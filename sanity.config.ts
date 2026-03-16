@@ -7,7 +7,7 @@ export default defineConfig({
   title: 'AccountingBody',
   basePath: '/studio',
 
-  projectId: '4rl1ejq1',
+  projectId: '4rllejq1',
   dataset: 'production',
 
   plugins: [
