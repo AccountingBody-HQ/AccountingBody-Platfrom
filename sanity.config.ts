@@ -1,16 +1,20 @@
 import { defineConfig } from 'sanity'
-import { deskTool } from 'sanity/desk'
+import { structureTool } from 'sanity/structure'
 import { visionTool } from '@sanity/vision'
 
 export default defineConfig({
   name: 'accountingbody',
   title: 'AccountingBody',
+  basePath: '/studio',
+
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET!,
+
   plugins: [
-    deskTool(),
+    structureTool(),
     visionTool(),
   ],
+
   schema: {
     types: [],
   },
