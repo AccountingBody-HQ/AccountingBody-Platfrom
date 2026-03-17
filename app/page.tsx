@@ -383,12 +383,11 @@ function EmailSignupSection() {
               name="email"
               placeholder="your@email.com"
               required
-              className="flex-1 min-w-0 w-full h-12 px-4 rounded-lg text-sm bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+              className="flex-1 min-w-0 w-full h-14 px-4 rounded-lg text-base bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
             />
             <button
               type="submit"
-              className="h-12 px-6 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold whitespace-nowrap"
-            >
+              className="h-14 px-6 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold whitespace-nowrap"
               Subscribe free
             </button>
           </form>
