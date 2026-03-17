@@ -370,24 +370,24 @@ function EmailSignupSection() {
             written by qualified accountants. No spam, ever.
           </p>
           <form
-            action="/api/subscribe"
-            method="POST"
-            className="flex flex-col gap-3 w-full max-w-sm mx-auto px-6"
-          >
-            <input
-              type="email"
-              name="email"
-              placeholder="your@email.com"
-              required
-              className="flex-1 min-w-0 w-full h-14 px-4 rounded-lg text-base bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
-            />
-            <button
-              type="submit"
-              className="h-14 px-6 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold whitespace-nowrap"
-            >
-              Subscribe free
-            </button>
-          </form>
+  action="/api/subscribe"
+  method="POST"
+  className="flex flex-col gap-3 w-full max-w-sm mx-auto px-6"
+>
+  <input
+    type="email"
+    name="email"
+    placeholder="your@email.com"
+    required
+    className="w-full h-14 px-4 rounded-lg text-base bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+  />
+  <button
+    type="submit"
+    className="w-full h-14 px-6 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold"
+  >
+    Subscribe free
+  </button>
+</form>
           <p className="text-white/35 text-xs mt-4">
             Join 12,000+ accounting students and professionals.
             Unsubscribe any time.
