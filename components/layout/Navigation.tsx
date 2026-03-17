@@ -522,9 +522,9 @@ export function Navigation() {
 >
   {/* Brand logomark */}
 <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-  <rect x="0" y="0" width="10" height="20" rx="2.5" fill="#003A9B"/>
-  <rect x="14" y="0" width="10" height="10" rx="2.5" fill="#003A9B"/>
-  <rect x="14" y="14" width="10" height="10" rx="2.5" fill="#003A9B"/>
+  <rect x="0" y="0" width="9" height="20" rx="2" fill="#003A9B"/>
+  <rect x="12" y="0" width="8" height="8" rx="2" fill="#003A9B"/>
+  <rect x="12" y="12" width="8" height="8" rx="2" fill="#003A9B"/>
 </svg>
 <span className="font-sans font-semibold hidden sm:block" style={{ color: '#003A9B', fontSize: '21px', lineHeight: '24px' }}>
   Accounting Body<sup style={{ fontSize: '20px', verticalAlign: 'top', position: 'relative', top: '4px' }}>®</sup>
