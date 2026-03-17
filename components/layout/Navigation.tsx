@@ -527,8 +527,8 @@ export function Navigation() {
     <rect x="0" y="16" width="12" height="12" rx="2" fill="#003A9B"/>
     <rect x="16" y="16" width="12" height="12" rx="2" fill="#003A9B"/>
   </svg>
-  <span className="font-sans font-semibold hidden sm:block" style={{ color: '#003A9B', fontSize: '18px', lineHeight: '28px' }}>
-  Accounting Body<sup style={{ fontSize: '10px', verticalAlign: 'super' }}>®</sup>
+  <span className="font-sans font-semibold hidden sm:block" style={{ color: '#003A9B', fontSize: '15px', lineHeight: '28px' }}>
+  Accounting Body<sup style={{ fontSize: '20px', verticalAlign: 'super' }}>®</sup>
 </span>
 </Link>
 
