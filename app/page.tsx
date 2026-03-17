@@ -4,9 +4,9 @@
 
 import React from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { Button } from '@/components/ui/Button'
-import { Badge, ExamBodyBadge, StatusBadge } from '@/components/ui/Badge'
+
+
+import { ExamBodyBadge, StatusBadge } from '@/components/ui/Badge'
 
 // ── Sanity fetch ──────────────────────────────────────────────────────────────
 // Fetches the 4 most recent articles from Sanity.
