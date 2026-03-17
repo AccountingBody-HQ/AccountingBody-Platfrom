@@ -1,8 +1,17 @@
-cat > components/PortableTextRenderer.tsx << 'ENDOFFILE'
-import { PortableText, type PortableTextComponents } from '@portabletext/react'
+import { PortableText, type PortableTextComponents, type PortableTextBlock } from '@portabletext/react'
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
 const DATASET    = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
+
+function PortableLink({ value, children }: { value?: { href?: string }; children?: React.ReactNode }) {
+  const href = value?.href ?? ''
+  const isExternal = href.startsWith('http')
+  return (
+    <a href={href} target={isExternal ? '_blank' : undefined} rel={isExternal ? 'noopener noreferrer' : undefined} className="text-navy-700 underline underline-offset-2 decoration-navy-300 hover:text-gold-600 hover:decoration-gold-400 transition-colors">
+      {children}
+    </a>
+  )
+}
 
 const components: PortableTextComponents = {
   block: {
@@ -34,19 +43,7 @@ const components: PortableTextComponents = {
     strong: ({ children }) => <strong className="font-semibold text-navy-950">{children}</strong>,
     em: ({ children }) => <em className="italic text-slate-600">{children}</em>,
     code: ({ children }) => <code className="font-mono text-sm bg-slate-100 text-navy-800 px-1.5 py-0.5 rounded border border-slate-200">{children}</code>,
-    link: ({ value, children }) => {
-      const isExternal = value?.href?.startsWith('http')
-      return (
-        
-          href={value?.href}
-          target={isExternal ? '_blank' : undefined}
-          rel={isExternal ? 'noopener noreferrer' : undefined}
-          className="text-navy-700 underline underline-offset-2 decoration-navy-300 hover:text-gold-600 hover:decoration-gold-400 transition-colors"
-        >
-          {children}
-        </a>
-      )
-    },
+    link: PortableLink,
   },
   types: {
     image: ({ value }) => {
@@ -87,8 +84,7 @@ export default function PortableTextRenderer({ value }: Props) {
   }
   return (
     <div className="portable-text max-w-none">
-      <PortableText value={value} components={components} />
+      <PortableText value={value as PortableTextBlock[]} components={components} />
     </div>
   )
 }
-ENDOFFILE
