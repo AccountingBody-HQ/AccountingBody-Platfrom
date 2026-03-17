@@ -522,10 +522,9 @@ export function Navigation() {
 >
   {/* Grid icon — matches brand logomark */}
   <svg width="26" height="26" viewBox="0 0 26 26" xmlns="http://www.w3.org/2000/svg">
-  <rect x="0" y="0" width="11" height="11" rx="2" fill="#003A9B"/>
-  <rect x="15" y="0" width="11" height="11" rx="2" fill="#003A9B"/>
-  <rect x="0" y="15" width="11" height="11" rx="2" fill="#003A9B"/>
-  <rect x="15" y="15" width="11" height="11" rx="2" fill="#003A9B"/>
+  <rect x="0" y="0" width="11" height="26" rx="2.5" fill="#003A9B"/>
+  <rect x="15" y="0" width="11" height="11" rx="2.5" fill="#003A9B"/>
+  <rect x="15" y="15" width="11" height="11" rx="2.5" fill="#003A9B"/>
 </svg>
   <span className="font-sans font-semibold hidden sm:block" style={{ color: '#003A9B', fontSize: '18px', lineHeight: '26px' }}>
   Accounting Body<sup style={{ fontSize: '10px', verticalAlign: 'super' }}>®</sup>
