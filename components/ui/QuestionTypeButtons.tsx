@@ -144,7 +144,7 @@ export function QuestionTypeButtons({
   activeType,
   onSelect,
   layout = 'row',
-  showDescriptions = false,
+  //showDescriptions = false,
   className = '',
 }: QuestionTypeButtonsProps) {
   const available = availableTypes ?? ['mcq', 'learn', 'writing', 'scenario']
