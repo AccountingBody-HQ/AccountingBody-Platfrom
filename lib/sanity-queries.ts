@@ -1,6 +1,4 @@
 // lib/sanity-queries.ts
-// All GROQ queries for AccountingBody.com
-
 const PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
 const DATASET    = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
 const API_VER    = '2023-05-03'
@@ -27,15 +25,15 @@ export interface ArticleSummary {
 }
 
 export interface ArticleFull extends ArticleSummary {
-  body:                 unknown[]
-  canonicalOwner?:      string
-  showOnSites?:         string[]
-  mcqUrl?:              string
-  learningUrl?:         string
-  shortQuestionsUrl?:   string
-  scenarioUrl?:         string
-  author?:              Author
-  relatedArticles?:     ArticleSummary[]
+  body:                unknown[]
+  canonicalOwner?:     string
+  showOnSites?:        string[]
+  mcqUrl?:             string
+  learningUrl?:        string
+  shortQuestionsUrl?:  string
+  scenarioUrl?:        string
+  author?:             Author
+  relatedArticles?:    ArticleSummary[]
 }
 
 export interface ExamBodyStat {
@@ -51,17 +49,13 @@ async function sanityFetch<T>(
 ): Promise<T | null> {
   try {
     if (!PROJECT_ID) return null
-
     const encodedQuery  = encodeURIComponent(query)
     const encodedParams = Object.entries(params)
       .map(([k, v]) => `$${k}=${encodeURIComponent(JSON.stringify(v))}`)
       .join('&')
-
     const url = `https://${PROJECT_ID}.api.sanity.io/v${API_VER}/data/query/${DATASET}?query=${encodedQuery}${encodedParams ? `&${encodedParams}` : ''}`
-
     const res = await fetch(url, { next: { revalidate } })
     if (!res.ok) return null
-
     const data = await res.json()
     return (data.result ?? null) as T
   } catch {
@@ -87,14 +81,12 @@ export async function getStudyLandingData(): Promise<ExamBodyStat[]> {
   const query = `*[_type == "article"] | order(publishedAt desc) { examBody, ${SUMMARY_FIELDS} }`
   const all   = await sanityFetch<(ArticleSummary & { examBody: string })[]>(query)
   if (!all) return []
-
   const map: Record<string, { count: number; latest: ArticleSummary }> = {}
   for (const a of all) {
     if (!a.examBody) continue
     if (!map[a.examBody]) map[a.examBody] = { count: 0, latest: a }
     map[a.examBody].count++
   }
-
   return Object.entries(map).map(([examBody, v]) => ({
     examBody,
     count:         v.count,
@@ -102,9 +94,7 @@ export async function getStudyLandingData(): Promise<ExamBodyStat[]> {
   }))
 }
 
-export async function getArticlesByCategory(
-  categorySlug: string,
-): Promise<ArticleSummary[]> {
+export async function getArticlesByCategory(categorySlug: string): Promise<ArticleSummary[]> {
   const query = `
     *[
       _type == "article" &&
@@ -134,13 +124,10 @@ export async function getArticleBySlug(slug: string): Promise<ArticleFull | null
   return sanityFetch<ArticleFull>(query, { slug })
 }
 
-export async function getAllArticlePaths(): Promise
-  { category: string; slug: string }[]
-> {
+export async function getAllArticlePaths(): Promise<Array<{ category: string; slug: string }>> {
   const query = `*[_type == "article"] { "slug": slug.current, examBody }`
   const all   = await sanityFetch<{ slug: string; examBody?: string }[]>(query)
   if (!all) return []
-
   return all
     .filter(a => a.slug && a.examBody)
     .map(a => ({
