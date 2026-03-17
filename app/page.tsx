@@ -523,12 +523,6 @@ export default async function HomePage() {
 
           </div>
         </div>
-
-        {/* Bottom fade into page */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
-          style={{ background: 'linear-gradient(to bottom, transparent, #F8F7F4)' }}
-        />
       </section>
 
 

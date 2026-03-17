@@ -516,20 +516,21 @@ export function Navigation() {
 
           {/* Logo */}
           <Link
-            href="/"
-            className="flex items-center gap-2.5 shrink-0 mr-2 group/logo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 rounded"
-            aria-label="AccountingBody home"
-          >
-            {/* Logomark */}
-            <div className="w-8 h-8 rounded-lg bg-navy-950 flex items-center justify-center shrink-0">
-              <svg className="w-5 h-5 text-gold-400" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M4 4h3v12H4V4zm4.5 0h3l4 12h-3.2l-.8-2.5h-3l-.8 2.5H5.3L8.5 4zm1.5 2.4L12 10H9l1-3.6z"/>
-              </svg>
-            </div>
-            <span className="font-display text-xl text-navy-950 leading-none hidden sm:block group-hover/logo:text-navy-800 transition-colors">
-              AccountingBody
-            </span>
-          </Link>
+  href="/"
+  className="flex items-center gap-2 shrink-0 mr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 rounded"
+  aria-label="AccountingBody home"
+>
+  {/* Grid icon — matches brand logomark */}
+  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="12" height="12" rx="2" fill="#003A9B"/>
+    <rect x="16" y="0" width="12" height="12" rx="2" fill="#003A9B"/>
+    <rect x="0" y="16" width="12" height="12" rx="2" fill="#003A9B"/>
+    <rect x="16" y="16" width="12" height="12" rx="2" fill="#003A9B"/>
+  </svg>
+  <span className="font-sans text-lg font-semibold leading-none hidden sm:block" style={{ color: '#003A9B' }}>
+    Accounting Body<sup className="text-xs">®</sup>
+  </span>
+</Link>
 
           {/* Desktop nav */}
           <nav className="hidden lg:flex items-center flex-1 gap-0.5" aria-label="Main navigation">
