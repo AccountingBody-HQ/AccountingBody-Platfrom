@@ -490,7 +490,7 @@ export default async function HomePage() {
                 </svg>
               </Link>
               <Link
-                href="/practice"
+                href="/practice-questions"
                 className="inline-flex items-center gap-2 h-13 px-7 rounded-lg text-base font-medium text-white border border-white/25 hover:bg-white/10 hover:border-white/40 transition-all"
               >
                 Browse practice questions

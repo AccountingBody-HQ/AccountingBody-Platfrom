@@ -132,7 +132,7 @@ export default async function StudyPage() {
           <span className="eyebrow text-gold-400 mb-4 block">Practice Questions</span>
           <h2 className="font-display text-4xl text-white mb-4 leading-tight">Ready to test your knowledge?</h2>
           <p className="text-white/65 text-lg mb-8 max-w-xl mx-auto leading-relaxed">50,000+ exam-standard practice questions across every qualification.</p>
-          <Link href="/practice" className="inline-flex items-center gap-2 h-13 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
+          <Link href="/practice-questions" className="inline-flex items-center gap-2 h-13 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
             Browse practice questions
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
           </Link>
