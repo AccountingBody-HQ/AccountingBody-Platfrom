@@ -3,7 +3,8 @@ import { structureTool } from 'sanity/structure'
 import { visionTool } from '@sanity/vision'
 import article      from './sanity/schemas/article'
 import practicePost from './sanity/schemas/practicePost'
-import quizbankQuiz from './sanity/schemas/quizbankQuiz'
+import quizbankQuiz  from './sanity/schemas/quizbankQuiz'
+import quizbankBlock from './sanity/schemas/quizbankBlock'
 import course       from './sanity/schemas/course'
 import lesson       from './sanity/schemas/lesson'
 import manualCard   from './sanity/schemas/manualCard'
@@ -13,7 +14,7 @@ import page         from './sanity/schemas/page'
 import jobListing   from './sanity/schemas/jobListing'
 import firmProfile  from './sanity/schemas/firmProfile'
 
-const schemaTypes = [article, practicePost, quizbankQuiz, course, lesson, manualCard, page, author, category, jobListing, firmProfile]
+const schemaTypes = [article, practicePost, quizbankQuiz, quizbankBlock, course, lesson, manualCard, page, author, category, jobListing, firmProfile]
 
 const structure = (S: any) =>
   S.list().title('Content').items([

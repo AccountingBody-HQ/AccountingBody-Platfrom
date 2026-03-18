@@ -46,6 +46,18 @@ const components: PortableTextComponents = {
     link: PortableLink,
   },
   types: {
+    quizbankBlock: ({ value }: { value?: { quiz?: { _ref?: string } } }) => {
+      const id = value?.quiz?._ref
+      if (!id) return (
+        <div className="my-8 p-5 rounded-xl bg-slate-50 border border-slate-200 text-slate-400 text-sm text-center">
+          No quiz selected — edit this block in Sanity Studio.
+        </div>
+      )
+      // QuizBankEmbed is a server component — imported dynamically to avoid client bundle issues
+      const QuizBankEmbed = require('./QuizBankEmbed').default
+      return <QuizBankEmbed quizId={id} />
+    },
+
     image: ({ value }) => {
       if (!value?.asset?._ref || !PROJECT_ID) return null
       const parts = (value.asset._ref as string).split('-')

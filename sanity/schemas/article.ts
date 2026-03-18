@@ -10,7 +10,7 @@ export default defineType({
     defineField({ name: 'title', title: 'Title', type: 'string', group: 'content', validation: (Rule) => Rule.required() }),
     defineField({ name: 'slug', title: 'Slug', type: 'slug', group: 'content', options: { source: 'title', maxLength: 200 }, validation: (Rule) => Rule.required() }),
     defineField({ name: 'excerpt', title: 'Excerpt', type: 'text', rows: 3, group: 'content' }),
-    defineField({ name: 'body', title: 'Body', type: 'array', group: 'content', of: [{ type: 'block' }, { type: 'image', options: { hotspot: true }, fields: [defineField({ name: 'alt', title: 'Alt Text', type: 'string' })] }] }),
+    defineField({ name: 'body', title: 'Body', type: 'array', group: 'content', of: [{ type: 'block' }, { type: 'quizbankBlock' }, { type: 'image', options: { hotspot: true }, fields: [defineField({ name: 'alt', title: 'Alt Text', type: 'string' })] }] }),
     defineField({ name: 'featuredImage', title: 'Featured Image', type: 'image', group: 'content', options: { hotspot: true }, fields: [defineField({ name: 'alt', title: 'Alt Text', type: 'string' })] }),
     defineField({ name: 'author', title: 'Author', type: 'reference', group: 'content', to: [{ type: 'author' }] }),
     defineField({ name: 'categories', title: 'Categories', type: 'array', group: 'content', of: [{ type: 'reference', to: [{ type: 'category' }] }] }),
