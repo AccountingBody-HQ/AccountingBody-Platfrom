@@ -490,7 +490,7 @@ export function Navigation() {
         }`}
         style={{ height: 'var(--nav-height, 64px)' }}
       >
-        <div className="container-wide h-full flex items-center gap-6">
+        <div className="container-wide h-full grid grid-cols-[auto_1fr_auto] items-center gap-6">
 
           {/* Logo */}
           <Link
@@ -509,7 +509,7 @@ export function Navigation() {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center flex-1 gap-0.5" aria-label="Main navigation">
+          <nav className="hidden lg:flex items-center justify-center gap-0.5" aria-label="Main navigation">
             {navSections.map(section => {
               const isActive    = activeDropdown === section.id
               const hasDropdown = Boolean(section.groups?.length)
@@ -562,7 +562,7 @@ export function Navigation() {
           </nav>
 
           {/* Desktop right actions */}
-          <div className="hidden lg:flex items-center gap-2 ml-auto shrink-0">
+          <div className="hidden lg:flex items-center gap-2 justify-end shrink-0">
             <button
               className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-navy-950 hover:bg-slate-100 transition-colors"
               aria-label="Search"
@@ -586,7 +586,7 @@ export function Navigation() {
           </div>
 
           {/* Mobile menu button */}
-          <div className="flex items-center gap-2 ml-auto lg:hidden">
+          <div className="flex items-center gap-2 justify-end lg:hidden">
             <button
               className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
               aria-label="Search"
