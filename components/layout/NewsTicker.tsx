@@ -11,90 +11,81 @@ import Link from 'next/link'
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface TickerItem {
-  id:       string
-  text:     string
-  href?:    string
-  tag?:     string         // e.g. "ACCA", "New", "Exam Date"
+  id:        string
+  text:      string
+  href?:     string
+  tag?:      string
   tagColor?: 'navy' | 'gold' | 'teal' | 'crimson'
   external?: boolean
 }
 
 interface NewsTickerProps {
   items?:        TickerItem[]
-  speed?:        number    // seconds for one full scroll cycle (default 60)
+  speed?:        number
   pauseOnHover?: boolean
-  label?:        string    // Left label (default "Latest")
+  label?:        string
   className?:    string
 }
 
 // ── Default ticker items ───────────────────────────────────────────────────────
-// These are replaced by real data from Sanity/Supabase in production
 
 const defaultItems: TickerItem[] = [
   {
-    id: '1',
-    text: 'ACCA March 2025 exam results now available — check your results portal',
-    tag: 'ACCA',
+    id:       '1',
+    text:     'ACCA March 2025 exam results now available — check your results portal',
+    tag:      'ACCA',
     tagColor: 'navy',
-    href: '/study/acca/results',
+    href:     '/study/acca/results',
   },
   {
-    id: '2',
-    text: 'New: CIMA 2025 Operational Case Study practice materials now live',
-    tag: 'New',
+    id:       '2',
+    text:     'New: CIMA 2025 Operational Case Study practice materials now live',
+    tag:      'New',
     tagColor: 'teal',
-    href: '/study/cima/ocs',
+    href:     '/study/cima/ocs',
   },
   {
-    id: '3',
-    text: 'AAT Level 3 Synoptic Assessment updated for AQ2022 — download free study notes',
-    tag: 'AAT',
+    id:       '3',
+    text:     'AAT Level 3 Synoptic Assessment updated for AQ2022 — download free study notes',
+    tag:      'AAT',
     tagColor: 'teal',
-    href: '/study/aat/level-3',
+    href:     '/study/aat/level-3',
   },
   {
-    id: '4',
-    text: 'Tax year end 5 April 2025 — key dates and deadlines for accountants',
-    tag: 'Tax',
+    id:       '4',
+    text:     'Tax year end 5 April 2025 — key dates and deadlines for accountants',
+    tag:      'Tax',
     tagColor: 'gold',
-    href: '/articles/tax-year-end-2025',
+    href:     '/articles/tax-year-end-2025',
   },
   {
-    id: '5',
-    text: 'ACCA June 2025 exam entry deadline: 15 April — book your exams now',
-    tag: 'Exam Date',
+    id:       '5',
+    text:     'ACCA June 2025 exam entry deadline: 15 April — book your exams now',
+    tag:      'Exam Date',
     tagColor: 'crimson',
-    href: 'https://myacca.acca.global',
+    href:     'https://myacca.acca.global',
     external: true,
   },
   {
-    id: '6',
-    text: '50,000+ practice questions now live across all qualifications — try free',
-    tag: 'New',
+    id:       '6',
+    text:     '50,000+ practice questions now live across all qualifications — try free',
+    tag:      'New',
     tagColor: 'teal',
-    href: '/practice',
+    href:     '/practice',
   },
   {
-    id: '7',
-    text: 'ICAEW ACA Business Planning: Taxation — new written scenario questions added',
-    tag: 'ACA',
+    id:       '7',
+    text:     'ICAEW ACA Business Planning: Taxation — new written scenario questions added',
+    tag:      'ACA',
     tagColor: 'navy',
-    href: '/study/aca/bpt',
+    href:     '/study/aca/bpt',
   },
   {
-    id: '8',
-    text: 'Self-assessment tax return deadline: 31 January 2026 — start your preparation',
-    tag: 'Tax',
+    id:       '8',
+    text:     'Self-assessment tax return deadline: 31 January 2026 — start your preparation',
+    tag:      'Tax',
     tagColor: 'gold',
-    href: '/articles/self-assessment-guide',
-  },
-  {
-    id: '9',
-    text: 'Global Payroll Expert now covering 25 countries — employer cost data updated',
-    tag: 'GPE',
-    tagColor: 'navy',
-    href: 'https://globalpayrollexpert.com',
-    external: true,
+    href:     '/articles/self-assessment-guide',
   },
 ]
 
@@ -117,13 +108,13 @@ function Separator() {
 function TickerItemEl({ item }: { item: TickerItem }) {
   const tag = item.tag && item.tagColor
     ? (
-      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold border mr-2 leading-none ${tagStyles[item.tagColor]}`}>
+      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold border mr-2 leading-none ${tagStyles[item.tagColor]}`}>
         {item.tag}
       </span>
     )
     : item.tag
     ? (
-      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-semibold border mr-2 leading-none bg-white/15 text-white border-white/20">
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold border mr-2 leading-none bg-white/15 text-white border-white/20">
         {item.tag}
       </span>
     )
@@ -154,26 +145,22 @@ function TickerItemEl({ item }: { item: TickerItem }) {
 
 // ── Main NewsTicker ───────────────────────────────────────────────────────────
 export function NewsTicker({
-  items = defaultItems,
-  speed = 60,
+  items        = defaultItems,
+  speed        = 60,
   pauseOnHover = true,
-  label = 'Latest',
-  className = '',
+  label        = 'Latest',
+  className    = '',
 }: NewsTickerProps) {
-  const [paused, setPaused] = useState(false)
+  const [paused,    setPaused]    = useState(false)
   const [dismissed, setDismissed] = useState(false)
   const trackRef = useRef<HTMLDivElement>(null)
 
-  // Duplicate items for seamless loop
-  const displayItems = [...items, ...items]
-
-  // Adjust speed based on content length
-  const contentSpeed = Math.max(speed, items.length * 6)
+  const displayItems  = [...items, ...items]
+  const contentSpeed  = Math.max(speed, items.length * 6)
 
   useEffect(() => {
-    // Check dismissal from sessionStorage
-    const dismissed = sessionStorage.getItem('ticker-dismissed')
-    if (dismissed) setDismissed(true)
+    const wasDismissed = sessionStorage.getItem('ticker-dismissed')
+    if (wasDismissed) setDismissed(true)
   }, [])
 
   const handleDismiss = () => {
@@ -197,24 +184,23 @@ export function NewsTicker({
       aria-label="Latest updates"
       aria-live="off"
     >
-      {/* ── Label badge ──────────────────────────────────────────────────── */}
+      {/* Label badge */}
       <div
         className="shrink-0 flex items-center h-full pl-3 pr-4 border-r border-white/10 z-10"
         style={{ background: 'linear-gradient(135deg, #1a2e5a, #0C1A3D)' }}
       >
         <div className="flex items-center gap-2">
-          {/* Pulsing dot */}
           <span className="relative flex w-2 h-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold-400 opacity-70" />
             <span className="relative inline-flex rounded-full w-2 h-2 bg-gold-400" />
           </span>
-          <span className="text-2xs font-bold text-white uppercase tracking-widest whitespace-nowrap">
+          <span className="text-xs font-bold text-white uppercase tracking-widest whitespace-nowrap">
             {label}
           </span>
         </div>
       </div>
 
-      {/* ── Scrolling track ──────────────────────────────────────────────── */}
+      {/* Scrolling track */}
       <div
         className="flex-1 overflow-hidden relative"
         onMouseEnter={() => pauseOnHover && setPaused(true)}
@@ -222,12 +208,10 @@ export function NewsTicker({
         onTouchStart={() => pauseOnHover && setPaused(true)}
         onTouchEnd={() => pauseOnHover && setPaused(false)}
       >
-        {/* Left fade */}
         <div
           className="absolute left-0 top-0 bottom-0 w-8 z-10 pointer-events-none"
           style={{ background: 'linear-gradient(to right, #0C1A3D, transparent)' }}
         />
-        {/* Right fade */}
         <div
           className="absolute right-0 top-0 bottom-0 w-16 z-10 pointer-events-none"
           style={{ background: 'linear-gradient(to left, #0C1A3D, transparent)' }}
@@ -237,9 +221,9 @@ export function NewsTicker({
           ref={trackRef}
           className="flex items-center whitespace-nowrap"
           style={{
-            animation: `ticker ${contentSpeed}s linear infinite`,
+            animation:          `ticker ${contentSpeed}s linear infinite`,
             animationPlayState: paused ? 'paused' : 'running',
-            paddingLeft: '2rem',
+            paddingLeft:        '2rem',
           }}
         >
           {displayItems.map((item, index) => (
@@ -251,9 +235,8 @@ export function NewsTicker({
         </div>
       </div>
 
-      {/* ── Controls ─────────────────────────────────────────────────────── */}
+      {/* Controls */}
       <div className="shrink-0 flex items-center gap-0 border-l border-white/10">
-        {/* Pause/play */}
         <button
           onClick={() => setPaused(p => !p)}
           className="w-8 h-full flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/5 transition-colors"
@@ -270,7 +253,6 @@ export function NewsTicker({
           )}
         </button>
 
-        {/* Dismiss */}
         <button
           onClick={handleDismiss}
           className="w-8 h-full flex items-center justify-center text-white/30 hover:text-white/70 hover:bg-white/5 transition-colors"
@@ -285,13 +267,12 @@ export function NewsTicker({
   )
 }
 
-// ── Static (non-scrolling) ticker variant ─────────────────────────────────────
-// Use this when you want a non-animated single-line notice bar
+// ── Static ticker variant ─────────────────────────────────────────────────────
 interface StaticTickerProps {
-  message: string
-  tag?:    string
-  href?:   string
-  variant?: 'navy' | 'gold' | 'teal'
+  message:      string
+  tag?:         string
+  href?:        string
+  variant?:     'navy' | 'gold' | 'teal'
   dismissible?: boolean
 }
 
@@ -299,11 +280,10 @@ export function StaticTicker({
   message,
   tag,
   href,
-  variant = 'navy',
+  variant     = 'navy',
   dismissible = true,
 }: StaticTickerProps) {
   const [dismissed, setDismissed] = useState(false)
-
   if (dismissed) return null
 
   const variantStyles = {
@@ -315,7 +295,7 @@ export function StaticTicker({
   const content = (
     <div className="flex items-center gap-2 justify-center">
       {tag && (
-        <span className={`text-2xs font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${
+        <span className={`text-xs font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${
           variant === 'gold' ? 'bg-navy-950/15 text-navy-950' : 'bg-white/20 text-white'
         }`}>
           {tag}

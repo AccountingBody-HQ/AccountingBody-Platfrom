@@ -1,6 +1,6 @@
 // components/layout/Navigation.tsx
 // AccountingBody Design System — Main Navigation
-// Six sections: Get Help | Study | Practice Questions | Hire Talent | Firms and Freelancers | Global Payroll
+// Five sections: Get Help | Study | Practice Questions | Hire Talent | Firms & Freelancers
 // Sticky, responsive, with mega-menu dropdowns and mobile drawer
 
 'use client'
@@ -12,21 +12,21 @@ import { usePathname } from 'next/navigation'
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface NavLink {
-  label: string
-  href: string
-  badge?: string
+  label:        string
+  href:         string
+  badge?:       string
   description?: string
-  external?: boolean
+  external?:    boolean
 }
 
 interface NavSection {
-  id:          string
-  label:       string
-  href?:       string      // Direct link (no dropdown)
-  external?:   boolean
-  featured?:   NavLink     // Featured article/page in mega-menu
-  groups?:     { title: string; links: NavLink[] }[]
-  cta?:        { label: string; href: string; description: string }
+  id:        string
+  label:     string
+  href?:     string
+  external?: boolean
+  featured?: NavLink
+  groups?:   { title: string; links: NavLink[] }[]
+  cta?:      { label: string; href: string; description: string }
 }
 
 // ── Nav data ──────────────────────────────────────────────────────────────────
@@ -39,20 +39,20 @@ const navSections: NavSection[] = [
       {
         title: 'Free Resources',
         links: [
-          { label: 'Accounting Glossary',     href: '/glossary',              description: '1,200+ accounting terms defined' },
-          { label: 'Ask a Question',           href: '/ask',                   description: 'Post your accounting question' },
-          { label: 'Study Forums',             href: '/forums',                description: 'Community discussion boards' },
-          { label: 'Exam Tips & Guides',       href: '/exam-tips',             description: 'Pass rate improving strategies' },
-          { label: 'Podcast',                  href: '/podcast',               description: 'Accounting in Plain English' },
+          { label: 'Accounting Glossary',    href: '/glossary',     description: '1,200+ accounting terms defined' },
+          { label: 'Ask a Question',         href: '/ask',          description: 'Post your accounting question' },
+          { label: 'Study Forums',           href: '/forums',       description: 'Community discussion boards' },
+          { label: 'Exam Tips & Guides',     href: '/exam-tips',    description: 'Pass rate improving strategies' },
+          { label: 'Podcast',                href: '/podcast',      description: 'Accounting in Plain English' },
         ],
       },
       {
         title: 'Quick Tools',
         links: [
-          { label: 'Salary & Tax Calculator',  href: '/tools/salary-calculator' },
-          { label: 'Depreciation Calculator',  href: '/tools/depreciation' },
-          { label: 'Break-Even Calculator',    href: '/tools/break-even' },
-          { label: 'Ratio Calculator',         href: '/tools/ratios' },
+          { label: 'Salary & Tax Calculator', href: '/tools/salary-calculator' },
+          { label: 'Depreciation Calculator', href: '/tools/depreciation' },
+          { label: 'Break-Even Calculator',   href: '/tools/break-even' },
+          { label: 'Ratio Calculator',        href: '/tools/ratios' },
         ],
       },
     ],
@@ -70,23 +70,23 @@ const navSections: NavSection[] = [
       {
         title: 'By Qualification',
         links: [
-          { label: 'ACCA',  href: '/study/acca',  badge: 'Popular', description: 'All 13 ACCA papers covered' },
-          { label: 'CIMA',  href: '/study/cima',                     description: 'Certificate to Strategic level' },
-          { label: 'AAT',   href: '/study/aat',                      description: 'Level 2, 3 and 4 coverage' },
-          { label: 'ICAEW / ACA', href: '/study/aca',                description: 'ACA qualification pathway' },
-          { label: 'ATT / CTA', href: '/study/att-cta',              description: 'Tax specialist qualifications' },
-          { label: 'CIPFA', href: '/study/cipfa',                    description: 'Public sector accounting' },
+          { label: 'ACCA',        href: '/study/acca',     badge: 'Popular', description: 'All 13 ACCA papers covered' },
+          { label: 'CIMA',        href: '/study/cima',                        description: 'Certificate to Strategic level' },
+          { label: 'AAT',         href: '/study/aat',                         description: 'Level 2, 3 and 4 coverage' },
+          { label: 'ICAEW / ACA', href: '/study/aca',                         description: 'ACA qualification pathway' },
+          { label: 'ATT / CTA',   href: '/study/att-cta',                     description: 'Tax specialist qualifications' },
+          { label: 'CIPFA',       href: '/study/cipfa',                       description: 'Public sector accounting' },
         ],
       },
       {
         title: 'By Subject',
         links: [
-          { label: 'Financial Reporting',    href: '/subjects/financial-reporting' },
-          { label: 'Taxation',               href: '/subjects/taxation' },
-          { label: 'Audit & Assurance',      href: '/subjects/audit' },
-          { label: 'Management Accounting',  href: '/subjects/management-accounting' },
-          { label: 'Corporate Finance',      href: '/subjects/corporate-finance' },
-          { label: 'Business Law',           href: '/subjects/business-law' },
+          { label: 'Financial Reporting',   href: '/subjects/financial-reporting' },
+          { label: 'Taxation',              href: '/subjects/taxation' },
+          { label: 'Audit & Assurance',     href: '/subjects/audit' },
+          { label: 'Management Accounting', href: '/subjects/management-accounting' },
+          { label: 'Corporate Finance',     href: '/subjects/corporate-finance' },
+          { label: 'Business Law',          href: '/subjects/business-law' },
         ],
       },
     ],
@@ -104,20 +104,20 @@ const navSections: NavSection[] = [
       {
         title: 'Question Types',
         links: [
-          { label: 'MCQ Question Banks',    href: '/practice/mcq',       badge: 'New',    description: '50,000+ exam-style MCQs' },
-          { label: 'Written Answer Tasks',  href: '/practice/writing',                    description: 'Constructed response practice' },
-          { label: 'Case Studies',          href: '/practice/scenarios',                  description: 'Professional scenario questions' },
-          { label: 'Mock Examinations',     href: '/practice/mock-exams',                 description: 'Full timed mock exams' },
-          { label: 'Past Paper Archive',    href: '/practice/past-papers',                description: 'Official past papers with answers' },
+          { label: 'MCQ Question Banks',   href: '/practice/mcq',        badge: 'New', description: '50,000+ exam-style MCQs' },
+          { label: 'Written Answer Tasks', href: '/practice/writing',                  description: 'Constructed response practice' },
+          { label: 'Case Studies',         href: '/practice/scenarios',               description: 'Professional scenario questions' },
+          { label: 'Mock Examinations',    href: '/practice/mock-exams',              description: 'Full timed mock exams' },
+          { label: 'Past Paper Archive',   href: '/practice/past-papers',             description: 'Official past papers with answers' },
         ],
       },
       {
         title: 'By Difficulty',
         links: [
-          { label: 'Beginner Practice',     href: '/practice/level/easy' },
-          { label: 'Intermediate',          href: '/practice/level/medium' },
-          { label: 'Hard Questions',        href: '/practice/level/hard' },
-          { label: 'Exam Standard',         href: '/practice/level/exam-standard' },
+          { label: 'Beginner Practice', href: '/practice/level/easy' },
+          { label: 'Intermediate',      href: '/practice/level/medium' },
+          { label: 'Hard Questions',    href: '/practice/level/hard' },
+          { label: 'Exam Standard',     href: '/practice/level/exam-standard' },
         ],
       },
     ],
@@ -135,19 +135,18 @@ const navSections: NavSection[] = [
       {
         title: 'Find Professionals',
         links: [
-          { label: 'Find an Accountant',   href: '/hire/accountants',    description: 'Qualified accountants for hire' },
-          { label: 'Find a Bookkeeper',    href: '/hire/bookkeepers',    description: 'Expert bookkeeping services' },
-          { label: 'Find a Tax Adviser',   href: '/hire/tax-advisers',   description: 'Personal and business tax' },
-          { label: 'Find an Auditor',      href: '/hire/auditors',       description: 'Statutory and internal audit' },
-          { label: 'Finance Recruitment',  href: '/hire/recruitment',    description: 'Permanent and contract roles' },
+          { label: 'Find an Accountant',  href: '/hire/accountants',  description: 'Qualified accountants for hire' },
+          { label: 'Find a Bookkeeper',   href: '/hire/bookkeepers',  description: 'Expert bookkeeping services' },
+          { label: 'Find a Tax Adviser',  href: '/hire/tax-advisers', description: 'Personal and business tax' },
+          { label: 'Find an Auditor',     href: '/hire/auditors',     description: 'Statutory and internal audit' },
+          { label: 'Finance Recruitment', href: '/hire/recruitment',  description: 'Permanent and contract roles' },
         ],
       },
       {
         title: 'For Employers',
         links: [
-          { label: 'Post a Job',            href: '/hire/post-job' },
-          { label: 'Browse CVs',            href: '/hire/cvs' },
-          { label: 'Employer of Record',    href: 'https://globalpayrollexpert.com/eor', external: true },
+          { label: 'Post a Job',  href: '/hire/post-job' },
+          { label: 'Browse CVs',  href: '/hire/cvs' },
         ],
       },
     ],
@@ -160,19 +159,19 @@ const navSections: NavSection[] = [
       {
         title: 'For Firms',
         links: [
-          { label: 'List Your Firm',        href: '/firms/list',          description: 'Get found by new clients' },
-          { label: 'Firm Directory',        href: '/firms/directory',     description: 'Browse accounting firms' },
-          { label: 'CPD Resources',         href: '/firms/cpd',           description: 'Continuing professional development' },
-          { label: 'Staff Training',        href: '/firms/training',      description: 'Team learning solutions' },
+          { label: 'List Your Firm',  href: '/firms/list',      description: 'Get found by new clients' },
+          { label: 'Firm Directory',  href: '/firms/directory', description: 'Browse accounting firms' },
+          { label: 'CPD Resources',   href: '/firms/cpd',       description: 'Continuing professional development' },
+          { label: 'Staff Training',  href: '/firms/training',  description: 'Team learning solutions' },
         ],
       },
       {
         title: 'For Freelancers',
         links: [
-          { label: 'Create Your Profile',   href: '/freelancers/signup' },
-          { label: 'Find Work',             href: '/freelancers/jobs' },
-          { label: 'Freelance Resources',   href: '/freelancers/resources' },
-          { label: 'Rate Calculator',       href: '/freelancers/rate-calculator' },
+          { label: 'Create Your Profile',  href: '/freelancers/signup' },
+          { label: 'Find Work',            href: '/freelancers/jobs' },
+          { label: 'Freelance Resources',  href: '/freelancers/resources' },
+          { label: 'Rate Calculator',      href: '/freelancers/rate-calculator' },
         ],
       },
     ],
@@ -181,13 +180,6 @@ const navSections: NavSection[] = [
       href:        '/firms/list',
       description: 'Join 3,000+ accounting professionals',
     },
-  },
-
-  {
-    id:       'global-payroll',
-    label:    'Global Payroll',
-    href:     'https://globalpayrollexpert.com',
-    external: true,
   },
 ]
 
@@ -215,7 +207,7 @@ function ChevronDown({ open }: { open: boolean }) {
 // ── Mega-menu dropdown ────────────────────────────────────────────────────────
 function MegaMenu({ section, onClose }: { section: NavSection; onClose: () => void }) {
   const hasFeatured = Boolean(section.featured)
-  const colCount = section.groups?.length ?? 0
+  const colCount    = section.groups?.length ?? 0
 
   return (
     <div
@@ -228,12 +220,12 @@ function MegaMenu({ section, onClose }: { section: NavSection; onClose: () => vo
       </div>
 
       <div className="bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden">
-        <div className={`flex ${hasFeatured ? '' : ''}`}>
+        <div className="flex">
           {/* Featured panel */}
           {section.featured && (
             <div className="w-56 bg-gradient-navy p-5 flex flex-col justify-between shrink-0">
               <div>
-                <p className="text-2xs font-semibold text-gold-400 uppercase tracking-widest mb-2">Featured</p>
+                <p className="text-xs font-semibold text-gold-400 uppercase tracking-widest mb-2">Featured</p>
                 <h4 className="font-display text-white text-lg leading-snug mb-2">{section.featured.label}</h4>
                 <p className="text-xs text-white/60 leading-relaxed">{section.featured.description}</p>
               </div>
@@ -255,7 +247,7 @@ function MegaMenu({ section, onClose }: { section: NavSection; onClose: () => vo
             <div className={`grid gap-6 ${colCount >= 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
               {section.groups?.map(group => (
                 <div key={group.title}>
-                  <p className="text-2xs font-semibold text-slate-400 uppercase tracking-widest mb-3">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">
                     {group.title}
                   </p>
                   <ul className="space-y-0.5">
@@ -274,7 +266,7 @@ function MegaMenu({ section, onClose }: { section: NavSection; onClose: () => vo
                                 {link.label}
                               </span>
                               {link.badge && (
-                                <span className="text-2xs font-semibold px-1.5 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200">
+                                <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200">
                                   {link.badge}
                                 </span>
                               )}
@@ -315,13 +307,7 @@ function MegaMenu({ section, onClose }: { section: NavSection; onClose: () => vo
 }
 
 // ── Mobile nav ────────────────────────────────────────────────────────────────
-function MobileMenu({
-  open,
-  onClose,
-}: {
-  open: boolean
-  onClose: () => void
-}) {
+function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
 
   return (
@@ -364,7 +350,7 @@ function MobileMenu({
         {/* Nav items */}
         <nav className="flex-1 overflow-y-auto py-2">
           {navSections.map(section => {
-            const isExpanded = expandedSection === section.id
+            const isExpanded  = expandedSection === section.id
             const hasDropdown = Boolean(section.groups?.length)
 
             if (!hasDropdown && section.href) {
@@ -375,11 +361,7 @@ function MobileMenu({
                   target={section.external ? '_blank' : undefined}
                   rel={section.external ? 'noopener noreferrer' : undefined}
                   onClick={onClose}
-                  className={`flex items-center gap-2 w-full text-left px-5 py-3.5 text-sm font-medium transition-colors hover:bg-slate-50 ${
-                    section.id === 'global-payroll'
-                      ? 'text-gold-600 border-t border-slate-100 mt-1'
-                      : 'text-navy-950'
-                  }`}
+                  className="flex items-center gap-2 w-full text-left px-5 py-3.5 text-sm font-medium text-navy-950 transition-colors hover:bg-slate-50"
                 >
                   {section.label}
                   {section.external && <ExternalIcon />}
@@ -402,7 +384,7 @@ function MobileMenu({
                   <div className="bg-slate-50 border-t border-slate-100 py-2 animate-slide-down">
                     {section.groups?.map(group => (
                       <div key={group.title} className="mb-3">
-                        <p className="px-5 py-1.5 text-2xs font-semibold text-slate-400 uppercase tracking-widest">
+                        <p className="px-5 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-widest">
                           {group.title}
                         </p>
                         {group.links.map(link => (
@@ -416,7 +398,7 @@ function MobileMenu({
                           >
                             {link.label}
                             {link.badge && (
-                              <span className="text-2xs font-semibold px-1.5 py-0.5 rounded-full bg-teal-50 text-teal-700">
+                              <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-teal-50 text-teal-700">
                                 {link.badge}
                               </span>
                             )}
@@ -458,26 +440,23 @@ function MobileMenu({
 
 export function Navigation() {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-  const navRef = useRef<HTMLElement>(null)
-  const pathname = usePathname()
+  const [mobileOpen,     setMobileOpen]     = useState(false)
+  const [scrolled,       setScrolled]       = useState(false)
+  const navRef    = useRef<HTMLElement>(null)
+  const pathname  = usePathname()
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Close on route change
   useEffect(() => {
     setActiveDropdown(null)
     setMobileOpen(false)
   }, [pathname])
 
-  // Scroll detection for shadow
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 8)
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Close on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
@@ -488,7 +467,6 @@ export function Navigation() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Prevent body scroll when mobile menu is open
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -516,27 +494,25 @@ export function Navigation() {
 
           {/* Logo */}
           <Link
-  href="/"
-  className="flex items-center gap-2 shrink-0 mr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 rounded"
-  aria-label="AccountingBody home"
->
-  {/* Brand logomark */}
-<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-  <rect x="0" y="0" width="9" height="20" rx="2" fill="#1e3a7a"/>
-  <rect x="11" y="0" width="9" height="9" rx="2" fill="#1e3a7a"/>
-  <rect x="11" y="11" width="9" height="9" rx="2" fill="#1e3a7a"/>
-</svg>
-<span className="font-sans font-semibold hidden sm:block" style={{ color: '#1e3a7a', fontSize: '21px', lineHeight: '24px' }}>
-  Accounting Body<sup style={{ fontSize: '20px', verticalAlign: 'top', position: 'relative', top: '4px' }}>®</sup>
-</span>
-</Link>
+            href="/"
+            className="flex items-center gap-2 shrink-0 mr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 rounded"
+            aria-label="AccountingBody home"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0"  y="0" width="9" height="20" rx="2" fill="#1e3a7a"/>
+              <rect x="11" y="0" width="9" height="9"  rx="2" fill="#1e3a7a"/>
+              <rect x="11" y="11" width="9" height="9" rx="2" fill="#1e3a7a"/>
+            </svg>
+            <span className="font-sans font-semibold hidden sm:block" style={{ color: '#1e3a7a', fontSize: '21px', lineHeight: '24px' }}>
+              Accounting Body<sup style={{ fontSize: '20px', verticalAlign: 'top', position: 'relative', top: '4px' }}>®</sup>
+            </span>
+          </Link>
 
           {/* Desktop nav */}
           <nav className="hidden lg:flex items-center flex-1 gap-0.5" aria-label="Main navigation">
             {navSections.map(section => {
-              const isActive = activeDropdown === section.id
+              const isActive    = activeDropdown === section.id
               const hasDropdown = Boolean(section.groups?.length)
-              const isGlobalPayroll = section.id === 'global-payroll'
 
               if (!hasDropdown && section.href) {
                 return (
@@ -545,12 +521,7 @@ export function Navigation() {
                     href={section.href}
                     target={section.external ? '_blank' : undefined}
                     rel={section.external ? 'noopener noreferrer' : undefined}
-                    className={[
-                      'flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150',
-                      isGlobalPayroll
-                        ? 'text-gold-600 hover:text-gold-500 hover:bg-gold-50 ml-1'
-                        : 'text-navy-950 hover:text-navy-700 hover:bg-slate-50',
-                    ].join(' ')}
+                    className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-navy-950 hover:text-navy-700 hover:bg-slate-50 transition-colors duration-150"
                   >
                     {section.label}
                     {section.external && <ExternalIcon />}
@@ -592,7 +563,6 @@ export function Navigation() {
 
           {/* Desktop right actions */}
           <div className="hidden lg:flex items-center gap-2 ml-auto shrink-0">
-            {/* Search */}
             <button
               className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-navy-950 hover:bg-slate-100 transition-colors"
               aria-label="Search"
@@ -601,14 +571,12 @@ export function Navigation() {
                 <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
-
             <Link
               href="/login"
               className="px-4 h-9 flex items-center text-sm font-medium text-navy-950 hover:text-navy-700 rounded-lg hover:bg-slate-50 transition-colors"
             >
               Log in
             </Link>
-
             <Link
               href="/signup"
               className="px-4 h-9 flex items-center text-sm font-semibold bg-navy-950 text-white rounded-lg hover:bg-navy-900 transition-colors shadow-sm hover:shadow-md"
@@ -638,10 +606,10 @@ export function Navigation() {
               </svg>
             </button>
           </div>
+
         </div>
       </header>
 
-      {/* Mobile drawer */}
       <MobileMenu
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
