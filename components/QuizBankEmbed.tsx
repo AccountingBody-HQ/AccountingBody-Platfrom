@@ -41,9 +41,13 @@ async function fetchQuiz(id: string): Promise<QuizBankData | null> {
       }
     `)
     const params = encodeURIComponent(JSON.stringify({ id }))
+    const token = process.env.SANITY_API_READ_TOKEN
     const res = await fetch(
       `https://${PROJECT_ID}.api.sanity.io/v2023-05-03/data/query/${DATASET}?query=${query}&%24id=${params}`,
-      { next: { revalidate: 3600 } }
+      {
+        next: { revalidate: 3600 },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      }
     )
     if (!res.ok) return null
     const data = await res.json()
