@@ -116,7 +116,9 @@ const DIFF_CLS_DARK: Record<string, string> = {
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export default function QuizBankRenderer({ data }: Props) {
-  const { title, showTimer, showMap, theme, quizQuestions = [], cases = [] } = data
+  const { title, showTimer, showMap, theme, quizQuestions, cases } = data
+  const safeQuestions = quizQuestions ?? []
+  const safeCases = cases ?? []
   const dark = theme === 'dark'
 
   const [currentIdx, setCurrentIdx]   = useState(0)
@@ -129,8 +131,8 @@ export default function QuizBankRenderer({ data }: Props) {
 
   // Use rawJson if present (bulk workflow), otherwise use structured questions
   const parsedRaw  = data.rawJson ? parseRawJson(data.rawJson) : []
-  const questions  = parsedRaw.length > 0 ? parsedRaw : quizQuestions
-  const caseMap   = Object.fromEntries(cases.map(c => [c.caseId, c]))
+  const questions  = parsedRaw.length > 0 ? parsedRaw : safeQuestions
+  const caseMap   = Object.fromEntries(safeCases.map(c => [c.caseId, c]))
   const total     = questions.length
   const q         = questions[currentIdx]
 
