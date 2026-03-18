@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { getArticleBySlug, resolveCanonicalUrl } from '@/lib/sanity-queries'
 import PortableTextRenderer from '@/components/PortableTextRenderer'
 
-export const revalidate = 3600
+export const revalidate = 0
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const article = await getArticleBySlug(params.slug)
