@@ -138,7 +138,6 @@ const legalLinks = [
   { label: 'Cookie Policy',     href: '/cookie-policy' },
   { label: 'Disclaimer',        href: '/disclaimer' },
   { label: 'Accessibility',     href: '/accessibility' },
-  { label: 'Sitemap',           href: '/sitemap' },
 ]
 
 const stats = [
