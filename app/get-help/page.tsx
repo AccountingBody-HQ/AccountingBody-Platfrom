@@ -29,16 +29,26 @@ export default function GetHelpPage() {
 
   return (
     <main className="min-h-screen bg-[#faf9f7]">
-      <section className="bg-[#0f2444] text-white py-24 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-[#c9963f] text-sm font-semibold tracking-widest uppercase mb-4">Professional Services</p>
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">Find the Right<br />Accounting Expert</h1>
-          <p className="text-lg text-blue-200 max-w-2xl mx-auto mb-10">
-            Connect with verified accountants, bookkeepers, tax advisors and financial professionals across the UK.
-          </p>
-          <a href="#request-form" className="inline-block bg-[#c9963f] hover:bg-[#b8852e] text-white font-semibold px-10 py-4 rounded-lg transition-colors text-lg">
-            Find a Professional →
-          </a>
+      <section className="relative overflow-hidden bg-navy-950 py-16 md:py-24">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-20"
+            style={{ background: "radial-gradient(ellipse at center top, #3a4f9a 0%, transparent 70%)" }} />
+          <div className="absolute inset-0 opacity-[0.03]"
+            style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+        </div>
+        <div className="container-site relative z-10">
+          <div className="max-w-3xl">
+            <span className="eyebrow text-gold-400 mb-4 block">Professional Services</span>
+            <h1 className="font-display text-white text-4xl md:text-5xl mb-5 leading-tight">
+              Find the Right Accounting Expert
+            </h1>
+            <p className="text-white/60 text-xl leading-relaxed mb-10">
+              Connect with verified accountants, bookkeepers, tax advisors and financial professionals across the UK.
+            </p>
+            <a href="#request-form" className="inline-flex items-center h-12 px-7 text-sm font-semibold rounded-lg bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors">
+              Find a Professional →
+            </a>
+          </div>
         </div>
       </section>
 
