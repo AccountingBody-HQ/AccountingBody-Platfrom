@@ -9,8 +9,12 @@ import CourseProgressBar from './_components/CourseProgressBar'
 interface Props { params: { slug: string } }
 
 export async function generateStaticParams() {
-  const courses = await getCourses()
-  return courses.map(c => ({ slug: c.slug.current }))
+  try {
+    const courses = await getCourses()
+    return courses.map(c => ({ slug: c.slug.current }))
+  } catch {
+    return []
+  }
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -24,9 +28,9 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function CoursePage({ params }: Props) {
   const course = await getCourseBySlug(params.slug)
-  if (!course) notFound()
+  if (!course || !course.examBody) notFound()
 
-  const sorted = [...course.lessons].sort((a, b) => a.lessonNumber - b.lessonNumber)
+  const sorted = [...(course.lessons ?? [])].sort((a, b) => a.lessonNumber - b.lessonNumber)
   const lc = levelColour(course.level)
   const accentBg = examBodyColour(course.examBody)
   const totalQuizQuestions = sorted.reduce((sum, l) => sum + (l.quizQuestions?.length ?? 0), 0)

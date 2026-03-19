@@ -69,18 +69,18 @@ async function getArticlesByLetter(letter: string): Promise<SanityArticle[]> {
 const PLACEHOLDER: Record<string, SanityArticle[]> = {
   A: [
     { _id:'a1', title:'Accruals Concept',        slug:{current:'accruals-concept'},        excerpt:'The accruals concept requires revenues and expenses to be recorded when earned or incurred, not when cash changes hands.',           category:'Financial Reporting', examBody:'ACCA',  readTime:6 },
-    { _id:'a2', title:'Amortisation',             slug:{current:'amortisation'},             excerpt:'The systematic write-off of an intangible asset's cost over its useful economic life.',                                           category:'Financial Reporting', examBody:'ACCA',  readTime:5 },
+    { _id:'a2', title:'Amortisation',             slug:{current:'amortisation'},             excerpt:'The systematic write-off of an intangible asset cost over its useful economic life.',                                           category:'Financial Reporting', examBody:'ACCA',  readTime:5 },
     { _id:'a3', title:'Audit Trail',              slug:{current:'audit-trail'},              excerpt:'A chronological record providing documentary evidence for every accounting entry.',                                                  category:'Auditing',           examBody:'ICAEW', readTime:4 },
     { _id:'a4', title:'Accounts Payable',         slug:{current:'accounts-payable'},         excerpt:'Amounts owed by a business to its suppliers for goods or services received but not yet paid for.',                                 category:'Bookkeeping',        examBody:'AAT',   readTime:4 },
     { _id:'a5', title:'Accounts Receivable',      slug:{current:'accounts-receivable'},      excerpt:'Money owed to a business by customers for goods delivered on credit that have not yet been paid.',                                 category:'Bookkeeping',        examBody:'AAT',   readTime:4 },
   ],
   D: [
     { _id:'d1', title:'Deferred Tax',             slug:{current:'deferred-tax'},             excerpt:'A tax liability or asset created by temporary differences between accounting profit and taxable profit.',                            category:'Taxation',           examBody:'ACCA',  readTime:8 },
-    { _id:'d2', title:'Depreciation',             slug:{current:'depreciation'},             excerpt:'The systematic allocation of a tangible fixed asset's cost over its expected useful economic life.',                               category:'Financial Reporting', examBody:'ACCA',  readTime:6 },
+    { _id:'d2', title:'Depreciation',             slug:{current:'depreciation'},             excerpt:'The systematic allocation of a tangible fixed asset cost over its expected useful economic life.',                               category:'Financial Reporting', examBody:'ACCA',  readTime:6 },
     { _id:'d3', title:'Double Entry Bookkeeping', slug:{current:'double-entry-bookkeeping'}, excerpt:'Every transaction has two equal and opposite effects — one debit and one credit.',                                                 category:'Bookkeeping',        examBody:'AAT',   readTime:7 },
   ],
   I: [
-    { _id:'i1', title:'Impairment',               slug:{current:'impairment'},               excerpt:'Impairment occurs when an asset's carrying amount exceeds its recoverable amount, requiring a write-down.',                         category:'Financial Reporting', examBody:'ACCA',  readTime:7 },
+    { _id:'i1', title:'Impairment',               slug:{current:'impairment'},               excerpt:"Impairment occurs when an asset's carrying amount exceeds its recoverable amount, requiring a write-down.',                         category:'Financial Reporting', examBody:'ACCA',  ",readTime:7 },
     { _id:'i2', title:'Internal Controls',        slug:{current:'internal-controls'},        excerpt:'Processes implemented by management to safeguard assets, ensure accurate reporting, and promote operational efficiency.',           category:'Auditing',           examBody:'ICAEW', readTime:6 },
   ],
 }

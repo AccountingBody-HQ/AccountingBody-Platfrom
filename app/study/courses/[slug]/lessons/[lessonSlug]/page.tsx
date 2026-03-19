@@ -19,13 +19,17 @@ function extractVideoEmbed(url?: string): string | null {
 }
 
 export async function generateStaticParams() {
-  const courses = await getCourses()
-  return courses.flatMap(c =>
-    c.lessons.map(l => ({
-      slug: c.slug.current,
-      lessonSlug: l.slug.current,
-    }))
-  )
+  try {
+    const courses = await getCourses()
+    return courses.flatMap(c =>
+      (c.lessons ?? []).map(l => ({
+        slug: c.slug.current,
+        lessonSlug: l.slug?.current ?? '',
+      })).filter(p => p.lessonSlug !== '')
+    )
+  } catch {
+    return []
+  }
 }
 
 export async function generateMetadata({ params }: Props) {
