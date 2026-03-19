@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-export default function FirmProfilePage({ params }: { params: { slug: string } }) {
+export default function FirmProfilePage() {
   return (
     <main className="min-h-screen bg-[#faf9f7] py-20 px-6">
       <div className="max-w-3xl mx-auto text-center">
