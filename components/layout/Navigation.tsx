@@ -156,7 +156,16 @@ const navSections: NavSection[] = [
       description: 'Reach qualified accounting professionals',
     },
   },
-
+    {
+    id:    'about',
+    label: 'About',
+    href:  '/about',
+  },
+  {
+    id:    'contact',
+    label: 'Contact',
+    href:  '/contact',
+  },
   {
     id:    'firms',
     label: 'Firms & Freelancers',

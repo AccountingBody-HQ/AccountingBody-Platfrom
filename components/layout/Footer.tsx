@@ -133,9 +133,10 @@ const socialLinks = [
 ]
 
 const legalLinks = [
-  { label: 'Privacy Policy',    href: '/privacy' },
+  { label: 'Privacy Policy',    href: '/privacy-policy' },
   { label: 'Terms of Service',  href: '/terms' },
-  { label: 'Cookie Policy',     href: '/cookies' },
+  { label: 'Cookie Policy',     href: '/cookie-policy' },
+  { label: 'Disclaimer',        href: '/disclaimer' },
   { label: 'Accessibility',     href: '/accessibility' },
   { label: 'Sitemap',           href: '/sitemap' },
 ]
@@ -220,7 +221,7 @@ function EmailSignup() {
           )}
           <p className="text-xs text-white/35">
             By subscribing you agree to our{' '}
-            <Link href="/privacy" className="underline hover:text-white/60">Privacy Policy</Link>.
+            <Link href="/privacy-policy" className="underline hover:text-white/60">Privacy Policy</Link>.
           </p>
         </form>
       )}
