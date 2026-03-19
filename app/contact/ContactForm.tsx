@@ -42,9 +42,10 @@ export default function ContactForm() {
       if (!res.ok) throw new Error(json.error ?? 'Something went wrong')
       setFormState('success')
       form.reset()
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.'
       setFormState('error')
-      setErrorMsg(err.message ?? 'Something went wrong. Please try again.')
+      setErrorMsg(message)
     }
   }
 
