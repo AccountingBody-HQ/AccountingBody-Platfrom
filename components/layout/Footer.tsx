@@ -52,6 +52,7 @@ const footerColumns: FooterColumn[] = [
     title: 'Resources',
     links: [
       { label: 'Accounting Glossary',       href: '/glossary' },
+      { label: 'Accounting Dictionary',      href: '/dictionary' },
       { label: 'Ask a Question',            href: '/ask' },
       { label: 'Community Forums',          href: '/forums' },
       { label: 'Exam Tips',                 href: '/exam-tips' },
