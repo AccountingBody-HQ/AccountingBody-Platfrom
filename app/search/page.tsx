@@ -1,7 +1,7 @@
 // app/search/page.tsx
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 
@@ -183,7 +183,9 @@ function SkeletonCard() {
   )
 }
 
-export default function SearchPage() {
+// ── This is the inner component that uses useSearchParams ─────────────────────
+// It must be wrapped in <Suspense> — Next.js 14 requirement
+function SearchInner() {
   const router       = useRouter()
   const searchParams = useSearchParams()
 
@@ -225,7 +227,7 @@ export default function SearchPage() {
 
   return (
     <>
-      {/* ── HERO ─────────────────────────────────────────────────────── */}
+      {/* ── HERO ───────────────────────────────────────────────────── */}
       <section className="bg-navy-950 pt-16 pb-14 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div
@@ -296,7 +298,7 @@ export default function SearchPage() {
         </div>
       </section>
 
-      {/* ── RESULTS ──────────────────────────────────────────────────── */}
+      {/* ── RESULTS ──────────────────────────────────────────────── */}
       <section className="section bg-slate-50 min-h-[55vh]">
         <div className="container-site">
 
@@ -396,5 +398,24 @@ export default function SearchPage() {
         </div>
       </section>
     </>
+  )
+}
+
+// ── PAGE — wraps SearchInner in Suspense as required by Next.js 14 ────────────
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="bg-navy-950 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <svg className="w-8 h-8 text-gold-400 animate-spin mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <p className="text-white/60 text-sm">Loading search…</p>
+        </div>
+      </div>
+    }>
+      <SearchInner />
+    </Suspense>
   )
 }
