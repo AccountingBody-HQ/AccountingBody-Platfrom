@@ -1,6 +1,5 @@
 // components/CookieConsent.tsx
-// UK GDPR compliant cookie consent banner.
-// GTM only loads AFTER the user clicks "Accept cookies".
+// UK GDPR compliant cookie consent — centred modal style
 
 'use client'
 
@@ -21,29 +20,17 @@ function loadGTM(gtmId: string) {
   script.async = true
   script.src = `https://www.googletagmanager.com/gtm.js?id=${gtmId}`
   document.head.appendChild(script)
-  const noscript = document.createElement('noscript')
-  const iframe = document.createElement('iframe')
-  iframe.src = `https://www.googletagmanager.com/ns.html?id=${gtmId}`
-  iframe.height = '0'
-  iframe.width = '0'
-  iframe.style.cssText = 'display:none;visibility:hidden'
-  noscript.appendChild(iframe)
-  document.body.insertBefore(noscript, document.body.firstChild)
 }
 
 export default function CookieConsent({ gtmId }: { gtmId: string }) {
-  const [visible, setVisible]   = useState(false)
-  const [resolved, setResolved] = useState(false)
+  const [visible, setVisible] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem(CONSENT_KEY) as ConsentValue | null
     if (stored === 'accepted') {
       loadGTM(gtmId)
-      setResolved(true)
-    } else if (stored === 'declined') {
-      setResolved(true)
-    } else {
-      const timer = setTimeout(() => setVisible(true), 1500)
+    } else if (!stored) {
+      const timer = setTimeout(() => setVisible(true), 1000)
       return () => clearTimeout(timer)
     }
   }, [gtmId])
@@ -51,69 +38,83 @@ export default function CookieConsent({ gtmId }: { gtmId: string }) {
   function handleAccept() {
     localStorage.setItem(CONSENT_KEY, 'accepted')
     setVisible(false)
-    setResolved(true)
     loadGTM(gtmId)
   }
 
   function handleDecline() {
     localStorage.setItem(CONSENT_KEY, 'declined')
     setVisible(false)
-    setResolved(true)
   }
 
-  if (resolved || !visible) return null
+  if (!visible) return null
 
   return (
     <>
-      <div className="fixed inset-0 bg-navy-950/20 z-40 pointer-events-none" />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Cookie consent"
-        className="fixed bottom-0 left-0 right-0 z-50 bg-navy-950 border-t border-white/10 shadow-2xl"
-      >
-        <div className="container-site py-5">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+      {/* ── Backdrop ── */}
+      <div className="fixed inset-0 z-50 bg-navy-950/60 backdrop-blur-sm" />
 
-            <div className="w-10 h-10 rounded-xl bg-gold-500/15 flex items-center justify-center shrink-0">
-              <svg className="w-5 h-5 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeWidth="2"
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                />
-              </svg>
+      {/* ── Modal ── */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+
+          {/* Gold top bar */}
+          <div className="h-1 w-full bg-gold-500" />
+
+          <div className="p-8">
+            {/* Icon + Title */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-navy-50 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-navy-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="2"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                  />
+                </svg>
+              </div>
+              <h2 className="font-display text-lg text-navy-950">
+                Your privacy matters
+              </h2>
             </div>
 
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-white/80 leading-relaxed">
-                <span className="font-semibold text-white">We use cookies</span> to analyse site
-                traffic and improve your experience. Under UK GDPR we need your consent before
-                loading analytics. We never sell your data.{' '}
-                <Link href="/cookie-policy" className="text-gold-400 hover:text-gold-300 underline underline-offset-2 transition-colors">
-                  Cookie policy
-                </Link>
-                {' · '}
-                <Link href="/privacy-policy" className="text-gold-400 hover:text-gold-300 underline underline-offset-2 transition-colors">
-                  Privacy policy
-                </Link>
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3 shrink-0">
-              <button
-                onClick={handleDecline}
-                className="h-10 px-5 rounded-lg text-sm font-medium text-white/60 border border-white/20 hover:border-white/40 hover:text-white/90 transition-all"
+            {/* Body text */}
+            <p className="text-sm text-slate-500 leading-relaxed mb-2">
+              We use cookies to understand how you use AccountingBody and to improve
+              your experience. We never sell your data.
+            </p>
+            <p className="text-sm text-slate-500 leading-relaxed mb-6">
+              Under UK GDPR, we need your consent before loading any analytics.{' '}
+              <Link
+                href="/cookie-policy"
+                className="text-navy-700 hover:text-gold-600 underline underline-offset-2 transition-colors"
               >
-                Decline
-              </button>
+                Read our cookie policy
+              </Link>
+            </p>
+
+            {/* Buttons */}
+            <div className="flex flex-col gap-3">
               <button
                 onClick={handleAccept}
-                className="h-10 px-5 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors"
+                className="w-full h-12 rounded-xl text-sm font-semibold bg-navy-950 text-white hover:bg-navy-800 transition-colors"
               >
                 Accept cookies
               </button>
+              <button
+                onClick={handleDecline}
+                className="w-full h-12 rounded-xl text-sm font-medium text-slate-600 border border-slate-200 hover:border-slate-400 hover:text-slate-800 transition-all"
+              >
+                Decline non-essential cookies
+              </button>
             </div>
 
+            {/* Fine print */}
+            <p className="text-xs text-slate-400 text-center mt-4 leading-relaxed">
+              You can change your preference at any time in our{' '}
+              <Link href="/privacy-policy" className="underline hover:text-slate-600 transition-colors">
+                privacy policy
+              </Link>
+            </p>
           </div>
+
         </div>
       </div>
     </>
