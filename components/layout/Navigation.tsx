@@ -434,7 +434,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
             Log in
           </Link>
           <Link
-            href="/signup"
+            href="/sign-up"
             onClick={onClose}
             className="flex items-center justify-center h-10 px-4 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors"
           >
@@ -588,7 +588,7 @@ export function Navigation() {
               Log in
             </Link>
             <Link
-              href="/signup"
+              href="/sign-up"
               className="px-4 h-9 flex items-center text-sm font-semibold bg-navy-950 text-white rounded-lg hover:bg-navy-900 transition-colors shadow-sm hover:shadow-md"
             >
               Start free
