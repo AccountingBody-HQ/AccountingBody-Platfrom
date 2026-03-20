@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!
-)
-
 export async function POST(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!
+  )
 
   try {
     const { email } = await req.json()
@@ -37,18 +36,11 @@ export async function POST(req: NextRequest) {
               <h1 style="color:#fff;font-size:24px;margin:0;line-height:1.3;">You are subscribed.</h1>
             </div>
             <div style="padding:32px 40px;">
-              <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">
-                Thank you for subscribing. You will receive weekly study tips, new question
-                releases, and exam technique guides — written by qualified accountants.
-              </p>
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 28px;">No spam. Unsubscribe any time.</p>
               <a href="https://accountingbody.com/study"
                 style="display:inline-block;background:#D4A017;color:#0a0f2e;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;">
                 Start studying free →
               </a>
-            </div>
-            <div style="padding:20px 40px;border-top:1px solid #e2e8f0;">
-              <p style="color:#94a3b8;font-size:12px;margin:0;">© AccountingBody · Trusted by 250,000+ students worldwide</p>
             </div>
           </div>
         </body>
