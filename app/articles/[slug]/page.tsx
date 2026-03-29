@@ -6,8 +6,9 @@ import PortableTextRenderer from '@/components/PortableTextRenderer'
 
 export const revalidate = 0
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const article = await getArticleBySlug(params.slug)
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const article = await getArticleBySlug(slug)
   if (!article) return {}
   const canonicalUrl = resolveCanonicalUrl(article)
   return {
@@ -40,8 +41,9 @@ const EXAM_BODY_BADGE: Record<string, string> = {
   CTA:   'bg-amber-50 text-amber-800 border-amber-200',
 }
 
-export default async function ArticlePage({ params }: { params: { slug: string } }) {
-  const article = await getArticleBySlug(params.slug)
+export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const article = await getArticleBySlug(slug)
   if (!article) notFound()
 
   const accentBar  = EXAM_BODY_ACCENT[article.examBody ?? ''] ?? 'bg-navy-950'

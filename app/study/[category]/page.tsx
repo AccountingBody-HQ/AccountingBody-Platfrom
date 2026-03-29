@@ -37,13 +37,14 @@ export async function generateStaticParams() {
   return slugs.map(category => ({ category }))
 }
 
-export async function generateMetadata({ params }: { params: { category: string } }): Promise<Metadata> {
-  const meta = getCategoryDisplay(params.category)
+export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
+  const { category } = await params
+  const meta = getCategoryDisplay(category)
   return { title: `${meta.name} Study Notes | AccountingBody`, description: meta.description }
 }
 
-export default async function CategoryPage({ params }: { params: { category: string } }) {
-  const { category } = params
+export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
+  const { category } = await params
   const meta         = getCategoryDisplay(category)
   const articles     = await getArticlesByCategory(category)
   const groups       = groupAlphabetically(articles)

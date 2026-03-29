@@ -11,8 +11,9 @@ export async function generateStaticParams() {
   return paths.map(({ category, slug }) => ({ category, slug }))
 }
 
-export async function generateMetadata({ params }: { params: { category: string; slug: string } }): Promise<Metadata> {
-  const article = await getArticleBySlug(params.slug)
+export async function generateMetadata({ params }: { params: Promise<{ category: string; slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const article = await getArticleBySlug(slug)
   if (!article) return {}
   const canonicalUrl = resolveCanonicalUrl(article)
   return {
@@ -123,8 +124,9 @@ function QuestionButtons({ article }: { article: ArticleFull }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default async function ArticlePage({ params }: { params: { category: string; slug: string } }) {
-  const article = await getArticleBySlug(params.slug)
+export default async function ArticlePage({ params }: { params: Promise<{ category: string; slug: string }> }) {
+  const { category, slug } = await params
+  const article = await getArticleBySlug(slug)
   if (!article) notFound()
 
   const accentBar  = EXAM_BODY_ACCENT[article.examBody ?? ''] ?? 'bg-navy-950'
@@ -164,8 +166,8 @@ export default async function ArticlePage({ params }: { params: { category: stri
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
             </svg>
-            <Link href={`/study/${params.category}`} className="hover:text-white/70 transition-colors">
-              {params.category.toUpperCase()}
+            <Link href={`/study/${category}`} className="hover:text-white/70 transition-colors">
+              {category.toUpperCase()}
             </Link>
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
@@ -337,13 +339,13 @@ export default async function ArticlePage({ params }: { params: { category: stri
 
               {/* Back link */}
               <Link
-                href={`/study/${params.category}`}
+                href={`/study/${category}`}
                 className="flex items-center gap-2 text-sm text-navy-700 hover:text-gold-600 transition-colors font-medium"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
                 </svg>
-                All {params.category.toUpperCase()} notes
+                All {category.toUpperCase()} notes
               </Link>
 
             </aside>
@@ -361,7 +363,7 @@ export default async function ArticlePage({ params }: { params: { category: stri
                 <h2 className="section-title">Related articles</h2>
               </div>
               <Link
-                href={`/study/${params.category}`}
+                href={`/study/${category}`}
                 className="shrink-0 flex items-center gap-1.5 text-sm font-semibold text-navy-700 hover:text-gold-500 transition-colors whitespace-nowrap"
               >
                 View all

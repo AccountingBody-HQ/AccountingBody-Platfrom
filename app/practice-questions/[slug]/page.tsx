@@ -10,8 +10,9 @@ export async function generateStaticParams() {
   return slugs.map(slug => ({ slug }))
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const post = await getPracticePostBySlug(params.slug)
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const post = await getPracticePostBySlug(slug)
   if (!post) return {}
   return {
     title:       `${post.title} | AccountingBody Practice Questions`,
@@ -38,8 +39,9 @@ const DIFFICULTY_BADGE: Record<string, string> = {
   Advanced:     'bg-red-50 text-red-700 border-red-200',
 }
 
-export default async function PracticePostPage({ params }: { params: { slug: string } }) {
-  const post = await getPracticePostBySlug(params.slug)
+export default async function PracticePostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const post = await getPracticePostBySlug(slug)
   if (!post) notFound()
 
   const accentBar  = EXAM_BODY_ACCENT[post.examBody ?? ''] ?? 'bg-navy-950'
