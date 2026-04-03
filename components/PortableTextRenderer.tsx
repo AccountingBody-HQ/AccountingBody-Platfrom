@@ -76,6 +76,39 @@ const components: PortableTextComponents = {
         </pre>
       </div>
     ),
+    tableBlock: ({ value }: { value?: { headers?: string[]; rows?: { cells?: string[] }[] } }) => {
+      const headers = value?.headers ?? []
+      const rows = value?.rows ?? []
+      if (!headers.length && !rows.length) return null
+      return (
+        <div className="my-8 overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+          <table className="w-full text-sm text-left border-collapse">
+            {headers.length > 0 && (
+              <thead className="bg-navy-950 text-white">
+                <tr>
+                  {headers.map((h: string, i: number) => (
+                    <th key={i} className="px-4 py-3 font-semibold text-sm border-r border-white/10 last:border-r-0">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+            )}
+            <tbody>
+              {rows.map((row: { cells?: string[] }, ri: number) => (
+                <tr key={ri} className={ri % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                  {(row.cells ?? []).map((cell: string, ci: number) => (
+                    <td key={ci} className="px-4 py-3 text-slate-700 border-r border-slate-200 last:border-r-0 border-t border-slate-100">
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    },
     callout: ({ value }) => (
       <div className="my-6 p-5 rounded-xl bg-navy-50 border border-navy-200">
         {value.title && <p className="font-semibold text-navy-950 text-sm mb-1">{value.title}</p>}
