@@ -160,10 +160,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
 
               <PortableTextRenderer value={(() => {
-                    const blocks = (article.body || []) as any[]
+                    const blocks = (article.body || []) as {_type: string; children?: {text?: string}[]}[]
                     const first = blocks[0]
                     if (first?._type === 'block' && first?.children) {
-                      const firstText = first.children.map((c: any) => c.text || '').join('').trim()
+                      const firstText = first.children.map((c: {text?: string}) => c.text || '').join('').trim()
                       if (article.excerpt && firstText && article.excerpt.startsWith(firstText.substring(0, 80))) {
                         return blocks.slice(1)
                       }
