@@ -59,7 +59,7 @@ def parse_inline(tag):
             if t.strip(): children.append({"_type":"span","_key":uid(),"text":t,"marks":[]})
         elif isinstance(node, Tag):
             if node.name == "br":
-                children.append({"_type":"span","_key":uid(),"text":" ","marks":[]})
+                children.append({"_type":"span","_key":uid(),"text":"\n","marks":[]})
                 continue
             if node.name in ("ul","ol"): continue
             t = node.get_text().replace(chr(10)," ")
@@ -91,6 +91,9 @@ def process_list(el, list_type, level, blocks):
                 if t: li_children.append({"_type":"span","_key":uid(),"text":t,"marks":[]})
             elif isinstance(node, Tag):
                 if node.name in ("ul","ol"): continue
+                if node.name == "br":
+                    li_children.append({"_type":"span","_key":uid(),"text":"\n","marks":[]})
+                    continue
                 t = node.get_text().strip()
                 if not t: continue
                 if node.name in ("strong","b"): li_children.append({"_type":"span","_key":uid(),"text":t,"marks":["strong"]})
@@ -106,7 +109,19 @@ def process_list(el, list_type, level, blocks):
                 else:
                     li_children.append({"_type":"span","_key":uid(),"text":t,"marks":[]})
         if li_children:
-            blocks.append({"_type":"block","_key":uid(),"style":"normal","listItem":list_type,"level":level,"markDefs":li_mark_defs,"children":li_children})
+            # Split on newline spans — br tags create separate blocks
+            current_children = []
+            current_markdefs = []
+            for span in li_children:
+                if span.get("text") == "\n":
+                    if current_children:
+                        blocks.append({"_type":"block","_key":uid(),"style":"normal","listItem":list_type,"level":level,"markDefs":current_markdefs,"children":current_children})
+                    current_children = []
+                    current_markdefs = []
+                else:
+                    current_children.append(span)
+            if current_children:
+                blocks.append({"_type":"block","_key":uid(),"style":"normal","listItem":list_type,"level":level,"markDefs":li_mark_defs,"children":current_children})
         for child in li.find_all(["ul","ol"], recursive=False):
             process_list(child, "bullet" if child.name=="ul" else "number", level+1, blocks)
 
