@@ -171,6 +171,21 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                     return blocks
                   })()} />
 
+              {article.mcqUrl && (
+                <div className="mt-10 p-6 bg-blue-50 border border-blue-200 rounded-2xl">
+                  <p className="font-display font-semibold text-navy-950 mb-1">Test your knowledge</p>
+                  <p className="text-slate-600 text-sm mb-4">Practice questions for this topic.</p>
+                  
+                    href={article.mcqUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors"
+                  >
+                    Multiple Choice Questions →
+                  </a>
+                </div>
+              )}
+
               {formattedReviewed && (
                 <div className="mt-10 flex items-center gap-2 text-sm text-slate-400 pt-6 border-t border-slate-100">
                   <svg className="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
