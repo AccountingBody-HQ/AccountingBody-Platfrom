@@ -66,10 +66,31 @@ export async function getPracticePosts(params: {
 export async function getPracticePostBySlug(slug: string): Promise<PracticePost | null> {
   const query = `*[_type == "practicePost" && slug.current == $slug][0] {
     ${SUMMARY_FIELDS},
-    quizJson,
+    "questionCount": count(quizQuestions),
+    "quizQuestions": quizQuestions[] {
+      id, type, questionText, options, correctIndex, explanation, primaryTopic, difficulty, timeTargetMinutes
+    },
     body
   }`
-  return sanityFetch<PracticePost>(query, { slug })
+  const post = await sanityFetch<any>(query, { slug })
+  if (!post) return null
+
+  // Transform quizQuestions array into quizJson string that QuizRenderer expects
+  if (post.quizQuestions?.length) {
+    const questions = post.quizQuestions.map((q: any) => ({
+      id:           q.id,
+      type:         q.type ?? 'multiple-choice',
+      question:     q.questionText,
+      options:      (q.options ?? []).map((o: string) => ({ label: o, value: o })),
+      correctIndex: q.correctIndex,
+      explanation:  q.explanation,
+      meta:         { primaryTopic: q.primaryTopic },
+    }))
+    post.quizJson = JSON.stringify({ questions })
+    post.questionCount = questions.length
+  }
+
+  return post as PracticePost
 }
 
 export async function getAllPracticePostSlugs(): Promise<string[]> {
