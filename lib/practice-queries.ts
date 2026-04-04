@@ -79,16 +79,21 @@ export async function getPracticePostBySlug(slug: string): Promise<PracticePost 
   // Transform quizQuestions array into quizJson string that QuizRenderer expects
   if (post.quizQuestions?.length) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const questions = post.quizQuestions.map((q: any) => ({
-      id:           q.id,
-      type:         q.type ?? 'multiple-choice',
-      question:     q.questionText,
+    const questions = post.quizQuestions.map((q: any) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      options:      (q.options ?? []).map((o: any) => ({ label: o, value: o })),
-      correctIndex: q.correctIndex,
-      explanation:  q.explanation,
-      meta:         { primaryTopic: q.primaryTopic },
-    }))
+      const options = (q.options ?? []).map((o: any) => ({ label: o, value: o }))
+      // Resolve correct label from original index BEFORE shuffling happens in QuizRenderer
+      const correctLabel = options[q.correctIndex]?.label ?? null
+      return {
+        id:          q.id,
+        type:        q.type ?? 'multiple-choice',
+        question:    q.questionText,
+        options,
+        correct:     correctLabel,
+        explanation: q.explanation,
+        meta:        { primaryTopic: q.primaryTopic },
+      }
+    })
     post.quizJson = JSON.stringify({ questions })
     post.questionCount = questions.length
   }
