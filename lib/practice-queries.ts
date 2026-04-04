@@ -72,6 +72,7 @@ export async function getPracticePostBySlug(slug: string): Promise<PracticePost 
     },
     body
   }`
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const post = await sanityFetch<any>(query, { slug })
   if (!post) return null
 
