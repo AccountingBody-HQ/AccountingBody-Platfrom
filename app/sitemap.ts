@@ -60,8 +60,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   // ── 2. ARTICLES ───────────────────────────────────────────────────────────
+  // Only articles where AccountingBody is the canonical owner are submitted
+  // to Google. Articles owned by hrlake or ethiotax are excluded — each site
+  // claims only what it owns. showOnSites controls display; canonicalOwner
+  // controls SEO ownership.
   const articles = await querySanity<{ slug: string; updatedAt: string }>(`
-    *[_type == "article"] {
+    *[_type == "article" && canonicalOwner == "accountingbody" && defined(slug.current)] {
       "slug": slug.current,
       "updatedAt": _updatedAt
     }
