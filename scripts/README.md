@@ -3,7 +3,7 @@
 ## Before running any script
 No setup needed — token loads automatically on terminal start.
 
-## The Six Scripts
+## The Seven Scripts
 
 ### 1 — Wipe Sanity clean
 Deletes all articles and practice posts from Sanity and clears the migration logs.
@@ -44,15 +44,23 @@ Run this after the full migration.
 
     python3 /workspaces/AccountingBody-Platfrom/scripts/link_author.py
 
+### 7 — Link MCQ URLs
+Updates article mcqUrl fields from old WordPress URLs to new
+/practice-questions/[slug] paths.
+Run this after both article and quiz migrations are complete.
+
+    python3 /workspaces/AccountingBody-Platfrom/scripts/link_mcq.py
+
 ## Correct order for a full migration run
-1. Run wipe_sanity.py
-2. Change posts[:10] to posts in migrate_wp_to_sanity.py
-3. Run migrate_wp_to_sanity.py — approximately 11 minutes for 2,015 articles
-4. Change quiz_posts[:5] to quiz_posts in migrate_quiz_posts.py
-5. Run migrate_quiz_posts.py — approximately 1 minute for 181 posts
-6. Run audit_sanity.py
-7. Run audit_per_article.py
-8. Run link_author.py
-9. Reset migrate_wp_to_sanity.py back to posts[:10]
-10. Reset migrate_quiz_posts.py back to quiz_posts[:5]
-11. Commit everything to GitHub
+1.  Run wipe_sanity.py
+2.  Change posts[:10] to posts in migrate_wp_to_sanity.py
+3.  Run migrate_wp_to_sanity.py — approximately 11 minutes for 2,015 articles
+4.  Change quiz_posts[:5] to quiz_posts in migrate_quiz_posts.py
+5.  Run migrate_quiz_posts.py — approximately 1 minute for 181 posts
+6.  Run audit_sanity.py
+7.  Run audit_per_article.py
+8.  Run link_author.py
+9.  Run link_mcq.py
+10. Reset migrate_wp_to_sanity.py back to posts[:10]
+11. Reset migrate_quiz_posts.py back to quiz_posts[:5]
+12. Commit everything to GitHub
