@@ -1,4 +1,5 @@
 import Link from 'next/link'
+export const dynamic = 'force-dynamic'
 import type { Metadata } from 'next'
 import { getPracticePosts, getPracticeFilters } from '@/lib/practice-queries'
 
