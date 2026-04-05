@@ -23,7 +23,7 @@ export default defineType({
     defineField({ name: 'seoDescription', title: 'SEO Description', type: 'text', rows: 2, group: 'seo', validation: (Rule) => Rule.max(160) }),
     defineField({ name: 'canonicalOwner', title: 'Canonical Owner', type: 'string', group: 'multisite', options: { list: [{ title: 'AccountingBody', value: 'accountingbody' }, { title: 'HRLake', value: 'hrlake' }, { title: 'EthioTax', value: 'ethiotax' }], layout: 'radio' }, validation: (Rule) => Rule.required() }),
     defineField({ name: 'showOnSites', title: 'Show On Sites', type: 'array', group: 'multisite', of: [{ type: 'string' }], options: { list: [{ title: 'AccountingBody', value: 'accountingbody' }, { title: 'HRLake', value: 'hrlake' }, { title: 'EthioTax', value: 'ethiotax' }], layout: 'grid' } }),
-    defineField({ name: 'mcqUrl', title: 'MCQ Practice URL', type: 'url', group: 'links' }),
+    defineField({ name: 'mcqUrl', title: 'MCQ Practice URL', type: 'string', group: 'links', description: 'Relative path e.g. /practice-questions/some-slug' }),
     defineField({ name: 'learningUrl', title: 'Learning URL', type: 'url', group: 'links' }),
     defineField({ name: 'shortQuestionsUrl', title: 'Short Questions URL', type: 'url', group: 'links' }),
     defineField({ name: 'scenarioUrl', title: 'Scenario URL', type: 'url', group: 'links' }),
