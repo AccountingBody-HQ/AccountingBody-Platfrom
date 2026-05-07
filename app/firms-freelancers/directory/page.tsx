@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export default function DirectoryPage() {
   return (
-    <main className="min-h-screen bg-[#faf9f7]">
+    <main className="min-h-screen bg-surface">
             <section className="relative overflow-hidden bg-navy-950 py-16 md:py-20">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-20"
@@ -19,13 +19,13 @@ export default function DirectoryPage() {
       <section className="py-20 px-6">
         <div className="max-w-5xl mx-auto text-center py-24">
           <div className="text-6xl mb-6">🏢</div>
-          <h2 className="text-2xl font-bold text-[#0f2444] mb-3">Directory Launching Soon</h2>
-          <p className="text-gray-500 max-w-md mx-auto mb-10 leading-relaxed">
+          <h2 className="text-2xl font-bold text-navy-950 mb-3">Directory Launching Soon</h2>
+          <p className="text-slate-500 max-w-md mx-auto mb-10 leading-relaxed">
             We are building our professional directory. Be among the first to list your practice.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link href="/firms-freelancers/join" className="inline-block bg-[#0f2444] text-white font-semibold px-8 py-4 rounded-lg hover:bg-[#1a3a6b] transition-colors">List Your Practice →</Link>
-            <Link href="/get-help" className="inline-block border border-[#0f2444] text-[#0f2444] font-semibold px-8 py-4 rounded-lg hover:bg-[#0f2444] hover:text-white transition-colors">Get Matched Instead</Link>
+            <Link href="/firms-freelancers/join" className="inline-block bg-navy-950 text-white font-semibold px-8 h-11 px-6 rounded-lg flex items-center justify-center hover:bg-navy-900 transition-colors">List Your Practice →</Link>
+            <Link href="/get-help" className="inline-block border border-navy-950 text-navy-950 font-semibold px-8 h-11 px-6 rounded-lg flex items-center justify-center hover:bg-navy-950 hover:text-white transition-colors">Get Matched Instead</Link>
           </div>
         </div>
       </section>
