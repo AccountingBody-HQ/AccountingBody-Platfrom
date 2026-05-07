@@ -70,7 +70,6 @@ const qualifications = [
   { name: 'CIMA',  detail: 'Full pathway',        accent: 'border-[#0081C6] text-[#0081C6]', bg: 'bg-[#0081C6]/5' },
   { name: 'AAT',   detail: 'Levels 2–4',          accent: 'border-[#00857A] text-[#00857A]', bg: 'bg-[#00857A]/5' },
   { name: 'ICAEW', detail: 'ACA pathway',         accent: 'border-navy-600  text-navy-700',  bg: 'bg-navy-50' },
-  { name: 'CTA',   detail: 'Tax advisory',        accent: 'border-slate-400  text-slate-600', bg: 'bg-slate-50' },
 ]
 
 export default function AboutPage() {
@@ -184,9 +183,9 @@ export default function AboutPage() {
         <div className="container-site">
           <div className="max-w-2xl mb-12">
             <span className="eyebrow mb-3 block">Coverage</span>
-            <h2 className="section-title mb-4">Every major qualification, covered</h2>
+            <h2 className="section-title mb-4">ACCA, CIMA, ICAEW and AAT — fully covered</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              We cover all major UK and international professional accounting qualifications with
+              We cover the four leading UK professional accounting qualifications with
               dedicated study notes, question banks, and exam guides for each one.
             </p>
           </div>
