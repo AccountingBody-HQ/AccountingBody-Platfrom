@@ -50,7 +50,6 @@ export default function ContentFactoryPage() {
     if (!res.ok) {
       setError(data.error || "Generation failed.")
     } else {
-      setGeneratedContent(data.content)
       setEditedContent(data.content)
       const firstLine = data.content.split("\n")[0].replace(/^#+\s*/, "").trim()
       setTitle(firstLine || topic)
