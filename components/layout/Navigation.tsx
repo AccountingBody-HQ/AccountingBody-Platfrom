@@ -493,7 +493,7 @@ export function Navigation() {
     <>
       <header
         ref={navRef}
-        className={`fixed top-[var(--ticker-height,40px)] left-0 right-0 z-nav bg-white transition-shadow duration-200 ${
+        className={`fixed top-0 left-0 right-0 z-nav bg-white transition-shadow duration-200 ${
           scrolled ? 'shadow-md' : 'border-b border-slate-200'
         }`}
         style={{ height: 'var(--nav-height, 64px)' }}
