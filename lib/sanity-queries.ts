@@ -77,7 +77,7 @@ const SUMMARY_FIELDS = `
   readTime,
   publishedAt,
   lastReviewed,
-  "coverImage": coverImage { asset -> { url } },
+  "coverImage": featuredImage { asset -> { url } },
   "author": author -> { name, qualifications }
 `
 
