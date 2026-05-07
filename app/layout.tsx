@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     site: '@accountingbody',
     creator: '@accountingbody',
     title: 'AccountingBody — Everything You Need for Accounting & Finance',
-    description: 'Study notes, practice questions, and professional connections for every accounting qualification.',
+    description: 'Study notes, practice questions, and professional connections for ACCA, CIMA, ICAEW and AAT.',
     images: ['/og-default.png'],
   },
   robots: {

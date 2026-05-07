@@ -77,7 +77,7 @@ export default function GlossaryPage() {
             <p className="text-white/60 text-xl leading-relaxed mb-10">
               Over 1,200 accounting terms and concepts explained clearly — written and
               reviewed by qualified accountants. The definitive reference for students
-              and professionals studying for ACCA, CIMA, AAT, ICAEW, and more.
+              and professionals studying for ACCA, CIMA, ICAEW and AAT.
             </p>
 
             {/* Quick nav pills */}

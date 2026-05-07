@@ -10,7 +10,7 @@ import { getStudyLandingData } from '@/lib/sanity-queries'
 
 export const metadata: Metadata = {
   title: 'Study Hub | AccountingBody',
-  description: 'Your central hub for all accounting study content — notes, courses, practice questions, mock exams, and the dictionary. ACCA, CIMA, AAT, ICAEW and more.',
+  description: 'Your central hub for ACCA, CIMA, ICAEW and AAT study content — notes, courses, practice questions, mock exams, and the dictionary.',
 }
 
 // ── Static card data ───────────────────────────────────────────────────────────
@@ -36,7 +36,7 @@ const SUBJECT_CARDS: CategoryCard[] = [
 const RESOURCE_CARDS: CategoryCard[] = [
   {
     id: 'free-courses', title: 'Free Courses', href: '/study/courses',
-    description: 'Structured video and text courses for every major qualification.',
+    description: 'Structured video and text courses for ACCA, CIMA, ICAEW and AAT.',
     iconName: 'graduation-cap', iconBg: 'bg-navy-950', iconColor: 'text-white',
     accentClass: 'bg-navy-950', pinned: true, badge: 'Free',
   },
@@ -60,7 +60,7 @@ const RESOURCE_CARDS: CategoryCard[] = [
   },
   {
     id: 'glossary', title: 'Full Glossary', href: '/glossary',
-    description: 'Browse every term A–Z across all qualifications and subject areas.',
+    description: 'Browse every term A–Z across ACCA, CIMA, ICAEW and AAT.',
     iconName: 'file-text', iconBg: 'bg-slate-700', iconColor: 'text-white',
     accentClass: 'bg-slate-600',
   },
@@ -179,7 +179,7 @@ export default async function StudyHubPage() {
           <div className="mt-6 text-center">
             <Link href="/study"
               className="inline-flex items-center gap-2 h-10 px-5 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors shadow-sm">
-              Browse all qualifications
+              Browse all four qualifications
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
             </Link>
           </div>
@@ -193,7 +193,7 @@ export default async function StudyHubPage() {
             <span className="eyebrow mb-3 block">Browse by Subject</span>
             <h2 className="section-title mb-4">Or find notes by topic</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              Study any subject across all qualifications — from taxation to financial reporting.
+              Study any subject across ACCA, CIMA, ICAEW and AAT — from taxation to financial reporting.
             </p>
           </div>
           <CardGrid categories={SUBJECT_CARDS} columns={4} variant="compact" />

@@ -7,7 +7,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Mock Exams | AccountingBody',
-  description: 'Full timed mock exams for ACCA, CIMA, AAT, ICAEW and more. Instant marking, performance reports, and exam-standard questions.',
+  description: 'Full timed mock exams for ACCA, CIMA, ICAEW and AAT. Instant marking, performance reports, and exam-standard questions.',
 }
 
 const EXAM_BODIES = [
@@ -89,7 +89,7 @@ export default function MockExamsPage() {
               </span>
             </h1>
             <p className="text-white/65 text-xl leading-relaxed mb-10 max-w-2xl">
-              Full timed mock exams for every major accounting qualification.
+              Full timed mock exams for ACCA, CIMA, ICAEW and AAT.
               Instant marking, topic-level performance reports, and exam-standard questions.
             </p>
             <div className="flex flex-wrap items-center gap-4">
@@ -131,7 +131,7 @@ export default function MockExamsPage() {
             <span className="eyebrow mb-3 block">Choose Your Qualification</span>
             <h2 className="section-title mb-4">Select your exam to begin</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              Mock exams are available for all major qualifications. Each one mirrors the real exam format exactly.
+              Mock exams for ACCA, CIMA, ICAEW and AAT. Each one mirrors the real exam format exactly.
             </p>
           </div>
 

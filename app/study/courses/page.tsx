@@ -123,7 +123,7 @@ export default async function CoursesPage() {
           <div className="max-w-2xl">
             <span className="eyebrow text-gold-400 mb-4 block">Free Courses</span>
             <h1 className="font-display text-white mb-4 leading-tight" style={{ letterSpacing: '-0.025em' }}>
-              Structured courses for every qualification
+              Structured courses for ACCA, CIMA, ICAEW and AAT
             </h1>
             <p className="text-white/65 text-lg leading-relaxed">
               Video lessons, linked study notes, and practice quizzes — all mapped

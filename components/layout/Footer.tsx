@@ -277,7 +277,7 @@ export function Footer() {
 
             <p className="text-sm text-white/55 leading-relaxed max-w-xs">
               Everything you need for accounting and finance in one place. Study notes,
-              practice questions, and professional connections for every qualification.
+              practice questions, and professional connections for ACCA, CIMA, ICAEW and AAT.
             </p>
 
             {/* Email signup */}
