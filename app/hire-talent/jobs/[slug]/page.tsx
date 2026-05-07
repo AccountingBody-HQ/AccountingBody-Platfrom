@@ -155,7 +155,7 @@ export default async function JobPage({ params }: { params: Promise<{ slug: stri
                   <p className="text-white/55 text-xs leading-relaxed mb-4">
                     Contact the employer directly to apply.
                   </p>
-                  
+                  <a
                     href={`mailto:${job.contact_email}?subject=Application for ${encodeURIComponent(job.job_title)}`}
                     className="flex items-center justify-center gap-2 w-full h-10 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors"
                   >
