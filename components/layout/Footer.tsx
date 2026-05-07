@@ -267,7 +267,7 @@ export function Footer() {
           <div className="lg:col-span-2 space-y-6">
             {/* Logo */}
             <Link href="/" className="inline-flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 rounded">
-              <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                   <rect x="0" y="0" width="9" height="20" rx="2" fill="#1e3a7a"/>
                   <rect x="11" y="0" width="9" height="9" rx="2" fill="#1e3a7a"/>
