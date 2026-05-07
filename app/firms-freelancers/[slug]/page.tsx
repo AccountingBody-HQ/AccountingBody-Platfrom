@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!firm) return {}
   return {
     title: firm.practice_name + ' | AccountingBody Directory',
-    description: firm.about ? firm.about.slice(0, 160) : firm.practice_name + ' - ' + firm.practice_type + ' based in ' + firm.location,
+    description: firm.about ? firm.about.slice(0, 160) : firm.practice_name + ' based in ' + firm.location,
   }
 }
 
@@ -83,15 +83,13 @@ export default async function FirmProfilePage({ params }: { params: Promise<{ sl
               <h1 className="font-display text-white text-3xl md:text-4xl leading-tight mb-3" style={{ letterSpacing: '-0.02em' }}>
                 {firm.practice_name}
               </h1>
-              <div className="flex flex-wrap items-center gap-4 text-sm text-white/50">
-                <span className="flex items-center gap-1.5">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  {firm.location}
-                </span>
-              </div>
+              <span className="flex items-center gap-1.5 text-sm text-white/50">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {firm.location}
+              </span>
             </div>
           </div>
         </div>
@@ -125,10 +123,8 @@ export default async function FirmProfilePage({ params }: { params: Promise<{ sl
                 <div className="absolute inset-0 opacity-10" style={{ background: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 60%)' }} />
                 <div className="relative z-10">
                   <p className="font-display text-white text-base mb-2">Get in touch</p>
-                  <p className="text-white/55 text-xs leading-relaxed mb-4">
-                    Contact {firm.practice_name} directly to discuss your requirements.
-                  </p>
-                  
+                  <p className="text-white/55 text-xs leading-relaxed mb-4">Contact this practice directly.</p>
+                  <a
                     href={'mailto:' + firm.email + '?subject=Enquiry from AccountingBody'}
                     className="flex items-center justify-center gap-2 w-full h-10 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors"
                   >
