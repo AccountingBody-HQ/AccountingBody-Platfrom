@@ -43,7 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/cookie-policy`,      lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.3 },
 
     // Exam body landing pages
-    ...['acca', 'cima', 'aat', 'icaew', 'att', 'cpa', 'cipfa', 'cta'].map(body => ({
+    ...['acca', 'cima', 'aat', 'icaew'].map(body => ({
       url:             `${BASE_URL}/study/${body}`,
       lastModified:    new Date(),
       changeFrequency: 'weekly'  as const,

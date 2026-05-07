@@ -15,8 +15,6 @@ const EXAM_BODIES = [
   { code: 'CIMA',  slug: 'cima',  accent: 'bg-[#0081C6]', badgeBg: 'bg-sky-50',     badgeText: 'text-[#0081C6]', papers: ['E1', 'P1', 'F1', 'E2', 'P2', 'F2', 'E3', 'P3', 'F3'] },
   { code: 'AAT',   slug: 'aat',   accent: 'bg-[#00857A]', badgeBg: 'bg-teal-50',    badgeText: 'text-teal-700',  papers: ['Level 2', 'Level 3', 'Level 4', 'Synoptic'] },
   { code: 'ICAEW', slug: 'icaew', accent: 'bg-[#8B0000]', badgeBg: 'bg-red-50',     badgeText: 'text-red-800',   papers: ['Accounting', 'Tax', 'Law', 'Business', 'Case Study'] },
-  { code: 'ATT',   slug: 'att',   accent: 'bg-[#6B21A8]', badgeBg: 'bg-purple-50',  badgeText: 'text-purple-800',papers: ['Personal Tax', 'Business Tax', 'Law & Ethics'] },
-  { code: 'CPA',   slug: 'cpa',   accent: 'bg-[#1D4ED8]', badgeBg: 'bg-blue-50',    badgeText: 'text-blue-800',  papers: ['FAR', 'AUD', 'REG', 'BAR'] },
 ]
 
 const FEATURES = [

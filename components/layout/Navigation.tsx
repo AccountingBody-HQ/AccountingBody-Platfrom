@@ -74,8 +74,6 @@ const navSections: NavSection[] = [
           { label: 'CIMA',        href: '/study/cima',                        description: 'Certificate to Strategic level' },
           { label: 'AAT',         href: '/study/aat',                         description: 'Level 2, 3 and 4 coverage' },
           { label: 'ICAEW / ACA', href: '/study/aca',                         description: 'ACA qualification pathway' },
-          { label: 'ATT / CTA',   href: '/study/att-cta',                     description: 'Tax specialist qualifications' },
-          { label: 'CIPFA',       href: '/study/cipfa',                       description: 'Public sector accounting' },
         ],
       },
       {

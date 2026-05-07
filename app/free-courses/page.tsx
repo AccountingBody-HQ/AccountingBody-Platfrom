@@ -57,8 +57,6 @@ const EXAM_BODY_ACCENT: Record<string, string> = {
   CIMA:  'bg-[#0081C6]',
   AAT:   'bg-[#00857A]',
   ICAEW: 'bg-[#8B0000]',
-  ATT:   'bg-[#6B21A8]',
-  CPA:   'bg-[#1D4ED8]',
 }
 
 const EXAM_BODY_BADGE: Record<string, string> = {
@@ -66,8 +64,6 @@ const EXAM_BODY_BADGE: Record<string, string> = {
   CIMA:  'bg-sky-50 text-[#0081C6]',
   AAT:   'bg-teal-50 text-teal-700',
   ICAEW: 'bg-red-50 text-red-800',
-  ATT:   'bg-purple-50 text-purple-800',
-  CPA:   'bg-blue-50 text-blue-800',
 }
 
 const LEVEL_BADGE: Record<string, string> = {

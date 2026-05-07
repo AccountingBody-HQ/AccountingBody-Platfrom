@@ -92,10 +92,7 @@ const examBodyConfig: Record<string, { bg: string; text: string; border: string;
   AAT:   { bg: '#00857A', text: '#ffffff', border: '#006d65', abbr: 'AAT'   },
   ICAEW: { bg: '#003087', text: '#ffffff', border: '#00256b', abbr: 'ICAEW' },
   ACA:   { bg: '#003087', text: '#ffffff', border: '#00256b', abbr: 'ACA'   },
-  CIPFA: { bg: '#5b2d8e', text: '#ffffff', border: '#4a2472', abbr: 'CIPFA' },
   CFAB:  { bg: '#4a2885', text: '#ffffff', border: '#3a1e6e', abbr: 'CFAB'  },
-  CPA:   { bg: '#BE1E2D', text: '#ffffff', border: '#a01828', abbr: 'CPA'   },
-  ATT:   { bg: '#2D6A2D', text: '#ffffff', border: '#215221', abbr: 'ATT'   },
   CTA:   { bg: '#1a1a4e', text: '#ffffff', border: '#111138', abbr: 'CTA'   },
   ACCA_F:{ bg: '#004B8D', text: '#ffffff', border: '#003d75', abbr: 'ACCA Foundation' },
 }

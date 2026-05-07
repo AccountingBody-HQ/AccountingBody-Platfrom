@@ -137,7 +137,6 @@ export function examBodyColour(body: string) {
     CIMA:  'bg-[#0081C6]',
     AAT:   'bg-[#00857A]',
     ICAEW: 'bg-[#C8102E]',
-    ATT:   'bg-slate-700',
     CTA:   'bg-slate-700',
   }[body] ?? 'bg-navy-950'
 }

@@ -12,7 +12,7 @@ export const metadata = {
 
 // Group courses by exam body, then sort within each group
 function groupByExamBody(courses: Course[]): Record<string, Course[]> {
-  const order = ['ACCA', 'CIMA', 'AAT', 'ICAEW', 'ATT', 'CTA']
+  const order = ['ACCA', 'CIMA', 'AAT', 'ICAEW']
   const map: Record<string, Course[]> = {}
   for (const c of courses) {
     if (!c.examBody || !c.slug?.current) continue

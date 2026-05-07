@@ -46,7 +46,7 @@ const sections = [
     body: [
       'All original content on AccountingBody — including study notes, practice questions, articles, and guides — is owned by AccountingBody or its content contributors and is protected by copyright.',
       'You may not reproduce, redistribute, or republish any content without prior written permission. You may print or download content for your own personal, non-commercial study use only.',
-      'AccountingBody is not affiliated with, endorsed by, or officially connected to ACCA, CIMA, AAT, ICAEW, ATT, or any other professional body. All qualification names are trademarks of their respective owners.',
+      'AccountingBody is not affiliated with, endorsed by, or officially connected to ACCA, CIMA, AAT, ICAEW, or any other professional body. All qualification names are trademarks of their respective owners.',
     ],
   },
   {

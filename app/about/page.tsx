@@ -70,9 +70,6 @@ const qualifications = [
   { name: 'CIMA',  detail: 'Full pathway',        accent: 'border-[#0081C6] text-[#0081C6]', bg: 'bg-[#0081C6]/5' },
   { name: 'AAT',   detail: 'Levels 2–4',          accent: 'border-[#00857A] text-[#00857A]', bg: 'bg-[#00857A]/5' },
   { name: 'ICAEW', detail: 'ACA pathway',         accent: 'border-navy-600  text-navy-700',  bg: 'bg-navy-50' },
-  { name: 'ATT',   detail: 'Tax qualification',   accent: 'border-slate-500  text-slate-700', bg: 'bg-slate-50' },
-  { name: 'CPA',   detail: 'Core subjects',       accent: 'border-teal-500   text-teal-700',  bg: 'bg-teal-50' },
-  { name: 'CIPFA', detail: 'Public finance',      accent: 'border-gold-500   text-gold-600',  bg: 'bg-gold-50' },
   { name: 'CTA',   detail: 'Tax advisory',        accent: 'border-slate-400  text-slate-600', bg: 'bg-slate-50' },
 ]
 

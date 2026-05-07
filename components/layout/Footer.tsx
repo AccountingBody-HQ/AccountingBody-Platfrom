@@ -32,7 +32,6 @@ const footerColumns: FooterColumn[] = [
       { label: 'CIMA Study Hub',            href: '/study/cima' },
       { label: 'AAT Study Hub',             href: '/study/aat' },
       { label: 'ICAEW / ACA',               href: '/study/aca' },
-      { label: 'ATT & CTA',                 href: '/study/att-cta' },
       { label: 'All Qualifications',        href: '/study' },
       { label: 'Study Planner',             href: '/tools/study-planner', new: true },
     ],

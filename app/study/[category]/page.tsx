@@ -8,9 +8,6 @@ const EXAM_BODY_META: Record<string, { name: string; description: string; accent
   cima:  { name: 'CIMA',  description: 'Chartered Institute of Management Accountants full pathway.',     accent: 'bg-[#0081C6]', badgeBg: 'bg-sky-50',     badgeText: 'text-[#0081C6]' },
   aat:   { name: 'AAT',   description: 'Association of Accounting Technicians — Levels 2 to 4.',          accent: 'bg-[#00857A]', badgeBg: 'bg-teal-50',    badgeText: 'text-teal-700'  },
   icaew: { name: 'ICAEW', description: 'Institute of Chartered Accountants in England and Wales.',        accent: 'bg-[#8B0000]', badgeBg: 'bg-red-50',     badgeText: 'text-red-800'   },
-  att:   { name: 'ATT',   description: 'Association of Taxation Technicians — core and elective papers.', accent: 'bg-[#6B21A8]', badgeBg: 'bg-purple-50',  badgeText: 'text-purple-800'},
-  cpa:   { name: 'CPA',   description: 'Certified Public Accountant — FAR, AUD, REG, BAR sections.',     accent: 'bg-[#1D4ED8]', badgeBg: 'bg-blue-50',    badgeText: 'text-blue-800'  },
-  cipfa: { name: 'CIPFA', description: 'Chartered Institute of Public Finance and Accountancy.',          accent: 'bg-[#065F46]', badgeBg: 'bg-emerald-50', badgeText: 'text-emerald-800'},
   cta:   { name: 'CTA',   description: 'Chartered Tax Adviser — gold standard for UK tax professionals.',accent: 'bg-[#B45309]', badgeBg: 'bg-amber-50',   badgeText: 'text-amber-800' },
 }
 
