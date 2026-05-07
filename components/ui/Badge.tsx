@@ -93,7 +93,6 @@ const examBodyConfig: Record<string, { bg: string; text: string; border: string;
   ICAEW: { bg: '#003087', text: '#ffffff', border: '#00256b', abbr: 'ICAEW' },
   ACA:   { bg: '#003087', text: '#ffffff', border: '#00256b', abbr: 'ACA'   },
   CFAB:  { bg: '#4a2885', text: '#ffffff', border: '#3a1e6e', abbr: 'CFAB'  },
-  CTA:   { bg: '#1a1a4e', text: '#ffffff', border: '#111138', abbr: 'CTA'   },
   ACCA_F:{ bg: '#004B8D', text: '#ffffff', border: '#003d75', abbr: 'ACCA Foundation' },
 }
 

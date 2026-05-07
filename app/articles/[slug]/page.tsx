@@ -24,7 +24,6 @@ const EXAM_BODY_ACCENT: Record<string, string> = {
   CIMA:  'bg-[#0081C6]',
   AAT:   'bg-[#00857A]',
   ICAEW: 'bg-[#8B0000]',
-  CTA:   'bg-[#B45309]',
 }
 
 const EXAM_BODY_BADGE: Record<string, string> = {
@@ -32,7 +31,6 @@ const EXAM_BODY_BADGE: Record<string, string> = {
   CIMA:  'bg-sky-50 text-[#0081C6] border-sky-200',
   AAT:   'bg-teal-50 text-teal-700 border-teal-200',
   ICAEW: 'bg-red-50 text-red-800 border-red-200',
-  CTA:   'bg-amber-50 text-amber-800 border-amber-200',
 }
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
