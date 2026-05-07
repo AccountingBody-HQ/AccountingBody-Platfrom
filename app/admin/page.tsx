@@ -1,4 +1,11 @@
 import { createClient } from "@supabase/supabase-js"
+import Link from "next/link"
+import {
+  Mail, Users, HelpCircle, Building2, Briefcase,
+  ArrowRight, TrendingUp, Factory, Inbox
+} from "lucide-react"
+
+export const dynamic = "force-dynamic"
 
 async function getStats() {
   const supabase = createClient(
@@ -46,71 +53,200 @@ async function getStats() {
 export default async function AdminCommandCentre() {
   const stats = await getStats()
 
-  const statCards = [
-    { label: "Contact Submissions", value: stats.contactCount, icon: "📬", color: "#2563eb" },
-    { label: "Email Subscribers", value: stats.subscriberCount, icon: "📧", color: "#10b981" },
-    { label: "Help Requests", value: stats.helpCount, icon: "🙋", color: "#f59e0b" },
-    { label: "Firm Applications", value: stats.firmsCount, icon: "🏢", color: "#8b5cf6" },
-    { label: "Job Listings", value: stats.jobsCount, icon: "💼", color: "#ec4899" },
+  const STAT_CARDS = [
+    {
+      label: "Contact Submissions",
+      value: stats.contactCount,
+      sub: "from contact form",
+      color: "#3b82f6",
+      bg: "rgba(59,130,246,0.08)",
+      border: "rgba(59,130,246,0.2)",
+      icon: Mail,
+      href: "/admin/submissions",
+    },
+    {
+      label: "Email Subscribers",
+      value: stats.subscriberCount,
+      sub: "on the mailing list",
+      color: "#10b981",
+      bg: "rgba(16,185,129,0.08)",
+      border: "rgba(16,185,129,0.2)",
+      icon: Users,
+      href: "/admin/subscribers",
+    },
+    {
+      label: "Help Requests",
+      value: stats.helpCount,
+      sub: "from get-help page",
+      color: "#f59e0b",
+      bg: "rgba(245,158,11,0.08)",
+      border: "rgba(245,158,11,0.2)",
+      icon: HelpCircle,
+      href: "/admin/submissions",
+    },
+    {
+      label: "Firm Applications",
+      value: stats.firmsCount,
+      sub: "directory applications",
+      color: "#8b5cf6",
+      bg: "rgba(139,92,246,0.08)",
+      border: "rgba(139,92,246,0.2)",
+      icon: Building2,
+      href: "/admin/jobs-firms",
+    },
+    {
+      label: "Job Listings",
+      value: stats.jobsCount,
+      sub: "on the job board",
+      color: "#ec4899",
+      bg: "rgba(236,72,153,0.08)",
+      border: "rgba(236,72,153,0.2)",
+      icon: Briefcase,
+      href: "/admin/jobs-firms",
+    },
+  ]
+
+  const QUICK_ACTIONS = [
+    { label: "View Submissions",   sub: "Help & contact forms",     href: "/admin/submissions",     icon: Inbox,       color: "#3b82f6" },
+    { label: "Manage Subscribers", sub: "Email list & CSV export",  href: "/admin/subscribers",     icon: Users,       color: "#10b981" },
+    { label: "Content Factory",    sub: "Generate AI study content",href: "/admin/content-factory", icon: Factory,     color: "#f59e0b" },
+    { label: "Jobs & Firms",       sub: "Listings & applications",  href: "/admin/jobs-firms",      icon: Briefcase,   color: "#8b5cf6" },
   ]
 
   return (
-    <div>
+    <div className="p-8">
+
       {/* Header */}
-      <div style={{ marginBottom: "32px" }}>
-        <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#ffffff", margin: "0 0 8px 0" }}>Command Centre</h1>
-        <p style={{ fontSize: "14px", color: "#94a3b8", margin: 0 }}>Live platform overview — all data from Supabase</p>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-white mb-1">Command Centre</h1>
+        <p className="text-sm" style={{ color: "#475569" }}>
+          Live platform overview — {stats.subscriberCount} subscribers · {stats.contactCount} contact submissions · {stats.helpCount} help requests
+        </p>
       </div>
 
       {/* Stat Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", marginBottom: "40px" }}>
-        {statCards.map((card) => (
-          <div key={card.label} style={{ backgroundColor: "#0d1424", border: "1px solid #1a2238", borderRadius: "12px", padding: "24px" }}>
-            <div style={{ fontSize: "28px", marginBottom: "8px" }}>{card.icon}</div>
-            <div style={{ fontSize: "36px", fontWeight: "700", color: card.color, marginBottom: "4px" }}>{card.value}</div>
-            <div style={{ fontSize: "13px", color: "#94a3b8" }}>{card.label}</div>
-          </div>
+      <div className="grid grid-cols-5 gap-4 mb-8">
+        {STAT_CARDS.map(card => (
+          <Link key={card.label} href={card.href}
+            className="rounded-2xl p-5 border transition-all hover:scale-[1.02] group"
+            style={{ background: card.bg, borderColor: card.border }}>
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                style={{ background: `${card.color}20` }}>
+                <card.icon size={17} style={{ color: card.color }} />
+              </div>
+              <ArrowRight size={14} style={{ color: card.color }} className="opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
+            </div>
+            <p className="text-3xl font-black text-white mb-1">{card.value}</p>
+            <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: card.color }}>{card.label}</p>
+            <p className="text-xs" style={{ color: "#334155" }}>{card.sub}</p>
+          </Link>
         ))}
       </div>
 
-      {/* Recent Activity */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+      {/* Main grid */}
+      <div className="grid grid-cols-3 gap-6 mb-6">
+
         {/* Recent Submissions */}
-        <div style={{ backgroundColor: "#0d1424", border: "1px solid #1a2238", borderRadius: "12px", padding: "24px" }}>
-          <h2 style={{ fontSize: "16px", fontWeight: "600", color: "#ffffff", margin: "0 0 16px 0" }}>Recent Contact Submissions</h2>
-          {stats.recentSubmissions.length === 0 ? (
-            <p style={{ fontSize: "14px", color: "#94a3b8" }}>No submissions yet.</p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {stats.recentSubmissions.map((item) => (
-                <div key={item.id} style={{ borderBottom: "1px solid #1a2238", paddingBottom: "12px" }}>
-                  <div style={{ fontSize: "14px", color: "#ffffff", fontWeight: "500" }}>{item.name}</div>
-                  <div style={{ fontSize: "12px", color: "#94a3b8" }}>{item.email}</div>
-                  <div style={{ fontSize: "12px", color: "#94a3b8" }}>{item.subject}</div>
-                  <div style={{ fontSize: "11px", color: "#475569", marginTop: "4px" }}>{new Date(item.created_at).toLocaleDateString()}</div>
-                </div>
-              ))}
+        <div className="col-span-2 rounded-2xl border overflow-hidden"
+          style={{ background: "#0d1424", borderColor: "#1a2238" }}>
+          <div className="px-6 py-4 border-b flex items-center justify-between"
+            style={{ borderColor: "#1a2238" }}>
+            <div className="flex items-center gap-2">
+              <Inbox size={15} style={{ color: "#3b82f6" }} />
+              <h2 className="text-white font-bold text-sm">Recent Contact Submissions</h2>
             </div>
-          )}
+            <Link href="/admin/submissions"
+              className="text-xs font-semibold flex items-center gap-1"
+              style={{ color: "#475569" }}>
+              View all <ArrowRight size={11} />
+            </Link>
+          </div>
+          <div className="divide-y" style={{ borderColor: "#1a2238" }}>
+            {stats.recentSubmissions.length === 0 ? (
+              <div className="px-6 py-8 text-center">
+                <p className="text-sm" style={{ color: "#334155" }}>No submissions yet.</p>
+              </div>
+            ) : (
+              stats.recentSubmissions.map((item) => (
+                <div key={item.id} className="px-6 py-3.5 flex items-center justify-between"
+                  style={{ borderColor: "#1a2238" }}>
+                  <div>
+                    <p className="text-white text-sm font-semibold">{item.name}</p>
+                    <p className="text-xs" style={{ color: "#475569" }}>{item.email} · {item.subject ?? "No subject"}</p>
+                  </div>
+                  <p className="text-xs" style={{ color: "#334155" }}>
+                    {new Date(item.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
         {/* Recent Subscribers */}
-        <div style={{ backgroundColor: "#0d1424", border: "1px solid #1a2238", borderRadius: "12px", padding: "24px" }}>
-          <h2 style={{ fontSize: "16px", fontWeight: "600", color: "#ffffff", margin: "0 0 16px 0" }}>Recent Subscribers</h2>
-          {stats.recentSubscribers.length === 0 ? (
-            <p style={{ fontSize: "14px", color: "#94a3b8" }}>No subscribers yet.</p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {stats.recentSubscribers.map((item) => (
-                <div key={item.id} style={{ borderBottom: "1px solid #1a2238", paddingBottom: "12px" }}>
-                  <div style={{ fontSize: "14px", color: "#ffffff", fontWeight: "500" }}>{item.email}</div>
-                  <div style={{ fontSize: "11px", color: "#475569", marginTop: "4px" }}>{new Date(item.subscribed_at).toLocaleDateString()}</div>
+        <div className="rounded-2xl border overflow-hidden"
+          style={{ background: "#0d1424", borderColor: "#1a2238" }}>
+          <div className="px-5 py-4 border-b flex items-center gap-2"
+            style={{ borderColor: "#1a2238" }}>
+            <Users size={14} style={{ color: "#10b981" }} />
+            <h2 className="text-white font-bold text-sm">Recent Subscribers</h2>
+          </div>
+          <div className="divide-y" style={{ borderColor: "#1a2238" }}>
+            {stats.recentSubscribers.length === 0 ? (
+              <div className="px-5 py-6 text-center">
+                <p className="text-xs" style={{ color: "#334155" }}>No subscribers yet.</p>
+              </div>
+            ) : (
+              stats.recentSubscribers.map((item) => (
+                <div key={item.id} className="px-5 py-3 flex items-center gap-3"
+                  style={{ borderColor: "#1a2238" }}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                    style={{ background: "rgba(16,185,129,0.1)" }}>
+                    <Users size={12} style={{ color: "#10b981" }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-xs font-semibold truncate">{item.email}</p>
+                    <p className="text-xs" style={{ color: "#334155" }}>
+                      {item.subscribed_at ? new Date(item.subscribed_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                    </p>
+                  </div>
+                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "#10b981" }} />
                 </div>
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Quick Actions */}
+      <div className="rounded-2xl border overflow-hidden"
+        style={{ background: "#0d1424", borderColor: "#1a2238" }}>
+        <div className="px-6 py-4 border-b flex items-center gap-2" style={{ borderColor: "#1a2238" }}>
+          <TrendingUp size={14} style={{ color: "#2563eb" }} />
+          <h2 className="text-white font-bold text-sm">Quick Actions</h2>
+        </div>
+        <div className="grid grid-cols-4 divide-x" style={{ borderColor: "#1a2238" }}>
+          {QUICK_ACTIONS.map(action => (
+            <Link key={action.label} href={action.href}
+              className="px-6 py-5 flex flex-col gap-3 transition-all group hover:bg-white/[0.02]">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                style={{ background: `${action.color}15` }}>
+                <action.icon size={17} style={{ color: action.color }} />
+              </div>
+              <div>
+                <p className="text-white text-sm font-semibold mb-0.5">{action.label}</p>
+                <p className="text-xs" style={{ color: "#334155" }}>{action.sub}</p>
+              </div>
+              <div className="flex items-center gap-1 text-xs font-semibold mt-auto"
+                style={{ color: action.color }}>
+                Open <ArrowRight size={11} />
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
     </div>
   )
 }

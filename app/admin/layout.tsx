@@ -1,82 +1,164 @@
 'use client'
+import { Suspense } from 'react'
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import {
+  LayoutDashboard, Inbox, Users, Briefcase,
+  Factory, Settings, LogOut, ExternalLink,
+  ChevronRight, Palette
+} from 'lucide-react'
 
-import { useRouter, usePathname } from "next/navigation"
-import Link from "next/link"
-
-const navItems = [
-  { label: "Command Centre", href: "/admin", icon: "⚡" },
-  { label: "Submissions", href: "/admin/submissions", icon: "📥" },
-  { label: "Subscribers", href: "/admin/subscribers", icon: "📧" },
-  { label: "Jobs & Firms", href: "/admin/jobs-firms", icon: "💼" },
-  { label: "Content Factory", href: "/admin/content-factory", icon: "🏭" },
-  { label: "Sanity Studio", href: "/studio", icon: "🎨" },
-  { label: "Settings", href: "/admin/settings", icon: "⚙️" },
+const NAV = [
+  { href: '/admin',                 exact: true,  icon: LayoutDashboard, label: 'Command Centre',  sub: 'Overview & live stats'     },
+  { href: '/admin/submissions',     exact: false, icon: Inbox,           label: 'Submissions',     sub: 'Help & contact forms'      },
+  { href: '/admin/subscribers',     exact: false, icon: Users,           label: 'Subscribers',     sub: 'Email list & export'       },
+  { href: '/admin/jobs-firms',      exact: false, icon: Briefcase,       label: 'Jobs & Firms',    sub: 'Listings & applications'   },
+  { href: '/admin/content-factory', exact: false, icon: Factory,         label: 'Content Factory', sub: 'AI content generation'     },
+  { href: '/studio',                exact: false, icon: Palette,         label: 'Sanity Studio',   sub: 'CMS & content editor'      },
+  { href: '/admin/settings',        exact: false, icon: Settings,        label: 'Settings',        sub: 'Environment & checklist'   },
 ]
+
+function isActive(pathname: string, href: string, exact: boolean) {
+  if (exact) return pathname === href
+  return pathname === href || pathname.startsWith(href + '/')
+}
+
+function getBreadcrumb(pathname: string) {
+  const map: Record<string, string> = {
+    '/admin':                 'Command Centre',
+    '/admin/submissions':     'Submissions',
+    '/admin/subscribers':     'Subscribers',
+    '/admin/jobs-firms':      'Jobs & Firms',
+    '/admin/content-factory': 'Content Factory',
+    '/admin/settings':        'Settings',
+    '/studio':                'Sanity Studio',
+  }
+  const base = '/' + pathname.split('/').slice(1, 3).join('/')
+  return map[base] ?? 'Admin'
+}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
+  const crumb = getBreadcrumb(pathname)
 
   async function handleLogout() {
-    await fetch("/api/admin-logout", { method: "POST" })
-    router.push("/admin-login")
+    await fetch('/api/admin-logout', { method: 'POST' })
+    router.push('/admin-login')
   }
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#080d1a", display: "flex", fontFamily: "DM Sans, sans-serif" }}>
-      {/* Sidebar */}
-      <div style={{ width: "240px", backgroundColor: "#0d1424", borderRight: "1px solid #1a2238", display: "flex", flexDirection: "column", position: "fixed", height: "100vh", zIndex: 10 }}>
+    <div className="min-h-screen flex" style={{ background: '#080d1a' }}>
+
+      {/* SIDEBAR */}
+      <aside className="w-64 shrink-0 flex flex-col border-r" style={{ background: '#0d1424', borderColor: '#1a2238' }}>
+
         {/* Logo */}
-        <div style={{ padding: "24px 20px", borderBottom: "1px solid #1a2238" }}>
-          <div style={{ fontSize: "16px", fontWeight: "700", color: "#ffffff" }}>AccountingBody</div>
-          <div style={{ fontSize: "11px", color: "#2563eb", marginTop: "2px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Admin Console</div>
+        <div className="px-5 py-5 border-b" style={{ borderColor: '#1a2238' }}>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: 'linear-gradient(135deg,#2563eb,#1d4ed8)' }}>
+              <LayoutDashboard size={17} className="text-white" />
+            </div>
+            <div>
+              <p className="text-white font-bold text-sm tracking-tight">AccountingBody</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <p className="text-xs font-semibold" style={{ color: '#34d399' }}>Admin Console</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Nav */}
-        <nav style={{ flex: 1, padding: "16px 12px", overflowY: "auto" }}>
-          {navItems.map((item) => {
-            const isActive = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href)
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+          {NAV.map(item => {
+            const active = isActive(pathname, item.href, item.exact)
             return (
-              <Link
-                key={item.href}
-                href={item.href}
+              <Link key={item.href} href={item.href}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  padding: "10px 12px",
-                  borderRadius: "8px",
-                  marginBottom: "4px",
-                  backgroundColor: isActive ? "#2563eb20" : "transparent",
-                  color: isActive ? "#2563eb" : "#94a3b8",
-                  textDecoration: "none",
-                  fontSize: "14px",
-                  fontWeight: isActive ? "600" : "400",
-                  border: isActive ? "1px solid #2563eb40" : "1px solid transparent",
-                  transition: "all 0.15s",
-                }}
-              >
-                <span style={{ fontSize: "16px" }}>{item.icon}</span>
-                {item.label}
+                  background: active ? 'rgba(37,99,235,0.12)' : 'transparent',
+                  borderLeft: active ? '2px solid #2563eb' : '2px solid transparent',
+                }}>
+                {active && (
+                  <div className="absolute inset-0 rounded-xl pointer-events-none"
+                    style={{ background: 'linear-gradient(90deg,rgba(37,99,235,0.06),transparent)' }} />
+                )}
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all"
+                  style={{ background: active ? '#2563eb' : 'rgba(255,255,255,0.04)' }}>
+                  <item.icon size={15} style={{ color: active ? '#ffffff' : '#475569' }} />
+                </div>
+                <div className="relative">
+                  <p className="text-sm font-semibold" style={{ color: active ? '#ffffff' : '#64748b' }}>
+                    {item.label}
+                  </p>
+                  <p className="text-xs" style={{ color: active ? 'rgba(255,255,255,0.45)' : '#334155' }}>
+                    {item.sub}
+                  </p>
+                </div>
               </Link>
             )
           })}
         </nav>
 
-        {/* Logout */}
-        <div style={{ padding: "16px 12px", borderTop: "1px solid #1a2238" }}>
-          <button
-            onClick={handleLogout}
-            style={{ width: "100%", backgroundColor: "transparent", border: "1px solid #1a2238", borderRadius: "8px", padding: "10px 12px", color: "#94a3b8", fontSize: "14px", cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: "10px" }}
-          >
-            <span>🚪</span> Logout
+        {/* Footer */}
+        <div className="px-3 py-4 border-t space-y-0.5" style={{ borderColor: '#1a2238' }}>
+          <a href="/"
+            target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-all"
+            style={{ background: 'rgba(255,255,255,0.02)' }}>
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span className="text-xs font-semibold" style={{ color: '#475569' }}>View Live Platform</span>
+            </div>
+            <ExternalLink size={11} style={{ color: '#1e293b' }} />
+          </a>
+          <button onClick={handleLogout}
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all w-full text-left"
+            style={{ background: 'transparent' }}>
+            <LogOut size={14} style={{ color: '#ef4444' }} />
+            <span className="text-xs font-semibold" style={{ color: '#ef4444' }}>Log out</span>
           </button>
         </div>
-      </div>
+      </aside>
 
-      {/* Main content */}
-      <div style={{ marginLeft: "240px", flex: 1, padding: "32px", minHeight: "100vh" }}>
-        {children}
+      {/* MAIN */}
+      <div className="flex-1 flex flex-col min-w-0">
+
+        {/* Topbar */}
+        <header className="h-12 shrink-0 flex items-center px-6 border-b"
+          style={{ background: '#0d1424', borderColor: '#1a2238' }}>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="font-semibold" style={{ color: '#334155' }}>Admin</span>
+            <ChevronRight size={12} style={{ color: '#1e293b' }} />
+            <span className="font-semibold" style={{ color: '#64748b' }}>{crumb}</span>
+          </div>
+          <div className="ml-auto flex items-center gap-3">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+              style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span className="text-xs font-bold" style={{ color: '#34d399' }}>Live</span>
+            </div>
+          </div>
+        </header>
+
+        {/* Page content */}
+        <main className="flex-1 overflow-auto">
+          <Suspense fallback={
+            <div className="p-8 space-y-4 animate-pulse">
+              <div className="h-8 w-64 rounded-xl" style={{ background: '#0d1424' }} />
+              <div className="h-4 w-96 rounded-lg" style={{ background: '#0d1424' }} />
+              <div className="grid grid-cols-4 gap-4 mt-6">
+                {[...Array(4)].map((_,i) => (
+                  <div key={i} className="h-28 rounded-2xl" style={{ background: '#0d1424' }} />
+                ))}
+              </div>
+            </div>
+          }>
+            {children}
+          </Suspense>
+        </main>
       </div>
     </div>
   )
