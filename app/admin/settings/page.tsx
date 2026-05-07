@@ -1,4 +1,4 @@
-import { CheckCircle, Circle, Settings, Server } from "lucide-react"
+import { CheckCircle, Circle, Server } from "lucide-react"
 
 export default function SettingsPage() {
   const envVars = [
