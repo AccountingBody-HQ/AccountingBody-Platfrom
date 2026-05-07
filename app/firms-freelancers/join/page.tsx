@@ -7,7 +7,7 @@ const firmTypes = ['Accounting Firm','Bookkeeping Practice','Tax Consultancy','F
 const specialismOptions = ['Tax Advice','Bookkeeping','Payroll','Financial Planning','Audit','Business Advisory','Company Formation','VAT','Self Assessment']
 
 export default function JoinDirectoryPage() {
-  const [form, setForm] = useState({ firm_name: '', contact_name: '', email: '', phone: '', website: '', firm_type: '', location: '', specialisms: '', description: '' })
+  const [form, setForm] = useState({ practice_name: '', contact_name: '', email: '', phone: '', website: '', practice_type: '', location: '', specialisms: '', about: '' })
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,12 +46,12 @@ export default function JoinDirectoryPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-navy-950 mb-2">Practice / Firm Name *</label>
-                  <input required type="text" value={form.firm_name} onChange={(e) => setForm({ ...form, firm_name: e.target.value })}
+                  <input required type="text" value={form.practice_name} onChange={(e) => setForm({ ...form, practice_name: e.target.value })}
                     className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" placeholder="Your practice name" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-navy-950 mb-2">Practice Type *</label>
-                  <select required value={form.firm_type} onChange={(e) => setForm({ ...form, firm_type: e.target.value })}
+                  <select required value={form.practice_type} onChange={(e) => setForm({ ...form, practice_type: e.target.value })}
                     className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent bg-white">
                     <option value="">Select type</option>
                     {firmTypes.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -108,7 +108,7 @@ export default function JoinDirectoryPage() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-navy-950 mb-2">About Your Practice</label>
-                <textarea rows={4} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
+                <textarea rows={4} value={form.about} onChange={(e) => setForm({ ...form, about: e.target.value })}
                   className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                   placeholder="Tell potential clients about your practice and what makes you stand out..." />
               </div>
