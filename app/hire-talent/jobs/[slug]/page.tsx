@@ -59,6 +59,7 @@ export default async function JobPage({ params }: { params: Promise<{ slug: stri
   const { slug } = await params
   const job = await getJob(slug)
   if (!job) notFound()
+  if (!job) return null
 
   const badgeClass = JOB_TYPE_BADGE[job.job_type] ?? 'bg-slate-100 text-slate-600 border-slate-200'
   const posted = job.created_at

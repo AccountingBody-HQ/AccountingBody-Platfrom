@@ -42,8 +42,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const firm = await getFirm(slug)
   if (!firm) return {}
   return {
-    title:       `${firm.practice_name} | AccountingBody Directory`,
-    description: firm.about?.slice(0, 160) ?? `${firm.practice_name} — ${firm.practice_type} based in ${firm.location}`,
+    title: firm.practice_name + ' | AccountingBody Directory',
+    description: firm.about ? firm.about.slice(0, 160) : firm.practice_name + ' - ' + firm.practice_type + ' based in ' + firm.location,
   }
 }
 
@@ -51,13 +51,12 @@ export default async function FirmProfilePage({ params }: { params: Promise<{ sl
   const { slug } = await params
   const firm = await getFirm(slug)
   if (!firm) notFound()
+  if (!firm) return null
 
   const specialisms = firm.specialisms ? firm.specialisms.split(', ').filter(Boolean) : []
 
   return (
     <main className="min-h-screen bg-slate-50">
-
-      {/* HERO */}
       <section className="relative overflow-hidden bg-navy-950 py-14 md:py-20">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[80%] opacity-20"
@@ -73,7 +72,6 @@ export default async function FirmProfilePage({ params }: { params: Promise<{ sl
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70 line-clamp-1">{firm.practice_name}</span>
           </nav>
-
           <div className="flex items-start gap-6">
             <div className="w-16 h-16 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
               <span className="font-display text-2xl font-bold text-white">
@@ -99,12 +97,9 @@ export default async function FirmProfilePage({ params }: { params: Promise<{ sl
         </div>
       </section>
 
-      {/* BODY */}
       <section className="section bg-slate-50">
         <div className="container-site">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-12 items-start">
-
-            {/* Main */}
             <div className="space-y-6">
               {firm.about && (
                 <div className="bg-white rounded-xl border border-slate-200 p-8">
@@ -112,7 +107,6 @@ export default async function FirmProfilePage({ params }: { params: Promise<{ sl
                   <p className="text-slate-600 text-base leading-relaxed whitespace-pre-line">{firm.about}</p>
                 </div>
               )}
-
               {specialisms.length > 0 && (
                 <div className="bg-white rounded-xl border border-slate-200 p-8">
                   <h2 className="font-display text-xl text-navy-950 mb-4">Specialisms</h2>
@@ -126,11 +120,7 @@ export default async function FirmProfilePage({ params }: { params: Promise<{ sl
                 </div>
               )}
             </div>
-
-            {/* Sidebar */}
             <aside className="lg:sticky lg:top-24 space-y-5">
-
-              {/* Contact CTA */}
               <div className="bg-navy-950 rounded-xl p-6 relative overflow-hidden">
                 <div className="absolute inset-0 opacity-10" style={{ background: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 60%)' }} />
                 <div className="relative z-10">
@@ -139,7 +129,7 @@ export default async function FirmProfilePage({ params }: { params: Promise<{ sl
                     Contact {firm.practice_name} directly to discuss your requirements.
                   </p>
                   
-                    href={`mailto:${firm.email}?subject=Enquiry from AccountingBody`}
+                    href={'mailto:' + firm.email + '?subject=Enquiry from AccountingBody'}
                     className="flex items-center justify-center gap-2 w-full h-10 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors"
                   >
                     Send Enquiry
@@ -149,8 +139,6 @@ export default async function FirmProfilePage({ params }: { params: Promise<{ sl
                   </a>
                 </div>
               </div>
-
-              {/* Details */}
               <div className="bg-white rounded-xl border border-slate-200 p-5">
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">Practice Details</p>
                 <dl className="space-y-3">
@@ -181,7 +169,6 @@ export default async function FirmProfilePage({ params }: { params: Promise<{ sl
                   )}
                 </dl>
               </div>
-
               <Link href="/firms-freelancers/directory" className="flex items-center gap-2 text-sm text-navy-700 hover:text-gold-600 transition-colors font-medium">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
@@ -189,11 +176,9 @@ export default async function FirmProfilePage({ params }: { params: Promise<{ sl
                 Back to directory
               </Link>
             </aside>
-
           </div>
         </div>
       </section>
-
     </main>
   )
 }
