@@ -7,6 +7,7 @@ import Link from 'next/link'
 
 
 import { ExamBodyBadge, StatusBadge } from '@/components/ui/Badge'
+import EmailSignupForm from '@/components/EmailSignupForm'
 
 // ── Sanity fetch ──────────────────────────────────────────────────────────────
 // Fetches the 4 most recent articles from Sanity.
@@ -42,7 +43,7 @@ async function getFeaturedArticles(): Promise<SanityArticle[]> {
         examBody,
         readTime,
         publishedAt,
-        "coverImage": coverImage { asset -> { url } },
+        "coverImage": featuredImage { asset -> { url } },
         "author": author -> { name }
       }
     `)
@@ -369,25 +370,7 @@ function EmailSignupSection() {
             Weekly study tips, new question releases, and exam technique guides —
             written by qualified accountants. No spam, ever.
           </p>
-          <form
-  action="/api/subscribe"
-  method="POST"
-  className="flex flex-col gap-3 w-full max-w-sm mx-auto px-6"
->
-  <input
-    type="email"
-    name="email"
-    placeholder="your@email.com"
-    required
-    className="w-full h-14 px-4 rounded-lg text-base bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
-  />
-  <button
-    type="submit"
-    className="w-full h-14 px-6 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold"
-  >
-    Subscribe free
-  </button>
-</form>
+          <EmailSignupForm />
           <p className="text-white/35 text-xs mt-4">
             Join 12,000+ accounting students and professionals.
             Unsubscribe any time.
@@ -808,7 +791,7 @@ export default async function HomePage() {
                 Browse study notes
               </Link>
               <Link
-                href="/signup"
+                href="/sign-up"
                 className="h-10 px-5 flex items-center text-sm font-semibold rounded-lg bg-navy-950 text-white hover:bg-navy-900 transition-colors shadow-sm"
               >
                 Create free account

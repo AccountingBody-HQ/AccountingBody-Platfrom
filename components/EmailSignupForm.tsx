@@ -1,0 +1,58 @@
+'use client'
+import { useState } from 'react'
+
+export default function EmailSignupForm() {
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [email, setEmail] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStatus('loading')
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      if (!res.ok) throw new Error()
+      setStatus('success')
+      setEmail('')
+    } catch {
+      setStatus('error')
+    }
+  }
+
+  if (status === 'success') {
+    return (
+      <div className="flex items-center justify-center gap-3 bg-white/10 rounded-lg px-5 py-4 border border-white/20 max-w-sm mx-auto">
+        <svg className="w-5 h-5 text-gold-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <p className="text-white text-sm font-medium">You are subscribed — welcome!</p>
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3 w-full max-w-sm mx-auto px-6">
+      <input
+        type="email"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        placeholder="your@email.com"
+        required
+        className="w-full h-14 px-4 rounded-lg text-base bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+      />
+      <button
+        type="submit"
+        disabled={status === 'loading'}
+        className="w-full h-14 px-6 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold disabled:opacity-60"
+      >
+        {status === 'loading' ? 'Subscribing...' : 'Subscribe free'}
+      </button>
+      {status === 'error' && (
+        <p className="text-red-400 text-xs text-center">Something went wrong. Please try again.</p>
+      )}
+    </form>
+  )
+}
