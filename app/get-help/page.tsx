@@ -79,12 +79,20 @@ export default function GetHelpPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {services.map((s) => (
-              <div key={s.name}
-                className="group bg-white rounded-xl border border-slate-200 p-6 hover:border-gold-400 hover:shadow-lg transition-all duration-200 cursor-pointer">
+              <button key={s.name} type="button"
+                onClick={() => {
+                  setForm(f => ({ ...f, service_type: s.name }))
+                  document.getElementById('request-form')?.scrollIntoView({ behavior: 'smooth' })
+                }}
+                className="group bg-white rounded-xl border border-slate-200 p-6 hover:border-gold-400 hover:shadow-lg transition-all duration-200 cursor-pointer text-left w-full">
                 <div className="text-3xl mb-4">{s.icon}</div>
                 <h3 className="font-display text-lg text-navy-950 mb-2 group-hover:text-navy-700 transition-colors">{s.name}</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">{s.desc}</p>
-              </div>
+                <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-gold-600 group-hover:gap-2 transition-all">
+                  Get matched
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                </span>
+              </button>
             ))}
           </div>
         </div>
