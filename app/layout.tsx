@@ -10,7 +10,6 @@ import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Navigation } from '@/components/layout/Navigation'
 import { Footer } from '@/components/layout/Footer'
-import { NewsTicker } from '@/components/layout/NewsTicker'
 import CookieConsent from '@/components/CookieConsent'
 import './globals.css'
 
@@ -102,11 +101,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               />
             </noscript>
           )}
-          <NewsTicker />
           <Navigation />
           <main
             className="flex-1"
-            style={{ paddingTop: 'calc(var(--ticker-height, 40px) + var(--nav-height, 64px))' }}
+            style={{ paddingTop: 'var(--nav-height, 64px)' }}
           >
             {children}
           </main>
