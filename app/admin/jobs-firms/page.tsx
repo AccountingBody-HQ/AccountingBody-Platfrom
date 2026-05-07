@@ -17,8 +17,8 @@ async function getJobsAndFirms() {
     .order("created_at", { ascending: false })
 
   return {
-    jobListings: jobListings ?? [],
-    firmsApplications: firmsApplications ?? [],
+    jobListings: (jobListings ?? []) as Array<Record<string, string>>,
+    firmsApplications: (firmsApplications ?? []) as Array<Record<string, string>>,
   }
 }
 
@@ -74,7 +74,7 @@ export default async function JobsFirmsPage() {
                 </tr>
               </thead>
               <tbody>
-                {jobListings.map((item: any) => (
+                {jobListings.map((item) => (
                   <tr key={item.id}>
                     <td style={{ ...tableCellStyle, color: "#ffffff", fontWeight: "500" }}>{item.job_title ?? "—"}</td>
                     <td style={tableCellStyle}>{item.company_name ?? "—"}</td>
@@ -118,7 +118,7 @@ export default async function JobsFirmsPage() {
                 </tr>
               </thead>
               <tbody>
-                {firmsApplications.map((item: any) => (
+                {firmsApplications.map((item) => (
                   <tr key={item.id}>
                     <td style={{ ...tableCellStyle, color: "#ffffff", fontWeight: "500" }}>{item.practice_name ?? "—"}</td>
                     <td style={tableCellStyle}>

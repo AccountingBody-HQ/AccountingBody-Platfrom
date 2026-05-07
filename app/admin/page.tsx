@@ -38,8 +38,8 @@ async function getStats() {
     helpCount: helpCount ?? 0,
     firmsCount: firmsCount ?? 0,
     jobsCount: jobsCount ?? 0,
-    recentSubmissions: recentSubmissions ?? [],
-    recentSubscribers: recentSubscribers ?? [],
+    recentSubmissions: (recentSubmissions ?? []) as Array<{id: string; name: string; email: string; subject: string; created_at: string}>,
+    recentSubscribers: (recentSubscribers ?? []) as Array<{id: string; email: string; subscribed_at: string}>,
   }
 }
 
@@ -82,7 +82,7 @@ export default async function AdminCommandCentre() {
             <p style={{ fontSize: "14px", color: "#94a3b8" }}>No submissions yet.</p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {stats.recentSubmissions.map((item: any) => (
+              {stats.recentSubmissions.map((item) => (
                 <div key={item.id} style={{ borderBottom: "1px solid #1a2238", paddingBottom: "12px" }}>
                   <div style={{ fontSize: "14px", color: "#ffffff", fontWeight: "500" }}>{item.name}</div>
                   <div style={{ fontSize: "12px", color: "#94a3b8" }}>{item.email}</div>
@@ -101,7 +101,7 @@ export default async function AdminCommandCentre() {
             <p style={{ fontSize: "14px", color: "#94a3b8" }}>No subscribers yet.</p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {stats.recentSubscribers.map((item: any) => (
+              {stats.recentSubscribers.map((item) => (
                 <div key={item.id} style={{ borderBottom: "1px solid #1a2238", paddingBottom: "12px" }}>
                   <div style={{ fontSize: "14px", color: "#ffffff", fontWeight: "500" }}>{item.email}</div>
                   <div style={{ fontSize: "11px", color: "#475569", marginTop: "4px" }}>{new Date(item.subscribed_at).toLocaleDateString()}</div>

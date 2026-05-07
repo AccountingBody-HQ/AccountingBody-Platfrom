@@ -17,8 +17,8 @@ async function getSubmissions() {
     .order("created_at", { ascending: false })
 
   return {
-    helpRequests: helpRequests ?? [],
-    contactSubmissions: contactSubmissions ?? [],
+    helpRequests: (helpRequests ?? []) as Array<Record<string, string>>,
+    contactSubmissions: (contactSubmissions ?? []) as Array<Record<string, string>>,
   }
 }
 
@@ -73,7 +73,7 @@ export default async function SubmissionsPage() {
                 </tr>
               </thead>
               <tbody>
-                {helpRequests.map((item: any) => (
+                {helpRequests.map((item) => (
                   <tr key={item.id} style={{ backgroundColor: "transparent" }}>
                     <td style={{ ...tableCellStyle, color: "#ffffff", fontWeight: "500" }}>{item.name}</td>
                     <td style={tableCellStyle}>{item.email}</td>
@@ -116,7 +116,7 @@ export default async function SubmissionsPage() {
                 </tr>
               </thead>
               <tbody>
-                {contactSubmissions.map((item: any) => (
+                {contactSubmissions.map((item) => (
                   <tr key={item.id}>
                     <td style={{ ...tableCellStyle, color: "#ffffff", fontWeight: "500" }}>{item.name}</td>
                     <td style={tableCellStyle}>{item.email}</td>

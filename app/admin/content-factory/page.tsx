@@ -23,7 +23,6 @@ export default function ContentFactoryPage() {
   const [topic, setTopic] = useState("")
   const [difficulty, setDifficulty] = useState("Intermediate")
   const [tone, setTone] = useState("Academic but approachable")
-  const [generatedContent, setGeneratedContent] = useState("")
   const [editedContent, setEditedContent] = useState("")
   const [title, setTitle] = useState("")
   const [generating, setGenerating] = useState(false)
@@ -39,7 +38,6 @@ export default function ContentFactoryPage() {
     setGenerating(true)
     setError("")
     setSuccessMsg("")
-    setGeneratedContent("")
     setEditedContent("")
 
     const res = await fetch("/api/admin/content-factory/generate", {

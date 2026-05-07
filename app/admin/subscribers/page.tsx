@@ -12,7 +12,7 @@ async function getSubscribers() {
     .order("subscribed_at", { ascending: false })
 
   return {
-    subscribers: subscribers ?? [],
+    subscribers: (subscribers ?? []) as Array<Record<string, string>>,
     total: count ?? 0,
   }
 }
@@ -39,7 +39,7 @@ export default async function SubscribersPage() {
     verticalAlign: "top" as const,
   }
 
-  const csvRows = subscribers.map((s: any) => s.email + "," + (s.status ?? "active") + "," + s.subscribed_at).join("\n")
+  const csvRows = subscribers.map((s) => s.email + "," + (s.status ?? "active") + "," + s.subscribed_at).join("\n")
   const csvContent = "email,status,subscribed_at\n" + csvRows
 
   return (
@@ -65,13 +65,13 @@ export default async function SubscribersPage() {
         </div>
         <div style={{ backgroundColor: "#0d1424", border: "1px solid #1a2238", borderRadius: "12px", padding: "24px" }}>
           <div style={{ fontSize: "36px", fontWeight: "700", color: "#2563eb", marginBottom: "4px" }}>
-            {subscribers.filter((s: any) => s.status === "active" || !s.status).length}
+            {subscribers.filter((s) => s.status === "active" || !s.status).length}
           </div>
           <div style={{ fontSize: "13px", color: "#94a3b8" }}>Active</div>
         </div>
         <div style={{ backgroundColor: "#0d1424", border: "1px solid #1a2238", borderRadius: "12px", padding: "24px" }}>
           <div style={{ fontSize: "36px", fontWeight: "700", color: "#f59e0b", marginBottom: "4px" }}>
-            {subscribers.filter((s: any) => s.status === "unsubscribed").length}
+            {subscribers.filter((s) => s.status === "unsubscribed").length}
           </div>
           <div style={{ fontSize: "13px", color: "#94a3b8" }}>Unsubscribed</div>
         </div>
@@ -95,7 +95,7 @@ export default async function SubscribersPage() {
                 </tr>
               </thead>
               <tbody>
-                {subscribers.map((item: any) => (
+                {subscribers.map((item) => (
                   <tr key={item.id}>
                     <td style={{ ...tableCellStyle, color: "#ffffff", fontWeight: "500" }}>{item.email}</td>
                     <td style={tableCellStyle}>
