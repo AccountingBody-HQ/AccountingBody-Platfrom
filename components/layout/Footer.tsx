@@ -268,8 +268,10 @@ export function Footer() {
             {/* Logo */}
             <Link href="/" className="inline-flex items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 rounded">
               <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center">
-                <svg className="w-5 h-5 text-gold-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M4 4h3v12H4V4zm4.5 0h3l4 12h-3.2l-.8-2.5h-3l-.8 2.5H5.3L8.5 4zm1.5 2.4L12 10H9l1-3.6z"/>
+                <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="0" y="0" width="9" height="20" rx="2" fill="#ffffff"/>
+                  <rect x="11" y="0" width="9" height="9" rx="2" fill="#ffffff"/>
+                  <rect x="11" y="11" width="9" height="9" rx="2" fill="#D4A017"/>
                 </svg>
               </div>
               <span className="font-display text-xl text-white leading-none">AccountingBody</span>
