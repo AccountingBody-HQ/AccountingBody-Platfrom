@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title:       'Practice Questions | AccountingBody',
-  description: 'Exam-standard MCQ, scenario, and writing practice questions across every major accounting qualification.',
+  description: 'Exam-standard MCQ, scenario, and written practice questions for ACCA, CIMA, ICAEW, and AAT.',
 }
 
 export default async function PracticeQuestionsPage({
@@ -48,7 +48,7 @@ export default async function PracticeQuestionsPage({
             Exam-standard practice<br /><span className='text-gold-400'>questions.</span>
           </h1>
           <p className='text-white/60 text-lg max-w-2xl'>
-            MCQ, scenario-based, and written questions across every major accounting qualification. Every session picks a fresh random set.
+            MCQ, scenario-based, and written questions for ACCA, CIMA, ICAEW, and AAT. Every session picks a fresh random set.
           </p>
         </div>
       </section>
