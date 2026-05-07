@@ -285,7 +285,7 @@ const trustPoints = [
   },
 ]
 
-const examBodies = ['ACCA', 'CIMA', 'AAT', 'ICAEW', 'ATT', 'CPA', 'CIPFA', 'CTA']
+const examBodies = ['ACCA', 'CIMA', 'AAT', 'ICAEW']
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
