@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 export const metadata = {
   title: 'Create Free Account — AccountingBody',
-  description: 'Join 250,000+ students. Free access to study notes, practice questions and more.',
+  description: 'Join 250,000+ ACCA, CIMA, ICAEW and AAT students. Free access to study notes and practice questions.',
 }
 
 export default function SignUpPage() {
