@@ -132,7 +132,7 @@ const pillars = [
   {
     id:          'study',
     title:       'Study',
-    description: 'Comprehensive study notes for every paper across ACCA, CIMA, AAT, ICAEW, and more.',
+    description: 'Comprehensive study notes for every paper across ACCA, CIMA, AAT, and ICAEW.',
     href:        '/study',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -150,7 +150,7 @@ const pillars = [
   {
     id:          'practice',
     title:       'Practice Questions',
-    description: 'MCQs, written tasks, case studies and mock exams — built to exam standard for every qualification.',
+    description: 'MCQs, written tasks, case studies and mock exams — built to exam standard for ACCA, CIMA, ICAEW and AAT.',
     href:        '/practice-questions',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,7 +169,7 @@ const pillars = [
     id:          'hire',
     title:       'Hire Talent',
     description: 'Find qualified accountants, bookkeepers, and tax advisers — or post a role to reach our network.',
-    href:        '/hire',
+    href:        '/hire-talent',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeWidth="1.75"
@@ -187,7 +187,7 @@ const pillars = [
     id:          'firms',
     title:       'Firms & Freelancers',
     description: 'List your practice, find new clients, access CPD resources and connect with the profession.',
-    href:        '/firms',
+    href:        '/firms-freelancers',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeWidth="1.75"
