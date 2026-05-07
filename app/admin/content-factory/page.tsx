@@ -77,7 +77,6 @@ export default function ContentFactoryPage() {
       setError(data.error || "Publish failed.")
     } else {
       setSuccessMsg("Published successfully to Sanity! Document ID: " + data.documentId)
-      setGeneratedContent("")
       setEditedContent("")
       setTitle("")
       setTopic("")
