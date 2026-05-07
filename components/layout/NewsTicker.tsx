@@ -68,7 +68,7 @@ const defaultItems: TickerItem[] = [
   },
   {
     id:       '6',
-    text:     '50,000+ practice questions now live across all qualifications — try free',
+    text:     '50,000+ practice questions now live for ACCA, CIMA, ICAEW and AAT — try free',
     tag:      'New',
     tagColor: 'teal',
     href:     '/practice',

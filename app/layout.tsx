@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     template: '%s | AccountingBody',
   },
   description:
-    'The definitive accounting and finance education platform. Study notes, practice questions, and professional connections for ACCA, CIMA, AAT, ICAEW, and more.',
+    'The definitive platform for ACCA, CIMA, ICAEW and AAT. Study notes, practice questions, and professional connections for accounting qualification students.',
   keywords: [
     'accounting education', 'ACCA study', 'CIMA study', 'AAT study notes',
     'ICAEW ACA', 'accounting practice questions', 'finance qualifications',
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     siteName: 'AccountingBody',
     title: 'AccountingBody — Everything You Need for Accounting & Finance',
     description:
-      'Study notes, practice questions, and professional connections for every accounting qualification. ACCA, CIMA, AAT, ICAEW and more.',
+      'Study notes, practice questions, and professional connections for ACCA, CIMA, ICAEW and AAT students.',
     images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'AccountingBody' }],
   },
   twitter: {
