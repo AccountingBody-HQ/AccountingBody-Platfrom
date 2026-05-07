@@ -474,7 +474,7 @@ export default async function HomePage() {
             {/* Value proposition */}
             <p className="text-white/65 text-xl leading-relaxed mb-10 max-w-2xl">
               Study notes, practice questions, and professional connections for
-              every accounting qualification — ACCA, CIMA, AAT, ICAEW, and more.
+              ACCA, CIMA, AAT, and ICAEW — the four leading UK professional accounting qualifications.
               Trusted by 250,000+ students worldwide.
             </p>
 
@@ -500,7 +500,7 @@ export default async function HomePage() {
             {/* Exam body logos row */}
             <div>
               <p className="text-white/35 text-xs font-semibold uppercase tracking-widest mb-4">
-                Covering all major qualifications
+                Covering all four qualifications
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 {examBodies.map(body => (
