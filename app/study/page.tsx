@@ -4,18 +4,14 @@ import { getStudyLandingData } from '@/lib/sanity-queries'
 
 export const metadata: Metadata = {
   title: 'Study Notes | AccountingBody',
-  description: 'Comprehensive study notes for ACCA, CIMA, AAT, ICAEW, ATT, CPA, CIPFA, and CTA.',
+  description: 'Comprehensive study notes for ACCA, CIMA, AAT, and ICAEW — the UK's leading professional accounting qualifications.',
 }
 
 const EXAM_BODIES = [
-  { code: 'ACCA',  slug: 'acca',  description: 'All 13 papers from Applied Knowledge through Strategic Professional.', accent: 'bg-[#004B8D]', badgeBg: 'bg-blue-50',    badgeText: 'text-[#004B8D]', highlights: ['Applied Knowledge', 'Applied Skills', 'Strategic Professional', 'Ethics module'] },
-  { code: 'CIMA',  slug: 'cima',  description: 'Operational, Management, and Strategic levels plus Case Study prep.', accent: 'bg-[#0081C6]', badgeBg: 'bg-sky-50',     badgeText: 'text-[#0081C6]', highlights: ['Operational level', 'Management level', 'Strategic level', 'Case Study prep'] },
-  { code: 'AAT',   slug: 'aat',   description: 'Level 2 Foundation through Level 4 Professional Diploma.',            accent: 'bg-[#00857A]', badgeBg: 'bg-teal-50',    badgeText: 'text-teal-700',  highlights: ['Level 2 Foundation', 'Level 3 Advanced', 'Level 4 Professional', 'Synoptic prep'] },
-  { code: 'ICAEW', slug: 'icaew', description: 'ACA qualification — Certificate, Professional, and Advanced levels.',  accent: 'bg-[#8B0000]', badgeBg: 'bg-red-50',     badgeText: 'text-red-800',   highlights: ['Certificate level', 'Professional level', 'Advanced level', 'Case Study'] },
-  { code: 'ATT',   slug: 'att',   description: 'Personal tax, business tax, and the core principles exams.',          accent: 'bg-[#6B21A8]', badgeBg: 'bg-purple-50',  badgeText: 'text-purple-800',highlights: ['Personal taxation', 'Business taxation', 'Law and ethics', 'Elective papers'] },
-  { code: 'CPA',   slug: 'cpa',   description: 'US CPA exam — FAR, AUD, REG, and BAR sections.',                     accent: 'bg-[#1D4ED8]', badgeBg: 'bg-blue-50',    badgeText: 'text-blue-800',  highlights: ['Financial (FAR)', 'Auditing (AUD)', 'Regulation (REG)', 'Business (BAR)'] },
-  { code: 'CIPFA', slug: 'cipfa', description: 'Public finance and government accounting across all stages.',          accent: 'bg-[#065F46]', badgeBg: 'bg-emerald-50', badgeText: 'text-emerald-800',highlights: ['Public finance', 'Financial reporting', 'Audit and governance', 'Treasury'] },
-  { code: 'CTA',   slug: 'cta',   description: 'Advanced UK tax — the gold standard for tax professionals.',          accent: 'bg-[#B45309]', badgeBg: 'bg-amber-50',   badgeText: 'text-amber-800', highlights: ['Human capital taxes', 'Business tax', 'Indirect taxes', 'Advisory skills'] },
+  { code: 'ACCA',  slug: 'acca',  description: 'All 13 papers from Applied Knowledge through Strategic Professional.', accent: 'bg-[#004B8D]', badgeBg: 'bg-blue-50',  badgeText: 'text-[#004B8D]', highlights: ['Applied Knowledge', 'Applied Skills', 'Strategic Professional', 'Ethics module'] },
+  { code: 'CIMA',  slug: 'cima',  description: 'Operational, Management, and Strategic levels plus Case Study prep.', accent: 'bg-[#0081C6]', badgeBg: 'bg-sky-50',   badgeText: 'text-[#0081C6]', highlights: ['Operational level', 'Management level', 'Strategic level', 'Case Study prep'] },
+  { code: 'ICAEW', slug: 'icaew', description: 'ACA qualification — Certificate, Professional, and Advanced levels.',  accent: 'bg-[#8B0000]', badgeBg: 'bg-red-50',   badgeText: 'text-red-800',   highlights: ['Certificate level', 'Professional level', 'Advanced level', 'Case Study'] },
+  { code: 'AAT',   slug: 'aat',   description: 'Level 2 Foundation through Level 4 Professional Diploma.',            accent: 'bg-[#00857A]', badgeBg: 'bg-teal-50',  badgeText: 'text-teal-700',  highlights: ['Level 2 Foundation', 'Level 3 Advanced', 'Level 4 Professional', 'Synoptic prep'] },
 ]
 
 const SUBJECT_AREAS = [
