@@ -11,6 +11,7 @@ export default defineType({
     defineField({ name: 'publishedAt', title: 'Published At', type: 'datetime', group: 'content' }),
     defineField({ name: 'difficulty', title: 'Difficulty', type: 'string', group: 'content', options: { list: [{ title: 'Beginner', value: 'beginner' }, { title: 'Intermediate', value: 'intermediate' }, { title: 'Advanced', value: 'advanced' }], layout: 'radio' } }),
     defineField({ name: 'framework', title: 'Framework', type: 'string', group: 'content' }),
+    defineField({ name: 'topic', title: 'Topic', type: 'string', group: 'content', description: 'e.g. Financial Accounting, Management Accounting, Taxation' }),
     defineField({ name: 'examBody', title: 'Exam Body', type: 'string', group: 'content' }),
     defineField({ name: 'questionType', title: 'Question Type', type: 'string', group: 'content', options: { list: [{ title: 'Multiple Choice', value: 'multiple-choice' }, { title: 'Writing', value: 'writing' }, { title: 'Scenario', value: 'scenario' }, { title: 'Mixed', value: 'mixed' }] } }),
     defineField({ name: 'categories', title: 'Categories', type: 'array', group: 'content', of: [{ type: 'reference', to: [{ type: 'category' }] }] }),
