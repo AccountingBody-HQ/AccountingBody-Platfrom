@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
+import { Users } from "lucide-react"
 
 async function getSubscribers() {
   const supabase = createClient(
@@ -79,7 +80,7 @@ export default async function SubscribersPage() {
 
       <div style={{ backgroundColor: "#0d1424", border: "1px solid #1a2238", borderRadius: "12px", overflow: "hidden" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid #1a2238", display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ fontSize: "18px" }}>📧</span>
+          <Users size={18} style={{ color: "#10b981" }} />
           <h2 style={{ fontSize: "16px", fontWeight: "600", color: "#ffffff", margin: 0 }}>All Subscribers ({total})</h2>
         </div>
         {subscribers.length === 0 ? (

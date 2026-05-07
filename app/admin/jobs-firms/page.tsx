@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
+import { Briefcase, Building2 } from "lucide-react"
 
 async function getJobsAndFirms() {
   const supabase = createClient(
@@ -54,7 +55,7 @@ export default async function JobsFirmsPage() {
       {/* Job Listings */}
       <div style={{ backgroundColor: "#0d1424", border: "1px solid #1a2238", borderRadius: "12px", marginBottom: "32px", overflow: "hidden" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid #1a2238", display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ fontSize: "18px" }}>💼</span>
+          <Briefcase size={18} style={{ color: "#2563eb" }} />
           <h2 style={{ fontSize: "16px", fontWeight: "600", color: "#ffffff", margin: 0 }}>Job Listings ({jobListings.length})</h2>
         </div>
         {jobListings.length === 0 ? (
@@ -98,7 +99,7 @@ export default async function JobsFirmsPage() {
       {/* Firms Applications */}
       <div style={{ backgroundColor: "#0d1424", border: "1px solid #1a2238", borderRadius: "12px", overflow: "hidden" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid #1a2238", display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ fontSize: "18px" }}>🏢</span>
+          <Building2 size={18} style={{ color: "#8b5cf6" }} />
           <h2 style={{ fontSize: "16px", fontWeight: "600", color: "#ffffff", margin: 0 }}>Firm Applications ({firmsApplications.length})</h2>
         </div>
         {firmsApplications.length === 0 ? (

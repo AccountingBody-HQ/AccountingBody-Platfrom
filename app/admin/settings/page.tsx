@@ -1,3 +1,5 @@
+import { CheckCircle, Circle, Settings, Server } from "lucide-react"
+
 export default function SettingsPage() {
   const envVars = [
     { name: "NEXT_PUBLIC_SANITY_PROJECT_ID", required: true, description: "Sanity project ID" },
@@ -47,7 +49,7 @@ export default function SettingsPage() {
       <div style={{ backgroundColor: "#0d1424", border: "1px solid #1a2238", borderRadius: "12px", marginBottom: "32px", overflow: "hidden" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid #1a2238", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span style={{ fontSize: "18px" }}>✅</span>
+            <CheckCircle size={18} style={{ color: "#10b981" }} />
             <h2 style={{ fontSize: "16px", fontWeight: "600", color: "#ffffff", margin: 0 }}>Pre-Launch Checklist</h2>
           </div>
           <span style={{ fontSize: "14px", color: "#94a3b8" }}>{completedCount} / {checklist.length} complete</span>
@@ -55,7 +57,7 @@ export default function SettingsPage() {
         <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "12px" }}>
           {checklist.map((item) => (
             <div key={item.label} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <span style={{ fontSize: "16px" }}>{item.done ? "✅" : "⬜"}</span>
+              {item.done ? <CheckCircle size={16} style={{ color: "#10b981" }} /> : <Circle size={16} style={{ color: "#334155" }} />}
               <span style={{ fontSize: "14px", color: item.done ? "#10b981" : "#94a3b8" }}>{item.label}</span>
             </div>
           ))}
@@ -65,7 +67,7 @@ export default function SettingsPage() {
       {/* Environment Variables */}
       <div style={{ backgroundColor: "#0d1424", border: "1px solid #1a2238", borderRadius: "12px", overflow: "hidden" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid #1a2238", display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ fontSize: "18px" }}>⚙️</span>
+          <Server size={18} style={{ color: "#2563eb" }} />
           <h2 style={{ fontSize: "16px", fontWeight: "600", color: "#ffffff", margin: 0 }}>Environment Variables</h2>
         </div>
         <div style={{ overflowX: "auto" }}>
