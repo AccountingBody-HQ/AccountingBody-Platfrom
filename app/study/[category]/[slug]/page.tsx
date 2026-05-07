@@ -318,7 +318,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                     Exam-standard practice questions on this topic.
                   </p>
                   <Link
-                    href="/practice"
+                    href="/practice-questions"
                     className="flex items-center justify-center gap-2 w-full h-10 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors"
                   >
                     Browse questions
