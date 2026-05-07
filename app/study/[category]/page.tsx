@@ -28,9 +28,13 @@ function groupAlphabetically(articles: ArticleSummary[]): { letter: string; arti
   return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([letter, articles]) => ({ letter, articles }))
 }
 
+export const dynamicParams = true
+
 export async function generateStaticParams() {
-  const slugs = await getAllCategorySlugs()
-  return slugs.map(category => ({ category }))
+  const sanity = await getAllCategorySlugs()
+  const known  = ['acca', 'cima', 'aat', 'icaew']
+  const all    = Array.from(new Set([...known, ...sanity]))
+  return all.map(category => ({ category }))
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
