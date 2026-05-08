@@ -760,42 +760,49 @@ export default async function HomePage() {
             </div>
 
             <div className="relative">
-              <div className="bg-navy-950 rounded-2xl p-8 relative overflow-hidden">
-                <div
-                  className="absolute inset-0 opacity-10"
-                  style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 50%)' }}
-                />
-                <div className="relative z-10">
-                  <p className="text-gold-400 text-xs font-semibold uppercase tracking-widest mb-6">
-                    Student experience
-                  </p>
-                  <blockquote className="border-l-2 border-gold-500 pl-4 mb-8">
-                    <p className="text-white/75 text-base leading-relaxed italic">
-                      &ldquo;AccountingBody has been my go-to resource throughout my
-                      qualification journey. The study notes and practice questions
-                      are genuinely exam standard.&rdquo;
+              <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-lg">
+
+                {/* Quote card */}
+                <div className="bg-navy-950 p-8 relative overflow-hidden">
+                  <div
+                    className="absolute inset-0 opacity-20"
+                    style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 50%)' }}
+                  />
+                  <div className="relative z-10">
+                    <p className="text-gold-400 text-xs font-semibold uppercase tracking-widest mb-5">
+                      Student experience
                     </p>
-                    <footer className="mt-4 flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-gold-500/30 flex items-center justify-center text-gold-400 text-xs font-bold">
+                    {/* Large quote mark */}
+                    <div className="text-gold-500 text-6xl font-display leading-none mb-2 opacity-60">&ldquo;</div>
+                    <p className="text-white text-base leading-relaxed mb-6">
+                      AccountingBody has been my go-to resource throughout my
+                      qualification journey. The study notes and practice questions
+                      are genuinely exam standard.
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-gold-500 flex items-center justify-center text-navy-950 text-sm font-bold shrink-0">
                         S
                       </div>
                       <div>
-                        <span className="text-white/80 text-xs font-medium block">Sarah M.</span>
-                        <span className="text-white/40 text-xs">Professional accounting student, UK</span>
+                        <span className="text-white text-sm font-semibold block">Sarah M.</span>
+                        <span className="text-white/50 text-xs">Professional accounting student, UK</span>
                       </div>
-                    </footer>
-                  </blockquote>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white/8 rounded-xl p-4 border border-white/10">
-                      <span className="text-white font-display text-2xl block mb-0.5">98%</span>
-                      <span className="text-white/50 text-xs">Would recommend</span>
-                    </div>
-                    <div className="bg-white/8 rounded-xl p-4 border border-white/10">
-                      <span className="text-white font-display text-2xl block mb-0.5">4.9/5</span>
-                      <span className="text-white/50 text-xs">Average rating</span>
                     </div>
                   </div>
                 </div>
+
+                {/* Stats row */}
+                <div className="grid grid-cols-2 divide-x divide-slate-200 bg-white">
+                  <div className="p-6 flex flex-col items-center text-center">
+                    <span className="font-display text-3xl text-navy-950 leading-none mb-1">98%</span>
+                    <span className="text-slate-500 text-xs font-medium">Would recommend</span>
+                  </div>
+                  <div className="p-6 flex flex-col items-center text-center">
+                    <span className="font-display text-3xl text-navy-950 leading-none mb-1">4.9/5</span>
+                    <span className="text-slate-500 text-xs font-medium">Average rating</span>
+                  </div>
+                </div>
+
               </div>
             </div>
 
