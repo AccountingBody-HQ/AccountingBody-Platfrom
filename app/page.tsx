@@ -6,6 +6,7 @@ import React from 'react'
 import Link from 'next/link'
 import { ExamBodyBadge } from '@/components/ui/Badge'
 import EmailSignupForm from '@/components/EmailSignupForm'
+import HeroSearch from '@/components/HeroSearch'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -475,6 +476,11 @@ export default async function HomePage() {
               >
                 Browse practice questions
               </Link>
+            </div>
+
+            {/* Search box */}
+            <div className="w-full mb-10">
+              <HeroSearch />
             </div>
 
             <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
