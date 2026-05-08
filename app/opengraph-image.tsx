@@ -29,7 +29,7 @@ export default function OGImage() {
             <rect x="11" y="11" width="9" height="9" fill="#ffffff" />
           </svg>
           <span style={{ color: "#ffffff", fontSize: "36px", fontWeight: "600", marginLeft: "16px" }}>
-            Accounting Body
+            Accounting Body<sup style={{ fontSize: "18px", verticalAlign: "super", lineHeight: 0 }}>®</sup>
           </span>
         </div>
         <div style={{ color: "#ffffff", fontSize: "52px", fontWeight: "700", textAlign: "center", lineHeight: 1.15, maxWidth: "900px", marginBottom: "24px" }}>
