@@ -566,25 +566,33 @@ export default async function HomePage() {
 
           <div className="max-w-2xl mx-auto text-center mb-16">
             <span className="eyebrow mb-3 block">How It Works</span>
-            <h2 className="section-title mb-4">Simple. Structured. Effective.</h2>
+            <h2 className="section-title mb-4">Three steps to exam success</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              Three steps from starting your studies to walking into the exam room with confidence.
+              From choosing your qualification to walking into the exam room with confidence.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {howItWorks.map((step) => (
-              <div key={step.step} className="flex flex-col">
-                <span className="font-display text-6xl text-gold-500 font-bold leading-none mb-5">
-                  {step.step}
-                </span>
-                <h3 className="font-display text-xl text-navy-950 mb-3">{step.title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">{step.body}</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
+            {howItWorks.map((step, i) => (
+              <div key={step.step} className="relative flex flex-col items-start md:items-center text-left md:text-center px-0 md:px-8">
+
+                {/* Connector line between steps */}
+                {i < howItWorks.length - 1 && (
+                  <div className="hidden md:block absolute top-9 left-[calc(50%+2.5rem)] right-0 h-px bg-slate-200" />
+                )}
+
+                {/* Step number circle */}
+                <div className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full bg-white border-2 border-gold-500 mb-6 shadow-sm">
+                  <span className="font-display text-xl font-bold text-gold-500">{step.step}</span>
+                </div>
+
+                <h3 className="font-display text-lg text-navy-950 mb-3">{step.title}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed max-w-xs">{step.body}</p>
               </div>
             ))}
           </div>
 
-          <div className="mt-12 flex justify-center">
+          <div className="mt-14 flex justify-center">
             <Link
               href="/study"
               className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors"
