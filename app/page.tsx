@@ -101,36 +101,40 @@ const placeholderArticles = [
 
 const qualificationPaths = [
   {
-    body:        'ACCA',
-    fullName:    'Association of Chartered Certified Accountants',
-    description: "The global professional accountancy qualification. Recognised in 180 countries and held by over 250,000 members worldwide.",
-    detail:      '13 papers · Applied Knowledge → Strategic Professional',
-    href:        '/study/acca',
-    color:       '#004B8D',
+    code:        'ACCA',
+    slug:        'acca',
+    description: 'All 13 papers from Applied Knowledge through Strategic Professional.',
+    accent:      'bg-[#004B8D]',
+    badgeBg:     'bg-blue-50',
+    badgeText:   'text-[#004B8D]',
+    highlights:  ['Applied Knowledge', 'Applied Skills', 'Strategic Professional', 'Ethics module'],
   },
   {
-    body:        'CIMA',
-    fullName:    'Chartered Institute of Management Accountants',
-    description: "The world's largest professional body of management accountants. Focused on business strategy and financial leadership.",
-    detail:      'Full pathway · Operational → Management → Strategic',
-    href:        '/study/cima',
-    color:       '#0081C6',
+    code:        'CIMA',
+    slug:        'cima',
+    description: 'Operational, Management, and Strategic levels plus Case Study prep.',
+    accent:      'bg-[#0081C6]',
+    badgeBg:     'bg-sky-50',
+    badgeText:   'text-[#0081C6]',
+    highlights:  ['Operational level', 'Management level', 'Strategic level', 'Case Study prep'],
   },
   {
-    body:        'ICAEW',
-    fullName:    'Institute of Chartered Accountants in England & Wales',
-    description: "The ACA — one of the most respected chartered accountancy designations. Highly regarded by employers across the world.",
-    detail:      'ACA · Certificate → Professional → Advanced',
-    href:        '/study/icaew',
-    color:       '#1e3a7a',
+    code:        'ICAEW',
+    slug:        'icaew',
+    description: 'ACA qualification — Certificate, Professional, and Advanced levels.',
+    accent:      'bg-[#8B0000]',
+    badgeBg:     'bg-red-50',
+    badgeText:   'text-red-800',
+    highlights:  ['Certificate level', 'Professional level', 'Advanced level', 'Case Study'],
   },
   {
-    body:        'AAT',
-    fullName:    'Association of Accounting Technicians',
-    description: "The practical entry route into professional accounting. From complete beginner through to qualified accounting technician.",
-    detail:      'Levels 2, 3 & 4 · Foundation → Professional Diploma',
-    href:        '/study/aat',
-    color:       '#00857A',
+    code:        'AAT',
+    slug:        'aat',
+    description: 'Level 2 Foundation through Level 4 Professional Diploma.',
+    accent:      'bg-[#00857A]',
+    badgeBg:     'bg-teal-50',
+    badgeText:   'text-teal-700',
+    highlights:  ['Level 2 Foundation', 'Level 3 Advanced', 'Level 4 Professional', 'Synoptic prep'],
   },
 ]
 
@@ -510,36 +514,35 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
             {qualificationPaths.map(q => (
               <Link
-                key={q.body}
-                href={q.href}
-                className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-200"
+                key={q.slug}
+                href={`/study/${q.slug}`}
+                className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
               >
-                <div className="h-1.5" style={{ backgroundColor: q.color }} />
-                <div className="flex flex-col flex-1 p-6">
-                  <div
-                    className="inline-flex items-center justify-center w-14 h-14 rounded-xl mb-4 text-white text-lg font-bold tracking-wide"
-                    style={{ backgroundColor: q.color }}
-                  >
-                    {q.body}
-                  </div>
-                  <p className="text-xs font-medium text-slate-400 mb-2 leading-snug">
-                    {q.fullName}
-                  </p>
-                  <p className="text-sm text-slate-600 leading-relaxed flex-1 mb-5">
-                    {q.description}
-                  </p>
-                  <div className="pt-4 border-t border-slate-100">
-                    <p className="text-xs text-slate-400 mb-3">{q.detail}</p>
-                    <span
-                      className="flex items-center gap-1.5 text-xs font-semibold group-hover:gap-2.5 transition-all"
-                      style={{ color: q.color }}
-                    >
-                      Start studying
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                      </svg>
+                <div className={`h-1.5 ${q.accent}`} />
+                <div className="p-6 flex flex-col flex-1">
+                  <div className="flex items-start justify-between mb-4">
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${q.badgeBg} ${q.badgeText}`}>
+                      {q.code}
                     </span>
                   </div>
+                  <h3 className="font-display text-base text-navy-950 leading-snug mb-2 group-hover:text-navy-700 transition-colors">
+                    {q.code}
+                  </h3>
+                  <p className="text-xs text-slate-500 mb-4 leading-relaxed flex-1">{q.description}</p>
+                  <ul className="space-y-1.5 mb-5">
+                    {q.highlights.map(h => (
+                      <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${q.accent}`} />
+                        {h}
+                      </li>
+                    ))}
+                  </ul>
+                  <span className={`flex items-center gap-1.5 text-xs font-semibold ${q.badgeText} group-hover:gap-2.5 transition-all`}>
+                    Browse {q.code} notes
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </span>
                 </div>
               </Link>
             ))}
