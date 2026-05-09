@@ -1,38 +1,140 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import Link from 'next/link'
 
 const services = [
-  { name: 'Tax Advice',         icon: '📊', desc: 'Personal and business tax planning, returns and HMRC compliance.' },
-  { name: 'Bookkeeping',        icon: '📒', desc: 'Day-to-day financial records, bank reconciliations and reporting.' },
-  { name: 'Payroll',            icon: '💷', desc: 'End-to-end payroll processing, RTI submissions and auto-enrolment.' },
-  { name: 'Financial Planning', icon: '📈', desc: 'Strategic financial planning, forecasting and cash flow management.' },
-  { name: 'Audit',              icon: '🔍', desc: 'Statutory and voluntary audits for businesses of all sizes.' },
-  { name: 'Business Advisory',  icon: '🤝', desc: 'Strategic advice to grow, scale and protect your business.' },
-  { name: 'Company Formation',  icon: '🏢', desc: 'Register your limited company quickly and correctly from day one.' },
-  { name: 'VAT',                icon: '🧾', desc: 'VAT registration, returns, MTD compliance and HMRC advice.' },
-  { name: 'Self Assessment',    icon: '📝', desc: 'Personal tax returns filed accurately and submitted on time.' },
+  {
+    name: 'Tax Advice',
+    slug: 'tax-advice',
+    desc: 'Personal and business tax planning, returns and HMRC compliance.',
+    icon: (
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+        <rect width="40" height="40" rx="10" fill="#EEF2FF"/>
+        <path d="M12 28V14a2 2 0 012-2h8l6 6v10a2 2 0 01-2 2H14a2 2 0 01-2-2z" stroke="#0C1A3D" strokeWidth="1.6" strokeLinejoin="round"/>
+        <path d="M22 12v6h6" stroke="#0C1A3D" strokeWidth="1.6" strokeLinejoin="round"/>
+        <path d="M16 21h8M16 25h5" stroke="#D4A017" strokeWidth="1.6" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  {
+    name: 'Bookkeeping',
+    slug: 'bookkeeping',
+    desc: 'Day-to-day financial records, bank reconciliations and reporting.',
+    icon: (
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+        <rect width="40" height="40" rx="10" fill="#F0FDF4"/>
+        <rect x="10" y="11" width="20" height="18" rx="2" stroke="#0C1A3D" strokeWidth="1.6"/>
+        <path d="M14 16h12M14 20h12M14 24h7" stroke="#D4A017" strokeWidth="1.6" strokeLinecap="round"/>
+        <path d="M10 15h2M10 20h2M10 25h2" stroke="#0C1A3D" strokeWidth="1.6" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  {
+    name: 'Payroll',
+    slug: 'payroll',
+    desc: 'End-to-end payroll processing, RTI submissions and auto-enrolment.',
+    icon: (
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+        <rect width="40" height="40" rx="10" fill="#FFFBEB"/>
+        <circle cx="20" cy="20" r="9" stroke="#0C1A3D" strokeWidth="1.6"/>
+        <path d="M20 14v1.5M20 24.5V26M17 17.5c0-1.38 1.12-2.5 3-2.5s3 1.12 3 2.5c0 1.5-1.5 2-3 2.5-1.5.5-3 1.12-3 2.5 0 1.38 1.12 2.5 3 2.5s3-1.12 3-2.5" stroke="#D4A017" strokeWidth="1.6" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  {
+    name: 'Financial Planning',
+    slug: 'financial-planning',
+    desc: 'Strategic financial planning, forecasting and cash flow management.',
+    icon: (
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+        <rect width="40" height="40" rx="10" fill="#EFF6FF"/>
+        <path d="M11 29l6-7 4 4 8-10" stroke="#D4A017" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx="29" cy="16" r="2" fill="#0C1A3D"/>
+        <path d="M11 12v17h18" stroke="#0C1A3D" strokeWidth="1.6" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  {
+    name: 'Audit',
+    slug: 'audit',
+    desc: 'Statutory and voluntary audits for businesses of all sizes.',
+    icon: (
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+        <rect width="40" height="40" rx="10" fill="#F5F3FF"/>
+        <circle cx="19" cy="19" r="7" stroke="#0C1A3D" strokeWidth="1.6"/>
+        <path d="M24 24l5 5" stroke="#0C1A3D" strokeWidth="1.8" strokeLinecap="round"/>
+        <path d="M16 19h6M19 16v6" stroke="#D4A017" strokeWidth="1.6" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  {
+    name: 'Business Advisory',
+    slug: 'business-advisory',
+    desc: 'Strategic advice to grow, scale and protect your business.',
+    icon: (
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+        <rect width="40" height="40" rx="10" fill="#FFF7ED"/>
+        <path d="M14 26c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="#0C1A3D" strokeWidth="1.6" strokeLinecap="round"/>
+        <circle cx="20" cy="16" r="3" stroke="#0C1A3D" strokeWidth="1.6"/>
+        <path d="M28 22c1.5.8 2.5 2.3 2.5 4" stroke="#D4A017" strokeWidth="1.6" strokeLinecap="round"/>
+        <circle cx="28" cy="18" r="2" stroke="#D4A017" strokeWidth="1.4"/>
+        <path d="M12 22c-1.5.8-2.5 2.3-2.5 4" stroke="#D4A017" strokeWidth="1.6" strokeLinecap="round"/>
+        <circle cx="12" cy="18" r="2" stroke="#D4A017" strokeWidth="1.4"/>
+      </svg>
+    ),
+  },
+  {
+    name: 'Company Formation',
+    slug: 'company-formation',
+    desc: 'Register your limited company quickly and correctly from day one.',
+    icon: (
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+        <rect width="40" height="40" rx="10" fill="#ECFDF5"/>
+        <rect x="11" y="18" width="18" height="11" rx="1.5" stroke="#0C1A3D" strokeWidth="1.6"/>
+        <path d="M15 18v-3a5 5 0 0110 0v3" stroke="#0C1A3D" strokeWidth="1.6" strokeLinecap="round"/>
+        <rect x="17" y="22" width="6" height="4" rx="1" fill="#D4A017"/>
+      </svg>
+    ),
+  },
+  {
+    name: 'VAT',
+    slug: 'vat',
+    desc: 'VAT registration, returns, MTD compliance and HMRC advice.',
+    icon: (
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+        <rect width="40" height="40" rx="10" fill="#FEF2F2"/>
+        <rect x="10" y="13" width="20" height="14" rx="2" stroke="#0C1A3D" strokeWidth="1.6"/>
+        <path d="M10 18h20" stroke="#0C1A3D" strokeWidth="1.4"/>
+        <path d="M15 22.5h3M25 22.5h-4" stroke="#D4A017" strokeWidth="1.6" strokeLinecap="round"/>
+        <circle cx="28" cy="12" r="4" fill="#0C1A3D"/>
+        <path d="M26.5 12h3M28 10.5v3" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  {
+    name: 'Self Assessment',
+    slug: 'self-assessment',
+    desc: 'Personal tax returns filed accurately and submitted on time.',
+    icon: (
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+        <rect width="40" height="40" rx="10" fill="#F0FDF4"/>
+        <rect x="11" y="10" width="18" height="20" rx="2" stroke="#0C1A3D" strokeWidth="1.6"/>
+        <path d="M15 17l2 2 4-4" stroke="#D4A017" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M15 23l2 2 4-4" stroke="#D4A017" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M23 18h2M23 24h2" stroke="#0C1A3D" strokeWidth="1.4" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
 ]
 
 const steps = [
-  { step: '01', title: 'Tell us what you need', desc: 'Fill in the short form below describing the accounting help you are looking for.' },
+  { step: '01', title: 'Tell us what you need', desc: 'Fill in the short form describing the accounting help you are looking for.' },
   { step: '02', title: 'We match you',          desc: 'Our team reviews your request and connects you with a vetted professional within one business day.' },
   { step: '03', title: 'Get expert help',       desc: 'Speak directly with your matched professional and get the support you need.' },
 ]
 
 export default function GetHelpPage() {
-  const [form,   setForm]   = useState({ name: '', email: '', phone: '', service_type: '', message: '' })
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setStatus('loading')
-    const { error } = await supabase.from('help_requests').insert([form])
-    if (error) { console.error(error); setStatus('error') }
-    else { setStatus('success'); setForm({ name: '', email: '', phone: '', service_type: '', message: '' }) }
-  }
-
   return (
     <main className="min-h-screen bg-surface">
 
@@ -58,9 +160,9 @@ export default function GetHelpPage() {
             <p className="text-white/60 text-xl leading-relaxed mb-10 max-w-2xl">
               Connect with verified accountants, bookkeepers, tax advisors and financial professionals across the UK.
             </p>
-            <a href="#request-form"
+            <a href="#services"
               className="inline-flex items-center gap-2 h-12 px-7 text-sm font-semibold rounded-lg bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
-              Find a Professional
+              Browse Services
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
             </a>
           </div>
@@ -68,7 +170,7 @@ export default function GetHelpPage() {
       </section>
 
       {/* SERVICES GRID */}
-      <section className="section bg-slate-50">
+      <section id="services" className="section bg-slate-50">
         <div className="container-site">
           <div className="max-w-2xl mb-12">
             <span className="eyebrow mb-3 block">Service Categories</span>
@@ -79,20 +181,16 @@ export default function GetHelpPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {services.map((s) => (
-              <button key={s.name} type="button"
-                onClick={() => {
-                  setForm(f => ({ ...f, service_type: s.name }))
-                  document.getElementById('request-form')?.scrollIntoView({ behavior: 'smooth' })
-                }}
-                className="group bg-white rounded-xl border border-slate-200 p-6 hover:border-gold-400 hover:shadow-lg transition-all duration-200 cursor-pointer text-left w-full">
-                <div className="text-3xl mb-4">{s.icon}</div>
+              <Link key={s.name} href={`/get-help/${s.slug}`}
+                className="group bg-white rounded-xl border border-slate-200 p-6 hover:border-gold-400 hover:shadow-lg transition-all duration-200 text-left block">
+                <div className="mb-4">{s.icon}</div>
                 <h3 className="font-display text-lg text-navy-950 mb-2 group-hover:text-navy-700 transition-colors">{s.name}</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">{s.desc}</p>
                 <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-gold-600 group-hover:gap-2 transition-all">
-                  Get matched
+                  Learn more
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                 </span>
-              </button>
+              </Link>
             ))}
           </div>
         </div>
@@ -124,87 +222,6 @@ export default function GetHelpPage() {
                 <p className="text-white/55 text-sm leading-relaxed">{item.desc}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* REQUEST FORM */}
-      <section id="request-form" className="section bg-slate-50">
-        <div className="container-site">
-          <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-10">
-              <span className="eyebrow mb-3 block">Get Matched</span>
-              <h2 className="section-title mb-4">Find a Professional</h2>
-              <p className="text-slate-500 text-lg">
-                Tell us what you need and we will connect you with the right expert.
-              </p>
-            </div>
-
-            {status === 'success' ? (
-              <div className="bg-teal-50 border border-teal-200 rounded-xl p-12 text-center">
-                <div className="w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-5">
-                  <svg className="w-7 h-7 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h3 className="font-display text-2xl text-navy-950 mb-3">Request Received</h3>
-                <p className="text-slate-600">We will be in touch within one business day to connect you with the right professional.</p>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-navy-950 mb-1.5">Full Name *</label>
-                    <input required type="text" value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
-                      placeholder="Your full name" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-navy-950 mb-1.5">Email Address *</label>
-                    <input required type="email" value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
-                      placeholder="you@example.com" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-navy-950 mb-1.5">Phone Number</label>
-                    <input type="tel" value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
-                      placeholder="Optional" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-navy-950 mb-1.5">Service Required *</label>
-                    <select required value={form.service_type}
-                      onChange={(e) => setForm({ ...form, service_type: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent bg-white transition-all">
-                      <option value="">Select a service</option>
-                      {services.map((s) => <option key={s.name} value={s.name}>{s.name}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-navy-950 mb-1.5">Tell us more about what you need *</label>
-                  <textarea required rows={5} value={form.message}
-                    onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all resize-none"
-                    placeholder="Briefly describe your situation and what help you are looking for..." />
-                </div>
-                {status === 'error' && (
-                  <p className="text-crimson-600 text-sm">Something went wrong. Please try again or email us directly.</p>
-                )}
-                <button type="submit" disabled={status === 'loading'}
-                  className="w-full h-12 rounded-lg bg-navy-950 text-white font-semibold text-sm hover:bg-navy-900 transition-colors disabled:opacity-50 shadow-sm">
-                  {status === 'loading' ? 'Sending your request...' : 'Find a Professional →'}
-                </button>
-                <p className="text-xs text-slate-400 text-center">
-                  We will respond within one business day. Your details are never shared without your permission.
-                </p>
-              </form>
-            )}
           </div>
         </div>
       </section>
