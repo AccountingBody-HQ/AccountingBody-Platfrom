@@ -31,7 +31,7 @@ async function getFeaturedArticles(): Promise<SanityArticle[]> {
     const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
     if (!projectId) return []
     const query = encodeURIComponent(`
-      *[_type == "article"] | order(publishedAt desc) [0..3] {
+      *[_type == "article" && "accountingbody" in showOnSites] | order(publishedAt desc) [0..3] {
         _id, title, slug, excerpt, category, examBody, readTime, publishedAt,
         "coverImage": featuredImage { asset -> { url } },
         "author": author -> { name }
