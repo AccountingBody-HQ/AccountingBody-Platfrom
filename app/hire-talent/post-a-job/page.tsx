@@ -27,6 +27,13 @@ export default function PostAJobPage() {
             style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
         </div>
         <div className="container-site relative z-10">
+          <nav className="flex items-center gap-2 text-white/40 text-sm mb-8">
+            <a href="/" className="hover:text-white/70 transition-colors">Home</a>
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+            <a href="/hire-talent" className="hover:text-white/70 transition-colors">Hire Talent</a>
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+            <span className="text-white/70">Post a Job</span>
+          </nav>
           <span className="eyebrow text-gold-400 mb-4 block">Employers</span>
           <h1 className="font-display text-white text-4xl md:text-5xl mb-4 leading-tight">Post a Job</h1>
           <p className="text-white/60 text-xl leading-relaxed">Reach qualified accounting and finance professionals across the UK.</p>
@@ -36,7 +43,9 @@ export default function PostAJobPage() {
         <div className="max-w-3xl mx-auto">
           {status === 'success' ? (
             <div className="bg-green-50 border border-green-200 rounded-xl p-12 text-center">
-              <div className="text-5xl mb-5">✅</div>
+              <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+              </div>
               <h2 className="text-2xl font-bold text-green-800 mb-3">Job Submitted</h2>
               <p className="text-green-700">We will review your listing and publish it within one business day.</p>
             </div>
