@@ -169,14 +169,17 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
 
           {/* Badges */}
           <div className="flex flex-wrap items-center gap-2 mb-5">
-            {article.examBody && (
-              <span className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-md border ${badgeClass}`}>
-                {article.examBody}
-              </span>
-            )}
+            {article.examBody?.map((body: string) => {
+              const cls = EXAM_BODY_BADGE[body.toUpperCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200'
+              return (
+                <span key={body} className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-md border ${cls}`}>
+                  {body.toUpperCase()}
+                </span>
+              )
+            })}
             {article.category && (
               <span className="text-xs font-medium px-2.5 py-1 rounded-md bg-white/10 text-white/70 border border-white/15">
-                {article.category}
+                {article.category.replace(/-/g, ' ').replace(/\w/g, (c: string) => c.toUpperCase())}
               </span>
             )}
           </div>
@@ -269,20 +272,21 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                   Article details
                 </p>
                 <dl className="space-y-3">
-                  {article.examBody && (
-                    <div className="flex justify-between text-sm">
-                      <dt className="text-slate-500">Qualification</dt>
-                      <dd>
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${badgeClass}`}>
-                          {article.examBody}
-                        </span>
+                  {article.examBody?.length && (
+                    <div className="flex justify-between items-start text-sm gap-2">
+                      <dt className="text-slate-500 shrink-0">Qualification</dt>
+                      <dd className="flex flex-wrap gap-1 justify-end">
+                        {article.examBody.map((body: string) => {
+                          const cls = EXAM_BODY_BADGE[body.toUpperCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200'
+                          return <span key={body} className={`text-xs font-bold px-2 py-0.5 rounded-md border ${cls}`}>{body.toUpperCase()}</span>
+                        })}
                       </dd>
                     </div>
                   )}
                   {article.category && (
                     <div className="flex justify-between text-sm">
                       <dt className="text-slate-500">Subject</dt>
-                      <dd className="text-navy-950 font-medium">{article.category}</dd>
+                      <dd className="text-navy-950 font-medium">{article.category.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}</dd>
                     </div>
                   )}
                   {article.readTime && (
