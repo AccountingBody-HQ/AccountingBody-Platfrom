@@ -46,7 +46,7 @@ export async function getPracticePosts(params: {
   perPage?:   number
 }): Promise<{ posts: PracticePost[]; total: number }> {
   const { examBody, difficulty, topic, search, page = 1, perPage = 12 } = params
-  const filters: string[] = ["_type == \"practicePost\""]
+  const filters: string[] = ["_type == \"practicePost\"", "\"accountingbody\" in showOnSites"]
   if (examBody)   filters.push(`examBody == "${examBody}"`)
   if (difficulty) filters.push(`difficulty == "${difficulty}"`)
   if (topic)      filters.push(`topic == "${topic}"`)
@@ -63,7 +63,7 @@ export async function getPracticePosts(params: {
 }
 
 export async function getPracticePostBySlug(slug: string): Promise<PracticePost | null> {
-  const query = `*[_type == "practicePost" && slug.current == $slug][0] {
+  const query = `*[_type == "practicePost" && "accountingbody" in showOnSites && slug.current == $slug][0] {
     ${SUMMARY_FIELDS},
     "quizQuestions": quizQuestions[] {
       id, type, questionText, options, correctIndex, explanation, primaryTopic, difficulty, timeTargetMinutes
@@ -105,9 +105,9 @@ export async function getPracticeFilters(): Promise<{
   topics:       string[]
 }> {
   const query = `{
-    "examBodies":   array::unique(*[_type == "practicePost" && defined(examBody)].examBody),
-    "difficulties": array::unique(*[_type == "practicePost" && defined(difficulty)].difficulty),
-    "topics":       array::unique(*[_type == "practicePost" && defined(topic)].topic)
+    "examBodies":   array::unique(*[_type == "practicePost" && "accountingbody" in showOnSites && defined(examBody)].examBody),
+    "difficulties": array::unique(*[_type == "practicePost" && "accountingbody" in showOnSites && defined(difficulty)].difficulty),
+    "topics":       array::unique(*[_type == "practicePost" && "accountingbody" in showOnSites && defined(topic)].topic)
   }`
   const result = await sanityFetch<{ examBodies: string[]; difficulties: string[]; topics: string[] }>(query)
   return result ?? { examBodies: [], difficulties: [], topics: [] }
