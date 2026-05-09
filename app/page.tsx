@@ -326,19 +326,20 @@ function ArticleCard({ article }: { article: typeof placeholderArticles[0] }) {
       })
     : null
 
+  const examBodyFirst = Array.isArray(article.examBody) ? article.examBody[0] : article.examBody
   const bodyColor =
-    article.examBody === 'acca'  ? '#004B8D' :
-    article.examBody === 'cima'  ? '#0081C6' :
-    article.examBody === 'aat'   ? '#00857A' :
-    article.examBody === 'icaew' ? '#1e3a7a' : '#0C1A3D'
+    examBodyFirst === 'acca'  ? '#004B8D' :
+    examBodyFirst === 'cima'  ? '#0081C6' :
+    examBodyFirst === 'aat'   ? '#00857A' :
+    examBodyFirst === 'icaew' ? '#1e3a7a' : '#0C1A3D'
 
   return (
     <article className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
       <div className="h-1" style={{ backgroundColor: bodyColor }} />
       <div className="flex flex-col flex-1 p-5">
         <div className="flex flex-wrap items-center gap-2 mb-3">
-          {article.examBody && (
-            <ExamBodyBadge body={article.examBody.toUpperCase()} />
+          {examBodyFirst && (
+            <ExamBodyBadge body={examBodyFirst.toUpperCase()} />
           )}
           {article.category && (
             <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
