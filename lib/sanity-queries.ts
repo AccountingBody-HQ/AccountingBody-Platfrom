@@ -98,16 +98,13 @@ export async function getStudyLandingData(): Promise<ExamBodyStat[]> {
   }))
 }
 
+const QUAL_SLUGS = ["acca", "cima", "icaew", "aat"]
+
 export async function getArticlesByCategory(categorySlug: string): Promise<ArticleSummary[]> {
-  const query = `
-    *[
-      _type == "article" &&
-      "accountingbody" in showOnSites &&
-      (lower(examBody) == $cat || lower(category) == $cat)
-    ] | order(title asc) {
-      ${SUMMARY_FIELDS}
-    }
-  `
+  const isQualPage = QUAL_SLUGS.includes(categorySlug.toLowerCase())
+  const query = isQualPage
+    ? `*[_type == "article" && "accountingbody" in showOnSites] | order(title asc) { ${SUMMARY_FIELDS} }`
+    : `*[_type == "article" && "accountingbody" in showOnSites && categories[]->.slug.current match $cat] | order(title asc) { ${SUMMARY_FIELDS} }`
   return (await sanityFetch<ArticleSummary[]>(query, { cat: categorySlug })) ?? []
 }
 
