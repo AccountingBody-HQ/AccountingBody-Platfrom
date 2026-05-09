@@ -178,7 +178,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
             })}
             {article.category && (
               <span className="text-xs font-medium px-2.5 py-1 rounded-md bg-white/10 text-white/70 border border-white/15">
-                {article.category.replace(/-/g, ' ').replace(/\w/g, (c: string) => c.toUpperCase())}
+                {article.category.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
               </span>
             )}
           </div>
