@@ -310,8 +310,8 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
             {allServices.filter(s => s.slug !== params.slug).map(s => (
               <Link key={s.slug} href={`/get-help/${s.slug}`}
                 className="group bg-white rounded-xl border border-slate-200 p-5 hover:border-gold-400 hover:shadow-md transition-all duration-200 flex flex-col items-center text-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-navy-950 flex items-center justify-center group-hover:bg-gold-500 transition-colors">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 rounded-full bg-gold-500 flex items-center justify-center group-hover:bg-navy-950 transition-colors">
+                  <svg className="w-5 h-5 text-navy-950 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
