@@ -31,7 +31,7 @@ async function getArticles(): Promise<ArticleSummary[]> {
   try {
     if (!PROJECT_ID) return []
     const query = encodeURIComponent(
-      '*[_type == "article"] | order(publishedAt desc) [0...50] { _id, title, slug, excerpt, examBody, readTime, publishedAt }'
+      '*[_type == "article" && "accountingbody" in showOnSites] | order(publishedAt desc) [0...50] { _id, title, slug, excerpt, examBody, readTime, publishedAt }'
     )
     const token = process.env.SANITY_API_TOKEN
     const res = await fetch(
