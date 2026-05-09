@@ -82,7 +82,7 @@ const SUMMARY_FIELDS = `
 `
 
 export async function getStudyLandingData(): Promise<ExamBodyStat[]> {
-  const query = `*[_type == "article"] | order(publishedAt desc) { examBody, ${SUMMARY_FIELDS} }`
+  const query = `*[_type == "article" && "accountingbody" in showOnSites] | order(publishedAt desc) { examBody, ${SUMMARY_FIELDS} }`
   const all   = await sanityFetch<(ArticleSummary & { examBody: string })[]>(query)
   if (!all) return []
   const map: Record<string, { count: number; latest: ArticleSummary }> = {}
@@ -102,6 +102,7 @@ export async function getArticlesByCategory(categorySlug: string): Promise<Artic
   const query = `
     *[
       _type == "article" &&
+      "accountingbody" in showOnSites &&
       (lower(examBody) == $cat || lower(category) == $cat)
     ] | order(title asc) {
       ${SUMMARY_FIELDS}
@@ -112,7 +113,7 @@ export async function getArticlesByCategory(categorySlug: string): Promise<Artic
 
 export async function getArticleBySlug(slug: string): Promise<ArticleFull | null> {
   const query = `
-    *[_type == "article" && slug.current == $slug][0] {
+    *[_type == "article" && "accountingbody" in showOnSites && slug.current == $slug][0] {
       ${SUMMARY_FIELDS},
       body[]{ ..., _type == "tableBlock" => { _type, _key, headers, rows[]{ _type, _key, cells } } },
       canonicalOwner,
@@ -129,7 +130,7 @@ export async function getArticleBySlug(slug: string): Promise<ArticleFull | null
 }
 
 export async function getAllArticlePaths(): Promise<Array<{ category: string; slug: string }>> {
-  const query = `*[_type == "article"] { "slug": slug.current, examBody }`
+  const query = `*[_type == "article" && "accountingbody" in showOnSites] { "slug": slug.current, examBody }`
   const all   = await sanityFetch<{ slug: string; examBody?: string }[]>(query)
   if (!all) return []
   return all
@@ -141,7 +142,7 @@ export async function getAllArticlePaths(): Promise<Array<{ category: string; sl
 }
 
 export async function getAllCategorySlugs(): Promise<string[]> {
-  const query = `array::unique(*[_type == "article"].examBody)`
+  const query = `array::unique(*[_type == "article" && "accountingbody" in showOnSites].examBody)`
   const all   = await sanityFetch<string[]>(query)
   return (all ?? []).filter(Boolean).map(e => e.toLowerCase())
 }
