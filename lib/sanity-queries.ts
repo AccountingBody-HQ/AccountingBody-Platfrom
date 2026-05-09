@@ -72,7 +72,7 @@ const SUMMARY_FIELDS = `
   title,
   slug,
   excerpt,
-  category,
+  "category": categories[0]->slug.current,
   examBody,
   readTime,
   publishedAt,
