@@ -37,7 +37,7 @@ export default defineType({
     defineField({ name: 'abcmDifficulty', title: 'ABCM Difficulty', type: 'string', group: 'abcm' }),
     defineField({ name: 'abcmFramework', title: 'ABCM Framework', type: 'string', group: 'abcm' }),
     defineField({ name: 'abcmExamBody', title: 'ABCM Exam Body', type: 'string', group: 'abcm' }),
-    defineField({ name: 'examBody', title: 'Exam Body', type: 'string', group: 'abcm', description: 'AccountingBody qualification: acca, cima, icaew, or aat', options: { list: [{ title: 'ACCA', value: 'acca' }, { title: 'CIMA', value: 'cima' }, { title: 'ICAEW', value: 'icaew' }, { title: 'AAT', value: 'aat' }], layout: 'radio' } }),
+    defineField({ name: 'examBody', title: 'Exam Bodies', type: 'array', group: 'abcm', description: 'Select all qualifications this article applies to', of: [{ type: 'string' }], options: { list: [{ title: 'ACCA', value: 'acca' }, { title: 'CIMA', value: 'cima' }, { title: 'ICAEW', value: 'icaew' }, { title: 'AAT', value: 'aat' }], layout: 'grid' } }),
     defineField({ name: 'abcmQuestionType', title: 'ABCM Question Type', type: 'string', group: 'abcm' }),
   ],
   preview: {

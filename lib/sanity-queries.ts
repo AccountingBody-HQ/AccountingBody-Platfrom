@@ -16,7 +16,7 @@ export interface ArticleSummary {
   slug:          { current: string }
   excerpt?:      string
   category?:     string
-  examBody?:     string
+  examBody?:     string[]
   readTime?:     number
   publishedAt?:  string
   lastReviewed?: string
@@ -83,13 +83,15 @@ const SUMMARY_FIELDS = `
 
 export async function getStudyLandingData(): Promise<ExamBodyStat[]> {
   const query = `*[_type == "article" && "accountingbody" in showOnSites] | order(publishedAt desc) { examBody, ${SUMMARY_FIELDS} }`
-  const all   = await sanityFetch<(ArticleSummary & { examBody: string })[]>(query)
+  const all   = await sanityFetch<(ArticleSummary & { examBody: string[] })[]>(query)
   if (!all) return []
   const map: Record<string, { count: number; latest: ArticleSummary }> = {}
   for (const a of all) {
-    if (!a.examBody) continue
-    if (!map[a.examBody]) map[a.examBody] = { count: 0, latest: a }
-    map[a.examBody].count++
+    if (!a.examBody?.length) continue
+    for (const body of a.examBody) {
+      if (!map[body]) map[body] = { count: 0, latest: a }
+      map[body].count++
+    }
   }
   return Object.entries(map).map(([examBody, v]) => ({
     examBody,
@@ -128,18 +130,21 @@ export async function getArticleBySlug(slug: string): Promise<ArticleFull | null
 
 export async function getAllArticlePaths(): Promise<Array<{ category: string; slug: string }>> {
   const query = `*[_type == "article" && "accountingbody" in showOnSites] { "slug": slug.current, examBody }`
-  const all   = await sanityFetch<{ slug: string; examBody?: string }[]>(query)
+  const all   = await sanityFetch<{ slug: string; examBody?: string[] }[]>(query)
   if (!all) return []
-  return all
-    .filter(a => a.slug && a.examBody)
-    .map(a => ({
-      category: a.examBody!.toLowerCase(),
-      slug:     a.slug,
-    }))
+  const paths: Array<{ category: string; slug: string }> = []
+  for (const a of all) {
+    if (!a.slug) continue
+    const bodies = a.examBody?.length ? a.examBody : ['acca']
+    for (const body of bodies) {
+      paths.push({ category: body.toLowerCase(), slug: a.slug })
+    }
+  }
+  return paths
 }
 
 export async function getAllCategorySlugs(): Promise<string[]> {
-  const query = `array::unique(*[_type == "article" && "accountingbody" in showOnSites].examBody)`
+  const query = `array::unique(*[_type == "article" && "accountingbody" in showOnSites].examBody[])`
   const all   = await sanityFetch<string[]>(query)
   return (all ?? []).filter(Boolean).map(e => e.toLowerCase())
 }

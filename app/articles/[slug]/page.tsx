@@ -39,8 +39,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   if (!article) notFound()
   if (!article) return null
 
-  const accentBar  = EXAM_BODY_ACCENT[article.examBody ?? ''] ?? 'bg-navy-950'
-  const badgeClass = EXAM_BODY_BADGE[article.examBody ?? '']  ?? 'bg-slate-100 text-slate-600 border-slate-200'
+  const accentBar  = EXAM_BODY_ACCENT[article.examBody?.[0] ?? ''] ?? 'bg-navy-950'
+  const badgeClass = EXAM_BODY_BADGE[article.examBody?.[0] ?? '']  ?? 'bg-slate-100 text-slate-600 border-slate-200'
 
   const formattedPublished = article.publishedAt
     ? new Date(article.publishedAt).toLocaleDateString('en-GB', {

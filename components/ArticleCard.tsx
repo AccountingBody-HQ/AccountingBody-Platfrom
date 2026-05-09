@@ -22,7 +22,7 @@ interface Props {
 }
 
 export default function ArticleCard({ article, compact = false }: Props) {
-  const href = `/study/${article.examBody?.toLowerCase() ?? 'articles'}/${article.slug.current}`
+  const href = `/study/${article.examBody?.[0]?.toLowerCase() ?? 'articles'}/${article.slug.current}`
 
   const formattedDate = article.publishedAt
     ? new Date(article.publishedAt).toLocaleDateString('en-GB', {
@@ -30,8 +30,8 @@ export default function ArticleCard({ article, compact = false }: Props) {
       })
     : null
 
-  const accentBar  = EXAM_BODY_ACCENT[article.examBody ?? ''] ?? 'bg-navy-950'
-  const badgeClass = EXAM_BODY_BADGE[article.examBody ?? '']  ?? 'bg-slate-100 text-slate-600 border-slate-200'
+  const accentBar  = EXAM_BODY_ACCENT[article.examBody?.[0] ?? ''] ?? 'bg-navy-950'
+  const badgeClass = EXAM_BODY_BADGE[article.examBody?.[0] ?? '']  ?? 'bg-slate-100 text-slate-600 border-slate-200'
 
   if (compact) {
     return (
