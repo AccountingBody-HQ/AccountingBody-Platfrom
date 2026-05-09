@@ -7,11 +7,29 @@ const EXAM_BODY_META: Record<string, { name: string; description: string; accent
   acca:  { name: 'ACCA',  description: 'Association of Chartered Certified Accountants — all 13 papers.', accent: 'bg-[#004B8D]', badgeBg: 'bg-blue-50',    badgeText: 'text-[#004B8D]' },
   cima:  { name: 'CIMA',  description: 'Chartered Institute of Management Accountants full pathway.',     accent: 'bg-[#0081C6]', badgeBg: 'bg-sky-50',     badgeText: 'text-[#0081C6]' },
   aat:   { name: 'AAT',   description: 'Association of Accounting Technicians — Levels 2 to 4.',          accent: 'bg-[#00857A]', badgeBg: 'bg-teal-50',    badgeText: 'text-teal-700'  },
-  icaew: { name: 'ICAEW', description: 'Institute of Chartered Accountants in England and Wales.',        accent: 'bg-[#8B0000]', badgeBg: 'bg-red-50',     badgeText: 'text-red-800'   },
+  icaew: { name: 'ICAEW', description: 'Institute of Chartered Accountants — ACA qualification pathway.',        accent: 'bg-[#8B0000]', badgeBg: 'bg-red-50',     badgeText: 'text-red-800'   },
+}
+
+const SUBJECT_META: Record<string, { name: string; description: string }> = {
+  'financial-accounting':  { name: 'Financial Accounting',  description: 'Financial statements, bookkeeping, accounting standards and reporting practices.' },
+  'financial-management':  { name: 'Financial Management',  description: 'Investment strategies, corporate finance, risk analysis and financial markets.' },
+  'management-accounting': { name: 'Management Accounting', description: 'Budgeting, cost analysis, performance measurement and decision-making techniques.' },
+  'financial-market':      { name: 'Financial Market',      description: 'Stocks, bonds, derivatives and investment instruments that shape the global economy.' },
+  'business-management':   { name: 'Business Management',   description: 'Organisational structures, strategy, operations and leadership for growing businesses.' },
+  'audit-assurance':       { name: 'Audit and Assurance',   description: 'Audit procedures, internal controls, risk assessment and financial reporting assurance.' },
+  'taxation':              { name: 'Tax',                   description: 'Tax principles, compliance requirements and how taxation impacts financial decisions.' },
+  'economics':             { name: 'Economics',             description: 'Macroeconomics, microeconomics, inflation and global policies that impact financial systems.' },
+  'mock-exams':            { name: 'Mock Exams',            description: 'Full exam simulations to test your knowledge and build exam confidence.' },
+  'cryptocurrency':        { name: 'Cryptocurrency',        description: 'Blockchain fundamentals, Bitcoin, Ethereum and the impact of crypto on modern finance.' },
+  'tools-templates':       { name: 'Tools and Templates',   description: 'Practical calculators, templates and downloadable tools to support your studies.' },
 }
 
 function getCategoryDisplay(slug: string) {
-  return EXAM_BODY_META[slug.toLowerCase()] ?? {
+  const examBody = EXAM_BODY_META[slug.toLowerCase()]
+  if (examBody) return examBody
+  const subject = SUBJECT_META[slug.toLowerCase()]
+  if (subject) return { ...subject, accent: 'bg-navy-950', badgeBg: 'bg-navy-50', badgeText: 'text-navy-700' }
+  return {
     name: slug.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
     description: `Study notes and articles on ${slug.replace(/-/g, ' ')}.`,
     accent: 'bg-navy-950', badgeBg: 'bg-navy-50', badgeText: 'text-navy-700',
