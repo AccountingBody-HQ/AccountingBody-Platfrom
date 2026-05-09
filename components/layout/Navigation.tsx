@@ -35,6 +35,7 @@ const navSections: NavSection[] = [
   {
     id:    'get-help',
     label: 'Get Help',
+    href:  '/get-help',
     groups: [
       {
         title: 'Professional Services',
@@ -66,6 +67,7 @@ const navSections: NavSection[] = [
   {
     id:    'study',
     label: 'Study',
+    href:  '/study',
     groups: [
       {
         title: 'By Qualification',
@@ -98,6 +100,7 @@ const navSections: NavSection[] = [
   {
     id:    'practice',
     label: 'Practice Questions',
+    href:  '/practice-questions',
     groups: [
       {
         title: 'Question Types',
@@ -129,6 +132,7 @@ const navSections: NavSection[] = [
   {
     id:    'hire-talent',
     label: 'Hire Talent',
+    href:  '/hire-talent',
     groups: [
       {
         title: 'Browse Jobs',
@@ -157,6 +161,7 @@ const navSections: NavSection[] = [
     {
     id:    'firms',
     label: 'Firms & Freelancers',
+    href:  '/firms-freelancers',
     groups: [
       {
         title: 'Directory',
@@ -519,8 +524,11 @@ export function Navigation() {
           {/* Desktop nav */}
           <nav className="hidden lg:flex items-center justify-center gap-0.5" aria-label="Main navigation">
             {navSections.map(section => {
-              const isActive    = activeDropdown === section.id
-              const hasDropdown = Boolean(section.groups?.length)
+              const isActive      = activeDropdown === section.id
+              const hasDropdown   = Boolean(section.groups?.length)
+              const isCurrentPage = section.href
+                ? (section.href === '/' ? pathname === '/' : pathname.startsWith(section.href))
+                : false
 
               if (!hasDropdown && section.href) {
                 return (
@@ -529,9 +537,17 @@ export function Navigation() {
                     href={section.href}
                     target={section.external ? '_blank' : undefined}
                     rel={section.external ? 'noopener noreferrer' : undefined}
-                    className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-navy-950 hover:text-navy-700 hover:bg-slate-50 transition-colors duration-150"
+                    className={[
+                      'relative flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150',
+                      isCurrentPage
+                        ? 'text-gold-600 font-semibold'
+                        : 'text-navy-950 hover:text-navy-700 hover:bg-slate-50',
+                    ].join(' ')}
                   >
                     {section.label}
+                    {isCurrentPage && (
+                      <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-gold-500 rounded-full" />
+                    )}
                     {section.external && <ExternalIcon />}
                   </Link>
                 )
@@ -544,19 +560,32 @@ export function Navigation() {
                   onMouseEnter={() => handleMouseEnter(section.id)}
                   onMouseLeave={handleMouseLeave}
                 >
-                  <button
-                    className={[
-                      'flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150',
-                      isActive
-                        ? 'text-navy-950 bg-slate-50'
-                        : 'text-navy-950 hover:text-navy-700 hover:bg-slate-50',
-                    ].join(' ')}
-                    aria-expanded={isActive}
-                    aria-haspopup="true"
-                  >
-                    {section.label}
-                    <ChevronDown open={isActive} />
-                  </button>
+                  <div className={[
+                    'flex items-center rounded-lg transition-colors duration-150',
+                    isActive ? 'bg-slate-50' : '',
+                  ].join(' ')}>
+                    <Link
+                      href={section.href ?? '#'}
+                      className={[
+                        'relative flex items-center pl-3 pr-1 py-2 text-sm font-medium transition-colors duration-150',
+                        isCurrentPage
+                          ? 'text-gold-600 font-semibold'
+                          : 'text-navy-950 hover:text-navy-700',
+                      ].join(' ')}
+                    >
+                      {section.label}
+                      {isCurrentPage && (
+                        <span className="absolute bottom-0 left-3 right-1 h-0.5 bg-gold-500 rounded-full" />
+                      )}
+                    </Link>
+                    <button
+                      className="flex items-center pr-2 py-2 text-navy-950 hover:text-navy-700"
+                      aria-expanded={isActive}
+                      aria-haspopup="true"
+                    >
+                      <ChevronDown open={isActive} />
+                    </button>
+                  </div>
 
                   {isActive && (
                     <MegaMenu
