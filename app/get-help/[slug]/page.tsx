@@ -203,7 +203,7 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
         <div className="container-site">
           <div className="max-w-3xl">
             <p className="text-slate-600 text-lg leading-relaxed mb-10">{service.intro}</p>
-            <h2 className="font-display text-2xl text-navy-950 mb-6">What's included</h2>
+            <h2 className="font-display text-2xl text-navy-950 mb-6">What&apos;s included</h2>
             <ul className="space-y-3 mb-10">
               {service.bullets.map((b) => (
                 <li key={b} className="flex items-start gap-3">
