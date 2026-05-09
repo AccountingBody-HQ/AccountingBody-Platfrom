@@ -121,8 +121,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
   const article = await getArticleBySlug(slug)
   if (!article) notFound()
 
-  const accentBar  = EXAM_BODY_ACCENT[article.examBody?.[0] ?? ''] ?? 'bg-navy-950'
-  const badgeClass = EXAM_BODY_BADGE[article.examBody?.[0] ?? '']  ?? 'bg-slate-100 text-slate-600 border-slate-200'
+  const accentBar = EXAM_BODY_ACCENT[article.examBody?.[0]?.toUpperCase() ?? ''] ?? 'bg-navy-950'
 
   const formattedPublished = article.publishedAt
     ? new Date(article.publishedAt).toLocaleDateString('en-GB', {
