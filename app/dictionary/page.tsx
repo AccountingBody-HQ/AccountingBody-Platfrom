@@ -52,7 +52,7 @@ async function getArticlesByLetter(letter: string): Promise<SanityArticle[]> {
       matchConditions = `title match "${u}*" || title match "${l}*"`
     }
     const query = encodeURIComponent(
-      `*[_type == "article" && (${matchConditions})] | order(title asc) { _id, title, slug, excerpt, category, examBody, readTime, publishedAt }`
+      `*[_type == "article" && "accountingbody" in showOnSites && (${matchConditions})] | order(title asc) { _id, title, slug, excerpt, category, examBody, readTime, publishedAt }`
     )
     const res = await fetch(
       `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
@@ -124,8 +124,8 @@ function ArticleRow({ article }: { article: SanityArticle }) {
           {article.category && (
             <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">{article.category}</span>
           )}
-          {article.examBody && (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-navy-50 text-navy-700 border border-navy-100">{article.examBody}</span>
+          {(Array.isArray(article.examBody) ? article.examBody[0] : article.examBody) && (
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-navy-50 text-navy-700 border border-navy-100">{Array.isArray(article.examBody) ? article.examBody[0] : article.examBody}</span>
           )}
           {formattedDate && <span className="text-xs text-slate-400">{formattedDate}</span>}
         </div>
