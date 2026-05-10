@@ -1,13 +1,12 @@
 'use client'
 
-
 import Link from 'next/link'
 
 const services = [
   {
     name: 'Tax Advice',
     slug: 'tax-advice',
-    desc: 'Personal and business tax planning, returns and HMRC compliance.',
+    desc: 'Personal and corporate tax planning, compliance, and advisory services delivered by our qualified tax specialists.',
     icon: (
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#EEF2FF"/>
@@ -20,7 +19,7 @@ const services = [
   {
     name: 'Bookkeeping',
     slug: 'bookkeeping',
-    desc: 'Day-to-day financial records, bank reconciliations and reporting.',
+    desc: 'Accurate, up-to-date financial records maintained by our bookkeeping professionals — so you always know where you stand.',
     icon: (
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#F0FDF4"/>
@@ -33,7 +32,7 @@ const services = [
   {
     name: 'Payroll',
     slug: 'payroll',
-    desc: 'End-to-end payroll processing, RTI submissions and auto-enrolment.',
+    desc: 'End-to-end payroll management — processing, statutory submissions, payslips, and pension compliance handled in full.',
     icon: (
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#FFFBEB"/>
@@ -45,7 +44,7 @@ const services = [
   {
     name: 'Financial Planning',
     slug: 'financial-planning',
-    desc: 'Strategic financial planning, forecasting and cash flow management.',
+    desc: 'Strategic financial planning, cash flow forecasting, and budgeting to help your business grow with confidence.',
     icon: (
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#EFF6FF"/>
@@ -58,7 +57,7 @@ const services = [
   {
     name: 'Audit',
     slug: 'audit',
-    desc: 'Statutory and voluntary audits for businesses of all sizes.',
+    desc: 'Independent statutory and voluntary audits conducted by our qualified audit professionals to the highest professional standards.',
     icon: (
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#F5F3FF"/>
@@ -71,7 +70,7 @@ const services = [
   {
     name: 'Business Advisory',
     slug: 'business-advisory',
-    desc: 'Strategic advice to grow, scale and protect your business.',
+    desc: 'Senior advisory support for growth, restructuring, investment, and strategic decision-making — delivered by experienced professionals.',
     icon: (
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#FFF7ED"/>
@@ -87,7 +86,7 @@ const services = [
   {
     name: 'Company Formation',
     slug: 'company-formation',
-    desc: 'Register your limited company quickly and correctly from day one.',
+    desc: 'Professional incorporation and company setup — structured correctly from day one, in any jurisdiction.',
     icon: (
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#ECFDF5"/>
@@ -98,9 +97,9 @@ const services = [
     ),
   },
   {
-    name: 'VAT',
+    name: 'VAT & Sales Tax',
     slug: 'vat',
-    desc: 'VAT registration, returns, MTD compliance and HMRC advice.',
+    desc: 'VAT, GST, and indirect tax compliance managed across jurisdictions — registration, returns, and advisory.',
     icon: (
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#FEF2F2"/>
@@ -115,7 +114,7 @@ const services = [
   {
     name: 'Self Assessment',
     slug: 'self-assessment',
-    desc: 'Personal tax returns filed accurately and submitted on time.',
+    desc: 'Personal tax return preparation and submission handled by our specialists — accurate, complete, and filed on time.',
     icon: (
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#F0FDF4"/>
@@ -128,10 +127,10 @@ const services = [
   },
 ]
 
-const steps = [
-  { step: '01', title: 'Tell us what you need', desc: 'Fill in the short form describing the accounting help you are looking for.' },
-  { step: '02', title: 'We match you',          desc: 'Our team reviews your request and connects you with a vetted professional within one business day.' },
-  { step: '03', title: 'Get expert help',       desc: 'Speak directly with your matched professional and get the support you need.' },
+const process = [
+  { step: '01', title: 'Submit Your Brief',        desc: 'Complete a short service brief outlining your requirements. Our team reviews every submission personally.' },
+  { step: '02', title: 'We Assess and Assign',     desc: 'AccountingBody reviews your brief, determines the scope of work, and assigns the appropriate specialist from our professional network.' },
+  { step: '03', title: 'Engagement Confirmed',     desc: 'We contact you with a proposed scope and fee. Once confirmed, your engagement begins under the full AccountingBody service standard.' },
 ]
 
 export default function GetHelpPage() {
@@ -139,7 +138,7 @@ export default function GetHelpPage() {
     <main className="min-h-screen bg-surface">
 
       {/* HERO */}
-      <section className="relative overflow-hidden bg-navy-950 py-16 md:py-24">
+      <section className="relative overflow-hidden bg-navy-950 py-20 md:py-28">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-20"
             style={{ background: 'radial-gradient(ellipse at center top, #3a4f9a 0%, transparent 70%)' }} />
@@ -148,21 +147,24 @@ export default function GetHelpPage() {
         </div>
         <div className="container-site relative z-10">
           <div className="max-w-3xl">
-            <nav className="flex items-center gap-2 text-white/40 text-sm mb-8">
+            <nav className="flex items-center gap-2 text-white/40 text-sm mb-10">
               <a href="/" className="hover:text-white/70 transition-colors">Home</a>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-              <span className="text-white/70">Get Help</span>
+              <span className="text-white/70">Professional Services</span>
             </nav>
-            <span className="eyebrow text-gold-400 mb-4 block">Professional Services</span>
-            <h1 className="font-display text-white text-4xl md:text-5xl mb-5 leading-tight" style={{ letterSpacing: '-0.02em' }}>
-              Find the Right<br />Accounting Expert
+            <span className="eyebrow text-gold-400 mb-5 block">AccountingBody Professional Services</span>
+            <h1 className="font-display text-white text-4xl md:text-5xl lg:text-6xl mb-6 leading-tight" style={{ letterSpacing: '-0.02em' }}>
+              Expert Accounting Services,<br />Managed by Us
             </h1>
-            <p className="text-white/60 text-xl leading-relaxed mb-10 max-w-2xl">
-              Connect with verified accountants, bookkeepers, tax advisors and financial professionals across the UK.
+            <p className="text-white/60 text-xl leading-relaxed mb-4 max-w-2xl">
+              AccountingBody delivers professional accounting, tax, audit, and advisory services through our managed network of verified specialists. You engage us — we handle everything.
+            </p>
+            <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
+              Every engagement is managed directly by AccountingBody. We oversee scope, quality, communication, and delivery from start to finish.
             </p>
             <a href="#services"
               className="inline-flex items-center gap-2 h-12 px-7 text-sm font-semibold rounded-lg bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
-              Browse Services
+              View Our Services
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
             </a>
           </div>
@@ -173,30 +175,30 @@ export default function GetHelpPage() {
       <section id="services" className="section bg-slate-50">
         <div className="container-site">
           <div className="max-w-2xl mb-12">
-            <span className="eyebrow mb-3 block">Service Categories</span>
-            <h2 className="section-title mb-4">Whatever you need, we have an expert</h2>
+            <span className="eyebrow mb-3 block">Our Services</span>
+            <h2 className="section-title mb-4">A full suite of professional accounting services</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              Every professional in our network is qualified, vetted, and experienced in their specialism.
+              Each service is delivered by qualified professionals within the AccountingBody network, operating under our managed engagement framework.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {services.map((s) => (
-              <Link key={s.name} href={`/get-help/${s.slug}`}
+              <a key={s.name} href={`/get-help/${s.slug}`}
                 className="group bg-white rounded-xl border border-slate-200 p-6 hover:border-gold-400 hover:shadow-lg transition-all duration-200 text-left block">
                 <div className="mb-4">{s.icon}</div>
                 <h3 className="font-display text-lg text-navy-950 mb-2 group-hover:text-navy-700 transition-colors">{s.name}</h3>
                 <p className="text-sm text-slate-500 leading-relaxed">{s.desc}</p>
                 <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-gold-600 group-hover:gap-2 transition-all">
-                  Learn more
+                  View service
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                 </span>
-              </Link>
+              </a>
             ))}
           </div>
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
+      {/* ENGAGEMENT PROCESS */}
       <section className="section section-navy relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-white/5 blur-3xl" />
@@ -206,14 +208,14 @@ export default function GetHelpPage() {
           <div className="text-center mb-14">
             <span className="eyebrow text-gold-400 mb-4 block">How It Works</span>
             <h2 className="font-display text-4xl text-white mb-4 leading-tight">
-              Matched to the right expert in 24 hours
+              A managed engagement from brief to delivery
             </h2>
             <p className="text-white/60 text-lg max-w-xl mx-auto">
-              Three simple steps to get the accounting help you need.
+              AccountingBody manages every stage of your engagement. You deal with us — we handle the rest.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            {steps.map((item) => (
+            {process.map((item) => (
               <div key={item.step} className="flex flex-col items-center text-center">
                 <div className="w-14 h-14 rounded-full bg-gold-500 flex items-center justify-center text-navy-950 font-bold text-lg mb-5 shadow-gold">
                   {item.step}

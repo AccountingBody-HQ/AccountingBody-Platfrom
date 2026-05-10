@@ -227,10 +227,10 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
         <div className="container-site">
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-10">
-              <span className="eyebrow mb-3 block">Get Matched</span>
-              <h2 className="section-title mb-4">Find a {service.name} Professional</h2>
+              <span className="eyebrow mb-3 block">Submit a Brief</span>
+              <h2 className="section-title mb-4">{service.name} — Submit Your Service Brief</h2>
               <p className="text-slate-500 text-lg">
-                Tell us what you need and we will connect you with the right expert within one business day.
+                Outline your requirements below. Our team will review your brief and confirm your engagement within one business day.
               </p>
             </div>
 
@@ -241,8 +241,8 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
                     <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="font-display text-2xl text-navy-950 mb-3">Request Received</h3>
-                <p className="text-slate-600">We will be in touch within one business day to connect you with the right professional.</p>
+                <h3 className="font-display text-2xl text-navy-950 mb-3">Brief Received</h3>
+                <p className="text-slate-600">Your service brief has been received by our team. We will review your requirements and confirm your engagement within one business day.</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-5">
@@ -281,17 +281,17 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
                   <textarea required rows={5} value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
                     className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all resize-none"
-                    placeholder="Briefly describe your situation and what help you are looking for..." />
+                    placeholder="Please describe your situation, the scope of work required, and any relevant deadlines or jurisdictions..." />
                 </div>
                 {status === 'error' && (
                   <p className="text-red-600 text-sm">Something went wrong. Please try again or contact us directly.</p>
                 )}
                 <button type="submit" disabled={status === 'loading'}
                   className="w-full h-12 rounded-lg bg-navy-950 text-white font-semibold text-sm hover:bg-navy-900 transition-colors disabled:opacity-50 shadow-sm">
-                  {status === 'loading' ? 'Sending your request...' : 'Find a Professional →'}
+                  {status === 'loading' ? 'Submitting...' : 'Submit Service Brief →'}
                 </button>
                 <p className="text-xs text-slate-400 text-center">
-                  We will respond within one business day. Your details are never shared without your permission.
+                  All briefs are reviewed by our team. We will confirm your engagement scope and fee before any work commences.
                 </p>
               </form>
             )}
@@ -304,7 +304,7 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
         <div className="container-site">
           <div className="text-center mb-10">
             <span className="eyebrow mb-3 block">Our Services</span>
-            <h2 className="font-display text-3xl text-navy-950">Other services you might need</h2>
+            <h2 className="font-display text-3xl text-navy-950">Other services we deliver</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {allServices.filter(s => s.slug !== params.slug).map(s => (
