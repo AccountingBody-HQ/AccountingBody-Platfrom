@@ -111,7 +111,7 @@ export default function GlossaryPage() {
             {[
               { value:'1,200+', label:'Terms defined' },
               { value:'3,000+', label:'Study articles' },
-              { value:'8',      label:'Qualifications covered' },
+              { value:'4',      label:'Qualifications covered' },
               { value:'Free',   label:'Always' },
             ].map(stat => (
               <div key={stat.label} className="flex items-center gap-2">
