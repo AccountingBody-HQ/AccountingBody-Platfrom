@@ -5,7 +5,7 @@ import Link from 'next/link'
 export const metadata: Metadata = {
   title: 'About AccountingBody — Our Mission, Story & Values',
   description:
-    'AccountingBody was built to give every accounting student access to world-class study resources. Learn about our mission, values, and the story behind the platform.',
+    'AccountingBody is a professional accounting education and managed services platform. Study for ACCA, CIMA, ICAEW and AAT — and access our global network of verified accounting professionals.',
 }
 
 const values = [
@@ -43,9 +43,9 @@ const values = [
     ),
   },
   {
-    title: 'Student First',
+    title: 'People First',
     description:
-      'Every product decision starts with one question: does this actually help a student pass their exam? If the answer is no, we do not build it.',
+      'Every decision — whether it affects a student preparing for an exam or a client engaging our professional services — starts with one question: does this genuinely serve them? If the answer is no, we do not do it.',
     iconBg: 'bg-slate-700',
     icon: (
       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,7 +62,7 @@ const milestones = [
   { year: '2018', event: '100,000 students reached. CIMA and AAT content added to the platform.' },
   { year: '2020', event: 'Full glossary of 1,200+ accounting and finance terms published.' },
   { year: '2022', event: '250,000+ students across 80+ countries. 50,000+ practice questions live.' },
-  { year: '2025', event: 'Full platform rebuild on Next.js, Sanity CMS, and modern infrastructure.' },
+  { year: '2025', event: 'Full platform rebuild on Next.js and Sanity CMS. Professional services network launched — tax, audit, bookkeeping, and advisory delivered through a managed global professional network.' },
 ]
 
 const qualifications = [
@@ -93,20 +93,21 @@ export default function AboutPage() {
           <div className="max-w-3xl">
             <span className="eyebrow text-gold-400 mb-5 block">About AccountingBody</span>
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.02em' }}>
-              Built for the student who{' '}
+              Education and professional services,{' '}
               <span style={{
                 background: 'linear-gradient(135deg, #D4A017 0%, #e8c050 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}>
-                cannot afford to fail
+                built to one standard
               </span>
             </h1>
-            <p className="text-white/65 text-xl leading-relaxed max-w-2xl">
-              We built AccountingBody because professional accounting qualifications are hard enough
-              without having to hunt across the internet for reliable study materials. Everything you
-              need is here — free to start, exam-accurate, written by people who have been where you are.
+            <p className="text-white/65 text-xl leading-relaxed mb-4 max-w-2xl">
+              AccountingBody is a dual-purpose platform — a world-class accounting study resource for students pursuing ACCA, CIMA, ICAEW and AAT, and a managed professional services network for businesses and individuals who need expert accounting support.
+            </p>
+            <p className="text-white/40 text-base leading-relaxed max-w-2xl">
+              Both pillars are built to the same standard: qualified professionals, rigorous quality control, and a commitment to delivering genuine value to everyone we serve.
             </p>
           </div>
         </div>
@@ -118,21 +119,15 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
               <span className="eyebrow mb-3 block">Our Mission</span>
-              <h2 className="section-title mb-6">Make world-class accounting education accessible to everyone</h2>
+              <h2 className="section-title mb-6">Raising the standard in accounting education and professional services</h2>
               <p className="text-slate-500 text-lg leading-relaxed mb-5">
-                The internet is full of accounting content written by people who have never sat a
-                professional exam. Search for &ldquo;how to pass ACCA P7&rdquo; and you will find
-                generic listicles, affiliate marketing dressed up as advice, and outdated material
-                from three syllabus changes ago.
+                AccountingBody was founded on a simple belief: that the quality of accounting education and professional services available to students and businesses should not depend on geography, budget, or who you happen to know.
               </p>
               <p className="text-slate-500 text-lg leading-relaxed mb-5">
-                AccountingBody was built to fix that. Every article, study note, and practice
-                question is written or reviewed by a qualified accountant who has actually sat
-                the exam you are preparing for.
+                On the education side, every study note and practice question is written or reviewed by a qualified accountant. On the professional services side, every engagement is managed directly by our team — with qualified professionals drawn from our verified global network.
               </p>
               <p className="text-slate-500 text-lg leading-relaxed">
-                And because we believe cost should never be a barrier to a professional
-                qualification, the core of everything we build is permanently free.
+                One platform. Two pillars. The same uncompromising commitment to quality across both.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -185,7 +180,7 @@ export default function AboutPage() {
             <span className="eyebrow mb-3 block">Coverage</span>
             <h2 className="section-title mb-4">ACCA, CIMA, ICAEW and AAT — fully covered</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              We cover the four leading UK professional accounting qualifications with
+              We cover the four leading global professional accounting qualifications with
               dedicated study notes, question banks, and exam guides for each one.
             </p>
           </div>
@@ -255,10 +250,9 @@ export default function AboutPage() {
         </div>
         <div className="container-site relative z-10 text-center">
           <span className="eyebrow text-gold-400 mb-4 block">Get Started</span>
-          <h2 className="font-display text-4xl text-white mb-4 leading-tight">Ready to start studying?</h2>
+          <h2 className="font-display text-4xl text-white mb-4 leading-tight">Start studying or engage our services</h2>
           <p className="text-white/65 text-lg mb-8 max-w-xl mx-auto leading-relaxed">
-            Join 250,000+ students who use AccountingBody to prepare for their professional
-            accounting exams. Free to start. No credit card required.
+            Whether you are preparing for a professional accounting exam or need expert accounting support for your business — AccountingBody is built for both.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Link href="/study"
@@ -268,9 +262,9 @@ export default function AboutPage() {
                 <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </Link>
-            <Link href="/contact"
+            <Link href="/get-help"
               className="inline-flex items-center gap-2 h-12 px-7 rounded-lg text-base font-medium text-white border border-white/25 hover:bg-white/10 transition-all">
-              Get in touch
+              Explore our services
             </Link>
           </div>
         </div>
