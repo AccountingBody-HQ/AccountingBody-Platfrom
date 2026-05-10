@@ -133,58 +133,28 @@ const navSections: NavSection[] = [
   },
 
   {
-    id:    'hire-talent',
-    label: 'Hire Talent',
-    href:  '/hire-talent',
-    groups: [
-      {
-        title: 'Browse Jobs',
-        links: [
-          { label: 'All Accounting Jobs',   href: '/hire-talent/jobs',                        description: 'Browse all open roles' },
-          { label: 'Accountant Roles',      href: '/hire-talent/jobs?role=Accountant',        description: 'Qualified accountant positions' },
-          { label: 'Bookkeeper Roles',      href: '/hire-talent/jobs?role=Bookkeeper',        description: 'Bookkeeping positions' },
-          { label: 'Tax Advisor Roles',     href: '/hire-talent/jobs?role=Tax+Advisor',       description: 'Tax specialist positions' },
-          { label: 'Payroll Manager Roles', href: '/hire-talent/jobs?role=Payroll+Manager',   description: 'Payroll specialist positions' },
-        ],
-      },
-      {
-        title: 'For Employers',
-        links: [
-          { label: 'Post a Job',       href: '/hire-talent/post-a-job', description: 'Advertise a role to our community' },
-          { label: 'Hire Talent Hub',  href: '/hire-talent',            description: 'Overview and role categories' },
-        ],
-      },
-    ],
-    cta: {
-      label:       'Post a Job Today →',
-      href:        '/hire-talent/post-a-job',
-      description: 'Reach qualified accounting professionals',
-    },
-  },
-    {
     id:    'firms',
     label: 'Firms & Freelancers',
     href:  '/firms-freelancers',
     groups: [
       {
-        title: 'Directory',
+        title: 'Join Our Network',
         links: [
-          { label: 'Browse Directory',   href: '/firms-freelancers/directory', description: 'Find verified accounting professionals' },
-          { label: 'List Your Practice', href: '/firms-freelancers/join',      description: 'Get discovered by new clients' },
-          { label: 'How It Works',       href: '/firms-freelancers',           description: 'Overview of the directory' },
+          { label: 'Apply to Join',      href: '/firms-freelancers/join', description: 'Register your interest to join our verified professional network' },
+          { label: 'How It Works',       href: '/firms-freelancers',      description: 'How we match professionals with clients' },
         ],
       },
       {
-        title: 'Need Help Instead?',
+        title: 'Need Accounting Help?',
         links: [
-          { label: 'Get Matched to an Expert', href: '/get-help', description: 'We find the right professional for you' },
+          { label: 'Get Matched to an Expert', href: '/get-help', description: 'Submit a request and we will find the right professional for you' },
         ],
       },
     ],
     cta: {
-      label:       'List Your Practice Free →',
+      label:       'Apply to Join Our Network →',
       href:        '/firms-freelancers/join',
-      description: 'Join our growing directory of professionals',
+      description: 'Verified professionals only — we review every application',
     },
   },
   {
