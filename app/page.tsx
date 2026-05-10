@@ -190,45 +190,30 @@ const pillars = [
   },
   {
     id:          'get-help',
-    title:       'Get Help',
-    description: 'Ask questions, search the glossary, and get matched with expert accountants for one-to-one support.',
+    title:       'Professional Services',
+    description: 'Engage AccountingBody for tax, audit, bookkeeping, payroll, and advisory. We manage every engagement through our verified professional network.',
     href:        '/get-help',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeWidth="1.75" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <path strokeLinecap="round" strokeWidth="1.75" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
       </svg>
     ),
-    highlights:  ['1,200+ glossary terms', 'Expert matching', 'Free calculators', 'Exam tip guides'],
+    highlights:  ['Tax & audit', 'Bookkeeping & payroll', 'Business advisory', 'Global coverage'],
     iconBg:      'bg-navy-950',
     iconColor:   'text-white',
     accentText:  'text-navy-700',
   },
   {
-    id:          'hire',
-    title:       'Hire Talent',
-    description: 'Find qualified accountants, bookkeepers and tax advisers — or post a role to reach our network.',
-    href:        '/hire-talent',
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeWidth="1.75" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-    highlights:  ['Vetted professionals', 'Tax advisers', 'Bookkeepers', 'Post a job free'],
-    iconBg:      'bg-navy-800',
-    iconColor:   'text-white',
-    accentText:  'text-navy-600',
-  },
-  {
     id:          'firms',
-    title:       'Firms & Freelancers',
-    description: 'List your practice, find new clients, and connect with the wider accounting profession.',
+    title:       'Join Our Network',
+    description: 'Accounting firms and independent professionals can apply to join the AccountingBody managed network and receive matched client engagements.',
     href:        '/firms-freelancers',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeWidth="1.75" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
       </svg>
     ),
-    highlights:  ['Free firm listing', 'Client enquiries', 'CPD resources', 'Freelance profiles'],
+    highlights:  ['Verified network', 'Managed engagements', 'Global coverage', 'Firms & independents'],
     iconBg:      'bg-slate-700',
     iconColor:   'text-white',
     accentText:  'text-slate-700',
@@ -435,13 +420,12 @@ export default async function HomePage() {
           <div className="max-w-4xl">
 
             <p className="text-gold-400 text-xs font-semibold uppercase tracking-widest mb-7">
-              Independent Study Platform &nbsp;&middot;&nbsp; Trusted Since 2010
+              Professional Accounting Services &nbsp;&middot;&nbsp; Study Platform &nbsp;&middot;&nbsp; Trusted Since 2010
             </p>
 
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.025em' }}>
-              Study smarter.
+              Your accounting
               <br />
-              Pass your{' '}
               <span
                 style={{
                   background: 'linear-gradient(135deg, #D4A017 0%, #e8c050 100%)',
@@ -450,15 +434,17 @@ export default async function HomePage() {
                   backgroundClip: 'text',
                 }}
               >
-                accounting exams
+                education &amp; services
               </span>
               <br />
-              first time.
+              platform.
             </h1>
 
-            <p className="text-white/65 text-xl leading-relaxed mb-10 max-w-2xl">
-              Expert study notes, exam-standard practice questions, and professional
-              connections — everything in one place, completely free to start.
+            <p className="text-white/65 text-xl leading-relaxed mb-6 max-w-2xl">
+              Study for ACCA, CIMA, ICAEW and AAT with expert notes and practice questions — and access AccountingBody&apos;s managed professional services network for tax, audit, bookkeeping, and advisory.
+            </p>
+            <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
+              One platform. Two pillars. Education and professional services, managed to the same standard.
             </p>
 
             <div className="flex flex-wrap items-center gap-4 mb-16">
@@ -472,10 +458,10 @@ export default async function HomePage() {
                 </svg>
               </Link>
               <Link
-                href="/practice-questions"
+                href="/get-help"
                 className="inline-flex items-center gap-2 h-13 px-7 rounded-lg text-base font-medium text-white border border-white/25 hover:bg-white/10 hover:border-white/40 transition-all"
               >
-                Browse practice questions
+                Explore our services
               </Link>
             </div>
 
@@ -622,11 +608,10 @@ export default async function HomePage() {
         <div className="container-site">
 
           <div className="max-w-2xl mb-12">
-            <span className="eyebrow mb-3 block">Everything in One Place</span>
-            <h2 className="section-title mb-4">What is on the platform</h2>
+            <span className="eyebrow mb-3 block">The Full Platform</span>
+            <h2 className="section-title mb-4">Education and professional services, in one place</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              Whether you are studying for exams, looking to hire a qualified accountant,
-              or growing your practice — AccountingBody has the tools you need.
+              AccountingBody combines a world-class accounting study platform with a managed professional services network. Whether you are studying for your exams or need expert accounting support — we have you covered.
             </p>
           </div>
 
@@ -831,21 +816,21 @@ export default async function HomePage() {
         <div className="container-site">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
-              <p className="font-display text-xl text-navy-950">Ready to start? It&apos;s completely free.</p>
-              <p className="text-sm text-slate-500 mt-0.5">No credit card. No trial. Just accounting.</p>
+              <p className="font-display text-xl text-navy-950">Ready to get started?</p>
+              <p className="text-sm text-slate-500 mt-0.5">Study for free — or engage our professional services team.</p>
             </div>
             <div className="flex items-center gap-3 shrink-0">
               <Link
-                href="/study"
+                href="/get-help"
                 className="h-10 px-5 flex items-center text-sm font-medium rounded-lg border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors"
               >
-                Browse study notes
+                Explore our services
               </Link>
               <Link
                 href="/sign-up"
                 className="h-10 px-5 flex items-center text-sm font-semibold rounded-lg bg-navy-950 text-white hover:bg-navy-900 transition-colors shadow-sm"
               >
-                Create free account
+                Start studying free
               </Link>
             </div>
           </div>
