@@ -91,10 +91,11 @@ export default async function ArticlesPage() {
           ) : (
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
               {articles.map(article => {
-                const examBodyKey = article.examBody?.toLowerCase() ?? ''
+                const examBodyFirst = Array.isArray(article.examBody) ? article.examBody[0] : article.examBody
+                const examBodyKey = examBodyFirst?.toLowerCase() ?? ''
                 const badgeClass = EXAM_BODY_BADGE[examBodyKey] ?? 'bg-slate-100 text-slate-600 border-slate-200'
-                const href = article.examBody
-                  ? `/study/${article.examBody.toLowerCase()}/${article.slug.current}`
+                const href = examBodyFirst
+                  ? `/study/${examBodyFirst.toLowerCase()}/${article.slug.current}`
                   : `/articles/${article.slug.current}`
                 const posted = article.publishedAt
                   ? new Date(article.publishedAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
@@ -111,9 +112,9 @@ export default async function ArticlesPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
-                      {article.examBody && (
+                      {examBodyFirst && (
                         <span className={"hidden sm:inline text-xs font-medium px-2 py-0.5 rounded-md border " + badgeClass}>
-                          {article.examBody}
+                          {examBodyFirst.toUpperCase()}
                         </span>
                       )}
                       {article.readTime && <span className="hidden md:block text-xs text-slate-400">{article.readTime} min</span>}

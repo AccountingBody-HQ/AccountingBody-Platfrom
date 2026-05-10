@@ -81,9 +81,9 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
           {/* Badges */}
           <div className="flex flex-wrap items-center gap-2 mb-5">
-            {article.examBody && (
+            {article.examBody?.[0] && (
               <span className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-md border ${badgeClass}`}>
-                {article.examBody}
+                {article.examBody[0].toUpperCase()}
               </span>
             )}
             {article.category && (
@@ -199,12 +199,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                   Article details
                 </p>
                 <dl className="space-y-3">
-                  {article.examBody && (
+                  {article.examBody?.[0] && (
                     <div className="flex justify-between text-sm">
                       <dt className="text-slate-500">Qualification</dt>
                       <dd>
                         <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${badgeClass}`}>
-                          {article.examBody}
+                          {article.examBody[0].toUpperCase()}
                         </span>
                       </dd>
                     </div>
