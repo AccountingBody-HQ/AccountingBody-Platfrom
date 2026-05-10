@@ -118,13 +118,15 @@ function ResultCard({ result }: { result: SearchResult }) {
       href={getUrl(result)}
       className="group flex flex-col bg-white rounded-xl border border-slate-200 p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
     >
-      {result.examBody && (
+      {(Array.isArray(result.examBody) ? result.examBody[0] : result.examBody) && (
         <div className={`h-0.5 w-full rounded-full mb-4 ${
-          result.examBody === 'ACCA'  ? 'bg-[#004B8D]' :
-          result.examBody === 'CIMA'  ? 'bg-[#0081C6]' :
-          result.examBody === 'AAT'   ? 'bg-[#00857A]' :
-          result.examBody === 'ICAEW' ? 'bg-[#C8A000]' :
-          'bg-navy-400'
+          (() => { const b = (Array.isArray(result.examBody) ? result.examBody[0] : result.examBody)?.toUpperCase()
+            return b === 'ACCA'  ? 'bg-[#004B8D]' :
+                   b === 'CIMA'  ? 'bg-[#0081C6]' :
+                   b === 'AAT'   ? 'bg-[#00857A]' :
+                   b === 'ICAEW' ? 'bg-[#C8A000]' :
+                   'bg-navy-400'
+          })()
         }`} />
       )}
 
