@@ -9,9 +9,10 @@ type FormState = 'idle' | 'loading' | 'success' | 'error'
 
 const subjects = [
   'General Enquiry',
+  'Professional Services Enquiry',
+  'Enterprise Enquiry',
   'Content Error',
   'Content Partnership',
-  'Enterprise Enquiry',
   'Technical Issue',
   'Press / Media',
   'Other',

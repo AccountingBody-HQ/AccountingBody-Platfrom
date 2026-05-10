@@ -5,17 +5,21 @@ import ContactForm from './ContactForm'
 export const metadata: Metadata = {
   title: 'Contact AccountingBody — Get in Touch',
   description:
-    'Have a question, content partnership enquiry, or want to report an error? Get in touch with the AccountingBody team.',
+    'Have a question about our study platform or professional services? Get in touch with the AccountingBody team — we reply within 2 business days.',
 }
 
 const faqs = [
   {
     q: 'Is AccountingBody really free?',
-    a: 'Yes. Study notes, the full glossary, and core practice questions are permanently free — no credit card, no trial, no hidden fees.',
+    a: 'The study platform is free to start — study notes, the full glossary, and core practice questions carry no subscription fee. Professional services engagements are priced based on scope and are confirmed with you before any work commences.',
   },
   {
     q: 'How quickly do you reply to messages?',
-    a: 'We aim to reply to all messages within 2 business days. Technical issues are prioritised.',
+    a: 'We aim to reply to all messages within 2 business days. Professional services enquiries and technical issues are prioritised.',
+  },
+  {
+    q: 'How do I engage AccountingBody for professional services?',
+    a: 'Use the Get Help section to submit a service brief for tax, audit, bookkeeping, payroll, or advisory services. Our team will review your requirements and confirm scope and fees before any work begins.',
   },
   {
     q: 'Can I contribute articles or study notes?',
@@ -51,8 +55,7 @@ export default function ContactPage() {
             <span className="eyebrow text-gold-400 mb-5 block">Get in Touch</span>
             <h1 className="font-display text-white mb-5 leading-tight">Contact AccountingBody</h1>
             <p className="text-white/65 text-xl leading-relaxed">
-              Questions about study materials, content partnerships, technical issues,
-              or anything else — we read every message and reply within 2 business days.
+              Questions about our study platform, professional services enquiries, content partnerships, or technical issues — we read every message and reply within 2 business days.
             </p>
           </div>
         </div>
@@ -72,7 +75,7 @@ export default function ContactPage() {
                   {[
                     { label: 'Email',         value: 'hello@accountingbody.com' },
                     { label: 'Response time',  value: 'Within 2 business days' },
-                    { label: 'Based in',       value: 'United Kingdom' },
+                    { label: 'Coverage',       value: 'Global' },
                   ].map(item => (
                     <div key={item.label}>
                       <span className="text-xs text-slate-400 block">{item.label}</span>

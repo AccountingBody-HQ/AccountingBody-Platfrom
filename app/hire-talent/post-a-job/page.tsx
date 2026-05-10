@@ -1,7 +1,9 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Temporary', 'Internship']
 const roleTitles = ['Accountant','Bookkeeper','CFO','Tax Advisor','Auditor','Payroll Manager','Finance Director','Management Accountant','Financial Controller','Credit Controller','Accounts Assistant','Practice Manager','Other']
@@ -13,6 +15,7 @@ export default function PostAJobPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus('loading')
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!)
     const { error } = await supabase.from('job_listings').insert([form])
     if (error) { console.error(error); setStatus('error') } else { setStatus('success') }
   }

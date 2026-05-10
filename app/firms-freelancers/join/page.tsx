@@ -1,7 +1,9 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 const firmTypes = ['Accounting Firm','Audit Firm','Tax Consultancy','Bookkeeping Practice','Payroll Bureau','Financial Planning Practice','Business Advisory Practice','Other']
 const independentTypes = ['Chartered Accountant','Certified Accountant','Bookkeeper','Tax Advisor','Payroll Specialist','Financial Planner','Auditor','Management Accountant','Other']
@@ -27,6 +29,7 @@ export default function JoinNetworkPage() {
       practice_type: applicantType === 'firm' ? form.practice_type : form.practice_type,
       about: `[${applicantType === 'firm' ? 'FIRM' : 'INDEPENDENT'}] Qualifications: ${qualifications.join(', ')}. ${form.about}`,
     }
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!)
     const { error } = await supabase.from('firms_applications').insert([payload])
     if (error) { console.error(error); setStatus('error') } else { setStatus('success') }
   }
