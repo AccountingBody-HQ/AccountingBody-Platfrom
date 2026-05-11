@@ -1,4 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
+
+export const dynamic = "force-dynamic"
 import { HelpCircle, Mail } from "lucide-react"
 
 async function getSubmissions() {
