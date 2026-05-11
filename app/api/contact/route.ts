@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     if (subscribeOnly) {
       const { error: subError } = await supabase
         .from('email_subscribers')
-        .upsert({ email, status: 'active' }, { onConflict: 'email' })
+        .upsert({ email, platform: 'ab', status: 'subscribed', source: 'contact_form' }, { onConflict: 'email' })
 
       if (subError) {
         console.error('Subscribe error:', subError)
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     if (subscribe) {
       const { error: subError } = await supabase
         .from('email_subscribers')
-        .upsert({ email, status: 'active' }, { onConflict: 'email' })
+        .upsert({ email, platform: 'ab', status: 'subscribed', source: 'contact_form' }, { onConflict: 'email' })
 
       if (subError) {
         console.error('Subscribe error (non-fatal):', subError)
