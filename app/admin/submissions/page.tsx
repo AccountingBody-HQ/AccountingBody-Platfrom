@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
+import AutoRefresh from "@/components/admin/AutoRefresh"
 import { HelpCircle, Mail } from "lucide-react"
 
 export const dynamic = "force-dynamic"
@@ -49,6 +50,7 @@ export default async function SubmissionsPage() {
 
   return (
     <div>
+      <AutoRefresh />
       <div style={{ marginBottom: "32px" }}>
         <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#ffffff", margin: "0 0 8px 0" }}>Submissions</h1>
         <p style={{ fontSize: "14px", color: "#94a3b8", margin: 0 }}>Help requests and contact form submissions</p>
