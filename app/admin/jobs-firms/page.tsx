@@ -1,4 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
+import AutoRefresh from "@/components/admin/AutoRefresh"
+
+export const dynamic = "force-dynamic"
 import { Briefcase, Building2 } from "lucide-react"
 
 async function getJobsAndFirms() {
@@ -47,6 +50,7 @@ export default async function JobsFirmsPage() {
 
   return (
     <div>
+      <AutoRefresh />
       <div style={{ marginBottom: "32px" }}>
         <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#ffffff", margin: "0 0 8px 0" }}>Jobs & Firms</h1>
         <p style={{ fontSize: "14px", color: "#94a3b8", margin: 0 }}>Job listings and firm directory applications</p>
