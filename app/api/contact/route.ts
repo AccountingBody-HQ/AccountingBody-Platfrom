@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     const { error: dbError } = await supabase
       .from('contact_submissions')
-      .insert({ name, email, subject: subject ?? 'General Enquiry', message })
+      .insert({ name, email, subject: subject ?? 'General Enquiry', message, platform: 'accountingbody' })
 
     if (dbError) {
       console.error('Contact insert error:', dbError)
