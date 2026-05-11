@@ -5,10 +5,6 @@ import { createClient } from '@sanity/client'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-const QUALIFICATION_MAP: Record<string, string> = {
-  ACCA: 'acca', CIMA: 'cima', ICAEW: 'icaew', AAT: 'aat'
-}
-
 const CONTENT_TYPE_MAP: Record<string, string> = {
   'Study Note':                 'article',
   'Article':                    'article',
@@ -140,7 +136,7 @@ export async function POST(req: NextRequest) {
     const slug        = generateSlug(title)
     const blocks      = markdownToBlocks(content)
     const now         = new Date().toISOString()
-    const examBody    = [QUALIFICATION_MAP[qualification] ?? qualification.toLowerCase()]
+    const examBody    = ['acca', 'cima', 'icaew', 'aat']
     const mappedType  = CONTENT_TYPE_MAP[contentType] ?? 'article'
     const mappedDiff  = DIFFICULTY_MAP[difficulty] ?? 'intermediate'
     const keyTermsArr = keyTerms ? keyTerms.split(',').map((t: string) => t.trim()).filter(Boolean) : []

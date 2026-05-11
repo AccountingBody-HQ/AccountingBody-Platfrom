@@ -117,6 +117,11 @@ COPYRIGHT AND ORIGINALITY RULES:
 
 const FORBIDDEN_PHRASES = `
 FORBIDDEN PHRASES — NEVER USE:
+- Never mention ACCA, CIMA, ICAEW, AAT, or any professional accounting body name anywhere in the published content — not in the title, not in headings, not in body text, not in key points. These are used internally for categorisation only and must never appear in the output.
+- Never reference "this exam", "the exam", "exam technique for [body]", "for [body] candidates" or any phrase that implies affiliation with or endorsement by a professional body.
+- Instead of "for ACCA students" write "for accounting students" or "in professional accounting examinations"
+- Instead of "ACCA Financial Reporting" write "financial reporting at professional level" or "advanced financial reporting"
+- Instead of "CIMA candidates" write "management accounting students" or "finance professionals"
 - "In today's fast-paced world..." / "In today's rapidly changing landscape..."
 - "It is worth noting that..." / "It is important to note that..." / "It should be noted that..."
 - "As previously mentioned..." / "As we have seen..."
