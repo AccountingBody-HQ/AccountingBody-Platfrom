@@ -1,9 +1,11 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 const services: Record<string, {
   name: string
@@ -164,7 +166,11 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus('loading')
-    const { error } = await supabase.from('help_requests').insert([form])
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+    )
+    const { error } = await supabase.from('help_requests').insert([{ ...form, platform: 'ab' }])
     if (error) { console.error(error); setStatus('error') }
     else { setStatus('success'); setForm({ name: '', email: '', phone: '', service_type: service.name, message: '' }) }
   }
