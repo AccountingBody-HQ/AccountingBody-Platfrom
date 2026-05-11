@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
@@ -121,15 +120,19 @@ export default function GlobalPayrollServicePage({ params }: { params: { slug: s
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus('loading')
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-    )
-    const { error } = await supabase.from('help_requests').insert([form])
-    if (error) { console.error(error); setStatus('error') }
-    else {
+    try {
+      const res = await fetch('/api/help-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? 'Something went wrong')
       setStatus('success')
       setForm({ name: '', email: '', phone: '', service_type: service.name, message: '' })
+    } catch (err) {
+      console.error(err)
+      setStatus('error')
     }
   }
 
@@ -207,6 +210,10 @@ export default function GlobalPayrollServicePage({ params }: { params: { slug: s
                 </div>
                 <h3 className="font-display text-2xl text-navy-950 mb-3">Brief Received</h3>
                 <p className="text-slate-600">Your service brief has been received by our team. We will review your requirements and confirm your engagement within one business day.</p>
+                <button onClick={() => setStatus('idle')}
+                  className="mt-6 text-sm font-medium text-navy-700 hover:text-gold-600 transition-colors">
+                  Submit another brief
+                </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-5">
