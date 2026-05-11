@@ -12,7 +12,7 @@ export default function JobsFirmsPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/jobs-firms', { cache: 'no-store' })
+      const res = await fetch('/api/admin/jobs-firms', { cache: 'no-store', credentials: 'include' })
       const data = await res.json()
       setJobListings(data.jobListings ?? [])
       setFirmsApplications(data.firmsApplications ?? [])

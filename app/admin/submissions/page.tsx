@@ -12,7 +12,7 @@ export default function SubmissionsPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/submissions', { cache: 'no-store' })
+      const res = await fetch('/api/admin/submissions', { cache: 'no-store', credentials: 'include' })
       const data = await res.json()
       setHelpRequests(data.helpRequests ?? [])
       setContactSubmissions(data.contactSubmissions ?? [])
