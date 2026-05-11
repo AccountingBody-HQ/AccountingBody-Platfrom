@@ -5,7 +5,6 @@ export const dynamic = 'force-dynamic'
 import { useState } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@supabase/supabase-js'
 
 const services: Record<string, {
   name: string
@@ -166,13 +165,20 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus('loading')
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-    )
-    const { error } = await supabase.from('help_requests').insert([{ ...form, platform: 'ab', title: form.service_type, description: form.message }])
-    if (error) { console.error(error); setStatus('error') }
-    else { setStatus('success'); setForm({ name: '', email: '', phone: '', service_type: service.name, message: '' }) }
+    try {
+      const res = await fetch('/api/help-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? 'Something went wrong')
+      setStatus('success')
+      setForm({ name: '', email: '', phone: '', service_type: service.name, message: '' })
+    } catch (err) {
+      console.error(err)
+      setStatus('error')
+    }
   }
 
   return (
