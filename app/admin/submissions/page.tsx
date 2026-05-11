@@ -1,32 +1,32 @@
-'use client'
+import { createClient } from "@supabase/supabase-js"
+import { HelpCircle, Mail } from "lucide-react"
 
-import { useEffect, useState, useCallback } from 'react'
-import { HelpCircle, Mail } from 'lucide-react'
+export const dynamic = "force-dynamic"
 
-type Row = Record<string, string>
+async function getSubmissions() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!
+  )
 
-export default function SubmissionsPage() {
-  const [helpRequests, setHelpRequests] = useState<Row[]>([])
-  const [contactSubmissions, setContactSubmissions] = useState<Row[]>([])
-  const [lastUpdated, setLastUpdated] = useState<string>('')
+  const { data: helpRequests } = await supabase
+    .from("help_requests")
+    .select("*")
+    .order("created_at", { ascending: false })
 
-  const fetchData = useCallback(async () => {
-    try {
-      const res = await fetch('/api/admin/submissions', { cache: 'no-store', credentials: 'include' })
-      const data = await res.json()
-      setHelpRequests(data.helpRequests ?? [])
-      setContactSubmissions(data.contactSubmissions ?? [])
-      setLastUpdated(new Date().toLocaleTimeString())
-    } catch (err) {
-      console.error('Failed to fetch submissions:', err)
-    }
-  }, [])
+  const { data: contactSubmissions } = await supabase
+    .from("contact_submissions")
+    .select("*")
+    .order("created_at", { ascending: false })
 
-  useEffect(() => {
-    fetchData()
-    const interval = setInterval(fetchData, 30000)
-    return () => clearInterval(interval)
-  }, [fetchData])
+  return {
+    helpRequests: (helpRequests ?? []) as Array<Record<string, string>>,
+    contactSubmissions: (contactSubmissions ?? []) as Array<Record<string, string>>,
+  }
+}
+
+export default async function SubmissionsPage() {
+  const { helpRequests, contactSubmissions } = await getSubmissions()
 
   const tableHeaderStyle = {
     padding: "12px 16px",
@@ -49,23 +49,11 @@ export default function SubmissionsPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: "32px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-        <div>
-          <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#ffffff", margin: "0 0 8px 0" }}>Submissions</h1>
-          <p style={{ fontSize: "14px", color: "#94a3b8", margin: 0 }}>Help requests and contact form submissions</p>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          {lastUpdated && (
-            <span style={{ fontSize: "12px", color: "#475569" }}>Updated {lastUpdated}</span>
-          )}
-          <button onClick={fetchData}
-            style={{ fontSize: "12px", color: "#94a3b8", background: "#1a2238", border: "1px solid #2a3550", borderRadius: "6px", padding: "4px 10px", cursor: "pointer" }}>
-            Refresh
-          </button>
-        </div>
+      <div style={{ marginBottom: "32px" }}>
+        <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#ffffff", margin: "0 0 8px 0" }}>Submissions</h1>
+        <p style={{ fontSize: "14px", color: "#94a3b8", margin: 0 }}>Help requests and contact form submissions</p>
       </div>
 
-      {/* Help Requests */}
       <div style={{ backgroundColor: "#0d1424", border: "1px solid #1a2238", borderRadius: "12px", marginBottom: "32px", overflow: "hidden" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid #1a2238", display: "flex", alignItems: "center", gap: "12px" }}>
           <HelpCircle size={18} style={{ color: "#f59e0b" }} />
@@ -91,7 +79,7 @@ export default function SubmissionsPage() {
                   <tr key={item.id}>
                     <td style={{ ...tableCellStyle, color: "#ffffff", fontWeight: "500" }}>{item.name ?? "—"}</td>
                     <td style={tableCellStyle}>
-                      <a href={`mailto:${item.email}`} style={{ color: "#94a3b8", textDecoration: "none" }}>{item.email ?? "—"}</a>
+                      <a href={"mailto:" + item.email} style={{ color: "#94a3b8", textDecoration: "none" }}>{item.email ?? "—"}</a>
                     </td>
                     <td style={tableCellStyle}>{item.phone ?? "—"}</td>
                     <td style={tableCellStyle}>
@@ -111,7 +99,6 @@ export default function SubmissionsPage() {
         )}
       </div>
 
-      {/* Contact Submissions */}
       <div style={{ backgroundColor: "#0d1424", border: "1px solid #1a2238", borderRadius: "12px", overflow: "hidden" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid #1a2238", display: "flex", alignItems: "center", gap: "12px" }}>
           <Mail size={18} style={{ color: "#3b82f6" }} />
@@ -136,7 +123,7 @@ export default function SubmissionsPage() {
                   <tr key={item.id}>
                     <td style={{ ...tableCellStyle, color: "#ffffff", fontWeight: "500" }}>{item.name ?? "—"}</td>
                     <td style={tableCellStyle}>
-                      <a href={`mailto:${item.email}`} style={{ color: "#94a3b8", textDecoration: "none" }}>{item.email ?? "—"}</a>
+                      <a href={"mailto:" + item.email} style={{ color: "#94a3b8", textDecoration: "none" }}>{item.email ?? "—"}</a>
                     </td>
                     <td style={tableCellStyle}>{item.subject ?? "—"}</td>
                     <td style={{ ...tableCellStyle, maxWidth: "300px" }}>

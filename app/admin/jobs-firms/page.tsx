@@ -1,32 +1,32 @@
-'use client'
+import { createClient } from "@supabase/supabase-js"
+import { Briefcase, Building2 } from "lucide-react"
 
-import { useEffect, useState, useCallback } from 'react'
-import { Briefcase, Building2 } from 'lucide-react'
+export const dynamic = "force-dynamic"
 
-type Row = Record<string, string>
+async function getJobsAndFirms() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!
+  )
 
-export default function JobsFirmsPage() {
-  const [jobListings, setJobListings] = useState<Row[]>([])
-  const [firmsApplications, setFirmsApplications] = useState<Row[]>([])
-  const [lastUpdated, setLastUpdated] = useState<string>('')
+  const { data: jobListings } = await supabase
+    .from("job_listings")
+    .select("*")
+    .order("created_at", { ascending: false })
 
-  const fetchData = useCallback(async () => {
-    try {
-      const res = await fetch('/api/admin/jobs-firms', { cache: 'no-store', credentials: 'include' })
-      const data = await res.json()
-      setJobListings(data.jobListings ?? [])
-      setFirmsApplications(data.firmsApplications ?? [])
-      setLastUpdated(new Date().toLocaleTimeString())
-    } catch (err) {
-      console.error('Failed to fetch jobs/firms:', err)
-    }
-  }, [])
+  const { data: firmsApplications } = await supabase
+    .from("firms_applications")
+    .select("*")
+    .order("created_at", { ascending: false })
 
-  useEffect(() => {
-    fetchData()
-    const interval = setInterval(fetchData, 30000)
-    return () => clearInterval(interval)
-  }, [fetchData])
+  return {
+    jobListings: (jobListings ?? []) as Array<Record<string, string>>,
+    firmsApplications: (firmsApplications ?? []) as Array<Record<string, string>>,
+  }
+}
+
+export default async function JobsFirmsPage() {
+  const { jobListings, firmsApplications } = await getJobsAndFirms()
 
   const tableHeaderStyle = {
     padding: "12px 16px",
@@ -49,23 +49,11 @@ export default function JobsFirmsPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: "32px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-        <div>
-          <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#ffffff", margin: "0 0 8px 0" }}>Jobs & Firms</h1>
-          <p style={{ fontSize: "14px", color: "#94a3b8", margin: 0 }}>Job listings and firm directory applications</p>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          {lastUpdated && (
-            <span style={{ fontSize: "12px", color: "#475569" }}>Updated {lastUpdated}</span>
-          )}
-          <button onClick={fetchData}
-            style={{ fontSize: "12px", color: "#94a3b8", background: "#1a2238", border: "1px solid #2a3550", borderRadius: "6px", padding: "4px 10px", cursor: "pointer" }}>
-            Refresh
-          </button>
-        </div>
+      <div style={{ marginBottom: "32px" }}>
+        <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#ffffff", margin: "0 0 8px 0" }}>Jobs & Firms</h1>
+        <p style={{ fontSize: "14px", color: "#94a3b8", margin: 0 }}>Job listings and firm directory applications</p>
       </div>
 
-      {/* Job Listings */}
       <div style={{ backgroundColor: "#0d1424", border: "1px solid #1a2238", borderRadius: "12px", marginBottom: "32px", overflow: "hidden" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid #1a2238", display: "flex", alignItems: "center", gap: "12px" }}>
           <Briefcase size={18} style={{ color: "#2563eb" }} />
@@ -100,7 +88,7 @@ export default function JobsFirmsPage() {
                     <td style={tableCellStyle}>{item.location ?? "—"}</td>
                     <td style={tableCellStyle}>{item.salary_range ?? "—"}</td>
                     <td style={tableCellStyle}>
-                      <a href={`mailto:${item.contact_email}`} style={{ color: "#94a3b8", textDecoration: "none" }}>{item.contact_email ?? "—"}</a>
+                      <a href={"mailto:" + item.contact_email} style={{ color: "#94a3b8", textDecoration: "none" }}>{item.contact_email ?? "—"}</a>
                     </td>
                     <td style={{ ...tableCellStyle, whiteSpace: "nowrap" }}>{item.created_at ? new Date(item.created_at).toLocaleDateString() : "—"}</td>
                   </tr>
@@ -111,7 +99,6 @@ export default function JobsFirmsPage() {
         )}
       </div>
 
-      {/* Firms Applications */}
       <div style={{ backgroundColor: "#0d1424", border: "1px solid #1a2238", borderRadius: "12px", overflow: "hidden" }}>
         <div style={{ padding: "20px 24px", borderBottom: "1px solid #1a2238", display: "flex", alignItems: "center", gap: "12px" }}>
           <Building2 size={18} style={{ color: "#8b5cf6" }} />
@@ -144,7 +131,7 @@ export default function JobsFirmsPage() {
                     </td>
                     <td style={tableCellStyle}>{item.contact_name ?? "—"}</td>
                     <td style={tableCellStyle}>
-                      <a href={`mailto:${item.contact_email}`} style={{ color: "#94a3b8", textDecoration: "none" }}>{item.contact_email ?? "—"}</a>
+                      <a href={"mailto:" + item.contact_email} style={{ color: "#94a3b8", textDecoration: "none" }}>{item.contact_email ?? "—"}</a>
                     </td>
                     <td style={tableCellStyle}>
                       {item.website ? (
