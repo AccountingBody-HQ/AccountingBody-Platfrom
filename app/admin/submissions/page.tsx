@@ -1,33 +1,32 @@
-import { createClient } from "@supabase/supabase-js"
-import AutoRefresh from "@/components/admin/AutoRefresh"
+'use client'
 
-export const dynamic = "force-dynamic"
-import { HelpCircle, Mail } from "lucide-react"
+import { useEffect, useState, useCallback } from 'react'
+import { HelpCircle, Mail } from 'lucide-react'
 
-async function getSubmissions() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+type Row = Record<string, string>
 
-  const { data: helpRequests } = await supabase
-    .from("help_requests")
-    .select("*")
-    .order("created_at", { ascending: false })
+export default function SubmissionsPage() {
+  const [helpRequests, setHelpRequests] = useState<Row[]>([])
+  const [contactSubmissions, setContactSubmissions] = useState<Row[]>([])
+  const [lastUpdated, setLastUpdated] = useState<string>('')
 
-  const { data: contactSubmissions } = await supabase
-    .from("contact_submissions")
-    .select("*")
-    .order("created_at", { ascending: false })
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/submissions', { cache: 'no-store' })
+      const data = await res.json()
+      setHelpRequests(data.helpRequests ?? [])
+      setContactSubmissions(data.contactSubmissions ?? [])
+      setLastUpdated(new Date().toLocaleTimeString())
+    } catch (err) {
+      console.error('Failed to fetch submissions:', err)
+    }
+  }, [])
 
-  return {
-    helpRequests: (helpRequests ?? []) as Array<Record<string, string>>,
-    contactSubmissions: (contactSubmissions ?? []) as Array<Record<string, string>>,
-  }
-}
-
-export default async function SubmissionsPage() {
-  const { helpRequests, contactSubmissions } = await getSubmissions()
+  useEffect(() => {
+    fetchData()
+    const interval = setInterval(fetchData, 30000)
+    return () => clearInterval(interval)
+  }, [fetchData])
 
   const tableHeaderStyle = {
     padding: "12px 16px",
@@ -50,10 +49,20 @@ export default async function SubmissionsPage() {
 
   return (
     <div>
-      <AutoRefresh />
-      <div style={{ marginBottom: "32px" }}>
-        <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#ffffff", margin: "0 0 8px 0" }}>Submissions</h1>
-        <p style={{ fontSize: "14px", color: "#94a3b8", margin: 0 }}>Help requests and contact form submissions</p>
+      <div style={{ marginBottom: "32px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <div>
+          <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#ffffff", margin: "0 0 8px 0" }}>Submissions</h1>
+          <p style={{ fontSize: "14px", color: "#94a3b8", margin: 0 }}>Help requests and contact form submissions</p>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          {lastUpdated && (
+            <span style={{ fontSize: "12px", color: "#475569" }}>Updated {lastUpdated}</span>
+          )}
+          <button onClick={fetchData}
+            style={{ fontSize: "12px", color: "#94a3b8", background: "#1a2238", border: "1px solid #2a3550", borderRadius: "6px", padding: "4px 10px", cursor: "pointer" }}>
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Help Requests */}
@@ -79,19 +88,21 @@ export default async function SubmissionsPage() {
               </thead>
               <tbody>
                 {helpRequests.map((item) => (
-                  <tr key={item.id} style={{ backgroundColor: "transparent" }}>
-                    <td style={{ ...tableCellStyle, color: "#ffffff", fontWeight: "500" }}>{item.name}</td>
-                    <td style={tableCellStyle}>{item.email}</td>
+                  <tr key={item.id}>
+                    <td style={{ ...tableCellStyle, color: "#ffffff", fontWeight: "500" }}>{item.name ?? "—"}</td>
+                    <td style={tableCellStyle}>
+                      <a href={`mailto:${item.email}`} style={{ color: "#94a3b8", textDecoration: "none" }}>{item.email ?? "—"}</a>
+                    </td>
                     <td style={tableCellStyle}>{item.phone ?? "—"}</td>
                     <td style={tableCellStyle}>
-                      <span style={{ backgroundColor: "#2563eb20", color: "#2563eb", padding: "2px 8px", borderRadius: "4px", fontSize: "12px", fontWeight: "500" }}>
+                      <span style={{ backgroundColor: "#2563eb20", color: "#60a5fa", padding: "2px 8px", borderRadius: "4px", fontSize: "12px", fontWeight: "500" }}>
                         {item.service_type ?? "—"}
                       </span>
                     </td>
                     <td style={{ ...tableCellStyle, maxWidth: "300px" }}>
-                      <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{item.message}</div>
+                      <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{item.message ?? "—"}</div>
                     </td>
-                    <td style={{ ...tableCellStyle, whiteSpace: "nowrap" }}>{new Date(item.created_at).toLocaleDateString()}</td>
+                    <td style={{ ...tableCellStyle, whiteSpace: "nowrap" }}>{item.created_at ? new Date(item.created_at).toLocaleDateString() : "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -123,13 +134,15 @@ export default async function SubmissionsPage() {
               <tbody>
                 {contactSubmissions.map((item) => (
                   <tr key={item.id}>
-                    <td style={{ ...tableCellStyle, color: "#ffffff", fontWeight: "500" }}>{item.name}</td>
-                    <td style={tableCellStyle}>{item.email}</td>
+                    <td style={{ ...tableCellStyle, color: "#ffffff", fontWeight: "500" }}>{item.name ?? "—"}</td>
+                    <td style={tableCellStyle}>
+                      <a href={`mailto:${item.email}`} style={{ color: "#94a3b8", textDecoration: "none" }}>{item.email ?? "—"}</a>
+                    </td>
                     <td style={tableCellStyle}>{item.subject ?? "—"}</td>
                     <td style={{ ...tableCellStyle, maxWidth: "300px" }}>
-                      <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{item.message}</div>
+                      <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{item.message ?? "—"}</div>
                     </td>
-                    <td style={{ ...tableCellStyle, whiteSpace: "nowrap" }}>{new Date(item.created_at).toLocaleDateString()}</td>
+                    <td style={{ ...tableCellStyle, whiteSpace: "nowrap" }}>{item.created_at ? new Date(item.created_at).toLocaleDateString() : "—"}</td>
                   </tr>
                 ))}
               </tbody>

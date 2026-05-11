@@ -1,33 +1,32 @@
-import { createClient } from "@supabase/supabase-js"
-import AutoRefresh from "@/components/admin/AutoRefresh"
+'use client'
 
-export const dynamic = "force-dynamic"
-import { Briefcase, Building2 } from "lucide-react"
+import { useEffect, useState, useCallback } from 'react'
+import { Briefcase, Building2 } from 'lucide-react'
 
-async function getJobsAndFirms() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+type Row = Record<string, string>
 
-  const { data: jobListings } = await supabase
-    .from("job_listings")
-    .select("*")
-    .order("created_at", { ascending: false })
+export default function JobsFirmsPage() {
+  const [jobListings, setJobListings] = useState<Row[]>([])
+  const [firmsApplications, setFirmsApplications] = useState<Row[]>([])
+  const [lastUpdated, setLastUpdated] = useState<string>('')
 
-  const { data: firmsApplications } = await supabase
-    .from("firms_applications")
-    .select("*")
-    .order("created_at", { ascending: false })
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/jobs-firms', { cache: 'no-store' })
+      const data = await res.json()
+      setJobListings(data.jobListings ?? [])
+      setFirmsApplications(data.firmsApplications ?? [])
+      setLastUpdated(new Date().toLocaleTimeString())
+    } catch (err) {
+      console.error('Failed to fetch jobs/firms:', err)
+    }
+  }, [])
 
-  return {
-    jobListings: (jobListings ?? []) as Array<Record<string, string>>,
-    firmsApplications: (firmsApplications ?? []) as Array<Record<string, string>>,
-  }
-}
-
-export default async function JobsFirmsPage() {
-  const { jobListings, firmsApplications } = await getJobsAndFirms()
+  useEffect(() => {
+    fetchData()
+    const interval = setInterval(fetchData, 30000)
+    return () => clearInterval(interval)
+  }, [fetchData])
 
   const tableHeaderStyle = {
     padding: "12px 16px",
@@ -50,10 +49,20 @@ export default async function JobsFirmsPage() {
 
   return (
     <div>
-      <AutoRefresh />
-      <div style={{ marginBottom: "32px" }}>
-        <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#ffffff", margin: "0 0 8px 0" }}>Jobs & Firms</h1>
-        <p style={{ fontSize: "14px", color: "#94a3b8", margin: 0 }}>Job listings and firm directory applications</p>
+      <div style={{ marginBottom: "32px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <div>
+          <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#ffffff", margin: "0 0 8px 0" }}>Jobs & Firms</h1>
+          <p style={{ fontSize: "14px", color: "#94a3b8", margin: 0 }}>Job listings and firm directory applications</p>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          {lastUpdated && (
+            <span style={{ fontSize: "12px", color: "#475569" }}>Updated {lastUpdated}</span>
+          )}
+          <button onClick={fetchData}
+            style={{ fontSize: "12px", color: "#94a3b8", background: "#1a2238", border: "1px solid #2a3550", borderRadius: "6px", padding: "4px 10px", cursor: "pointer" }}>
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Job Listings */}
@@ -84,13 +93,15 @@ export default async function JobsFirmsPage() {
                     <td style={{ ...tableCellStyle, color: "#ffffff", fontWeight: "500" }}>{item.job_title ?? "—"}</td>
                     <td style={tableCellStyle}>{item.company_name ?? "—"}</td>
                     <td style={tableCellStyle}>
-                      <span style={{ backgroundColor: "#2563eb20", color: "#2563eb", padding: "2px 8px", borderRadius: "4px", fontSize: "12px", fontWeight: "500" }}>
+                      <span style={{ backgroundColor: "#2563eb20", color: "#60a5fa", padding: "2px 8px", borderRadius: "4px", fontSize: "12px", fontWeight: "500" }}>
                         {item.job_type ?? "—"}
                       </span>
                     </td>
                     <td style={tableCellStyle}>{item.location ?? "—"}</td>
                     <td style={tableCellStyle}>{item.salary_range ?? "—"}</td>
-                    <td style={tableCellStyle}>{item.contact_email ?? "—"}</td>
+                    <td style={tableCellStyle}>
+                      <a href={`mailto:${item.contact_email}`} style={{ color: "#94a3b8", textDecoration: "none" }}>{item.contact_email ?? "—"}</a>
+                    </td>
                     <td style={{ ...tableCellStyle, whiteSpace: "nowrap" }}>{item.created_at ? new Date(item.created_at).toLocaleDateString() : "—"}</td>
                   </tr>
                 ))}
@@ -113,33 +124,37 @@ export default async function JobsFirmsPage() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr>
-                  <th style={tableHeaderStyle}>Practice Name</th>
+                  <th style={tableHeaderStyle}>Firm Name</th>
                   <th style={tableHeaderStyle}>Type</th>
                   <th style={tableHeaderStyle}>Contact</th>
                   <th style={tableHeaderStyle}>Email</th>
-                  <th style={tableHeaderStyle}>Location</th>
                   <th style={tableHeaderStyle}>Website</th>
+                  <th style={tableHeaderStyle}>Message</th>
                   <th style={tableHeaderStyle}>Date</th>
                 </tr>
               </thead>
               <tbody>
                 {firmsApplications.map((item) => (
                   <tr key={item.id}>
-                    <td style={{ ...tableCellStyle, color: "#ffffff", fontWeight: "500" }}>{item.practice_name ?? "—"}</td>
+                    <td style={{ ...tableCellStyle, color: "#ffffff", fontWeight: "500" }}>{item.firm_name ?? "—"}</td>
                     <td style={tableCellStyle}>
-                      <span style={{ backgroundColor: "#8b5cf620", color: "#8b5cf6", padding: "2px 8px", borderRadius: "4px", fontSize: "12px", fontWeight: "500" }}>
-                        {item.practice_type ?? "—"}
+                      <span style={{ backgroundColor: "#8b5cf620", color: "#a78bfa", padding: "2px 8px", borderRadius: "4px", fontSize: "12px", fontWeight: "500" }}>
+                        {item.firm_type ?? "—"}
                       </span>
                     </td>
                     <td style={tableCellStyle}>{item.contact_name ?? "—"}</td>
-                    <td style={tableCellStyle}>{item.email ?? "—"}</td>
-                    <td style={tableCellStyle}>{item.location ?? "—"}</td>
+                    <td style={tableCellStyle}>
+                      <a href={`mailto:${item.contact_email}`} style={{ color: "#94a3b8", textDecoration: "none" }}>{item.contact_email ?? "—"}</a>
+                    </td>
                     <td style={tableCellStyle}>
                       {item.website ? (
-                        <a href={item.website} target="_blank" rel="noopener noreferrer" style={{ color: "#2563eb", textDecoration: "none" }}>
+                        <a href={item.website} target="_blank" rel="noopener noreferrer" style={{ color: "#60a5fa", textDecoration: "none" }}>
                           {item.website}
                         </a>
                       ) : "—"}
+                    </td>
+                    <td style={{ ...tableCellStyle, maxWidth: "250px" }}>
+                      <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{item.message ?? "—"}</div>
                     </td>
                     <td style={{ ...tableCellStyle, whiteSpace: "nowrap" }}>{item.created_at ? new Date(item.created_at).toLocaleDateString() : "—"}</td>
                   </tr>
