@@ -81,7 +81,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           {/* Badges */}
           <div className="flex flex-wrap items-center gap-2 mb-5">
             {article.examBody?.map((body: string) => {
-              const bc = EXAM_BODY_BADGE[body] ?? 'bg-slate-100 text-slate-600 border-slate-200'
+              const bc = EXAM_BODY_BADGE[body.toUpperCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200'
               return (
                 <span key={body} className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-md border ${bc}`}>
                   {body.toUpperCase()}
@@ -206,7 +206,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                       <dt className="text-slate-500 shrink-0">Qualification</dt>
                       <dd className="flex flex-wrap gap-1 justify-end">
                         {article.examBody.map((body: string) => {
-                          const bc = EXAM_BODY_BADGE[body] ?? 'bg-slate-100 text-slate-600 border-slate-200'
+                          const bc = EXAM_BODY_BADGE[body.toUpperCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200'
                           return (
                             <span key={body} className={`text-xs font-bold px-2 py-0.5 rounded-md border ${bc}`}>
                               {body.toUpperCase()}
