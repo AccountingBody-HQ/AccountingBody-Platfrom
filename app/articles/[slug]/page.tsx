@@ -40,7 +40,6 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   if (!article) return null
 
   const accentBar  = EXAM_BODY_ACCENT[article.examBody?.[0] ?? ''] ?? 'bg-navy-950'
-  const badgeClass = EXAM_BODY_BADGE[article.examBody?.[0] ?? '']  ?? 'bg-slate-100 text-slate-600 border-slate-200'
 
   const formattedPublished = article.publishedAt
     ? new Date(article.publishedAt).toLocaleDateString('en-GB', {
@@ -81,11 +80,14 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
           {/* Badges */}
           <div className="flex flex-wrap items-center gap-2 mb-5">
-            {article.examBody?.[0] && (
-              <span className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-md border ${badgeClass}`}>
-                {article.examBody[0].toUpperCase()}
-              </span>
-            )}
+            {article.examBody?.map((body: string) => {
+              const bc = EXAM_BODY_BADGE[body] ?? 'bg-slate-100 text-slate-600 border-slate-200'
+              return (
+                <span key={body} className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-md border ${bc}`}>
+                  {body.toUpperCase()}
+                </span>
+              )
+            })}
             {article.category && (
               <span className="text-xs font-medium px-2.5 py-1 rounded-md bg-white/10 text-white/70 border border-white/15">
                 {article.category}
@@ -199,13 +201,18 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                   Article details
                 </p>
                 <dl className="space-y-3">
-                  {article.examBody?.[0] && (
-                    <div className="flex justify-between text-sm">
-                      <dt className="text-slate-500">Qualification</dt>
-                      <dd>
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-md border ${badgeClass}`}>
-                          {article.examBody[0].toUpperCase()}
-                        </span>
+                  {article.examBody && article.examBody.length > 0 && (
+                    <div className="flex justify-between text-sm gap-2">
+                      <dt className="text-slate-500 shrink-0">Qualification</dt>
+                      <dd className="flex flex-wrap gap-1 justify-end">
+                        {article.examBody.map((body: string) => {
+                          const bc = EXAM_BODY_BADGE[body] ?? 'bg-slate-100 text-slate-600 border-slate-200'
+                          return (
+                            <span key={body} className={`text-xs font-bold px-2 py-0.5 rounded-md border ${bc}`}>
+                              {body.toUpperCase()}
+                            </span>
+                          )
+                        })}
                       </dd>
                     </div>
                   )}
