@@ -170,7 +170,7 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
     )
-    const { error } = await supabase.from('help_requests').insert([{ ...form, platform: 'ab' }])
+    const { error } = await supabase.from('help_requests').insert([{ ...form, platform: 'ab', title: form.service_type, description: form.message }])
     if (error) { console.error(error); setStatus('error') }
     else { setStatus('success'); setForm({ name: '', email: '', phone: '', service_type: service.name, message: '' }) }
   }
