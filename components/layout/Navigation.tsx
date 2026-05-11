@@ -483,8 +483,6 @@ export function Navigation() {
   }, [mobileOpen])
 
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchOpen,  setSearchOpen]  = useState(false)
-  const searchInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
@@ -493,17 +491,11 @@ export function Navigation() {
     if (q.length < 1) return
     router.push(`/search?q=${encodeURIComponent(q)}`)
     setSearchQuery('')
-    setSearchOpen(false)
   }
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') handleSearchSubmit()
-    if (e.key === 'Escape') { setSearchOpen(false); setSearchQuery('') }
-  }
-
-  const openSearch = () => {
-    setSearchOpen(true)
-    setTimeout(() => searchInputRef.current?.focus(), 50)
+    if (e.key === 'Escape') { setSearchQuery('') }
   }
 
   const handleMouseEnter = (id: string) => {
@@ -619,55 +611,26 @@ export function Navigation() {
             })}
           </nav>
 
-          {/* Desktop right actions — search */}
-          <div className="hidden lg:flex items-center gap-2 justify-end shrink-0">
-            {searchOpen ? (
-              <form
-                onSubmit={handleSearchSubmit}
-                className="flex items-center gap-2 animate-slide-down"
+          {/* Desktop right actions — search (always visible) */}
+          <div className="hidden lg:flex items-center justify-end shrink-0">
+            <form onSubmit={handleSearchSubmit} className="relative">
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
               >
-                <div className="relative">
-                  <svg
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  <input
-                    ref={searchInputRef}
-                    type="search"
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    onKeyDown={handleSearchKeyDown}
-                    placeholder="Search articles, questions…"
-                    autoComplete="off"
-                    className="h-9 w-64 pl-9 pr-4 rounded-lg border border-slate-300 text-sm text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all bg-white"
-                    aria-label="Search AccountingBody"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => { setSearchOpen(false); setSearchQuery('') }}
-                  className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-navy-950 hover:bg-slate-100 transition-colors"
-                  aria-label="Close search"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </form>
-            ) : (
-              <button
-                onClick={openSearch}
-                className="flex items-center gap-2 h-9 px-4 rounded-lg border border-slate-300 text-sm text-slate-500 hover:text-navy-950 hover:border-navy-300 bg-white transition-colors"
-                aria-label="Open search"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <span className="text-sm text-slate-400">Search…</span>
-              </button>
-            )}
+                <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Search articles, questions, glossary…"
+                autoComplete="off"
+                className="h-9 w-72 pl-9 pr-4 rounded-lg border border-slate-200 text-sm text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all bg-slate-50 hover:bg-white hover:border-slate-300 focus:bg-white"
+                aria-label="Search AccountingBody"
+              />
+            </form>
           </div>
 
           {/* Mobile menu button */}
