@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -322,7 +322,7 @@ function MegaMenu({ section, onClose }: { section: NavSection; onClose: () => vo
 }
 
 // ── Mobile nav ────────────────────────────────────────────────────────────────
-function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
+function MobileMenu({ open, onClose, onSearch }: { open: boolean; onClose: () => void; onSearch: () => void }) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
 
   return (
@@ -429,22 +429,17 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
           })}
         </nav>
 
-        {/* Mobile CTAs */}
-        <div className="p-5 border-t border-slate-200 space-y-2">
-          <Link
-            href="/sign-in"
-            onClick={onClose}
-            className="flex items-center justify-center h-10 px-4 rounded-lg text-sm font-semibold text-navy-950 border border-slate-300 hover:border-navy-950 transition-colors"
+        {/* Mobile search CTA */}
+        <div className="p-5 border-t border-slate-200">
+          <button
+            onClick={() => { onSearch(); onClose() }}
+            className="flex items-center justify-center gap-2 w-full h-10 px-4 rounded-lg text-sm font-semibold text-navy-950 border border-slate-300 hover:border-navy-950 transition-colors"
           >
-            Log in
-          </Link>
-          <Link
-            href="/sign-up"
-            onClick={onClose}
-            className="flex items-center justify-center h-10 px-4 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors"
-          >
-            Start free
-          </Link>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Search the platform
+          </button>
         </div>
       </div>
     </>
@@ -486,6 +481,30 @@ export function Navigation() {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [mobileOpen])
+
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchOpen,  setSearchOpen]  = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
+
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    const q = searchQuery.trim()
+    if (q.length < 1) return
+    router.push(`/search?q=${encodeURIComponent(q)}`)
+    setSearchQuery('')
+    setSearchOpen(false)
+  }
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleSearchSubmit()
+    if (e.key === 'Escape') { setSearchOpen(false); setSearchQuery('') }
+  }
+
+  const openSearch = () => {
+    setSearchOpen(true)
+    setTimeout(() => searchInputRef.current?.focus(), 50)
+  }
 
   const handleMouseEnter = (id: string) => {
     if (closeTimer.current) clearTimeout(closeTimer.current)
@@ -600,33 +619,61 @@ export function Navigation() {
             })}
           </nav>
 
-          {/* Desktop right actions */}
+          {/* Desktop right actions — search */}
           <div className="hidden lg:flex items-center gap-2 justify-end shrink-0">
-            <button
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-navy-950 hover:bg-slate-100 transition-colors"
-              aria-label="Search"
-            >
-              <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </button>
-            <Link
-              href="/sign-in"
-              className="px-4 h-9 flex items-center text-sm font-medium text-navy-950 hover:text-navy-700 rounded-lg hover:bg-slate-50 transition-colors"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/sign-up"
-              className="px-4 h-9 flex items-center text-sm font-semibold bg-navy-950 text-white rounded-lg hover:bg-navy-900 transition-colors shadow-sm hover:shadow-md"
-            >
-              Start free
-            </Link>
+            {searchOpen ? (
+              <form
+                onSubmit={handleSearchSubmit}
+                className="flex items-center gap-2 animate-slide-down"
+              >
+                <div className="relative">
+                  <svg
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    ref={searchInputRef}
+                    type="search"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    onKeyDown={handleSearchKeyDown}
+                    placeholder="Search articles, questions…"
+                    autoComplete="off"
+                    className="h-9 w-64 pl-9 pr-4 rounded-lg border border-slate-300 text-sm text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all bg-white"
+                    aria-label="Search AccountingBody"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setSearchOpen(false); setSearchQuery('') }}
+                  className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-navy-950 hover:bg-slate-100 transition-colors"
+                  aria-label="Close search"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </form>
+            ) : (
+              <button
+                onClick={openSearch}
+                className="flex items-center gap-2 h-9 px-4 rounded-lg border border-slate-300 text-sm text-slate-500 hover:text-navy-950 hover:border-navy-300 bg-white transition-colors"
+                aria-label="Open search"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span className="text-sm text-slate-400">Search…</span>
+              </button>
+            )}
           </div>
 
           {/* Mobile menu button */}
           <div className="flex items-center gap-2 justify-end lg:hidden">
             <button
+              onClick={() => router.push('/search')}
               className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
               aria-label="Search"
             >
@@ -652,6 +699,7 @@ export function Navigation() {
       <MobileMenu
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
+        onSearch={() => router.push('/search')}
       />
     </>
   )
