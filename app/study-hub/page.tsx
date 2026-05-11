@@ -152,7 +152,7 @@ export default async function StudyHubPage() {
             {[
               { value: '3,000+',   label: 'Study articles',       sub: 'Updated for 2025 exams' },
               { value: '50,000+',  label: 'Practice questions',    sub: 'MCQ, written & scenario' },
-              { value: '8',        label: 'Qualifications covered',sub: 'ACCA, CIMA, AAT & more' },
+              { value: '4',        label: 'Qualifications covered',sub: 'ACCA, CIMA, ICAEW & AAT' },
               { value: '1,200+',   label: 'Dictionary terms',      sub: 'Always free' },
             ].map((s, i, arr) => (
               <div key={s.label} className={['flex flex-col', i < arr.length - 1 ? 'lg:border-r lg:border-slate-200 lg:pr-6' : ''].join(' ')}>

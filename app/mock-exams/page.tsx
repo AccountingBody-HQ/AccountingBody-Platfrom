@@ -76,7 +76,7 @@ export default function MockExamsPage() {
             <nav className="flex items-center gap-2 text-white/40 text-sm mb-8">
               <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-              <Link href="/study-hub" className="hover:text-white/70 transition-colors">Study Hub</Link>
+              <Link href="/study" className="hover:text-white/70 transition-colors">Study</Link>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
               <span className="text-white/70">Mock Exams</span>
             </nav>
@@ -98,9 +98,9 @@ export default function MockExamsPage() {
                 Browse practice questions
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </Link>
-              <Link href="/study-hub"
+              <Link href="/study"
                 className="inline-flex items-center gap-2 h-13 px-7 rounded-lg text-base font-medium text-white border border-white/25 hover:bg-white/10 hover:border-white/40 transition-all">
-                Back to Study Hub
+                Back to Study
               </Link>
             </div>
           </div>
@@ -177,9 +177,9 @@ export default function MockExamsPage() {
               <p className="text-sm text-slate-500 mt-0.5">Start with topic-level practice questions instead.</p>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              <Link href="/study-hub"
+              <Link href="/study"
                 className="h-10 px-5 flex items-center text-sm font-medium rounded-lg border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors">
-                Study Hub
+                Study
               </Link>
               <Link href="/practice-questions"
                 className="h-10 px-5 flex items-center text-sm font-semibold rounded-lg bg-navy-950 text-white hover:bg-navy-900 transition-colors shadow-sm">
