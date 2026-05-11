@@ -9,30 +9,55 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    console.log('Contact form received:', JSON.stringify(body))
-    console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
-    console.log('Secret key prefix:', process.env.SUPABASE_SECRET_KEY?.slice(0, 20))
+    const { name, email, subject, message, subscribe, subscribeOnly } = body
 
-    const { name, email, subject, message } = body
+    if (!email) {
+      return NextResponse.json({ error: 'Email is required.' }, { status: 400 })
+    }
 
-    if (!name || !email || !message) {
+    // Newsletter-only path (footer subscribe form)
+    if (subscribeOnly) {
+      const { error: subError } = await supabase
+        .from('email_subscribers')
+        .upsert({ email, status: 'active' }, { onConflict: 'email' })
+
+      if (subError) {
+        console.error('Subscribe error:', subError)
+        return NextResponse.json({ error: subError.message }, { status: 500 })
+      }
+
+      return NextResponse.json({ success: true })
+    }
+
+    // Full contact form path
+    if (!name || !message) {
       return NextResponse.json({ error: 'Name, email and message are required.' }, { status: 400 })
     }
 
-    const { data, error: dbError } = await supabase
+    const { error: dbError } = await supabase
       .from('contact_submissions')
-      .insert({ name, email, subject: subject ?? 'General enquiry', message })
-      .select()
-
-    console.log('Supabase insert result:', JSON.stringify({ data, error: dbError }))
+      .insert({ name, email, subject: subject ?? 'General Enquiry', message })
 
     if (dbError) {
+      console.error('Contact insert error:', dbError)
       return NextResponse.json({ error: dbError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, data })
+    // Also subscribe if checkbox was ticked
+    if (subscribe) {
+      const { error: subError } = await supabase
+        .from('email_subscribers')
+        .upsert({ email, status: 'active' }, { onConflict: 'email' })
+
+      if (subError) {
+        console.error('Subscribe error (non-fatal):', subError)
+        // Non-fatal — contact was saved, subscription failed silently
+      }
+    }
+
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Contact error:', error)
+    console.error('Contact route error:', error)
     return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 })
   }
 }
