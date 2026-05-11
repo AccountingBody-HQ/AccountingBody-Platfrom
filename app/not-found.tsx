@@ -17,7 +17,7 @@ export default function NotFound() {
         </h1>
         <p className="text-slate-500 text-lg leading-relaxed mb-8">
           The page you are looking for does not exist or may have moved.
-          Try browsing our study notes or returning to the homepage.
+          Try browsing our study notes, exploring our services, or returning to the homepage.
         </p>
         <div className="flex flex-wrap justify-center gap-4">
           <Link
