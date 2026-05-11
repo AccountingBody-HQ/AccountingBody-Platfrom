@@ -18,18 +18,22 @@ export async function POST(req: NextRequest) {
     }
 
     // Save to Supabase
+    const messageBody = [
+      location ? `Location: ${location}` : '',
+      specialisms ? `Specialisms: ${specialisms}` : '',
+      about || '',
+    ].filter(Boolean).join('\n')
+
     const { error: dbError } = await supabase
       .from('firms_applications')
       .insert([{
-        practice_name: practice_name || contact_name,
+        firm_name: practice_name || contact_name,
         contact_name,
-        email,
-        phone: phone || null,
+        contact_email: email,
+        contact_phone: phone || null,
         website: website || null,
-        practice_type,
-        location,
-        specialisms: specialisms || null,
-        about,
+        firm_type: practice_type || null,
+        message: messageBody,
         platform: 'ab',
       }])
 
