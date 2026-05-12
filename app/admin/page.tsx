@@ -118,6 +118,7 @@ export default async function AdminCommandCentre() {
 
   return (
     <div className="p-8">
+      <AutoRefresh />
 
       {/* Header */}
       <div className="mb-8">
