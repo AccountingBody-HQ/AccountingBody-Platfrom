@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import QuizProgress from './QuizProgress'
+import ExplanationRenderer from './ExplanationRenderer'
 
 interface QuizOption { label: string; value: string }
 
@@ -437,10 +438,7 @@ function QuestionItem({ entry, index, submitted, answers, writing, revealed, set
 
           {/* Explanation */}
           {submitted && q.explanation && (
-            <div className="mt-4 p-4 rounded-lg bg-navy-50 border border-navy-200">
-              <p className="text-xs font-semibold text-navy-500 uppercase tracking-widest mb-1">Explanation</p>
-              <p className="text-sm text-navy-800 leading-relaxed">{q.explanation}</p>
-            </div>
+            <ExplanationRenderer explanation={q.explanation} dark={false} />
           )}
 
           {/* No answer warning */}

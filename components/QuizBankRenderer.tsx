@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import ExplanationRenderer from './ExplanationRenderer'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -531,10 +532,7 @@ export default function QuizBankRenderer({ data }: Props) {
 
                 {/* Explanation */}
                 {submitted && q.explanation && (
-                  <div className={`mt-3 p-4 rounded-lg border ${T.explain}`}>
-                    <p className={`text-[0.625rem] font-semibold uppercase tracking-widest mb-1 ${T.explainHd}`}>Explanation</p>
-                    <p className={`text-sm leading-relaxed ${T.explainTxt}`}>{q.explanation}</p>
-                  </div>
+                  <ExplanationRenderer explanation={q.explanation} dark={dark} />
                 )}
 
                 {/* Unanswered */}
