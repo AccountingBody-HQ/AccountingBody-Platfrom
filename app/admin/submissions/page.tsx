@@ -38,13 +38,6 @@ async function getServiceTypes() {
   return types as string[]
 }
 
-const STATUS_COLOURS: Record<string, { bg: string; color: string }> = {
-  open:         { bg: 'rgba(59,130,246,0.12)',  color: '#60a5fa' },
-  in_progress:  { bg: 'rgba(245,158,11,0.12)',  color: '#fbbf24' },
-  resolved:     { bg: 'rgba(16,185,129,0.12)',  color: '#34d399' },
-  closed:       { bg: 'rgba(100,116,139,0.12)', color: '#94a3b8' },
-}
-
 export default async function SubmissionsPage({
   searchParams,
 }: {
