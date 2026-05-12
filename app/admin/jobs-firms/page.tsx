@@ -23,13 +23,6 @@ async function getJobsAndFirms() {
   }
 }
 
-const FIRM_STATUS_COLOURS: Record<string, { bg: string; color: string }> = {
-  pending:      { bg: 'rgba(245,158,11,0.12)',  color: '#fbbf24' },
-  under_review: { bg: 'rgba(139,92,246,0.12)',  color: '#a78bfa' },
-  approved:     { bg: 'rgba(16,185,129,0.12)',  color: '#34d399' },
-  rejected:     { bg: 'rgba(239,68,68,0.12)',   color: '#f87171' },
-}
-
 export default async function JobsFirmsPage() {
   const { jobListings, firmsApplications } = await getJobsAndFirms()
 

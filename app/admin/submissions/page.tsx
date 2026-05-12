@@ -34,7 +34,7 @@ async function getServiceTypes() {
   noStore()
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!)
   const { data } = await supabase.from('help_requests').select('service_type').not('service_type', 'is', null)
-  const types = [...new Set((data ?? []).map((r: any) => r.service_type).filter(Boolean))]
+  const types = Array.from(new Set((data ?? []).map((r: any) => r.service_type).filter(Boolean)))
   return types as string[]
 }
 
