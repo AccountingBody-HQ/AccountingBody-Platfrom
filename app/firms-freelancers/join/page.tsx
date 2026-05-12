@@ -87,6 +87,10 @@ export default function JoinNetworkPage() {
               </div>
               <h2 className="font-display text-2xl text-navy-950 mb-3">Application Received</h2>
               <p className="text-slate-500 leading-relaxed max-w-md mx-auto">Thank you for your application. Our team will review your credentials and professional standing. You will receive a response within two business days.</p>
+              <button onClick={() => { setStatus('idle'); setApplicantType(null); setQualifications([]); setForm({ practice_name: '', contact_name: '', email: '', phone: '', website: '', practice_type: '', location: '', specialisms: '', about: '' }) }}
+                className="mt-6 text-sm font-medium text-navy-700 hover:text-gold-600 transition-colors">
+                Submit another application
+              </button>
             </div>
           ) : (
             <div className="space-y-6">
