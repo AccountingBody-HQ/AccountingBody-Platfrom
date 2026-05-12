@@ -745,7 +745,7 @@ export async function POST(req: NextRequest) {
 
     const authorMessage = await client.messages.create({
       model:      'claude-sonnet-4-20250514',
-      max_tokens: 9000,
+      max_tokens: 16000,
       system:     `You are a Principal Examiner for a world-class professional accounting education platform. You produce examination questions that match the quality of major professional accounting bodies. You return VALID JSON only — no markdown, no fences, no preamble. You never mention any professional accounting body name in output. You never use backticks or code blocks. All invented figures are specific and non-round. All distractors represent real student errors. Your explanations are full teaching resources, not just answer confirmations.`,
       messages:   [{ role: 'user', content: authorPrompt }],
     })
