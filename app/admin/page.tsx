@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
+import { unstable_noStore as noStore } from "next/cache"
 import Link from "next/link"
 import {
   Mail, Users, HelpCircle, Building2, Briefcase,
@@ -8,6 +9,7 @@ import {
 export const dynamic = "force-dynamic"
 
 async function getStats() {
+  noStore()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SECRET_KEY!

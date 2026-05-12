@@ -24,11 +24,16 @@ export default function EmailSignupForm() {
 
   if (status === 'success') {
     return (
-      <div className="flex items-center justify-center gap-3 bg-white/10 rounded-lg px-5 py-4 border border-white/20 max-w-sm mx-auto">
-        <svg className="w-5 h-5 text-gold-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-        </svg>
-        <p className="text-white text-sm font-medium">You are subscribed — welcome!</p>
+      <div className="flex flex-col items-center justify-center gap-3 max-w-sm mx-auto">
+        <div className="flex items-center gap-3 bg-white/10 rounded-lg px-5 py-4 border border-white/20 w-full">
+          <svg className="w-5 h-5 text-gold-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+          </svg>
+          <p className="text-white text-sm font-medium">You are subscribed — welcome!</p>
+        </div>
+        <button onClick={() => setStatus('idle')} className="text-xs text-white/50 hover:text-white/80 transition-colors">
+          Subscribe another email
+        </button>
       </div>
     )
   }
