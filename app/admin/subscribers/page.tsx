@@ -1,7 +1,11 @@
 import { createClient } from "@supabase/supabase-js"
+import { unstable_noStore as noStore } from "next/cache"
 import { Users } from "lucide-react"
 
+export const dynamic = "force-dynamic"
+
 async function getSubscribers() {
+  noStore()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SECRET_KEY!
