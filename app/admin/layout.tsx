@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Inbox, Users, Briefcase,
   Factory, Settings, LogOut, ExternalLink,
-  ChevronRight, Palette
+  ChevronRight, Palette, BookOpen
 } from 'lucide-react'
 
 const NAV = [
@@ -13,6 +13,7 @@ const NAV = [
   { href: '/admin/submissions',     exact: false, icon: Inbox,           label: 'Submissions',     sub: 'Help & contact forms'      },
   { href: '/admin/subscribers',     exact: false, icon: Users,           label: 'Subscribers',     sub: 'Email list & export'       },
   { href: '/admin/jobs-firms',      exact: false, icon: Briefcase,       label: 'Jobs & Firms',    sub: 'Listings & applications'   },
+  { href: '/admin/questions',        exact: false, icon: BookOpen,        label: 'Questions',       sub: 'Generate and manage MCQs'  },
   { href: '/admin/content-factory', exact: false, icon: Factory,         label: 'Content Factory', sub: 'AI content generation'     },
   { href: '/studio',                exact: false, icon: Palette,         label: 'Sanity Studio',   sub: 'CMS & content editor'      },
   { href: '/admin/settings',        exact: false, icon: Settings,        label: 'Settings',        sub: 'Environment & checklist'   },
