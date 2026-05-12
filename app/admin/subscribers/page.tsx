@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import { unstable_noStore as noStore } from "next/cache"
 import { Users } from "lucide-react"
+import AutoRefresh from "@/components/admin/AutoRefresh"
 
 export const dynamic = "force-dynamic"
 
@@ -49,6 +50,7 @@ export default async function SubscribersPage() {
 
   return (
     <div>
+      <AutoRefresh />
       <div style={{ marginBottom: "32px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
         <div>
           <h1 style={{ fontSize: "28px", fontWeight: "700", color: "#ffffff", margin: "0 0 8px 0" }}>Subscribers</h1>

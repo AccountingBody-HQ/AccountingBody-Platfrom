@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import { unstable_noStore as noStore } from "next/cache"
 import Link from "next/link"
+import AutoRefresh from "@/components/admin/AutoRefresh"
 import {
   Mail, Users, HelpCircle, Building2, Briefcase,
   ArrowRight, TrendingUp, Factory, Inbox
