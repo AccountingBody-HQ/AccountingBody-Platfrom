@@ -86,7 +86,7 @@ export default async function SubscribersPage({
             style={{ background: '#111827', border: '1px solid #1f2937', color: status ? '#ffffff' : '#475569' }}>
             <option value="">All statuses</option>
             <option value="subscribed">Subscribed</option>
-            <option value="active">Active</option>
+            <option value="subscribed">Subscribed</option>
             <option value="unsubscribed">Unsubscribed</option>
           </select>
           <select name="source" defaultValue={source}

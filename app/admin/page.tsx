@@ -22,12 +22,16 @@ async function getStats() {
     { count: helpCount },
     { count: firmsCount },
     { count: jobsCount },
+    { count: openHelpCount },
+    { count: pendingFirmsCount },
   ] = await Promise.all([
     supabase.from("contact_submissions").select("*", { count: "exact", head: true }),
     supabase.from("email_subscribers").select("*", { count: "exact", head: true }),
     supabase.from("help_requests").select("*", { count: "exact", head: true }),
     supabase.from("firms_applications").select("*", { count: "exact", head: true }),
     supabase.from("job_listings").select("*", { count: "exact", head: true }),
+    supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("status", "open"),
+    supabase.from("firms_applications").select("*", { count: "exact", head: true }).in("status", ["pending", "under_review"]),
   ])
 
   const { data: recentSubmissions } = await supabase
@@ -42,14 +46,31 @@ async function getStats() {
     .order("subscribed_at", { ascending: false })
     .limit(5)
 
+  const { data: recentHelpRequests } = await supabase
+    .from("help_requests")
+    .select("id, name, email, service_type, status, created_at")
+    .order("created_at", { ascending: false })
+    .limit(5)
+
+  const { data: pendingFirms } = await supabase
+    .from("firms_applications")
+    .select("id, firm_name, contact_email, firm_type, status, created_at")
+    .in("status", ["pending", "under_review"])
+    .order("created_at", { ascending: false })
+    .limit(5)
+
   return {
-    contactCount: contactCount ?? 0,
-    subscriberCount: subscriberCount ?? 0,
-    helpCount: helpCount ?? 0,
-    firmsCount: firmsCount ?? 0,
-    jobsCount: jobsCount ?? 0,
-    recentSubmissions: (recentSubmissions ?? []) as Array<{id: string; name: string; email: string; subject: string; created_at: string}>,
-    recentSubscribers: (recentSubscribers ?? []) as Array<{id: string; email: string; subscribed_at: string}>,
+    contactCount:      contactCount      ?? 0,
+    subscriberCount:   subscriberCount   ?? 0,
+    helpCount:         helpCount         ?? 0,
+    firmsCount:        firmsCount        ?? 0,
+    jobsCount:         jobsCount         ?? 0,
+    openHelpCount:     openHelpCount     ?? 0,
+    pendingFirmsCount: pendingFirmsCount ?? 0,
+    recentSubmissions:   (recentSubmissions   ?? []) as Array<{id: string; name: string; email: string; subject: string; created_at: string}>,
+    recentSubscribers:   (recentSubscribers   ?? []) as Array<{id: string; email: string; subscribed_at: string}>,
+    recentHelpRequests:  (recentHelpRequests  ?? []) as Array<{id: string; name: string; email: string; service_type: string; status: string; created_at: string}>,
+    pendingFirms:        (pendingFirms        ?? []) as Array<{id: string; firm_name: string; contact_email: string; firm_type: string; status: string; created_at: string}>,
   }
 }
 
@@ -80,7 +101,7 @@ export default async function AdminCommandCentre() {
     {
       label: "Help Requests",
       value: stats.helpCount,
-      sub: "from get-help page",
+      sub: stats.openHelpCount + " open — needs action",
       color: "#f59e0b",
       bg: "rgba(245,158,11,0.08)",
       border: "rgba(245,158,11,0.2)",
@@ -90,7 +111,7 @@ export default async function AdminCommandCentre() {
     {
       label: "Firm Applications",
       value: stats.firmsCount,
-      sub: "directory applications",
+      sub: stats.pendingFirmsCount + " pending review",
       color: "#8b5cf6",
       bg: "rgba(139,92,246,0.08)",
       border: "rgba(139,92,246,0.2)",
@@ -114,6 +135,7 @@ export default async function AdminCommandCentre() {
     { label: "Manage Subscribers", sub: "Email list & CSV export",  href: "/admin/subscribers",     icon: Users,       color: "#10b981" },
     { label: "Content Factory",    sub: "Generate AI study content",href: "/admin/content-factory", icon: Factory,     color: "#f59e0b" },
     { label: "Jobs & Firms",       sub: "Listings & applications",  href: "/admin/jobs-firms",      icon: Briefcase,   color: "#8b5cf6" },
+    { label: "Questions",          sub: "Generate practice questions",href: "/admin/questions",       icon: HelpCircle,  color: "#D4A017" },
   ]
 
   return (
