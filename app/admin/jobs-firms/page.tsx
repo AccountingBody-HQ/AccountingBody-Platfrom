@@ -79,7 +79,6 @@ export default async function JobsFirmsPage() {
         ) : (
           <div className="divide-y" style={{ borderColor: '#1a2238' }}>
             {firmsApplications.map((item: any) => {
-              const sc = FIRM_STATUS_COLOURS[item.status ?? 'pending'] ?? FIRM_STATUS_COLOURS.pending
               return (
                 <div key={item.id} className="px-6 py-5 hover:bg-white/[0.01] transition-colors">
                   <div className="flex items-start justify-between gap-4 flex-wrap">
