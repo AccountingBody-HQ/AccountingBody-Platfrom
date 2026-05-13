@@ -13,7 +13,7 @@ async function getSubscribers(filters: { status?: string; source?: string }) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SECRET_KEY!
   )
-  let query = supabase.from('email_subscribers').select('*', { count: 'exact' }).order('subscribed_at', { ascending: false })
+  let query = supabase.from('email_subscribers').select('*', { count: 'exact' }).eq('platform', 'ab').order('subscribed_at', { ascending: false })
   if (filters.status) query = query.eq('status', filters.status)
   if (filters.source) query = query.eq('source', filters.source)
   const { data, count } = await query
@@ -23,7 +23,7 @@ async function getSubscribers(filters: { status?: string; source?: string }) {
 async function getSources() {
   noStore()
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!)
-  const { data } = await supabase.from('email_subscribers').select('source').not('source', 'is', null)
+  const { data } = await supabase.from('email_subscribers').select('source').eq('platform', 'ab').not('source', 'is', null)
   return Array.from(new Set((data ?? []).map((r: any) => r.source).filter(Boolean))) as string[]
 }
 

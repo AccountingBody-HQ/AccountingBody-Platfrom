@@ -15,7 +15,7 @@ async function getJobsAndFirms() {
   )
   const [{ data: jobListings }, { data: firmsApplications }] = await Promise.all([
     supabase.from('job_listings').select('*').order('created_at', { ascending: false }),
-    supabase.from('firms_applications').select('*').order('created_at', { ascending: false }),
+    supabase.from('firms_applications').select('*').eq('platform', 'ab').order('created_at', { ascending: false }),
   ])
   return {
     jobListings:       (jobListings ?? [])       as any[],

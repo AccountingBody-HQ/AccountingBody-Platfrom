@@ -14,12 +14,12 @@ async function getSubmissions(filters: { search?: string; serviceType?: string; 
     process.env.SUPABASE_SECRET_KEY!
   )
 
-  let helpQuery = supabase.from('help_requests').select('*').order('created_at', { ascending: false })
+  let helpQuery = supabase.from('help_requests').select('*').eq('platform', 'ab').order('created_at', { ascending: false })
   if (filters.status)      helpQuery = helpQuery.eq('status', filters.status)
   if (filters.serviceType) helpQuery = helpQuery.eq('service_type', filters.serviceType)
   if (filters.search)      helpQuery = helpQuery.or('name.ilike.%' + filters.search + '%,email.ilike.%' + filters.search + '%')
 
-  let contactQuery = supabase.from('contact_submissions').select('*').order('created_at', { ascending: false })
+  let contactQuery = supabase.from('contact_submissions').select('*').eq('platform', 'ab').order('created_at', { ascending: false })
   if (filters.search) contactQuery = contactQuery.or('name.ilike.%' + filters.search + '%,email.ilike.%' + filters.search + '%')
 
   const [{ data: helpRequests }, { data: contactSubmissions }] = await Promise.all([helpQuery, contactQuery])
@@ -33,7 +33,7 @@ async function getSubmissions(filters: { search?: string; serviceType?: string; 
 async function getServiceTypes() {
   noStore()
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!)
-  const { data } = await supabase.from('help_requests').select('service_type').not('service_type', 'is', null)
+  const { data } = await supabase.from('help_requests').select('service_type').eq('platform', 'ab').not('service_type', 'is', null)
   const types = Array.from(new Set((data ?? []).map((r: any) => r.service_type).filter(Boolean)))
   return types as string[]
 }

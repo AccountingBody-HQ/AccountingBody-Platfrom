@@ -25,36 +25,40 @@ async function getStats() {
     { count: openHelpCount },
     { count: pendingFirmsCount },
   ] = await Promise.all([
-    supabase.from("contact_submissions").select("*", { count: "exact", head: true }),
-    supabase.from("email_subscribers").select("*", { count: "exact", head: true }),
-    supabase.from("help_requests").select("*", { count: "exact", head: true }),
-    supabase.from("firms_applications").select("*", { count: "exact", head: true }),
+    supabase.from("contact_submissions").select("*", { count: "exact", head: true }).eq("platform", "ab"),
+    supabase.from("email_subscribers").select("*", { count: "exact", head: true }).eq("platform", "ab"),
+    supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("platform", "ab"),
+    supabase.from("firms_applications").select("*", { count: "exact", head: true }).eq("platform", "ab"),
     supabase.from("job_listings").select("*", { count: "exact", head: true }),
-    supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("status", "open"),
-    supabase.from("firms_applications").select("*", { count: "exact", head: true }).in("status", ["pending", "under_review"]),
+    supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("platform", "ab").eq("status", "open"),
+    supabase.from("firms_applications").select("*", { count: "exact", head: true }).eq("platform", "ab").in("status", ["pending", "under_review"]),
   ])
 
   const { data: recentSubmissions } = await supabase
     .from("contact_submissions")
     .select("id, name, email, subject, created_at")
+    .eq("platform", "ab")
     .order("created_at", { ascending: false })
     .limit(5)
 
   const { data: recentSubscribers } = await supabase
     .from("email_subscribers")
     .select("id, email, subscribed_at")
+    .eq("platform", "ab")
     .order("subscribed_at", { ascending: false })
     .limit(5)
 
   const { data: recentHelpRequests } = await supabase
     .from("help_requests")
     .select("id, name, email, service_type, status, created_at")
+    .eq("platform", "ab")
     .order("created_at", { ascending: false })
     .limit(5)
 
   const { data: pendingFirms } = await supabase
     .from("firms_applications")
     .select("id, firm_name, contact_email, firm_type, status, created_at")
+    .eq("platform", "ab")
     .in("status", ["pending", "under_review"])
     .order("created_at", { ascending: false })
     .limit(5)
