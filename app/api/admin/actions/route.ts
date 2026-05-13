@@ -4,6 +4,22 @@ import { createClient } from '@supabase/supabase-js'
 
 export const runtime = 'nodejs'
 
+async function sha256Hex(message: string): Promise<string> {
+  const msgBuffer = new TextEncoder().encode(message)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+async function isAuthenticated(req: NextRequest): Promise<boolean> {
+  const token = req.cookies.get('admin_token')?.value
+  if (!token) return false
+  const secret = process.env.ADMIN_SECRET
+  if (!secret) return false
+  const expectedHash = await sha256Hex(secret)
+  return token === expectedHash
+}
+
 function getClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,6 +30,10 @@ function getClient() {
 // POST /api/admin/actions
 // body: { action, table, id, payload }
 export async function POST(req: NextRequest) {
+  if (!(await isAuthenticated(req))) {
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  }
+
   try {
     const { action, table, id, payload } = await req.json()
 
@@ -23,10 +43,11 @@ export async function POST(req: NextRequest) {
 
     // Whitelist allowed tables and actions for security
     const ALLOWED: Record<string, string[]> = {
-      help_requests:      ['update_status', 'delete'],
-      contact_submissions:['update_status', 'delete'],
-      firms_applications: ['update_status', 'delete'],
-      email_subscribers:  ['update_status', 'delete'],
+      help_requests:       ['update_status', 'delete'],
+      contact_submissions: ['update_status', 'delete'],
+      firms_applications:  ['update_status', 'delete'],
+      email_subscribers:   ['update_status', 'delete'],
+      job_listings:        ['delete'],
     }
 
     if (!ALLOWED[table] || !ALLOWED[table].includes(action)) {
@@ -45,20 +66,31 @@ export async function POST(req: NextRequest) {
       if (!payload?.status) {
         return NextResponse.json({ error: 'status is required in payload' }, { status: 400 })
       }
+
       const update: Record<string, any> = { status: payload.status }
-      if (table === 'firms_applications' && payload.status === 'approved') {
+
+      if (table === 'firms_applications' && (payload.status === 'approved' || payload.status === 'rejected')) {
         update.reviewed_at = new Date().toISOString()
       }
+
       if (table === 'email_subscribers' && payload.status === 'unsubscribed') {
         update.unsubscribed_at = new Date().toISOString()
       }
+
+      if (table === 'help_requests' && payload.status === 'resolved') {
+        update.resolved_at = new Date().toISOString()
+      }
+
+      if (table === 'contact_submissions' && payload.status === 'resolved') {
+        update.resolved_at = new Date().toISOString()
+      }
+
       const { error } = await supabase.from(table).update(update).eq('id', id)
       if (error) throw error
       return NextResponse.json({ success: true })
     }
 
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
-
   } catch (err: any) {
     console.error('admin/actions error:', err)
     return NextResponse.json({ error: err.message ?? 'Internal server error' }, { status: 500 })
