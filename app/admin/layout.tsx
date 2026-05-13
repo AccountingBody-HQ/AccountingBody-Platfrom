@@ -15,7 +15,7 @@ const NAV = [
   { href: '/admin/jobs-firms',      exact: false, icon: Briefcase,       label: 'Jobs & Firms',    sub: 'Listings & applications'   },
   { href: '/admin/questions',        exact: false, icon: BookOpen,        label: 'Questions',       sub: 'Generate and manage MCQs'  },
   { href: '/admin/content-factory', exact: false, icon: Factory,         label: 'Content Factory', sub: 'AI content generation'     },
-  { href: '/studio',                exact: false, icon: Palette,         label: 'Sanity Studio',   sub: 'CMS & content editor'      },
+  { href: 'https://accountingbody-website.vercel.app/studio',                exact: false, icon: Palette,         label: 'Sanity Studio',   sub: 'CMS & content editor'      },
   { href: '/admin/settings',        exact: false, icon: Settings,        label: 'Settings',        sub: 'Environment & checklist'   },
 ]
 
@@ -31,8 +31,6 @@ function getBreadcrumb(pathname: string) {
     '/admin/subscribers':     'Subscribers',
     '/admin/jobs-firms':      'Jobs & Firms',
     '/admin/content-factory': 'Content Factory',
-    '/admin/settings':        'Settings',
-    '/studio':                'Sanity Studio',
   }
   const base = '/' + pathname.split('/').slice(1, 3).join('/')
   return map[base] ?? 'Admin'
@@ -76,7 +74,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {NAV.map(item => {
             const active = isActive(pathname, item.href, item.exact)
             return (
-              <Link key={item.href} href={item.href}
+              <Link key={item.href} href={item.href} target={item.href.startsWith("https://") ? "_blank" : undefined} rel={item.href.startsWith("https://") ? "noopener noreferrer" : undefined}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative"
                 style={{
                   background: active ? 'rgba(37,99,235,0.12)' : 'transparent',

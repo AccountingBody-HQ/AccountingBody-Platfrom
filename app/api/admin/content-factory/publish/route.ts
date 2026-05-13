@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'content, qualification, contentType, canonicalOwner and showOnSites are required' }, { status: 400 })
     }
 
-    const token     = (process.env.SANITY_API_TOKEN ?? process.env.SANITY_WRITE_TOKEN)?.trim()
+    const token     = (process.env.SANITY_API_TOKEN)?.trim()
     const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
     const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET    ?? 'production'
 
