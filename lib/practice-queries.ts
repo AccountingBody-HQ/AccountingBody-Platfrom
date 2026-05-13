@@ -38,12 +38,12 @@ const SUMMARY_FIELDS = `
 `
 
 export async function getPracticePosts(params: {
-  examBody?:  string
+  examBody?:   string
   difficulty?: string
-  topic?:     string
-  search?:    string
-  page?:      number
-  perPage?:   number
+  topic?:      string
+  search?:     string
+  page?:       number
+  perPage?:    number
 }): Promise<{ posts: PracticePost[]; total: number }> {
   const { examBody, difficulty, topic, search, page = 1, perPage = 12 } = params
   const filters: string[] = ["_type == \"practicePost\"", "\"accountingbody\" in showOnSites"]
@@ -63,39 +63,77 @@ export async function getPracticePosts(params: {
 }
 
 export async function getPracticePostBySlug(slug: string): Promise<PracticePost | null> {
+  // FIX 11: fetch writingModelAnswer + writingExplanation (were missing)
+  // FIX 12: fetch cases array (was missing — scenario exhibits never loaded)
+  // FIX 13: fetch caseId per question (was missing — questions could not link to exhibits)
   const query = `*[_type == "practicePost" && "accountingbody" in showOnSites && slug.current == $slug][0] {
     ${SUMMARY_FIELDS},
     "quizQuestions": quizQuestions[] {
-      id, type, questionText, options, correctIndex, explanation, primaryTopic, difficulty, timeTargetMinutes
+      id, type, questionText, options, correctIndex, explanation,
+      primaryTopic, difficulty, timeTargetMinutes,
+      writingModelAnswer, writingExplanation, caseId
+    },
+    "cases": cases[] {
+      caseId, title, exhibitHtml
     },
     body
   }`
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const post = await sanityFetch<any>(query, { slug })
   if (!post) return null
+
   try {
     if (Array.isArray(post.quizQuestions) && post.quizQuestions.length) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const questions = post.quizQuestions.map((q: any) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const options = Array.isArray(q.options) ? q.options.map((o: any) => ({ label: String(o), value: String(o) })) : []
-        const correctLabel = (typeof q.correctIndex === "number" && options[q.correctIndex]) ? options[q.correctIndex].label : null
+        const correctLabel = (typeof q.correctIndex === "number" && options[q.correctIndex])
+          ? options[q.correctIndex].label
+          : null
+
         return {
-          id:          q.id ?? String(Math.random()),
-          type:        q.type ?? "multiple-choice",
-          question:    q.questionText ?? "",
+          id:           q.id ?? String(Math.random()),
+          // FIX 14: type preserved so QuizRenderer can switch rendering modes correctly
+          type:         q.type ?? "multiple-choice",
+          question:     q.questionText ?? "",
           options,
-          correct:     correctLabel,
-          explanation: q.explanation ?? "",
-          meta:        { primaryTopic: q.primaryTopic ?? "" },
+          correct:      correctLabel,
+          correctIndex: typeof q.correctIndex === "number" ? q.correctIndex : null,
+          explanation:  q.explanation ?? "",
+          // FIX 13: caseId mapped to case_id so scenario questions link to their exhibits
+          case_id:      q.caseId ?? null,
+          meta:         { primaryTopic: q.primaryTopic ?? "" },
+          // FIX 11: writing fields mapped to the shape QuizRenderer expects
+          writing: q.type === "writing" ? {
+            model_answer_html: q.writingModelAnswer ?? "",
+            explanation_html:  q.writingExplanation ?? "",
+          } : undefined,
         }
       })
-      post.quizJson      = JSON.stringify({ questions })
+
+      // FIX 12: cases mapped to the shape QuizRenderer expects
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cases = Array.isArray(post.cases)
+        ? post.cases.map((c: any) => ({  // eslint-disable-line @typescript-eslint/no-explicit-any
+            case_id:      c.caseId      ?? "",
+            title:        c.title       ?? "",
+            exhibit_html: c.exhibitHtml ?? "",
+          }))
+        : []
+
+      // FIX 14: question_type included so QuizRenderer renders the correct question mode
+      post.quizJson = JSON.stringify({
+        question_type: post.questionType ?? "multiple-choice",
+        questions,
+        cases,
+      })
       post.questionCount = questions.length
     }
   } catch (e) {
     console.error("practice-queries: transform failed", e)
   }
+
   return post as PracticePost
 }
 
