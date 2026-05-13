@@ -53,16 +53,44 @@ export default async function SubmissionsPage({
     getServiceTypes(),
   ])
 
+  const helpCsvRows = helpRequests.map((r: any) => [
+    r.name ?? '', r.email ?? '', r.phone ?? '', r.service_type ?? '',
+    r.status ?? '', r.message?.replace(/
+/g, ' ') ?? '', r.created_at ?? ''
+  ].map((v: string) => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n')
+  const helpCsvContent = 'name,email,phone,service_type,status,message,created_at\n' + helpCsvRows
+
+  const contactCsvRows = contactSubmissions.map((r: any) => [
+    r.name ?? r.full_name ?? '', r.email ?? '', r.subject ?? '', r.status ?? '',
+    r.message?.replace(/
+/g, ' ') ?? '', r.created_at ?? ''
+  ].map((v: string) => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n')
+  const contactCsvContent = 'name,email,subject,status,message,created_at\n' + contactCsvRows
+
   return (
     <div className="p-8">
       <AutoRefresh />
 
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white mb-1">Submissions</h1>
-        <p className="text-sm" style={{ color: '#475569' }}>
-          {helpRequests.length} help requests · {contactSubmissions.length} contact submissions
-        </p>
+      <div className="flex items-start justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-white mb-1">Submissions</h1>
+          <p className="text-sm" style={{ color: '#475569' }}>
+            {helpRequests.length} help requests · {contactSubmissions.length} contact submissions
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <a href={'data:text/csv;charset=utf-8,' + encodeURIComponent(helpCsvContent)} download="help-requests.csv"
+            className="flex items-center gap-2 text-sm font-bold px-4 py-2.5 rounded-xl"
+            style={{ background: '#0C1A3D', color: '#D4A017', border: '1px solid #D4A017' }}>
+            Export Help Requests
+          </a>
+          <a href={'data:text/csv;charset=utf-8,' + encodeURIComponent(contactCsvContent)} download="contact-submissions.csv"
+            className="flex items-center gap-2 text-sm font-bold px-4 py-2.5 rounded-xl"
+            style={{ background: '#059669', color: '#ffffff' }}>
+            Export Contact
+          </a>
+        </div>
       </div>
 
       {/* Filter bar */}

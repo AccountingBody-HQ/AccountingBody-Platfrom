@@ -30,15 +30,30 @@ export default async function JobsFirmsPage() {
   const approvedCount = firmsApplications.filter((f: any) => f.status === 'approved').length
   const rejectedCount = firmsApplications.filter((f: any) => f.status === 'rejected').length
 
+  const firmsCsvRows = firmsApplications.map((r: any) => [
+    r.firm_name ?? '', r.contact_name ?? '', r.contact_email ?? '',
+    r.contact_phone ?? '', r.firm_type ?? '', r.status ?? '',
+    r.website ?? '', r.message?.replace(/
+/g, ' ') ?? '', r.created_at ?? ''
+  ].map((v: string) => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n')
+  const firmsCsvContent = 'firm_name,contact_name,contact_email,contact_phone,firm_type,status,website,message,created_at\n' + firmsCsvRows
+
   return (
     <div className="p-8">
       <AutoRefresh />
 
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white mb-1">Jobs & Firms</h1>
-        <p className="text-sm" style={{ color: '#475569' }}>
-          {firmsApplications.length} firm applications · {jobListings.length} job listings
-        </p>
+      <div className="flex items-start justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-white mb-1">Jobs & Firms</h1>
+          <p className="text-sm" style={{ color: '#475569' }}>
+            {firmsApplications.length} firm applications · {jobListings.length} job listings
+          </p>
+        </div>
+        <a href={'data:text/csv;charset=utf-8,' + encodeURIComponent(firmsCsvContent)} download="firms-applications.csv"
+          className="flex items-center gap-2 text-sm font-bold px-4 py-2.5 rounded-xl"
+          style={{ background: '#059669', color: '#ffffff' }}>
+          Export Applications
+        </a>
       </div>
 
       {/* Firm application stats */}
