@@ -122,8 +122,7 @@ export async function POST(req: NextRequest) {
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear ${name},</p>
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Thank you for getting in touch. We have received your service brief for <strong style="color:#0C1A3D;">${service_type}</strong> and a member of our team will be in contact with you shortly.</p>
               <div style="background:#f8fafc;border-radius:8px;border-left:3px solid #D4A017;padding:16px 20px;margin:0 0 24px;">
-                <p style="margin:0;color:#475569;font-size:13px;line-height:1.6;"><strong style="color:#0C1A3D;">Your message:</strong><br>${message.replace(/
-/g, '<br>')}</p>
+                <p style="margin:0;color:#475569;font-size:13px;line-height:1.6;"><strong style="color:#0C1A3D;">Your message:</strong><br>${message.split('\n').join('<br>')}</p>
               </div>
               <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 28px;">If you have any additional information to add, simply reply to this email.</p>
               <a href="https://accountingbody.com/get-help"
