@@ -249,6 +249,122 @@ export default async function AdminCommandCentre() {
         </div>
       </div>
 
+      {/* Open Help Requests */}
+      <div className="grid grid-cols-2 gap-6 mb-6">
+        <div className="rounded-2xl border overflow-hidden"
+          style={{ background: "#0d1424", borderColor: "#1a2238" }}>
+          <div className="px-6 py-4 border-b flex items-center justify-between"
+            style={{ borderColor: "#1a2238" }}>
+            <div className="flex items-center gap-2">
+              <HelpCircle size={15} style={{ color: "#f59e0b" }} />
+              <h2 className="text-white font-bold text-sm">Open Help Requests</h2>
+            </div>
+            <div className="flex items-center gap-3">
+              {stats.openHelpCount > 0 && (
+                <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                  style={{ background: "rgba(245,158,11,0.12)", color: "#f59e0b" }}>
+                  {stats.openHelpCount} open
+                </span>
+              )}
+              <Link href="/admin/submissions"
+                className="text-xs font-semibold flex items-center gap-1"
+                style={{ color: "#475569" }}>
+                View all <ArrowRight size={11} />
+              </Link>
+            </div>
+          </div>
+          <div className="divide-y" style={{ borderColor: "#1a2238" }}>
+            {stats.recentHelpRequests.length === 0 ? (
+              <div className="px-6 py-8 text-center">
+                <p className="text-sm" style={{ color: "#334155" }}>No open help requests.</p>
+              </div>
+            ) : (
+              stats.recentHelpRequests.map((item) => (
+                <div key={item.id} className="px-6 py-3.5 flex items-center justify-between gap-4"
+                  style={{ borderColor: "#1a2238" }}>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm font-semibold truncate">{item.name}</p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      {item.service_type && (
+                        <span className="text-xs px-1.5 py-0.5 rounded font-medium"
+                          style={{ background: "rgba(37,99,235,0.1)", color: "#60a5fa" }}>
+                          {item.service_type}
+                        </span>
+                      )}
+                      <span className="text-xs" style={{ color: "#334155" }}>
+                        {new Date(item.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                      </span>
+                    </div>
+                  </div>
+                  <a href={"mailto:" + item.email}
+                    className="text-xs font-semibold px-2.5 py-1 rounded-lg shrink-0"
+                    style={{ background: "rgba(37,99,235,0.1)", color: "#60a5fa", border: "1px solid rgba(37,99,235,0.2)" }}>
+                    ✉ Reply
+                  </a>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Pending Firm Applications */}
+        <div className="rounded-2xl border overflow-hidden"
+          style={{ background: "#0d1424", borderColor: "#1a2238" }}>
+          <div className="px-6 py-4 border-b flex items-center justify-between"
+            style={{ borderColor: "#1a2238" }}>
+            <div className="flex items-center gap-2">
+              <Building2 size={15} style={{ color: "#8b5cf6" }} />
+              <h2 className="text-white font-bold text-sm">Pending Applications</h2>
+            </div>
+            <div className="flex items-center gap-3">
+              {stats.pendingFirmsCount > 0 && (
+                <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                  style={{ background: "rgba(139,92,246,0.12)", color: "#a78bfa" }}>
+                  {stats.pendingFirmsCount} pending
+                </span>
+              )}
+              <Link href="/admin/jobs-firms"
+                className="text-xs font-semibold flex items-center gap-1"
+                style={{ color: "#475569" }}>
+                View all <ArrowRight size={11} />
+              </Link>
+            </div>
+          </div>
+          <div className="divide-y" style={{ borderColor: "#1a2238" }}>
+            {stats.pendingFirms.length === 0 ? (
+              <div className="px-6 py-8 text-center">
+                <p className="text-sm" style={{ color: "#334155" }}>No pending applications.</p>
+              </div>
+            ) : (
+              stats.pendingFirms.map((item) => (
+                <div key={item.id} className="px-6 py-3.5 flex items-center justify-between gap-4"
+                  style={{ borderColor: "#1a2238" }}>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm font-semibold truncate">{item.firm_name}</p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      {item.firm_type && (
+                        <span className="text-xs px-1.5 py-0.5 rounded font-medium"
+                          style={{ background: "rgba(139,92,246,0.1)", color: "#a78bfa" }}>
+                          {item.firm_type}
+                        </span>
+                      )}
+                      <span className="text-xs" style={{ color: "#334155" }}>
+                        {new Date(item.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                      </span>
+                    </div>
+                  </div>
+                  <a href={"mailto:" + item.contact_email}
+                    className="text-xs font-semibold px-2.5 py-1 rounded-lg shrink-0"
+                    style={{ background: "rgba(37,99,235,0.1)", color: "#60a5fa", border: "1px solid rgba(37,99,235,0.2)" }}>
+                    ✉ Reply
+                  </a>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Quick Actions */}
       <div className="rounded-2xl border overflow-hidden"
         style={{ background: "#0d1424", borderColor: "#1a2238" }}>
