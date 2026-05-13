@@ -21,6 +21,7 @@ const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
   rejected:     { bg: 'rgba(239,68,68,0.12)',   color: '#f87171' },
   subscribed:   { bg: 'rgba(16,185,129,0.12)',  color: '#34d399' },
   unsubscribed: { bg: 'rgba(239,68,68,0.12)',   color: '#f87171' },
+  error:        { bg: 'rgba(239,68,68,0.12)',   color: '#f87171' },
 }
 
 interface StatusBadgeProps {
@@ -32,22 +33,30 @@ interface StatusBadgeProps {
 export function StatusBadge({ id, table, currentStatus }: StatusBadgeProps) {
   const [status, setStatus]   = useState(currentStatus ?? 'open')
   const [saving, setSaving]   = useState(false)
+  const [error, setError]     = useState(false)
   const [open, setOpen]       = useState(false)
   const options = STATUS_OPTIONS[table] ?? []
-  const style   = STATUS_STYLE[status] ?? STATUS_STYLE.open
+  const style   = error ? STATUS_STYLE.error : (STATUS_STYLE[status] ?? STATUS_STYLE.open)
 
   async function handleSelect(newStatus: string) {
     if (newStatus === status) { setOpen(false); return }
-    setSaving(true); setOpen(false)
+    setSaving(true); setOpen(false); setError(false)
     try {
-      await fetch('/api/admin/actions', {
+      const res = await fetch('/api/admin/actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update_status', table, id, payload: { status: newStatus } }),
       })
-      setStatus(newStatus)
-    } catch { /* silent */ }
-    finally { setSaving(false) }
+      if (!res.ok) {
+        setError(true)
+        setTimeout(() => setError(false), 3000)
+      } else {
+        setStatus(newStatus)
+      }
+    } catch {
+      setError(true)
+      setTimeout(() => setError(false), 3000)
+    } finally { setSaving(false) }
   }
 
   return (
@@ -58,8 +67,8 @@ export function StatusBadge({ id, table, currentStatus }: StatusBadgeProps) {
         className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all"
         style={{ background: style.bg, color: style.color, border: '1px solid ' + style.color + '30' }}>
         {saving ? <Loader2 size={10} className="animate-spin" /> : null}
-        {status.replace('_', ' ')}
-        <span style={{ opacity: 0.6 }}>▾</span>
+        {error ? 'failed — retry' : status.replace('_', ' ')}
+        {!saving && <span style={{ opacity: 0.6 }}>▾</span>}
       </button>
       {open && (
         <>
@@ -93,22 +102,38 @@ interface DeleteButtonProps {
 }
 
 export function DeleteButton({ id, table, label = 'Delete', onDeleted }: DeleteButtonProps) {
-  const [confirm, setConfirm] = useState(false)
+  const [confirm, setConfirm]   = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [error, setError]       = useState(false)
 
   async function handleDelete() {
-    setDeleting(true)
+    setDeleting(true); setError(false)
     try {
-      await fetch('/api/admin/actions', {
+      const res = await fetch('/api/admin/actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'delete', table, id }),
       })
-      onDeleted?.()
-      // Reload page to reflect deletion
-      window.location.reload()
-    } catch { /* silent */ }
-    finally { setDeleting(false); setConfirm(false) }
+      if (!res.ok) {
+        setError(true)
+        setTimeout(() => { setError(false); setConfirm(false) }, 3000)
+      } else {
+        onDeleted?.()
+        window.location.reload()
+      }
+    } catch {
+      setError(true)
+      setTimeout(() => { setError(false); setConfirm(false) }, 3000)
+    } finally { setDeleting(false) }
+  }
+
+  if (error) {
+    return (
+      <span className="text-xs font-semibold px-2 py-1 rounded-lg"
+        style={{ background: 'rgba(239,68,68,0.12)', color: '#f87171' }}>
+        Failed — try again
+      </span>
+    )
   }
 
   if (confirm) {
