@@ -861,7 +861,7 @@ function calcTokenBudgets(count: number, questionType: string, difficulty: strin
   const base = basePerType[questionType] ?? 500
   const mult = difficultyMultiplier[difficulty] ?? 1.3
   const author  = Math.min(16000, Math.max(4000, Math.ceil(count * base * mult)))
-  const auditor = count <= 10 ? 3000 : count <= 20 ? 4000 : 5000
+  const auditor = count <= 10 ? 8000 : count <= 20 ? 12000 : 16000
   return { author, auditor }
 }
 
@@ -870,7 +870,7 @@ function calcTokenBudgets(count: number, questionType: string, difficulty: strin
 // Sends only stems, options, and correctIndex for all questions.
 // Full explanations included for first 3 questions only.
 // Prevents auditor token overflow on large batches.
-// ═══════════════════════════════════════════════════════════════════════════════
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function buildSlimBundle(bundle: any): any {
   return {
     title:    bundle.title,
@@ -1144,7 +1144,7 @@ ${jsonShape}`
 // Uses slim bundle — Issue 1 fix
 // ═══════════════════════════════════════════════════════════════════════════════
 function buildAuditorPrompt(bundle: any, cfg: any): string {
-  const slimBundle = buildSlimBundle(bundle)
+  const slimBundle = bundle
   return `You are a Chief Examiner conducting a quality audit of a set of practice questions.
 Your role is to identify any questions that fail to meet professional examination standards and specify exactly what must be fixed.
 

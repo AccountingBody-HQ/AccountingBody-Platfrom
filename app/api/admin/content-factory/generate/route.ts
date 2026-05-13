@@ -856,6 +856,8 @@ export async function POST(req: NextRequest) {
       deep:     14000,
     }
     const maxTokensAuthor = authorTokens[config.length] ?? authorTokens.standard
+    const criticTokens: Record<string, number> = { short: 4000, standard: 6000, deep: 10000 }
+    const maxTokensCritic = criticTokens[config.length] ?? criticTokens.standard
 
     // ── PASS 1: AUTHOR ──────────────────────────────────────────────
     const authorPrompt = buildAuthorPrompt(config)
@@ -877,7 +879,7 @@ export async function POST(req: NextRequest) {
 
     const criticMsg = await client.messages.create({
       model:      'claude-sonnet-4-20250514',
-      max_tokens: 4000,
+      max_tokens: maxTokensCritic,
       system:     'You are the Content Critic for AccountingBody. You audit articles for compliance violations (qualification body names, backtick formatting, round numbers), technical accuracy (correct standard references, balanced journals, correct formulas), insight density (professional reader test, specific errors not generic cautions), and structural completeness. You return a corrected version of the article in the same markdown format, beginning immediately with the # title. No preamble. No explanation of changes.',
       messages:   [{ role: 'user', content: criticPrompt }],
     })
