@@ -61,8 +61,7 @@ export default async function SubmissionsPage({
 
   const contactCsvRows = contactSubmissions.map((r: any) => [
     r.name ?? r.full_name ?? '', r.email ?? '', r.subject ?? '', r.status ?? '',
-    r.message?.replace(/
-/g, ' ') ?? '', r.created_at ?? ''
+    (r.message ?? '').split('\n').join(' '), r.created_at ?? ''
   ].map((v: string) => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n')
   const contactCsvContent = 'name,email,subject,status,message,created_at\n' + contactCsvRows
 
