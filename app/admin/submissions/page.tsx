@@ -55,8 +55,7 @@ export default async function SubmissionsPage({
 
   const helpCsvRows = helpRequests.map((r: any) => [
     r.name ?? '', r.email ?? '', r.phone ?? '', r.service_type ?? '',
-    r.status ?? '', r.message?.replace(/
-/g, ' ') ?? '', r.created_at ?? ''
+    r.status ?? '', (r.message ?? '').split('\n').join(' '), r.created_at ?? ''
   ].map((v: string) => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n')
   const helpCsvContent = 'name,email,phone,service_type,status,message,created_at\n' + helpCsvRows
 

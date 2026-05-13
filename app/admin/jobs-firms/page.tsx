@@ -33,8 +33,7 @@ export default async function JobsFirmsPage() {
   const firmsCsvRows = firmsApplications.map((r: any) => [
     r.firm_name ?? '', r.contact_name ?? '', r.contact_email ?? '',
     r.contact_phone ?? '', r.firm_type ?? '', r.status ?? '',
-    r.website ?? '', r.message?.replace(/
-/g, ' ') ?? '', r.created_at ?? ''
+    r.website ?? '', (r.message ?? '').split('\n').join(' '), r.created_at ?? ''
   ].map((v: string) => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n')
   const firmsCsvContent = 'firm_name,contact_name,contact_email,contact_phone,firm_type,status,website,message,created_at\n' + firmsCsvRows
 
