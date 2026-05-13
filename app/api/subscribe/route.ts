@@ -20,7 +20,10 @@ export async function POST(req: NextRequest) {
       .from('email_subscribers')
       .upsert({ email, platform: 'ab', status: 'subscribed', source: 'footer', subscribed_at: new Date().toISOString() }, { onConflict: 'email' })
 
-    if (dbError) console.error('Supabase error:', dbError)
+    if (dbError) {
+      console.error('Supabase error:', dbError)
+      return NextResponse.json({ error: 'Could not save subscription. Please try again.' }, { status: 500 })
+    }
 
     await resend.emails.send({
       from: 'AccountingBody <hello@accountingbody.com>',
