@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       caseId:             q.caseId ?? null,
       primaryTopic:       q.primaryTopic ?? '',
       difficulty:         q.difficulty ?? 'intermediate',
-      timeTargetMinutes:  q.timeTargetMinutes ?? 3,
+      timeTargetMinutes:  q.timeTargetMinutes ?? (q.type === 'writing' ? 20 : 2),
       points:             q.points ?? 1,
     }))
 
