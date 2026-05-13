@@ -4,8 +4,7 @@ export default function SettingsPage() {
   const envVars = [
     { name: "NEXT_PUBLIC_SANITY_PROJECT_ID", required: true, description: "Sanity project ID" },
     { name: "NEXT_PUBLIC_SANITY_DATASET", required: true, description: "Sanity dataset" },
-    { name: "SANITY_API_TOKEN", required: true, description: "Sanity read token" },
-    { name: "SANITY_WRITE_TOKEN", required: true, description: "Sanity write token — Content Factory" },
+    { name: "SANITY_API_TOKEN", required: true, description: "Sanity editor token — read and write" },
     { name: "NEXT_PUBLIC_SUPABASE_URL", required: true, description: "Supabase project URL" },
     { name: "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", required: true, description: "Supabase anon key" },
     { name: "SUPABASE_SECRET_KEY", required: true, description: "Supabase service role key — server only" },
@@ -23,7 +22,7 @@ export default function SettingsPage() {
     { label: "Admin panel built", done: true },
     { label: "ADMIN_SECRET set", done: !!process.env.ADMIN_SECRET },
     { label: "ANTHROPIC_API_KEY set", done: !!process.env.ANTHROPIC_API_KEY },
-    { label: "SANITY_WRITE_TOKEN set", done: !!process.env.SANITY_WRITE_TOKEN },
+    { label: "SANITY_API_TOKEN set", done: !!process.env.SANITY_API_TOKEN },
     { label: "Clerk test keys upgraded to production", done: (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "").startsWith("pk_live_") },
     { label: "GTM ID configured", done: !!process.env.NEXT_PUBLIC_GTM_ID },
     { label: "AdSense ID configured", done: !!process.env.NEXT_PUBLIC_ADSENSE_ID },
