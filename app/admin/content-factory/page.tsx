@@ -1,11 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Sparkles, ChevronRight, BookOpen, Edit3, Check, Loader2, AlertCircle, Send } from 'lucide-react'
 
-const QUALIFICATIONS  = ['ACCA', 'CIMA', 'ICAEW', 'AAT']
-const CONTENT_TYPES   = ['Study Note', 'Article', 'Exam Technique Guide', 'Practice Question Explainer', 'Subject Overview']
-const TONES           = [
+const QUALIFICATIONS = ['ACCA', 'CIMA', 'ICAEW', 'AAT']
+
+const CONTENT_TYPES = [
+  { label: 'Study Note',                       desc: 'Exam-focused topic breakdown'         },
+  { label: 'Article',                           desc: 'Professional insight piece'           },
+  { label: 'Exam Technique Guide',             desc: 'How to maximise marks'                },
+  { label: 'Practice Question Explainer',      desc: 'Worked question with commentary'      },
+  { label: 'Subject Overview',                 desc: 'Full subject orientation guide'       },
+  { label: 'Accounting Guide',                 desc: 'Financial reporting deep dive'        },
+  { label: 'Management Accounting Guide',      desc: 'Decision-support analytics guide'    },
+  { label: 'Tax Guide',                        desc: 'Tax rules and compliance guide'       },
+  { label: 'Audit and Assurance Guide',        desc: 'Audit process and standards guide'   },
+  { label: 'Financial Management Guide',       desc: 'Corporate finance guide'             },
+  { label: 'Ethics and Professional Standards Guide', desc: 'Ethics and conduct guide'     },
+  { label: 'Business Law and Regulation Guide', desc: 'Law and regulatory guide'           },
+]
+
+const TONES = [
   { label: 'Educational',   desc: 'Clear, accessible, structured'   },
   { label: 'Authoritative', desc: 'Expert, confident, definitive'   },
   { label: 'Technical',     desc: 'Precise, detailed, professional' },
@@ -16,9 +31,9 @@ const LENGTHS = [
   { label: 'Deep Dive', desc: '2,000+ words', value: 'deep'     },
 ]
 const DIFFICULTIES = [
-  { label: 'Foundation',    desc: 'New to topic — build from first principles' },
-  { label: 'Intermediate',  desc: 'Some familiarity — focus on depth'          },
-  { label: 'Advanced',      desc: 'Near exam-ready — complex scenarios'        },
+  { label: 'Foundation',   desc: 'New to topic — build from first principles' },
+  { label: 'Intermediate', desc: 'Some familiarity — focus on depth'          },
+  { label: 'Advanced',     desc: 'Near exam-ready — complex scenarios'        },
 ]
 const STEPS = ['Select', 'Configure', 'Generate', 'Review', 'Publish']
 
@@ -26,7 +41,7 @@ const QUAL_SUBJECTS: Record<string, string[]> = {
   ACCA:  ['Business and Technology (BT)', 'Management Accounting (MA)', 'Financial Accounting (FA)', 'Corporate and Business Law (LW)', 'Performance Management (PM)', 'Taxation (TX)', 'Financial Reporting (FR)', 'Audit and Assurance (AA)', 'Financial Management (FM)', 'Strategic Business Leader (SBL)', 'Strategic Business Reporting (SBR)', 'Advanced Financial Management (AFM)', 'Advanced Performance Management (APM)', 'Advanced Taxation (ATX)', 'Advanced Audit and Assurance (AAA)'],
   CIMA:  ['Business Economics (BA1)', 'Fundamentals of Management Accounting (BA2)', 'Fundamentals of Financial Accounting (BA3)', 'Fundamentals of Ethics (BA4)', 'Management Accounting (P1)', 'Advanced Management Accounting (P2)', 'Risk Management (P3)', 'Financial Reporting (F1)', 'Advanced Financial Reporting (F2)', 'Financial Strategy (F3)', 'Organisational Management (E1)', 'Project and Relationship Management (E2)', 'Strategic Management (E3)', 'Case Study'],
   ICAEW: ['Accounting (A)', 'Assurance (As)', 'Business, Technology and Finance (BTF)', 'Law (L)', 'Management Information (MI)', 'Principles of Taxation (PoT)', 'Financial Accounting and Reporting (FAR)', 'Audit and Assurance (AA)', 'Business Strategy and Technology (BST)', 'Financial Management (FM)', 'Tax Compliance (TC)', 'Corporate Reporting (CR)', 'Strategic Business Management (SBM)', 'Case Study'],
-  AAT:   ['Bookkeeping Transactions (BTRN)', 'Bookkeeping Controls (BKCL)', 'Introduction to Payroll (ITPF)', 'Business Environment (BENV)', 'Financial Accounting: Preparing Financial Statements (FAPS)', 'Management Accounting Techniques (MATS)', 'Tax Processes for Businesses (TPFB)', 'Business Awareness (BUAW)', 'Financial Accounting: Preparing Financial Statements (FAPS L3)', 'Advanced Bookkeeping (AVBK)', 'Financial Statements of Limited Companies (FSLC)', 'Management Accounting: Decision and Control (MDCL)', 'Management Accounting: Budgeting (MABU)', 'Business Tax (BNTA)', 'Personal Tax (PNTA)', 'Audit and Assurance (AUDT)', 'Cash and Financial Management (CAFM)', 'Credit and Debt Management (CDMT)', 'Synoptic Assessment'],
+  AAT:   ['Bookkeeping Transactions (BTRN)', 'Bookkeeping Controls (BKCL)', 'Introduction to Payroll (ITPF)', 'Business Environment (BENV)', 'Financial Accounting: Preparing Financial Statements (FAPS)', 'Management Accounting Techniques (MATS)', 'Tax Processes for Businesses (TPFB)', 'Business Awareness (BUAW)', 'Advanced Bookkeeping (AVBK)', 'Financial Statements of Limited Companies (FSLC)', 'Management Accounting: Decision and Control (MDCL)', 'Management Accounting: Budgeting (MABU)', 'Business Tax (BNTA)', 'Personal Tax (PNTA)', 'Audit and Assurance (AUDT)', 'Cash and Financial Management (CAFM)', 'Credit and Debt Management (CDMT)', 'Synoptic Assessment'],
 }
 
 type Config = {
@@ -55,18 +70,59 @@ function SelectCard({ active, onClick, children }: { active: boolean; onClick: (
   )
 }
 
+// Two-pass progress indicator
+function GeneratingIndicator({ pass }: { pass: 1 | 2 }) {
+  return (
+    <div className="rounded-xl p-4 mb-4" style={{ background: 'rgba(212,160,23,0.06)', border: '1px solid rgba(212,160,23,0.2)' }}>
+      <div className="flex items-center gap-3 mb-3">
+        <Loader2 size={15} className="animate-spin" style={{ color: '#D4A017' }} />
+        <span className="text-sm font-bold text-white">
+          {pass === 1 ? 'Pass 1 of 2 — Authoring content…' : 'Pass 2 of 2 — Critic reviewing…'}
+        </span>
+      </div>
+      <div className="flex gap-2">
+        {[1, 2].map(p => (
+          <div key={p} className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold"
+            style={p < pass
+              ? { background: 'rgba(16,185,129,0.12)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)' }
+              : p === pass
+                ? { background: 'rgba(212,160,23,0.15)', color: '#D4A017', border: '1px solid rgba(212,160,23,0.3)' }
+                : { background: 'rgba(255,255,255,0.03)', color: '#334155', border: '1px solid #1f2937' }}>
+            {p < pass ? <Check size={10} /> : p === pass ? <Loader2 size={10} className="animate-spin" /> : null}
+            {p === 1 ? 'Author' : 'Critic'}
+          </div>
+        ))}
+      </div>
+      <p className="text-xs mt-3" style={{ color: '#475569' }}>
+        {pass === 1
+          ? 'Generating content calibrated to qualification level and subject standards…'
+          : 'Auditing technical accuracy, compliance, and insight density…'}
+      </p>
+    </div>
+  )
+}
+
 export default function ContentFactoryPage() {
   const [step, setStep]             = useState(0)
   const [config, setConfig]         = useState<Config>(EMPTY)
   const [generated, setGenerated]   = useState('')
   const [edited, setEdited]         = useState('')
   const [generating, setGenerating] = useState(false)
+  const [generatingPass, setGeneratingPass] = useState<1 | 2>(1)
   const [publishing, setPublishing] = useState(false)
   const [published, setPublished]   = useState(false)
   const [error, setError]           = useState('')
   const [showOnSites, setShowOnSites] = useState<string[]>(['accountingbody'])
   const [canonical, setCanonical]   = useState('accountingbody')
   const [docId, setDocId]           = useState('')
+  const passTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Estimate pass 2 starts after ~40% of expected total duration
+  const pass2Delays: Record<string, number> = { short: 18000, standard: 28000, deep: 45000 }
+
+  useEffect(() => {
+    return () => { if (passTimerRef.current) clearTimeout(passTimerRef.current) }
+  }, [])
 
   const wordCount = (edited || generated).split(/\s+/).filter(Boolean).length
 
@@ -84,10 +140,15 @@ export default function ContentFactoryPage() {
   }
 
   async function handleGenerate() {
-    setGenerating(true); setError('')
+    setGenerating(true)
+    setGeneratingPass(1)
+    setError('')
+    // Schedule pass 2 indicator
+    const delay = pass2Delays[config.length] ?? pass2Delays.standard
+    passTimerRef.current = setTimeout(() => setGeneratingPass(2), delay)
     try {
       const controller = new AbortController()
-      const tid = setTimeout(() => controller.abort(), 120000)
+      const tid = setTimeout(() => controller.abort(), 180000)
       const res = await fetch('/api/admin/content-factory/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -95,6 +156,7 @@ export default function ContentFactoryPage() {
         signal: controller.signal,
       })
       clearTimeout(tid)
+      if (passTimerRef.current) clearTimeout(passTimerRef.current)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Generation failed')
       setGenerated(data.content)
@@ -103,6 +165,7 @@ export default function ContentFactoryPage() {
       if (data.keyTerms)  setConfig(c => ({ ...c, keyTerms: data.keyTerms }))
       setStep(3)
     } catch (e: any) {
+      if (passTimerRef.current) clearTimeout(passTimerRef.current)
       setError(e.message)
     } finally {
       setGenerating(false)
@@ -155,7 +218,7 @@ export default function ContentFactoryPage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">Content Factory</h1>
-          <p className="text-sm" style={{ color: '#475569' }}>Generate ACCA, CIMA, ICAEW and AAT study content using Claude AI and publish directly to Sanity</p>
+          <p className="text-sm" style={{ color: '#475569' }}>Two-pass AI pipeline — Author generates, Critic audits. Publish directly to Sanity.</p>
         </div>
       </div>
 
@@ -175,7 +238,7 @@ export default function ContentFactoryPage() {
                   : i === step
                     ? { background: '#D4A017', color: '#0C1A3D' }
                     : { background: 'rgba(255,255,255,0.04)', color: '#334155' }}>
-                {i < step ? '✓' : i + 1}
+                {i < step ? '\u2713' : i + 1}
               </span>
               <span className="text-sm font-semibold">{s}</span>
             </div>
@@ -211,11 +274,12 @@ export default function ContentFactoryPage() {
 
           <div className="rounded-2xl border p-6" style={C.card}>
             <h2 className="text-white font-bold text-sm mb-1">Content Type</h2>
-            <p className="text-xs mb-4" style={{ color: '#334155' }}>What type of content do you need?</p>
+            <p className="text-xs mb-4" style={{ color: '#334155' }}>What type of content do you need? All 12 types available.</p>
             <div className="grid grid-cols-3 gap-3">
               {CONTENT_TYPES.map(type => (
-                <SelectCard key={type} active={config.contentType === type} onClick={() => setConfig(c => ({ ...c, contentType: type }))}>
-                  <p className="font-semibold text-xs">{type}</p>
+                <SelectCard key={type.label} active={config.contentType === type.label} onClick={() => setConfig(c => ({ ...c, contentType: type.label }))}>
+                  <p className="font-semibold text-xs leading-snug">{type.label}</p>
+                  <p className="text-xs mt-1 leading-snug" style={{ color: '#475569' }}>{type.desc}</p>
                 </SelectCard>
               ))}
             </div>
@@ -234,7 +298,7 @@ export default function ContentFactoryPage() {
               </div>
               <input type="text" value={config.subject}
                 onChange={e => setConfig(c => ({ ...c, subject: e.target.value }))}
-                placeholder="Or type a custom subject / paper name…"
+                placeholder="Or type a custom subject / paper name\u2026"
                 className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder-slate-600 focus:outline-none mt-2"
                 style={C.input} />
             </div>
@@ -245,7 +309,7 @@ export default function ContentFactoryPage() {
             <p className="text-xs mb-4" style={{ color: '#334155' }}>Be specific — the more detail you give, the better the output</p>
             <textarea value={config.topic} rows={3}
               onChange={e => setConfig(c => ({ ...c, topic: e.target.value }))}
-              placeholder="e.g. Lease accounting under IFRS 16 — right-of-use assets, lease liabilities, and disclosure requirements…"
+              placeholder="e.g. Lease accounting under IFRS 16 \u2014 right-of-use assets, lease liabilities, and disclosure requirements\u2026"
               className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder-slate-600 focus:outline-none resize-none"
               style={C.input} />
           </div>
@@ -326,7 +390,7 @@ export default function ContentFactoryPage() {
               {[
                 { label: 'Qualification', value: config.qualification },
                 { label: 'Content Type',  value: config.contentType   },
-                { label: 'Subject',       value: config.subject || '—' },
+                { label: 'Subject',       value: config.subject || '\u2014' },
                 { label: 'Difficulty',    value: config.difficulty    },
                 { label: 'Tone',          value: config.tone          },
                 { label: 'Length',        value: LENGTHS.find(l => l.value === config.length)?.label ?? config.length },
@@ -337,15 +401,34 @@ export default function ContentFactoryPage() {
                 </div>
               ))}
             </div>
-            <div className="rounded-xl p-3" style={{ background: '#111827' }}>
+            <div className="rounded-xl p-3 mb-4" style={{ background: '#111827' }}>
               <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: '#334155' }}>Topic</p>
               <p className="text-white text-sm">{config.topic}</p>
             </div>
+
+            {/* Pipeline info */}
+            <div className="rounded-xl p-3" style={{ background: 'rgba(212,160,23,0.04)', border: '1px solid rgba(212,160,23,0.1)' }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#D4A017' }}>Two-Pass Pipeline</p>
+              <div className="flex gap-3">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full" style={{ background: '#3b82f6' }} />
+                  <span className="text-xs" style={{ color: '#64748b' }}>Pass 1: Author generates content with full qualification and subject calibration</span>
+                </div>
+              </div>
+              <div className="flex gap-3 mt-1">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full" style={{ background: '#10b981' }} />
+                  <span className="text-xs" style={{ color: '#64748b' }}>Pass 2: Critic audits technical accuracy, compliance, and insight density</span>
+                </div>
+              </div>
+            </div>
           </div>
 
+          {generating && <GeneratingIndicator pass={generatingPass} />}
+
           <div className="flex justify-between">
-            <button onClick={() => setStep(1)}
-              className="text-sm font-bold px-6 py-2.5 rounded-xl"
+            <button onClick={() => setStep(1)} disabled={generating}
+              className="text-sm font-bold px-6 py-2.5 rounded-xl disabled:opacity-40"
               style={{ background: 'rgba(255,255,255,0.04)', color: '#64748b', border: '1px solid #1f2937' }}>
               Back
             </button>
@@ -353,7 +436,7 @@ export default function ContentFactoryPage() {
               className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl disabled:opacity-40"
               style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
               {generating
-                ? <><Loader2 size={14} className="animate-spin" /> Generating…</>
+                ? <><Loader2 size={14} className="animate-spin" /> {generatingPass === 1 ? 'Authoring\u2026' : 'Reviewing\u2026'}</>
                 : <><Sparkles size={14} /> Generate Content</>}
             </button>
           </div>
@@ -365,9 +448,9 @@ export default function ContentFactoryPage() {
         <div className="space-y-5">
           <div className="grid grid-cols-4 gap-4">
             {[
-              { label: 'SEO Score',  value: `${seo}%`,            color: seoColor   },
-              { label: 'Word Count', value: wordCount,             color: '#3b82f6'  },
-              { label: 'Status',     value: 'Ready to Review',    color: '#10b981'  },
+              { label: 'SEO Score',     value: `${seo}%`,          color: seoColor   },
+              { label: 'Word Count',    value: wordCount,           color: '#3b82f6'  },
+              { label: 'Status',        value: 'Critic Approved',   color: '#10b981'  },
               { label: 'Qualification', value: config.qualification, color: '#D4A017' },
             ].map(c => (
               <div key={c.label} className="rounded-2xl border p-4" style={C.card}>
@@ -486,7 +569,7 @@ export default function ContentFactoryPage() {
               className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl disabled:opacity-40"
               style={{ background: '#059669', color: '#ffffff' }}>
               {publishing
-                ? <><Loader2 size={14} className="animate-spin" /> Publishing…</>
+                ? <><Loader2 size={14} className="animate-spin" /> Publishing\u2026</>
                 : <><Send size={14} /> Publish to Sanity</>}
             </button>
           </div>
@@ -511,7 +594,7 @@ export default function ContentFactoryPage() {
             </p>
           )}
           <p className="text-sm mb-8" style={{ color: '#334155' }}>
-            Canonical owner: <span className="text-white font-semibold">{canonical}</span> ·
+            Canonical owner: <span className="text-white font-semibold">{canonical}</span> &middot;
             Qualification: <span className="text-white font-semibold">{config.qualification}</span>
           </p>
           <button onClick={reset}
