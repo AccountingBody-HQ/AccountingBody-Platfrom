@@ -162,6 +162,77 @@ export function DeleteButton({ id, table, label = 'Delete', onDeleted }: DeleteB
   )
 }
 
+// ── Notes Field ──────────────────────────────────────────────────────────────
+interface NotesFieldProps {
+  id: string
+  table: string
+  initialNotes?: string | null
+}
+
+export function NotesField({ id, table, initialNotes }: NotesFieldProps) {
+  const [notes, setNotes]   = useState(initialNotes ?? '')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved]   = useState(false)
+  const [error, setError]   = useState(false)
+
+  async function handleSave() {
+    if (notes === (initialNotes ?? '')) return
+    setSaving(true); setSaved(false); setError(false)
+    try {
+      const res = await fetch('/api/admin/actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_notes', table, id, payload: { notes } }),
+      })
+      if (!res.ok) {
+        setError(true)
+        setTimeout(() => setError(false), 3000)
+      } else {
+        setSaved(true)
+        setTimeout(() => setSaved(false), 2000)
+      }
+    } catch {
+      setError(true)
+      setTimeout(() => setError(false), 3000)
+    } finally { setSaving(false) }
+  }
+
+  return (
+    <div className="mt-3 w-full">
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#334155' }}>
+          Internal Notes
+        </span>
+        {saved && <span className="text-xs font-semibold" style={{ color: '#34d399' }}>Saved ✓</span>}
+        {error && <span className="text-xs font-semibold" style={{ color: '#f87171' }}>Failed — try again</span>}
+      </div>
+      <div className="flex gap-2 items-start">
+        <textarea
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          onBlur={handleSave}
+          placeholder="Add internal notes (saved on blur)…"
+          rows={2}
+          className="flex-1 rounded-xl px-3 py-2 text-xs resize-none focus:outline-none"
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid #1a2238',
+            color: '#94a3b8',
+            lineHeight: 1.6,
+          }}
+        />
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-3 py-2 rounded-xl text-xs font-bold shrink-0"
+          style={{ background: '#0C1A3D', color: '#D4A017', border: '1px solid #D4A017' }}>
+          {saving ? <Loader2 size={10} className="animate-spin inline" /> : 'Save'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Reply Button ──────────────────────────────────────────────────────────────
 interface ReplyButtonProps {
   email: string

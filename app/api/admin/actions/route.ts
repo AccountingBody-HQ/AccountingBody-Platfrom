@@ -43,9 +43,9 @@ export async function POST(req: NextRequest) {
 
     // Whitelist allowed tables and actions for security
     const ALLOWED: Record<string, string[]> = {
-      help_requests:       ['update_status', 'delete'],
-      contact_submissions: ['update_status', 'delete'],
-      firms_applications:  ['update_status', 'delete'],
+      help_requests:       ['update_status', 'update_notes', 'delete'],
+      contact_submissions: ['update_status', 'update_notes', 'delete'],
+      firms_applications:  ['update_status', 'update_notes', 'delete'],
       email_subscribers:   ['update_status', 'delete'],
       job_listings:        ['delete'],
     }
@@ -86,6 +86,15 @@ export async function POST(req: NextRequest) {
       }
 
       const { error } = await supabase.from(table).update(update).eq('id', id)
+      if (error) throw error
+      return NextResponse.json({ success: true })
+    }
+
+    if (action === 'update_notes') {
+      const { error } = await supabase
+        .from(table)
+        .update({ notes: payload?.notes ?? null })
+        .eq('id', id)
       if (error) throw error
       return NextResponse.json({ success: true })
     }

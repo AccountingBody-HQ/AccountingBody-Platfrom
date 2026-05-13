@@ -119,6 +119,7 @@ export default async function JobsFirmsPage() {
                           <p className="text-xs leading-relaxed" style={{ color: '#64748b' }}>{item.message}</p>
                         </div>
                       )}
+                      <NotesField id={item.id} table="firms_applications" initialNotes={item.notes} />
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">

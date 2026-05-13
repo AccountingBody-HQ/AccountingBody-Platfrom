@@ -2,7 +2,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { unstable_noStore as noStore } from 'next/cache'
 import AutoRefresh from '@/components/admin/AutoRefresh'
-import { StatusBadge, DeleteButton, ReplyButton } from '@/components/admin/AdminActions'
+import { StatusBadge, DeleteButton, ReplyButton, NotesField } from '@/components/admin/AdminActions'
 import { HelpCircle, Mail, Search } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -168,6 +168,7 @@ export default async function SubmissionsPage({
                       {item.message && (
                         <p className="text-sm leading-relaxed" style={{ color: '#64748b' }}>{item.message}</p>
                       )}
+                      <NotesField id={item.id} table="help_requests" initialNotes={item.notes} />
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <ReplyButton email={item.email} subject={item.service_type ? 'Re: ' + item.service_type + ' enquiry' : undefined} name={item.name} />
@@ -217,6 +218,7 @@ export default async function SubmissionsPage({
                     {item.message && (
                       <p className="text-sm leading-relaxed" style={{ color: '#64748b' }}>{item.message}</p>
                     )}
+                    <NotesField id={item.id} table="contact_submissions" initialNotes={item.notes} />
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <ReplyButton email={item.email} subject={item.subject} name={item.name ?? item.full_name} />
