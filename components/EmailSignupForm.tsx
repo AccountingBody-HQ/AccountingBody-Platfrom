@@ -39,14 +39,14 @@ export default function EmailSignupForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3 w-full max-w-sm mx-auto px-6">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3 w-full max-w-md mx-auto">
       <input
         type="email"
         value={email}
         onChange={e => setEmail(e.target.value)}
         placeholder="your@email.com"
         required
-        className="w-full h-14 px-4 rounded-lg text-base bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+        className="w-full h-14 px-4 rounded-lg text-base bg-white/15 border border-white/30 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
       />
       <button
         type="submit"
