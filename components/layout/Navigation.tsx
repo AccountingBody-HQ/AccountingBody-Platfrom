@@ -349,7 +349,7 @@ function MobileMenu({ open, onClose, onSearch }: { open: boolean; onClose: () =>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
           <Link href="/" onClick={onClose}>
-            <span className="font-display text-xl text-navy-950">AccountingBody</span>
+            <span className="font-display text-xl text-navy-950">Accounting Body</span>
           </Link>
           <button
             onClick={onClose}
