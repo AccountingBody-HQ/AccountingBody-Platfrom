@@ -86,7 +86,7 @@ export default function JoinNetworkPage() {
                 <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
               </div>
               <h2 className="font-display text-2xl text-navy-950 mb-3">Application Received</h2>
-              <p className="text-slate-500 leading-relaxed max-w-md mx-auto">Thank you for your application. Our team will review your credentials and professional standing. You will receive a response within two business days.</p>
+              <p className="text-slate-500 leading-relaxed max-w-md mx-auto">Thank you for your application. Our team will review your credentials and professional standing. We aim to review all applications within 5 working days. You will hear from us once your application has been assessed.</p>
               <button onClick={() => { setStatus('idle'); setApplicantType(null); setQualifications([]); setForm({ practice_name: '', contact_name: '', email: '', phone: '', website: '', practice_type: '', location: '', specialisms: '', about: '' }) }}
                 className="mt-6 text-sm font-medium text-navy-700 hover:text-gold-600 transition-colors">
                 Submit another application
