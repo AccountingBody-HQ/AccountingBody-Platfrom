@@ -447,10 +447,10 @@ export default async function HomePage() {
               One platform. Two pillars. Education and professional services, managed to the same standard.
             </p>
 
-            <div className="flex flex-wrap items-center gap-4 mb-16">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-16">
               <Link
                 href="/study"
-                className="inline-flex items-center gap-2 h-13 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold"
+                className="inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold"
               >
                 Start studying free
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -459,7 +459,7 @@ export default async function HomePage() {
               </Link>
               <Link
                 href="/get-help"
-                className="inline-flex items-center gap-2 h-13 px-7 rounded-lg text-base font-medium text-white border border-white/25 hover:bg-white/10 hover:border-white/40 transition-all"
+                className="inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-medium text-white border border-white/25 hover:bg-white/10 hover:border-white/40 transition-all"
               >
                 Explore our services
               </Link>
