@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Brief</span>
                   </td>
                   <td style="padding:10px 0;">
-                    <span style="color:#0C1A3D;font-size:14px;line-height:1.6;">${message.replace(/\n/g, '<br>')}</span>
+                    <span style="color:#0C1A3D;font-size:14px;line-height:1.6;">${message.split('\n').join('<br>')}</span>
                   </td>
                 </tr>
               </table>
