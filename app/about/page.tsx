@@ -254,16 +254,16 @@ export default function AboutPage() {
           <p className="text-white/65 text-lg mb-8 max-w-xl mx-auto leading-relaxed">
             Whether you are preparing for a professional accounting exam or need expert accounting support for your business — Accounting Body is built for both.
           </p>
-          <div className="flex flex-wrap gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center">
             <Link href="/study"
-              className="inline-flex items-center gap-2 h-12 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
+              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
               Start studying free
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </Link>
             <Link href="/get-help"
-              className="inline-flex items-center gap-2 h-12 px-7 rounded-lg text-base font-medium text-white border border-white/25 hover:bg-white/10 transition-all">
+              className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-lg text-base font-medium text-white border border-white/25 hover:bg-white/10 transition-all">
               Explore our services
             </Link>
           </div>
