@@ -73,7 +73,7 @@ export default function ContactPage() {
                 <h3 className="font-display text-base text-navy-950 mb-4">Contact details</h3>
                 <div className="space-y-4">
                   {[
-                    { label: 'Email',         value: 'hello@accountingbody.com' },
+                    
                     { label: 'Response time',  value: 'Within 2 business days' },
                     { label: 'Coverage',       value: 'Global' },
                   ].map(item => (
