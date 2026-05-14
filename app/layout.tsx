@@ -19,8 +19,8 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accountingbody.com
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'AccountingBody — Everything You Need for Accounting & Finance',
-    template: '%s | AccountingBody',
+    default: 'Accounting Body — Everything You Need for Accounting & Finance',
+    template: '%s | Accounting Body',
   },
   description:
     'The definitive platform for ACCA, CIMA, ICAEW and AAT. Study notes, practice questions, and professional connections for accounting qualification students.',
@@ -36,17 +36,17 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_GB',
     url: SITE_URL,
-    siteName: 'AccountingBody',
-    title: 'AccountingBody — Everything You Need for Accounting & Finance',
+    siteName: 'Accounting Body',
+    title: 'Accounting Body — Everything You Need for Accounting & Finance',
     description:
       'Study notes, practice questions, and professional connections for ACCA, CIMA, ICAEW and AAT students.',
-    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'AccountingBody' }],
+    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Accounting Body' }],
   },
   twitter: {
     card: 'summary_large_image',
     site: '@accountingbody',
     creator: '@accountingbody',
-    title: 'AccountingBody — Everything You Need for Accounting & Finance',
+    title: 'Accounting Body — Everything You Need for Accounting & Finance',
     description: 'Study notes, practice questions, and professional connections for ACCA, CIMA, ICAEW and AAT.',
     images: ['/og-default.png'],
   },
