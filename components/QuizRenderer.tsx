@@ -301,7 +301,7 @@ export default function QuizRenderer({ quizJson }: Props) {
             <button
               onClick={() => setSubmitted(true)}
               disabled={!allAnswered}
-              className="h-11 px-7 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="h-11 px-7 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
             >
               Submit answers
             </button>
