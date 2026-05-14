@@ -118,28 +118,31 @@ const SYNONYMS: Record<string, string[]> = {
   'bookkeeping':  ['bookkeeping', 'double', 'entry', 'ledger'],
 }
 
-function expandQuery(raw: string): string[] {
-  const sanitised = raw.replace(/['"\`]/g, '').trim().toLowerCase()
+function buildWordGroups(raw: string): string[][] {
+  const sanitised = raw.replace(/['"`]/g, '').trim().toLowerCase()
   const words = sanitised.split(/\s+/).filter(w => w.length >= 2 && !STOP_WORDS.has(w))
-  const expanded = new Set<string>()
-  words.forEach(w => {
-    expanded.add(w)
-    if (SYNONYMS[w]) SYNONYMS[w].forEach(s => expanded.add(s))
-  })
-  return Array.from(expanded).filter(w => w.length >= 2)
+  return words.map(w => {
+    const group = new Set<string>([w])
+    if (SYNONYMS[w]) {
+      SYNONYMS[w].filter(s => !s.includes(' ') && s.length >= 2).forEach(s => group.add(s))
+    }
+    return Array.from(group)
+  }).filter(g => g.length > 0)
 }
-
-function buildGroq(typeFilter: string, words: string[], mode: 'AND' | 'OR', limit: number): string {
-  const fieldMatch = (w: string) =>
-    `(title match "*${w}*" || term match "*${w}*" || excerpt match "*${w}*" || definition match "*${w}*" || category match "*${w}*")`
+function buildGroq(typeFilter: string, groups: string[][], mode: 'AND' | 'OR', limit: number): string {
+  const groupMatch = (group: string[]) => {
+    const terms = group.map(w =>
+      `(title match "*${w}*" || term match "*${w}*" || excerpt match "*${w}*" || definition match "*${w}*" || category match "*${w}*")`
+    ).join(' || ')
+    return `(${terms})`
+  }
   const filterJoin = mode === 'AND' ? ' && ' : ' || '
-  const filters    = words.map(fieldMatch).join(filterJoin)
-  const boosts     = words.map(w =>
+  const filters = groups.map(groupMatch).join(filterJoin)
+  const boosts  = groups.flat().map(w =>
     `boost(title match "${w}", 5), boost(term match "${w}", 5), boost(excerpt match "${w}", 3), boost(definition match "${w}", 3), boost(category match "${w}", 2)`
   ).join(', ')
   return `*[${typeFilter} && "accountingbody" in showOnSites && (${filters})] | score(${boosts}) | order(_score desc) [0..${limit - 1}] { _id, _type, title, term, "slug": slug.current, excerpt, definition, category, examBody, readTime, publishedAt }`
 }
-
 async function runGroq(projectId: string, dataset: string, groq: string): Promise<SearchResult[]> {
   const res = await fetch(
     `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${encodeURIComponent(groq)}`,
@@ -159,16 +162,16 @@ async function searchSanity(q: string, type: ContentType): Promise<SearchResult[
     ? `_type in ["article", "practicePost", "course", "quiz", "dictionaryTerm"]`
     : `_type == "${type}"`
 
-  const words = expandQuery(q)
-  if (words.length === 0) return []
+  const groups = buildWordGroups(q)
+  if (groups.length === 0) return []
 
   try {
-    // Pass 1 — strict AND with synonym expansion (best results)
-    const andResults = await runGroq(projectId, dataset, buildGroq(typeFilter, words, 'AND', 40))
+    // Pass 1 — all word groups must match (AND), synonyms are alternatives (OR within group)
+    const andResults = await runGroq(projectId, dataset, buildGroq(typeFilter, groups, 'AND', 40))
     if (andResults.length > 0) return andResults
 
-    // Pass 2 — OR fallback so something always shows
-    const orResults = await runGroq(projectId, dataset, buildGroq(typeFilter, words, 'OR', 40))
+    // Pass 2 — OR fallback across groups so something always shows
+    const orResults = await runGroq(projectId, dataset, buildGroq(typeFilter, groups, 'OR', 40))
     return orResults
   } catch {
     return []
