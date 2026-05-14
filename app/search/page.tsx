@@ -138,10 +138,7 @@ function buildGroq(typeFilter: string, groups: string[][], mode: 'AND' | 'OR', l
   }
   const filterJoin = mode === 'AND' ? ' && ' : ' || '
   const filters = groups.map(groupMatch).join(filterJoin)
-  const boosts  = groups.flat().map(w =>
-    `boost(title match "${w}", 5), boost(term match "${w}", 5), boost(excerpt match "${w}", 3), boost(definition match "${w}", 3), boost(category match "${w}", 2)`
-  ).join(', ')
-  return `*[${typeFilter} && "accountingbody" in showOnSites && (${filters})] | score(${boosts}) | order(_score desc) [0..${limit - 1}] { _id, _type, title, term, "slug": slug.current, excerpt, definition, category, examBody, readTime, publishedAt }`
+  return `*[${typeFilter} && "accountingbody" in showOnSites && (${filters})] | order(publishedAt desc) [0..${limit - 1}] { _id, _type, title, term, "slug": slug.current, excerpt, definition, category, examBody, readTime, publishedAt }`
 }
 async function runGroq(projectId: string, dataset: string, groq: string): Promise<SearchResult[]> {
   const res = await fetch(
