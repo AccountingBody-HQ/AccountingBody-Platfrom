@@ -132,7 +132,7 @@ function buildWordGroups(raw: string): string[][] {
 function buildGroq(typeFilter: string, groups: string[][], mode: 'AND' | 'OR', limit: number): string {
   const groupMatch = (group: string[]) => {
     const terms = group.map(w =>
-      `(title match "*${w}*" || term match "*${w}*" || excerpt match "*${w}*" || definition match "*${w}*" || category match "*${w}*")`
+      `(title match "${w}*" || term match "${w}*" || excerpt match "${w}*" || definition match "${w}*" || category match "${w}*")`
     ).join(' || ')
     return `(${terms})`
   }
