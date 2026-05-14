@@ -195,7 +195,7 @@ function EmailSignup() {
             <button
               type="submit"
               disabled={status === 'loading' || !email}
-              className="h-10 px-4 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 disabled:opacity-50 transition-colors shrink-0 shadow-gold"
+              className="h-12 px-4 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 disabled:opacity-50 transition-colors shrink-0 shadow-gold whitespace-nowrap"
             >
               {status === 'loading' ? (
                 <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
