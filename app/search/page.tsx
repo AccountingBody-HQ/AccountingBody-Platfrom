@@ -154,7 +154,7 @@ async function runGroq(projectId: string, dataset: string, groq: string): Promis
 }
 
 async function searchSanity(q: string, type: ContentType): Promise<SearchResult[]> {
-  const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+  const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
   const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
   if (!projectId || q.trim().length < 2) return []
 
