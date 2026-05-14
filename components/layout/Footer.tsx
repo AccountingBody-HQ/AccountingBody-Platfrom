@@ -187,7 +187,7 @@ function EmailSignup() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="your@email.com"
-              className="flex-1 h-12 px-4 rounded-lg text-base bg-white/10 border border-white/30 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all" style={{ fontSize: "16px", WebkitAppearance: "none" }}
+              className="flex-1 h-14 px-4 rounded-lg text-base bg-white/10 border border-white/30 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all" style={{ fontSize: "16px", WebkitAppearance: "none" }}
               required
               autoComplete="email"
               disabled={status === 'loading'}
@@ -195,7 +195,7 @@ function EmailSignup() {
             <button
               type="submit"
               disabled={status === 'loading' || !email}
-              className="h-12 px-4 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 disabled:opacity-50 transition-colors shrink-0 shadow-gold whitespace-nowrap"
+              className="h-14 px-4 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 disabled:opacity-50 transition-colors shrink-0 shadow-gold whitespace-nowrap"
             >
               {status === 'loading' ? (
                 <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
