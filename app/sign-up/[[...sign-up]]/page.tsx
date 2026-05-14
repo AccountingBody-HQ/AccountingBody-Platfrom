@@ -2,7 +2,7 @@ import { SignUp } from '@clerk/nextjs'
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'Create Free Account — AccountingBody',
+  title: 'Create Free Account — Accounting Body',
   description: 'Join 250,000+ ACCA, CIMA, ICAEW and AAT students. Free access to study notes and practice questions.',
 }
 
@@ -13,7 +13,7 @@ export default function SignUpPage() {
       <div className="bg-white border-b border-slate-200 px-6 py-4">
         <div className="container-site flex items-center justify-between">
           <Link href="/" className="font-display text-xl text-navy-950 font-bold tracking-tight">
-            AccountingBody
+            Accounting Body
           </Link>
           <p className="text-sm text-slate-500">
             Already have an account?{' '}
@@ -29,7 +29,7 @@ export default function SignUpPage() {
           <div className="text-center mb-8">
             <span className="eyebrow block mb-3">Free forever</span>
             <h1 className="font-display text-4xl text-navy-950 leading-tight mb-3">
-              Join AccountingBody
+              Join Accounting Body
             </h1>
             <p className="text-slate-500 text-base">
               Study notes, practice questions, and free tools —

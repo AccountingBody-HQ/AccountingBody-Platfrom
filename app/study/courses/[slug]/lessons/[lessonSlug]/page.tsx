@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props) {
   const data = await getLessonBySlug(params.slug, params.lessonSlug)
   if (!data) return {}
   return {
-    title: `${data.lesson.title} — ${data.course.title} | AccountingBody`,
+    title: `${data.lesson.title} — ${data.course.title} | Accounting Body`,
     description: `Lesson ${data.lesson.lessonNumber} of the ${data.course.title} course.`,
   }
 }

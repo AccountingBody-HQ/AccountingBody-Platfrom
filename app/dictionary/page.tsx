@@ -1,5 +1,5 @@
 // app/dictionary/page.tsx
-// AccountingBody.com — Accounting Dictionary
+// Accounting Body.com — Accounting Dictionary
 // A-Z filtered view of all Sanity articles, browsable by first letter
 
 import React from 'react'
@@ -30,8 +30,8 @@ export async function generateMetadata({
   const letter = searchParams.letter?.toUpperCase() ?? ''
   return {
     title: letter
-      ? `Accounting Dictionary — ${letter} | AccountingBody`
-      : 'Accounting Dictionary & Glossary | AccountingBody',
+      ? `Accounting Dictionary — ${letter} | Accounting Body`
+      : 'Accounting Dictionary & Glossary | Accounting Body',
     description: letter
       ? `Browse accounting terms starting with ${letter} — definitions, study notes, and exam guides.`
       : 'Browse our complete accounting dictionary — 1,200+ terms explained clearly for students and professionals.',

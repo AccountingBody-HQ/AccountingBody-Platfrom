@@ -1,5 +1,5 @@
 // app/glossary/page.tsx
-// AccountingBody.com — Glossary Hub
+// Accounting Body.com — Glossary Hub
 // Main entry point — A-Z navigation, topic browsing, popular terms
 
 import React from 'react'
@@ -8,7 +8,7 @@ import type { Metadata } from 'next'
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  title: 'Accounting Glossary | AccountingBody',
+  title: 'Accounting Glossary | Accounting Body',
   description: 'Your complete reference for accounting and finance terminology. Browse 1,200+ terms by letter or topic — written and reviewed by qualified accountants.',
 }
 
@@ -272,7 +272,7 @@ export default function GlossaryPage() {
                   </h3>
                   <p className="text-white/60 text-sm leading-relaxed">
                     The internet is full of accounting content written by people who
-                    have never sat an exam. Every term on AccountingBody is written or
+                    have never sat an exam. Every term on Accounting Body is written or
                     reviewed by a qualified ACCA, CIMA, or ICAEW member.
                     We have been trusted by students since 2010.
                   </p>

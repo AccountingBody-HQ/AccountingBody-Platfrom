@@ -58,7 +58,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
   const { category } = await params
   const meta = getCategoryDisplay(category)
-  return { title: `${meta.name} Study Notes | AccountingBody`, description: meta.description }
+  return { title: `${meta.name} Study Notes | Accounting Body`, description: meta.description }
 }
 
 export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {

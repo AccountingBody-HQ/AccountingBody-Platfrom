@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Cookie Policy — AccountingBody',
-  description: 'How AccountingBody uses cookies and how to manage your preferences. Last updated March 2026.',
+  title: 'Cookie Policy — Accounting Body',
+  description: 'How Accounting Body uses cookies and how to manage your preferences. Last updated March 2026.',
 }
 
 const cookies = [
@@ -23,7 +23,7 @@ const cookies = [
   },
   { category: 'Functional', bar: 'bg-gold-500',  always: false,
     items: [
-      { name: 'ab_preferences', provider: 'AccountingBody', purpose: 'Stores your preferences such as calculator settings.', duration: '1 year' },
+      { name: 'ab_preferences', provider: 'Accounting Body', purpose: 'Stores your preferences such as calculator settings.', duration: '1 year' },
     ],
   },
 ]
@@ -49,7 +49,7 @@ export default function CookiePolicyPage() {
             <div className="border-l-4 border-gold-400 pl-5 mb-10">
               <p className="text-slate-600 text-base leading-relaxed">
                 Cookies are small text files stored on your device. This policy explains every cookie
-                AccountingBody uses and how to control your preferences.
+                Accounting Body uses and how to control your preferences.
               </p>
             </div>
 

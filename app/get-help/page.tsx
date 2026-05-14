@@ -128,8 +128,8 @@ const services = [
 
 const process = [
   { step: '01', title: 'Submit Your Brief',        desc: 'Complete a short service brief outlining your requirements. Our team reviews every submission personally.' },
-  { step: '02', title: 'We Assess and Assign',     desc: 'AccountingBody reviews your brief, determines the scope of work, and assigns the appropriate specialist from our professional network.' },
-  { step: '03', title: 'Engagement Confirmed',     desc: 'We contact you with a proposed scope and fee. Once confirmed, your engagement begins under the full AccountingBody service standard.' },
+  { step: '02', title: 'We Assess and Assign',     desc: 'Accounting Body reviews your brief, determines the scope of work, and assigns the appropriate specialist from our professional network.' },
+  { step: '03', title: 'Engagement Confirmed',     desc: 'We contact you with a proposed scope and fee. Once confirmed, your engagement begins under the full Accounting Body service standard.' },
 ]
 
 export default function GetHelpPage() {
@@ -151,15 +151,15 @@ export default function GetHelpPage() {
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
               <span className="text-white/70">Professional Services</span>
             </nav>
-            <span className="eyebrow text-gold-400 mb-5 block">AccountingBody Professional Services</span>
+            <span className="eyebrow text-gold-400 mb-5 block">Accounting Body Professional Services</span>
             <h1 className="font-display text-white text-4xl md:text-5xl lg:text-6xl mb-6 leading-tight" style={{ letterSpacing: '-0.02em' }}>
               Expert Accounting Services,<br />Managed by Us
             </h1>
             <p className="text-white/60 text-xl leading-relaxed mb-4 max-w-2xl">
-              AccountingBody delivers professional accounting, tax, audit, and advisory services through our managed network of verified specialists. You engage us — we handle everything.
+              Accounting Body delivers professional accounting, tax, audit, and advisory services through our managed network of verified specialists. You engage us — we handle everything.
             </p>
             <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
-              Every engagement is managed directly by AccountingBody. We oversee scope, quality, communication, and delivery from start to finish.
+              Every engagement is managed directly by Accounting Body. We oversee scope, quality, communication, and delivery from start to finish.
             </p>
             <a href="#services"
               className="inline-flex items-center gap-2 h-12 px-7 text-sm font-semibold rounded-lg bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
@@ -177,7 +177,7 @@ export default function GetHelpPage() {
             <span className="eyebrow mb-3 block">Our Services</span>
             <h2 className="section-title mb-4">A full suite of professional accounting services</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              Each service is delivered by qualified professionals within the AccountingBody network, operating under our managed engagement framework.
+              Each service is delivered by qualified professionals within the Accounting Body network, operating under our managed engagement framework.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -210,7 +210,7 @@ export default function GetHelpPage() {
               A managed engagement from brief to delivery
             </h2>
             <p className="text-white/60 text-lg max-w-xl mx-auto">
-              AccountingBody manages every stage of your engagement. You deal with us — we handle the rest.
+              Accounting Body manages every stage of your engagement. You deal with us — we handle the rest.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">

@@ -6,7 +6,7 @@ import { getCourses, formatMinutes, levelColour, examBodyColour } from '@/lib/co
 import type { Course } from '@/lib/courses'
 
 export const metadata = {
-  title:       'Free Accounting Courses | AccountingBody',
+  title:       'Free Accounting Courses | Accounting Body',
   description: 'Structured courses for ACCA, CIMA, AAT, and ICAEW — with study notes, videos, and practice quizzes.',
 }
 

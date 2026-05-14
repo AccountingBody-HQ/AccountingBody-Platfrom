@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service — AccountingBody',
-  description: 'The terms and conditions governing your use of AccountingBody. Last updated March 2026.',
+  title: 'Terms of Service — Accounting Body',
+  description: 'The terms and conditions governing your use of Accounting Body. Last updated March 2026.',
 }
 
 const sections = [
@@ -20,7 +20,7 @@ const sections = [
     id: 'use-of-site',
     title: '2. Use of the site',
     body: [
-      'You may use AccountingBody for lawful, personal, and non-commercial educational purposes. You must not use the Site in any way that is unlawful, harmful, or that could damage our reputation.',
+      'You may use Accounting Body for lawful, personal, and non-commercial educational purposes. You must not use the Site in any way that is unlawful, harmful, or that could damage our reputation.',
       'You must not attempt to gain unauthorised access to any part of the Site, its servers, or any database connected to it. You must not use automated tools to scrape, harvest, or copy content from the Site without prior written permission.',
     ],
   },
@@ -44,16 +44,16 @@ const sections = [
     id: 'intellectual-property',
     title: '5. Intellectual property',
     body: [
-      'All original content on AccountingBody — including study notes, practice questions, articles, and guides — is owned by AccountingBody or its content contributors and is protected by copyright.',
+      'All original content on Accounting Body — including study notes, practice questions, articles, and guides — is owned by Accounting Body or its content contributors and is protected by copyright.',
       'You may not reproduce, redistribute, or republish any content without prior written permission. You may print or download content for your own personal, non-commercial study use only.',
-      'AccountingBody is not affiliated with, endorsed by, or officially connected to ACCA, CIMA, AAT, ICAEW, or any other professional body. All qualification names are trademarks of their respective owners.',
+      'Accounting Body is not affiliated with, endorsed by, or officially connected to ACCA, CIMA, AAT, ICAEW, or any other professional body. All qualification names are trademarks of their respective owners.',
     ],
   },
   {
     id: 'disclaimer',
     title: '6. Content disclaimer',
     body: [
-      'Content on AccountingBody is provided for educational purposes only. It does not constitute professional accounting, tax, legal, or financial advice. See our full Disclaimer for details.',
+      'Content on Accounting Body is provided for educational purposes only. It does not constitute professional accounting, tax, legal, or financial advice. See our full Disclaimer for details.',
       'We make every effort to keep content accurate and up to date, but we cannot guarantee that all content reflects the very latest syllabus or regulatory requirements. Always verify against official sources.',
     ],
   },
@@ -61,7 +61,7 @@ const sections = [
     id: 'limitation',
     title: '7. Limitation of liability',
     body: [
-      'To the fullest extent permitted by law, AccountingBody shall not be liable for any indirect, incidental, special, or consequential loss arising from your use of the Site or its content.',
+      'To the fullest extent permitted by law, Accounting Body shall not be liable for any indirect, incidental, special, or consequential loss arising from your use of the Site or its content.',
       'Our total liability to you for any claim arising from your use of the Site shall not exceed the amount you paid us in the 12 months preceding the claim, or £50, whichever is greater.',
     ],
   },
@@ -126,7 +126,7 @@ export default function TermsPage() {
             <div className="lg:col-span-3">
               <div className="border-l-4 border-gold-400 pl-5 mb-10">
                 <p className="text-slate-600 text-base leading-relaxed">
-                  Please read these Terms of Service carefully before using AccountingBody.
+                  Please read these Terms of Service carefully before using Accounting Body.
                   By using the Site you agree to be bound by these Terms.
                 </p>
               </div>

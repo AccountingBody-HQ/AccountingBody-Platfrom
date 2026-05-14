@@ -1,5 +1,5 @@
 // app/study-hub/page.tsx
-// AccountingBody — Study Hub
+// Accounting Body — Study Hub
 // Central navigation hub for all study content. 17 outgoing internal links.
 
 import Link from 'next/link'
@@ -9,7 +9,7 @@ import type { CategoryCard } from '@/components/CardGrid'
 import { getStudyLandingData } from '@/lib/sanity-queries'
 
 export const metadata: Metadata = {
-  title: 'Study Hub | AccountingBody',
+  title: 'Study Hub | Accounting Body',
   description: 'Your central hub for ACCA, CIMA, ICAEW and AAT study content — notes, courses, practice questions, mock exams, and the dictionary.',
 }
 

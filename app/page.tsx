@@ -1,5 +1,5 @@
 // app/page.tsx
-// AccountingBody.com — Homepage (Session 4 Redesign)
+// Accounting Body.com — Homepage (Session 4 Redesign)
 // Structure: Hero → Qualification Paths → How It Works → Platform Features → Stats → Articles → Trust → Email → CTA
 
 import React from 'react'
@@ -61,7 +61,7 @@ const placeholderArticles = [
     examBody: 'acca',
     readTime: 12,
     publishedAt: '2025-03-01',
-    author: { name: 'AccountingBody' },
+    author: { name: 'Accounting Body' },
   },
   {
     _id: '2',
@@ -72,7 +72,7 @@ const placeholderArticles = [
     examBody: 'acca',
     readTime: 8,
     publishedAt: '2025-02-28',
-    author: { name: 'AccountingBody' },
+    author: { name: 'Accounting Body' },
   },
   {
     _id: '3',
@@ -83,7 +83,7 @@ const placeholderArticles = [
     examBody: 'cima',
     readTime: 10,
     publishedAt: '2025-02-25',
-    author: { name: 'AccountingBody' },
+    author: { name: 'Accounting Body' },
   },
   {
     _id: '4',
@@ -94,7 +94,7 @@ const placeholderArticles = [
     examBody: 'aat',
     readTime: 9,
     publishedAt: '2025-02-20',
-    author: { name: 'AccountingBody' },
+    author: { name: 'Accounting Body' },
   },
 ]
 
@@ -191,7 +191,7 @@ const pillars = [
   {
     id:          'get-help',
     title:       'Professional Services',
-    description: 'Engage AccountingBody for tax, audit, bookkeeping, payroll, and advisory. We manage every engagement through our verified professional network.',
+    description: 'Engage Accounting Body for tax, audit, bookkeeping, payroll, and advisory. We manage every engagement through our verified professional network.',
     href:        '/get-help',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,7 +206,7 @@ const pillars = [
   {
     id:          'firms',
     title:       'Join Our Network',
-    description: 'Accounting firms and independent professionals can apply to join the AccountingBody managed network and receive matched client engagements.',
+    description: 'Accounting firms and independent professionals can apply to join the Accounting Body managed network and receive matched client engagements.',
     href:        '/firms-freelancers',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -441,7 +441,7 @@ export default async function HomePage() {
             </h1>
 
             <p className="text-white/65 text-xl leading-relaxed mb-6 max-w-2xl">
-              Study for ACCA, CIMA, ICAEW and AAT with expert notes and practice questions — and access AccountingBody&apos;s managed professional services network for tax, audit, bookkeeping, and advisory.
+              Study for ACCA, CIMA, ICAEW and AAT with expert notes and practice questions — and access Accounting Body&apos;s managed professional services network for tax, audit, bookkeeping, and advisory.
             </p>
             <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
               One platform. Two pillars. Education and professional services, managed to the same standard.
@@ -542,7 +542,7 @@ export default async function HomePage() {
           </div>
 
           <p className="text-xs text-slate-400 border-t border-slate-100 pt-5">
-            AccountingBody is an independent study platform and is not affiliated with,
+            Accounting Body is an independent study platform and is not affiliated with,
             endorsed by, or connected to ACCA, CIMA, ICAEW, or AAT. These names are used
             solely to identify the qualifications our study materials are designed to support.
           </p>
@@ -611,7 +611,7 @@ export default async function HomePage() {
             <span className="eyebrow mb-3 block">The Full Platform</span>
             <h2 className="section-title mb-4">Education and professional services, in one place</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              AccountingBody combines a world-class accounting study platform with a managed professional services network. Whether you are studying for your exams or need expert accounting support — we have you covered.
+              Accounting Body combines a world-class accounting study platform with a managed professional services network. Whether you are studying for your exams or need expert accounting support — we have you covered.
             </p>
           </div>
 
@@ -729,11 +729,11 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
             <div>
-              <span className="eyebrow mb-3 block">Why AccountingBody</span>
+              <span className="eyebrow mb-3 block">Why Accounting Body</span>
               <h2 className="section-title mb-6">Content you can actually trust</h2>
               <p className="text-slate-500 text-lg leading-relaxed mb-8">
                 The internet is full of accounting content written by people who have
-                never sat an exam. Every piece of content on AccountingBody is written
+                never sat an exam. Every piece of content on Accounting Body is written
                 or reviewed by someone who has.
               </p>
               <div className="space-y-5">
@@ -767,7 +767,7 @@ export default async function HomePage() {
                     {/* Large quote mark */}
                     <div className="text-gold-500 text-6xl font-display leading-none mb-2 opacity-60">&ldquo;</div>
                     <p className="text-white text-base leading-relaxed mb-6">
-                      AccountingBody has been my go-to resource throughout my
+                      Accounting Body has been my go-to resource throughout my
                       qualification journey. The study notes and practice questions
                       are genuinely exam standard.
                     </p>

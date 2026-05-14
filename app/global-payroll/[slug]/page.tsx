@@ -16,7 +16,7 @@ const services: Record<string, {
   'entity-setup': {
     name: 'Entity Setup & Registration',
     tagline: 'Establish your legal presence in any country — structured correctly from day one.',
-    intro: 'Expanding into a new country requires more than just registering a company name. The legal structure, shareholding, director requirements, tax registration, and banking setup all vary significantly by jurisdiction — and getting any of these wrong at formation can be costly to unwind. AccountingBody manages the entire entity setup process through our verified local specialists, so your new entity is compliant, correctly structured, and ready to operate from day one.',
+    intro: 'Expanding into a new country requires more than just registering a company name. The legal structure, shareholding, director requirements, tax registration, and banking setup all vary significantly by jurisdiction — and getting any of these wrong at formation can be costly to unwind. Accounting Body manages the entire entity setup process through our verified local specialists, so your new entity is compliant, correctly structured, and ready to operate from day one.',
     bullets: [
       'Company incorporation and legal entity registration in any jurisdiction',
       'Director, shareholder, and governance structure setup',
@@ -30,7 +30,7 @@ const services: Record<string, {
   'global-payroll-management': {
     name: 'Global Payroll Management',
     tagline: 'Your global payroll, processed accurately and on time — every pay period, every country.',
-    intro: 'Running payroll across borders is one of the most operationally complex tasks a growing business faces. Each country has its own tax rates, social contribution rules, statutory entitlements, and reporting deadlines. A single missed submission or miscalculated deduction can trigger penalties, damage employee trust, or create compliance liabilities. AccountingBody manages your global payroll end-to-end through our verified specialists in each jurisdiction — giving you a single point of contact for payroll across every country you operate in.',
+    intro: 'Running payroll across borders is one of the most operationally complex tasks a growing business faces. Each country has its own tax rates, social contribution rules, statutory entitlements, and reporting deadlines. A single missed submission or miscalculated deduction can trigger penalties, damage employee trust, or create compliance liabilities. Accounting Body manages your global payroll end-to-end through our verified specialists in each jurisdiction — giving you a single point of contact for payroll across every country you operate in.',
     bullets: [
       'Monthly and weekly payroll processing across multiple countries',
       'Gross-to-net calculations including all local statutory deductions',
@@ -44,13 +44,13 @@ const services: Record<string, {
   'eor-support': {
     name: 'Employer of Record (EOR) Support',
     tagline: 'The local payroll and compliance backbone your EOR operation depends on.',
-    intro: 'Employer of Record providers operate in some of the most complex payroll and employment law environments in the world. To deliver reliable EOR services across multiple countries, you need a trusted local partner in each jurisdiction who understands the rules, manages the filings, and keeps your operation compliant. AccountingBody provides exactly that — acting as your local delivery partner for payroll, compliance, and entity management, so you can focus on growing your EOR business.',
+    intro: 'Employer of Record providers operate in some of the most complex payroll and employment law environments in the world. To deliver reliable EOR services across multiple countries, you need a trusted local partner in each jurisdiction who understands the rules, manages the filings, and keeps your operation compliant. Accounting Body provides exactly that — acting as your local delivery partner for payroll, compliance, and entity management, so you can focus on growing your EOR business.',
     bullets: [
       'Local payroll processing and statutory submissions on behalf of EOR clients',
       'In-country employment tax and social contribution management',
       'Local entity setup and maintenance for EOR operations',
       'Payroll compliance monitoring as regulations change',
-      'Multi-country coordination under a single AccountingBody engagement',
+      'Multi-country coordination under a single Accounting Body engagement',
       'Confidential, white-label delivery for EOR providers',
     ],
     whoFor: 'EOR platforms and providers that need a reliable, vetted local partner network for payroll delivery, compliance, and entity management across the countries they serve.',
@@ -58,7 +58,7 @@ const services: Record<string, {
   'payroll-compliance': {
     name: 'Payroll Compliance & Reporting',
     tagline: 'Every filing. Every deadline. Every jurisdiction. Managed.',
-    intro: 'Payroll compliance is not a one-time task — it is an ongoing obligation that changes as regulations evolve, headcounts grow, and your business enters new markets. Missed filings, incorrect deductions, or late submissions can result in significant penalties, interest charges, and reputational risk. AccountingBody manages your payroll compliance obligations across every jurisdiction you operate in, ensuring every statutory report is accurate, every authority submission is on time, and every regulatory change is captured and applied.',
+    intro: 'Payroll compliance is not a one-time task — it is an ongoing obligation that changes as regulations evolve, headcounts grow, and your business enters new markets. Missed filings, incorrect deductions, or late submissions can result in significant penalties, interest charges, and reputational risk. Accounting Body manages your payroll compliance obligations across every jurisdiction you operate in, ensuring every statutory report is accurate, every authority submission is on time, and every regulatory change is captured and applied.',
     bullets: [
       'Monthly and annual payroll tax filings in each jurisdiction',
       'Social security, pension, and insurance contribution submissions',
@@ -72,7 +72,7 @@ const services: Record<string, {
   'multi-country-payroll': {
     name: 'Multi-Country Payroll',
     tagline: 'One engagement. Multiple countries. Complete coordination.',
-    intro: 'Managing payroll across two or more countries introduces a level of complexity that quickly overwhelms internal teams. Different currencies, different pay cycles, different statutory rules, and different reporting authorities all need to be coordinated and reconciled. AccountingBody provides a single, consolidated multi-country payroll service — one point of contact, one managed engagement, full local compliance in every jurisdiction. We coordinate everything across our specialist network so you see a unified, accurate picture of your global payroll at all times.',
+    intro: 'Managing payroll across two or more countries introduces a level of complexity that quickly overwhelms internal teams. Different currencies, different pay cycles, different statutory rules, and different reporting authorities all need to be coordinated and reconciled. Accounting Body provides a single, consolidated multi-country payroll service — one point of contact, one managed engagement, full local compliance in every jurisdiction. We coordinate everything across our specialist network so you see a unified, accurate picture of your global payroll at all times.',
     bullets: [
       'Consolidated payroll management across two or more countries',
       'Single point of contact for your entire global payroll operation',
@@ -86,7 +86,7 @@ const services: Record<string, {
   'payroll-advisory': {
     name: 'Payroll Advisory',
     tagline: 'Strategic payroll advice to build a global operation that scales.',
-    intro: 'International expansion brings payroll decisions that have long-term cost and compliance implications — which entity structure to use, which jurisdictions to enter first, how to structure compensation across borders, and how to build a payroll infrastructure that grows with your business. AccountingBody provides senior payroll advisory support from specialists who have built and managed global payroll operations across multiple industries and jurisdictions. This is not generic advice — it is practical, experienced guidance tailored to your situation.',
+    intro: 'International expansion brings payroll decisions that have long-term cost and compliance implications — which entity structure to use, which jurisdictions to enter first, how to structure compensation across borders, and how to build a payroll infrastructure that grows with your business. Accounting Body provides senior payroll advisory support from specialists who have built and managed global payroll operations across multiple industries and jurisdictions. This is not generic advice — it is practical, experienced guidance tailored to your situation.',
     bullets: [
       'Jurisdiction selection and payroll cost modelling for new markets',
       'Entity structure advice to optimise payroll compliance and cost',

@@ -87,14 +87,14 @@ const services = [
 
 const process = [
   { step: '01', title: 'Submit Your Brief', desc: 'Tell us which countries you operate in, your headcount, and what you need. Our team reviews every brief personally.' },
-  { step: '02', title: 'We Scope and Assign', desc: 'AccountingBody reviews your requirements, determines the jurisdictions involved, and assigns the right specialists from our global network.' },
-  { step: '03', title: 'Engagement Confirmed', desc: 'We present a proposed scope and fee. Once confirmed, your engagement is managed end-to-end under the AccountingBody service standard.' },
+  { step: '02', title: 'We Scope and Assign', desc: 'Accounting Body reviews your requirements, determines the jurisdictions involved, and assigns the right specialists from our global network.' },
+  { step: '03', title: 'Engagement Confirmed', desc: 'We present a proposed scope and fee. Once confirmed, your engagement is managed end-to-end under the Accounting Body service standard.' },
 ]
 
 const stats = [
   { value: '150+', label: 'Countries covered' },
   { value: '24hr', label: 'Brief response time' },
-  { value: '100%', label: 'Managed by AccountingBody' },
+  { value: '100%', label: 'Managed by Accounting Body' },
 ]
 
 export default function GlobalPayrollPage() {
@@ -117,15 +117,15 @@ export default function GlobalPayrollPage() {
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
               <span className="text-white/70">Global Payroll</span>
             </nav>
-            <span className="eyebrow text-gold-400 mb-5 block">AccountingBody Global Payroll</span>
+            <span className="eyebrow text-gold-400 mb-5 block">Accounting Body Global Payroll</span>
             <h1 className="font-display text-white text-4xl md:text-5xl lg:text-6xl mb-6 leading-tight" style={{ letterSpacing: '-0.02em' }}>
               Global Payroll & Entity<br />Setup, Managed by Us
             </h1>
             <p className="text-white/60 text-xl leading-relaxed mb-4 max-w-2xl">
-              AccountingBody delivers end-to-end global payroll and entity setup services through our managed network of verified specialists across 150+ countries. You engage us — we handle everything.
+              Accounting Body delivers end-to-end global payroll and entity setup services through our managed network of verified specialists across 150+ countries. You engage us — we handle everything.
             </p>
             <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
-              Whether you are establishing a new entity abroad or running payroll across multiple countries, every engagement is managed directly by AccountingBody — from brief to delivery.
+              Whether you are establishing a new entity abroad or running payroll across multiple countries, every engagement is managed directly by Accounting Body — from brief to delivery.
             </p>
             <div className="flex flex-wrap gap-4">
               <a href="#services"
@@ -159,7 +159,7 @@ export default function GlobalPayrollPage() {
             <span className="eyebrow mb-3 block">Our Services</span>
             <h2 className="section-title mb-4">Global payroll and entity services, in one managed engagement</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              Each service is delivered by verified specialists within the AccountingBody network, coordinated across jurisdictions under our managed engagement framework.
+              Each service is delivered by verified specialists within the Accounting Body network, coordinated across jurisdictions under our managed engagement framework.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -223,7 +223,7 @@ export default function GlobalPayrollPage() {
               A managed engagement from brief to delivery
             </h2>
             <p className="text-white/60 text-lg max-w-xl mx-auto">
-              AccountingBody manages every stage of your global payroll engagement. You deal with us — we coordinate everything across jurisdictions.
+              Accounting Body manages every stage of your global payroll engagement. You deal with us — we coordinate everything across jurisdictions.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
@@ -248,7 +248,7 @@ export default function GlobalPayrollPage() {
               <span className="eyebrow mb-3 block">For Professionals</span>
               <h2 className="font-display text-3xl text-navy-950 mb-4 leading-tight">Are you a global payroll specialist?</h2>
               <p className="text-slate-500 text-lg leading-relaxed">
-                AccountingBody works with verified payroll professionals and firms across 150+ countries. If you specialise in payroll, entity setup, or EOR support, apply to join our professional network.
+                Accounting Body works with verified payroll professionals and firms across 150+ countries. If you specialise in payroll, entity setup, or EOR support, apply to join our professional network.
               </p>
             </div>
             <div className="shrink-0 flex flex-col gap-3 w-full md:w-auto">

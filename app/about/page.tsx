@@ -3,9 +3,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'About AccountingBody — Our Mission, Story & Values',
+  title: 'About Accounting Body — Our Mission, Story & Values',
   description:
-    'AccountingBody is a professional accounting education and managed services platform. Study for ACCA, CIMA, ICAEW and AAT — and access our global network of verified accounting professionals.',
+    'Accounting Body is a professional accounting education and managed services platform. Study for ACCA, CIMA, ICAEW and AAT — and access our global network of verified accounting professionals.',
 }
 
 const values = [
@@ -56,7 +56,7 @@ const values = [
 ]
 
 const milestones = [
-  { year: '2010', event: 'AccountingBody founded as a blog covering ACCA F3 topics.' },
+  { year: '2010', event: 'Accounting Body founded as a blog covering ACCA F3 topics.' },
   { year: '2013', event: 'First 100 articles published. Google begins indexing the site.' },
   { year: '2016', event: 'Practice question bank launched — 5,000 MCQs across ACCA Applied Skills.' },
   { year: '2018', event: '100,000 students reached. CIMA and AAT content added to the platform.' },
@@ -91,7 +91,7 @@ export default function AboutPage() {
         </div>
         <div className="container-site relative z-10">
           <div className="max-w-3xl">
-            <span className="eyebrow text-gold-400 mb-5 block">About AccountingBody</span>
+            <span className="eyebrow text-gold-400 mb-5 block">About Accounting Body</span>
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.02em' }}>
               Education and professional services,{' '}
               <span style={{
@@ -104,7 +104,7 @@ export default function AboutPage() {
               </span>
             </h1>
             <p className="text-white/65 text-xl leading-relaxed mb-4 max-w-2xl">
-              AccountingBody is a dual-purpose platform — a world-class accounting study resource for students pursuing ACCA, CIMA, ICAEW and AAT, and a managed professional services network for businesses and individuals who need expert accounting support.
+              Accounting Body is a dual-purpose platform — a world-class accounting study resource for students pursuing ACCA, CIMA, ICAEW and AAT, and a managed professional services network for businesses and individuals who need expert accounting support.
             </p>
             <p className="text-white/40 text-base leading-relaxed max-w-2xl">
               Both pillars are built to the same standard: qualified professionals, rigorous quality control, and a commitment to delivering genuine value to everyone we serve.
@@ -121,7 +121,7 @@ export default function AboutPage() {
               <span className="eyebrow mb-3 block">Our Mission</span>
               <h2 className="section-title mb-6">Raising the standard in accounting education and professional services</h2>
               <p className="text-slate-500 text-lg leading-relaxed mb-5">
-                AccountingBody was founded on a simple belief: that the quality of accounting education and professional services available to students and businesses should not depend on geography, budget, or who you happen to know.
+                Accounting Body was founded on a simple belief: that the quality of accounting education and professional services available to students and businesses should not depend on geography, budget, or who you happen to know.
               </p>
               <p className="text-slate-500 text-lg leading-relaxed mb-5">
                 On the education side, every study note and practice question is written or reviewed by a qualified accountant. On the professional services side, every engagement is managed directly by our team — with qualified professionals drawn from our verified global network.
@@ -213,7 +213,7 @@ export default function AboutPage() {
               <span className="eyebrow mb-3 block">Our Story</span>
               <h2 className="section-title mb-6">Fifteen years in the making</h2>
               <p className="text-slate-500 text-lg leading-relaxed mb-4">
-                AccountingBody started with a single blog post about ACCA F3. No grand plan.
+                Accounting Body started with a single blog post about ACCA F3. No grand plan.
                 No investors. Just a qualified accountant who wanted to explain double-entry
                 bookkeeping in a way that actually made sense.
               </p>
@@ -252,7 +252,7 @@ export default function AboutPage() {
           <span className="eyebrow text-gold-400 mb-4 block">Get Started</span>
           <h2 className="font-display text-4xl text-white mb-4 leading-tight">Start studying or engage our services</h2>
           <p className="text-white/65 text-lg mb-8 max-w-xl mx-auto leading-relaxed">
-            Whether you are preparing for a professional accounting exam or need expert accounting support for your business — AccountingBody is built for both.
+            Whether you are preparing for a professional accounting exam or need expert accounting support for your business — Accounting Body is built for both.
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Link href="/study"

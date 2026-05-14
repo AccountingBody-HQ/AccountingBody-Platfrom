@@ -2,8 +2,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title:       'AccountingBody Professionals | Firms & Freelancers',
-  description: 'Join the AccountingBody managed professional network. We oversee every client engagement — from initial request through to delivery — on behalf of our verified global network of firms and independent professionals.',
+  title:       'Accounting Body Professionals | Firms & Freelancers',
+  description: 'Join the Accounting Body managed professional network. We oversee every client engagement — from initial request through to delivery — on behalf of our verified global network of firms and independent professionals.',
 }
 
 const standards = [
@@ -20,7 +20,7 @@ const standards = [
   },
   {
     title: 'Managed Engagements',
-    desc:  'AccountingBody manages the full client journey. We receive service requests, assess requirements, select the right professional, oversee delivery, and manage client communication throughout.',
+    desc:  'Accounting Body manages the full client journey. We receive service requests, assess requirements, select the right professional, oversee delivery, and manage client communication throughout.',
     icon: (
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#FFF7ED"/>
@@ -44,7 +44,7 @@ const standards = [
   },
   {
     title: 'Quality Assurance',
-    desc:  'All work delivered through AccountingBody is subject to our quality standards. We monitor engagement outcomes, gather client feedback, and maintain the right to remove professionals who do not meet our standards.',
+    desc:  'All work delivered through Accounting Body is subject to our quality standards. We monitor engagement outcomes, gather client feedback, and maintain the right to remove professionals who do not meet our standards.',
     icon: (
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#EEF2FF"/>
@@ -58,13 +58,13 @@ const standards = [
 const process = [
   { step: '01', title: 'Application',        desc: 'Submit a detailed application including your professional credentials, jurisdictions covered, service areas, and relevant qualifications. Applications are reviewed individually.' },
   { step: '02', title: 'Vetting & Approval', desc: 'Our team conducts a structured review of your credentials and professional standing. You will be notified of the outcome. Approved professionals are added to our internal network.' },
-  { step: '03', title: 'Engagement Briefing', desc: 'When a client request matches your profile, AccountingBody contacts you with a full brief. You provide a fee proposal which we review and present to the client on your behalf.' },
-  { step: '04', title: 'Delivery & Payment', desc: 'Upon client approval, you receive a formal engagement instruction from AccountingBody. We manage client communication, handle billing, and remit your agreed fee on completion.' },
+  { step: '03', title: 'Engagement Briefing', desc: 'When a client request matches your profile, Accounting Body contacts you with a full brief. You provide a fee proposal which we review and present to the client on your behalf.' },
+  { step: '04', title: 'Delivery & Payment', desc: 'Upon client approval, you receive a formal engagement instruction from Accounting Body. We manage client communication, handle billing, and remit your agreed fee on completion.' },
 ]
 
 const firmBenefits = [
   'Access to a pipeline of pre-qualified client engagements',
-  'AccountingBody manages all client-facing communication',
+  'Accounting Body manages all client-facing communication',
   'Operate across multiple jurisdictions within one network',
   'Your firm is presented as part of a premium managed service',
   'Structured onboarding and engagement process throughout',
@@ -73,7 +73,7 @@ const firmBenefits = [
 const independentBenefits = [
   'Join a credentialled network of independent professionals',
   'Receive matched engagements suited to your specialism',
-  'AccountingBody handles billing and client management',
+  'Accounting Body handles billing and client management',
   'Work flexibly — accept engagements that suit your capacity',
   'Professional representation through an established platform',
 ]
@@ -97,15 +97,15 @@ export default function FirmsFreelancersPage() {
             <span className="text-white/70">Firms &amp; Freelancers</span>
           </nav>
           <div className="max-w-4xl">
-            <span className="eyebrow text-gold-400 mb-5 block">AccountingBody Professionals</span>
+            <span className="eyebrow text-gold-400 mb-5 block">Accounting Body Professionals</span>
             <h1 className="font-display text-white text-4xl md:text-5xl lg:text-6xl mb-6 leading-tight" style={{ letterSpacing: '-0.02em' }}>
               A Managed Network of<br />Verified Accounting Professionals
             </h1>
             <p className="text-white/60 text-xl leading-relaxed mb-4 max-w-3xl">
-              AccountingBody operates a carefully managed global network of accounting firms and independent professionals. We oversee every client engagement — from initial brief through to final delivery — ensuring a consistent, high-quality service experience.
+              Accounting Body operates a carefully managed global network of accounting firms and independent professionals. We oversee every client engagement — from initial brief through to final delivery — ensuring a consistent, high-quality service experience.
             </p>
             <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
-              Professionals within our network do not operate independently on this platform. All client relationships, communications, pricing, and quality oversight are managed directly by AccountingBody.
+              Professionals within our network do not operate independently on this platform. All client relationships, communications, pricing, and quality oversight are managed directly by Accounting Body.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link href="/firms-freelancers/join"
@@ -129,7 +129,7 @@ export default function FirmsFreelancersPage() {
             <span className="eyebrow mb-3 block">Our Standards</span>
             <h2 className="section-title mb-4">How we manage our professional network</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              Every professional in our network operates under the AccountingBody standard — a structured framework covering vetting, engagement management, and quality assurance.
+              Every professional in our network operates under the Accounting Body standard — a structured framework covering vetting, engagement management, and quality assurance.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -154,7 +154,7 @@ export default function FirmsFreelancersPage() {
           <div className="text-center mb-14">
             <span className="eyebrow text-gold-400 mb-4 block">Engagement Process</span>
             <h2 className="font-display text-4xl text-white mb-4 leading-tight">How engagements work</h2>
-            <p className="text-white/60 text-lg max-w-2xl mx-auto">From application through to completed delivery — AccountingBody manages every stage of the professional engagement process.</p>
+            <p className="text-white/60 text-lg max-w-2xl mx-auto">From application through to completed delivery — Accounting Body manages every stage of the professional engagement process.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
             {process.map((item) => (
@@ -210,7 +210,7 @@ export default function FirmsFreelancersPage() {
                 </svg>
               </div>
               <h3 className="font-display text-2xl text-white mb-2">Independent Professionals</h3>
-              <p className="text-white/55 text-sm mb-6 leading-relaxed">Qualified independent accountants, bookkeepers, tax advisors, and finance professionals who wish to receive managed client engagements through the AccountingBody network.</p>
+              <p className="text-white/55 text-sm mb-6 leading-relaxed">Qualified independent accountants, bookkeepers, tax advisors, and finance professionals who wish to receive managed client engagements through the Accounting Body network.</p>
               <ul className="space-y-3 mb-8">
                 {independentBenefits.map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-white/65">
@@ -235,7 +235,7 @@ export default function FirmsFreelancersPage() {
       <section className="bg-slate-50 border-t border-slate-200 py-10">
         <div className="container-site">
           <p className="text-xs text-slate-400 leading-relaxed max-w-3xl">
-            Professionals listed within the AccountingBody network operate under our managed engagement framework. AccountingBody acts as the principal point of contact for all client engagements. All fees are collected by AccountingBody and disbursed to professionals following completion of agreed deliverables. Acceptance into the network is subject to satisfactory completion of our vetting process.
+            Professionals listed within the Accounting Body network operate under our managed engagement framework. Accounting Body acts as the principal point of contact for all client engagements. All fees are collected by Accounting Body and disbursed to professionals following completion of agreed deliverables. Acceptance into the network is subject to satisfactory completion of our vetting process.
           </p>
         </div>
       </section>

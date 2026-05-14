@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { getStudyLandingData } from '@/lib/sanity-queries'
 
 export const metadata: Metadata = {
-  title: 'Study Notes | AccountingBody',
+  title: 'Study Notes | Accounting Body',
   description: 'Comprehensive study notes for ACCA, CIMA, AAT, and ICAEW — the four leading professional accounting qualifications.',
 }
 

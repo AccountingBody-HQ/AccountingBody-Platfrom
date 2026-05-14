@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { UserButton } from '@clerk/nextjs'
 
 export const metadata = {
-  title: 'Dashboard — AccountingBody',
+  title: 'Dashboard — Accounting Body',
 }
 
 export default async function DashboardPage() {
@@ -67,7 +67,7 @@ export default async function DashboardPage() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
         <div className="container-site py-4 flex items-center justify-between">
           <Link href="/" className="font-display text-xl text-navy-950 font-bold tracking-tight">
-            AccountingBody
+            Accounting Body
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/study" className="hidden sm:inline-flex text-sm font-medium text-slate-600 hover:text-navy-950 transition-colors">Study</Link>

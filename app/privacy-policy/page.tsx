@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — AccountingBody',
-  description: 'How AccountingBody collects, uses, and protects your personal data. Last updated March 2026.',
+  title: 'Privacy Policy — Accounting Body',
+  description: 'How Accounting Body collects, uses, and protects your personal data. Last updated March 2026.',
 }
 
 export default function PrivacyPolicyPage() {
@@ -45,7 +45,7 @@ export default function PrivacyPolicyPage() {
             <div className="lg:col-span-3 space-y-10">
               <div className="border-l-4 border-gold-400 pl-5">
                 <p className="text-slate-600 text-base leading-relaxed">
-                  AccountingBody is committed to protecting your privacy. This policy explains what personal data
+                  Accounting Body is committed to protecting your privacy. This policy explains what personal data
                   we collect, how we use it, and the rights you have over it.
                 </p>
               </div>
@@ -53,7 +53,7 @@ export default function PrivacyPolicyPage() {
               {[
                 {
                   id: 'who-we-are', title: '1. Who we are',
-                  body: 'AccountingBody operates the website accountingbody.com — an accounting and finance education platform. For privacy questions email privacy@accountingbody.com.',
+                  body: 'Accounting Body operates the website accountingbody.com — an accounting and finance education platform. For privacy questions email privacy@accountingbody.com.',
                 },
                 {
                   id: 'what-we-collect', title: '2. Data we collect',

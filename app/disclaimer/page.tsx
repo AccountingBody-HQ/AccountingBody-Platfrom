@@ -3,49 +3,49 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Disclaimer — AccountingBody',
-  description: 'Important disclaimers regarding the accuracy and use of content on AccountingBody. Last updated March 2026.',
+  title: 'Disclaimer — Accounting Body',
+  description: 'Important disclaimers regarding the accuracy and use of content on Accounting Body. Last updated March 2026.',
 }
 
 const sections = [
   {
     id: 'general', title: '1. General disclaimer',
     body: [
-      'The content on AccountingBody is provided for educational and informational purposes only. While we make every effort to ensure accuracy, we make no warranties about the completeness, reliability, or suitability of any content on this site.',
-      'Your use of any content is entirely at your own risk. AccountingBody shall not be liable for any loss or damage arising from the use of, or inability to use, materials on this site.',
+      'The content on Accounting Body is provided for educational and informational purposes only. While we make every effort to ensure accuracy, we make no warranties about the completeness, reliability, or suitability of any content on this site.',
+      'Your use of any content is entirely at your own risk. Accounting Body shall not be liable for any loss or damage arising from the use of, or inability to use, materials on this site.',
     ],
   },
   {
     id: 'not-advice', title: '2. Not professional advice',
     body: [
-      'Nothing on AccountingBody constitutes professional accounting, tax, legal, or financial advice. Study notes and articles are designed to help students understand concepts for educational purposes — they are not a substitute for advice from a qualified professional.',
+      'Nothing on Accounting Body constitutes professional accounting, tax, legal, or financial advice. Study notes and articles are designed to help students understand concepts for educational purposes — they are not a substitute for advice from a qualified professional.',
       'If you require professional advice, consult a qualified and appropriately regulated professional.',
     ],
   },
   {
     id: 'exam-content', title: '3. Exam content and syllabus accuracy',
     body: [
-      'Professional accounting qualifications — including ACCA, CIMA, AAT, ICAEW, and others — are managed by independent examining bodies whose syllabuses can change at any time. AccountingBody strives to keep content current, but cannot guarantee it reflects the very latest syllabus.',
-      'Always cross-reference with the official published syllabus. AccountingBody is not affiliated with, endorsed by, or officially connected to any professional accounting body.',
+      'Professional accounting qualifications — including ACCA, CIMA, AAT, ICAEW, and others — are managed by independent examining bodies whose syllabuses can change at any time. Accounting Body strives to keep content current, but cannot guarantee it reflects the very latest syllabus.',
+      'Always cross-reference with the official published syllabus. Accounting Body is not affiliated with, endorsed by, or officially connected to any professional accounting body.',
     ],
   },
   {
     id: 'third-party', title: '4. Third-party links',
     body: [
-      'AccountingBody may contain links to external websites. These links are provided for convenience only. We have no control over those sites and accept no responsibility for them or for any loss arising from your use of them.',
+      'Accounting Body may contain links to external websites. These links are provided for convenience only. We have no control over those sites and accept no responsibility for them or for any loss arising from your use of them.',
     ],
   },
   {
     id: 'errors', title: '5. Errors and corrections',
     body: [
       'We take accuracy seriously. If you believe any content contains an error, please report it via our contact form. We will investigate and correct verified errors promptly.',
-      'Despite our best efforts, AccountingBody cannot accept responsibility for errors or omissions, or for any loss resulting from reliance on such content.',
+      'Despite our best efforts, Accounting Body cannot accept responsibility for errors or omissions, or for any loss resulting from reliance on such content.',
     ],
   },
   {
     id: 'ip', title: '6. Intellectual property',
     body: [
-      'All original content on AccountingBody — including study notes, practice questions, and guides — is the intellectual property of AccountingBody unless otherwise stated. Content may not be reproduced or republished without prior written permission.',
+      'All original content on Accounting Body — including study notes, practice questions, and guides — is the intellectual property of Accounting Body unless otherwise stated. Content may not be reproduced or republished without prior written permission.',
     ],
   },
   {

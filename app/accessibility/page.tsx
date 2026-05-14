@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Accessibility Statement — AccountingBody',
-  description: 'AccountingBody is committed to making its website accessible to everyone. Read our accessibility statement.',
+  title: 'Accessibility Statement — Accounting Body',
+  description: 'Accounting Body is committed to making its website accessible to everyone. Read our accessibility statement.',
 }
 
 const standards = [
@@ -22,7 +22,7 @@ const standards = [
   },
   {
     title: 'Responsive design',
-    body: 'AccountingBody works on all screen sizes from mobile to desktop. Text can be resized up to 200% without loss of content or functionality.',
+    body: 'Accounting Body works on all screen sizes from mobile to desktop. Text can be resized up to 200% without loss of content or functionality.',
   },
   {
     title: 'Forms and inputs',
@@ -61,7 +61,7 @@ export default function AccessibilityPage() {
 
             <div className="border-l-4 border-gold-400 pl-5 mb-10">
               <p className="text-slate-600 text-base leading-relaxed">
-                AccountingBody is committed to ensuring that its website is accessible to everyone —
+                Accounting Body is committed to ensuring that its website is accessible to everyone —
                 including people with disabilities. We aim to conform to the Web Content Accessibility
                 Guidelines (WCAG) 2.1 at Level AA.
               </p>
@@ -98,7 +98,7 @@ export default function AccessibilityPage() {
 
             <h2 className="font-display text-2xl text-navy-950 mb-4">Feedback and contact</h2>
             <p className="text-slate-500 text-sm leading-relaxed mb-6">
-              We welcome feedback on the accessibility of AccountingBody. If you experience any barriers
+              We welcome feedback on the accessibility of Accounting Body. If you experience any barriers
               or have suggestions for improvement, please get in touch. We aim to respond to accessibility
               feedback within 5 business days.
             </p>
@@ -127,7 +127,7 @@ export default function AccessibilityPage() {
 
             <h2 className="font-display text-2xl text-navy-950 mb-4">Technical information</h2>
             <p className="text-slate-500 text-sm leading-relaxed mb-3">
-              AccountingBody is built with Next.js 14 using semantic HTML5, Tailwind CSS, and
+              Accounting Body is built with Next.js 14 using semantic HTML5, Tailwind CSS, and
               React. The site is tested using keyboard navigation, the WAVE accessibility tool,
               and VoiceOver on macOS.
             </p>

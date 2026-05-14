@@ -71,9 +71,9 @@ export default function JoinNetworkPage() {
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">Apply to Join</span>
           </nav>
-          <span className="eyebrow text-gold-400 mb-4 block">AccountingBody Professionals</span>
+          <span className="eyebrow text-gold-400 mb-4 block">Accounting Body Professionals</span>
           <h1 className="font-display text-white text-4xl md:text-5xl mb-4 leading-tight" style={{ letterSpacing: '-0.02em' }}>Apply to Join Our Network</h1>
-          <p className="text-white/60 text-xl leading-relaxed max-w-2xl">All applications are reviewed individually by our team. Acceptance into the AccountingBody professional network is subject to satisfactory completion of our vetting process.</p>
+          <p className="text-white/60 text-xl leading-relaxed max-w-2xl">All applications are reviewed individually by our team. Acceptance into the Accounting Body professional network is subject to satisfactory completion of our vetting process.</p>
         </div>
       </section>
 
@@ -253,7 +253,7 @@ export default function JoinNetworkPage() {
                   <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
                     <div className="bg-slate-50 rounded-lg border border-slate-200 p-4 mb-6">
                       <p className="text-xs text-slate-500 leading-relaxed">
-                        By submitting this application you confirm that all information provided is accurate and complete. AccountingBody reserves the right to verify all credentials independently. Submission of this form does not guarantee acceptance into the network.
+                        By submitting this application you confirm that all information provided is accurate and complete. Accounting Body reserves the right to verify all credentials independently. Submission of this form does not guarantee acceptance into the network.
                       </p>
                     </div>
                     {status === 'error' && <p className="text-red-500 text-sm mb-4">Something went wrong. Please try again.</p>}

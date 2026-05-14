@@ -6,7 +6,7 @@ const DATASET    = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
-  title:       'Articles | AccountingBody',
+  title:       'Articles | Accounting Body',
   description: 'Study notes and articles for ACCA, CIMA, ICAEW, and AAT.',
 }
 

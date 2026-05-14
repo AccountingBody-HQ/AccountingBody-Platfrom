@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     // Send notification to team
     await resend.emails.send({
-      from: 'AccountingBody <info@accountingbody.com>',
+      from: 'Accounting Body <info@accountingbody.com>',
       to: 'info@accountingbody.com',
       subject: `New Network Application — ${applicantType}: ${practice_name || contact_name}`,
       html: `
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
         <body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
           <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
             <div style="background:#0C1A3D;padding:32px 40px;">
-              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">AccountingBody</p>
+              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">Accounting Body</p>
               <h1 style="color:#fff;font-size:22px;margin:0;line-height:1.3;">New Network Application</h1>
             </div>
             <div style="padding:32px 40px;">
@@ -155,21 +155,21 @@ export async function POST(req: NextRequest) {
 
     // Send acknowledgment to applicant
     await resend.emails.send({
-      from: 'AccountingBody <info@accountingbody.com>',
+      from: 'Accounting Body <info@accountingbody.com>',
       to: email,
-      subject: 'We have received your application — AccountingBody',
+      subject: 'We have received your application — Accounting Body',
       html: `
         <!DOCTYPE html>
         <html>
         <body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
           <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
             <div style="background:#0C1A3D;padding:32px 40px;">
-              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">AccountingBody</p>
+              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">Accounting Body</p>
               <h1 style="color:#fff;font-size:22px;margin:0;line-height:1.3;">Application received.</h1>
             </div>
             <div style="padding:32px 40px;">
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear ${contact_name},</p>
-              <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Thank you for applying to join the AccountingBody professional network. We have received your application and our team will review it carefully.</p>
+              <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Thank you for applying to join the Accounting Body professional network. We have received your application and our team will review it carefully.</p>
               <div style="background:#f8fafc;border-radius:8px;border-left:3px solid #D4A017;padding:16px 20px;margin:0 0 24px;">
                 <p style="margin:0;color:#475569;font-size:13px;line-height:1.6;">We aim to review all applications within 5 working days. You will hear from us once your application has been assessed.</p>
               </div>
@@ -180,7 +180,7 @@ export async function POST(req: NextRequest) {
               </a>
             </div>
             <div style="padding:20px 40px;border-top:1px solid #e2e8f0;">
-              <p style="margin:0;color:#94a3b8;font-size:12px;">AccountingBody · Professional Services Network</p>
+              <p style="margin:0;color:#94a3b8;font-size:12px;">Accounting Body · Professional Services Network</p>
             </div>
           </div>
         </body>

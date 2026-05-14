@@ -2,8 +2,8 @@ import { SignIn } from '@clerk/nextjs'
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'Sign In — AccountingBody',
-  description: 'Sign in to your AccountingBody account.',
+  title: 'Sign In — Accounting Body',
+  description: 'Sign in to your Accounting Body account.',
 }
 
 export default function SignInPage() {
@@ -13,7 +13,7 @@ export default function SignInPage() {
       <div className="bg-white border-b border-slate-200 px-6 py-4">
         <div className="container-site flex items-center justify-between">
           <Link href="/" className="font-display text-xl text-navy-950 font-bold tracking-tight">
-            AccountingBody
+            Accounting Body
           </Link>
           <p className="text-sm text-slate-500">
             No account?{' '}
@@ -29,7 +29,7 @@ export default function SignInPage() {
           <div className="text-center mb-8">
             <span className="eyebrow block mb-3">Welcome back</span>
             <h1 className="font-display text-4xl text-navy-950 leading-tight mb-3">
-              Sign in to AccountingBody
+              Sign in to Accounting Body
             </h1>
             <p className="text-slate-500 text-base">
               Access your study notes, practice questions, and saved calculations.

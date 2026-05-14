@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props) {
   const course = await getCourseBySlug(params.slug)
   if (!course) return {}
   return {
-    title: `${course.title} | AccountingBody`,
+    title: `${course.title} | Accounting Body`,
     description: course.description,
   }
 }

@@ -3,14 +3,14 @@ import type { Metadata } from 'next'
 import ContactForm from './ContactForm'
 
 export const metadata: Metadata = {
-  title: 'Contact AccountingBody — Get in Touch',
+  title: 'Contact Accounting Body — Get in Touch',
   description:
-    'Have a question about our study platform or professional services? Get in touch with the AccountingBody team — we reply within 2 business days.',
+    'Have a question about our study platform or professional services? Get in touch with the Accounting Body team — we reply within 2 business days.',
 }
 
 const faqs = [
   {
-    q: 'Is AccountingBody really free?',
+    q: 'Is Accounting Body really free?',
     a: 'The study platform is free to start — study notes, the full glossary, and core practice questions carry no subscription fee. Professional services engagements are priced based on scope and are confirmed with you before any work commences.',
   },
   {
@@ -18,7 +18,7 @@ const faqs = [
     a: 'We aim to reply to all messages within 2 business days. Professional services enquiries and technical issues are prioritised.',
   },
   {
-    q: 'How do I engage AccountingBody for professional services?',
+    q: 'How do I engage Accounting Body for professional services?',
     a: 'Use the Get Help section to submit a service brief for tax, audit, bookkeeping, payroll, or advisory services. Our team will review your requirements and confirm scope and fees before any work begins.',
   },
   {
@@ -53,7 +53,7 @@ export default function ContactPage() {
         <div className="container-site relative z-10">
           <div className="max-w-2xl">
             <span className="eyebrow text-gold-400 mb-5 block">Get in Touch</span>
-            <h1 className="font-display text-white mb-5 leading-tight">Contact AccountingBody</h1>
+            <h1 className="font-display text-white mb-5 leading-tight">Contact Accounting Body</h1>
             <p className="text-white/65 text-xl leading-relaxed">
               Questions about our study platform, professional services enquiries, content partnerships, or technical issues — we read every message and reply within 2 business days.
             </p>

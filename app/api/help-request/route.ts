@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     // Send notification to team
     await resend.emails.send({
-      from: 'AccountingBody <info@accountingbody.com>',
+      from: 'Accounting Body <info@accountingbody.com>',
       to: 'info@accountingbody.com',
       subject: `New Service Brief — ${service_type}`,
       html: `
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
         <body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
           <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
             <div style="background:#0C1A3D;padding:32px 40px;">
-              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">AccountingBody</p>
+              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">Accounting Body</p>
               <h1 style="color:#fff;font-size:22px;margin:0;line-height:1.3;">New Service Brief Received</h1>
             </div>
             <div style="padding:32px 40px;">
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
 
     // Send acknowledgment to client
     await resend.emails.send({
-      from: 'AccountingBody <info@accountingbody.com>',
+      from: 'Accounting Body <info@accountingbody.com>',
       to: email,
       subject: `We have received your enquiry — ${service_type}`,
       html: `
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
         <body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
           <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
             <div style="background:#0C1A3D;padding:32px 40px;">
-              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">AccountingBody</p>
+              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">Accounting Body</p>
               <h1 style="color:#fff;font-size:22px;margin:0;line-height:1.3;">We have received your enquiry.</h1>
             </div>
             <div style="padding:32px 40px;">
@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
               </a>
             </div>
             <div style="padding:20px 40px;border-top:1px solid #e2e8f0;">
-              <p style="margin:0;color:#94a3b8;font-size:12px;">AccountingBody · Professional Services Network</p>
+              <p style="margin:0;color:#94a3b8;font-size:12px;">Accounting Body · Professional Services Network</p>
             </div>
           </div>
         </body>

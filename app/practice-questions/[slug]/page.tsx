@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const post = await getPracticePostBySlug(slug)
   if (!post) return {}
   return {
-    title:       `${post.title} | AccountingBody Practice Questions`,
+    title:       `${post.title} | Accounting Body Practice Questions`,
     description: post.excerpt,
   }
 }

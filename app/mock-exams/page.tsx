@@ -1,12 +1,12 @@
 // app/mock-exams/page.tsx
-// AccountingBody — Mock Exams
+// Accounting Body — Mock Exams
 // Full timed mock exams catalogue, reusing the practice questions design language.
 
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Mock Exams | AccountingBody',
+  title: 'Mock Exams | Accounting Body',
   description: 'Full timed mock exams for ACCA, CIMA, ICAEW and AAT. Instant marking, performance reports, and exam-standard questions.',
 }
 

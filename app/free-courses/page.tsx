@@ -1,5 +1,5 @@
 // app/free-courses/page.tsx
-// AccountingBody — Free Courses
+// Accounting Body — Free Courses
 // PRIMARY URL for all courses content. /study/courses, /courses, /course
 // all 301 redirect here. This is the Google-indexed canonical page.
 
@@ -8,7 +8,7 @@ import type { Metadata } from 'next'
 import { client } from '@/lib/sanity'
 
 export const metadata: Metadata = {
-  title: 'Free Accounting Courses | AccountingBody',
+  title: 'Free Accounting Courses | Accounting Body',
   description: 'Free online accounting courses for ACCA, CIMA, ICAEW and AAT. Structured lessons, worked examples, and built-in practice questions. No signup required.',
 }
 

@@ -5,7 +5,7 @@ import { getPracticePosts, getPracticeFilters } from '@/lib/practice-queries'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title:       'Practice Questions | AccountingBody',
+  title:       'Practice Questions | Accounting Body',
   description: 'Exam-standard MCQ, scenario, and written practice questions for ACCA, CIMA, ICAEW, and AAT.',
 }
 
