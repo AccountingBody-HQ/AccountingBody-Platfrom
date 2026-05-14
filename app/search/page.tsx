@@ -16,7 +16,7 @@ interface SearchResult {
   excerpt?:     string
   definition?:  string
   category?:    string
-  examBody?:    string
+  examBody?:    string | string[]
   readTime?:    number
   publishedAt?: string
 }
@@ -32,7 +32,7 @@ const FILTERS: { id: ContentType; label: string }[] = [
 
 const POPULAR_SEARCHES = [
   'ACCA F3', 'deferred tax', 'CIMA OCS', 'double entry',
-  'AAT Level 3', 'financial statements', 'cash flow statement',
+  'AAT Level 3', 'financial statements', 'cash flow',
   'ratio analysis', 'ICAEW ACA', 'VAT',
 ]
 
@@ -67,135 +67,26 @@ function getTypeBadgeClass(type: ContentType): string {
   return map[type]
 }
 
-// ── Search helpers ───────────────────────────────────────────────────────────
-
-const STOP_WORDS = new Set([
-  'a','an','the','and','or','but','in','on','at','to','for','of','with',
-  'by','from','is','it','its','as','be','are','was','were','been','have',
-  'has','had','do','does','did','will','would','could','should','may',
-  'might','what','how','why','when','where','which','who','that','this',
-  'these','those','my','your','our','their','i','we','you','he','she','they',
-])
-
-const SYNONYMS: Record<string, string[]> = {
-  'p&l':          ['profit', 'loss'],
-  'pnl':          ['profit', 'loss'],
-  'profit':       ['profit', 'loss', 'income'],
-  'vat':          ['value', 'added', 'tax', 'vat'],
-  'bs':           ['balance', 'sheet'],
-  'is':           ['income', 'statement'],
-  'cf':           ['cash', 'flow'],
-  'ifrs':         ['ifrs', 'international', 'financial', 'reporting', 'standards'],
-  'gaap':         ['gaap', 'generally', 'accepted', 'accounting', 'principles'],
-  'ebitda':       ['ebitda', 'earnings', 'interest', 'tax', 'depreciation', 'amortisation'],
-  'roi':          ['return', 'investment'],
-  'npv':          ['net', 'present', 'value'],
-  'irr':          ['internal', 'rate', 'return'],
-  'kpi':          ['key', 'performance', 'indicator'],
-  'sme':          ['small', 'medium', 'enterprise'],
-  'ar':           ['accounts', 'receivable'],
-  'ap':           ['accounts', 'payable'],
-  'ppe':          ['property', 'plant', 'equipment'],
-  'cogs':         ['cost', 'goods', 'sold'],
-  'eps':          ['earnings', 'per', 'share'],
-  'pe':           ['price', 'earnings'],
-  'roe':          ['return', 'equity'],
-  'roa':          ['return', 'assets'],
-  'mgt':          ['management'],
-  'mgmt':         ['management'],
-  'accrual':      ['accrual', 'accruals'],
-  'depreciation': ['depreciation', 'amortisation'],
-  'amortisation': ['amortisation', 'depreciation'],
-  'amortization': ['amortisation', 'depreciation'],
-  'lease':        ['lease', 'leasing', 'ifrs16', 'ifrs 16'],
-  'tax':          ['tax', 'taxation', 'hmrc'],
-  'audit':        ['audit', 'assurance', 'auditing'],
-  'budget':       ['budget', 'budgeting', 'forecast'],
-  'variance':     ['variance', 'analysis'],
-  'ratio':        ['ratio', 'analysis', 'ratios'],
-  'consolidation':['consolidation', 'consolidated', 'group'],
-  'payroll':      ['payroll', 'wages', 'salary'],
-  'bookkeeping':  ['bookkeeping', 'double', 'entry', 'ledger'],
-}
-
-function buildWordGroups(raw: string): string[][] {
-  const sanitised = raw.replace(/['"`]/g, '').trim().toLowerCase()
-  const words = sanitised.split(/\s+/).filter(w => w.length >= 2 && !STOP_WORDS.has(w))
-  return words.map(w => {
-    const group = new Set<string>([w])
-    if (SYNONYMS[w]) {
-      SYNONYMS[w].filter(s => !s.includes(' ') && s.length >= 2).forEach(s => group.add(s))
-    }
-    return Array.from(group)
-  }).filter(g => g.length > 0)
-}
-function buildGroq(typeFilter: string, groups: string[][], mode: 'AND' | 'OR', limit: number): string {
-  const groupMatch = (group: string[]) => {
-    const terms = group.map(w =>
-      `(title match "${w}*" || term match "${w}*" || excerpt match "${w}*" || definition match "${w}*" || category match "${w}*")`
-    ).join(' || ')
-    return `(${terms})`
-  }
-  const filterJoin = mode === 'AND' ? ' && ' : ' || '
-  const filters = groups.map(groupMatch).join(filterJoin)
-  return `*[${typeFilter} && "accountingbody" in showOnSites && (${filters})] | order(publishedAt desc) [0..${limit - 1}] { _id, _type, title, term, "slug": slug.current, excerpt, definition, category, examBody, readTime, publishedAt }`
-}
-async function runGroq(projectId: string, dataset: string, groq: string): Promise<SearchResult[]> {
-  const res = await fetch(
-    `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${encodeURIComponent(groq)}`,
-    { cache: 'no-store' }
-  )
-  if (!res.ok) return []
-  const data = await res.json()
-  return data.result ?? []
-}
-
-async function searchSanity(q: string, type: ContentType): Promise<SearchResult[]> {
-  const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
-  const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
-  if (!projectId || q.trim().length < 2) return []
-
-  const typeFilter = type === 'all'
-    ? `_type in ["article", "practicePost", "course", "quiz", "dictionaryTerm"]`
-    : `_type == "${type}"`
-
-  const groups = buildWordGroups(q)
-  if (groups.length === 0) return []
-
-  try {
-    // Pass 1 — all word groups must match (AND), synonyms are alternatives (OR within group)
-    const andResults = await runGroq(projectId, dataset, buildGroq(typeFilter, groups, 'AND', 40))
-    if (andResults.length > 0) return andResults
-
-    // Pass 2 — OR fallback across groups so something always shows
-    const orResults = await runGroq(projectId, dataset, buildGroq(typeFilter, groups, 'OR', 40))
-    return orResults
-  } catch {
-    return []
-  }
+function getExamBodyColor(examBody: string | string[] | undefined): string {
+  const b = (Array.isArray(examBody) ? examBody[0] : examBody)?.toUpperCase()
+  if (b === 'ACCA')  return 'bg-[#004B8D]'
+  if (b === 'CIMA')  return 'bg-[#0081C6]'
+  if (b === 'AAT')   return 'bg-[#00857A]'
+  if (b === 'ICAEW') return 'bg-[#8B0000]'
+  return 'bg-navy-400'
 }
 
 function ResultCard({ result }: { result: SearchResult }) {
   const title   = result.title || result.term || 'Untitled'
   const excerpt = result.excerpt || result.definition
+  const hasBody = Array.isArray(result.examBody) ? result.examBody[0] : result.examBody
 
   return (
     <Link
       href={getUrl(result)}
       className="group flex flex-col bg-white rounded-xl border border-slate-200 p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
     >
-      {(Array.isArray(result.examBody) ? result.examBody[0] : result.examBody) && (
-        <div className={`h-0.5 w-full rounded-full mb-4 ${
-          (() => { const b = (Array.isArray(result.examBody) ? result.examBody[0] : result.examBody)?.toUpperCase()
-            return b === 'ACCA'  ? 'bg-[#004B8D]' :
-                   b === 'CIMA'  ? 'bg-[#0081C6]' :
-                   b === 'AAT'   ? 'bg-[#00857A]' :
-                   b === 'ICAEW' ? 'bg-[#C8A000]' :
-                   'bg-navy-400'
-          })()
-        }`} />
-      )}
-
+      {hasBody && <div className={`h-0.5 w-full rounded-full mb-4 ${getExamBodyColor(result.examBody)}`} />}
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${getTypeBadgeClass(result._type)}`}>
           {getTypeLabel(result._type)}
@@ -206,23 +97,16 @@ function ResultCard({ result }: { result: SearchResult }) {
           </span>
         )}
       </div>
-
-      <h3 className="font-display text-navy-950 text-base leading-snug mb-2 group-hover:text-navy-700 transition-colors">
+      <h3 className="font-display text-navy-950 text-base leading-snug mb-2 group-hover:text-navy-700 transition-colors flex-1">
         {title}
       </h3>
-
       {excerpt && (
-        <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed flex-1">
-          {excerpt}
-        </p>
+        <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed mb-3">{excerpt}</p>
       )}
-
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+      <div className="flex items-center justify-between pt-3 border-t border-slate-100">
         <span className="text-xs text-slate-400">
           {result.publishedAt
-            ? new Date(result.publishedAt).toLocaleDateString('en-GB', {
-                day: 'numeric', month: 'short', year: 'numeric',
-              })
+            ? new Date(result.publishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
             : ''}
         </span>
         <span className="flex items-center gap-1 text-xs font-semibold text-navy-700 group-hover:text-gold-600 transition-colors">
@@ -251,8 +135,6 @@ function SkeletonCard() {
   )
 }
 
-// ── This is the inner component that uses useSearchParams ─────────────────────
-// It must be wrapped in <Suspense> — Next.js 14 requirement
 function SearchInner() {
   const router       = useRouter()
   const searchParams = useSearchParams()
@@ -278,8 +160,13 @@ function SearchInner() {
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
       router.replace(`/search?q=${encodeURIComponent(query)}`, { scroll: false })
-      const data = await searchSanity(query, activeType)
-      setResults(data)
+      try {
+        const res  = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
+        const data = await res.json()
+        setResults(data)
+      } catch {
+        setResults([])
+      }
       setSearched(true)
       setLoading(false)
     }, 350)
@@ -295,23 +182,13 @@ function SearchInner() {
 
   return (
     <>
-      {/* ── HERO ───────────────────────────────────────────────────── */}
       <section className="bg-navy-950 pt-16 pb-14 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full opacity-20"
-            style={{ background: 'radial-gradient(ellipse at top, #3a4f9a 0%, transparent 65%)' }}
-          />
-          <div
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage: `linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
-                                linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)`,
-              backgroundSize: '60px 60px',
-            }}
-          />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full opacity-20"
+            style={{ background: 'radial-gradient(ellipse at top, #3a4f9a 0%, transparent 65%)' }} />
+          <div className="absolute inset-0 opacity-[0.03]"
+            style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         </div>
-
         <div className="container-site relative z-10">
           <div className="max-w-3xl mx-auto text-center mb-10">
             <span className="eyebrow text-gold-400 mb-3 block">Search</span>
@@ -322,16 +199,12 @@ function SearchInner() {
               Search across 3,000+ articles, 50,000+ practice questions, courses, and glossary terms.
             </p>
           </div>
-
           <div className="max-w-2xl mx-auto">
             <div className="relative">
-              <svg
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40 pointer-events-none"
-                fill="none" stroke="currentColor" viewBox="0 0 24 24"
-              >
+              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40 pointer-events-none"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-
               <input
                 ref={inputRef}
                 type="search"
@@ -342,7 +215,6 @@ function SearchInner() {
                 aria-label="Search Accounting Body"
                 autoComplete="off"
               />
-
               <div className="absolute right-4 top-1/2 -translate-y-1/2">
                 {loading ? (
                   <svg className="w-5 h-5 text-gold-400 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -350,11 +222,8 @@ function SearchInner() {
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
                 ) : query ? (
-                  <button
-                    onClick={() => { setQuery(''); inputRef.current?.focus() }}
-                    className="text-white/40 hover:text-white/80 transition-colors"
-                    aria-label="Clear search"
-                  >
+                  <button onClick={() => { setQuery(''); inputRef.current?.focus() }}
+                    className="text-white/40 hover:text-white/80 transition-colors" aria-label="Clear search">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -366,28 +235,22 @@ function SearchInner() {
         </div>
       </section>
 
-      {/* ── RESULTS ──────────────────────────────────────────────── */}
       <section className="section bg-slate-50 min-h-[55vh]">
         <div className="container-site">
 
           {searched && results.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-8">
               {FILTERS.map(f => (
-                <button
-                  key={f.id}
-                  onClick={() => setActiveType(f.id)}
+                <button key={f.id} onClick={() => setActiveType(f.id)}
                   className={`flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-medium border transition-all ${
                     activeType === f.id
                       ? 'bg-navy-950 text-white border-navy-950'
                       : 'bg-white text-slate-600 border-slate-200 hover:border-navy-300 hover:text-navy-700'
-                  }`}
-                >
+                  }`}>
                   {f.label}
                   <span className={`text-xs px-1.5 py-0.5 rounded-full ${
                     activeType === f.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
-                  }`}>
-                    {countFor(f.id)}
-                  </span>
+                  }`}>{countFor(f.id)}</span>
                 </button>
               ))}
             </div>
@@ -407,11 +270,8 @@ function SearchInner() {
               <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-3">Popular searches</p>
               <div className="flex flex-wrap justify-center gap-2 max-w-lg mx-auto">
                 {POPULAR_SEARCHES.map(term => (
-                  <button
-                    key={term}
-                    onClick={() => setQuery(term)}
-                    className="h-8 px-3 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:border-navy-300 hover:text-navy-700 transition-all"
-                  >
+                  <button key={term} onClick={() => setQuery(term)}
+                    className="h-8 px-3 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:border-navy-300 hover:text-navy-700 transition-all">
                     {term}
                   </button>
                 ))}
@@ -419,7 +279,7 @@ function SearchInner() {
             </div>
           )}
 
-          {loading && results.length === 0 && query.trim().length >= 2 && (
+          {loading && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
             </div>
@@ -438,11 +298,8 @@ function SearchInner() {
               </p>
               <div className="flex flex-wrap justify-center gap-2">
                 {['ACCA', 'CIMA', 'AAT', 'ICAEW'].map(body => (
-                  <Link
-                    key={body}
-                    href={`/study/${body.toLowerCase()}`}
-                    className="h-9 px-4 rounded-lg text-sm font-medium bg-white text-navy-950 border border-slate-200 hover:border-navy-300 transition-all"
-                  >
+                  <Link key={body} href={`/study/${body.toLowerCase()}`}
+                    className="h-9 px-4 rounded-lg text-sm font-medium bg-white text-navy-950 border border-slate-200 hover:border-navy-300 transition-all">
                     Browse {body}
                   </Link>
                 ))}
@@ -469,18 +326,14 @@ function SearchInner() {
   )
 }
 
-// ── PAGE — wraps SearchInner in Suspense as required by Next.js 14 ────────────
 export default function SearchPage() {
   return (
     <Suspense fallback={
       <div className="bg-navy-950 min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <svg className="w-8 h-8 text-gold-400 animate-spin mx-auto mb-4" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          <p className="text-white/60 text-sm">Loading search…</p>
-        </div>
+        <svg className="w-8 h-8 text-gold-400 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
       </div>
     }>
       <SearchInner />
