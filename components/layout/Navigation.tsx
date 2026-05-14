@@ -353,7 +353,7 @@ function MobileMenu({ open, onClose, onSearch }: { open: boolean; onClose: () =>
           </Link>
           <button
             onClick={onClose}
-            className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors"
+            className="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors"
             aria-label="Close menu"
           >
             <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -637,7 +637,7 @@ export function Navigation() {
           <div className="flex items-center gap-2 justify-end lg:hidden">
             <button
               onClick={() => router.push('/search')}
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+              className="w-11 h-11 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
               aria-label="Search"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -646,7 +646,7 @@ export function Navigation() {
             </button>
             <button
               onClick={() => setMobileOpen(true)}
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+              className="w-11 h-11 flex items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
               aria-label="Open menu"
               aria-expanded={mobileOpen}
             >
