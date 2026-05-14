@@ -77,7 +77,7 @@ async function searchSanity(q: string, type: ContentType): Promise<SearchResult[
     : `_type == "${type}"`
 
   const groq = `
-    *[${typeFilter} && (
+    *[${typeFilter} && "accountingbody" in showOnSites && (
       title         match "*${q}*"
       || term       match "*${q}*"
       || excerpt    match "*${q}*"
