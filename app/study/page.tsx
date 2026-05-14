@@ -237,7 +237,7 @@ export default async function StudyPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {EXAM_BODIES.map((body) => {
-              const articleCount = liveMap[body.code]
+              const articleCount = liveMap[body.code.toLowerCase()]
               return (
                 <Link key={body.slug} href={`/study/${body.slug}`}
                   className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
