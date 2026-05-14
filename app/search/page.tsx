@@ -76,19 +76,23 @@ async function searchSanity(q: string, type: ContentType): Promise<SearchResult[
     ? `_type in ["article", "practicePost", "course", "quiz", "dictionaryTerm"]`
     : `_type == "${type}"`
 
+  const words = q.trim().split(/\s+/).filter(Boolean)
+  const wordFilters = words.map(w => `(
+      title match "*${w}*" || term match "*${w}*" ||
+      excerpt match "*${w}*" || definition match "*${w}*" ||
+      category match "*${w}*"
+    )`).join(' && ')
+  const wordBoosts = words.map(w => `
+      boost(title match "${w}", 3),
+      boost(term match "${w}", 3),
+      boost(excerpt match "${w}", 2),
+      boost(definition match "${w}", 2),
+      boost(category match "${w}", 1)`).join(',')
   const groq = `
     *[${typeFilter} && "accountingbody" in showOnSites && (
-      title         match "*${q}*"
-      || term       match "*${q}*"
-      || excerpt    match "*${q}*"
-      || definition match "*${q}*"
-      || category   match "*${q}*"
+      ${wordFilters}
     )] | score(
-      boost(title        match "${q}", 3),
-      boost(term         match "${q}", 3),
-      boost(excerpt      match "${q}", 2),
-      boost(definition   match "${q}", 2),
-      boost(category     match "${q}", 1)
+      ${wordBoosts}
     ) | order(_score desc) [0..23] {
       _id, _type, title, term,
       "slug": slug.current,
