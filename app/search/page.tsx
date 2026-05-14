@@ -67,6 +67,89 @@ function getTypeBadgeClass(type: ContentType): string {
   return map[type]
 }
 
+// ── Search helpers ───────────────────────────────────────────────────────────
+
+const STOP_WORDS = new Set([
+  'a','an','the','and','or','but','in','on','at','to','for','of','with',
+  'by','from','is','it','its','as','be','are','was','were','been','have',
+  'has','had','do','does','did','will','would','could','should','may',
+  'might','what','how','why','when','where','which','who','that','this',
+  'these','those','my','your','our','their','i','we','you','he','she','they',
+])
+
+const SYNONYMS: Record<string, string[]> = {
+  'p&l':          ['profit', 'loss'],
+  'pnl':          ['profit', 'loss'],
+  'profit':       ['profit', 'loss', 'income'],
+  'vat':          ['value', 'added', 'tax', 'vat'],
+  'bs':           ['balance', 'sheet'],
+  'is':           ['income', 'statement'],
+  'cf':           ['cash', 'flow'],
+  'ifrs':         ['ifrs', 'international', 'financial', 'reporting', 'standards'],
+  'gaap':         ['gaap', 'generally', 'accepted', 'accounting', 'principles'],
+  'ebitda':       ['ebitda', 'earnings', 'interest', 'tax', 'depreciation', 'amortisation'],
+  'roi':          ['return', 'investment'],
+  'npv':          ['net', 'present', 'value'],
+  'irr':          ['internal', 'rate', 'return'],
+  'kpi':          ['key', 'performance', 'indicator'],
+  'sme':          ['small', 'medium', 'enterprise'],
+  'ar':           ['accounts', 'receivable'],
+  'ap':           ['accounts', 'payable'],
+  'ppe':          ['property', 'plant', 'equipment'],
+  'cogs':         ['cost', 'goods', 'sold'],
+  'eps':          ['earnings', 'per', 'share'],
+  'pe':           ['price', 'earnings'],
+  'roe':          ['return', 'equity'],
+  'roa':          ['return', 'assets'],
+  'mgt':          ['management'],
+  'mgmt':         ['management'],
+  'accrual':      ['accrual', 'accruals'],
+  'depreciation': ['depreciation', 'amortisation'],
+  'amortisation': ['amortisation', 'depreciation'],
+  'amortization': ['amortisation', 'depreciation'],
+  'lease':        ['lease', 'leasing', 'ifrs16', 'ifrs 16'],
+  'tax':          ['tax', 'taxation', 'hmrc'],
+  'audit':        ['audit', 'assurance', 'auditing'],
+  'budget':       ['budget', 'budgeting', 'forecast'],
+  'variance':     ['variance', 'analysis'],
+  'ratio':        ['ratio', 'analysis', 'ratios'],
+  'consolidation':['consolidation', 'consolidated', 'group'],
+  'payroll':      ['payroll', 'wages', 'salary'],
+  'bookkeeping':  ['bookkeeping', 'double', 'entry', 'ledger'],
+}
+
+function expandQuery(raw: string): string[] {
+  const sanitised = raw.replace(/['"\`]/g, '').trim().toLowerCase()
+  const words = sanitised.split(/\s+/).filter(w => w.length >= 2 && !STOP_WORDS.has(w))
+  const expanded = new Set<string>()
+  words.forEach(w => {
+    expanded.add(w)
+    if (SYNONYMS[w]) SYNONYMS[w].forEach(s => expanded.add(s))
+  })
+  return Array.from(expanded).filter(w => w.length >= 2)
+}
+
+function buildGroq(typeFilter: string, words: string[], mode: 'AND' | 'OR', limit: number): string {
+  const fieldMatch = (w: string) =>
+    `(title match "*${w}*" || term match "*${w}*" || excerpt match "*${w}*" || definition match "*${w}*" || category match "*${w}*")`
+  const filterJoin = mode === 'AND' ? ' && ' : ' || '
+  const filters    = words.map(fieldMatch).join(filterJoin)
+  const boosts     = words.map(w =>
+    `boost(title match "${w}", 5), boost(term match "${w}", 5), boost(excerpt match "${w}", 3), boost(definition match "${w}", 3), boost(category match "${w}", 2)`
+  ).join(', ')
+  return `*[${typeFilter} && "accountingbody" in showOnSites && (${filters})] | score(${boosts}) | order(_score desc) [0..${limit - 1}] { _id, _type, title, term, "slug": slug.current, excerpt, definition, category, examBody, readTime, publishedAt }`
+}
+
+async function runGroq(projectId: string, dataset: string, groq: string): Promise<SearchResult[]> {
+  const res = await fetch(
+    `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${encodeURIComponent(groq)}`,
+    { cache: 'no-store' }
+  )
+  if (!res.ok) return []
+  const data = await res.json()
+  return data.result ?? []
+}
+
 async function searchSanity(q: string, type: ContentType): Promise<SearchResult[]> {
   const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
   const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
@@ -76,38 +159,17 @@ async function searchSanity(q: string, type: ContentType): Promise<SearchResult[
     ? `_type in ["article", "practicePost", "course", "quiz", "dictionaryTerm"]`
     : `_type == "${type}"`
 
-  const words = q.trim().split(/\s+/).filter(Boolean)
-  const wordFilters = words.map(w => `(
-      title match "*${w}*" || term match "*${w}*" ||
-      excerpt match "*${w}*" || definition match "*${w}*" ||
-      category match "*${w}*"
-    )`).join(' && ')
-  const wordBoosts = words.map(w => `
-      boost(title match "${w}", 3),
-      boost(term match "${w}", 3),
-      boost(excerpt match "${w}", 2),
-      boost(definition match "${w}", 2),
-      boost(category match "${w}", 1)`).join(',')
-  const groq = `
-    *[${typeFilter} && "accountingbody" in showOnSites && (
-      ${wordFilters}
-    )] | score(
-      ${wordBoosts}
-    ) | order(_score desc) [0..23] {
-      _id, _type, title, term,
-      "slug": slug.current,
-      excerpt, definition, category, examBody, readTime, publishedAt
-    }
-  `
+  const words = expandQuery(q)
+  if (words.length === 0) return []
 
   try {
-    const res = await fetch(
-      `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${encodeURIComponent(groq)}`,
-      { cache: 'no-store' }
-    )
-    if (!res.ok) return []
-    const data = await res.json()
-    return data.result ?? []
+    // Pass 1 — strict AND with synonym expansion (best results)
+    const andResults = await runGroq(projectId, dataset, buildGroq(typeFilter, words, 'AND', 40))
+    if (andResults.length > 0) return andResults
+
+    // Pass 2 — OR fallback so something always shows
+    const orResults = await runGroq(projectId, dataset, buildGroq(typeFilter, words, 'OR', 40))
+    return orResults
   } catch {
     return []
   }
