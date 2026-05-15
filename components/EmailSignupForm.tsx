@@ -40,15 +40,17 @@ export default function EmailSignupForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3 w-full max-w-md mx-auto">
-      <input
-        type="email"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-        placeholder="your@email.com"
-        required
-        className="w-full h-14 px-4 rounded-lg text-base text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all"
-        style={{ backgroundColor: 'white', fontSize: '16px', border: '2px solid white', WebkitAppearance: 'none', appearance: 'none' }}
-      />
+      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '2px' }}>
+        <input
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder="your@email.com"
+          required
+          className="w-full h-13 px-4 rounded-lg text-base text-navy-950 placeholder:text-slate-400 focus:outline-none transition-all"
+          style={{ backgroundColor: 'white', fontSize: '16px', WebkitAppearance: 'none', appearance: 'none', display: 'block' }}
+        />
+      </div>
       <button
         type="submit"
         disabled={status === 'loading'}
