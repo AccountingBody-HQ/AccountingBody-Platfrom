@@ -12,7 +12,7 @@ export default defineType({
     defineField({ name: 'difficulty', title: 'Difficulty', type: 'string', group: 'content', options: { list: [{ title: 'Beginner', value: 'beginner' }, { title: 'Intermediate', value: 'intermediate' }, { title: 'Advanced', value: 'advanced' }], layout: 'radio' } }),
     defineField({ name: 'framework', title: 'Framework', type: 'string', group: 'content' }),
     defineField({ name: 'topic', title: 'Topic', type: 'string', group: 'content', description: 'e.g. Financial Accounting, Management Accounting, Taxation' }),
-    defineField({ name: 'examBody', title: 'Exam Body', type: 'string', group: 'content' }),
+    defineField({ name: 'examBody', title: 'Exam Bodies', type: 'array', group: 'content', of: [{ type: 'string' }], options: { list: [{ title: 'ACCA', value: 'acca' }, { title: 'CIMA', value: 'cima' }, { title: 'ICAEW', value: 'icaew' }, { title: 'AAT', value: 'aat' }], layout: 'grid' } }),
     defineField({ name: 'questionType', title: 'Question Type', type: 'string', group: 'content', options: { list: [{ title: 'Multiple Choice', value: 'multiple-choice' }, { title: 'Writing', value: 'writing' }, { title: 'Scenario', value: 'scenario' }, { title: 'Mixed', value: 'mixed' }] } }),
     defineField({ name: 'categories', title: 'Categories', type: 'array', group: 'content', of: [{ type: 'reference', to: [{ type: 'category' }] }] }),
     defineField({ name: 'tags', title: 'Tags', type: 'array', group: 'content', of: [{ type: 'string' }], options: { layout: 'tags' } }),

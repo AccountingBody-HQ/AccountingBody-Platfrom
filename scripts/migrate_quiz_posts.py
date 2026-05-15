@@ -171,13 +171,13 @@ for i, item in enumerate(quiz_posts[:5]):  # Change quiz_posts[:5] to quiz_posts
         "seoDescription": yoast_desc if yoast_desc else None,
         "difficulty"    : difficulty,
         "framework"     : framework,
-        "examBody"      : exam_body,
+        "examBody"      : ["acca", "cima", "icaew", "aat"],
         "questionType"  : question_type,
         "tags"          : cats[:10],
         "quizQuestions" : questions,
         "wpId"           : wp_id,
         "canonicalOwner": "accountingbody",
-        "showOnSites"   : ["accountingbody"],
+        "showOnSites"   : ["accountingbody", "ethiotax"],
     }
     doc = {k:v for k,v in doc.items() if v is not None}
 
