@@ -175,6 +175,7 @@ for i, item in enumerate(quiz_posts[:5]):  # Change quiz_posts[:5] to quiz_posts
         "questionType"  : question_type,
         "tags"          : cats[:10],
         "quizQuestions" : questions,
+        "wpId"           : wp_id,
         "canonicalOwner": "accountingbody",
         "showOnSites"   : ["accountingbody"],
     }
