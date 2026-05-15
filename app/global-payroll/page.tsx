@@ -127,14 +127,14 @@ export default function GlobalPayrollPage() {
             <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
               Whether you are establishing a new entity abroad or running payroll across multiple countries, every engagement is managed directly by Accounting Body — from brief to delivery.
             </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               <a href="#services"
-                className="inline-flex items-center gap-2 h-12 px-7 text-sm font-semibold rounded-lg bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
+                className="inline-flex items-center justify-center gap-2 h-12 px-7 text-sm font-semibold rounded-lg bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
                 View Our Services
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </a>
               <a href="/firms-freelancers/join"
-                className="inline-flex items-center gap-2 h-12 px-7 text-sm font-semibold rounded-lg border border-white/20 text-white/80 hover:bg-white/10 transition-colors">
+                className="inline-flex items-center justify-center gap-2 h-12 px-7 text-sm font-semibold rounded-lg border border-white/20 text-white/80 hover:bg-white/10 transition-colors">
                 Join Our Network
               </a>
             </div>
