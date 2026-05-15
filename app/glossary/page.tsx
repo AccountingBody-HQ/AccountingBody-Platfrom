@@ -303,16 +303,16 @@ export default function GlossaryPage() {
             Test your knowledge with 50,000+ practice questions across every
             major accounting qualification.
           </p>
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
             <Link
               href="/practice-questions"
-              className="h-12 px-7 flex items-center text-sm font-semibold rounded-lg bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold"
+              className="sm:flex-1 h-13 px-7 flex items-center justify-center text-sm font-semibold rounded-lg bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold"
             >
               Browse practice questions
             </Link>
             <Link
               href="/study"
-              className="h-12 px-7 flex items-center text-sm font-medium rounded-lg border border-white/25 text-white hover:bg-white/10 hover:border-white/40 transition-all"
+              className="sm:flex-1 h-13 px-7 flex items-center justify-center text-sm font-medium rounded-lg border border-white/25 text-white hover:bg-white/10 hover:border-white/40 transition-all"
             >
               Start studying free
             </Link>
