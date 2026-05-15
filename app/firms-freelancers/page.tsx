@@ -107,7 +107,7 @@ export default function FirmsFreelancersPage() {
             <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
               Professionals within our network do not operate independently on this platform. All client relationships, communications, pricing, and quality oversight are managed directly by Accounting Body.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 sm:items-stretch">
               <Link href="/firms-freelancers/join"
                 className="h-12 px-7 flex items-center justify-center gap-2 text-sm font-semibold rounded-lg bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
                 Apply to Join Our Network
