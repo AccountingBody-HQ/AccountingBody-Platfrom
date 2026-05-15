@@ -107,14 +107,14 @@ export default function FirmsFreelancersPage() {
             <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
               Professionals within our network do not operate independently on this platform. All client relationships, communications, pricing, and quality oversight are managed directly by Accounting Body.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-stretch max-w-lg">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <Link href="/firms-freelancers/join"
-                className="flex-1 h-12 px-7 flex items-center justify-center gap-2 text-sm font-semibold rounded-lg bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
+                className="h-13 px-7 flex items-center justify-center gap-2 text-sm font-semibold rounded-lg bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
                 Apply to Join Our Network
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </Link>
               <Link href="/get-help"
-                className="flex-1 h-12 px-7 flex items-center justify-center text-sm font-medium rounded-lg border border-white/25 text-white hover:bg-white/10 hover:border-white/40 transition-all">
+                className="h-13 px-7 flex items-center justify-center text-sm font-medium rounded-lg border border-white/25 text-white hover:bg-white/10 hover:border-white/40 transition-all">
                 I Need Accounting Services
               </Link>
             </div>
