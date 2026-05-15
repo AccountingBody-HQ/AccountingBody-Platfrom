@@ -13,6 +13,21 @@ LOG_FILE   = "/workspaces/AccountingBody-Platfrom/scripts/migration_log.json"
 API_URL    = f"https://{PROJECT_ID}.api.sanity.io/v2026-03-16/data/mutate/{DATASET}"
 WP_NS      = "http://wordpress.org/export/1.2/"
 CONTENT_NS = "http://purl.org/rss/1.0/modules/content/"
+CATEGORY_MAP = {
+    "audit and assurance"   : "category-audit-assurance",
+    "business management"   : "category-business-management",
+    "cryptocurrency"        : "category-cryptocurrency",
+    "economics"             : "category-economics",
+    "financial accounting"  : "category-financial-accounting",
+    "financial management"  : "category-financial-management",
+    "financial market"      : "category-financial-market",
+    "management accounting" : "category-management-accounting",
+    "mock exams"            : "category-mock-exams",
+    "tax"                   : "category-taxation",
+    "taxation"              : "category-taxation",
+    "tools and templates"   : "category-tools-templates",
+}
+
 
 # ============================================================
 # LOG — Resumable migration. Completed posts are never re-sent.
@@ -311,10 +326,11 @@ for i, item in enumerate(posts[:10]):  # Change posts[:10] to posts for full mig
         "mcqUrl"                 : mcq_url if mcq_url else None,
         "body"                   : blocks,
         "canonicalOwner"         : "accountingbody",
-        "showOnSites"            : ["accountingbody"],
+        "showOnSites"            : ["accountingbody", "ethiotax"],
+        "examBody"               : ["acca", "cima", "icaew", "aat"],
         "aiSearchable"           : False,
         "requiresQuarterlyReview": False,
-        "tags"                   : cats[:10],
+        "categories"             : [{"_type":"reference","_ref":CATEGORY_MAP[c.lower()],"_key":uid()} for c in cats if c.lower() in CATEGORY_MAP],
     }
     # Remove None values before sending to Sanity
     doc = {k:v for k,v in doc.items() if v is not None}
