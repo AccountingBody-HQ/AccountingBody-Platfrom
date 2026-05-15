@@ -325,6 +325,7 @@ for i, item in enumerate(posts[:10]):  # Change posts[:10] to posts for full mig
         "seoTitle"               : yoast_title if yoast_title else None,
         "mcqUrl"                 : mcq_url if mcq_url else None,
         "body"                   : blocks,
+        "wpId"                   : wp_id,
         "canonicalOwner"         : "accountingbody",
         "showOnSites"            : ["accountingbody", "ethiotax"],
         "examBody"               : ["acca", "cima", "icaew", "aat"],
