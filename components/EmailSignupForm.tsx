@@ -46,7 +46,7 @@ export default function EmailSignupForm() {
         onChange={e => setEmail(e.target.value)}
         placeholder="your@email.com"
         required
-        className="w-full h-14 px-4 rounded-lg text-base border border-white/30 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all" style={{ backgroundColor: "rgba(255,255,255,0.08)", fontSize: "16px", WebkitAppearance: "none", appearance: "none" }}
+        className="w-full h-14 px-4 rounded-lg text-base border-2 border-white/40 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition-all" style={{ backgroundColor: "rgba(255,255,255,0.08)", fontSize: "16px", WebkitAppearance: "none", appearance: "none" }}
       />
       <button
         type="submit"
