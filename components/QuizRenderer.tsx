@@ -90,6 +90,7 @@ export default function QuizRenderer({ quizJson }: Props) {
   const [submitted, setSubmitted] = useState(false)
   const [revealed, setRevealed]   = useState<Record<string, boolean>>({})
   const [session, setSession]     = useState(0)
+  const [showWarning, setShowWarning] = useState(false)
   const actionBarRef = useRef<HTMLDivElement>(null)
 
   const buildSession = useCallback((data: QuizData) => {
@@ -126,6 +127,14 @@ export default function QuizRenderer({ quizJson }: Props) {
   }, [quizJson, buildSession, session])
 
   const handleRetry = () => setSession(s => s + 1)
+
+  const handleSubmitClick = () => {
+    if (allAnswered) {
+      setSubmitted(true)
+    } else {
+      setShowWarning(true)
+    }
+  }
 
   const setAnswer = (id: string, val: string) => {
     if (submitted) return
@@ -290,22 +299,56 @@ export default function QuizRenderer({ quizJson }: Props) {
 
       {/* STICKY ACTION BAR */}
       {!submitted && (
-        <div ref={actionBarRef} className="sticky bottom-0 z-30 mt-8 -mx-4 px-4 py-4 bg-white border-t border-slate-200 shadow-lg">
-          <div className="container-site flex items-center justify-between gap-4">
-            <p className="text-sm text-slate-500">
-              {answeredCount < selected.length
-                ? `${selected.length - answeredCount} question${selected.length - answeredCount !== 1 ? 's' : ''} remaining`
-                : 'All questions answered — ready to submit!'}
-            </p>
-            <button
-              onClick={() => setSubmitted(true)}
-              disabled={!allAnswered}
-              className="h-11 px-7 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
-            >
-              Submit answers
-            </button>
+        <>
+          {/* Warning dialog */}
+          {showWarning && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
+                    <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-navy-950">Unanswered questions</p>
+                    <p className="text-sm text-slate-500">{selected.length - answeredCount} question{selected.length - answeredCount !== 1 ? 's' : ''} left unanswered.</p>
+                  </div>
+                </div>
+                <p className="text-sm text-slate-600 mb-6">You can still submit, but unanswered questions will be marked as incorrect. Are you sure you want to continue?</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowWarning(false)}
+                    className="flex-1 h-10 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:border-navy-300 transition-colors"
+                  >
+                    Go back
+                  </button>
+                  <button
+                    onClick={() => { setShowWarning(false); setSubmitted(true) }}
+                    className="flex-1 h-10 rounded-lg bg-navy-950 text-white text-sm font-semibold hover:bg-navy-900 transition-colors"
+                  >
+                    Submit anyway
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={actionBarRef} className="sticky bottom-0 z-30 mt-8 -mx-4 px-4 py-4 bg-white border-t border-slate-200 shadow-lg">
+            <div className="container-site flex items-center justify-between gap-4">
+              <p className="text-sm text-slate-500">
+                {answeredCount < selected.length
+                  ? <span><span className="font-semibold text-navy-950">{selected.length - answeredCount}</span> question{selected.length - answeredCount !== 1 ? 's' : ''} remaining</span>
+                  : <span className="text-teal-600 font-medium">All questions answered — ready to submit!</span>}
+              </p>
+              <button
+                onClick={handleSubmitClick}
+                className="h-11 px-7 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors whitespace-nowrap"
+              >
+                Submit answers
+              </button>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {submitted && (
