@@ -51,19 +51,21 @@ export async function getPracticePostCount(): Promise<number> {
 }
 
 export async function getPracticePosts(params: {
-  examBody?:   string
-  difficulty?: string
-  topic?:      string
-  search?:     string
-  page?:       number
-  perPage?:    number
-  sortBy?:     string
+  examBody?:    string
+  difficulty?:  string
+  topic?:       string
+  search?:      string
+  category?:    string
+  page?:        number
+  perPage?:     number
+  sortBy?:      string
 }): Promise<{ posts: PracticePost[]; total: number }> {
-  const { examBody, difficulty, topic, search, page = 1, perPage = 12, sortBy = 'alpha' } = params
+  const { examBody, difficulty, topic, search, category, page = 1, perPage = 12, sortBy = 'alpha' } = params
   const filters: string[] = ["_type == \"practicePost\"", "\"accountingbody\" in showOnSites"]
   if (examBody)   filters.push(`examBody == "${examBody}"`)
   if (difficulty) filters.push(`difficulty == "${difficulty}"`)
   if (topic)      filters.push(`topic == "${topic}"`)
+  if (category)   filters.push(`categories[]->.slug.current match "${category}"`)
   if (search) {
     const isSingleLetter = /^[a-zA-Z#]$/.test(search)
     if (isSingleLetter) {
@@ -166,16 +168,33 @@ export async function getPracticePostBySlug(slug: string): Promise<PracticePost 
   return post as PracticePost
 }
 
+export interface PracticeCategory {
+  slug:  string
+  title: string
+}
+
 export async function getPracticeFilters(): Promise<{
   examBodies:   string[]
   difficulties: string[]
   topics:       string[]
+  categories:   PracticeCategory[]
 }> {
   const query = `{
     "examBodies":   array::unique(*[_type == "practicePost" && "accountingbody" in showOnSites && defined(examBody)].examBody),
     "difficulties": array::unique(*[_type == "practicePost" && "accountingbody" in showOnSites && defined(difficulty)].difficulty),
-    "topics":       array::unique(*[_type == "practicePost" && "accountingbody" in showOnSites && defined(topic)].topic)
+    "topics":       array::unique(*[_type == "practicePost" && "accountingbody" in showOnSites && defined(topic)].topic),
+    "categories":   *[_type == "category"] | order(title asc) {
+      "slug": slug.current,
+      title,
+      "count": count(*[_type == "practicePost" && "accountingbody" in showOnSites && references(^._id)])
+    }
   }`
-  const result = await sanityFetch<{ examBodies: string[]; difficulties: string[]; topics: string[] }>(query)
-  return result ?? { examBodies: [], difficulties: [], topics: [] }
+  const result = await sanityFetch<{ examBodies: string[]; difficulties: string[]; topics: string[]; categories: (PracticeCategory & { count: number })[] }>(query)
+  if (!result) return { examBodies: [], difficulties: [], topics: [], categories: [] }
+  return {
+    examBodies:   result.examBodies ?? [],
+    difficulties: result.difficulties ?? [],
+    topics:       result.topics ?? [],
+    categories:   (result.categories ?? []).filter(c => c.count > 0),
+  }
 }

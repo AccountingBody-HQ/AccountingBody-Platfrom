@@ -22,7 +22,7 @@ const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 export default async function PracticeQuestionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ difficulty?: string; search?: string; page?: string; letter?: string; sort?: string }>
+  searchParams: Promise<{ difficulty?: string; search?: string; page?: string; letter?: string; sort?: string; category?: string }>
 }) {
   const sp         = await searchParams
   const difficulty = sp.difficulty ?? ''
@@ -30,6 +30,7 @@ export default async function PracticeQuestionsPage({
   const page       = Math.max(1, parseInt(sp.page ?? '1', 10))
   const letter     = sp.letter ?? ''
   const sort       = sp.sort ?? 'alpha'
+  const category   = sp.category ?? ''
 
   // Build search term — letter filter takes priority over text search
   const searchTerm = letter ? letter : (search || undefined)
@@ -38,6 +39,7 @@ export default async function PracticeQuestionsPage({
     getPracticePosts({
       difficulty: difficulty || undefined,
       search:     searchTerm,
+      category:   category || undefined,
       page,
       perPage:    PER_PAGE,
       sortBy:     sort,
@@ -54,6 +56,7 @@ export default async function PracticeQuestionsPage({
     if (search && !letter) params.set('search', search)
     if (letter) params.set('letter', letter)
     if (sort && sort !== 'alpha') params.set('sort', sort)
+    if (category) params.set('category', category)
     if (page > 1) params.set('page', String(page))
     Object.entries(overrides).forEach(([k, v]) => {
       if (v === '' || v === 0) params.delete(k)
@@ -138,6 +141,24 @@ export default async function PracticeQuestionsPage({
                   </Link>
                 ))}
               </div>
+
+              {/* Subject Category */}
+              {filters.categories.length > 0 && (
+                <>
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3 mt-5">Subject</p>
+                  <div className="space-y-1">
+                    {[{ label: 'All subjects', slug: '' }, ...filters.categories].map(cat => (
+                      <Link
+                        key={'slug' in cat ? cat.slug : ''}
+                        href={buildUrl({ category: 'slug' in cat ? cat.slug : '', page: 1 })}
+                        className={`block w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${'slug' in cat && category === cat.slug && cat.slug !== '' ? 'bg-navy-950 text-white font-semibold' : !category && !('slug' in cat && cat.slug) ? 'bg-navy-950 text-white font-semibold' : 'text-slate-600 hover:bg-slate-100'}`}
+                      >
+                        {'title' in cat ? cat.title : cat.label}
+                      </Link>
+                    ))}
+                  </div>
+                </>
+              )}
             </aside>
 
             {/* RESULTS */}
