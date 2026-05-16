@@ -183,7 +183,7 @@ const pillars = [
         <path strokeLinecap="round" strokeWidth="1.75" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
       </svg>
     ),
-    highlights:  ['50,000+ questions', 'Full mock exams', 'Instant marking', 'Detailed solutions'],
+    highlights:  ['20,000+ questions', 'Full mock exams', 'Instant marking', 'Detailed solutions'],
     iconBg:      'bg-gold-500',
     iconColor:   'text-navy-950',
     accentText:  'text-gold-600',
@@ -223,8 +223,8 @@ const pillars = [
 const stats = [
   {
     value:    '3,000+',
-    label:    'Study Notes',
-    sublabel: 'Updated for 2025 exams',
+    label:    'Articles',
+    sublabel: 'Written by qualified accountants',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -232,7 +232,7 @@ const stats = [
     ),
   },
   {
-    value:    '50,000+',
+    value:    '20,000+',
     label:    'Practice Questions',
     sublabel: 'MCQ, written & scenario',
     icon: (
@@ -242,9 +242,9 @@ const stats = [
     ),
   },
   {
-    value:    '250,000+',
-    label:    'Students Helped',
-    sublabel: 'Across 80+ countries',
+    value:    'Since 2010',
+    label:    'Trusted Platform',
+    sublabel: 'Helping students pass exams',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
@@ -472,9 +472,9 @@ export default async function HomePage() {
 
             <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
               {[
-                { value: '3,000+',   label: 'study notes' },
-                { value: '50,000+',  label: 'practice questions' },
-                { value: '250,000+', label: 'students helped' },
+                { value: '3,000+',   label: 'articles' },
+                { value: '20,000+',  label: 'practice questions' },
+                { value: 'Top Global Qualifications', label: '' },
                 { value: 'Free',     label: 'to start' },
               ].map(item => (
                 <div key={item.label} className="flex items-baseline gap-2">
@@ -786,12 +786,12 @@ export default async function HomePage() {
                 {/* Stats row */}
                 <div className="grid grid-cols-2 divide-x divide-slate-200 bg-white">
                   <div className="p-6 flex flex-col items-center text-center">
-                    <span className="font-display text-3xl text-navy-950 leading-none mb-1">98%</span>
-                    <span className="text-slate-500 text-xs font-medium">Would recommend</span>
+                    <span className="font-display text-3xl text-navy-950 leading-none mb-1">Since 2010</span>
+                    <span className="text-slate-500 text-xs font-medium">Trusted by educators</span>
                   </div>
                   <div className="p-6 flex flex-col items-center text-center">
-                    <span className="font-display text-3xl text-navy-950 leading-none mb-1">4.9/5</span>
-                    <span className="text-slate-500 text-xs font-medium">Average rating</span>
+                    <span className="font-display text-3xl text-navy-950 leading-none mb-1">Top Global</span>
+                    <span className="text-slate-500 text-xs font-medium">Qualifications covered</span>
                   </div>
                 </div>
 
