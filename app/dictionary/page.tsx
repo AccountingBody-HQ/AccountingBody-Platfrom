@@ -1,6 +1,6 @@
 // app/dictionary/page.tsx
 // Accounting Body.com — Accounting Dictionary
-// A-Z filtered view of all Sanity articles, browsable by first letter
+// A-Z filtered view of all Sanity articles, browsable by first letter or category
 
 import React from 'react'
 import Link from 'next/link'
@@ -11,8 +11,8 @@ interface SanityArticle {
   title:        string
   slug:         { current: string }
   excerpt?:     string
-  category?:    string
-  examBody?:    string
+  categoryTitle?: string
+  examBody?:    string | string[]
   readTime?:    number
   publishedAt?: string
 }
@@ -25,9 +25,17 @@ const LETTERS = [
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: { letter?: string }
+  searchParams: { letter?: string; category?: string }
 }): Promise<Metadata> {
-  const letter = searchParams.letter?.toUpperCase() ?? ''
+  const letter   = searchParams.letter?.toUpperCase() ?? ''
+  const category = searchParams.category ?? ''
+  if (category) {
+    const title = category.replace(/-/g, ' ').replace(/\w/g, c => c.toUpperCase())
+    return {
+      title: `${title} — Accounting Dictionary | Accounting Body`,
+      description: `Browse accounting terms and study notes in ${title}.`,
+    }
+  }
   return {
     title: letter
       ? `Accounting Dictionary — ${letter} | Accounting Body`
@@ -40,9 +48,8 @@ export async function generateMetadata({
 
 async function getArticlesByLetter(letter: string): Promise<SanityArticle[]> {
   try {
-    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
     const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
-    if (!projectId) return []
     let matchConditions: string
     if (letter === '#') {
       matchConditions = Array.from({ length: 10 }, (_, i) => `title match "${i}*"`).join(' || ')
@@ -52,7 +59,7 @@ async function getArticlesByLetter(letter: string): Promise<SanityArticle[]> {
       matchConditions = `title match "${u}*" || title match "${l}*"`
     }
     const query = encodeURIComponent(
-      `*[_type == "article" && "accountingbody" in showOnSites && (${matchConditions})] | order(title asc) { _id, title, slug, excerpt, category, examBody, readTime, publishedAt }`
+      `*[_type == "article" && "accountingbody" in showOnSites && (${matchConditions})] | order(title asc) { _id, title, slug, excerpt, "categoryTitle": categories[0]->title, examBody, readTime, publishedAt }`
     )
     const res = await fetch(
       `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
@@ -66,23 +73,23 @@ async function getArticlesByLetter(letter: string): Promise<SanityArticle[]> {
   }
 }
 
-const PLACEHOLDER: Record<string, SanityArticle[]> = {
-  A: [
-    { _id:'a1', title:'Accruals Concept',        slug:{current:'accruals-concept'},        excerpt:'The accruals concept requires revenues and expenses to be recorded when earned or incurred, not when cash changes hands.',           category:'Financial Reporting', examBody:'ACCA',  readTime:6 },
-    { _id:'a2', title:'Amortisation',             slug:{current:'amortisation'},             excerpt:'The systematic write-off of an intangible asset cost over its useful economic life.',                                           category:'Financial Reporting', examBody:'ACCA',  readTime:5 },
-    { _id:'a3', title:'Audit Trail',              slug:{current:'audit-trail'},              excerpt:'A chronological record providing documentary evidence for every accounting entry.',                                                  category:'Auditing',           examBody:'ICAEW', readTime:4 },
-    { _id:'a4', title:'Accounts Payable',         slug:{current:'accounts-payable'},         excerpt:'Amounts owed by a business to its suppliers for goods or services received but not yet paid for.',                                 category:'Bookkeeping',        examBody:'AAT',   readTime:4 },
-    { _id:'a5', title:'Accounts Receivable',      slug:{current:'accounts-receivable'},      excerpt:'Money owed to a business by customers for goods delivered on credit that have not yet been paid.',                                 category:'Bookkeeping',        examBody:'AAT',   readTime:4 },
-  ],
-  D: [
-    { _id:'d1', title:'Deferred Tax',             slug:{current:'deferred-tax'},             excerpt:'A tax liability or asset created by temporary differences between accounting profit and taxable profit.',                            category:'Taxation',           examBody:'ACCA',  readTime:8 },
-    { _id:'d2', title:'Depreciation',             slug:{current:'depreciation'},             excerpt:'The systematic allocation of a tangible fixed asset cost over its expected useful economic life.',                               category:'Financial Reporting', examBody:'ACCA',  readTime:6 },
-    { _id:'d3', title:'Double Entry Bookkeeping', slug:{current:'double-entry-bookkeeping'}, excerpt:'Every transaction has two equal and opposite effects — one debit and one credit.',                                                 category:'Bookkeeping',        examBody:'AAT',   readTime:7 },
-  ],
-  I: [
-    { _id:'i1', title:'Impairment',               slug:{current:'impairment'},               excerpt:"Impairment occurs when an asset's carrying amount exceeds its recoverable amount, requiring a write-down.',                         category:'Financial Reporting', examBody:'ACCA',  ",readTime:7 },
-    { _id:'i2', title:'Internal Controls',        slug:{current:'internal-controls'},        excerpt:'Processes implemented by management to safeguard assets, ensure accurate reporting, and promote operational efficiency.',           category:'Auditing',           examBody:'ICAEW', readTime:6 },
-  ],
+async function getArticlesByCategorySlug(categorySlug: string): Promise<SanityArticle[]> {
+  try {
+    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
+    const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
+    const query = encodeURIComponent(
+      `*[_type == "article" && "accountingbody" in showOnSites && categories[]->.slug.current match "${categorySlug}"] | order(title asc) { _id, title, slug, excerpt, "categoryTitle": categories[0]->title, examBody, readTime, publishedAt }`
+    )
+    const res = await fetch(
+      `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
+      { next: { revalidate: 3600 } }
+    )
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.result ?? []
+  } catch {
+    return []
+  }
 }
 
 function LetterNav({ activeLetter }: { activeLetter: string }) {
@@ -111,9 +118,10 @@ function LetterNav({ activeLetter }: { activeLetter: string }) {
 }
 
 function ArticleRow({ article }: { article: SanityArticle }) {
-  const formattedDate = article.publishedAt
-    ? new Date(article.publishedAt).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })
-    : null
+  const examBodyDisplay = Array.isArray(article.examBody)
+    ? article.examBody[0]?.toUpperCase()
+    : article.examBody?.toUpperCase()
+
   return (
     <article className="group flex flex-col sm:flex-row sm:items-start gap-4 py-5 border-b border-slate-100 last:border-0">
       <div className="hidden sm:flex w-10 h-10 rounded-lg bg-navy-50 border border-navy-100 items-center justify-center shrink-0 mt-0.5">
@@ -121,13 +129,12 @@ function ArticleRow({ article }: { article: SanityArticle }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2 mb-1.5">
-          {article.category && (
-            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">{article.category}</span>
+          {article.categoryTitle && (
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">{article.categoryTitle}</span>
           )}
-          {(Array.isArray(article.examBody) ? article.examBody[0] : article.examBody) && (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-navy-50 text-navy-700 border border-navy-100">{Array.isArray(article.examBody) ? article.examBody[0] : article.examBody}</span>
+          {examBodyDisplay && (
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-navy-50 text-navy-700 border border-navy-100">{examBodyDisplay}</span>
           )}
-          {formattedDate && <span className="text-xs text-slate-400">{formattedDate}</span>}
         </div>
         <Link href={`/articles/${article.slug.current}`} className="block mb-1.5">
           <h3 className="font-display text-base text-navy-950 group-hover:text-navy-600 transition-colors leading-snug">{article.title}</h3>
@@ -152,19 +159,26 @@ function ArticleRow({ article }: { article: SanityArticle }) {
 export default async function DictionaryPage({
   searchParams,
 }: {
-  searchParams: { letter?: string }
+  searchParams: { letter?: string; category?: string }
 }) {
-  const rawLetter    = searchParams.letter?.toUpperCase() ?? ''
-  const activeLetter = LETTERS.includes(rawLetter) ? rawLetter : ''
+  const rawLetter      = searchParams.letter?.toUpperCase() ?? ''
+  const activeLetter   = LETTERS.includes(rawLetter) ? rawLetter : ''
+  const activeCategory = searchParams.category ?? ''
 
   let articles: SanityArticle[] = []
-  if (activeLetter) {
-    const fetched = await getArticlesByLetter(activeLetter)
-    articles = fetched.length > 0 ? fetched : (PLACEHOLDER[activeLetter] ?? [])
+  let categoryTitle = ''
+
+  if (activeCategory) {
+    articles = await getArticlesByCategorySlug(activeCategory)
+    categoryTitle = activeCategory.replace(/-/g, ' ').replace(/\w/g, c => c.toUpperCase())
+  } else if (activeLetter) {
+    articles = await getArticlesByLetter(activeLetter)
   }
 
   const prevLetter = activeLetter ? LETTERS[LETTERS.indexOf(activeLetter) - 1] : null
   const nextLetter = activeLetter ? LETTERS[LETTERS.indexOf(activeLetter) + 1] : null
+
+  const isFiltered = activeLetter || activeCategory
 
   return (
     <>
@@ -178,7 +192,7 @@ export default async function DictionaryPage({
             </h1>
             <p className="text-white/60 text-lg leading-relaxed">
               Browse 1,200+ accounting and finance terms — clearly defined for students and professionals.
-              Select a letter to get started.
+              Select a letter or topic to get started.
             </p>
           </div>
         </div>
@@ -194,7 +208,7 @@ export default async function DictionaryPage({
       {/* Content */}
       <section className="section bg-slate-50 min-h-[60vh]">
         <div className="container-site">
-          {!activeLetter ? (
+          {!isFiltered ? (
             <div className="max-w-xl mx-auto text-center py-16">
               <div className="w-16 h-16 rounded-2xl bg-navy-50 border border-navy-100 flex items-center justify-center mx-auto mb-6">
                 <svg className="w-8 h-8 text-navy-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -207,7 +221,7 @@ export default async function DictionaryPage({
                 <Link href="/glossary" className="text-navy-700 font-semibold hover:text-gold-500 transition-colors">
                   Glossary hub
                 </Link>{" "}
-                for featured topics.
+                to browse by topic area.
               </p>
               <div className="flex flex-wrap justify-center gap-2">
                 {['A','C','D','I','P','R'].map(l => (
@@ -224,9 +238,11 @@ export default async function DictionaryPage({
           ) : articles.length === 0 ? (
             <div className="max-w-xl mx-auto text-center py-16">
               <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-6">
-                <span className="font-display text-3xl text-slate-400">{activeLetter}</span>
+                <span className="font-display text-3xl text-slate-400">{activeLetter || '?'}</span>
               </div>
-              <h2 className="font-display text-2xl text-navy-950 mb-3">No terms under &ldquo;{activeLetter}&rdquo; yet</h2>
+              <h2 className="font-display text-2xl text-navy-950 mb-3">
+                No terms found{activeLetter ? ` under "${activeLetter}"` : activeCategory ? ` in "${categoryTitle}"` : ''}
+              </h2>
               <p className="text-slate-500 leading-relaxed">
                 We are continuously adding new content. Try another letter or{" "}
                 <Link href="/glossary" className="text-navy-700 font-semibold hover:text-gold-500 transition-colors">browse the glossary</Link>.
@@ -237,41 +253,53 @@ export default async function DictionaryPage({
               <div className="flex items-center justify-between mb-6 gap-4">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-navy-950 flex items-center justify-center shrink-0">
-                    <span className="font-display text-2xl text-white">{activeLetter}</span>
+                    <span className="font-display text-2xl text-white">
+                      {activeLetter || categoryTitle.charAt(0)}
+                    </span>
                   </div>
                   <div>
                     <h2 className="font-display text-2xl text-navy-950 leading-none">
-                      Terms starting with &ldquo;{activeLetter}&rdquo;
+                      {activeLetter ? `Terms starting with "${activeLetter}"` : categoryTitle}
                     </h2>
                     <p className="text-sm text-slate-400 mt-0.5">
                       {articles.length} {articles.length === 1 ? 'result' : 'results'}
                     </p>
                   </div>
                 </div>
-                <div className="hidden sm:flex items-center gap-3 shrink-0">
-                  {prevLetter && (
-                    <Link href={`/dictionary?letter=${prevLetter}`} className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-navy-950 transition-colors">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
-                      {prevLetter}
-                    </Link>
-                  )}
-                  {nextLetter && (
-                    <Link href={`/dictionary?letter=${nextLetter}`} className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-navy-950 transition-colors">
-                      {nextLetter}
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-                    </Link>
-                  )}
-                </div>
+                {activeLetter && (
+                  <div className="hidden sm:flex items-center gap-3 shrink-0">
+                    {prevLetter && (
+                      <Link href={`/dictionary?letter=${prevLetter}`} className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-navy-950 transition-colors">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+                        {prevLetter}
+                      </Link>
+                    )}
+                    {nextLetter && (
+                      <Link href={`/dictionary?letter=${nextLetter}`} className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-navy-950 transition-colors">
+                        {nextLetter}
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                      </Link>
+                    )}
+                  </div>
+                )}
+                {activeCategory && (
+                  <Link href="/glossary" className="text-xs font-semibold text-slate-500 hover:text-navy-950 transition-colors flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+                    All topics
+                  </Link>
+                )}
               </div>
               <div className="bg-white rounded-xl border border-slate-200 px-6 divide-y divide-slate-50">
                 {articles.map(article => (
                   <ArticleRow key={article._id} article={article} />
                 ))}
               </div>
-              <div className="mt-10 pt-6 border-t border-slate-200">
-                <p className="text-sm text-slate-500 mb-4 font-medium">Continue browsing:</p>
-                <LetterNav activeLetter={activeLetter} />
-              </div>
+              {activeLetter && (
+                <div className="mt-10 pt-6 border-t border-slate-200">
+                  <p className="text-sm text-slate-500 mb-4 font-medium">Continue browsing:</p>
+                  <LetterNav activeLetter={activeLetter} />
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -185,6 +185,23 @@ export async function getManualCards(placement?: string): Promise<ManualCardDoc[
   return (await sanityFetch<ManualCardDoc[]>(query, placement ? { placement } : {})) ?? []
 }
 
+export interface GlossaryCategory {
+  slug:  string
+  title: string
+  count: number
+}
+
+export async function getGlossaryCategories(): Promise<GlossaryCategory[]> {
+  const query = `*[_type == "category"] | order(title asc) {
+    "slug": slug.current,
+    title,
+    "count": count(*[_type == "article" && "accountingbody" in showOnSites && references(^._id)])
+  }`
+  const result = await sanityFetch<GlossaryCategory[]>(query, {}, 3600)
+  if (!result) return []
+  return result.filter(c => c.count > 0)
+}
+
 export async function getCategoryCounts(): Promise<Record<string, number>> {
   const query = `*[_type == "category"]{
     "slug": slug.current,
