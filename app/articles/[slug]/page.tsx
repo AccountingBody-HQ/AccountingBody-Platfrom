@@ -158,20 +158,48 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                     return blocks
                   })()} />
 
-              {article.mcqUrl && (
-                <div className="mt-10 p-6 bg-blue-50 border border-blue-200 rounded-2xl">
-                  <p className="font-display font-semibold text-navy-950 mb-1">Test your knowledge</p>
-                  <p className="text-slate-600 text-sm mb-4">Practice questions for this topic.</p>
-                  <a
-                    href={article.mcqUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors"
-                  >
-                    Multiple Choice Questions →
-                  </a>
+              {/* Test your knowledge — bottom of article */}
+              <div className="mt-10 p-6 bg-navy-950 rounded-2xl relative overflow-hidden">
+                <div className="absolute inset-0 opacity-10" style={{ background: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 60%)' }} />
+                <div className="relative z-10">
+                  <p className="font-display text-white text-lg mb-1">Test your knowledge</p>
+                  {article.mcqUrl ? (
+                    <>
+                      <p className="text-white/60 text-sm mb-4">Practice questions specifically for this topic.</p>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Link
+                          href={article.mcqUrl}
+                          className="inline-flex items-center justify-center gap-2 bg-gold-500 text-navy-950 px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-gold-400 transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                          </svg>
+                          Practice this topic
+                        </Link>
+                        <Link
+                          href="/practice-questions"
+                          className="inline-flex items-center justify-center gap-2 border border-white/20 text-white/70 px-5 py-2.5 rounded-xl text-sm font-medium hover:border-white/40 hover:text-white transition-colors"
+                        >
+                          Browse all question sets
+                        </Link>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-white/60 text-sm mb-4">Exam-standard practice questions across all topics.</p>
+                      <Link
+                        href="/practice-questions"
+                        className="inline-flex items-center justify-center gap-2 bg-gold-500 text-navy-950 px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-gold-400 transition-colors"
+                      >
+                        Browse practice questions
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                      </Link>
+                    </>
+                  )}
                 </div>
-              )}
+              </div>
 
               {formattedReviewed && (
                 <div className="mt-10 flex items-center gap-2 text-sm text-slate-400 pt-6 border-t border-slate-100">
@@ -240,18 +268,43 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                   <p className="font-display text-white text-base mb-2 leading-snug">
                     Test your knowledge
                   </p>
-                  <p className="text-white/55 text-xs leading-relaxed mb-4">
-                    Exam-standard practice questions on this topic.
-                  </p>
-                  <Link
-                    href="/practice-questions"
-                    className="flex items-center justify-center gap-2 w-full h-10 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors"
-                  >
-                    Browse questions
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </Link>
+                  {article.mcqUrl ? (
+                    <>
+                      <p className="text-white/55 text-xs leading-relaxed mb-3">
+                        Practice questions for this exact topic.
+                      </p>
+                      <Link
+                        href={article.mcqUrl}
+                        className="flex items-center justify-center gap-2 w-full h-10 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors mb-2"
+                      >
+                        Practice this topic
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                      </Link>
+                      <Link
+                        href="/practice-questions"
+                        className="flex items-center justify-center w-full h-9 rounded-lg text-xs font-medium border border-white/20 text-white/60 hover:border-white/40 hover:text-white transition-colors"
+                      >
+                        Browse all question sets
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-white/55 text-xs leading-relaxed mb-3">
+                        Exam-standard practice questions on this topic.
+                      </p>
+                      <Link
+                        href="/practice-questions"
+                        className="flex items-center justify-center gap-2 w-full h-10 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors"
+                      >
+                        Browse questions
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
 
