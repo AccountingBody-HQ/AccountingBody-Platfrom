@@ -183,3 +183,13 @@ export async function getManualCards(placement?: string): Promise<ManualCardDoc[
     : `*[_type == "manualCard"] | order(pinned desc, _createdAt asc) { _id, title, href, description, iconName, pinned, badge, accentClass }`
   return (await sanityFetch<ManualCardDoc[]>(query, placement ? { placement } : {})) ?? []
 }
+
+export async function getCategoryCounts(): Promise<Record<string, number>> {
+  const query = `*[_type == "category"]{
+    "slug": slug.current,
+    "count": count(*[_type == "article" && "accountingbody" in showOnSites && references(^._id)])
+  }`
+  const result = await sanityFetch<{ slug: string; count: number }[]>(query)
+  if (!result) return {}
+  return Object.fromEntries(result.map(r => [r.slug, r.count]))
+}

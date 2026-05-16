@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { getStudyLandingData } from '@/lib/sanity-queries'
+import { getStudyLandingData, getCategoryCounts } from '@/lib/sanity-queries'
 
 export const metadata: Metadata = {
   title: 'Study Notes | Accounting Body',
@@ -192,8 +192,11 @@ const SUBJECT_AREAS = [
 ]
 
 export default async function StudyPage() {
-  const liveData = await getStudyLandingData()
-  const liveMap  = Object.fromEntries(liveData.map(d => [d.examBody, d.count]))
+  const [liveData, categoryCounts] = await Promise.all([
+    getStudyLandingData(),
+    getCategoryCounts(),
+  ])
+  const liveMap = Object.fromEntries(liveData.map(d => [d.examBody, d.count]))
 
   return (
     <div>
@@ -289,7 +292,7 @@ export default async function StudyPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <h3 className="font-display text-base text-navy-950 group-hover:text-navy-700 transition-colors leading-snug">{area.name}</h3>
-                    <span className="text-xs font-semibold text-gold-600 bg-gold-50 px-2 py-0.5 rounded-full shrink-0 mt-0.5">{area.count}</span>
+                    <span className="text-xs font-semibold text-gold-600 bg-gold-50 px-2 py-0.5 rounded-full shrink-0 mt-0.5">{(categoryCounts[area.slug] ?? 0).toLocaleString()}</span>
                   </div>
                   <p className="text-xs text-slate-500 leading-relaxed">{area.description}</p>
                   <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-navy-950 group-hover:text-gold-600 group-hover:gap-2 transition-all">
