@@ -48,22 +48,12 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
             {post.difficulty && (
               <span className={`text-xs font-medium px-2.5 py-1 rounded-md border ${diffClass}`}>{post.difficulty}</span>
             )}
-            {post.questionType && (
-              <span className='text-xs font-medium px-2.5 py-1 rounded-md bg-white/10 text-white/70 border border-white/15'>{post.questionType}</span>
-            )}
+
           </div>
           <h1 className='font-display text-white text-3xl md:text-4xl lg:text-5xl leading-tight mb-6 max-w-4xl' style={{ letterSpacing: '-0.02em' }}>
             {post.title}
           </h1>
-          {post.questionCount && (
-            <div className='flex items-center gap-2 text-white/50 text-sm'>
-              <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeWidth='2' d='M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' /></svg>
-              {post.questionCount} questions
-              {post.questionCount > 10 && (
-                <span className='text-gold-400 ml-1'>— 10 randomly selected each session</span>
-              )}
-            </div>
-          )}
+
         </div>
       </section>
 
@@ -85,44 +75,59 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
                   </div>
                 </div>
               )}
+              {/* Study note link — bottom of page */}
+              {post.relatedArticle && (
+                <div className='mt-10 p-6 rounded-2xl border border-slate-200 bg-slate-50'>
+                  <div className='flex items-start gap-4'>
+                    <div className='w-10 h-10 rounded-xl bg-navy-950 flex items-center justify-center shrink-0'>
+                      <svg className='w-5 h-5 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeWidth='2' d='M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' /></svg>
+                    </div>
+                    <div className='flex-1'>
+                      <p className='text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1'>Study this topic in depth</p>
+                      <p className='font-display text-navy-950 text-base font-semibold mb-1'>{post.relatedArticle.title}</p>
+                      <p className='text-slate-500 text-sm mb-3'>Read the full study note to strengthen your understanding of this topic.</p>
+                      <Link
+                        href={`/articles/${post.relatedArticle.slug}`}
+                        className='inline-flex items-center gap-2 text-sm font-semibold text-navy-950 hover:text-gold-600 transition-colors'
+                      >
+                        Read study note
+                        <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeWidth='2' d='M17 8l4 4m0 0l-4 4m4-4H3' /></svg>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <aside className='lg:sticky lg:top-24 space-y-5'>
-              <div className='bg-slate-50 rounded-xl border border-slate-200 p-5'>
-                <p className='text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4'>Details</p>
-                <dl className='space-y-3'>
-                  {post.difficulty && (
+              {/* Details card */}
+              {post.difficulty && (
+                <div className='bg-slate-50 rounded-xl border border-slate-200 p-5'>
+                  <p className='text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4'>Details</p>
+                  <dl className='space-y-3'>
                     <div className='flex justify-between text-sm'>
                       <dt className='text-slate-500'>Difficulty</dt>
                       <dd><span className={`text-xs font-medium px-2 py-0.5 rounded-md border ${diffClass}`}>{post.difficulty}</span></dd>
                     </div>
-                  )}
-                  {post.questionCount && (
-                    <div className='flex justify-between text-sm'>
-                      <dt className='text-slate-500'>Questions</dt>
-                      <dd className='text-navy-950 font-medium'>{post.questionCount}</dd>
-                    </div>
-                  )}
-                </dl>
-              </div>
-              <div className='bg-navy-950 rounded-xl p-5 relative overflow-hidden'>
-                <div className='absolute inset-0 opacity-10' style={{ background: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 60%)' }} />
-                <div className='relative z-10'>
-                  <p className='font-display text-white text-sm mb-3 leading-snug'>How it works</p>
-                  <ul className='space-y-2'>
-                    {[
-                      '10 questions selected at random each session',
-                      'Options shuffled to prevent pattern learning',
-                      'Instant feedback and explanations on submit',
-                      'Retry for a completely fresh set',
-                    ].map(tip => (
-                      <li key={tip} className='flex items-start gap-2 text-xs text-white/60 leading-relaxed'>
-                        <span className='w-1 h-1 rounded-full bg-gold-400 shrink-0 mt-1.5' />
-                        {tip}
-                      </li>
-                    ))}
-                  </ul>
+                  </dl>
                 </div>
-              </div>
+              )}
+              {/* Study note link — sidebar */}
+              {post.relatedArticle && (
+                <div className='bg-navy-950 rounded-xl p-5 relative overflow-hidden'>
+                  <div className='absolute inset-0 opacity-10' style={{ background: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 60%)' }} />
+                  <div className='relative z-10'>
+                    <p className='font-display text-white text-sm mb-2 leading-snug'>Study this topic</p>
+                    <p className='text-white/55 text-xs leading-relaxed mb-3'>Read the full study note before attempting the questions.</p>
+                    <Link
+                      href={`/articles/${post.relatedArticle.slug}`}
+                      className='flex items-center justify-center gap-2 w-full h-10 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors'
+                    >
+                      <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeWidth='2' d='M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' /></svg>
+                      Read study note
+                    </Link>
+                  </div>
+                </div>
+              )}
               <Link href='/practice-questions' className='flex items-center gap-2 text-sm text-navy-700 hover:text-gold-600 transition-colors font-medium'>
                 <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeWidth='2' d='M7 16l-4-4m0 0l4-4m-4 4h18' /></svg>
                 All practice questions

@@ -16,6 +16,7 @@ export interface PracticePost {
   publishedAt?:   string
   quizJson?:      string
   body?:          unknown[]
+  relatedArticle?: { title: string; slug: string } | null
 }
 
 // No caching — all practice data is always fresh from Sanity
@@ -76,7 +77,8 @@ export async function getPracticePostBySlug(slug: string): Promise<PracticePost 
     "cases": cases[] {
       caseId, title, exhibitHtml
     },
-    body
+    body,
+    "relatedArticle": *[_type == "article" && "accountingbody" in showOnSites && mcqUrl match ("*/practice-questions/" + ^.slug.current)][0]{ title, "slug": slug.current }
   }`
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const post = await sanityFetch<any>(query, { slug })
