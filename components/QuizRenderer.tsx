@@ -84,7 +84,7 @@ function qId(q: QuizQuestion, idx: number): string {
 export default function QuizRenderer({ quizJson }: Props) {
   const [quiz, setQuiz]           = useState<QuizData | null>(null)
   const [error, setError]         = useState('')
-  const [selected, setSelected]   = useState<{ orig: number; q: QuizQuestion; opts: QuizOption[] }[]>([])
+  const [selected, setSelected]   = useState<{ orig: number; q: QuizQuestion; opts: QuizOption[]; correctLabel: string }[]>([])
   const [answers, setAnswers]     = useState<Record<string, string>>({})
   const [writing, setWriting]     = useState<Record<string, string>>({})
   const [submitted, setSubmitted] = useState(false)
@@ -96,14 +96,15 @@ export default function QuizRenderer({ quizJson }: Props) {
     const qtype = (data.question_type ?? 'mcq').toLowerCase()
     const qs    = data.questions ?? []
     if (qtype === 'scenario') {
-      setSelected(qs.map((q, i) => ({ orig: i, q, opts: normaliseOptions(q) })))
+      setSelected(qs.map((q, i) => { const opts = normaliseOptions(q); return { orig: i, q, opts, correctLabel: getCorrectLabel(q, opts) } }))
     } else {
       const indices = shuffle(qs.map((_, i) => i)).slice(0, Math.min(10, qs.length))
       const entries = shuffle(indices).map(i => {
-        const q    = qs[i]
-        const opts = normaliseOptions(q)
-        const shuf = !hasBothAB(opts) ? shuffle(opts) : opts
-        return { orig: i, q, opts: pinSpecial(shuf) }
+        const q          = qs[i]
+        const opts       = normaliseOptions(q)
+        const correctLabel = getCorrectLabel(q, opts)
+        const shuf       = !hasBothAB(opts) ? shuffle(opts) : opts
+        return { orig: i, q, opts: pinSpecial(shuf), correctLabel }
       })
       setSelected(entries)
     }
@@ -152,13 +153,12 @@ export default function QuizRenderer({ quizJson }: Props) {
 
   // Score
   let correct = 0; let gradedTotal = 0
-  selected.forEach(({ q, orig, opts }) => {
+  selected.forEach(({ q, orig, opts, correctLabel }) => {
     const type = (q.type ?? 'single').toLowerCase()
     if (type === 'writing') return
     gradedTotal++
     const id       = qId(q, orig)
     const userVal  = answers[id]
-    const correctLabel = getCorrectLabel(q, opts)
     const userLabel    = opts.find(o => o.value === userVal)?.label ?? userVal ?? ''
     if (userLabel && correctLabel && userLabel.trim().toLowerCase() === correctLabel.trim().toLowerCase()) correct++
   })
@@ -167,14 +167,13 @@ export default function QuizRenderer({ quizJson }: Props) {
   // Topic breakdown
   const topicMap: Record<string, { correct: number; total: number }> = {}
   if (submitted) {
-    selected.forEach(({ q, orig, opts }) => {
+    selected.forEach(({ q, orig, opts, correctLabel }) => {
       const type  = (q.type ?? 'single').toLowerCase()
       if (type === 'writing') return
       const topic = q.meta?.primaryTopic ?? 'General'
       if (!topicMap[topic]) topicMap[topic] = { correct: 0, total: 0 }
       topicMap[topic].total++
       const id           = qId(q, orig)
-      const correctLabel = getCorrectLabel(q, opts)
       const userLabel    = opts.find(o => o.value === answers[id])?.label ?? answers[id] ?? ''
       if (userLabel.trim().toLowerCase() === correctLabel.trim().toLowerCase()) topicMap[topic].correct++
     })
@@ -277,14 +276,14 @@ export default function QuizRenderer({ quizJson }: Props) {
               )}
               <div className="divide-y divide-slate-100">
                 {entries.map((entry, ei) => (
-                  <QuestionItem key={ei} entry={entry} index={ei} submitted={submitted} answers={answers} writing={writing} revealed={revealed} setAnswer={setAnswer} setWriting={(id, val) => setWriting(prev => ({ ...prev, [id]: val }))} setRevealed={(id) => setRevealed(prev => ({ ...prev, [id]: true }))} />
+                  <QuestionItem key={ei} entry={entry} index={ei} submitted={submitted} answers={answers} writing={writing} revealed={revealed} setAnswer={setAnswer} setWriting={(id, val) => setWriting(prev => ({ ...prev, [id]: val }))} setRevealed={(id) => setRevealed(prev => ({ ...prev, [id]: true }))} correctLabel={entry.correctLabel} />
                 ))}
               </div>
             </div>
           ))
         ) : (
           selected.map((entry, i) => (
-            <QuestionItem key={i} entry={entry} index={i} submitted={submitted} answers={answers} writing={writing} revealed={revealed} setAnswer={setAnswer} setWriting={(id, val) => setWriting(prev => ({ ...prev, [id]: val }))} setRevealed={(id) => setRevealed(prev => ({ ...prev, [id]: true }))} />
+            <QuestionItem key={i} entry={entry} index={i} submitted={submitted} answers={answers} writing={writing} revealed={revealed} setAnswer={setAnswer} setWriting={(id, val) => setWriting(prev => ({ ...prev, [id]: val }))} setRevealed={(id) => setRevealed(prev => ({ ...prev, [id]: true }))} correctLabel={entry.correctLabel} />
           ))
         )}
       </div>
@@ -333,13 +332,13 @@ function QuestionItem({ entry, index, submitted, answers, writing, revealed, set
   setAnswer:   (id: string, val: string) => void
   setWriting:  (id: string, val: string) => void
   setRevealed: (id: string) => void
-}) {
+  correctLabel: string
+}, { correctLabel }: { correctLabel: string } = { correctLabel: '' }) {
   const { q, orig, opts } = entry
   const id     = qId(q, orig)
   const type   = (q.type ?? 'single').toLowerCase()
   const isWriting  = type === 'writing'
   const userVal    = answers[id]
-  const correctLabel = getCorrectLabel(q, opts)
   const userLabel    = opts.find(o => o.value === userVal)?.label ?? userVal ?? ''
   const isCorrect    = submitted && !isWriting && userLabel.trim().toLowerCase() === correctLabel.trim().toLowerCase()
   const isWrong      = submitted && !isWriting && !!userVal && !isCorrect
