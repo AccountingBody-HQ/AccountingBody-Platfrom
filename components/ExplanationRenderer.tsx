@@ -23,6 +23,8 @@ const SECTION_HEADINGS = [
   'PROFESSIONAL CONTEXT:',
   'KEY TAKEAWAY:',
   'APPLY TO THIS CASE:',
+  'RESULT:',
+  'PITFALL NOTE:',
 ]
 
 interface Section {
@@ -31,24 +33,50 @@ interface Section {
 }
 
 function parseSections(text: string): Section[] {
-  const lines = text.split('\n')
-  const sections: Section[] = []
-  let current: Section | null = null
+  if (!text?.trim()) return []
 
-  for (const line of lines) {
-    const trimmed = line.trim()
-    const heading = SECTION_HEADINGS.find(h => trimmed.toUpperCase() === h || trimmed.toUpperCase().startsWith(h))
-    if (heading) {
-      if (current) sections.push(current)
-      current = { heading: heading.replace(/:$/, ''), content: '' }
-    } else if (current) {
-      current.content += (current.content ? '\n' : '') + line
-    } else if (trimmed) {
-      // Content before any heading — treat as overview
-      current = { heading: 'OVERVIEW', content: line }
+  // Build a regex that matches any known section heading
+  // Handles both inline format (single line) and newline-separated format
+  const escapedHeadings = SECTION_HEADINGS.map(h =>
+    h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  )
+  const headingPattern = new RegExp(
+    '(?:^|\\s)(' + escapedHeadings.join('|') + ')',
+    'gi'
+  )
+
+  // Find all heading matches and their positions
+  const matches: { index: number; heading: string }[] = []
+  let m: RegExpExecArray | null
+  while ((m = headingPattern.exec(text)) !== null) {
+    const heading = m[1]
+    // index of the heading itself (skip leading whitespace)
+    const headingIndex = m.index + m[0].length - m[1].length
+    matches.push({ index: headingIndex, heading: heading.trim() })
+  }
+
+  // If no headings found, return empty (fallback will handle)
+  if (matches.length === 0) return []
+
+  const sections: Section[] = []
+
+  // If there is content before the first heading, treat as OVERVIEW
+  const beforeFirst = text.slice(0, matches[0].index).trim()
+  if (beforeFirst) {
+    sections.push({ heading: 'OVERVIEW', content: beforeFirst })
+  }
+
+  for (let i = 0; i < matches.length; i++) {
+    const { index, heading } = matches[i]
+    const headingKey = heading.replace(/:$/, '').trim().toUpperCase()
+    const contentStart = index + heading.length
+    const contentEnd = i + 1 < matches.length ? matches[i + 1].index : text.length
+    const content = text.slice(contentStart, contentEnd).trim()
+    if (content) {
+      sections.push({ heading: headingKey, content })
     }
   }
-  if (current) sections.push(current)
+
   return sections.filter(s => s.content.trim())
 }
 
@@ -119,6 +147,8 @@ const SECTION_CONFIG: Record<string, { label: string; accent: string; accentDark
   'WHY CORRECT':                 { label: 'Why This Is Correct', accent: '#059669', accentDark: '#6ee7b7', bg: 'rgba(5,150,105,0.05)',  bgDark: 'rgba(5,150,105,0.08)'  },
   'PROFESSIONAL CONTEXT':        { label: 'Professional Context', accent: '#0891b2', accentDark: '#67e8f9', bg: 'rgba(8,145,178,0.05)',  bgDark: 'rgba(8,145,178,0.08)'  },
   'APPLY TO THIS CASE':          { label: 'Applied to This Case', accent: '#7c3aed', accentDark: '#c4b5fd', bg: 'rgba(124,58,237,0.05)', bgDark: 'rgba(124,58,237,0.08)' },
+  'RESULT':                      { label: 'Result',               accent: '#059669', accentDark: '#6ee7b7', bg: 'rgba(5,150,105,0.05)',  bgDark: 'rgba(5,150,105,0.08)'  },
+  'PITFALL NOTE':                { label: 'Pitfall Note',          accent: '#dc2626', accentDark: '#fca5a5', bg: 'rgba(220,38,38,0.04)',  bgDark: 'rgba(220,38,38,0.08)'  },
   'KEY TAKEAWAY':                { label: 'Key Takeaway',         accent: '#D4A017', accentDark: '#D4A017', bg: 'rgba(212,160,23,0.08)',  bgDark: 'rgba(212,160,23,0.12)' },
 }
 
