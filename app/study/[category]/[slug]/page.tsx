@@ -129,6 +129,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
         day: 'numeric', month: 'long', year: 'numeric',
       })
     : null
+  // Hidden — evergreen content should not show potentially outdated dates
+  void formattedPublished
 
   const formattedReviewed = article.lastReviewed
     ? new Date(article.lastReviewed).toLocaleDateString('en-GB', {
@@ -202,14 +204,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                 {article.author.name}
               </span>
             )}
-            {formattedPublished && (
-              <span className="flex items-center gap-1.5">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                {formattedPublished}
-              </span>
-            )}
+
             {formattedReviewed && (
               <span className="flex items-center gap-1.5 text-gold-400">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -295,12 +290,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                       <dd className="text-navy-950 font-medium">{article.readTime} minutes</dd>
                     </div>
                   )}
-                  {formattedPublished && (
-                    <div className="flex justify-between text-sm">
-                      <dt className="text-slate-500">Published</dt>
-                      <dd className="text-navy-950 font-medium">{formattedPublished}</dd>
-                    </div>
-                  )}
+
                   {formattedReviewed && (
                     <div className="flex justify-between text-sm">
                       <dt className="text-slate-500">Reviewed</dt>
@@ -310,7 +300,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                 </dl>
               </div>
 
-              {/* Practice questions CTA */}
+              {/* Practice questions CTA — dynamic */}
               <div className="bg-navy-950 rounded-xl p-5 relative overflow-hidden">
                 <div
                   className="absolute inset-0 opacity-10"
@@ -318,18 +308,43 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                 />
                 <div className="relative z-10">
                   <p className="font-display text-white text-base mb-2 leading-snug">Test your knowledge</p>
-                  <p className="text-white/55 text-xs leading-relaxed mb-4">
-                    Exam-standard practice questions on this topic.
-                  </p>
-                  <Link
-                    href="/practice-questions"
-                    className="flex items-center justify-center gap-2 w-full h-10 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors"
-                  >
-                    Browse questions
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </Link>
+                  {article.mcqUrl ? (
+                    <>
+                      <p className="text-white/55 text-xs leading-relaxed mb-3">
+                        Practice questions for this exact topic.
+                      </p>
+                      <Link
+                        href={article.mcqUrl}
+                        className="flex items-center justify-center gap-2 w-full h-10 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors mb-2"
+                      >
+                        Practice this topic
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                      </Link>
+                      <Link
+                        href="/practice-questions"
+                        className="flex items-center justify-center w-full h-9 rounded-lg text-xs font-medium border border-white/20 text-white/60 hover:border-white/40 hover:text-white transition-colors"
+                      >
+                        Browse all question sets
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-white/55 text-xs leading-relaxed mb-3">
+                        Topic-specific questions are being developed for this study note. Browse all available question sets in the meantime.
+                      </p>
+                      <Link
+                        href="/practice-questions"
+                        className="flex items-center justify-center gap-2 w-full h-10 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors"
+                      >
+                        Browse question sets
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
 
