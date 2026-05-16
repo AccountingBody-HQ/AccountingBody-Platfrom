@@ -41,12 +41,6 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
   const accentBar  = EXAM_BODY_ACCENT[article.examBody?.[0] ?? ''] ?? 'bg-navy-950'
 
-  const formattedPublished = article.publishedAt
-    ? new Date(article.publishedAt).toLocaleDateString('en-GB', {
-        day: 'numeric', month: 'long', year: 'numeric',
-      })
-    : null
-
   const formattedReviewed = article.lastReviewed
     ? new Date(article.lastReviewed).toLocaleDateString('en-GB', {
         day: 'numeric', month: 'long', year: 'numeric',
@@ -113,14 +107,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 {article.author.name}
               </span>
             )}
-            {formattedPublished && (
-              <span className="flex items-center gap-1.5">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                {formattedPublished}
-              </span>
-            )}
+
             {formattedReviewed && (
               <span className="flex items-center gap-1.5 text-gold-400">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,12 +220,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                       <dd className="text-navy-950 font-medium">{article.readTime} minutes</dd>
                     </div>
                   )}
-                  {formattedPublished && (
-                    <div className="flex justify-between text-sm">
-                      <dt className="text-slate-500">Published</dt>
-                      <dd className="text-navy-950 font-medium">{formattedPublished}</dd>
-                    </div>
-                  )}
+
                   {formattedReviewed && (
                     <div className="flex justify-between text-sm">
                       <dt className="text-slate-500">Reviewed</dt>
