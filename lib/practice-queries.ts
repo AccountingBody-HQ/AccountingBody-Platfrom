@@ -52,7 +52,7 @@ export async function getPracticePosts(params: {
   if (examBody)   filters.push(`examBody == "${examBody}"`)
   if (difficulty) filters.push(`difficulty == "${difficulty}"`)
   if (topic)      filters.push(`topic == "${topic}"`)
-  if (search)     filters.push(`title match "*${search}*"`)
+  if (search)     filters.push(`title match "${search}*"`)
   const filter  = filters.join(" && ")
   const orderBy = sortBy === 'newest' ? 'publishedAt desc' : 'title asc'
   const start   = (page - 1) * perPage
