@@ -51,7 +51,36 @@ export async function POST(req: NextRequest) {
       `,
     })
 
+    await resend.emails.send({
+      from: 'Accounting Body <hello@accountingbody.com>',
+      to: 'acctn.body@gmail.com',
+      subject: 'New subscriber — ' + email,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
+          <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
+            <div style="background:#0a0f2e;padding:32px 40px;">
+              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">Accounting Body — Admin</p>
+              <h1 style="color:#fff;font-size:24px;margin:0;line-height:1.3;">New subscriber.</h1>
+            </div>
+            <div style="padding:32px 40px;">
+              <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 8px;"><strong>Email:</strong> ` + email + `</p>
+              <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 8px;"><strong>Source:</strong> Footer signup</p>
+              <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 28px;"><strong>Time:</strong> ` + new Date().toUTCString() + `</p>
+              <a href="https://accountingbody.com/admin/subscribers"
+                style="display:inline-block;background:#D4A017;color:#0a0f2e;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;">
+                View all subscribers →
+              </a>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    })
+
     return NextResponse.json({ success: true })
+
   } catch (error) {
     console.error('Subscribe error:', error)
     return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
