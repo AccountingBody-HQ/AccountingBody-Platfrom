@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Simple in-memory rate limiter — 30 requests per 60s per IP
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
+function checkRateLimit(ip: string): boolean {
+  const now   = Date.now()
+  const entry = rateLimitStore.get(ip)
+  if (!entry || entry.resetTime < now) {
+    rateLimitStore.set(ip, { count: 1, resetTime: now + 60_000 })
+    return true
+  }
+  if (entry.count >= 30) return false
+  entry.count++
+  return true
+}
+
 const PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
 const DATASET    = process.env.NEXT_PUBLIC_SANITY_DATASET    ?? 'production'
 
@@ -66,6 +80,10 @@ async function querySanity(groq: string) {
 }
 
 export async function GET(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
   const q = req.nextUrl.searchParams.get('q') ?? ''
   if (q.trim().length < 2) return NextResponse.json([])
 
