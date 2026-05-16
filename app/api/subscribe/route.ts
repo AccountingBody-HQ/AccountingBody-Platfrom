@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     await resend.emails.send({
       from: 'Accounting Body <hello@accountingbody.com>',
-      to: 'acctn.body@gmail.com',
+      to: 'info@accountingbody.com',
       subject: 'New subscriber — ' + email,
       html: `
         <!DOCTYPE html>
