@@ -21,6 +21,7 @@ export default defineType({
     defineField({ name: 'seoTitle', title: 'SEO Title', type: 'string', group: 'seo', validation: (Rule) => Rule.max(60) }),
     defineField({ name: 'seoDescription', title: 'SEO Description', type: 'text', rows: 2, group: 'seo', validation: (Rule) => Rule.max(160) }),
     defineField({ name: 'wpId', title: 'WordPress Post ID', type: 'string', group: 'multisite', description: 'Original WordPress post ID — used for book publishing and content tracing.' }),
+    defineField({ name: 'contentId', title: 'Content ID', type: 'string', group: 'multisite', description: 'AI-generated content ID — format AB-QZ-00001. Do not set on migrated WordPress content.' }),
     defineField({ name: 'canonicalOwner', title: 'Canonical Owner', type: 'string', group: 'multisite', options: { list: [{ title: 'AccountingBody', value: 'accountingbody' }, { title: 'HRLake', value: 'hrlake' }, { title: 'EthioTax', value: 'ethiotax' }], layout: 'radio' }, validation: (Rule) => Rule.required() }),
     defineField({ name: 'showOnSites', title: 'Show On Sites', type: 'array', group: 'multisite', of: [{ type: 'string' }], options: { list: [{ title: 'AccountingBody', value: 'accountingbody' }, { title: 'HRLake', value: 'hrlake' }, { title: 'EthioTax', value: 'ethiotax' }], layout: 'grid' } }),
   ],

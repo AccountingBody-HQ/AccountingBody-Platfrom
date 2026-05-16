@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
       publishedAt:   now,
       difficulty:    bundle.difficulty ?? 'intermediate',
       topic:         bundle.topic ?? '',
-      examBody:      examBodyArr[0] ?? '',
+      examBody:      examBodyArr,
       questionType:  bundle.questionType ?? 'multiple-choice',
       tags:          Array.isArray(bundle.tags) ? bundle.tags : [],
       cases,
@@ -103,11 +103,24 @@ export async function POST(req: NextRequest) {
       canonicalOwner,
     }
 
+    // Content ID — query highest existing AB-QZ-XXXXX and increment
+    const lastContentId = await client.fetch<string | null>(
+      '*[_type == "practicePost" && defined(contentId) && contentId match "AB-QZ-*"] | order(contentId desc) [0].contentId'
+    )
+    let nextNum = 1
+    if (lastContentId) {
+      const match = lastContentId.match(/AB-QZ-(\d+)$/)
+      if (match) nextNum = parseInt(match[1], 10) + 1
+    }
+    const contentId = 'AB-QZ-' + String(nextNum).padStart(5, '0')
+    doc.contentId = contentId
+
     const result = await client.create(doc)
 
     return NextResponse.json({
-      success:    true,
-      documentId: result._id,
+      success:       true,
+      documentId:    result._id,
+      contentId,
       title,
       slug,
       questionCount: quizQuestions.length,

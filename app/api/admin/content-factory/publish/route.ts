@@ -159,11 +159,24 @@ export async function POST(req: NextRequest) {
       aiSearchable:   true,
     }
 
+    // Content ID — query highest existing AB-ART-XXXXX and increment
+    const lastContentId = await client.fetch<string | null>(
+      '*[_type == "article" && defined(contentId) && contentId match "AB-ART-*"] | order(contentId desc) [0].contentId'
+    )
+    let nextNum = 1
+    if (lastContentId) {
+      const match = lastContentId.match(/AB-ART-(\d+)$/)
+      if (match) nextNum = parseInt(match[1], 10) + 1
+    }
+    const contentId = 'AB-ART-' + String(nextNum).padStart(5, '0')
+    doc.contentId = contentId
+
     const result = await client.create(doc)
 
     return NextResponse.json({
       success:        true,
       documentId:     result._id,
+      contentId,
       title,
       slug,
       showOnSites,
