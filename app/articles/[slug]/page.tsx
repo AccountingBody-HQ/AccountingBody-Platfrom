@@ -201,15 +201,31 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 </div>
               </div>
 
-              {formattedReviewed && (
-                <div className="mt-10 flex items-center gap-2 text-sm text-slate-400 pt-6 border-t border-slate-100">
-                  <svg className="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Last reviewed by a qualified accountant on
-                  <span className="text-slate-600 font-medium ml-1">{formattedReviewed}</span>
-                </div>
-              )}
+              {/* Author + reviewed bar — always visible */}
+              <div className="mt-10 pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                {article.author?.name && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-navy-950 flex items-center justify-center shrink-0">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">Written by</p>
+                      <p className="text-sm font-semibold text-navy-950">{article.author.name}</p>
+                    </div>
+                  </div>
+                )}
+                {formattedReviewed && (
+                  <div className="flex items-center gap-2 text-sm text-slate-400">
+                    <svg className="w-4 h-4 text-teal-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Last reviewed by a qualified accountant on
+                    <span className="text-slate-600 font-medium ml-1">{formattedReviewed}</span>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* ── Sidebar ─────────────────────────────────────────────────── */}
