@@ -52,7 +52,20 @@ export async function getPracticePosts(params: {
   if (examBody)   filters.push(`examBody == "${examBody}"`)
   if (difficulty) filters.push(`difficulty == "${difficulty}"`)
   if (topic)      filters.push(`topic == "${topic}"`)
-  if (search)     filters.push(`title match "${search}*"`)
+  if (search) {
+    const isSingleLetter = /^[a-zA-Z#]$/.test(search)
+    if (isSingleLetter) {
+      // A-Z letter filter — trailing wildcard on title only (GROQ supported)
+      filters.push(`title match "${search.toUpperCase()}*" || title match "${search.toLowerCase()}*"`)
+    } else {
+      // Text search — match each word across title, topic, and excerpt
+      const words = search.trim().split(/\s+/).filter(Boolean)
+      const wordFilters = words.map(w =>
+        `title match "${w}*" || topic match "${w}*" || excerpt match "${w}*"`
+      )
+      filters.push(wordFilters.map(f => `(${f})`).join(' && '))
+    }
+  }
   const filter  = filters.join(" && ")
   const orderBy = sortBy === 'newest' ? 'publishedAt desc' : 'title asc'
   const start   = (page - 1) * perPage
