@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import ScrollToTop from '@/components/ScrollToTop'
 import type { Metadata } from 'next'
 import { getArticlesByCategory, getAllCategorySlugs } from '@/lib/sanity-queries'
 import type { ArticleSummary } from '@/lib/sanity-queries'
@@ -169,6 +170,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
           )}
         </div>
       </section>
+      <ScrollToTop />
     </div>
   )
 }
