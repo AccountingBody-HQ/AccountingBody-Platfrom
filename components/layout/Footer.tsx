@@ -132,9 +132,9 @@ const legalLinks = [
 
 const stats = [
   { value: '3,000+',   label: 'Articles' },
-  { value: '50,000+',  label: 'Practice Questions' },
-  { value: '250,000+', label: 'Students Helped' },
-  { value: '20+',      label: 'Qualifications Covered' },
+  { value: '20,000+',  label: 'Practice Questions' },
+  { value: 'Since 2010', label: 'Trusted Platform' },
+  { value: 'Free',      label: 'To Start' },
 ]
 
 // ── Email Signup Widget ───────────────────────────────────────────────────────

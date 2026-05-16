@@ -38,6 +38,18 @@ const SUMMARY_FIELDS = `
   "questionCount": count(quizQuestions)
 `
 
+export async function getPracticePostCount(): Promise<number> {
+  try {
+    const projectId = PROJECT_ID ?? '4rllejq1'
+    const query = encodeURIComponent(`count(*[_type == "practicePost" && "accountingbody" in showOnSites])`)
+    const url = `https://${projectId}.api.sanity.io/v${API_VER}/data/query/${DATASET}?query=${query}`
+    const res = await fetch(url, { next: { revalidate: 3600 } })
+    if (!res.ok) return 0
+    const data = await res.json()
+    return (data.result ?? 0) as number
+  } catch { return 0 }
+}
+
 export async function getPracticePosts(params: {
   examBody?:   string
   difficulty?: string

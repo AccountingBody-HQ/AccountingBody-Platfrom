@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getStudyLandingData, getCategoryCounts } from '@/lib/sanity-queries'
+import { getPracticePostCount } from '@/lib/practice-queries'
 
 export const revalidate = 3600
 
@@ -194,9 +195,10 @@ const SUBJECT_AREAS = [
 ]
 
 export default async function StudyPage() {
-  const [liveData, categoryCounts] = await Promise.all([
+  const [liveData, categoryCounts, practicePostCount] = await Promise.all([
     getStudyLandingData(),
     getCategoryCounts(),
+    getPracticePostCount(),
   ])
   const liveMap = Object.fromEntries(liveData.map(d => [d.examBody, d.count]))
 
@@ -285,25 +287,33 @@ export default async function StudyPage() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {SUBJECT_AREAS.map(area => (
-              <Link key={area.slug} href={`/study/${area.slug}`}
-                className="group flex items-start gap-5 p-6 rounded-xl border border-slate-200 bg-white hover:border-gold-400 hover:shadow-lg transition-all duration-200">
-                <div className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 group-hover:bg-gold-50 group-hover:border-gold-200 transition-all">
-                  {area.icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <h3 className="font-display text-base text-navy-950 group-hover:text-navy-700 transition-colors leading-snug">{area.name}</h3>
-                    <span className="text-xs font-semibold text-gold-600 bg-gold-50 px-2 py-0.5 rounded-full shrink-0 mt-0.5">{(categoryCounts[area.slug] ?? 0).toLocaleString()}</span>
+            {SUBJECT_AREAS.map(area => {
+              const isMockExams = area.slug === 'mock-exams'
+              const href = isMockExams ? '/practice-questions' : `/study/${area.slug}`
+              const count = isMockExams
+                ? practicePostCount.toLocaleString()
+                : (categoryCounts[area.slug] ?? 0).toLocaleString()
+              const browseLabel = isMockExams ? 'Browse question sets' : 'Browse notes'
+              return (
+                <Link key={area.slug} href={href}
+                  className="group flex items-start gap-5 p-6 rounded-xl border border-slate-200 bg-white hover:border-gold-400 hover:shadow-lg transition-all duration-200">
+                  <div className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 group-hover:bg-gold-50 group-hover:border-gold-200 transition-all">
+                    {area.icon}
                   </div>
-                  <p className="text-xs text-slate-500 leading-relaxed">{area.description}</p>
-                  <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-navy-950 group-hover:text-gold-600 group-hover:gap-2 transition-all">
-                    Browse notes
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                  </span>
-                </div>
-              </Link>
-            ))}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <h3 className="font-display text-base text-navy-950 group-hover:text-navy-700 transition-colors leading-snug">{area.name}</h3>
+                      <span className="text-xs font-semibold text-gold-600 bg-gold-50 px-2 py-0.5 rounded-full shrink-0 mt-0.5">{count}</span>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed">{area.description}</p>
+                    <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-navy-950 group-hover:text-gold-600 group-hover:gap-2 transition-all">
+                      {browseLabel}
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                    </span>
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         </div>
       </section>

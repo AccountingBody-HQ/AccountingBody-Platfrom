@@ -827,7 +827,7 @@ export default async function HomePage() {
                 Explore our services
               </Link>
               <Link
-                href="/sign-up"
+                href="/study"
                 className="h-10 px-5 flex items-center text-sm font-semibold rounded-lg bg-navy-950 text-white hover:bg-navy-900 transition-colors shadow-sm"
               >
                 Start studying free

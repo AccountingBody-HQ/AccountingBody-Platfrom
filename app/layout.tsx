@@ -11,6 +11,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Navigation } from '@/components/layout/Navigation'
 import { Footer } from '@/components/layout/Footer'
 import CookieConsent from '@/components/CookieConsent'
+import ScrollToTop from '@/components/ScrollToTop'
 import './globals.css'
 
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID
@@ -110,6 +111,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </main>
           <Footer />
           <CookieConsent gtmId={GTM_ID ?? ''} />
+          <ScrollToTop />
           <Analytics />
           <SpeedInsights />
         </body>
