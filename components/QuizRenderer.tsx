@@ -322,7 +322,7 @@ export default function QuizRenderer({ quizJson }: Props) {
   )
 }
 
-function QuestionItem({ entry, index, submitted, answers, writing, revealed, setAnswer, setWriting, setRevealed }: {
+function QuestionItem({ entry, index, submitted, answers, writing, revealed, setAnswer, setWriting, setRevealed, correctLabel }: {
   entry:       { orig: number; q: QuizQuestion; opts: QuizOption[] }
   index:       number
   submitted:   boolean
@@ -333,7 +333,7 @@ function QuestionItem({ entry, index, submitted, answers, writing, revealed, set
   setWriting:  (id: string, val: string) => void
   setRevealed: (id: string) => void
   correctLabel: string
-}, { correctLabel }: { correctLabel: string } = { correctLabel: '' }) {
+}) {
   const { q, orig, opts } = entry
   const id     = qId(q, orig)
   const type   = (q.type ?? 'single').toLowerCase()
