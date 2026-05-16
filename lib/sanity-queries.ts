@@ -16,6 +16,7 @@ export interface ArticleSummary {
   slug:          { current: string }
   excerpt?:      string
   category?:     string
+  categoryTitle?: string
   examBody?:     string[]
   readTime?:     number
   publishedAt?:  string
@@ -73,6 +74,7 @@ const SUMMARY_FIELDS = `
   slug,
   excerpt,
   "category": categories[0]->slug.current,
+  "categoryTitle": categories[0]->title,
   examBody,
   readTime,
   publishedAt,

@@ -88,9 +88,9 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 </span>
               )
             })}
-            {article.category && (
+            {article.categoryTitle && (
               <span className="text-xs font-medium px-2.5 py-1 rounded-md bg-white/10 text-white/70 border border-white/15">
-                {article.category}
+                {article.categoryTitle}
               </span>
             )}
           </div>
@@ -221,10 +221,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                       </dd>
                     </div>
                   )}
-                  {article.category && (
+                  {article.categoryTitle && (
                     <div className="flex justify-between text-sm">
                       <dt className="text-slate-500">Subject</dt>
-                      <dd className="text-navy-950 font-medium">{article.category}</dd>
+                      <dd className="text-navy-950 font-medium">{article.categoryTitle}</dd>
                     </div>
                   )}
                   {article.readTime && (
