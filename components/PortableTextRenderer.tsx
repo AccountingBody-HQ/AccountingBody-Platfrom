@@ -24,9 +24,7 @@ const components: PortableTextComponents = {
     h5: ({ children }) => <h5 className="font-display text-base text-navy-950 font-semibold mt-5 mb-2">{children}</h5>,
     h6: ({ children }) => <h6 className="font-display text-sm text-navy-700 font-semibold mt-4 mb-1 uppercase tracking-wide">{children}</h6>,
     blockquote: ({ children }) => (
-      <blockquote className="border-l-4 border-gold-500 pl-5 pr-4 py-1 my-6 bg-gold-50 rounded-r-lg">
-        <p className="text-slate-700 italic leading-relaxed text-base m-0">{children}</p>
-      </blockquote>
+      <p className="text-slate-600 text-lg leading-relaxed mb-6 font-normal">{children}</p>
     ),
   },
   list: {
