@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { PortableText, type PortableTextComponents, type PortableTextBlock } from '@portabletext/react'
 import QuizBankEmbed from './QuizBankEmbed'
 
@@ -63,7 +64,7 @@ const components: PortableTextComponents = {
       const imageUrl = `https://cdn.sanity.io/images/${PROJECT_ID}/${DATASET}/${parts[1]}-${parts[2]}.${parts[3]}`
       return (
         <figure className="my-8">
-          <img src={imageUrl} alt={value.alt ?? ''} className="w-full rounded-xl border border-slate-200 shadow-sm" />
+          <Image src={imageUrl} alt={value.alt ?? ''} width={800} height={500} className="w-full rounded-xl border border-slate-200 shadow-sm" style={{ height: 'auto' }} />
           {value.caption && <figcaption className="text-center text-sm text-slate-400 mt-3 italic">{value.caption}</figcaption>}
         </figure>
       )

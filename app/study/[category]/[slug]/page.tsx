@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
@@ -50,7 +51,7 @@ function AuthorBio({ article }: { article: ArticleFull }) {
       <div className="flex items-start gap-4">
         <div className="w-12 h-12 rounded-full shrink-0 overflow-hidden bg-navy-200 flex items-center justify-center">
           {image?.asset?.url
-            ? <img src={image.asset.url} alt={name} className="w-full h-full object-cover" />
+            ? <Image src={image.asset.url} alt={name} width={48} height={48} className="w-full h-full object-cover" />
             : <span className="font-display text-lg text-navy-700 font-bold">{name.charAt(0).toUpperCase()}</span>
           }
         </div>
