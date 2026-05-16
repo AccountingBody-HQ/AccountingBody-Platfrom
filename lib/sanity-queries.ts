@@ -84,21 +84,22 @@ const SUMMARY_FIELDS = `
 `
 
 export async function getStudyLandingData(): Promise<ExamBodyStat[]> {
-  const query = `*[_type == "article" && "accountingbody" in showOnSites] | order(publishedAt desc) { examBody, ${SUMMARY_FIELDS} }`
-  const all   = await sanityFetch<(ArticleSummary & { examBody: string[] })[]>(query)
+  const query = `*[_type == "article" && "accountingbody" in showOnSites] {
+    "examBody": examBody
+  }`
+  const all = await sanityFetch<{ examBody: string[] }[]>(query, {}, 3600)
   if (!all) return []
-  const map: Record<string, { count: number; latest: ArticleSummary }> = {}
+  const map: Record<string, number> = {}
   for (const a of all) {
     if (!a.examBody?.length) continue
     for (const body of a.examBody) {
-      if (!map[body]) map[body] = { count: 0, latest: a }
-      map[body].count++
+      map[body] = (map[body] ?? 0) + 1
     }
   }
-  return Object.entries(map).map(([examBody, v]) => ({
+  return Object.entries(map).map(([examBody, count]) => ({
     examBody,
-    count:         v.count,
-    latestArticle: v.latest,
+    count,
+    latestArticle: null as unknown as ArticleSummary,
   }))
 }
 
@@ -189,7 +190,7 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
     "slug": slug.current,
     "count": count(*[_type == "article" && "accountingbody" in showOnSites && references(^._id)])
   }`
-  const result = await sanityFetch<{ slug: string; count: number }[]>(query)
+  const result = await sanityFetch<{ slug: string; count: number }[]>(query, {}, 3600)
   if (!result) return {}
   return Object.fromEntries(result.map(r => [r.slug, r.count]))
 }
