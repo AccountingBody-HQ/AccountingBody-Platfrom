@@ -45,18 +45,20 @@ export async function getPracticePosts(params: {
   search?:     string
   page?:       number
   perPage?:    number
+  sortBy?:     string
 }): Promise<{ posts: PracticePost[]; total: number }> {
-  const { examBody, difficulty, topic, search, page = 1, perPage = 12 } = params
+  const { examBody, difficulty, topic, search, page = 1, perPage = 12, sortBy = 'alpha' } = params
   const filters: string[] = ["_type == \"practicePost\"", "\"accountingbody\" in showOnSites"]
   if (examBody)   filters.push(`examBody == "${examBody}"`)
   if (difficulty) filters.push(`difficulty == "${difficulty}"`)
   if (topic)      filters.push(`topic == "${topic}"`)
   if (search)     filters.push(`title match "*${search}*"`)
-  const filter = filters.join(" && ")
-  const start  = (page - 1) * perPage
-  const end    = start + perPage
+  const filter  = filters.join(" && ")
+  const orderBy = sortBy === 'newest' ? 'publishedAt desc' : 'title asc'
+  const start   = (page - 1) * perPage
+  const end     = start + perPage
   const query = `{
-    "posts": *[${filter}] | order(publishedAt desc) [${start}...${end}] { ${SUMMARY_FIELDS} },
+    "posts": *[${filter}] | order(${orderBy}) [${start}...${end}] { ${SUMMARY_FIELDS} },
     "total": count(*[${filter}])
   }`
   const result = await sanityFetch<{ posts: PracticePost[]; total: number }>(query)
