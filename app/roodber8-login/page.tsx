@@ -52,7 +52,7 @@ export default function AdminLoginPage() {
           </div>
           <div style={{ marginBottom: "16px" }}>
             <label style={{ display: "block", fontSize: "13px", color: "#94a3b8", marginBottom: "8px" }}>
-              Google Authenticator Code
+              Verification Code
             </label>
             <input
               type="text"
