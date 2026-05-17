@@ -34,9 +34,9 @@ async function generateTOTP(secret: string, counter: number): Promise<string> {
     c = Math.floor(c / 256)
   }
   const key = await crypto.subtle.importKey(
-    "raw", keyBytes, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]
+    "raw", keyBytes.buffer as ArrayBuffer, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]
   )
-  const sig = await crypto.subtle.sign("HMAC", key, counterBytes)
+  const sig = await crypto.subtle.sign("HMAC", key, counterBytes.buffer as ArrayBuffer)
   const hmac = new Uint8Array(sig)
   const offset = hmac[hmac.length - 1] & 0x0f
   const code = ((hmac[offset] & 0x7f) << 24) |
