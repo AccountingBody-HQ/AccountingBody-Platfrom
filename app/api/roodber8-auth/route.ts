@@ -7,6 +7,54 @@ async function sha256Hex(message: string): Promise<string> {
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
 }
 
+function base32ToBytes(base32: string): Uint8Array {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+  let bits = 0
+  let value = 0
+  const output: number[] = []
+  for (const char of base32.toUpperCase().replace(/=+$/, "")) {
+    const idx = alphabet.indexOf(char)
+    if (idx === -1) continue
+    value = (value << 5) | idx
+    bits += 5
+    if (bits >= 8) {
+      output.push((value >>> (bits - 8)) & 255)
+      bits -= 8
+    }
+  }
+  return new Uint8Array(output)
+}
+
+async function generateTOTP(secret: string, counter: number): Promise<string> {
+  const keyBytes = base32ToBytes(secret)
+  const counterBytes = new Uint8Array(8)
+  let c = counter
+  for (let i = 7; i >= 0; i--) {
+    counterBytes[i] = c & 0xff
+    c = Math.floor(c / 256)
+  }
+  const key = await crypto.subtle.importKey(
+    "raw", keyBytes, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]
+  )
+  const sig = await crypto.subtle.sign("HMAC", key, counterBytes)
+  const hmac = new Uint8Array(sig)
+  const offset = hmac[hmac.length - 1] & 0x0f
+  const code = ((hmac[offset] & 0x7f) << 24) |
+    ((hmac[offset + 1] & 0xff) << 16) |
+    ((hmac[offset + 2] & 0xff) << 8) |
+    (hmac[offset + 3] & 0xff)
+  return String(code % 1000000).padStart(6, "0")
+}
+
+async function verifyTOTP(token: string, secret: string): Promise<boolean> {
+  const counter = Math.floor(Date.now() / 1000 / 30)
+  for (let i = -1; i <= 1; i++) {
+    const expected = await generateTOTP(secret, counter + i)
+    if (expected === token) return true
+  }
+  return false
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { password, totpCode } = await req.json()
@@ -41,17 +89,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "2FA not configured" }, { status: 500 })
     }
 
-    if (!totpCode || totpCode.length !== 6) {
+    if (!totpCode || String(totpCode).length !== 6) {
       return NextResponse.json({ error: "2FA code required" }, { status: 400 })
     }
 
-    const otplib = await import("otplib")
-    const totp = otplib.totp ?? otplib.default?.totp
-    if (!totp) {
-      return NextResponse.json({ error: "2FA library error" }, { status: 500 })
-    }
-
-    const isValid = totp.verify({ token: String(totpCode), secret: totpSecret })
+    const isValid = await verifyTOTP(String(totpCode), totpSecret)
 
     if (!isValid) {
       return NextResponse.json({ error: "Invalid 2FA code" }, { status: 401 })
