@@ -4,7 +4,6 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { ExamBodyBadge } from '@/components/ui/Badge'
 import EmailSignupForm from '@/components/EmailSignupForm'
 import HeroSearch from '@/components/HeroSearch'
 
@@ -305,11 +304,6 @@ const trustPoints = [
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function ArticleCard({ article }: { article: typeof placeholderArticles[0] }) {
-  const formattedDate = article.publishedAt
-    ? new Date(article.publishedAt).toLocaleDateString('en-GB', {
-        day: 'numeric', month: 'short', year: 'numeric',
-      })
-    : null
 
   const examBodyFirst = Array.isArray(article.examBody) ? article.examBody[0] : article.examBody
   const bodyColor =
@@ -323,9 +317,6 @@ function ArticleCard({ article }: { article: typeof placeholderArticles[0] }) {
       <div className="h-1" style={{ backgroundColor: bodyColor }} />
       <div className="flex flex-col flex-1 p-5">
         <div className="flex flex-wrap items-center gap-2 mb-3">
-          {examBodyFirst && (
-            <ExamBodyBadge body={examBodyFirst.toUpperCase()} />
-          )}
           {article.category && (
             <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
               {article.category}
@@ -341,7 +332,7 @@ function ArticleCard({ article }: { article: typeof placeholderArticles[0] }) {
           <p className="text-sm text-slate-500 line-clamp-2 mb-4">{article.excerpt}</p>
         )}
         <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-auto">
-          <span className="text-xs text-slate-400">{formattedDate}</span>
+
           {article.readTime && (
             <div className="flex items-center gap-1 text-xs text-slate-400">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -441,7 +432,7 @@ export default async function HomePage() {
             </h1>
 
             <p className="text-white/65 text-xl leading-relaxed mb-6 max-w-2xl">
-              Study for ACCA, CIMA, ICAEW and AAT with expert notes and practice questions — and access Accounting Body&apos;s managed professional services network for tax, audit, bookkeeping, and advisory.
+              Study for globally recognised accounting and finance qualifications with expert notes and practice questions — and access Accounting Body&apos;s managed professional services network for tax, audit, bookkeeping, and advisory.
             </p>
             <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
               One platform. Two pillars. Education and professional services, managed to the same standard.
