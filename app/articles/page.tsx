@@ -113,12 +113,12 @@ export default async function ArticlesPage() {
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       {examBodyFirst && (
-                        <span className={"hidden sm:inline text-xs font-medium px-2 py-0.5 rounded-md border " + badgeClass}>
+                        <span className={"hidden text-xs font-medium px-2 py-0.5 rounded-md border " + badgeClass}>
                           {examBodyFirst.toUpperCase()}
                         </span>
                       )}
                       {article.readTime && <span className="hidden md:block text-xs text-slate-400">{article.readTime} min</span>}
-                      {posted && <span className="hidden lg:block text-xs text-slate-400">{posted}</span>}
+                      {posted && <span className="hidden text-xs text-slate-400">{posted}</span>}
                       <svg className="w-4 h-4 text-slate-300 group-hover:text-navy-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                       </svg>
