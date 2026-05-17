@@ -41,12 +41,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "2FA not configured" }, { status: 500 })
     }
 
-    if (!totpCode) {
+    if (!totpCode || totpCode.length !== 6) {
       return NextResponse.json({ error: "2FA code required" }, { status: 400 })
     }
 
-    const { verify } = await import("otplib")
-    const isValid = verify({ token: totpCode, secret: totpSecret })
+    const otplib = await import("otplib")
+    const totp = otplib.totp ?? otplib.default?.totp
+    if (!totp) {
+      return NextResponse.json({ error: "2FA library error" }, { status: 500 })
+    }
+
+    const isValid = totp.verify({ token: String(totpCode), secret: totpSecret })
 
     if (!isValid) {
       return NextResponse.json({ error: "Invalid 2FA code" }, { status: 401 })
