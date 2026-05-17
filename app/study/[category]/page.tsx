@@ -157,7 +157,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
                           </div>
                           <div className="flex items-center gap-4 shrink-0 text-xs text-slate-400">
                             {article.readTime && <span className="hidden sm:block">{article.readTime} min</span>}
-                            {formattedDate && <span className="hidden md:block">{formattedDate}</span>}
+                            {formattedDate && <span className="hidden">{formattedDate}</span>}
                             <svg className="w-4 h-4 text-slate-300 group-hover:text-navy-400 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
                           </div>
                         </div>
