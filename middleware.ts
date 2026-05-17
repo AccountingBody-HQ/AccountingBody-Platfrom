@@ -44,18 +44,19 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     return NextResponse.redirect(url, 301)
   }
 
+  const adminPath = process.env.ADMIN_PATH ?? "roodber8"
   const isAdminRoute =
-    pathname.startsWith("/roodber8") && pathname !== "/roodber8-login"
+    pathname.startsWith("/" + adminPath) && pathname !== "/" + adminPath + "-login"
   const isAdminApi =
-    pathname.startsWith("/api/roodber8") &&
-    pathname !== "/api/roodber8-auth" &&
-    pathname !== "/api/roodber8-logout"
+    pathname.startsWith("/api/" + adminPath) &&
+    pathname !== "/api/" + adminPath + "-auth" &&
+    pathname !== "/api/" + adminPath + "-logout"
 
   if (isAdminRoute || isAdminApi) {
     const authenticated = await isAdminAuthenticated(req)
     if (!authenticated) {
       const loginUrl = req.nextUrl.clone()
-      loginUrl.pathname = "/roodber8-login"
+      loginUrl.pathname = "/" + adminPath + "-login"
       return NextResponse.redirect(loginUrl)
     }
   }
@@ -65,7 +66,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
 
 export const config = {
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/((?!_next|[^?]*\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
   ],
 }
