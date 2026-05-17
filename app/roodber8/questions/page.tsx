@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Link from 'next/link'
 import { unstable_noStore as noStore } from 'next/cache'
-import AutoRefresh from '@/components/admin/AutoRefresh'
+import AutoRefresh from '@/components/roodber8/AutoRefresh'
 import { BookOpen, Plus, ExternalLink, CheckCircle2, FileText, Layers, PenLine } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -72,7 +72,7 @@ export default async function QuestionsLibraryPage() {
             style={{ background: 'rgba(255,255,255,0.05)', color: '#64748b', border: '1px solid #1a2238' }}>
             <ExternalLink size={13} /> Browse All in Sanity
           </a>
-          <Link href="/admin/questions/generate"
+          <Link href="/roodber8/questions/generate"
             className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl"
             style={{ background: '#D4A017', color: '#0C1A3D' }}>
             <Plus size={15} /> Generate Questions
@@ -113,7 +113,7 @@ export default async function QuestionsLibraryPage() {
             <BookOpen size={32} style={{ color: '#1a2238' }} className="mx-auto mb-4" />
             <p className="text-white font-semibold mb-2">No question sets yet</p>
             <p className="text-sm mb-6" style={{ color: '#334155' }}>Generate your first set using the button above.</p>
-            <Link href="/admin/questions/generate"
+            <Link href="/roodber8/questions/generate"
               className="inline-flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl"
               style={{ background: '#D4A017', color: '#0C1A3D' }}>
               <Plus size={14} /> Generate Questions

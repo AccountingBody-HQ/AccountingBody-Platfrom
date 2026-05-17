@@ -14,14 +14,14 @@ export default function AdminLoginPage() {
     setLoading(true)
     setError("")
 
-    const res = await fetch("/api/admin-auth", {
+    const res = await fetch("/api/roodber8-auth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ password }),
     })
 
     if (res.ok) {
-      router.push("/admin")
+      router.push("/roodber8")
     } else {
       setError("Invalid password. Access denied.")
       setLoading(false)

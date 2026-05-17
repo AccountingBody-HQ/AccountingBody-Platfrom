@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from '@supabase/supabase-js'
 import { unstable_noStore as noStore } from 'next/cache'
-import AutoRefresh from '@/components/admin/AutoRefresh'
-import { StatusBadge, DeleteButton, ReplyButton, NotesField } from '@/components/admin/AdminActions'
+import AutoRefresh from '@/components/roodber8/AutoRefresh'
+import { StatusBadge, DeleteButton, ReplyButton, NotesField } from '@/components/roodber8/AdminActions'
 import { HelpCircle, Mail, Search } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -123,7 +123,7 @@ export default async function SubmissionsPage({
             Filter
           </button>
           {(search || serviceType || status) && (
-            <a href="/admin/submissions" className="text-xs font-semibold" style={{ color: '#475569' }}>Clear</a>
+            <a href="/roodber8/submissions" className="text-xs font-semibold" style={{ color: '#475569' }}>Clear</a>
           )}
         </form>
       </div>

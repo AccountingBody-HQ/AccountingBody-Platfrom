@@ -45,17 +45,17 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   }
 
   const isAdminRoute =
-    pathname.startsWith("/admin") && pathname !== "/admin-login"
+    pathname.startsWith("/roodber8") && pathname !== "/roodber8-login"
   const isAdminApi =
-    pathname.startsWith("/api/admin") &&
-    pathname !== "/api/admin-auth" &&
-    pathname !== "/api/admin-logout"
+    pathname.startsWith("/api/roodber8") &&
+    pathname !== "/api/roodber8-auth" &&
+    pathname !== "/api/roodber8-logout"
 
   if (isAdminRoute || isAdminApi) {
     const authenticated = await isAdminAuthenticated(req)
     if (!authenticated) {
       const loginUrl = req.nextUrl.clone()
-      loginUrl.pathname = "/admin-login"
+      loginUrl.pathname = "/roodber8-login"
       return NextResponse.redirect(loginUrl)
     }
   }

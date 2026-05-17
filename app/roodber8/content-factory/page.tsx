@@ -149,7 +149,7 @@ export default function ContentFactoryPage() {
     try {
       const controller = new AbortController()
       const tid = setTimeout(() => controller.abort(), 180000)
-      const res = await fetch('/api/admin/content-factory/generate', {
+      const res = await fetch('/api/roodber8/content-factory/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config),
@@ -176,7 +176,7 @@ export default function ContentFactoryPage() {
     if (publishing) return
     setPublishing(true); setError('')
     try {
-      const res = await fetch('/api/admin/content-factory/publish', {
+      const res = await fetch('/api/roodber8/content-factory/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

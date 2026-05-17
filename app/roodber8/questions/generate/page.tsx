@@ -117,7 +117,7 @@ export default function GenerateQuestionsPage() {
   async function handleGenerate() {
     setGenerating(true); setError(''); setWarnings([])
     try {
-      const res = await fetch('/api/admin/questions/generate', {
+      const res = await fetch('/api/roodber8/questions/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...config, examBody: config.qualification.toLowerCase() }),
@@ -139,7 +139,7 @@ export default function GenerateQuestionsPage() {
     if (!bundle || publishing) return
     setPublishing(true); setError('')
     try {
-      const res = await fetch('/api/admin/questions/publish', {
+      const res = await fetch('/api/roodber8/questions/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bundle, qualification: config.qualification, examBody: config.qualification.toLowerCase(), showOnSites, canonicalOwner: canonical }),
@@ -636,7 +636,7 @@ export default function GenerateQuestionsPage() {
               style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
               <Sparkles size={14} /> Generate Another Set
             </button>
-            <a href="/admin/questions" className="flex items-center gap-2 text-sm font-bold px-8 py-3 rounded-xl"
+            <a href="/roodber8/questions" className="flex items-center gap-2 text-sm font-bold px-8 py-3 rounded-xl"
               style={{ background: 'rgba(255,255,255,0.04)', color: '#64748b', border: '1px solid #1f2937' }}>
               View Library
             </a>

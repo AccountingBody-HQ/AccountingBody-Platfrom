@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import { unstable_noStore as noStore } from "next/cache"
 import Link from "next/link"
-import AutoRefresh from "@/components/admin/AutoRefresh"
+import AutoRefresh from "@/components/roodber8/AutoRefresh"
 import {
   Mail, Users, HelpCircle, Building2, Briefcase,
   ArrowRight, TrendingUp, Factory, Inbox
@@ -90,7 +90,7 @@ export default async function AdminCommandCentre() {
       bg: "rgba(59,130,246,0.08)",
       border: "rgba(59,130,246,0.2)",
       icon: Mail,
-      href: "/admin/submissions",
+      href: "/roodber8/submissions",
     },
     {
       label: "Email Subscribers",
@@ -100,7 +100,7 @@ export default async function AdminCommandCentre() {
       bg: "rgba(16,185,129,0.08)",
       border: "rgba(16,185,129,0.2)",
       icon: Users,
-      href: "/admin/subscribers",
+      href: "/roodber8/subscribers",
     },
     {
       label: "Help Requests",
@@ -110,7 +110,7 @@ export default async function AdminCommandCentre() {
       bg: "rgba(245,158,11,0.08)",
       border: "rgba(245,158,11,0.2)",
       icon: HelpCircle,
-      href: "/admin/submissions",
+      href: "/roodber8/submissions",
     },
     {
       label: "Firm Applications",
@@ -120,7 +120,7 @@ export default async function AdminCommandCentre() {
       bg: "rgba(139,92,246,0.08)",
       border: "rgba(139,92,246,0.2)",
       icon: Building2,
-      href: "/admin/jobs-firms",
+      href: "/roodber8/jobs-firms",
     },
     {
       label: "Job Listings",
@@ -130,16 +130,16 @@ export default async function AdminCommandCentre() {
       bg: "rgba(236,72,153,0.08)",
       border: "rgba(236,72,153,0.2)",
       icon: Briefcase,
-      href: "/admin/jobs-firms",
+      href: "/roodber8/jobs-firms",
     },
   ]
 
   const QUICK_ACTIONS = [
-    { label: "View Submissions",   sub: "Help & contact forms",     href: "/admin/submissions",     icon: Inbox,       color: "#3b82f6" },
-    { label: "Manage Subscribers", sub: "Email list & CSV export",  href: "/admin/subscribers",     icon: Users,       color: "#10b981" },
-    { label: "Content Factory",    sub: "Generate AI study content",href: "/admin/content-factory", icon: Factory,     color: "#f59e0b" },
-    { label: "Jobs & Firms",       sub: "Listings & applications",  href: "/admin/jobs-firms",      icon: Briefcase,   color: "#8b5cf6" },
-    { label: "Questions",          sub: "Generate practice questions",href: "/admin/questions",       icon: HelpCircle,  color: "#D4A017" },
+    { label: "View Submissions",   sub: "Help & contact forms",     href: "/roodber8/submissions",     icon: Inbox,       color: "#3b82f6" },
+    { label: "Manage Subscribers", sub: "Email list & CSV export",  href: "/roodber8/subscribers",     icon: Users,       color: "#10b981" },
+    { label: "Content Factory",    sub: "Generate AI study content",href: "/roodber8/content-factory", icon: Factory,     color: "#f59e0b" },
+    { label: "Jobs & Firms",       sub: "Listings & applications",  href: "/roodber8/jobs-firms",      icon: Briefcase,   color: "#8b5cf6" },
+    { label: "Questions",          sub: "Generate practice questions",href: "/roodber8/questions",       icon: HelpCircle,  color: "#D4A017" },
   ]
 
   return (
@@ -186,7 +186,7 @@ export default async function AdminCommandCentre() {
               <Inbox size={15} style={{ color: "#3b82f6" }} />
               <h2 className="text-white font-bold text-sm">Recent Contact Submissions</h2>
             </div>
-            <Link href="/admin/submissions"
+            <Link href="/roodber8/submissions"
               className="text-xs font-semibold flex items-center gap-1"
               style={{ color: "#475569" }}>
               View all <ArrowRight size={11} />
@@ -266,7 +266,7 @@ export default async function AdminCommandCentre() {
                   {stats.openHelpCount} open
                 </span>
               )}
-              <Link href="/admin/submissions"
+              <Link href="/roodber8/submissions"
                 className="text-xs font-semibold flex items-center gap-1"
                 style={{ color: "#475569" }}>
                 View all <ArrowRight size={11} />
@@ -323,7 +323,7 @@ export default async function AdminCommandCentre() {
                   {stats.pendingFirmsCount} pending
                 </span>
               )}
-              <Link href="/admin/jobs-firms"
+              <Link href="/roodber8/jobs-firms"
                 className="text-xs font-semibold flex items-center gap-1"
                 style={{ color: "#475569" }}>
                 View all <ArrowRight size={11} />

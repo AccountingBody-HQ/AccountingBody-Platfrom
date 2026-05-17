@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from '@supabase/supabase-js'
 import { unstable_noStore as noStore } from 'next/cache'
-import AutoRefresh from '@/components/admin/AutoRefresh'
-import { StatusBadge, DeleteButton } from '@/components/admin/AdminActions'
+import AutoRefresh from '@/components/roodber8/AutoRefresh'
+import { StatusBadge, DeleteButton } from '@/components/roodber8/AdminActions'
 import { Users } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -99,7 +99,7 @@ export default async function SubscribersPage({
             Filter
           </button>
           {(status || source) && (
-            <a href="/admin/subscribers" className="text-xs font-semibold" style={{ color: '#475569' }}>Clear</a>
+            <a href="/roodber8/subscribers" className="text-xs font-semibold" style={{ color: '#475569' }}>Clear</a>
           )}
         </form>
       </div>

@@ -9,14 +9,14 @@ import {
 } from 'lucide-react'
 
 const NAV = [
-  { href: '/admin',                 exact: true,  icon: LayoutDashboard, label: 'Command Centre',  sub: 'Overview & live stats'     },
-  { href: '/admin/submissions',     exact: false, icon: Inbox,           label: 'Submissions',     sub: 'Help & contact forms'      },
-  { href: '/admin/subscribers',     exact: false, icon: Users,           label: 'Subscribers',     sub: 'Email list & export'       },
-  { href: '/admin/jobs-firms',      exact: false, icon: Briefcase,       label: 'Jobs & Firms',    sub: 'Listings & applications'   },
-  { href: '/admin/questions',        exact: false, icon: BookOpen,        label: 'Questions',       sub: 'Generate and manage MCQs'  },
-  { href: '/admin/content-factory', exact: false, icon: Factory,         label: 'Content Factory', sub: 'AI content generation'     },
+  { href: '/roodber8',                 exact: true,  icon: LayoutDashboard, label: 'Command Centre',  sub: 'Overview & live stats'     },
+  { href: '/roodber8/submissions',     exact: false, icon: Inbox,           label: 'Submissions',     sub: 'Help & contact forms'      },
+  { href: '/roodber8/subscribers',     exact: false, icon: Users,           label: 'Subscribers',     sub: 'Email list & export'       },
+  { href: '/roodber8/jobs-firms',      exact: false, icon: Briefcase,       label: 'Jobs & Firms',    sub: 'Listings & applications'   },
+  { href: '/roodber8/questions',        exact: false, icon: BookOpen,        label: 'Questions',       sub: 'Generate and manage MCQs'  },
+  { href: '/roodber8/content-factory', exact: false, icon: Factory,         label: 'Content Factory', sub: 'AI content generation'     },
   { href: 'https://accountingbody-website.vercel.app/studio',                exact: false, icon: Palette,         label: 'Sanity Studio',   sub: 'CMS & content editor'      },
-  { href: '/admin/settings',        exact: false, icon: Settings,        label: 'Settings',        sub: 'Environment & checklist'   },
+  { href: '/roodber8/settings',        exact: false, icon: Settings,        label: 'Settings',        sub: 'Environment & checklist'   },
 ]
 
 function isActive(pathname: string, href: string, exact: boolean) {
@@ -26,11 +26,11 @@ function isActive(pathname: string, href: string, exact: boolean) {
 
 function getBreadcrumb(pathname: string) {
   const map: Record<string, string> = {
-    '/admin':                 'Command Centre',
-    '/admin/submissions':     'Submissions',
-    '/admin/subscribers':     'Subscribers',
-    '/admin/jobs-firms':      'Jobs & Firms',
-    '/admin/content-factory': 'Content Factory',
+    '/roodber8':                 'Command Centre',
+    '/roodber8/submissions':     'Submissions',
+    '/roodber8/subscribers':     'Subscribers',
+    '/roodber8/jobs-firms':      'Jobs & Firms',
+    '/roodber8/content-factory': 'Content Factory',
   }
   const base = '/' + pathname.split('/').slice(1, 3).join('/')
   return map[base] ?? 'Admin'
@@ -42,8 +42,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const crumb = getBreadcrumb(pathname)
 
   async function handleLogout() {
-    await fetch('/api/admin-logout', { method: 'POST' })
-    router.push('/admin-login')
+    await fetch('/api/roodber8-logout', { method: 'POST' })
+    router.push('/roodber8-login')
   }
 
   return (
