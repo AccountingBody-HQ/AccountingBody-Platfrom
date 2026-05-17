@@ -9,7 +9,7 @@ async function sha256Hex(message: string): Promise<string> {
 
 export async function POST(req: NextRequest) {
   try {
-    const { password } = await req.json()
+    const { password, totpCode } = await req.json()
 
     if (!password) {
       return NextResponse.json({ error: "Password required" }, { status: 400 })
@@ -36,8 +36,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid password" }, { status: 401 })
     }
 
-    const token = expectedHash
+    const totpSecret = process.env.ADMIN_TOTP_SECRET
+    if (!totpSecret) {
+      return NextResponse.json({ error: "2FA not configured" }, { status: 500 })
+    }
 
+    if (!totpCode) {
+      return NextResponse.json({ error: "2FA code required" }, { status: 400 })
+    }
+
+    const { verify } = await import("otplib")
+    const isValid = verify({ token: totpCode, secret: totpSecret })
+
+    if (!isValid) {
+      return NextResponse.json({ error: "Invalid 2FA code" }, { status: 401 })
+    }
+
+    const token = expectedHash
     const response = NextResponse.json({ success: true }, { status: 200 })
     response.cookies.set("admin_token", token, {
       httpOnly: true,
@@ -46,9 +61,10 @@ export async function POST(req: NextRequest) {
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
     })
-
     return response
-  } catch {
+
+  } catch (err) {
+    console.error("Auth error:", err)
     return NextResponse.json({ error: "Server error" }, { status: 500 })
   }
 }
