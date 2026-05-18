@@ -77,7 +77,7 @@ async function getArticlesByCategorySlug(categorySlug: string): Promise<SanityAr
     const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
     const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
     const query = encodeURIComponent(
-      `*[_type == "article" && "accountingbody" in showOnSites && categories[]->.slug.current match "${categorySlug}"] | order(title asc) { _id, title, slug, excerpt, "categoryTitle": categories[0]->title, readTime, publishedAt }`
+      `*[_type == "article" && "accountingbody" in showOnSites && categories[]->slug.current == "${categorySlug}"] | order(title asc) { _id, title, slug, excerpt, "categoryTitle": categories[0]->title, readTime, publishedAt }`
     )
     const res = await fetch(
       `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
