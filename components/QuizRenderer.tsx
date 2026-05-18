@@ -352,11 +352,11 @@ export default function QuizRenderer({ quizJson }: Props) {
       )}
 
       {submitted && (
-        <div className="mt-8 flex items-center justify-center gap-4">
-          <button onClick={handleRetry} className="h-11 px-7 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors">
+        <div className="mt-8 flex flex-col sm:flex-row items-stretch gap-3">
+          <button onClick={handleRetry} className="flex-1 h-11 px-7 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors">
             Try a new set
           </button>
-          <a href="/practice-questions" className="h-11 px-7 rounded-lg text-sm font-medium border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors flex items-center">
+          <a href="/practice-questions" className="flex-1 h-11 px-7 rounded-lg text-sm font-medium border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors flex items-center justify-center">
             Browse more questions
           </a>
         </div>
