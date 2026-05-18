@@ -178,8 +178,8 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
         </aside>
 
         {/* ══ LESSON CONTENT ══════════════════════════════════════════════════ */}
-        <main className="flex-1 min-w-0 py-10 px-5 sm:px-8 lg:px-14">
-          <div style={{ maxWidth: 700, margin: '0 auto' }}>
+        <main className="flex-1 min-w-0 py-10 px-5 sm:px-8 lg:px-10">
+          <div style={{ maxWidth: 860, margin: '0 auto' }}>
 
             {/* Lesson heading */}
             <div className="mb-10">
