@@ -677,7 +677,7 @@ export default async function HomePage() {
           <div className="flex items-end justify-between mb-10 gap-4">
             <div>
               <span className="eyebrow mb-3 block">Latest Content</span>
-              <h2 className="section-title">Featured articles &amp; study notes</h2>
+              <h2 className="section-title">Current Issues</h2>
             </div>
             <Link
               href="/articles"
