@@ -41,7 +41,7 @@ async function getCourses(): Promise<SanityCourse[]> {
     )
     const res = await fetch(
       `https://${PROJECT_ID}.api.sanity.io/v2023-05-03/data/query/${DATASET}?query=${query}`,
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: 60 } }
     )
     if (!res.ok) return []
     const data = await res.json()
