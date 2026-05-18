@@ -354,6 +354,11 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
               </div>
             </div>
 
+            {/* Reset progress — visible on all screens */}
+            <div className="mb-6 flex justify-end">
+              <ResetProgressButton courseSlug={course.slug.current} allLessonSlugs={allLessons} />
+            </div>
+
             {/* ── Prev / Next ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-12">
               {prevLesson ? (
