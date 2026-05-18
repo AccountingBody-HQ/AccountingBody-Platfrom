@@ -30,7 +30,7 @@ async function getCourses(): Promise<SanityCourse[]> {
     const PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
     const DATASET    = process.env.NEXT_PUBLIC_SANITY_DATASET    ?? 'production'
     const query = encodeURIComponent(
-      `*[_type == "course" && status == "published" && "accountingbody" in showOnSites]
+      `*[_type == "course" && (status == "published" || !defined(status)) && "accountingbody" in showOnSites]
       | order(courseOrder asc) {
         _id, title, slug, description, level, courseOrder,
         "categoryTitle": category->title,

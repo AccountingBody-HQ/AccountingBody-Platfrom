@@ -60,7 +60,7 @@ export interface CourseFull extends CourseListItem {
 export async function getPublishedCourses(): Promise<CourseListItem[]> {
   try {
     const query = encodeURIComponent(`
-      *[_type == "course" && status == "published" && "accountingbody" in showOnSites]
+      *[_type == "course" && (status == "published" || !defined(status)) && "accountingbody" in showOnSites]
       | order(courseOrder asc) {
         _id, title, slug, description, level, isFeatured, courseOrder,
         "categoryTitle": category->title,
