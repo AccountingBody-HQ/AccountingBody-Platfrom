@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getLessonData, getCourseBySlug, getPublishedCourses } from '@/lib/coursesNew'
-import MarkCompleteButton, { LessonStatusDot, CourseProgressBar } from '@/components/course/ProgressTracker'
+import MarkCompleteButton, { LessonStatusDot, CourseProgressBar, ResetProgressButton } from '@/components/course/ProgressTracker'
 
 export async function generateStaticParams() {
   const courses = await getPublishedCourses()
@@ -152,14 +152,15 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
             </div>
           )}
 
-          {/* Mark complete */}
-          <div className="mt-8">
+          {/* Mark complete + reset */}
+          <div className="mt-8 flex items-center gap-4">
             <MarkCompleteButton
               courseSlug={course.slug.current}
               lessonSlug={params.lessonSlug}
               allLessonSlugs={allLessons}
               nextHref={nextLesson ? `/free-courses/${course.slug.current}/learn/${nextLesson.slug}` : undefined}
             />
+            <ResetProgressButton courseSlug={course.slug.current} allLessonSlugs={allLessons} />
           </div>
 
           {/* Prev / Next */}
