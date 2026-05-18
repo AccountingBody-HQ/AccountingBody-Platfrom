@@ -8,8 +8,6 @@
 
 import { useState } from 'react'
 
-const SANITY_PROJECT_ID = '4rllejq1'
-const SANITY_DATASET    = 'production'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -42,25 +40,29 @@ function uid() {
 
 async function fetchArticleById(id: string): Promise<FetchedArticle | null> {
   try {
-    const isContentId = id.startsWith('AB-')
-    const condition   = isContentId
-      ? `contentId == "${id}"`
-      : `wpId == "${id}"`
-    const query = encodeURIComponent(
-      `*[_type == "article" && "accountingbody" in showOnSites && ${condition}][0] {
-        _id, title, slug, excerpt, contentId, wpId
-      }`
-    )
-    const res = await fetch(
-      `https://${SANITY_PROJECT_ID}.api.sanity.io/v2023-05-03/data/query/${SANITY_DATASET}?query=${query}`,
-      { cache: 'no-store' }
-    )
+    const res = await fetch(`/api/roodber8/course-factory/fetch-article?id=${encodeURIComponent(id.trim())}`, {
+      cache: 'no-store',
+    })
     if (!res.ok) return null
     const data = await res.json()
-    return data.result ?? null
+    return data.article ?? null
   } catch {
     return null
   }
+}
+
+async function fetchArticlesBulk(ids: string[]): Promise<{ found: FetchedArticle[]; missing: string[] }> {
+  const found: FetchedArticle[] = []
+  const missing: string[] = []
+  await Promise.all(ids.map(async (id) => {
+    const article = await fetchArticleById(id.trim())
+    if (article) {
+      found.push(article)
+    } else {
+      missing.push(id.trim())
+    }
+  }))
+  return { found, missing }
 }
 
 async function saveCourseToSanity(payload: any): Promise<{ success: boolean; id?: string; error?: string }> {
@@ -94,10 +96,10 @@ export default function CourseFactoryPage() {
   ])
 
   // ID input state
-  const [idInput,     setIdInput]     = useState('')
-  const [fetching,    setFetching]    = useState(false)
-  const [fetchError,  setFetchError]  = useState('')
-  const [fetchedArticle, setFetchedArticle] = useState<FetchedArticle | null>(null)
+  const [idInput,        setIdInput]        = useState('')
+  const [fetching,       setFetching]       = useState(false)
+  const [fetchError,     setFetchError]     = useState('')
+  const [fetchedArticles, setFetchedArticles] = useState<FetchedArticle[]>([])
   const [targetChapter,  setTargetChapter]  = useState('0')
   const [targetLesson,   setTargetLesson]   = useState('new')
 
@@ -106,33 +108,38 @@ export default function CourseFactoryPage() {
   const [saveMsg,    setSaveMsg]    = useState('')
   const [saveError,  setSaveError]  = useState('')
 
-  // ── Fetch article by ID ──────────────────────────────────────────────────
+  // ── Fetch articles by IDs (bulk) ─────────────────────────────────────────
   async function handleFetch() {
     if (!idInput.trim()) return
     setFetching(true)
     setFetchError('')
-    setFetchedArticle(null)
-    const article = await fetchArticleById(idInput.trim())
-    if (!article) {
-      setFetchError(`No article found for ID: ${idInput.trim()}`)
+    setFetchedArticles([])
+    const ids = idInput.split(',').map(s => s.trim()).filter(Boolean)
+    const { found, missing } = await fetchArticlesBulk(ids)
+    if (found.length === 0) {
+      setFetchError(`No articles found for the provided IDs.`)
     } else {
-      setFetchedArticle(article)
+      setFetchedArticles(found)
+      if (missing.length > 0) setFetchError(`Found ${found.length} articles. Could not find: ${missing.join(', ')}`)
     }
     setFetching(false)
   }
 
-  // ── Add fetched article to chapter/lesson ────────────────────────────────
-  function handleAddArticle() {
-    if (!fetchedArticle) return
+  // ── Add fetched articles to chapter/lesson (bulk) ────────────────────────
+  function handleAddArticles() {
+    if (fetchedArticles.length === 0) return
     const chIdx = parseInt(targetChapter)
     setChapters(prev => {
       const next = prev.map((ch, ci) => {
         if (ci !== chIdx) return ch
         if (targetLesson === 'new') {
+          // Create one new lesson containing all fetched articles
           const newLesson: Lesson = {
             id:       uid(),
-            title:    fetchedArticle.title,
-            articles: [fetchedArticle],
+            title:    fetchedArticles.length === 1
+              ? fetchedArticles[0].title
+              : `Lesson ${ch.lessons.length + 1}`,
+            articles: fetchedArticles,
           }
           return { ...ch, lessons: [...ch.lessons, newLesson] }
         }
@@ -141,14 +148,14 @@ export default function CourseFactoryPage() {
           ...ch,
           lessons: ch.lessons.map((l, li) =>
             li === lIdx
-              ? { ...l, articles: [...l.articles, fetchedArticle] }
+              ? { ...l, articles: [...l.articles, ...fetchedArticles] }
               : l
           ),
         }
       })
       return next
     })
-    setFetchedArticle(null)
+    setFetchedArticles([])
     setIdInput('')
     setFetchError('')
   }
@@ -348,20 +355,19 @@ export default function CourseFactoryPage() {
         <p className="text-xs text-slate-400">Enter a wpId (e.g. 1999) or contentId (e.g. AB-ART-00001) to fetch an article.</p>
 
         <div className="flex gap-2">
-          <input
-            type="text"
+          <textarea
             value={idInput}
             onChange={e => setIdInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleFetch()}
-            placeholder="wpId or AB-ART-00001"
-            className="flex-1 h-10 px-3 rounded-lg border border-slate-200 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950"
+            placeholder="Paste one or multiple IDs separated by commas e.g. 41267, 41273, 41278 or AB-ART-00001, AB-ART-00002"
+            rows={3}
+            className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950 resize-none"
           />
           <button
             onClick={handleFetch}
             disabled={fetching || !idInput.trim()}
-            className="h-10 px-5 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors disabled:opacity-40"
+            className="h-10 px-5 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors disabled:opacity-40 self-start"
           >
-            {fetching ? 'Fetching...' : 'Fetch'}
+            {fetching ? 'Fetching...' : 'Fetch All'}
           </button>
         </div>
 
@@ -369,21 +375,24 @@ export default function CourseFactoryPage() {
           <p className="text-sm text-crimson-600 bg-crimson-50 border border-crimson-200 rounded-lg px-3 py-2">{fetchError}</p>
         )}
 
-        {fetchedArticle && (
+        {fetchedArticles.length > 0 && (
           <div className="border border-teal-200 bg-teal-50 rounded-xl p-4 space-y-3">
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center gap-2 mb-2">
+              <svg className="w-5 h-5 text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-navy-950">{fetchedArticle.title}</p>
-                {fetchedArticle.excerpt && (
-                  <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{fetchedArticle.excerpt}</p>
-                )}
-              </div>
+              <p className="text-sm font-semibold text-teal-700">{fetchedArticles.length} article{fetchedArticles.length > 1 ? 's' : ''} found</p>
+            </div>
+            <div className="space-y-1.5 max-h-40 overflow-y-auto">
+              {fetchedArticles.map((a, i) => (
+                <div key={a._id} className="flex items-center gap-2">
+                  <span className="text-xs text-teal-600 font-bold w-5 shrink-0">{i + 1}.</span>
+                  <p className="text-xs text-navy-950 truncate">{a.title}</p>
+                </div>
+              ))}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-teal-200">
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">Add to Chapter</label>
                 <select
@@ -403,7 +412,7 @@ export default function CourseFactoryPage() {
                   onChange={e => setTargetLesson(e.target.value)}
                   className="w-full h-9 px-2 rounded-lg border border-slate-200 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950"
                 >
-                  <option value="new">+ Create new lesson</option>
+                  <option value="new">+ Create new lesson (all articles)</option>
                   {chapters[parseInt(targetChapter)]?.lessons.map((l, li) => (
                     <option key={l.id} value={li}>{l.title}</option>
                   ))}
@@ -412,10 +421,10 @@ export default function CourseFactoryPage() {
             </div>
 
             <button
-              onClick={handleAddArticle}
+              onClick={handleAddArticles}
               className="w-full h-9 rounded-lg text-sm font-semibold bg-teal-600 text-white hover:bg-teal-700 transition-colors"
             >
-              Add to Course
+              Add {fetchedArticles.length} Article{fetchedArticles.length > 1 ? 's' : ''} to Course
             </button>
           </div>
         )}
