@@ -1,11 +1,11 @@
 // app/free-courses/[slug]/learn/[lessonSlug]/page.tsx
-// Accounting Body — Premium Course Lesson Player v2
+// Accounting Body — Premium Course Lesson Player v3
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getLessonData, getCourseBySlug, getPublishedCourses } from '@/lib/coursesNew'
-import MarkCompleteButton, { LessonStatusDot, CourseProgressBar, ResetProgressButton } from '@/components/course/ProgressTracker'
+import MarkCompleteButton, { LessonStatusDot, CourseProgressBar, ResetProgressButton, PositionRing } from '@/components/course/ProgressTracker'
 
 export async function generateStaticParams() {
   const courses = await getPublishedCourses()
@@ -44,180 +44,198 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
   }
   const currentIdx   = allLessons.indexOf(params.lessonSlug)
   const totalLessons = allLessons.length
-  const pct          = Math.round(((currentIdx + 1) / totalLessons) * 100)
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#F0EEE9' }}>
+    <div className="flex flex-col" style={{ minHeight: '100vh', background: '#EDE9E3' }}>
 
-      {/* ── Top Bar ── */}
-      <header className="sticky top-16 z-40" style={{ background: '#0C1A3D' }}>
-        {/* Gold progress line */}
-        <div className="h-[3px] w-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
-          <CourseProgressBar courseSlug={course.slug.current} allLessonSlugs={allLessons} />
-        </div>
-        <div className="flex items-center gap-0" style={{ minHeight: 52 }}>
-          {/* Back button */}
+      {/* ══ TOP BAR ══════════════════════════════════════════════════════════ */}
+      <header className="sticky top-16 z-40 border-b" style={{ background: '#0C1A3D', borderColor: 'rgba(255,255,255,0.06)' }}>
+        <div className="flex items-stretch" style={{ minHeight: 56 }}>
+
+          {/* Back */}
           <Link
             href={`/free-courses/${course.slug.current}`}
-            className="flex items-center gap-2.5 px-5 py-3 border-r transition-colors h-full"
-            style={{ borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}
+            className="flex items-center gap-2 pl-4 pr-5 border-r shrink-0 transition-all"
+            style={{ borderColor: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)' }}
+            onMouseEnter={undefined}
           >
-            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-            </svg>
-            <span className="hidden sm:block text-xs font-semibold truncate max-w-[160px]" style={{ color: 'rgba(255,255,255,0.55)' }}>{course.title}</span>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeWidth="2.5" d="M15 19l-7-7 7-7"/>
+              </svg>
+            </div>
+            <span className="hidden md:block text-xs font-semibold truncate max-w-[150px]" style={{ color: 'rgba(255,255,255,0.45)' }}>
+              {course.title}
+            </span>
           </Link>
 
-          {/* Lesson title */}
-          <div className="flex-1 min-w-0 px-5">
-            <p className="text-sm font-semibold truncate" style={{ color: '#fff' }}>{lesson.title}</p>
-            <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{chapterTitle}</p>
+          {/* Lesson info */}
+          <div className="flex-1 flex items-center px-5 min-w-0">
+            <div className="min-w-0">
+              <p className="text-sm font-bold leading-tight truncate text-white">{lesson.title}</p>
+              <p className="text-[0.65rem] font-medium mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                {chapterTitle} · Lesson {currentIdx + 1} of {totalLessons}
+              </p>
+            </div>
           </div>
 
           {/* Progress */}
-          <div className="flex items-center gap-3 px-5 border-l" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-            <div className="hidden sm:block text-right">
-              <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.35)' }}>Lesson {currentIdx + 1} of {totalLessons}</p>
+          <div className="flex items-center gap-4 px-5 border-l shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+            <div className="hidden sm:block">
+              <CourseProgressBar courseSlug={course.slug.current} allLessonSlugs={allLessons} />
             </div>
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-              style={{ background: 'rgba(212,160,23,0.15)', color: '#D4A017', border: '1.5px solid rgba(212,160,23,0.3)' }}
-            >
-              {pct}%
-            </div>
+            <PositionRing current={currentIdx + 1} total={totalLessons} />
           </div>
         </div>
       </header>
 
-      {/* ── Body ── */}
+      {/* ══ BODY ══════════════════════════════════════════════════════════════ */}
       <div className="flex flex-1">
 
-        {/* ── Sidebar ── */}
+        {/* ══ SIDEBAR ════════════════════════════════════════════════════════ */}
         <aside
-          className="hidden lg:flex flex-col w-72 xl:w-80 shrink-0 sticky overflow-hidden"
+          className="hidden lg:flex flex-col shrink-0"
           style={{
-            top: 'calc(4rem + 55px)',
-            maxHeight: 'calc(100vh - 4rem - 55px)',
-            background: '#0F2044',
+            width: 288,
+            background: '#081428',
+            position: 'sticky',
+            top: 'calc(4rem + 56px)',
+            maxHeight: 'calc(100vh - 4rem - 56px)',
+            overflow: 'hidden',
           }}
         >
           {/* Sidebar header */}
-          <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-            <p className="text-[0.6rem] font-bold uppercase tracking-[0.12em] mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Course Content</p>
-            <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>
-              {course.chapters?.length ?? 0} chapters · {totalLessons} lessons
+          <div className="px-5 pt-5 pb-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+            <p className="text-[0.6rem] font-black uppercase tracking-[0.15em] mb-1" style={{ color: '#D4A017' }}>
+              Course Content
+            </p>
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
+              {course.chapters?.length} chapters · {totalLessons} lessons
             </p>
           </div>
 
-          {/* Chapters */}
-          <div className="flex-1 overflow-y-auto py-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
+          {/* Chapter list */}
+          <div className="flex-1 overflow-y-auto">
             {course.chapters?.map((chapter, ci) => (
-              <div key={chapter._key} className="mb-1">
-                {/* Chapter label */}
-                <div className="flex items-center gap-2.5 px-4 py-2.5">
+              <div key={chapter._key}>
+                {/* Chapter header */}
+                <div
+                  className="flex items-center gap-3 px-5 py-3 mt-1"
+                >
                   <div
-                    className="w-5 h-5 rounded flex items-center justify-center text-[0.55rem] font-bold shrink-0"
-                    style={{ background: 'rgba(212,160,23,0.2)', color: '#D4A017' }}
+                    className="w-6 h-6 rounded-md flex items-center justify-center text-[0.6rem] font-black shrink-0"
+                    style={{ background: 'rgba(212,160,23,0.15)', color: '#D4A017' }}
                   >
                     {ci + 1}
                   </div>
-                  <p className="text-[0.65rem] font-bold uppercase tracking-[0.08em] leading-snug" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  <p className="text-[0.7rem] font-black uppercase tracking-[0.08em] leading-tight" style={{ color: 'rgba(255,255,255,0.5)' }}>
                     {chapter.chapterTitle}
                   </p>
                 </div>
 
                 {/* Lessons */}
-                {chapter.lessons?.map((l, li) => {
-                  const isActive = l.slug?.current === params.lessonSlug
-                  return (
-                    <Link
-                      key={l._id}
-                      href={`/free-courses/${course.slug.current}/learn/${l.slug.current}`}
-                      className="flex items-center gap-3 px-4 py-2.5 transition-all duration-150 group relative"
-                      style={{
-                        background: isActive ? 'rgba(212,160,23,0.12)' : 'transparent',
-                        borderLeft: isActive ? '2px solid #D4A017' : '2px solid transparent',
-                      }}
-                    >
-                      <LessonStatusDot
-                        courseSlug={course.slug.current}
-                        lessonSlug={l.slug.current}
-                        allLessonSlugs={allLessons}
-                        isActive={isActive}
-                        lessonNumber={li + 1}
-                      />
-                      <span
-                        className="text-sm leading-snug flex-1"
+                <div className="mb-1">
+                  {chapter.lessons?.map((l, li) => {
+                    const isActive = l.slug?.current === params.lessonSlug
+                    return (
+                      <Link
+                        key={l._id}
+                        href={`/free-courses/${course.slug.current}/learn/${l.slug.current}`}
+                        className="flex items-center gap-3 pl-5 pr-4 py-3 transition-all duration-150"
                         style={{
-                          color: isActive ? '#fff' : 'rgba(255,255,255,0.5)',
-                          fontWeight: isActive ? 600 : 400,
+                          background:  isActive ? 'rgba(212,160,23,0.1)' : 'transparent',
+                          borderLeft:  isActive ? '3px solid #D4A017' : '3px solid transparent',
                         }}
                       >
-                        {l.title}
-                      </span>
-                    </Link>
-                  )
-                })}
+                        <LessonStatusDot
+                          courseSlug={course.slug.current}
+                          lessonSlug={l.slug.current}
+                          allLessonSlugs={allLessons}
+                          isActive={isActive}
+                          lessonNumber={li + 1}
+                        />
+                        <span
+                          className="text-sm leading-snug flex-1 min-w-0 truncate"
+                          style={{
+                            color:      isActive ? '#ffffff' : 'rgba(255,255,255,0.45)',
+                            fontWeight: isActive ? 700 : 400,
+                          }}
+                        >
+                          {l.title}
+                        </span>
+                      </Link>
+                    )
+                  })}
+                </div>
               </div>
             ))}
           </div>
 
           {/* Sidebar footer */}
-          <div className="px-5 py-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+          <div className="px-5 py-3.5 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
             <ResetProgressButton courseSlug={course.slug.current} allLessonSlugs={allLessons} />
           </div>
         </aside>
 
-        {/* ── Main Content ── */}
-        <main className="flex-1 min-w-0 py-10 px-4 sm:px-8 lg:px-12">
-          <div className="max-w-2xl mx-auto">
+        {/* ══ LESSON CONTENT ══════════════════════════════════════════════════ */}
+        <main className="flex-1 min-w-0 py-10 px-5 sm:px-8 lg:px-14">
+          <div style={{ maxWidth: 700, margin: '0 auto' }}>
 
-            {/* Lesson header */}
+            {/* Lesson heading */}
             <div className="mb-10">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex flex-wrap items-center gap-2 mb-5">
                 <span
-                  className="text-[0.6rem] font-bold uppercase tracking-[0.12em] px-2.5 py-1 rounded-full"
-                  style={{ background: 'rgba(212,160,23,0.12)', color: '#B8860B' }}
+                  className="text-[0.65rem] font-black uppercase tracking-[0.1em] px-3 py-1.5 rounded-full"
+                  style={{ background: 'rgba(12,26,61,0.08)', color: '#0C1A3D' }}
                 >
                   {chapterTitle}
                 </span>
-                <span className="text-[0.6rem] text-slate-400 font-medium">Lesson {currentIdx + 1} of {totalLessons}</span>
+                <span className="text-[0.65rem] font-semibold text-slate-400">
+                  Lesson {currentIdx + 1} of {totalLessons}
+                </span>
               </div>
               <h1
-                className="font-display text-navy-950 leading-[1.08] mb-5"
-                style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', letterSpacing: '-0.025em' }}
+                className="font-display text-navy-950"
+                style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.6rem)', lineHeight: 1.1, letterSpacing: '-0.03em', marginBottom: 16 }}
               >
                 {lesson.title}
               </h1>
-              <div className="flex items-center gap-3">
-                <div className="h-px flex-1" style={{ background: 'linear-gradient(to right, #D4A017, transparent)' }} />
-              </div>
+              {/* Decorative rule */}
+              <div style={{ height: 2, background: 'linear-gradient(to right, #D4A017 0%, #D4A01760 40%, transparent 100%)', borderRadius: 2 }} />
             </div>
 
             {/* Video */}
             {lesson.videoUrl && (
-              <div className="mb-10 rounded-2xl overflow-hidden shadow-2xl border border-slate-200 aspect-video bg-navy-950">
-                <iframe
-                  src={lesson.videoUrl.replace('watch?v=', 'embed/')}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
+              <div className="mb-10 rounded-3xl overflow-hidden border" style={{ boxShadow: '0 20px 60px rgba(12,26,61,0.15)', borderColor: 'rgba(0,0,0,0.06)' }}>
+                <div style={{ aspectRatio: '16/9', background: '#0C1A3D' }}>
+                  <iframe
+                    src={lesson.videoUrl.replace('watch?v=', 'embed/')}
+                    style={{ width: '100%', height: '100%' }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
               </div>
             )}
 
             {/* Study Notes */}
             {lesson.linkedArticles?.length > 0 && (
               <div className="mb-10">
+                {/* Section label */}
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#0C1A3D' }}>
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: '#0C1A3D' }}
+                  >
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      <path strokeLinecap="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                     </svg>
                   </div>
                   <div>
-                    <h2 className="font-display text-navy-950 text-lg leading-none">Study Notes</h2>
-                    <p className="text-xs text-slate-400 mt-0.5">{lesson.linkedArticles.length} {lesson.linkedArticles.length === 1 ? 'article' : 'articles'}</p>
+                    <h2 className="font-display text-navy-950 text-xl leading-none">Study Notes</h2>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {lesson.linkedArticles.length} {lesson.linkedArticles.length === 1 ? 'article' : 'articles'} in this lesson
+                    </p>
                   </div>
                 </div>
 
@@ -225,18 +243,19 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                   {lesson.linkedArticles.map((article, ai) => (
                     <div
                       key={article._id}
-                      className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
-                      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' }}
+                      className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
+                      style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
                     >
-                      {/* Left accent bar */}
+                      {/* Left bar */}
                       <div
-                        className="absolute left-0 top-0 bottom-0 w-1 transition-all duration-200"
-                        style={{ background: ai === 0 ? '#D4A017' : '#E2E8F0' }}
+                        className="absolute left-0 top-0 bottom-0 w-1.5"
+                        style={{ background: ai === 0 ? 'linear-gradient(to bottom, #D4A017, #c49215)' : '#E2E8F0' }}
                       />
-                      <div className="pl-6 pr-5 py-5 flex items-start gap-4">
+                      <div className="pl-7 pr-5 py-5 flex items-start gap-4">
+                        {/* Index */}
                         <div
-                          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-sm font-bold transition-all duration-200"
-                          style={{ background: '#F8F7F4', color: '#64748B' }}
+                          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 text-sm font-black transition-all duration-200 group-hover:scale-105"
+                          style={{ background: ai === 0 ? 'rgba(212,160,23,0.1)' : '#F8F7F4', color: ai === 0 ? '#B8860B' : '#94A3B8' }}
                         >
                           {ai + 1}
                         </div>
@@ -244,27 +263,31 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                           <Link
                             href={`/articles/${article.slug.current}`}
                             target="_blank"
-                            className="font-display text-base font-semibold text-navy-950 hover:text-navy-600 transition-colors leading-snug block mb-2"
+                            className="font-display text-navy-950 hover:text-navy-700 transition-colors leading-snug block font-semibold"
+                            style={{ fontSize: '1rem', marginBottom: 6 }}
                           >
                             {article.title}
                           </Link>
                           {article.excerpt && (
-                            <p className="text-sm text-slate-500 leading-relaxed line-clamp-2 mb-3">{article.excerpt}</p>
+                            <p className="text-sm leading-relaxed mb-3" style={{ color: '#64748B' }}>
+                              {article.excerpt.length > 120 ? article.excerpt.slice(0, 120) + '…' : article.excerpt}
+                            </p>
                           )}
                           <Link
                             href={`/articles/${article.slug.current}`}
                             target="_blank"
-                            className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide transition-colors"
+                            className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-colors"
                             style={{ color: '#D4A017' }}
                           >
-                            Read article
+                            Read full article
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                              <path strokeLinecap="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                             </svg>
                           </Link>
                         </div>
-                        <svg className="w-4 h-4 text-slate-300 shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        {/* External icon */}
+                        <svg className="w-4 h-4 shrink-0 mt-1 opacity-25" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                         </svg>
                       </div>
                     </div>
@@ -275,38 +298,50 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
 
             {/* External quiz */}
             {lesson.externalQuizUrl && (
-              <div className="mb-10 p-5 rounded-2xl border" style={{ background: 'rgba(212,160,23,0.06)', borderColor: 'rgba(212,160,23,0.2)' }}>
+              <div
+                className="mb-10 p-5 rounded-2xl"
+                style={{ background: 'rgba(212,160,23,0.07)', border: '1.5px solid rgba(212,160,23,0.2)' }}
+              >
                 <div className="flex items-center gap-4">
                   <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#D4A017' }}>
-                    <svg className="w-5 h-5 text-navy-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    <svg className="w-5 h-5" style={{ color: '#0C1A3D' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <p className="font-semibold text-navy-950 text-sm">Practice Questions</p>
+                    <p className="font-bold text-navy-950 text-sm">Practice Questions</p>
                     <p className="text-xs text-slate-500 mt-0.5">Test your understanding of this topic</p>
                   </div>
-                  <Link href={lesson.externalQuizUrl}
-                    className="h-10 px-5 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors"
-                    style={{ background: '#0C1A3D', color: '#fff' }}>
+                  <Link
+                    href={lesson.externalQuizUrl}
+                    className="h-10 px-5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all hover:-translate-y-0.5"
+                    style={{ background: '#0C1A3D', color: '#fff', boxShadow: '0 4px 12px rgba(12,26,61,0.25)' }}
+                  >
                     Practice
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      <path strokeLinecap="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                     </svg>
                   </Link>
                 </div>
               </div>
             )}
 
-            {/* Mark complete card */}
+            {/* ── Mark Complete Card ── */}
             <div
-              className="mb-8 p-6 rounded-2xl border"
-              style={{ background: '#fff', borderColor: '#E2E8F0', boxShadow: '0 4px 24px rgba(12,26,61,0.06)' }}
+              className="mb-8 rounded-3xl overflow-hidden"
+              style={{ boxShadow: '0 8px 32px rgba(12,26,61,0.1)' }}
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <p className="font-display text-navy-950 text-lg leading-tight mb-1">Ready to continue?</p>
-                  <p className="text-sm text-slate-400">Mark this lesson complete to track your progress.</p>
+              <div
+                className="px-7 py-6 flex flex-col sm:flex-row sm:items-center gap-5"
+                style={{ background: 'linear-gradient(135deg, #0C1A3D 0%, #14245a 100%)' }}
+              >
+                <div className="flex-1">
+                  <p className="font-display text-white text-xl leading-tight mb-1">
+                    Ready to continue?
+                  </p>
+                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                    Mark this lesson complete and move forward.
+                  </p>
                 </div>
                 <div className="shrink-0">
                   <MarkCompleteButton
@@ -319,25 +354,21 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
               </div>
             </div>
 
-            {/* Prev / Next */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
+            {/* ── Prev / Next ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-12">
               {prevLesson ? (
                 <Link
                   href={`/free-courses/${course.slug.current}/learn/${prevLesson.slug}`}
-                  className="flex items-center gap-3 p-4 rounded-2xl border bg-white transition-all duration-200 hover:-translate-y-0.5 group"
-                  style={{ borderColor: '#E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
+                  className="flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg group"
                 >
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200"
-                    style={{ background: '#F0EEE9' }}
-                  >
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors" style={{ background: '#F0EEE9' }}>
                     <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                      <path strokeLinecap="round" strokeWidth="2.5" d="M15 19l-7-7 7-7"/>
                     </svg>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-slate-400 mb-0.5">Previous</p>
-                    <p className="text-sm font-semibold text-navy-950 truncate">{prevLesson.title}</p>
+                    <p className="text-[0.6rem] font-black uppercase tracking-[0.12em] text-slate-400 mb-0.5">Previous</p>
+                    <p className="text-sm font-bold text-navy-950 truncate">{prevLesson.title}</p>
                   </div>
                 </Link>
               ) : <div />}
@@ -345,48 +376,48 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
               {nextLesson ? (
                 <Link
                   href={`/free-courses/${course.slug.current}/learn/${nextLesson.slug}`}
-                  className="flex items-center justify-end gap-3 p-4 rounded-2xl border transition-all duration-200 hover:-translate-y-0.5 group text-right"
-                  style={{ background: '#0C1A3D', borderColor: '#0C1A3D', boxShadow: '0 4px 16px rgba(12,26,61,0.3)' }}
+                  className="flex items-center justify-end gap-3 p-4 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl group text-right"
+                  style={{ background: 'linear-gradient(135deg, #0C1A3D 0%, #14245a 100%)', boxShadow: '0 4px 20px rgba(12,26,61,0.3)' }}
                 >
                   <div className="min-w-0">
-                    <p className="text-[0.6rem] font-bold uppercase tracking-[0.1em] mb-0.5" style={{ color: 'rgba(212,160,23,0.7)' }}>Next Lesson</p>
-                    <p className="text-sm font-semibold text-white truncate">{nextLesson.title}</p>
+                    <p className="text-[0.6rem] font-black uppercase tracking-[0.12em] mb-0.5" style={{ color: 'rgba(212,160,23,0.6)' }}>Next Lesson</p>
+                    <p className="text-sm font-bold text-white truncate">{nextLesson.title}</p>
                   </div>
                   <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: '#D4A017' }}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: '#D4A017', boxShadow: '0 4px 12px rgba(212,160,23,0.4)' }}
                   >
-                    <svg className="w-4 h-4 text-navy-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                    <svg className="w-4 h-4" style={{ color: '#0C1A3D' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="2.5" d="M9 5l7 7-7 7"/>
                     </svg>
                   </div>
                 </Link>
               ) : (
                 <Link
                   href={`/free-courses/${course.slug.current}`}
-                  className="flex items-center justify-center gap-3 p-4 rounded-2xl border-2 transition-colors"
-                  style={{ borderColor: '#14b4a3', background: 'rgba(20,180,163,0.06)' }}
+                  className="flex items-center justify-center gap-3 p-4 rounded-2xl border-2 transition-all hover:-translate-y-0.5"
+                  style={{ borderColor: '#14b4a3', background: 'rgba(20,180,163,0.07)' }}
                 >
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#14b4a3' }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#14b4a3' }}>
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-bold" style={{ color: '#0d8f82' }}>Course Complete!</p>
-                    <p className="text-xs" style={{ color: '#14b4a3' }}>Back to course overview</p>
+                    <p className="text-sm font-black" style={{ color: '#0d8f82' }}>Course Complete!</p>
+                    <p className="text-xs font-medium" style={{ color: '#14b4a3' }}>View course overview</p>
                   </div>
                 </Link>
               )}
             </div>
 
             {/* Footer credit */}
-            <div className="pt-6 border-t border-slate-200 flex items-center gap-2.5">
-              <svg className="w-3.5 h-3.5 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            <div className="flex items-center gap-2 pt-6 border-t border-slate-200">
+              <svg className="w-3.5 h-3.5 shrink-0 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
               </svg>
               <p className="text-xs text-slate-400">
-                Developed by <span className="font-semibold text-slate-500">Accounting Body Editorial Team</span> — written and reviewed by qualified accountants. Always free.
+                Developed by <strong className="text-slate-500">Accounting Body Editorial Team</strong> · Written and reviewed by qualified accountants · Always free
               </p>
             </div>
 
