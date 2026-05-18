@@ -120,7 +120,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
               <div key={chapter._key}>
                 {/* Chapter header */}
                 <div
-                  className="flex items-center gap-3 px-5 py-3 mt-1"
+                  className="flex items-center gap-3 px-5 py-2 mt-1"
                 >
                   <div
                     className="w-6 h-6 rounded-md flex items-center justify-center text-[0.6rem] font-black shrink-0"
@@ -141,7 +141,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                       <Link
                         key={l._id}
                         href={`/free-courses/${course.slug.current}/learn/${l.slug.current}`}
-                        className="flex items-center gap-3 pl-5 pr-4 py-3 transition-all duration-150"
+                        className="flex items-center gap-3 pl-5 pr-4 py-2 transition-all duration-150"
                         style={{
                           background:  isActive ? 'rgba(212,160,23,0.1)' : 'transparent',
                           borderLeft:  isActive ? '3px solid #D4A017' : '3px solid transparent',
@@ -155,7 +155,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                           lessonNumber={li + 1}
                         />
                         <span
-                          className="text-sm leading-snug flex-1 min-w-0 truncate"
+                          className="text-sm leading-snug flex-1 min-w-0"
                           style={{
                             color:      isActive ? '#ffffff' : 'rgba(255,255,255,0.45)',
                             fontWeight: isActive ? 700 : 400,
