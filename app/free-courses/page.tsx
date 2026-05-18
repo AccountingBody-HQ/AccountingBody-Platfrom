@@ -8,7 +8,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Free Accounting Courses | Accounting Body',
-  description: 'Free online accounting courses for ACCA, CIMA, ICAEW and AAT. Structured lessons, worked examples, and built-in practice questions. No signup required.',
+  description: 'Free online accounting courses for accounting and finance students. Structured lessons, worked examples, and built-in practice questions. No signup required.',
 }
 
 // ── Sanity fetch ───────────────────────────────────────────────────────────────
@@ -121,7 +121,7 @@ export default async function FreeCoursesPage() {
               </span>
             </h1>
             <p className="text-white/65 text-xl leading-relaxed mb-10 max-w-2xl">
-              Structured online courses for ACCA, CIMA, ICAEW and AAT.
+              Structured online courses for accounting and finance students.
               Written by qualified accountants. Built-in practice questions. Always free to start.
             </p>
             <div className="flex flex-wrap items-center gap-3">
