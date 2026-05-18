@@ -698,7 +698,7 @@ export default async function HomePage() {
 
           <div className="mt-8 text-center">
             <Link
-              href="/articles"
+              href="/study"
               className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors shadow-sm"
             >
               Browse all 3,000+ articles
