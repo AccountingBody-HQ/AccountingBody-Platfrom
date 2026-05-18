@@ -10,7 +10,6 @@ const STATIC_REDIRECTS: Record<string, string> = {
   "/about-us": "/about",
   "/cookie-policy-uk": "/cookie-policy",
   "/ethiotax.com": "/ethiotax",
-  "/study-hub": "/study-hub",
 }
 
 async function sha256Hex(message: string): Promise<string> {
