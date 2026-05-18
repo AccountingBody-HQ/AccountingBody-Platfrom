@@ -85,7 +85,7 @@ export async function getPublishedCourses(): Promise<CourseListItem[]> {
 export async function getCourseBySlug(slug: string): Promise<CourseFull | null> {
   try {
     const query = encodeURIComponent(`
-      *[_type == "course" && slug.current == "${slug}" && status == "published"][0] {
+      *[_type == "course" && slug.current == "${slug}" && (status == "published" || !defined(status))][0] {
         _id, title, slug, description, level, isFeatured,
         courseOrder, metaDescription, showOnSites, status,
         "categoryTitle": category->title,
