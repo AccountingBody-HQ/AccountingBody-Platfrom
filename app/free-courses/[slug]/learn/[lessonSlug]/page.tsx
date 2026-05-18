@@ -1,5 +1,5 @@
 // app/free-courses/[slug]/learn/[lessonSlug]/page.tsx
-// Accounting Body — Premium Course Lesson Player
+// Accounting Body — Premium Course Lesson Player v2
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -44,134 +44,159 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
   }
   const currentIdx   = allLessons.indexOf(params.lessonSlug)
   const totalLessons = allLessons.length
+  const pct          = Math.round(((currentIdx + 1) / totalLessons) * 100)
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#F8F7F4' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#F0EEE9' }}>
 
-      {/* ── Premium Top Bar ── */}
-      <header className="bg-navy-950 sticky top-16 z-30 shadow-lg">
-        {/* Full-width progress line at very top */}
-        <div className="h-0.5 w-full bg-white/10">
+      {/* ── Top Bar ── */}
+      <header className="sticky top-16 z-40" style={{ background: '#0C1A3D' }}>
+        {/* Gold progress line */}
+        <div className="h-[3px] w-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
           <CourseProgressBar courseSlug={course.slug.current} allLessonSlugs={allLessons} />
         </div>
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-3 flex items-center gap-4">
-          {/* Back to course */}
+        <div className="flex items-center gap-0" style={{ minHeight: 52 }}>
+          {/* Back button */}
           <Link
             href={`/free-courses/${course.slug.current}`}
-            className="shrink-0 flex items-center gap-2 text-white/50 hover:text-white transition-colors group"
+            className="flex items-center gap-2.5 px-5 py-3 border-r transition-colors h-full"
+            style={{ borderColor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)' }}
           >
-            <div className="w-8 h-8 rounded-lg bg-white/8 group-hover:bg-white/15 flex items-center justify-center transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </div>
-            <span className="hidden md:block text-sm font-medium truncate max-w-[200px]">{course.title}</span>
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="hidden sm:block text-xs font-semibold truncate max-w-[160px]" style={{ color: 'rgba(255,255,255,0.55)' }}>{course.title}</span>
           </Link>
 
-          {/* Divider */}
-          <div className="hidden md:block w-px h-5 bg-white/15" />
-
-          {/* Current lesson info */}
-          <div className="flex-1 min-w-0">
-            <p className="text-white text-sm font-semibold truncate leading-tight">{lesson.title}</p>
-            <p className="text-white/40 text-xs mt-0.5 truncate">{chapterTitle}</p>
+          {/* Lesson title */}
+          <div className="flex-1 min-w-0 px-5">
+            <p className="text-sm font-semibold truncate" style={{ color: '#fff' }}>{lesson.title}</p>
+            <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{chapterTitle}</p>
           </div>
 
-          {/* Progress info */}
-          <div className="shrink-0 flex items-center gap-3">
-            <div className="hidden sm:flex flex-col items-end gap-1">
-              <span className="text-xs text-white/40 font-medium">{currentIdx + 1} of {totalLessons} lessons</span>
-              <CourseProgressBar courseSlug={course.slug.current} allLessonSlugs={allLessons} />
+          {/* Progress */}
+          <div className="flex items-center gap-3 px-5 border-l" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+            <div className="hidden sm:block text-right">
+              <p className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.35)' }}>Lesson {currentIdx + 1} of {totalLessons}</p>
             </div>
-            <div className="w-9 h-9 rounded-full bg-white/8 border border-white/15 flex items-center justify-center shrink-0">
-              <span className="text-xs font-bold text-white/70">{Math.round(((currentIdx + 1) / totalLessons) * 100)}%</span>
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+              style={{ background: 'rgba(212,160,23,0.15)', color: '#D4A017', border: '1.5px solid rgba(212,160,23,0.3)' }}
+            >
+              {pct}%
             </div>
           </div>
         </div>
       </header>
 
-      {/* ── Main Layout ── */}
-      <div className="flex flex-1 max-w-[1400px] mx-auto w-full">
+      {/* ── Body ── */}
+      <div className="flex flex-1">
 
-        {/* ── Premium Sidebar ── */}
-        <aside className="hidden lg:flex flex-col w-80 shrink-0 bg-white border-r border-slate-200 sticky top-[calc(4rem+49px)] self-start max-h-[calc(100vh-4rem-49px)] overflow-hidden shadow-sm">
+        {/* ── Sidebar ── */}
+        <aside
+          className="hidden lg:flex flex-col w-72 xl:w-80 shrink-0 sticky overflow-hidden"
+          style={{
+            top: 'calc(4rem + 55px)',
+            maxHeight: 'calc(100vh - 4rem - 55px)',
+            background: '#0F2044',
+          }}
+        >
           {/* Sidebar header */}
-          <div className="px-5 py-4 border-b border-slate-100 bg-slate-50">
-            <p className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-[0.1em] mb-0.5">Course Content</p>
-            <p className="text-xs text-slate-500 font-medium">{course.chapters?.length ?? 0} chapters · {totalLessons} lessons</p>
+          <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+            <p className="text-[0.6rem] font-bold uppercase tracking-[0.12em] mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Course Content</p>
+            <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              {course.chapters?.length ?? 0} chapters · {totalLessons} lessons
+            </p>
           </div>
 
-          {/* Chapters list */}
-          <div className="flex-1 overflow-y-auto">
+          {/* Chapters */}
+          <div className="flex-1 overflow-y-auto py-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
             {course.chapters?.map((chapter, ci) => (
-              <div key={chapter._key} className="border-b border-slate-100 last:border-0">
-                {/* Chapter header */}
-                <div className="flex items-center gap-3 px-5 py-3 bg-slate-50/50">
-                  <div className="w-6 h-6 rounded-md bg-navy-950 text-white text-[0.6rem] font-bold flex items-center justify-center shrink-0">
+              <div key={chapter._key} className="mb-1">
+                {/* Chapter label */}
+                <div className="flex items-center gap-2.5 px-4 py-2.5">
+                  <div
+                    className="w-5 h-5 rounded flex items-center justify-center text-[0.55rem] font-bold shrink-0"
+                    style={{ background: 'rgba(212,160,23,0.2)', color: '#D4A017' }}
+                  >
                     {ci + 1}
                   </div>
-                  <p className="text-xs font-bold text-navy-950 leading-snug uppercase tracking-wide">{chapter.chapterTitle}</p>
+                  <p className="text-[0.65rem] font-bold uppercase tracking-[0.08em] leading-snug" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    {chapter.chapterTitle}
+                  </p>
                 </div>
+
                 {/* Lessons */}
-                <div>
-                  {chapter.lessons?.map((l, li) => {
-                    const isActive = l.slug?.current === params.lessonSlug
-                    return (
-                      <Link
-                        key={l._id}
-                        href={`/free-courses/${course.slug.current}/learn/${l.slug.current}`}
-                        className={[
-                          'group flex items-center gap-3 px-5 py-3 text-sm transition-all duration-150 border-l-2',
-                          isActive
-                            ? 'border-gold-500 bg-gold-50 text-navy-950'
-                            : 'border-transparent text-slate-600 hover:bg-slate-50 hover:text-navy-950 hover:border-slate-300',
-                        ].join(' ')}
+                {chapter.lessons?.map((l, li) => {
+                  const isActive = l.slug?.current === params.lessonSlug
+                  return (
+                    <Link
+                      key={l._id}
+                      href={`/free-courses/${course.slug.current}/learn/${l.slug.current}`}
+                      className="flex items-center gap-3 px-4 py-2.5 transition-all duration-150 group relative"
+                      style={{
+                        background: isActive ? 'rgba(212,160,23,0.12)' : 'transparent',
+                        borderLeft: isActive ? '2px solid #D4A017' : '2px solid transparent',
+                      }}
+                    >
+                      <LessonStatusDot
+                        courseSlug={course.slug.current}
+                        lessonSlug={l.slug.current}
+                        allLessonSlugs={allLessons}
+                        isActive={isActive}
+                        lessonNumber={li + 1}
+                      />
+                      <span
+                        className="text-sm leading-snug flex-1"
+                        style={{
+                          color: isActive ? '#fff' : 'rgba(255,255,255,0.5)',
+                          fontWeight: isActive ? 600 : 400,
+                        }}
                       >
-                        <LessonStatusDot
-                          courseSlug={course.slug.current}
-                          lessonSlug={l.slug.current}
-                          allLessonSlugs={allLessons}
-                          isActive={isActive}
-                          lessonNumber={li + 1}
-                        />
-                        <span className={['leading-snug flex-1 text-sm', isActive ? 'font-semibold' : ''].join(' ')}>{l.title}</span>
-                        {isActive && (
-                          <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-gold-500" />
-                        )}
-                      </Link>
-                    )
-                  })}
-                </div>
+                        {l.title}
+                      </span>
+                    </Link>
+                  )
+                })}
               </div>
             ))}
           </div>
 
           {/* Sidebar footer */}
-          <div className="px-5 py-3 border-t border-slate-100 bg-slate-50">
+          <div className="px-5 py-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
             <ResetProgressButton courseSlug={course.slug.current} allLessonSlugs={allLessons} />
           </div>
         </aside>
 
-        {/* ── Lesson Content ── */}
-        <main className="flex-1 min-w-0">
-          <div className="max-w-3xl mx-auto px-4 sm:px-8 py-10">
+        {/* ── Main Content ── */}
+        <main className="flex-1 min-w-0 py-10 px-4 sm:px-8 lg:px-12">
+          <div className="max-w-2xl mx-auto">
 
             {/* Lesson header */}
-            <div className="mb-8">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-[0.65rem] font-bold text-gold-600 uppercase tracking-[0.1em]">{chapterTitle}</span>
-                <span className="text-slate-300">·</span>
-                <span className="text-[0.65rem] font-medium text-slate-400">Lesson {currentIdx + 1} of {totalLessons}</span>
+            <div className="mb-10">
+              <div className="flex items-center gap-2 mb-4">
+                <span
+                  className="text-[0.6rem] font-bold uppercase tracking-[0.12em] px-2.5 py-1 rounded-full"
+                  style={{ background: 'rgba(212,160,23,0.12)', color: '#B8860B' }}
+                >
+                  {chapterTitle}
+                </span>
+                <span className="text-[0.6rem] text-slate-400 font-medium">Lesson {currentIdx + 1} of {totalLessons}</span>
               </div>
-              <h1 className="font-display text-navy-950 text-3xl md:text-4xl leading-tight mb-3" style={{ letterSpacing: '-0.02em' }}>
+              <h1
+                className="font-display text-navy-950 leading-[1.08] mb-5"
+                style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', letterSpacing: '-0.025em' }}
+              >
                 {lesson.title}
               </h1>
-              <div className="h-px bg-gradient-to-r from-gold-500/40 to-transparent" />
+              <div className="flex items-center gap-3">
+                <div className="h-px flex-1" style={{ background: 'linear-gradient(to right, #D4A017, transparent)' }} />
+              </div>
             </div>
 
             {/* Video */}
             {lesson.videoUrl && (
-              <div className="mb-10 rounded-2xl overflow-hidden shadow-xl border border-slate-200 aspect-video bg-navy-950">
+              <div className="mb-10 rounded-2xl overflow-hidden shadow-2xl border border-slate-200 aspect-video bg-navy-950">
                 <iframe
                   src={lesson.videoUrl.replace('watch?v=', 'embed/')}
                   className="w-full h-full"
@@ -185,14 +210,14 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
             {lesson.linkedArticles?.length > 0 && (
               <div className="mb-10">
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-8 h-8 rounded-lg bg-navy-950 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#0C1A3D' }}>
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                   </div>
                   <div>
-                    <h2 className="font-display text-lg text-navy-950 leading-none">Study Notes</h2>
-                    <p className="text-xs text-slate-400 mt-0.5">{lesson.linkedArticles.length} {lesson.linkedArticles.length === 1 ? 'article' : 'articles'} in this lesson</p>
+                    <h2 className="font-display text-navy-950 text-lg leading-none">Study Notes</h2>
+                    <p className="text-xs text-slate-400 mt-0.5">{lesson.linkedArticles.length} {lesson.linkedArticles.length === 1 ? 'article' : 'articles'}</p>
                   </div>
                 </div>
 
@@ -200,19 +225,26 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                   {lesson.linkedArticles.map((article, ai) => (
                     <div
                       key={article._id}
-                      className="group bg-white rounded-2xl border border-slate-200 hover:border-navy-200 hover:shadow-lg transition-all duration-200 overflow-hidden"
+                      className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
+                      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' }}
                     >
-                      <div className="h-0.5 bg-gradient-to-r from-navy-950/20 to-transparent group-hover:from-gold-500/60 transition-all duration-200" />
-                      <div className="p-5 flex items-start gap-4">
-                        {/* Number badge */}
-                        <div className="w-9 h-9 rounded-xl bg-slate-100 group-hover:bg-navy-950 flex items-center justify-center shrink-0 mt-0.5 transition-colors duration-200">
-                          <span className="text-sm font-bold text-slate-500 group-hover:text-white transition-colors duration-200">{ai + 1}</span>
+                      {/* Left accent bar */}
+                      <div
+                        className="absolute left-0 top-0 bottom-0 w-1 transition-all duration-200"
+                        style={{ background: ai === 0 ? '#D4A017' : '#E2E8F0' }}
+                      />
+                      <div className="pl-6 pr-5 py-5 flex items-start gap-4">
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-sm font-bold transition-all duration-200"
+                          style={{ background: '#F8F7F4', color: '#64748B' }}
+                        >
+                          {ai + 1}
                         </div>
                         <div className="flex-1 min-w-0">
                           <Link
                             href={`/articles/${article.slug.current}`}
                             target="_blank"
-                            className="font-display text-base text-navy-950 hover:text-navy-700 transition-colors leading-snug block mb-2"
+                            className="font-display text-base font-semibold text-navy-950 hover:text-navy-600 transition-colors leading-snug block mb-2"
                           >
                             {article.title}
                           </Link>
@@ -222,16 +254,16 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                           <Link
                             href={`/articles/${article.slug.current}`}
                             target="_blank"
-                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-navy-700 hover:text-gold-600 transition-colors"
+                            className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide transition-colors"
+                            style={{ color: '#D4A017' }}
                           >
-                            Read full article
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                            Read article
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                             </svg>
                           </Link>
                         </div>
-                        {/* External link icon */}
-                        <svg className="w-4 h-4 text-slate-300 group-hover:text-slate-400 shrink-0 mt-1 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-slate-300 shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
                       </div>
@@ -243,10 +275,10 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
 
             {/* External quiz */}
             {lesson.externalQuizUrl && (
-              <div className="mb-10 p-5 rounded-2xl bg-gradient-to-r from-gold-50 to-amber-50 border border-gold-200">
+              <div className="mb-10 p-5 rounded-2xl border" style={{ background: 'rgba(212,160,23,0.06)', borderColor: 'rgba(212,160,23,0.2)' }}>
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gold-500 flex items-center justify-center shrink-0 shadow-sm">
-                    <svg className="w-6 h-6 text-navy-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#D4A017' }}>
+                    <svg className="w-5 h-5 text-navy-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                   </div>
@@ -254,11 +286,10 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                     <p className="font-semibold text-navy-950 text-sm">Practice Questions</p>
                     <p className="text-xs text-slate-500 mt-0.5">Test your understanding of this topic</p>
                   </div>
-                  <Link
-                    href={lesson.externalQuizUrl}
-                    className="inline-flex items-center gap-2 h-10 px-5 rounded-xl text-sm font-semibold bg-navy-950 text-white hover:bg-navy-800 transition-colors shadow-sm"
-                  >
-                    Practice now
+                  <Link href={lesson.externalQuizUrl}
+                    className="h-10 px-5 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors"
+                    style={{ background: '#0C1A3D', color: '#fff' }}>
+                    Practice
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
@@ -267,36 +298,45 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
               </div>
             )}
 
-            {/* Mark complete */}
-            <div className="mb-8 p-6 rounded-2xl bg-white border border-slate-200 shadow-sm">
+            {/* Mark complete card */}
+            <div
+              className="mb-8 p-6 rounded-2xl border"
+              style={{ background: '#fff', borderColor: '#E2E8F0', boxShadow: '0 4px 24px rgba(12,26,61,0.06)' }}
+            >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <p className="font-semibold text-navy-950 text-sm mb-0.5">Finished this lesson?</p>
-                  <p className="text-xs text-slate-400">Mark it complete and move to the next one.</p>
+                  <p className="font-display text-navy-950 text-lg leading-tight mb-1">Ready to continue?</p>
+                  <p className="text-sm text-slate-400">Mark this lesson complete to track your progress.</p>
                 </div>
-                <MarkCompleteButton
-                  courseSlug={course.slug.current}
-                  lessonSlug={params.lessonSlug}
-                  allLessonSlugs={allLessons}
-                  nextHref={nextLesson ? `/free-courses/${course.slug.current}/learn/${nextLesson.slug}` : undefined}
-                />
+                <div className="shrink-0">
+                  <MarkCompleteButton
+                    courseSlug={course.slug.current}
+                    lessonSlug={params.lessonSlug}
+                    allLessonSlugs={allLessons}
+                    nextHref={nextLesson ? `/free-courses/${course.slug.current}/learn/${nextLesson.slug}` : undefined}
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Prev / Next navigation */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Prev / Next */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
               {prevLesson ? (
                 <Link
                   href={`/free-courses/${course.slug.current}/learn/${prevLesson.slug}`}
-                  className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 bg-white hover:border-navy-300 hover:shadow-md transition-all duration-200 group"
+                  className="flex items-center gap-3 p-4 rounded-2xl border bg-white transition-all duration-200 hover:-translate-y-0.5 group"
+                  style={{ borderColor: '#E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
                 >
-                  <div className="w-9 h-9 rounded-xl bg-slate-100 group-hover:bg-navy-950 flex items-center justify-center shrink-0 transition-colors duration-200">
-                    <svg className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200"
+                    style={{ background: '#F0EEE9' }}
+                  >
+                    <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                     </svg>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[0.65rem] font-semibold text-slate-400 uppercase tracking-wide mb-0.5">Previous</p>
+                    <p className="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-slate-400 mb-0.5">Previous</p>
                     <p className="text-sm font-semibold text-navy-950 truncate">{prevLesson.title}</p>
                   </div>
                 </Link>
@@ -305,14 +345,18 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
               {nextLesson ? (
                 <Link
                   href={`/free-courses/${course.slug.current}/learn/${nextLesson.slug}`}
-                  className="flex items-center justify-end gap-3 p-4 rounded-2xl border border-slate-200 bg-white hover:border-navy-300 hover:shadow-md transition-all duration-200 group text-right"
+                  className="flex items-center justify-end gap-3 p-4 rounded-2xl border transition-all duration-200 hover:-translate-y-0.5 group text-right"
+                  style={{ background: '#0C1A3D', borderColor: '#0C1A3D', boxShadow: '0 4px 16px rgba(12,26,61,0.3)' }}
                 >
                   <div className="min-w-0">
-                    <p className="text-[0.65rem] font-semibold text-slate-400 uppercase tracking-wide mb-0.5">Next Lesson</p>
-                    <p className="text-sm font-semibold text-navy-950 truncate">{nextLesson.title}</p>
+                    <p className="text-[0.6rem] font-bold uppercase tracking-[0.1em] mb-0.5" style={{ color: 'rgba(212,160,23,0.7)' }}>Next Lesson</p>
+                    <p className="text-sm font-semibold text-white truncate">{nextLesson.title}</p>
                   </div>
-                  <div className="w-9 h-9 rounded-xl bg-navy-950 group-hover:bg-gold-500 flex items-center justify-center shrink-0 transition-colors duration-200">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: '#D4A017' }}
+                  >
+                    <svg className="w-4 h-4 text-navy-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
@@ -320,28 +364,32 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
               ) : (
                 <Link
                   href={`/free-courses/${course.slug.current}`}
-                  className="flex items-center justify-center gap-3 p-4 rounded-2xl border-2 border-teal-400 bg-teal-50 hover:bg-teal-100 transition-colors group"
+                  className="flex items-center justify-center gap-3 p-4 rounded-2xl border-2 transition-colors"
+                  style={{ borderColor: '#14b4a3', background: 'rgba(20,180,163,0.06)' }}
                 >
-                  <div className="w-9 h-9 rounded-xl bg-teal-500 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#14b4a3' }}>
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-teal-700">Course Complete!</p>
-                    <p className="text-xs text-teal-600">Back to course overview</p>
+                    <p className="text-sm font-bold" style={{ color: '#0d8f82' }}>Course Complete!</p>
+                    <p className="text-xs" style={{ color: '#14b4a3' }}>Back to course overview</p>
                   </div>
                 </Link>
               )}
             </div>
 
-            {/* Editorial credit */}
-            <div className="mt-10 pt-6 border-t border-slate-200 flex items-center gap-3 text-xs text-slate-400">
-              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {/* Footer credit */}
+            <div className="pt-6 border-t border-slate-200 flex items-center gap-2.5">
+              <svg className="w-3.5 h-3.5 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
-              <span>Developed by <strong className="text-slate-500">Accounting Body Editorial Team</strong> — written and reviewed by qualified accountants.</span>
+              <p className="text-xs text-slate-400">
+                Developed by <span className="font-semibold text-slate-500">Accounting Body Editorial Team</span> — written and reviewed by qualified accountants. Always free.
+              </p>
             </div>
+
           </div>
         </main>
       </div>
