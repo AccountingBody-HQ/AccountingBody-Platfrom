@@ -96,7 +96,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
         <aside
           className="hidden lg:flex flex-col shrink-0"
           style={{
-            width: 288,
+            width: 'clamp(220px, 22vw, 320px)',
             background: '#081428',
             position: 'sticky',
             top: 'calc(4rem + 56px)',
