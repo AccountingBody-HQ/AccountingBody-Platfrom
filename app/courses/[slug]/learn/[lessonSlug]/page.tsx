@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getLessonData, getCourseBySlug, getPublishedCourses } from '@/lib/coursesNew'
+import MarkCompleteButton, { LessonStatusDot, CourseProgressBar } from '@/components/course/ProgressTracker'
 
 export async function generateStaticParams() {
   const courses = await getPublishedCourses()
@@ -55,7 +56,6 @@ export default async function LessonPage({
   }
   const currentIdx   = allLessons.indexOf(params.lessonSlug)
   const totalLessons = allLessons.length
-  const progressPct  = totalLessons > 0 ? Math.round(((currentIdx + 1) / totalLessons) * 100) : 0
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -78,14 +78,8 @@ export default async function LessonPage({
           </div>
           {/* Progress */}
           <div className="shrink-0 flex items-center gap-3">
-            <div className="hidden sm:flex flex-col items-end">
-              <span className="text-xs text-white/40">{progressPct}% complete</span>
-              <div className="w-24 h-1.5 bg-white/10 rounded-full mt-1 overflow-hidden">
-                <div
-                  className="h-full bg-gold-500 rounded-full transition-all duration-500"
-                  style={{ width: `${progressPct}%` }}
-                />
-              </div>
+            <div className="hidden sm:block">
+              <CourseProgressBar courseSlug={course.slug.current} allLessonSlugs={allLessons} />
             </div>
             <span className="text-xs text-white/40 bg-white/10 px-2 py-1 rounded-lg">
               {currentIdx + 1} / {totalLessons}
@@ -126,12 +120,13 @@ export default async function LessonPage({
                           : 'text-slate-600 hover:bg-slate-50 hover:text-navy-950',
                       ].join(' ')}
                     >
-                      <span className={[
-                        'w-5 h-5 rounded-full border flex items-center justify-center text-[0.6rem] shrink-0',
-                        isActive ? 'border-navy-950 bg-navy-950 text-white' : 'border-slate-300 text-slate-400',
-                      ].join(' ')}>
-                        {li + 1}
-                      </span>
+                      <LessonStatusDot
+                        courseSlug={course.slug.current}
+                        lessonSlug={l.slug.current}
+                        allLessonSlugs={allLessons}
+                        isActive={isActive}
+                        lessonNumber={li + 1}
+                      />
                       <span className="leading-snug">{l.title}</span>
                     </Link>
                   )
@@ -228,6 +223,16 @@ export default async function LessonPage({
               </div>
             </div>
           )}
+
+          {/* Mark complete */}
+          <div className="mt-8">
+            <MarkCompleteButton
+              courseSlug={course.slug.current}
+              lessonSlug={params.lessonSlug}
+              allLessonSlugs={allLessons}
+              nextHref={nextLesson ? `/courses/${course.slug.current}/learn/${nextLesson.slug}` : undefined}
+            />
+          </div>
 
           {/* Prev / Next navigation */}
           <div className="mt-10 pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-stretch gap-3">
