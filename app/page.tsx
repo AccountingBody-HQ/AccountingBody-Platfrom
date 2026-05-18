@@ -241,7 +241,7 @@ const stats = [
     ),
   },
   {
-    value:    'Since 2010',
+    value:    'Since 2018',
     label:    'Trusted Platform',
     sublabel: 'Helping students pass exams',
     icon: (
@@ -282,7 +282,7 @@ const trustPoints = [
     ),
   },
   {
-    title: 'Trusted Since 2010',
+    title: 'Trusted Since 2018',
     body:  'Over a decade of helping students pass professional accounting exams. More than 3,000 articles trusted by educators.',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -411,7 +411,7 @@ export default async function HomePage() {
           <div className="max-w-4xl">
 
             <p className="text-gold-400 text-xs font-semibold uppercase tracking-widest mb-7">
-              Professional Accounting Services &nbsp;&middot;&nbsp; Study Platform &nbsp;&middot;&nbsp; Trusted Since 2010
+              Professional Accounting Services &nbsp;&middot;&nbsp; Study Platform &nbsp;&middot;&nbsp; Trusted Since 2018
             </p>
 
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.025em' }}>
@@ -777,7 +777,7 @@ export default async function HomePage() {
                 {/* Stats row */}
                 <div className="grid grid-cols-2 divide-x divide-slate-200 bg-white">
                   <div className="p-6 flex flex-col items-center text-center">
-                    <span className="font-display text-3xl text-navy-950 leading-none mb-1">Since 2010</span>
+                    <span className="font-display text-3xl text-navy-950 leading-none mb-1">Since 2018</span>
                     <span className="text-slate-500 text-xs font-medium">Trusted by educators</span>
                   </div>
                   <div className="p-6 flex flex-col items-center text-center">

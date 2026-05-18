@@ -55,16 +55,6 @@ const values = [
   },
 ]
 
-const milestones = [
-  { year: '2010', event: 'Accounting Body founded as a blog covering ACCA F3 topics.' },
-  { year: '2013', event: 'First 100 articles published. Google begins indexing the site.' },
-  { year: '2016', event: 'Practice question bank launched — 5,000 MCQs across ACCA Applied Skills.' },
-  { year: '2018', event: '100,000 students reached. CIMA and AAT content added to the platform.' },
-  { year: '2020', event: 'Full glossary of 1,200+ accounting and finance terms published.' },
-  { year: '2022', event: '250,000+ students across 80+ countries. 50,000+ practice questions live.' },
-  { year: '2025', event: 'Full platform rebuild on Next.js and Sanity CMS. Professional services network launched — tax, audit, bookkeeping, and advisory delivered through a managed global professional network.' },
-]
-
 const qualifications = [
   { name: 'ACCA',  detail: '13 papers covered',  accent: 'border-[#004B8D] text-[#004B8D]', bg: 'bg-[#004B8D]/5' },
   { name: 'CIMA',  detail: 'Full pathway',        accent: 'border-[#0081C6] text-[#0081C6]', bg: 'bg-[#0081C6]/5' },
@@ -132,10 +122,10 @@ export default function AboutPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { value: '3,000+',   label: 'Articles & Study Notes',  sub: 'Current Exams' },
-                { value: '50,000+',  label: 'Practice Questions',       sub: 'MCQ, written & scenario' },
-                { value: '250,000+', label: 'Students Helped',          sub: 'Across 80+ countries' },
-                { value: '15+',      label: 'Years of Trust',           sub: 'Founded 2010' },
+                { value: '3,000+',   label: 'Articles',                sub: 'Written by qualified accountants' },
+                { value: '20,000+',  label: 'Practice Questions',       sub: 'MCQ, written & scenario' },
+                { value: 'Since 2018', label: 'Trusted Platform',       sub: 'Helping students pass exams' },
+                { value: 'Free',     label: 'To Start',                 sub: 'No credit card required' },
               ].map(stat => (
                 <div key={stat.label} className="bg-slate-50 rounded-xl border border-slate-200 p-6">
                   <span className="stat-number block mb-1">{stat.value}</span>
@@ -201,43 +191,6 @@ export default function AboutPage() {
                 <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* TIMELINE */}
-      <section className="section bg-slate-50">
-        <div className="container-site">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-            <div>
-              <span className="eyebrow mb-3 block">Our Story</span>
-              <h2 className="section-title mb-6">Fifteen years in the making</h2>
-              <p className="text-slate-500 text-lg leading-relaxed mb-4">
-                Accounting Body started with a single blog post about ACCA F3. No grand plan.
-                No investors. Just a qualified accountant who wanted to explain double-entry
-                bookkeeping in a way that actually made sense.
-              </p>
-              <p className="text-slate-500 text-lg leading-relaxed">
-                Fifteen years later, that post has become 3,000+ articles, 50,000+ practice
-                questions, and a platform trusted by over a quarter of a million students in 80+ countries.
-              </p>
-            </div>
-            <div className="relative">
-              <div className="absolute left-4 top-0 bottom-0 w-px bg-slate-200" />
-              <div className="space-y-7">
-                {milestones.map(m => (
-                  <div key={m.year} className="relative flex gap-5 pl-12">
-                    <div className="absolute left-0 w-8 h-8 rounded-full bg-navy-950 border-4 border-white flex items-center justify-center shadow-sm">
-                      <span className="w-2 h-2 rounded-full bg-gold-400" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-gold-600 uppercase tracking-widest block mb-0.5">{m.year}</span>
-                      <p className="text-navy-950 font-medium text-sm leading-relaxed">{m.event}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </section>

@@ -133,7 +133,7 @@ const legalLinks = [
 const stats = [
   { value: '3,000+',   label: 'Articles' },
   { value: '20,000+',  label: 'Practice Questions' },
-  { value: 'Since 2010', label: 'Trusted Platform' },
+  { value: 'Since 2018', label: 'Trusted Platform' },
   { value: 'Free',      label: 'To Start' },
 ]
 

@@ -271,7 +271,7 @@ export default async function GlossaryPage() {
                     The internet is full of accounting content written by people who
                     have never sat an exam. Every term on Accounting Body is written or
                     reviewed by a qualified accountant.
-                    We have been trusted by students since 2010.
+                    We have been trusted by students since 2018.
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 md:items-end shrink-0">
@@ -280,7 +280,7 @@ export default async function GlossaryPage() {
                     <span className="text-white/50 text-xs">study articles</span>
                   </div>
                   <div className="flex items-center gap-3 bg-white/8 border border-white/10 rounded-xl px-4 py-3">
-                    <span className="font-display text-2xl text-white">Since 2010</span>
+                    <span className="font-display text-2xl text-white">Since 2018</span>
                     <span className="text-white/50 text-xs">trusted by educators</span>
                   </div>
                 </div>
