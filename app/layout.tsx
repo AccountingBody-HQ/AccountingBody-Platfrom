@@ -4,7 +4,6 @@
 // Added: Vercel Analytics, Vercel Speed Insights, Clerk Auth
 
 import type { Metadata } from 'next'
-import Script from 'next/script'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
@@ -76,21 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <link rel="dns-prefetch" href="//fonts.googleapis.com" />
           <link rel="dns-prefetch" href="//fonts.gstatic.com" />
           <link rel="dns-prefetch" href="//www.googletagmanager.com" />
-          {GTM_ID && (
-            <Script
-              id="gtm-script"
-              strategy="afterInteractive"
-              dangerouslySetInnerHTML={{
-                __html: `
-                  (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-                  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-                  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-                  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-                  })(window,document,'script','dataLayer','${GTM_ID}');
-                `,
-              }}
-            />
-          )}
+          {/* GTM loaded by CookieConsent only after user consent — GDPR compliant */}
         </head>
         <body className="antialiased bg-surface text-slate-900 min-h-screen flex flex-col">
           {GTM_ID && (
