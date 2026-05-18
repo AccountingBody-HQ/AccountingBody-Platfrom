@@ -12,7 +12,6 @@ interface SanityArticle {
   slug:         { current: string }
   excerpt?:     string
   categoryTitle?: string
-  examBody?:    string | string[]
   readTime?:    number
   publishedAt?: string
 }
@@ -59,7 +58,7 @@ async function getArticlesByLetter(letter: string): Promise<SanityArticle[]> {
       matchConditions = `title match "${u}*" || title match "${l}*"`
     }
     const query = encodeURIComponent(
-      `*[_type == "article" && "accountingbody" in showOnSites && (${matchConditions})] | order(title asc) { _id, title, slug, excerpt, "categoryTitle": categories[0]->title, examBody, readTime, publishedAt }`
+      `*[_type == "article" && "accountingbody" in showOnSites && (${matchConditions})] | order(title asc) { _id, title, slug, excerpt, "categoryTitle": categories[0]->title, readTime, publishedAt }`
     )
     const res = await fetch(
       `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
@@ -78,7 +77,7 @@ async function getArticlesByCategorySlug(categorySlug: string): Promise<SanityAr
     const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
     const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
     const query = encodeURIComponent(
-      `*[_type == "article" && "accountingbody" in showOnSites && categories[]->.slug.current match "${categorySlug}"] | order(title asc) { _id, title, slug, excerpt, "categoryTitle": categories[0]->title, examBody, readTime, publishedAt }`
+      `*[_type == "article" && "accountingbody" in showOnSites && categories[]->.slug.current match "${categorySlug}"] | order(title asc) { _id, title, slug, excerpt, "categoryTitle": categories[0]->title, readTime, publishedAt }`
     )
     const res = await fetch(
       `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
@@ -118,10 +117,6 @@ function LetterNav({ activeLetter }: { activeLetter: string }) {
 }
 
 function ArticleRow({ article }: { article: SanityArticle }) {
-  const examBodyDisplay = Array.isArray(article.examBody)
-    ? article.examBody[0]?.toUpperCase()
-    : article.examBody?.toUpperCase()
-
   return (
     <article className="group flex flex-col sm:flex-row sm:items-start gap-4 py-5 border-b border-slate-100 last:border-0">
       <div className="hidden sm:flex w-10 h-10 rounded-lg bg-navy-50 border border-navy-100 items-center justify-center shrink-0 mt-0.5">
@@ -131,9 +126,6 @@ function ArticleRow({ article }: { article: SanityArticle }) {
         <div className="flex flex-wrap items-center gap-2 mb-1.5">
           {article.categoryTitle && (
             <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">{article.categoryTitle}</span>
-          )}
-          {examBodyDisplay && (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-navy-50 text-navy-700 border border-navy-100">{examBodyDisplay}</span>
           )}
         </div>
         <Link href={`/articles/${article.slug.current}`} className="block mb-1.5">
