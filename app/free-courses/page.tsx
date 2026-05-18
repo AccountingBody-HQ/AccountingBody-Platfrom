@@ -5,7 +5,6 @@
 
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { client } from '@/lib/sanity'
 
 export const metadata: Metadata = {
   title: 'Free Accounting Courses | Accounting Body',
@@ -15,27 +14,38 @@ export const metadata: Metadata = {
 // ── Sanity fetch ───────────────────────────────────────────────────────────────
 
 interface SanityCourse {
-  _id:          string
-  title:        string
-  slug:         { current: string }
-  description?: string
-  examBody?:    string
-  level?:       string
-  lessonCount?: number
-  duration?:    string
-  image?:       { asset: { url: string } }
+  _id:           string
+  title:         string
+  slug:          { current: string }
+  description?:  string
+  level?:        string
+  categoryTitle?: string
+  chapterCount?: number
+  lessonCount?:  number
+  featuredImage?: { asset: { url: string } }
 }
 
 async function getCourses(): Promise<SanityCourse[]> {
   try {
-    return await client.fetch(
-      `*[_type == "course"] | order(examBody asc, title asc) {
-        _id, title, slug, description, examBody, level, lessonCount, duration,
-        "image": image { asset -> { url } }
-      }`,
-      {},
+    const PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
+    const DATASET    = process.env.NEXT_PUBLIC_SANITY_DATASET    ?? 'production'
+    const query = encodeURIComponent(
+      `*[_type == "course" && status == "published" && "accountingbody" in showOnSites]
+      | order(courseOrder asc) {
+        _id, title, slug, description, level, courseOrder,
+        "categoryTitle": category->title,
+        "featuredImage": featuredImage { asset->{ url } },
+        "chapterCount": count(chapters),
+        "lessonCount":  count(chapters[].lessons[])
+      }`
+    )
+    const res = await fetch(
+      `https://${PROJECT_ID}.api.sanity.io/v2023-05-03/data/query/${DATASET}?query=${query}`,
       { next: { revalidate: 3600 } }
     )
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.result ?? []
   } catch {
     return []
   }
@@ -43,27 +53,13 @@ async function getCourses(): Promise<SanityCourse[]> {
 
 // ── Static course data (shown when Sanity has no courses yet) ──────────────────
 
-const PLACEHOLDER_COURSES = [
-  { _id: '1', title: 'ACCA BT — Business and Technology',        slug: { current: 'acca-bt' }, examBody: 'ACCA', level: 'Beginner',     lessonCount: 24, duration: '8 hrs',  description: 'The foundation of the ACCA qualification. Covers business structure, management, and technology.' },
-  { _id: '2', title: 'ACCA MA — Management Accounting',          slug: { current: 'acca-ma' }, examBody: 'ACCA', level: 'Beginner',     lessonCount: 32, duration: '12 hrs', description: 'Costing, budgeting, and performance management at Applied Knowledge level.' },
-  { _id: '3', title: 'ACCA FA — Financial Accounting',           slug: { current: 'acca-fa' }, examBody: 'ACCA', level: 'Beginner',     lessonCount: 36, duration: '14 hrs', description: 'Double entry, financial statements, and the conceptual framework.' },
-  { _id: '4', title: 'CIMA E1 — Managing Finance in a Digital World', slug: { current: 'cima-e1' }, examBody: 'CIMA', level: 'Beginner', lessonCount: 28, duration: '10 hrs', description: 'The role of finance in organisations, data analytics, and digital transformation.' },
-  { _id: '5', title: 'AAT Level 3 — Financial Accounting',       slug: { current: 'aat-l3-fa' }, examBody: 'AAT', level: 'Intermediate', lessonCount: 30, duration: '11 hrs', description: 'Financial statements for sole traders and partnerships at AAT Level 3.' },
-  { _id: '6', title: 'AAT Level 3 — Management Accounting',      slug: { current: 'aat-l3-ma' }, examBody: 'AAT', level: 'Intermediate', lessonCount: 26, duration: '9 hrs',  description: 'Costing techniques, budgeting, and variance analysis for AAT Level 3.' },
-]
+const PLACEHOLDER_COURSES: SanityCourse[] = []
 
 const EXAM_BODY_ACCENT: Record<string, string> = {
   ACCA:  'bg-[#004B8D]',
   CIMA:  'bg-[#0081C6]',
   AAT:   'bg-[#00857A]',
   ICAEW: 'bg-[#8B0000]',
-}
-
-const EXAM_BODY_BADGE: Record<string, string> = {
-  ACCA:  'bg-blue-50 text-[#004B8D]',
-  CIMA:  'bg-sky-50 text-[#0081C6]',
-  AAT:   'bg-teal-50 text-teal-700',
-  ICAEW: 'bg-red-50 text-red-800',
 }
 
 const LEVEL_BADGE: Record<string, string> = {
@@ -86,9 +82,9 @@ export default async function FreeCoursesPage() {
   const sanityCourses = await getCourses()
   const courses = sanityCourses.length > 0 ? sanityCourses : PLACEHOLDER_COURSES
 
-  // Group by exam body
+  // Group by category
   const grouped = courses.reduce<Record<string, SanityCourse[]>>((acc, c) => {
-    const key = c.examBody ?? 'Other'
+    const key = c.categoryTitle ?? 'Other'
     if (!acc[key]) acc[key] = []
     acc[key].push(c)
     return acc
@@ -173,17 +169,17 @@ export default async function FreeCoursesPage() {
               {grouped[body].map(course => (
                 <Link key={course._id} href={`/free-courses/${course.slug.current}`}
                   className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
-                  <div className={['h-1.5', EXAM_BODY_ACCENT[course.examBody ?? ''] ?? 'bg-navy-600'].join(' ')} />
+                  <div className="h-1.5 bg-navy-950" />
                   <div className="p-5 flex flex-col flex-1">
                     <div className="flex items-start justify-between gap-2 mb-3">
-                      {course.examBody && (
-                        <span className={['text-2xs font-bold px-2 py-0.5 rounded', EXAM_BODY_BADGE[course.examBody] ?? 'bg-slate-100 text-slate-700'].join(' ')}>
-                          {course.examBody}
+                      {course.categoryTitle && (
+                        <span className="text-2xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                          {course.categoryTitle}
                         </span>
                       )}
                       {course.level && (
                         <span className={['text-2xs font-semibold px-2 py-0.5 rounded-full border', LEVEL_BADGE[course.level] ?? 'bg-slate-100 text-slate-600 border-slate-200'].join(' ')}>
-                          {course.level}
+                          {course.level.charAt(0).toUpperCase() + course.level.slice(1)}
                         </span>
                       )}
                     </div>
@@ -197,16 +193,16 @@ export default async function FreeCoursesPage() {
                     )}
                     <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-auto">
                       <div className="flex items-center gap-3 text-xs text-slate-400">
-                        {course.lessonCount && (
+                        {(course.chapterCount ?? 0) > 0 && (
+                          <span className="flex items-center gap-1">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                            {course.chapterCount} chapters
+                          </span>
+                        )}
+                        {(course.lessonCount ?? 0) > 0 && (
                           <span className="flex items-center gap-1">
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13" /></svg>
                             {course.lessonCount} lessons
-                          </span>
-                        )}
-                        {course.duration && (
-                          <span className="flex items-center gap-1">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2" stroke="currentColor" fill="none" /><path strokeLinecap="round" strokeWidth="2" d="M12 6v6l4 2" /></svg>
-                            {course.duration}
                           </span>
                         )}
                       </div>
