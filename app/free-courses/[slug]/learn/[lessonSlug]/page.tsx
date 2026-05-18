@@ -120,15 +120,16 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
               <div key={chapter._key}>
                 {/* Chapter header */}
                 <div
-                  className="flex items-center gap-3 px-5 py-2 mt-1"
+                  className="flex items-center gap-3 px-4 py-2.5 mt-2"
+                  style={{ background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.05)' }}
                 >
                   <div
-                    className="w-6 h-6 rounded-md flex items-center justify-center text-[0.6rem] font-black shrink-0"
-                    style={{ background: 'rgba(212,160,23,0.15)', color: '#D4A017' }}
+                    className="w-5 h-5 rounded flex items-center justify-center text-[0.55rem] font-black shrink-0"
+                    style={{ background: '#D4A017', color: '#0C1A3D' }}
                   >
                     {ci + 1}
                   </div>
-                  <p className="text-[0.7rem] font-black uppercase tracking-[0.08em] leading-tight" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  <p className="text-[0.65rem] font-black uppercase tracking-[0.1em] leading-tight" style={{ color: '#D4A017' }}>
                     {chapter.chapterTitle}
                   </p>
                 </div>
@@ -172,7 +173,8 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
           </div>
 
           {/* Sidebar footer */}
-          <div className="px-5 py-3.5 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+          <div className="px-5 py-3 border-t flex items-center justify-between" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+            <span className="text-[0.6rem] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>Progress</span>
             <ResetProgressButton courseSlug={course.slug.current} allLessonSlugs={allLessons} />
           </div>
         </aside>
