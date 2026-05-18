@@ -26,19 +26,18 @@ interface SanityArticle {
 
 async function getFeaturedArticles(): Promise<SanityArticle[]> {
   try {
-    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
     const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
-    if (!projectId) return []
-    const query = encodeURIComponent(`
-      *[_type == "article" && "accountingbody" in showOnSites] | order(publishedAt desc) [0..3] {
-        _id, title, slug, excerpt, category, examBody, readTime, publishedAt,
-        "coverImage": featuredImage { asset -> { url } },
-        "author": author -> { name }
-      }
-    `)
+    const query = encodeURIComponent(
+      `*[_type == "article" && "accountingbody" in showOnSites] | order(publishedAt desc) [0..7] {
+        _id, title, slug, excerpt, examBody, readTime, publishedAt,
+        "categoryTitle": categories[0]->title,
+        "coverImage": featuredImage { asset -> { url } }
+      }`
+    )
     const res = await fetch(
       `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
-      { next: { revalidate: 3600 } }
+      { next: { revalidate: 1800 } }
     )
     if (!res.ok) return []
     const data = await res.json()
