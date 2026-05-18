@@ -150,7 +150,7 @@ export default async function StudyHubPage() {
         <div className="container-site py-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { value: '3,000+',   label: 'Study articles',       sub: 'Updated for 2025 exams' },
+              { value: '3,000+',   label: 'Study articles',       sub: 'Current Exams' },
               { value: '50,000+',  label: 'Practice questions',    sub: 'MCQ, written & scenario' },
               { value: '4',        label: 'Qualifications covered',sub: 'ACCA, CIMA, ICAEW & AAT' },
               { value: '1,200+',   label: 'Dictionary terms',      sub: 'Always free' },

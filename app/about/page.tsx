@@ -132,7 +132,7 @@ export default function AboutPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { value: '3,000+',   label: 'Articles & Study Notes',  sub: 'Updated for 2025 exams' },
+                { value: '3,000+',   label: 'Articles & Study Notes',  sub: 'Current Exams' },
                 { value: '50,000+',  label: 'Practice Questions',       sub: 'MCQ, written & scenario' },
                 { value: '250,000+', label: 'Students Helped',          sub: 'Across 80+ countries' },
                 { value: '15+',      label: 'Years of Trust',           sub: 'Founded 2010' },
