@@ -140,6 +140,7 @@ export default async function AdminCommandCentre() {
     { label: "Content Factory",    sub: "Generate AI study content",href: "/roodber8/content-factory", icon: Factory,     color: "#f59e0b" },
     { label: "Jobs & Firms",       sub: "Listings & applications",  href: "/roodber8/jobs-firms",      icon: Briefcase,   color: "#8b5cf6" },
     { label: "Questions",          sub: "Generate practice questions",href: "/roodber8/questions",       icon: HelpCircle,  color: "#D4A017" },
+    { label: "Course Factory",     sub: "Assemble structured courses", href: "/roodber8/course-factory",  icon: Factory,     color: "#14b4a3" },
   ]
 
   return (
