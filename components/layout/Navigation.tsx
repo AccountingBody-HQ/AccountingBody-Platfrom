@@ -121,12 +121,6 @@ const navSections: NavSection[] = [
           { label: 'Mock Exams',             href: '/study/mock-exams' },
         ],
       },
-      {
-        title: 'Free Courses',
-        links: [
-          { label: 'All Courses', href: '/courses', badge: 'New', description: 'Structured learning paths — free' },
-        ],
-      },
     ],
     featured: {
       label:       'ACCA Study Hub',
