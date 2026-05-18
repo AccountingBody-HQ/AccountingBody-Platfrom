@@ -191,7 +191,7 @@ export default async function DictionaryPage({
       </section>
 
       {/* Sticky A-Z nav */}
-      <section className="bg-white border-b border-slate-200 py-4 sticky top-0 z-20 shadow-sm">
+      <section className="bg-white border-b border-slate-200 py-4 sticky top-16 z-20 shadow-sm">
         <div className="container-site">
           <LetterNav activeLetter={activeLetter} />
         </div>
