@@ -34,6 +34,7 @@ const footerColumns: FooterColumn[] = [
       { label: 'ICAEW / ACA',               href: '/study/icaew' },
       { label: 'All Qualifications',        href: '/study' },
       { label: 'Study Planner',             href: '/study', new: true },
+      { label: 'Free Courses',              href: '/courses', new: true },
     ],
   },
   {
