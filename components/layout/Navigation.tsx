@@ -136,6 +136,27 @@ const navSections: NavSection[] = [
   },
 
   {
+    id:    'courses',
+    label: 'Courses',
+    href:  '/courses',
+    groups: [
+      {
+        title: 'Free Courses',
+        links: [
+          { label: 'All Courses',             href: '/courses',                    badge: 'New', description: 'All structured learning paths' },
+          { label: 'Beginner Courses',         href: '/courses?level=beginner',               description: 'Start from the foundations' },
+          { label: 'Intermediate Courses',     href: '/courses?level=intermediate',           description: 'Build on your knowledge' },
+          { label: 'Advanced Courses',         href: '/courses?level=advanced',               description: 'Master complex topics' },
+        ],
+      },
+    ],
+    featured: {
+      label:       'Free Accounting Courses',
+      href:        '/courses',
+      description: 'Structured learning paths assembled from expert study notes — developed by the Accounting Body Editorial Team. Always free.',
+    },
+  },
+  {
     id:    'practice',
     label: 'Practice Questions',
     href:  '/practice-questions',
