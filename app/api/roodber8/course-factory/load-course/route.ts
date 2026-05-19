@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 
   if (action === 'list') {
     const courses = await client.fetch(
-      `*[_type == "course"] | order(title asc) {
+      `*[_type == "course" && !(_id in path("drafts.**"))] | order(title asc) {
         _id, title, slug, status, level,
         "chapterCount": count(chapters)
       }`
