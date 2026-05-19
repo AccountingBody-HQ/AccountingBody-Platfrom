@@ -18,16 +18,25 @@ export async function DELETE(req: NextRequest) {
     const courseId = `course-${slug}`
     const lessonIdPattern = `lesson-${slug}-*`
 
+    // Find all lesson documents for this course
     const lessons = await client.fetch(
       `*[_id in path($pattern)]{ _id }`,
       { pattern: lessonIdPattern }
     )
-
     const lessonIds: string[] = lessons.map((l: { _id: string }) => l._id)
     const draftLessonIds = lessonIds.map((id: string) => `drafts.${id}`)
     const allLessonIds = [...lessonIds, ...draftLessonIds]
 
-    // Step 1 — delete all lesson documents first
+    // Step 1 — patch all lesson docs to unset any back-reference to course
+    if (allLessonIds.length > 0) {
+      let patchTx = client.transaction()
+      for (const id of allLessonIds) {
+        patchTx = patchTx.patch(id, p => p.unset(['course', 'courseRef']))
+      }
+      await patchTx.commit({ visibility: 'sync' })
+    }
+
+    // Step 2 — delete all lesson documents
     if (allLessonIds.length > 0) {
       let lessonTx = client.transaction()
       for (const id of allLessonIds) {
@@ -36,7 +45,7 @@ export async function DELETE(req: NextRequest) {
       await lessonTx.commit({ visibility: 'sync' })
     }
 
-    // Step 2 — delete course document after lessons are gone
+    // Step 3 — delete course document and its draft
     let courseTx = client.transaction()
     courseTx = courseTx.delete(courseId)
     courseTx = courseTx.delete(`drafts.${courseId}`)
