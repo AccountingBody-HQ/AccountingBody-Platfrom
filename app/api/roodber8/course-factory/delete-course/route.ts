@@ -55,11 +55,13 @@ export async function DELETE(req: NextRequest) {
       await tx.commit({ visibility: 'sync' })
     }
 
-    // Step 4 — delete course and its draft
-    await client.transaction()
-      .delete(courseId)
-      .delete(`drafts.${courseId}`)
-      .commit({ visibility: 'sync' })
+    // Step 4 — delete course (and draft if it exists)
+    await client.delete(courseId)
+    try {
+      await client.delete(`drafts.${courseId}`)
+    } catch {
+      // draft may not exist — safe to ignore
+    }
 
     return NextResponse.json({
       success: true,
