@@ -52,16 +52,17 @@ async function fetchArticleById(id: string): Promise<FetchedArticle | null> {
 }
 
 async function fetchArticlesBulk(ids: string[]): Promise<{ found: FetchedArticle[]; missing: string[] }> {
-  const found: FetchedArticle[] = []
   const missing: string[] = []
-  await Promise.all(ids.map(async (id) => {
-    const article = await fetchArticleById(id.trim())
+  // Fetch in parallel but preserve input order using index
+  const results = await Promise.all(ids.map(id => fetchArticleById(id.trim())))
+  const found: FetchedArticle[] = []
+  results.forEach((article, i) => {
     if (article) {
       found.push(article)
     } else {
-      missing.push(id.trim())
+      missing.push(ids[i].trim())
     }
-  }))
+  })
   return { found, missing }
 }
 
@@ -413,6 +414,7 @@ export default function CourseFactoryPage() {
                   className="w-full h-9 px-2 rounded-lg border border-slate-200 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950"
                 >
                   <option value="new">+ Create new lesson (all articles)</option>
+                  <option value="one-per-chapter">+ One chapter per article</option>
                   {chapters[parseInt(targetChapter)]?.lessons.map((l, li) => (
                     <option key={l.id} value={li}>{l.title}</option>
                   ))}
@@ -424,7 +426,7 @@ export default function CourseFactoryPage() {
               onClick={handleAddArticles}
               className="w-full h-9 rounded-lg text-sm font-semibold bg-teal-600 text-white hover:bg-teal-700 transition-colors"
             >
-              Add {fetchedArticles.length} Article{fetchedArticles.length > 1 ? 's' : ''} to Course
+              {targetLesson === 'one-per-chapter' ? `Add ${fetchedArticles.length} Articles as ${fetchedArticles.length} Chapters` : `Add ${fetchedArticles.length} Article${fetchedArticles.length > 1 ? 's' : ''} to Course`}
             </button>
           </div>
         )}
