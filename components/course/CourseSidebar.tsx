@@ -39,6 +39,10 @@ export default function CourseSidebar({
   const toggle = (i: number) =>
     setOpenChapters(prev => ({ ...prev, [i]: !prev[i] }))
 
+  const allOpen = Object.values(openChapters).every(Boolean)
+  const toggleAll = () =>
+    setOpenChapters(Object.fromEntries(chapters.map((_, i) => [i, !allOpen])))
+
   return (
     <aside
       className="hidden lg:flex flex-col shrink-0"
@@ -53,9 +57,28 @@ export default function CourseSidebar({
     >
       {/* Header */}
       <div className="px-5 pt-5 pb-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-        <p className="text-[0.6rem] font-black uppercase tracking-[0.15em] mb-1" style={{ color: '#D4A017' }}>
-          Course Content
-        </p>
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-[0.6rem] font-black uppercase tracking-[0.15em]" style={{ color: '#D4A017' }}>
+            Course Content
+          </p>
+          <button
+            onClick={toggleAll}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg transition-all hover:opacity-80"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+            title={allOpen ? 'Collapse all chapters' : 'Expand all chapters'}
+          >
+            <svg
+              className="w-3 h-3 transition-transform duration-200"
+              style={{ color: 'rgba(212,160,23,0.7)', transform: allOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}
+              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+            </svg>
+            <span className="text-[0.55rem] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>
+              {allOpen ? 'Collapse' : 'Expand'}
+            </span>
+          </button>
+        </div>
         <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
           {chapters.length} chapters · {totalLessons} lessons
         </p>
