@@ -17,42 +17,44 @@ export async function DELETE(req: NextRequest) {
 
     const courseId = `course-${slug}`
 
-    // Find all lesson documents for this course
-    const lessons = await client.fetch(
+    // Query ALL documents (including drafts) that reference this course
+    // via parentCourse — this is the field causing the integrity block
+    const referencingDocs = await client.fetch(
+      `*[parentCourse._ref == $courseId]{ _id }`,
+      { courseId }
+    )
+    const referencingIds: string[] = referencingDocs.map((d: { _id: string }) => d._id)
+
+    // Also get by slug pattern as fallback
+    const patternDocs = await client.fetch(
       `*[_id in path($pattern)]{ _id }`,
       { pattern: `lesson-${slug}-*` }
     )
-    const lessonIds: string[] = lessons.map((l: { _id: string }) => l._id)
-    const draftLessonIds = lessonIds.map((id: string) => `drafts.${id}`)
-    const allLessonIds = [...lessonIds, ...draftLessonIds]
+    const patternIds: string[] = patternDocs.map((d: { _id: string }) => d._id)
 
-    // Step 1 — unset parentCourse on all lessons so course has no inbound refs
-    if (allLessonIds.length > 0) {
-      let patchTx = client.transaction()
-      for (const id of allLessonIds) {
-        patchTx = patchTx.patch(id, p => p.unset(['parentCourse']))
+    // Merge and deduplicate all lesson IDs
+    const allIds = Array.from(new Set([...referencingIds, ...patternIds]))
+
+    console.log('Deleting lesson IDs:', allIds)
+
+    // Step 1 — delete all referencing lesson documents
+    if (allIds.length > 0) {
+      let tx = client.transaction()
+      for (const id of allIds) {
+        tx = tx.delete(id)
       }
-      await patchTx.commit({ visibility: 'sync' })
+      await tx.commit({ visibility: 'sync' })
     }
 
-    // Step 2 — now delete all lesson documents (no refs remaining)
-    if (allLessonIds.length > 0) {
-      let lessonTx = client.transaction()
-      for (const id of allLessonIds) {
-        lessonTx = lessonTx.delete(id)
-      }
-      await lessonTx.commit({ visibility: 'sync' })
-    }
-
-    // Step 3 — delete course document and its draft
-    let courseTx = client.transaction()
-    courseTx = courseTx.delete(courseId)
-    courseTx = courseTx.delete(`drafts.${courseId}`)
-    await courseTx.commit({ visibility: 'sync' })
+    // Step 2 — now no documents reference the course, safe to delete
+    await client.transaction()
+      .delete(courseId)
+      .delete(`drafts.${courseId}`)
+      .commit({ visibility: 'sync' })
 
     return NextResponse.json({
       success: true,
-      deleted: { lessons: lessonIds.length, courseId },
+      deleted: { lessons: allIds.length, courseId },
     })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Delete failed'
