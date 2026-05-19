@@ -32,10 +32,12 @@ export async function DELETE(req: NextRequest) {
     ]))
 
     // Step 1 — clear chapters array on course (removes course→lesson refs)
-    await client.transaction()
-      .patch(courseId, p => p.set({ chapters: [] }))
-      .patch(`drafts.${courseId}`, p => p.set({ chapters: [] }))
-      .commit({ visibility: 'sync' })
+    await client.patch(courseId).set({ chapters: [] }).commit()
+    try {
+      await client.patch(`drafts.${courseId}`).set({ chapters: [] }).commit()
+    } catch {
+      // draft may not exist — safe to ignore
+    }
 
     // Step 2 — clear parentCourse on all lessons (removes lesson→course refs)
     if (allIds.length > 0) {
