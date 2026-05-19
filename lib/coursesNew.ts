@@ -94,10 +94,10 @@ export async function getCourseBySlug(slug: string): Promise<CourseFull | null> 
         "lessonCount":  count(chapters[].lessons[]),
         "chapters": chapters[] {
           _key, chapterTitle, chapterOrder,
-          "lessons": lessons[]-> {
+          "lessons": lessons[defined(@->._id) && !(@->_id in path("drafts.**"))]-> {
             _id, title, slug, order, estimatedTime,
             videoUrl, audioUrl, externalQuizUrl,
-            "linkedArticles": linkedArticles[]-> {
+            "linkedArticles": linkedArticles[defined(@->._id)]-> {
               _id, title, slug, excerpt, readTime
             }
           }
@@ -105,7 +105,7 @@ export async function getCourseBySlug(slug: string): Promise<CourseFull | null> 
       }
     `)
     const res = await fetch(`${BASE_URL}?query=${query}`, {
-      next: { revalidate: 3600 },
+      cache: 'no-store',
     })
     if (!res.ok) return null
     const data = await res.json()
