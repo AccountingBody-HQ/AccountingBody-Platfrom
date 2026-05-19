@@ -40,7 +40,8 @@ export async function DELETE(req: NextRequest) {
       success: true,
       deleted: { lessons: lessonIds.length, courseId },
     })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message ?? 'Delete failed' }, { status: 500 })
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'Delete failed'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
