@@ -102,13 +102,14 @@ export default async function FreeCoursesSlugPage({ params }: { params: { slug: 
                   </div>
                   <div className="divide-y divide-slate-50">
                     {chapter.lessons?.map((lesson, li) => (
-                      <div key={lesson._id} className="flex items-center gap-4 px-5 py-3.5">
+                      <Link key={lesson._id} href={`/free-courses/${course.slug.current}/learn/${lesson.slug.current}`}
+                        className="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50 transition-colors">
                         <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
                           <span className="text-xs text-slate-500 font-medium">{li + 1}</span>
                         </div>
                         <p className="text-sm font-medium text-navy-950 flex-1 truncate">{lesson.title}</p>
                         <svg className="w-4 h-4 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
