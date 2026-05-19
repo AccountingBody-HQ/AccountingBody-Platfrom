@@ -104,6 +104,11 @@ export default function CourseFactoryPage() {
   const [targetChapter,  setTargetChapter]  = useState('0')
   const [targetLesson,   setTargetLesson]   = useState('new')
 
+  // Delete state
+  const [deleting,   setDeleting]   = useState(false)
+  const [deleteMsg,  setDeleteMsg]  = useState('')
+  const [deleteError,setDeleteError] = useState('')
+
   // Load existing course state
   const [courseList,     setCourseList]     = useState<{_id:string;title:string;slug:{current:string};status:string;level:string;chapterCount:number}[]>([])
   const [loadingList,    setLoadingList]    = useState(false)
@@ -248,6 +253,46 @@ export default function CourseFactoryPage() {
       ;[lessons[lIdx], lessons[lIdx + 1]] = [lessons[lIdx + 1], lessons[lIdx]]
       return { ...ch, lessons }
     }))
+  }
+
+  // ── Delete course + all its lessons ─────────────────────────────────────
+  async function handleDeleteCourse() {
+    if (!loadedSlug) return
+    const confirmed = window.confirm(
+      `DELETE "${title}"?
+
+This will permanently delete the course and all its lesson documents from Sanity. This cannot be undone.`
+    )
+    if (!confirmed) return
+    setDeleting(true)
+    setDeleteError('')
+    setDeleteMsg('')
+    try {
+      const res = await fetch('/api/roodber8/course-factory/delete-course', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug: loadedSlug }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        setDeleteError(data.error ?? 'Delete failed')
+      } else {
+        setDeleteMsg(`Deleted "${title}" and ${data.deleted.lessons} lesson document${data.deleted.lessons !== 1 ? 's' : ''} from Sanity.`)
+        // Reset factory to blank state
+        setTitle('')
+        setDescription('')
+        setLevel('beginner')
+        setStatus('draft')
+        setIsFeatured(false)
+        setLoadedSlug('')
+        setChapters([{ id: uid(), title: 'Chapter 1', lessons: [] }])
+        setCourseList([])
+        setShowLoadPanel(false)
+      }
+    } catch (e: any) {
+      setDeleteError(e.message ?? 'Delete failed')
+    }
+    setDeleting(false)
   }
 
   // ── Load existing courses list ──────────────────────────────────────────
@@ -705,6 +750,32 @@ export default function CourseFactoryPage() {
         >
           {saving ? 'Saving to Sanity...' : 'Save Course to Sanity'}
         </button>
+
+        {/* Delete course — only shown when a course is loaded */}
+        {loadedSlug && (
+          <div className="pt-4 border-t border-slate-100 space-y-3">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Danger Zone</p>
+              <p className="text-xs text-slate-400">
+                Permanently deletes this course and all its lesson documents from Sanity. Cannot be undone.
+              </p>
+            </div>
+            {deleteError && (
+              <p className="text-sm text-crimson-600 bg-crimson-50 border border-crimson-200 rounded-lg px-3 py-2">{deleteError}</p>
+            )}
+            {deleteMsg && (
+              <p className="text-sm text-teal-700 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2">{deleteMsg}</p>
+            )}
+            <button
+              onClick={handleDeleteCourse}
+              disabled={deleting}
+              className="w-full h-11 rounded-xl text-sm font-bold transition-colors disabled:opacity-40"
+              style={{ background: 'rgba(244,63,94,0.08)', color: '#f43f5e', border: '1.5px solid rgba(244,63,94,0.25)' }}
+            >
+              {deleting ? 'Deleting...' : `Delete "${title}" + all lesson documents`}
+            </button>
+          </div>
+        )}
       </section>
     </div>
   )
