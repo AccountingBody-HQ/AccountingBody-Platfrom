@@ -129,33 +129,51 @@ export default function CourseFactoryPage() {
   // ── Add fetched articles to chapter/lesson (bulk) ────────────────────────
   function handleAddArticles() {
     if (fetchedArticles.length === 0) return
-    const chIdx = parseInt(targetChapter)
-    setChapters(prev => {
-      const next = prev.map((ch, ci) => {
-        if (ci !== chIdx) return ch
-        if (targetLesson === 'new') {
-          // Create one new lesson containing all fetched articles
-          const newLesson: Lesson = {
-            id:       uid(),
-            title:    fetchedArticles.length === 1
-              ? fetchedArticles[0].title
-              : `Lesson ${ch.lessons.length + 1}`,
-            articles: fetchedArticles,
-          }
-          return { ...ch, lessons: [...ch.lessons, newLesson] }
-        }
-        const lIdx = parseInt(targetLesson)
-        return {
-          ...ch,
-          lessons: ch.lessons.map((l, li) =>
-            li === lIdx
-              ? { ...l, articles: [...l.articles, ...fetchedArticles] }
-              : l
-          ),
-        }
+
+    if (targetLesson === 'one-per-chapter') {
+      // Each article becomes its own chapter with one lesson inside
+      const newChapters: Chapter[] = fetchedArticles.map((article) => ({
+        id:      uid(),
+        title:   article.title,
+        lessons: [{
+          id:       uid(),
+          title:    article.title,
+          articles: [article],
+        }],
+      }))
+      setChapters(prev => {
+        const nonEmpty = prev.filter(ch => ch.lessons.length > 0)
+        return [...nonEmpty, ...newChapters]
       })
-      return next
-    })
+    } else {
+      const chIdx = parseInt(targetChapter)
+      setChapters(prev => {
+        const next = prev.map((ch, ci) => {
+          if (ci !== chIdx) return ch
+          if (targetLesson === 'new') {
+            const newLesson: Lesson = {
+              id:       uid(),
+              title:    fetchedArticles.length === 1
+                ? fetchedArticles[0].title
+                : `Lesson ${ch.lessons.length + 1}`,
+              articles: fetchedArticles,
+            }
+            return { ...ch, lessons: [...ch.lessons, newLesson] }
+          }
+          const lIdx = parseInt(targetLesson)
+          return {
+            ...ch,
+            lessons: ch.lessons.map((l, li) =>
+              li === lIdx
+                ? { ...l, articles: [...l.articles, ...fetchedArticles] }
+                : l
+            ),
+          }
+        })
+        return next
+      })
+    }
+
     setFetchedArticles([])
     setIdInput('')
     setFetchError('')
