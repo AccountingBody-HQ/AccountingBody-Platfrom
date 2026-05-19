@@ -45,7 +45,25 @@ async function getFeaturedArticles(): Promise<SanityArticle[]> {
     )
     if (!res.ok) return []
     const data = await res.json()
-    return data.result ?? []
+    const results = data.result ?? []
+    if (results.length === 0) {
+      const fallbackQuery = encodeURIComponent(
+        `*[_type == "article" && "accountingbody" in showOnSites] | order(publishedAt desc) [0..3] {
+          _id, title, slug, excerpt, examBody, readTime, publishedAt,
+          showInLatestInsights, isHotTopic, insightTag,
+          "categoryTitle": categories[0]->title,
+          "coverImage": featuredImage { asset -> { url } }
+        }`
+      )
+      const fallbackRes = await fetch(
+        `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${fallbackQuery}`,
+        { next: { revalidate: 1800 } }
+      )
+      if (!fallbackRes.ok) return []
+      const fallbackData = await fallbackRes.json()
+      return fallbackData.result ?? []
+    }
+    return results
   } catch {
     return []
   }
