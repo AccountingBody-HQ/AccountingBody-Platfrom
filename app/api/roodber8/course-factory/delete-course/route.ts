@@ -17,10 +17,10 @@ export async function DELETE(req: NextRequest) {
 
     const courseId = `course-${slug}`
 
-    // Query ALL documents (including drafts) that reference this course
-    // via parentCourse — this is the field causing the integrity block
+    // Query ONLY lesson documents that reference this course via parentCourse
+    // _type == 'lesson' is a hard safeguard — articles can never be matched
     const referencingDocs = await client.fetch(
-      `*[parentCourse._ref == $courseId]{ _id }`,
+      `*[_type == "lesson" && parentCourse._ref == $courseId]{ _id }`,
       { courseId }
     )
     const referencingIds: string[] = referencingDocs.map((d: { _id: string }) => d._id)
