@@ -8,6 +8,7 @@ import { getLessonData, getCourseBySlug, getPublishedCourses } from '@/lib/cours
 import MarkCompleteButton, { CourseProgressBar, ResetLessonButton, ResetChapterInlineButton } from '@/components/course/ProgressTracker'
 import CourseSidebar from '@/components/course/CourseSidebar'
 import MobileNavDrawer from '@/components/course/MobileNavDrawer'
+import ArticleBody from '@/components/course/ArticleBody'
 
 export async function generateStaticParams() {
   const courses = await getPublishedCourses()
@@ -211,7 +212,8 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                 </div>
 
                 <div className="space-y-4">
-                  {lesson.linkedArticles.map((article: { _id: string; title: string; slug: { current: string }; excerpt?: string }, ai: number) => (
+                  {lesson.linkedArticles.map((// eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    article: { _id: string; title: string; slug: { current: string }; excerpt?: string; body?: any[] }, ai: number) => (
                     <div
                       key={article._id}
                       className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
@@ -235,20 +237,24 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                           >
                             {article.title}
                           </h3>
-                          {article.excerpt && (
+                          {article.body && article.body.length > 0 ? (
+                            <div className="mb-4">
+                              <ArticleBody body={article.body} />
+                            </div>
+                          ) : article.excerpt ? (
                             <p className="text-sm mb-4" style={{ color: '#64748B', lineHeight: 1.75 }}>
                               {article.excerpt.length > 180 ? article.excerpt.slice(0, 180) + '...' : article.excerpt}
                             </p>
-                          )}
+                          ) : null}
                           <Link
                             href={`/articles/${article.slug.current}`}
                             target="_blank"
-                            className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider transition-all hover:-translate-y-0.5"
-                            style={{ color: '#D4A017' }}
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold transition-all hover:opacity-70"
+                            style={{ color: '#94A3B8' }}
                           >
-                            Read full article
+                            View original article
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                              <path strokeLinecap="round" strokeWidth="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                             </svg>
                           </Link>
                         </div>
