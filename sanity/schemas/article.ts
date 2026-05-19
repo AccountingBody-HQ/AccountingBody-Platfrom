@@ -41,6 +41,9 @@ export default defineType({
     defineField({ name: 'abcmExamBody', title: 'ABCM Exam Body', type: 'string', group: 'abcm' }),
     defineField({ name: 'examBody', title: 'Exam Bodies', type: 'array', group: 'abcm', description: 'Select all qualifications this article applies to', of: [{ type: 'string' }], options: { list: [{ title: 'ACCA', value: 'acca' }, { title: 'CIMA', value: 'cima' }, { title: 'ICAEW', value: 'icaew' }, { title: 'AAT', value: 'aat' }], layout: 'grid' } }),
     defineField({ name: 'abcmQuestionType', title: 'ABCM Question Type', type: 'string', group: 'abcm' }),
+    defineField({ name: 'showInLatestInsights', title: 'Show in Latest Insights', type: 'boolean', group: 'content', initialValue: false, description: 'When enabled this article appears in the Latest Insights section on the homepage.' }),
+    defineField({ name: 'isHotTopic', title: 'Mark as Hot Topic', type: 'boolean', group: 'content', initialValue: false, description: 'Adds a Hot badge to this article card on the homepage.' }),
+    defineField({ name: 'insightTag', title: 'Insight Tag', type: 'string', group: 'content', description: 'Label shown on the article card in Latest Insights.', options: { list: [{ title: 'Trending', value: 'trending' }, { title: 'New', value: 'new' }, { title: 'Exam Relevant', value: 'exam-relevant' }, { title: 'Technical Update', value: 'technical-update' }, { title: 'Industry Change', value: 'industry-change' }, { title: 'Regulatory Update', value: 'regulatory-update' }], layout: 'radio' } }),
   ],
   preview: {
     select: { title: 'title', author: 'author.name', media: 'featuredImage', sites: 'showOnSites' },

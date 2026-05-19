@@ -10,16 +10,19 @@ import HeroSearch from '@/components/HeroSearch'
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface SanityArticle {
-  _id:          string
-  title:        string
-  slug:         { current: string }
-  excerpt?:     string
-  category?:    string
-  examBody?:    string
-  readTime?:    number
-  publishedAt?: string
-  coverImage?:  { asset: { url: string } }
-  author?:      { name: string }
+  _id:             string
+  title:           string
+  slug:            { current: string }
+  excerpt?:        string
+  category?:       string
+  examBody?:       string
+  readTime?:       number
+  publishedAt?:    string
+  coverImage?:     { asset: { url: string } }
+  author?:         { name: string }
+  showInLatestInsights?: boolean
+  isHotTopic?:     boolean
+  insightTag?:     string
 }
 
 // ── Sanity fetch ──────────────────────────────────────────────────────────────
@@ -29,8 +32,9 @@ async function getFeaturedArticles(): Promise<SanityArticle[]> {
     const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
     const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
     const query = encodeURIComponent(
-      `*[_type == "article" && "accountingbody" in showOnSites] | order(publishedAt desc) [0..7] {
+      `*[_type == "article" && "accountingbody" in showOnSites && showInLatestInsights == true] | order(publishedAt desc) [0..7] {
         _id, title, slug, excerpt, examBody, readTime, publishedAt,
+        showInLatestInsights, isHotTopic, insightTag,
         "categoryTitle": categories[0]->title,
         "coverImage": featuredImage { asset -> { url } }
       }`
@@ -302,8 +306,7 @@ const trustPoints = [
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function ArticleCard({ article }: { article: typeof placeholderArticles[0] }) {
-
+function ArticleCard({ article }: { article: SanityArticle & { category?: string } }) {
   const examBodyFirst = Array.isArray(article.examBody) ? article.examBody[0] : article.examBody
   const bodyColor =
     examBodyFirst === 'acca'  ? '#004B8D' :
@@ -311,11 +314,34 @@ function ArticleCard({ article }: { article: typeof placeholderArticles[0] }) {
     examBodyFirst === 'aat'   ? '#00857A' :
     examBodyFirst === 'icaew' ? '#1e3a7a' : '#0C1A3D'
 
+  const tagLabels: Record<string, string> = {
+    'trending':          'Trending',
+    'new':               'New',
+    'exam-relevant':     'Exam Relevant',
+    'technical-update':  'Technical Update',
+    'industry-change':   'Industry Change',
+    'regulatory-update': 'Regulatory Update',
+  }
+
   return (
-    <article className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+    <article className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative">
       <div className="h-1" style={{ backgroundColor: bodyColor }} />
+      {article.isHotTopic && (
+        <div className="absolute top-4 right-4 z-10">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-black uppercase tracking-wider"
+            style={{ background: '#f43f5e', color: '#fff' }}>
+            🔥 Hot
+          </span>
+        </div>
+      )}
       <div className="flex flex-col flex-1 p-5">
         <div className="flex flex-wrap items-center gap-2 mb-3">
+          {article.insightTag && (
+            <span className="text-[0.6rem] font-black uppercase tracking-wider px-2 py-0.5 rounded-full"
+              style={{ background: 'rgba(212,160,23,0.1)', color: '#B8860B', border: '1px solid rgba(212,160,23,0.25)' }}>
+              {tagLabels[article.insightTag] ?? article.insightTag}
+            </span>
+          )}
           {article.category && (
             <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
               {article.category}
@@ -331,7 +357,6 @@ function ArticleCard({ article }: { article: typeof placeholderArticles[0] }) {
           <p className="text-sm text-slate-500 line-clamp-2 mb-4">{article.excerpt}</p>
         )}
         <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-auto">
-
           {article.readTime && (
             <div className="flex items-center gap-1 text-xs text-slate-400">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -346,7 +371,6 @@ function ArticleCard({ article }: { article: typeof placeholderArticles[0] }) {
     </article>
   )
 }
-
 function EmailSignupSection() {
   return (
     <section className="section-navy section relative overflow-hidden">
