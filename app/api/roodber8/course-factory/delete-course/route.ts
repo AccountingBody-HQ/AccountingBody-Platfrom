@@ -17,27 +17,36 @@ export async function DELETE(req: NextRequest) {
 
     const courseId = `course-${slug}`
 
-    // Query ONLY lesson documents that reference this course via parentCourse
-    // _type == 'lesson' is a hard safeguard — articles can never be matched
+    // Find all lesson documents for this course (by type + parentCourse ref)
     const referencingDocs = await client.fetch(
       `*[_type == "lesson" && parentCourse._ref == $courseId]{ _id }`,
       { courseId }
     )
-    const referencingIds: string[] = referencingDocs.map((d: { _id: string }) => d._id)
-
-    // Also get by slug pattern as fallback
     const patternDocs = await client.fetch(
       `*[_id in path($pattern)]{ _id }`,
       { pattern: `lesson-${slug}-*` }
     )
-    const patternIds: string[] = patternDocs.map((d: { _id: string }) => d._id)
+    const allIds = Array.from(new Set([
+      ...referencingDocs.map((d: { _id: string }) => d._id),
+      ...patternDocs.map((d: { _id: string }) => d._id),
+    ]))
 
-    // Merge and deduplicate all lesson IDs
-    const allIds = Array.from(new Set([...referencingIds, ...patternIds]))
+    // Step 1 — clear chapters array on course (removes course→lesson refs)
+    await client.transaction()
+      .patch(courseId, p => p.set({ chapters: [] }))
+      .patch(`drafts.${courseId}`, p => p.set({ chapters: [] }))
+      .commit({ visibility: 'sync' })
 
-    console.log('Deleting lesson IDs:', allIds)
+    // Step 2 — clear parentCourse on all lessons (removes lesson→course refs)
+    if (allIds.length > 0) {
+      let tx = client.transaction()
+      for (const id of allIds) {
+        tx = tx.patch(id, p => p.unset(['parentCourse']))
+      }
+      await tx.commit({ visibility: 'sync' })
+    }
 
-    // Step 1 — delete all referencing lesson documents
+    // Step 3 — delete all lesson documents
     if (allIds.length > 0) {
       let tx = client.transaction()
       for (const id of allIds) {
@@ -46,7 +55,7 @@ export async function DELETE(req: NextRequest) {
       await tx.commit({ visibility: 'sync' })
     }
 
-    // Step 2 — now no documents reference the course, safe to delete
+    // Step 4 — delete course and its draft
     await client.transaction()
       .delete(courseId)
       .delete(`drafts.${courseId}`)
