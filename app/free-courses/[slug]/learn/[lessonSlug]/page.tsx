@@ -75,7 +75,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                 <path strokeLinecap="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
               </svg>
             </div>
-            <span className="hidden md:block text-xs font-semibold truncate max-w-[160px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <span className="hidden md:block text-xs font-semibold truncate max-w-[220px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
               {course.title}
             </span>
           </Link>
@@ -83,8 +83,8 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
           {/* Lesson title + chapter */}
           <div className="flex-1 flex items-center px-5 min-w-0">
             <div className="min-w-0">
-              <p className="text-sm font-bold leading-tight truncate text-white">{lesson.title}</p>
-              <p className="text-[0.65rem] font-medium mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>
+              <p className="text-sm font-bold leading-tight text-white" style={{ overflowWrap: "break-word", wordBreak: "break-word" }}>{lesson.title}</p>
+              <p className="text-[0.65rem] font-medium mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
                 {chapterTitle} · Lesson {currentIdx + 1} of {totalLessons}
               </p>
             </div>
