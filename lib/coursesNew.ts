@@ -15,6 +15,7 @@ export interface CourseArticle {
   readTime?: number
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body?: any[]
+  mcqUrl?: string
 }
 
 export interface CourseLesson {
@@ -100,7 +101,7 @@ export async function getCourseBySlug(slug: string): Promise<CourseFull | null> 
             _id, title, slug, order, estimatedTime,
             videoUrl, audioUrl, externalQuizUrl,
             "linkedArticles": linkedArticles[defined(@->._id)]-> {
-              _id, title, slug, excerpt, readTime, body
+              _id, title, slug, excerpt, readTime, body, mcqUrl
             }
           }
         }

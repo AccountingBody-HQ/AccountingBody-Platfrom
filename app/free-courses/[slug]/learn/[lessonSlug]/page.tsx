@@ -213,7 +213,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
 
                 <div className="space-y-4">
                   {lesson.linkedArticles.map((// eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    article: { _id: string; title: string; slug: { current: string }; excerpt?: string; body?: any[] }, ai: number) => (
+                    article: { _id: string; title: string; slug: { current: string }; excerpt?: string; body?: any[]; mcqUrl?: string }, ai: number) => (
                     <div
                       key={article._id}
                       className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
@@ -223,7 +223,8 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                         className="absolute left-0 top-0 bottom-0 w-1.5"
                         style={{ background: ai === 0 ? 'linear-gradient(to bottom, #D4A017, #c49215)' : '#E2E8F0' }}
                       />
-                      <div className="pl-8 pr-6 py-6 flex items-start gap-5">
+                      {/* Card top row — badge + title + link icon */}
+                      <div className="pl-8 pr-6 pt-6 pb-4 flex items-start gap-5">
                         <div
                           className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 text-sm font-black transition-all duration-200 group-hover:scale-105"
                           style={{ background: ai === 0 ? 'rgba(212,160,23,0.1)' : '#F8F7F4', color: ai === 0 ? '#B8860B' : '#94A3B8' }}
@@ -232,20 +233,11 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3
-                            className="font-display text-navy-950 leading-snug mb-3"
+                            className="font-display text-navy-950 leading-snug mb-2"
                             style={{ fontSize: '1.05rem', fontWeight: 600 }}
                           >
                             {article.title}
                           </h3>
-                          {article.body && article.body.length > 0 ? (
-                            <div className="mb-4">
-                              <ArticleBody body={article.body} />
-                            </div>
-                          ) : article.excerpt ? (
-                            <p className="text-sm mb-4" style={{ color: '#64748B', lineHeight: 1.75 }}>
-                              {article.excerpt.length > 180 ? article.excerpt.slice(0, 180) + '...' : article.excerpt}
-                            </p>
-                          ) : null}
                           <Link
                             href={`/articles/${article.slug.current}`}
                             target="_blank"
@@ -258,10 +250,35 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                             </svg>
                           </Link>
                         </div>
-                        <svg className="w-4 h-4 shrink-0 mt-1 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
                       </div>
+
+                      {/* Article body — full card width for good mobile reading */}
+                      <div className="px-6 pb-4">
+                        {article.body && article.body.length > 0 ? (
+                          <ArticleBody body={article.body} />
+                        ) : article.excerpt ? (
+                          <p className="text-sm" style={{ color: '#64748B', lineHeight: 1.75 }}>
+                            {article.excerpt}
+                          </p>
+                        ) : null}
+                      </div>
+
+                      {/* Practice questions button — only if mcqUrl exists */}
+                      {article.mcqUrl && (
+                        <div className="px-6 pb-6">
+                          <Link
+                            href={article.mcqUrl}
+                            target="_blank"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all hover:-translate-y-0.5"
+                            style={{ background: 'rgba(212,160,23,0.1)', color: '#B8860B', border: '1.5px solid rgba(212,160,23,0.25)' }}
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            Practice Questions
+                          </Link>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
