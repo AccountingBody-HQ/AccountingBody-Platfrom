@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getLessonData, getCourseBySlug, getPublishedCourses } from '@/lib/coursesNew'
-import MarkCompleteButton, { CourseProgressBar, ResetLessonButton } from '@/components/course/ProgressTracker'
+import MarkCompleteButton, { CourseProgressBar, ResetLessonButton, ResetChapterInlineButton } from '@/components/course/ProgressTracker'
 import CourseSidebar from '@/components/course/CourseSidebar'
 import MobileNavDrawer from '@/components/course/MobileNavDrawer'
 
@@ -47,6 +47,11 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
   const currentIdx   = allLessons.indexOf(params.lessonSlug)
   const totalLessons = allLessons.length
   const isLastLesson = !nextLesson
+
+  const currentChapter = course.chapters?.find((ch: { lessons?: { slug?: { current: string } }[] }) =>
+    ch.lessons?.some((l: { slug?: { current: string } }) => l.slug?.current === params.lessonSlug)
+  )
+  const currentChapterLessonSlugs = currentChapter?.lessons?.map((l: { slug?: { current: string } }) => l.slug?.current ?? '') ?? []
 
   return (
     <div className="flex flex-col" style={{ minHeight: '100vh', background: '#EDE9E3' }}>
@@ -284,8 +289,17 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
               </div>
             )}
 
+            {/* Reset Lesson — above the card, only shows when lesson is complete */}
+            <div className="mb-3 flex justify-end">
+              <ResetLessonButton
+                courseSlug={course.slug.current}
+                lessonSlug={params.lessonSlug}
+                allLessonSlugs={allLessons}
+              />
+            </div>
+
             {/* Mark Complete Card */}
-            <div className="mb-4 rounded-3xl overflow-hidden" style={{ boxShadow: '0 8px 40px rgba(12,26,61,0.12)' }}>
+            <div className="mb-3 rounded-3xl overflow-hidden" style={{ boxShadow: '0 8px 40px rgba(12,26,61,0.12)' }}>
               <div
                 className="px-8 py-7 flex flex-col sm:flex-row sm:items-center gap-5"
                 style={{ background: 'linear-gradient(135deg, #0C1A3D 0%, #162756 50%, #0e2048 100%)' }}
@@ -311,12 +325,12 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
               </div>
             </div>
 
-            {/* Reset Lesson — only shows when lesson is marked complete */}
+            {/* Chapter Reset — below the card */}
             <div className="mb-10 flex justify-end">
-              <ResetLessonButton
+              <ResetChapterInlineButton
                 courseSlug={course.slug.current}
-                lessonSlug={params.lessonSlug}
                 allLessonSlugs={allLessons}
+                chapterLessonSlugs={currentChapterLessonSlugs}
               />
             </div>
 
