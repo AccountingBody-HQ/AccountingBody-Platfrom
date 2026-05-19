@@ -27,14 +27,20 @@ export async function DELETE(req: NextRequest) {
     const draftLessonIds = lessonIds.map((id: string) => `drafts.${id}`)
     const allLessonIds = [...lessonIds, ...draftLessonIds]
 
-    let tx = client.transaction()
-    for (const id of allLessonIds) {
-      tx = tx.delete(id)
+    // Step 1 — delete all lesson documents first
+    if (allLessonIds.length > 0) {
+      let lessonTx = client.transaction()
+      for (const id of allLessonIds) {
+        lessonTx = lessonTx.delete(id)
+      }
+      await lessonTx.commit({ visibility: 'sync' })
     }
-    tx = tx.delete(courseId)
-    tx = tx.delete(`drafts.${courseId}`)
 
-    await tx.commit({ visibility: 'async' })
+    // Step 2 — delete course document after lessons are gone
+    let courseTx = client.transaction()
+    courseTx = courseTx.delete(courseId)
+    courseTx = courseTx.delete(`drafts.${courseId}`)
+    await courseTx.commit({ visibility: 'sync' })
 
     return NextResponse.json({
       success: true,
