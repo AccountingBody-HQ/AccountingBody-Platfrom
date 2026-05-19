@@ -75,7 +75,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                 <path strokeLinecap="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
               </svg>
             </div>
-            <span className="hidden md:block text-xs font-semibold truncate max-w-[220px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <span className="hidden md:block text-xs font-semibold" style={{ overflowWrap: "break-word", wordBreak: "break-word", maxWidth: "220px", color: 'rgba(255,255,255,0.4)' }}>
               {course.title}
             </span>
           </Link>

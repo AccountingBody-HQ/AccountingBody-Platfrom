@@ -32,16 +32,37 @@ export default function CourseSidebar({
   currentLessonSlug,
   allLessons,
 }: CourseSidebarProps) {
-  const [openChapters, setOpenChapters] = useState<Record<number, boolean>>(
-    Object.fromEntries(chapters.map((_, i) => [i, true]))
-  )
+  const getInitialOpen = () => {
+    const stored = typeof window !== 'undefined'
+      ? localStorage.getItem(`sidebar_open_${courseSlug}`)
+      : null
+    if (stored) {
+      try { return JSON.parse(stored) } catch { /* ignore */ }
+    }
+    // Default: only open the chapter containing the current lesson
+    return Object.fromEntries(
+      chapters.map((ch, i) => [
+        i,
+        ch.lessons?.some(l => l.slug?.current === currentLessonSlug) ?? false
+      ])
+    )
+  }
+
+  const [openChapters, setOpenChapters] = useState<Record<number, boolean>>(getInitialOpen)
 
   const toggle = (i: number) =>
-    setOpenChapters(prev => ({ ...prev, [i]: !prev[i] }))
+    setOpenChapters(prev => {
+      const next = { ...prev, [i]: !prev[i] }
+      localStorage.setItem(`sidebar_open_${courseSlug}`, JSON.stringify(next))
+      return next
+    })
 
   const allOpen = Object.values(openChapters).every(Boolean)
-  const toggleAll = () =>
-    setOpenChapters(Object.fromEntries(chapters.map((_, i) => [i, !allOpen])))
+  const toggleAll = () => {
+    const next = Object.fromEntries(chapters.map((_, i) => [i, !allOpen]))
+    localStorage.setItem(`sidebar_open_${courseSlug}`, JSON.stringify(next))
+    setOpenChapters(next)
+  }
 
   return (
     <aside
