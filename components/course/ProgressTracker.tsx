@@ -36,7 +36,15 @@ export function useProgress(courseSlug: string, allLessonSlugs: string[]) {
     setCompleted([])
   }, [courseSlug])
 
-  return { completed, markComplete, isComplete, progressPct, mounted, resetProgress }
+  const resetChapter = useCallback((chapterLessonSlugs: string[]) => {
+    setCompleted(prev => {
+      const next = prev.filter(s => !chapterLessonSlugs.includes(s))
+      try { localStorage.setItem(getKey(courseSlug), JSON.stringify(next)) } catch { /* silent */ }
+      return next
+    })
+  }, [courseSlug])
+
+  return { completed, markComplete, isComplete, progressPct, mounted, resetProgress, resetChapter }
 }
 
 interface MarkCompleteButtonProps {
@@ -177,5 +185,38 @@ export function PositionRing({ current, total }: PositionRingProps) {
         {pct}%
       </span>
     </div>
+  )
+}
+
+// ── Reset Chapter Button ──────────────────────────────────────────────────────
+
+interface ResetChapterButtonProps {
+  courseSlug: string
+  allLessonSlugs: string[]
+  chapterLessonSlugs: string[]
+}
+
+export function ResetChapterButton({ courseSlug, allLessonSlugs, chapterLessonSlugs }: ResetChapterButtonProps) {
+  const { resetChapter, mounted, completed } = useProgress(courseSlug, allLessonSlugs)
+  if (!mounted) return null
+  const chapterHasProgress = chapterLessonSlugs.some(s => completed.includes(s))
+  if (!chapterHasProgress) return null
+
+  return (
+    <button
+      onClick={() => {
+        if (window.confirm('Reset progress for this chapter only? Other chapters are not affected.')) {
+          resetChapter(chapterLessonSlugs)
+          window.location.reload()
+        }
+      }}
+      title="Reset this chapter only"
+      className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center transition-all duration-150 hover:scale-110"
+      style={{ background: 'rgba(244,63,94,0.15)', border: '1px solid rgba(244,63,94,0.25)' }}
+    >
+      <svg className="w-3 h-3" style={{ color: '#f43f5e' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+    </button>
   )
 }

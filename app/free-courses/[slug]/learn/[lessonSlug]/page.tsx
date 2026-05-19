@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getLessonData, getCourseBySlug, getPublishedCourses } from '@/lib/coursesNew'
-import MarkCompleteButton, { LessonStatusDot, CourseProgressBar, ResetProgressButton, PositionRing } from '@/components/course/ProgressTracker'
+import MarkCompleteButton, { LessonStatusDot, CourseProgressBar, ResetProgressButton, PositionRing, ResetChapterButton } from '@/components/course/ProgressTracker'
 
 export async function generateStaticParams() {
   const courses = await getPublishedCourses()
@@ -120,7 +120,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
               <div key={chapter._key}>
                 {/* Chapter header */}
                 <div
-                  className="flex items-center gap-3 px-4 py-2.5 mt-2"
+                  className="flex items-center gap-2 px-4 py-2.5 mt-2"
                   style={{ background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.05)' }}
                 >
                   <div
@@ -129,9 +129,14 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                   >
                     {ci + 1}
                   </div>
-                  <p className="text-[0.65rem] font-black uppercase tracking-[0.1em] leading-tight" style={{ color: '#D4A017' }}>
+                  <p className="text-[0.65rem] font-black uppercase tracking-[0.1em] leading-tight flex-1" style={{ color: '#D4A017' }}>
                     {chapter.chapterTitle}
                   </p>
+                  <ResetChapterButton
+                    courseSlug={course.slug.current}
+                    allLessonSlugs={allLessons}
+                    chapterLessonSlugs={chapter.lessons?.map(l => l.slug?.current ?? '') ?? []}
+                  />
                 </div>
 
                 {/* Lessons */}
