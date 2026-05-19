@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
       examBody,
       showOnSites = ['accountingbody'],
       canonicalOwner = 'accountingbody',
+      sourceWpId,
     } = body
 
     if (!bundle || !bundle.questions?.length) {
@@ -114,6 +115,21 @@ export async function POST(req: NextRequest) {
     }
     const contentId = 'AB-QZ-' + String(nextNum).padStart(5, '0')
     doc.contentId = contentId
+
+    // Auto-copy categories from source article if wpId provided
+    if (sourceWpId) {
+      try {
+        const sourceArticle = await client.fetch(
+          `*[_type == "article" && wpId == $wpId][0]{ categories }`,
+          { wpId: String(sourceWpId) }
+        )
+        if (sourceArticle?.categories?.length) {
+          doc.categories = sourceArticle.categories
+        }
+      } catch (catErr) {
+        console.warn('Could not fetch source article categories:', catErr)
+      }
+    }
 
     const result = await client.create(doc)
 

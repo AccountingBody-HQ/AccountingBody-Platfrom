@@ -54,12 +54,14 @@ type Config = {
   qualification: string; subject: string; topic: string
   questionType: string; difficulty: string; count: number
   framework: string; noiseLevel: string; rounding: string
+  sourceWpId: string
 }
 
 const EMPTY: Config = {
   qualification: '', subject: '', topic: '',
   questionType: 'mcq', difficulty: 'intermediate', count: 10,
   framework: 'None', noiseLevel: 'medium', rounding: 'nearest whole number',
+  sourceWpId: '',
 }
 
 type Bundle = {
@@ -252,6 +254,18 @@ export default function GenerateQuestionsPage() {
               className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder-slate-600 focus:outline-none resize-none" style={C.input} />
           </div>
 
+          <div className="rounded-2xl border p-6" style={C.card}>
+            <h2 className="text-white font-bold text-sm mb-1">Source Article <span style={{ color: '#475569', fontWeight: 400 }}>(optional)</span></h2>
+            <p className="text-xs mb-4" style={{ color: '#334155' }}>Paste the WordPress ID (wpId) of the source article — categories will be copied automatically on publish</p>
+            <input
+              type="text"
+              value={config.sourceWpId}
+              onChange={e => setConfig(c => ({ ...c, sourceWpId: e.target.value }))}
+              placeholder="e.g. 41267"
+              className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder-slate-600 focus:outline-none"
+              style={C.input}
+            />
+          </div>
           <div className="rounded-2xl border p-6" style={C.card}>
             <h2 className="text-white font-bold text-sm mb-1">Question Type</h2>
             <p className="text-xs mb-4" style={{ color: '#334155' }}>What format should the questions take?</p>
