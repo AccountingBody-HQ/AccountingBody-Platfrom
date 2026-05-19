@@ -104,6 +104,14 @@ export default function CourseFactoryPage() {
   const [targetChapter,  setTargetChapter]  = useState('0')
   const [targetLesson,   setTargetLesson]   = useState('new')
 
+  // Load existing course state
+  const [courseList,     setCourseList]     = useState<{_id:string;title:string;slug:{current:string};status:string;level:string;chapterCount:number}[]>([])
+  const [loadingList,    setLoadingList]    = useState(false)
+  const [loadingCourse,  setLoadingCourse]  = useState(false)
+  const [loadError,      setLoadError]      = useState('')
+  const [loadedSlug,     setLoadedSlug]     = useState('')
+  const [showLoadPanel,  setShowLoadPanel]  = useState(false)
+
   // Save state
   const [saving,     setSaving]     = useState(false)
   const [saveMsg,    setSaveMsg]    = useState('')
@@ -242,6 +250,61 @@ export default function CourseFactoryPage() {
     }))
   }
 
+  // ── Load existing courses list ──────────────────────────────────────────
+  async function handleOpenLoadPanel() {
+    setShowLoadPanel(true)
+    if (courseList.length > 0) return
+    setLoadingList(true)
+    setLoadError('')
+    try {
+      const res = await fetch('/api/roodber8/course-factory/load-course?action=list')
+      const data = await res.json()
+      setCourseList(data.courses ?? [])
+    } catch {
+      setLoadError('Failed to fetch course list.')
+    }
+    setLoadingList(false)
+  }
+
+  async function handleLoadCourse(slug: string) {
+    if (!slug) return
+    setLoadingCourse(true)
+    setLoadError('')
+    try {
+      const res = await fetch(`/api/roodber8/course-factory/load-course?action=load&slug=${encodeURIComponent(slug)}`)
+      const data = await res.json()
+      if (data.error) { setLoadError(data.error); setLoadingCourse(false); return }
+      const c = data.course
+      setTitle(c.title ?? '')
+      setDescription(c.description ?? '')
+      setLevel(c.level ?? 'beginner')
+      setStatus(c.status ?? 'draft')
+      setIsFeatured(c.isFeatured ?? false)
+      setLoadedSlug(c.slug?.current ?? '')
+      const rebuilt = (c.chapters ?? []).map((ch: any) => ({
+        id:    uid(),
+        title: ch.chapterTitle ?? 'Chapter',
+        lessons: (ch.lessons ?? []).map((l: any) => ({
+          id:       uid(),
+          title:    l.title ?? 'Lesson',
+          articles: (l.linkedArticles ?? []).map((a: any) => ({
+            _id:       a._id,
+            title:     a.title,
+            slug:      a.slug,
+            excerpt:   a.excerpt,
+            contentId: a.contentId,
+            wpId:      a.wpId,
+          })),
+        })),
+      }))
+      setChapters(rebuilt.length > 0 ? rebuilt : [{ id: uid(), title: 'Chapter 1', lessons: [] }])
+      setShowLoadPanel(false)
+    } catch {
+      setLoadError('Failed to load course.')
+    }
+    setLoadingCourse(false)
+  }
+
   // ── Save to Sanity ───────────────────────────────────────────────────────
   async function handleSave() {
     if (!title.trim()) { setSaveError('Course title is required.'); return }
@@ -252,7 +315,7 @@ export default function CourseFactoryPage() {
     setSaveError('')
     setSaveMsg('')
 
-    const slug = title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+    const slug = loadedSlug || title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
     const payload = {
       title:       title.trim(),
@@ -297,6 +360,72 @@ export default function CourseFactoryPage() {
           Assemble structured courses from existing content IDs. Courses are saved to Sanity as draft by default.
         </p>
       </div>
+
+      {/* ── Load Existing Course ── */}
+      <section className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-display text-lg text-navy-950">Load Existing Course</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Load a course to edit its structure or add more lessons.</p>
+          </div>
+          <button
+            onClick={handleOpenLoadPanel}
+            className="h-9 px-4 rounded-lg text-sm font-semibold border-2 border-navy-950 text-navy-950 hover:bg-navy-950 hover:text-white transition-colors"
+          >
+            {showLoadPanel ? 'Hide' : 'Browse Courses'}
+          </button>
+        </div>
+
+        {loadedSlug && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm" style={{ background: 'rgba(20,180,163,0.08)', border: '1px solid rgba(20,180,163,0.25)', color: '#0d8f82' }}>
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Loaded: <strong>{title}</strong> — saving will update this course in Sanity.
+          </div>
+        )}
+
+        {showLoadPanel && (
+          <div className="border border-slate-200 rounded-xl overflow-hidden">
+            {loadingList && (
+              <p className="text-sm text-slate-400 px-4 py-6 text-center">Loading courses...</p>
+            )}
+            {loadError && (
+              <p className="text-sm text-crimson-600 px-4 py-3">{loadError}</p>
+            )}
+            {!loadingList && courseList.length === 0 && (
+              <p className="text-sm text-slate-400 px-4 py-6 text-center">No courses found.</p>
+            )}
+            {!loadingList && courseList.map(c => (
+              <button
+                key={c._id}
+                onClick={() => handleLoadCourse(c.slug.current)}
+                disabled={loadingCourse}
+                className="w-full flex items-center gap-4 px-4 py-3 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors text-left disabled:opacity-50"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-navy-950 truncate">{c.title}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{c.level} · {c.chapterCount ?? 0} chapters · {c.status}</p>
+                </div>
+                <span className="text-xs font-bold px-2.5 py-1 rounded-full shrink-0"
+                  style={{
+                    background: c.status === 'published' ? 'rgba(20,180,163,0.1)' : 'rgba(212,160,23,0.1)',
+                    color:      c.status === 'published' ? '#0d8f82' : '#B8860B',
+                  }}
+                >
+                  {c.status}
+                </span>
+                <svg className="w-4 h-4 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            ))}
+            {loadingCourse && (
+              <p className="text-sm text-navy-950 px-4 py-3 text-center font-semibold">Loading course structure...</p>
+            )}
+          </div>
+        )}
+      </section>
 
       {/* ── Step 1: Metadata ── */}
       <section className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
