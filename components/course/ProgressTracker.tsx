@@ -44,8 +44,18 @@ export function useProgress(courseSlug: string, allLessonSlugs: string[]) {
     })
   }, [courseSlug])
 
-  return { completed, markComplete, isComplete, progressPct, mounted, resetProgress, resetChapter }
+  const resetLesson = useCallback((lessonSlug: string) => {
+    setCompleted(prev => {
+      const next = prev.filter(s => s !== lessonSlug)
+      try { localStorage.setItem(getKey(courseSlug), JSON.stringify(next)) } catch { /* silent */ }
+      return next
+    })
+  }, [courseSlug])
+
+  return { completed, markComplete, isComplete, progressPct, mounted, resetProgress, resetChapter, resetLesson }
 }
+
+// ── Mark Complete Button ──────────────────────────────────────────────────────
 
 interface MarkCompleteButtonProps {
   courseSlug: string; lessonSlug: string; allLessonSlugs: string[]; nextHref?: string
@@ -53,17 +63,26 @@ interface MarkCompleteButtonProps {
 
 export default function MarkCompleteButton({ courseSlug, lessonSlug, allLessonSlugs, nextHref }: MarkCompleteButtonProps) {
   const { isComplete, markComplete, mounted } = useProgress(courseSlug, allLessonSlugs)
+  const [completing, setCompleting] = useState(false)
+
   if (!mounted) return null
   const done = isComplete(lessonSlug)
 
   function handleClick() {
+    if (completing || done) return
+    setCompleting(true)
     markComplete(lessonSlug)
-    if (nextHref) window.location.href = nextHref
+    if (nextHref) {
+      setTimeout(() => { window.location.href = nextHref }, 750)
+    } else {
+      setTimeout(() => setCompleting(false), 750)
+    }
   }
 
   if (done) {
     return (
-      <div className="inline-flex items-center gap-2.5 h-12 px-6 rounded-xl text-sm font-bold" style={{ background: 'rgba(20,180,163,0.12)', color: '#0d8f82', border: '1.5px solid rgba(20,180,163,0.3)' }}>
+      <div className="inline-flex items-center gap-2.5 h-12 px-6 rounded-xl text-sm font-bold"
+        style={{ background: 'rgba(20,180,163,0.12)', color: '#0d8f82', border: '1.5px solid rgba(20,180,163,0.3)' }}>
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
         </svg>
@@ -72,10 +91,22 @@ export default function MarkCompleteButton({ courseSlug, lessonSlug, allLessonSl
     )
   }
 
+  if (completing) {
+    return (
+      <div className="inline-flex items-center gap-2.5 h-12 px-7 rounded-xl text-sm font-bold"
+        style={{ background: 'linear-gradient(135deg, #14b4a3 0%, #0d8f82 100%)', color: '#fff', boxShadow: '0 4px 16px rgba(20,180,163,0.4)' }}>
+        <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Saving...
+      </div>
+    )
+  }
+
   return (
     <button
       onClick={handleClick}
-      className="inline-flex items-center gap-2.5 h-12 px-7 rounded-xl text-sm font-bold transition-all duration-200 hover:-translate-y-0.5"
+      className="inline-flex items-center gap-2.5 h-12 px-7 rounded-xl text-sm font-bold transition-all duration-200 hover:-translate-y-0.5 active:scale-95"
       style={{ background: 'linear-gradient(135deg, #D4A017 0%, #c49215 100%)', color: '#0C1A3D', boxShadow: '0 4px 16px rgba(212,160,23,0.35)' }}
     >
       Mark as complete
@@ -87,6 +118,8 @@ export default function MarkCompleteButton({ courseSlug, lessonSlug, allLessonSl
     </button>
   )
 }
+
+// ── Course Reset Button (sidebar footer) ──────────────────────────────────────
 
 interface ResetProgressButtonProps { courseSlug: string; allLessonSlugs: string[] }
 
@@ -108,17 +141,54 @@ export function ResetProgressButton({ courseSlug, allLessonSlugs }: ResetProgres
 
   return (
     <button
-      onClick={() => { if (window.confirm('Reset your progress for this course? This cannot be undone.')) { resetProgress(); window.location.reload() } }}
+      onClick={() => {
+        if (window.confirm('Reset all progress for this entire course? This cannot be undone.')) {
+          resetProgress()
+          window.location.reload()
+        }
+      }}
       className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-150 hover:-translate-y-0.5"
       style={{ background: 'rgba(244,63,94,0.12)', color: '#f43f5e', border: '1px solid rgba(244,63,94,0.25)' }}
     >
       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
       </svg>
-      Reset progress
+      Course Reset
     </button>
   )
 }
+
+// ── Lesson Reset Button (below Ready to continue card) ────────────────────────
+
+interface ResetLessonButtonProps {
+  courseSlug: string; lessonSlug: string; allLessonSlugs: string[]
+}
+
+export function ResetLessonButton({ courseSlug, lessonSlug, allLessonSlugs }: ResetLessonButtonProps) {
+  const { resetLesson, mounted, isComplete } = useProgress(courseSlug, allLessonSlugs)
+  if (!mounted) return null
+  if (!isComplete(lessonSlug)) return null
+
+  return (
+    <button
+      onClick={() => {
+        if (window.confirm('Mark this lesson as incomplete?')) {
+          resetLesson(lessonSlug)
+          window.location.reload()
+        }
+      }}
+      className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-150 hover:-translate-y-0.5"
+      style={{ background: 'rgba(244,63,94,0.08)', color: '#f43f5e', border: '1px solid rgba(244,63,94,0.2)' }}
+    >
+      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      Reset Lesson
+    </button>
+  )
+}
+
+// ── Lesson Status Dot ─────────────────────────────────────────────────────────
 
 interface LessonStatusProps {
   courseSlug: string; lessonSlug: string; allLessonSlugs: string[]; isActive: boolean; lessonNumber: number
@@ -144,13 +214,15 @@ export function LessonStatusDot({ courseSlug, lessonSlug, allLessonSlugs, isActi
       style={{
         background: isActive ? '#D4A017' : 'rgba(255,255,255,0.08)',
         color:      isActive ? '#0C1A3D' : 'rgba(255,255,255,0.3)',
-        border:     isActive ? 'none' : '1px solid rgba(255,255,255,0.1)',
+        border:     isActive ? 'none'    : '1px solid rgba(255,255,255,0.1)',
       }}
     >
       {lessonNumber}
     </span>
   )
 }
+
+// ── Course Progress Bar ───────────────────────────────────────────────────────
 
 interface CourseProgressBarProps { courseSlug: string; allLessonSlugs: string[] }
 
@@ -159,13 +231,46 @@ export function CourseProgressBar({ courseSlug, allLessonSlugs }: CourseProgress
   if (!mounted) return null
   return (
     <div className="flex items-center gap-2.5">
-      <div className="w-28 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
+      <div className="w-28 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${progressPct}%`, background: '#D4A017' }} />
       </div>
-      <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>{progressPct}% done</span>
+      <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>{progressPct}% done</span>
     </div>
   )
 }
+
+// ── Reset Chapter Button ──────────────────────────────────────────────────────
+
+interface ResetChapterButtonProps {
+  courseSlug: string; allLessonSlugs: string[]; chapterLessonSlugs: string[]
+}
+
+export function ResetChapterButton({ courseSlug, allLessonSlugs, chapterLessonSlugs }: ResetChapterButtonProps) {
+  const { resetChapter, mounted, completed } = useProgress(courseSlug, allLessonSlugs)
+  if (!mounted) return null
+  const chapterHasProgress = chapterLessonSlugs.some(s => completed.includes(s))
+  if (!chapterHasProgress) return null
+
+  return (
+    <button
+      onClick={() => {
+        if (window.confirm('Reset progress for this chapter only? Other chapters are not affected.')) {
+          resetChapter(chapterLessonSlugs)
+          window.location.reload()
+        }
+      }}
+      title="Reset this chapter"
+      className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center transition-all duration-150 hover:scale-110"
+      style={{ background: 'rgba(244,63,94,0.15)', border: '1px solid rgba(244,63,94,0.25)' }}
+    >
+      <svg className="w-3 h-3" style={{ color: '#f43f5e' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+    </button>
+  )
+}
+
+// ── Position Ring (retained for compatibility) ────────────────────────────────
 
 interface PositionRingProps { current: number; total: number }
 
@@ -185,38 +290,5 @@ export function PositionRing({ current, total }: PositionRingProps) {
         {pct}%
       </span>
     </div>
-  )
-}
-
-// ── Reset Chapter Button ──────────────────────────────────────────────────────
-
-interface ResetChapterButtonProps {
-  courseSlug: string
-  allLessonSlugs: string[]
-  chapterLessonSlugs: string[]
-}
-
-export function ResetChapterButton({ courseSlug, allLessonSlugs, chapterLessonSlugs }: ResetChapterButtonProps) {
-  const { resetChapter, mounted, completed } = useProgress(courseSlug, allLessonSlugs)
-  if (!mounted) return null
-  const chapterHasProgress = chapterLessonSlugs.some(s => completed.includes(s))
-  if (!chapterHasProgress) return null
-
-  return (
-    <button
-      onClick={() => {
-        if (window.confirm('Reset progress for this chapter only? Other chapters are not affected.')) {
-          resetChapter(chapterLessonSlugs)
-          window.location.reload()
-        }
-      }}
-      title="Reset this chapter only"
-      className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center transition-all duration-150 hover:scale-110"
-      style={{ background: 'rgba(244,63,94,0.15)', border: '1px solid rgba(244,63,94,0.25)' }}
-    >
-      <svg className="w-3 h-3" style={{ color: '#f43f5e' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-      </svg>
-    </button>
   )
 }
