@@ -1,114 +1,168 @@
 // components/book/CoverTemplate.tsx
-// Accounting Body Press - KDP Cover Template
-// Colour cover: 6x9 inch + 0.125 inch bleed on all sides
+// Accounting Body Press - KDP Cover v3 - Kaplan-style Option A
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react'
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
 
-// KDP cover with bleed: 6.25 x 9.25 inches
-const W = 6.25 * 72
-const H = 9.25 * 72
-const BLEED = 0.125 * 72
-const SAFE = 0.25 * 72
+const W = 6.25 * 72   // 450pt
+const H = 9.25 * 72   // 666pt
+const BLEED = 0.125 * 72  // 9pt
+
+const NAVY  = '#0C1A3D'
+const GOLD  = '#C9982A'
+const WHITE = '#FFFFFF'
+const OFFWHITE = '#F4F6F9'
+const DARKNAVY = '#060F22'
 
 const s = StyleSheet.create({
   page: {
     width: W,
     height: H,
-    backgroundColor: '#0C1A3D',
+    backgroundColor: NAVY,
     padding: 0,
+    margin: 0,
   },
-  safeArea: {
-    position: 'absolute',
-    top: BLEED + SAFE,
-    left: BLEED + SAFE,
-    right: BLEED + SAFE,
-    bottom: BLEED + SAFE,
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-  },
-  topSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  publisherName: {
-    fontSize: 9,
-    color: '#D4A017',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    fontFamily: 'Helvetica-Bold',
-  },
-  goldBar: {
-    width: W,
-    height: 6,
-    backgroundColor: '#D4A017',
+  // TOP GOLD BAND - 42% of page height
+  topBand: {
     position: 'absolute',
     top: 0,
     left: 0,
+    right: 0,
+    height: H * 0.42,
+    backgroundColor: GOLD,
   },
-  goldBarBottom: {
-    width: W,
-    height: 6,
-    backgroundColor: '#D4A017',
+  // Thin dark line separating top band from navy
+  separatorLine: {
     position: 'absolute',
-    bottom: 0,
+    top: H * 0.42,
     left: 0,
+    right: 0,
+    height: 4,
+    backgroundColor: DARKNAVY,
   },
-  middleSection: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingVertical: 40,
+  // BOTTOM NAVY section already set by page bg
+  // Publisher label - top of gold band
+  publisherRow: {
+    position: 'absolute',
+    top: BLEED + 18,
+    left: BLEED + 24,
+    right: BLEED + 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  publisherText: {
+    fontSize: 8,
+    color: NAVY,
+    fontFamily: 'Helvetica-Bold',
+    letterSpacing: 2,
+  },
+  editionBadge: {
+    backgroundColor: NAVY,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  editionBadgeText: {
+    fontSize: 7,
+    color: GOLD,
+    fontFamily: 'Helvetica-Bold',
+    letterSpacing: 1,
+  },
+  // TITLE BLOCK - sits across the gold/navy boundary
+  titleBlock: {
+    position: 'absolute',
+    top: H * 0.26,
+    left: BLEED + 24,
+    right: BLEED + 24,
   },
   bookTypeLabel: {
-    fontSize: 10,
-    color: '#D4A017',
+    fontSize: 8,
+    color: NAVY,
+    fontFamily: 'Helvetica-Bold',
     letterSpacing: 2,
-    textTransform: 'uppercase',
-    fontFamily: 'Helvetica-Bold',
-    marginBottom: 12,
+    marginBottom: 10,
   },
-  titleDivider: {
-    width: 48,
-    height: 3,
-    backgroundColor: '#D4A017',
-    marginBottom: 20,
-  },
-  bookTitle: {
-    fontSize: 36,
+  titleText: {
+    fontSize: 32,
     fontFamily: 'Helvetica-Bold',
-    color: '#FFFFFF',
-    marginBottom: 12,
+    color: NAVY,
     lineHeight: 1.2,
+    marginBottom: 0,
   },
-  editionText: {
-    fontSize: 12,
-    color: '#94a3b8',
-    marginTop: 8,
+  // White title card that overlaps gold/navy boundary
+  titleCard: {
+    position: 'absolute',
+    top: H * 0.36,
+    left: 0,
+    right: 0,
+    backgroundColor: WHITE,
+    paddingVertical: 20,
+    paddingLeft: BLEED + 24,
+    paddingRight: BLEED + 24,
   },
-  bottomSection: {
-    borderTopWidth: 1,
-    borderTopColor: '#1e3a6e',
-    paddingTop: 12,
+  titleCardText: {
+    fontSize: 28,
+    fontFamily: 'Helvetica-Bold',
+    color: NAVY,
+    lineHeight: 1.25,
+  },
+  // BOTTOM SECTION - navy area
+  bottomContent: {
+    position: 'absolute',
+    top: H * 0.42 + 4,
+    left: BLEED + 24,
+    right: BLEED + 24,
+    bottom: BLEED + 20,
+    justifyContent: 'space-between',
+  },
+  descriptionText: {
+    fontSize: 10,
+    color: OFFWHITE,
+    fontFamily: 'Helvetica',
+    lineHeight: 1.5,
+    marginTop: 20,
+  },
+  bottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
   },
-  authorText: {
+  authorBlock: {},
+  authorLabel: {
+    fontSize: 7,
+    color: GOLD,
+    fontFamily: 'Helvetica-Bold',
+    letterSpacing: 1.5,
+    marginBottom: 3,
+  },
+  authorName: {
     fontSize: 9,
-    color: '#94a3b8',
+    color: WHITE,
+    fontFamily: 'Helvetica',
   },
-  copyrightText: {
-    fontSize: 8,
-    color: '#64748b',
+  logoBlock: {
+    alignItems: 'flex-end',
   },
-  accentBlock: {
+  logoText: {
+    fontSize: 11,
+    color: WHITE,
+    fontFamily: 'Helvetica-Bold',
+  },
+  logoSub: {
+    fontSize: 7,
+    color: GOLD,
+    fontFamily: 'Helvetica',
+    letterSpacing: 1,
+    marginTop: 2,
+  },
+  // Bottom gold bar
+  bottomBar: {
     position: 'absolute',
+    bottom: 0,
+    left: 0,
     right: 0,
-    top: H * 0.25,
-    width: 8,
-    height: H * 0.5,
-    backgroundColor: '#D4A017',
+    height: 10,
+    backgroundColor: GOLD,
   },
 })
 
@@ -118,39 +172,55 @@ interface CoverTemplateProps {
   edition: string
 }
 
-const BOOK_TYPE_LABELS: Record<string, string> = {
-  combined: 'Study Text & Practice Kit',
-  study: 'Study Text',
-  practice: 'Practice Kit',
+const LABELS: Record<string, string> = {
+  combined: 'STUDY TEXT & PRACTICE KIT',
+  study:    'STUDY TEXT',
+  practice: 'PRACTICE & REVISION KIT',
 }
 
 export function CoverTemplate({ subtitle, bookType, edition }: CoverTemplateProps) {
-  const year = new Date().getFullYear()
   return (
-    <Document
-      title={subtitle + ' - Cover'}
-      creator="Accounting Body Press"
-      producer="Accounting Body Press"
-    >
+    <Document title={subtitle} creator="Accounting Body Press" producer="Accounting Body Press">
       <Page size={[W, H]} style={s.page}>
-        <View style={s.goldBar} />
-        <View style={s.goldBarBottom} />
-        <View style={s.accentBlock} />
-        <View style={s.safeArea}>
-          <View style={s.topSection}>
-            <Text style={s.publisherName}>Accounting Body Press</Text>
-          </View>
-          <View style={s.middleSection}>
-            <Text style={s.bookTypeLabel}>{BOOK_TYPE_LABELS[bookType] || 'Study Text'}</Text>
-            <View style={s.titleDivider} />
-            <Text style={s.bookTitle}>{subtitle}</Text>
-            <Text style={s.editionText}>{edition}</Text>
-          </View>
-          <View style={s.bottomSection}>
-            <Text style={s.authorText}>Accounting Body Editorial Team</Text>
-            <Text style={s.copyrightText}>Copyright {year} Accounting Body Press</Text>
+
+        {/* Top gold band */}
+        <View style={s.topBand} />
+        <View style={s.separatorLine} />
+        <View style={s.bottomBar} />
+
+        {/* Publisher row */}
+        <View style={s.publisherRow}>
+          <Text style={s.publisherText}>ACCOUNTING BODY PRESS</Text>
+          <View style={s.editionBadge}>
+            <Text style={s.editionBadgeText}>{edition}</Text>
           </View>
         </View>
+
+        {/* Book type label in gold band */}
+        <View style={{ position: 'absolute', top: H * 0.28, left: BLEED + 24 }}>
+          <Text style={s.bookTypeLabel}>{LABELS[bookType] || 'STUDY TEXT'}</Text>
+        </View>
+
+        {/* White title card bridging gold/navy */}
+        <View style={s.titleCard}>
+          <Text style={s.titleCardText}>{subtitle}</Text>
+        </View>
+
+        {/* Bottom navy content */}
+        <View style={s.bottomContent}>
+          <Text style={s.descriptionText}>Comprehensive study material developed by the Accounting Body Editorial Team. Aligned to current syllabus and examiner guidance.</Text>
+          <View style={s.bottomRow}>
+            <View style={s.authorBlock}>
+              <Text style={s.authorLabel}>AUTHORED BY</Text>
+              <Text style={s.authorName}>Accounting Body Editorial Team</Text>
+            </View>
+            <View style={s.logoBlock}>
+              <Text style={s.logoText}>Accounting Body</Text>
+              <Text style={s.logoSub}>PRESS</Text>
+            </View>
+          </View>
+        </View>
+
       </Page>
     </Document>
   )
