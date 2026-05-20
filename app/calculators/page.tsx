@@ -16,7 +16,7 @@ export default function CalculatorsPage() {
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
           <span style={{ color: '#D4A017', fontSize: 11, fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Free Tools</span>
           <h1 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#fff', margin: '12px 0 16px', lineHeight: 1.1 }}>Accounting Calculators</h1>
-          <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 17, maxWidth: 600, lineHeight: 1.7, margin: 0 }}>22 free instant calculators for ACCA, CIMA, ICAEW and AAT students. Results update as you type. No signup required.</p>
+          <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 17, maxWidth: 600, lineHeight: 1.7, margin: 0 }}>24 free instant calculators for ACCA, CIMA, ICAEW and AAT students. Results update as you type. No signup required.</p>
         </div>
       </section>
 
@@ -36,6 +36,14 @@ export default function CalculatorsPage() {
         <CalcCard title="Net Profit Margin" tag="P&L" description="Operating and net profit margins."
           fields={[{id:'rev',label:'Revenue (£)',placeholder:'100000'},{id:'ebit',label:'Operating Profit (£)',placeholder:'20000'},{id:'int',label:'Interest (£)',placeholder:'2000'},{id:'tax',label:'Tax (£)',placeholder:'4000'}]}
           calculate={v => { const r=p(v,'rev'),e=p(v,'ebit'),i=isNaN(p(v,'int'))?0:p(v,'int'),t=isNaN(p(v,'tax'))?0:p(v,'tax'); if([r,e].some(isNaN)||r===0)return null; const net=e-i-t; return [{label:'Operating Margin',value:pct(e/r)},{label:'Net Profit',value:fmt(net)},{label:'Net Profit Margin',value:pct(net/r)}] }}
+        />
+        <CalcCard title="Markup vs Margin" tag="P&L" description="Convert between markup on cost and margin on sales."
+          fields={[{id:'cost',label:'Cost Price (£)',placeholder:'80'},{id:'price',label:'Selling Price (£)',placeholder:'100'}]}
+          calculate={v => { const c=p(v,'cost'),sp=p(v,'price'); if([c,sp].some(isNaN)||c===0||sp===0)return null; const gp=sp-c; return [{label:'Gross Profit',value:fmt(gp)},{label:'Margin (on sales)',value:pct(gp/sp)},{label:'Markup (on cost)',value:pct(gp/c)},{label:'Cost as % of Price',value:pct(c/sp)}] }}
+        />
+        <CalcCard title="Accounting Equation" tag="Fundamentals" description="Verify Assets = Liabilities + Equity."
+          fields={[{id:'assets',label:'Total Assets (£)',placeholder:'150000'},{id:'liab',label:'Total Liabilities (£)',placeholder:'60000'},{id:'equity',label:'Total Equity (£)',placeholder:'90000'}]}
+          calculate={v => { const a=p(v,'assets'),l=p(v,'liab'),e=p(v,'equity'); if([a,l,e].some(isNaN))return null; const lhs=a, rhs=l+e, diff=lhs-rhs; return [{label:'Assets',value:fmt(a)},{label:'Liabilities + Equity',value:fmt(rhs)},{label:'Difference',value:fmt(diff)},{label:'Balanced?',value:Math.abs(diff)<0.01?'Yes':'No - check figures'}] }}
         />
       </Section>
 
@@ -96,39 +104,28 @@ export default function CalculatorsPage() {
         />
       </Section>
 
-      <Section title="Taxation" color="#D4A017">
-        <CalcCard title="VAT Calculator" tag="Indirect Tax" description="Add or remove VAT at any rate."
+      <Section title="Investment Appraisal" color="#D4A017">
+        <CalcCard title="Payback Period" tag="Appraisal" description="How long to recover the initial investment."
+          fields={[{id:'invest',label:'Initial Investment (£)',placeholder:'100000'},{id:'cashflow',label:'Annual Cash Inflow (£)',placeholder:'25000'}]}
+          calculate={v => { const inv=p(v,'invest'),cf=p(v,'cashflow'); if([inv,cf].some(isNaN)||cf===0)return null; const pb=inv/cf; const yrs=Math.floor(pb),months=Math.round((pb-yrs)*12); return [{label:'Payback Period',value:`${yrs} years ${months} months`},{label:'Annual Return',value:pct(cf/inv)}] }}
+        />
+        <CalcCard title="Accounting Rate of Return" tag="Appraisal" description="ARR based on average annual profit and initial investment."
+          fields={[{id:'profit',label:'Average Annual Profit (£)',placeholder:'20000'},{id:'invest',label:'Initial Investment (£)',placeholder:'100000'},{id:'residual',label:'Residual Value (£)',placeholder:'10000'}]}
+          calculate={v => { const pr=p(v,'profit'),inv=p(v,'invest'),res=isNaN(p(v,'residual'))?0:p(v,'residual'); if([pr,inv].some(isNaN)||inv===0)return null; const avgInvest=(inv+res)/2; return [{label:'ARR (on initial)',value:pct(pr/inv)},{label:'ARR (on average)',value:pct(pr/avgInvest)},{label:'Average Investment',value:fmt(avgInvest)}] }}
+        />
+        <CalcCard title="NPV Calculator" tag="Appraisal" description="Net Present Value using a single discount rate."
+          fields={[{id:'invest',label:'Initial Investment (£)',placeholder:'100000'},{id:'cf',label:'Annual Cash Flow (£)',placeholder:'30000'},{id:'rate',label:'Discount Rate (%)',placeholder:'10'},{id:'years',label:'Number of Years',placeholder:'5'}]}
+          calculate={v => { const inv=p(v,'invest'),cf=p(v,'cf'),rate=p(v,'rate')/100,yrs=p(v,'years'); if([inv,cf,rate,yrs].some(isNaN)||yrs<1)return null; let pv=0; for(let i=1;i<=yrs;i++) pv+=cf/Math.pow(1+rate,i); const npv=pv-inv; return [{label:'PV of Cash Flows',value:fmt(pv)},{label:'Initial Investment',value:fmt(inv)},{label:'NPV',value:fmt(npv)},{label:'Decision',value:npv>=0?'Accept (NPV positive)':'Reject (NPV negative)'}] }}
+        />
+        <CalcCard title="VAT Calculator" tag="Indirect Tax" description="Add or remove VAT at any rate — evergreen formula."
           fields={[{id:'amount',label:'Net Amount (£)',placeholder:'1000'},{id:'rate',label:'VAT Rate (%)',placeholder:'20'}]}
           calculate={v => { const a=p(v,'amount'),r=p(v,'rate'); if([a,r].some(isNaN))return null; const vat=a*(r/100); return [{label:'VAT Amount',value:fmt(vat)},{label:'Gross (inc. VAT)',value:fmt(a+vat)},{label:'Net from Gross',value:fmt(a/(1+r/100))},{label:'VAT Fraction',value:(r/(100+r)).toFixed(4)}] }}
-        />
-        <CalcCard title="UK Income Tax Estimator" tag="Direct Tax" description="2024/25 UK income tax — simplified estimate."
-          fields={[{id:'income',label:'Gross Annual Income (£)',placeholder:'50000'}]}
-          calculate={v => { const inc=p(v,'income'); if(isNaN(inc))return null; const pa=12570,tax1=Math.min(Math.max(0,inc-pa),37700)*0.20,tax2=Math.max(0,Math.min(inc-pa-37700,87440))*0.40,tax3=Math.max(0,inc-125140)*0.45,total=tax1+tax2+tax3; return [{label:'Personal Allowance',value:fmt(Math.min(inc,pa))},{label:'Basic Rate Tax (20%)',value:fmt(tax1)},{label:'Higher Rate Tax (40%)',value:fmt(tax2)},{label:'Additional Rate (45%)',value:fmt(tax3)},{label:'Total Income Tax',value:fmt(total)},{label:'Effective Rate',value:pct(inc>0?total/inc:0)}] }}
-        />
-        <CalcCard title="Corporation Tax" tag="Direct Tax" description="UK corporation tax estimate (FY2024 rates)."
-          fields={[{id:'profit',label:'Taxable Profit (£)',placeholder:'100000'}]}
-          calculate={v => { const pr=p(v,'profit'); if(isNaN(pr))return null; let tax=0; if(pr<=50000)tax=pr*0.19; else if(pr>=250000)tax=pr*0.25; else tax=pr*0.25-(250000-pr)*3/200; return [{label:'Corporation Tax',value:fmt(tax)},{label:'Effective Rate',value:pct(tax/pr)},{label:'Profit After Tax',value:fmt(pr-tax)}] }}
-        />
-        <CalcCard title="Capital Gains Tax" tag="Direct Tax" description="Simplified CGT estimate for individuals (2024/25)."
-          fields={[{id:'proceeds',label:'Sale Proceeds (£)',placeholder:'50000'},{id:'cost',label:'Original Cost (£)',placeholder:'20000'},{id:'income',label:'Other Taxable Income (£)',placeholder:'30000'}]}
-          calculate={v => { const pr=p(v,'proceeds'),c=p(v,'cost'),inc=isNaN(p(v,'income'))?0:p(v,'income'); if([pr,c].some(isNaN))return null; const gain=pr-c,exempt=3000,taxable=Math.max(0,gain-exempt),rem=Math.max(0,37700-inc),cgt=Math.min(taxable,rem)*0.18+Math.max(0,taxable-rem)*0.24; return [{label:'Capital Gain',value:fmt(gain)},{label:'Annual Exempt Amount',value:fmt(Math.min(gain,exempt))},{label:'Taxable Gain',value:fmt(taxable)},{label:'CGT Due',value:fmt(cgt)}] }}
-        />
-      </Section>
-
-      <Section title="Payroll" color="#475569">
-        <CalcCard title="Employee Net Pay" tag="Payroll" description="Estimated take-home pay after tax and NI (2024/25)."
-          fields={[{id:'salary',label:'Annual Gross Salary (£)',placeholder:'30000'}]}
-          calculate={v => { const s=p(v,'salary'); if(isNaN(s))return null; const pa=12570,tax=Math.min(Math.max(0,s-pa),37700)*0.20+Math.max(0,s-pa-37700)*0.40,ni=Math.max(0,Math.min(s,50270)-12570)*0.08+Math.max(0,s-50270)*0.02,net=s-tax-ni; return [{label:'Income Tax',value:fmt(tax)},{label:'Employee NI',value:fmt(ni)},{label:'Net Annual Pay',value:fmt(net)},{label:'Net Monthly',value:fmt(net/12)},{label:'Effective Rate',value:pct((tax+ni)/s)}] }}
-        />
-        <CalcCard title="Employer NI Cost" tag="Payroll" description="Employer National Insurance contribution (2024/25)."
-          fields={[{id:'salary',label:'Annual Salary (£)',placeholder:'30000'}]}
-          calculate={v => { const s=p(v,'salary'); if(isNaN(s))return null; const ni=Math.max(0,s-9100)*0.138; return [{label:'Employer NI',value:fmt(ni)},{label:'Total Staff Cost',value:fmt(s+ni)},{label:'NI Rate',value:'13.8%'}] }}
         />
       </Section>
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 24px' }}>
         <p style={{ fontSize: 12, color: '#94A3B8', textAlign: 'center', lineHeight: 1.7 }}>
-          For educational purposes only. Always verify with a qualified accountant. Tax rates shown are 2024/25 UK unless otherwise stated.
+          These calculators use standard accounting formulas and are suitable for ACCA, CIMA, ICAEW and AAT exam preparation. For professional decisions always consult a qualified accountant.
         </p>
       </div>
     </main>
