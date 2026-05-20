@@ -129,19 +129,51 @@ const s = StyleSheet.create({
 })
 
 // ---- Inline span renderer --------------------------------------------------
+// Do not inject space before these characters
+const NO_SPACE_BEFORE = new Set([".", ",", ";", ":", "!", "?", ")", "]", "}", "'", "\n", "\r", "%"])
+// Do not inject space after these characters
+const NO_SPACE_AFTER = new Set(["(", "[", "{", "\n", "\r"])
+
+function cleanText(raw: string): string {
+  return raw.replace(/\n/g, " ").replace(/\r/g, " ")
+}
+
+function hasVisibleText(raw: string): boolean {
+  // Strip all whitespace including non-breaking space and zero-width chars
+  return raw.replace(/[\s\u00a0\u200b\u200c\u200d\ufeff]/g, "").length > 0
+}
+
 function renderSpans(children: any[]): React.ReactNode {
   if (!children || children.length === 0) return null
-  // Always wrap every span in its own Text so React PDF preserves spacing
-  return children.map((c: any, i: number) => {
-    const text = c.text || ""
+  const result: React.ReactNode[] = []
+  children.forEach((c: any, i: number) => {
+    const text = cleanText(c.text || "")
     const marks: string[] = c.marks || []
     const isBold = marks.includes("strong")
     const isItalic = marks.includes("em")
-    const spanStyle: any = {}
-    if (isBold) spanStyle.fontFamily = "Helvetica-Bold"
-    if (isItalic) spanStyle.fontStyle = "italic"
-    return <Text key={i} style={spanStyle}>{text}</Text>
+    // Inject space between spans where content has no surrounding whitespace
+    if (i > 0 && text.length > 0) {
+      const prevText = cleanText(children[i - 1].text || "")
+      const lastPrev = prevText[prevText.length - 1] || ""
+      const firstCurr = text[0]
+      const needsSpace =
+        prevText.length > 0 &&
+        lastPrev !== " " &&
+        !NO_SPACE_AFTER.has(lastPrev) &&
+        firstCurr !== " " &&
+        !NO_SPACE_BEFORE.has(firstCurr)
+      if (needsSpace) result.push(" ")
+    }
+    if (marks.length === 0) {
+      result.push(text)
+    } else {
+      const spanStyle: any = {}
+      if (isBold) spanStyle.fontFamily = "Helvetica-Bold"
+      if (isItalic) spanStyle.fontStyle = "italic"
+      result.push(<Text key={i} style={spanStyle}>{text}</Text>)
+    }
   })
+  return result
 }
 
 // ---- Portable text block renderer ------------------------------------------
@@ -178,10 +210,10 @@ function renderBlocks(blocks: any[]): React.ReactNode {
     const style = b.style || "normal"
     const children = b.children || []
     const rawText = children.map((c: any) => c.text || "").join("").trim()
-    if (!rawText) { flushList(); return }
+    if (!hasVisibleText(rawText)) { flushList(); return }
 
     if (b.listItem) {
-      if (rawText) listBuffer.push(b)
+      if (hasVisibleText(rawText)) listBuffer.push(b)
       return
     }
 
