@@ -16,6 +16,7 @@ const NAV = [
   { href: '/roodber8/questions',        exact: false, icon: BookOpen,        label: 'Questions',       sub: 'Generate and manage MCQs'  },
   { href: '/roodber8/content-factory', exact: false, icon: Factory,         label: 'Content Factory', sub: 'AI content generation'     },
   { href: '/roodber8/course-factory',   exact: false, icon: BookOpen,        label: 'Course Factory',  sub: 'Assemble structured courses' },
+  { href: '/roodber8/ab-press',         exact: false, icon: BookOpen,        label: 'AB Press',        sub: 'Generate KDP-ready books'    },
   { href: 'https://accountingbody-website.vercel.app/studio',                exact: false, icon: Palette,         label: 'Sanity Studio',   sub: 'CMS & content editor'      },
   { href: '/roodber8/settings',        exact: false, icon: Settings,        label: 'Settings',        sub: 'Environment & checklist'   },
 ]
@@ -33,6 +34,7 @@ function getBreadcrumb(pathname: string) {
     '/roodber8/jobs-firms':      'Jobs & Firms',
     '/roodber8/content-factory': 'Content Factory',
     '/roodber8/course-factory':   'Course Factory',
+    '/roodber8/ab-press':         'AB Press',
   }
   const base = '/' + pathname.split('/').slice(1, 3).join('/')
   return map[base] ?? 'Admin'
