@@ -1,16 +1,17 @@
 'use client'
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const BOOK_TYPES = [
-  { value: 'combined', label: 'Combined', desc: 'Study notes + practice questions per chapter' },
-  { value: 'study', label: 'Study Text', desc: 'Study notes only' },
+  { value: 'combined', label: 'Combined', desc: 'Study notes + practice questions per chapter (Kaplan-style)' },
+  { value: 'study', label: 'Study Text', desc: 'Study notes only - no practice questions' },
   { value: 'practice', label: 'Practice Kit', desc: 'Practice questions + answer key only' },
 ]
 
 const EDITIONS = ['2025/26 Edition', '2026/27 Edition', '2027/28 Edition']
 
 export default function AbPressPage() {
+  const [courses, setCourses] = useState([] as any[])
   const [slug, setSlug] = useState('')
   const [bookType, setBookType] = useState('combined')
   const [edition, setEdition] = useState('2026/27 Edition')
@@ -22,8 +23,24 @@ export default function AbPressPage() {
   const [genError, setGenError] = useState('')
   const [downloadUrl, setDownloadUrl] = useState('')
 
+  useEffect(() => {
+    fetch('https://4rllejq1.api.sanity.io/v2023-05-03/data/query/production?query=' + encodeURIComponent('*[_type=="course" && "accountingbody" in showOnSites && (status == "published" || !defined(status))]{_id, title, slug}'))
+      .then(r => r.json())
+      .then(d => setCourses(d.result || []))
+      .catch(() => setCourses([]))
+  }, [])
+
+  const handleCourseSelect = (e: any) => {
+    const selected = courses.find((c: any) => c.slug.current === e.target.value)
+    setSlug(e.target.value)
+    if (selected && !subtitle) setSubtitle(selected.title)
+    setPreview(null)
+    setDownloadUrl('')
+    setError('')
+  }
+
   const handlePreview = async () => {
-    if (!slug.trim()) { setError('Enter a course slug'); return }
+    if (!slug.trim()) { setError('Select a course first'); return }
     setLoading(true)
     setError('')
     setPreview(null)
@@ -34,9 +51,9 @@ export default function AbPressPage() {
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Preview failed'); return }
       setPreview(data)
-      if (!subtitle) setSubtitle(data.course.title || '')
+      if (!subtitle) setSubtitle((data as any).course.title || '')
     } catch {
-      setError('Network error')
+      setError('Network error - could not load preview')
     } finally {
       setLoading(false)
     }
@@ -62,7 +79,7 @@ export default function AbPressPage() {
       const url = URL.createObjectURL(blob)
       setDownloadUrl(url)
     } catch {
-      setGenError('Network error')
+      setGenError('Network error - generation failed')
     } finally {
       setGenerating(false)
     }
@@ -84,19 +101,21 @@ export default function AbPressPage() {
 
           <div className="bg-[#081428] rounded-xl p-6 border border-slate-700">
             <h2 className="text-sm font-semibold text-[#D4A017] uppercase tracking-wide mb-4">Step 1 - Select Course</h2>
-            <label className="block text-xs text-slate-400 mb-1">Course Slug</label>
-            <input
-              type="text"
+            <label className="block text-xs text-slate-400 mb-1">Published Course</label>
+            <select
               value={slug}
-              onChange={e => setSlug(e.target.value)}
-              placeholder="e.g. bookkeeping-essentials"
-              className="w-full bg-[#0C1A3D] border border-slate-600 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#D4A017]"
-            />
-            <p className="text-xs text-slate-500 mt-2">Find the slug in Sanity Studio or the Course Factory</p>
+              onChange={handleCourseSelect}
+              className="w-full bg-[#0C1A3D] border border-slate-600 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#D4A017]"
+            >
+              <option value="">-- Select a course --</option>
+              {courses.map((c: any) => (
+                <option key={c._id} value={c.slug.current}>{c.title} ({c.slug.current})</option>
+              ))}
+            </select>
             {error ? <p className="text-red-400 text-xs mt-2">{error}</p> : null}
             <button
               onClick={handlePreview}
-              disabled={loading}
+              disabled={loading || !slug}
               className="mt-4 w-full bg-[#D4A017] hover:bg-yellow-500 disabled:opacity-50 text-[#0C1A3D] font-semibold text-sm py-2 rounded-lg transition-colors"
             >
               {loading ? 'Loading...' : 'Load Course Preview'}
@@ -166,7 +185,7 @@ export default function AbPressPage() {
 
           <div className="bg-[#081428] rounded-xl p-6 border border-slate-700 min-h-[200px]">
             <h2 className="text-sm font-semibold text-[#D4A017] uppercase tracking-wide mb-4">Course Preview</h2>
-            {!preview && !loading ? <p className="text-slate-500 text-sm">Load a course to see its content breakdown</p> : null}
+            {!preview && !loading ? <p className="text-slate-500 text-sm">Select a course and click Load Course Preview</p> : null}
             {loading ? <p className="text-slate-400 text-sm">Fetching from Sanity...</p> : null}
             {course ? (
               <div className="space-y-4">
