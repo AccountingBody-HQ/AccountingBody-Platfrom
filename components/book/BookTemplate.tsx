@@ -131,16 +131,10 @@ const s = StyleSheet.create({
 // ---- Inline span renderer --------------------------------------------------
 function renderSpans(children: any[]): React.ReactNode {
   if (!children || children.length === 0) return null
-  // If all spans are plain (no marks), return a simple string
-  const allPlain = children.every((c: any) => !c.marks || c.marks.length === 0)
-  if (allPlain) {
-    return children.map((c: any) => c.text || "").join("")
-  }
-  // Mixed: render each span, using nested Text for marks
+  // Always wrap every span in its own Text so React PDF preserves spacing
   return children.map((c: any, i: number) => {
     const text = c.text || ""
     const marks: string[] = c.marks || []
-    if (marks.length === 0) return text
     const isBold = marks.includes("strong")
     const isItalic = marks.includes("em")
     const spanStyle: any = {}
@@ -158,9 +152,17 @@ function renderBlocks(blocks: any[]): React.ReactNode {
 
   function flushList() {
     if (listBuffer.length === 0) return
+    let numCounter = 0
     listBuffer.forEach((item, idx) => {
       const text = renderSpans(item.children || [])
-      const dot = item.listItem === "number" ? `${idx + 1}.` : "•"
+      let dot: string
+      if (item.listItem === "number") {
+        numCounter++
+        dot = `${numCounter}.`
+      } else {
+        numCounter = 0
+        dot = "•"
+      }
       elements.push(
         <View key={"list-" + elements.length + "-" + idx} style={s.bulletRow}>
           <Text style={s.bulletDot}>{dot}</Text>
@@ -179,7 +181,7 @@ function renderBlocks(blocks: any[]): React.ReactNode {
     if (!rawText) { flushList(); return }
 
     if (b.listItem) {
-      listBuffer.push(b)
+      if (rawText) listBuffer.push(b)
       return
     }
 
