@@ -162,7 +162,7 @@ function renderSpans(children: any[]): React.ReactNode {
         !NO_SPACE_AFTER.has(lastPrev) &&
         firstCurr !== " " &&
         !NO_SPACE_BEFORE.has(firstCurr)
-      if (needsSpace) result.push(" ")
+      if (needsSpace) result.push(<Text key={"sp-" + i}>{" "}</Text>)
     }
     const spanStyle: any = {}
     if (isBold) spanStyle.fontFamily = "Helvetica-Bold"
