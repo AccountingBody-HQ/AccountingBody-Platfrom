@@ -164,14 +164,10 @@ function renderSpans(children: any[]): React.ReactNode {
         !NO_SPACE_BEFORE.has(firstCurr)
       if (needsSpace) result.push(" ")
     }
-    if (marks.length === 0) {
-      result.push(text)
-    } else {
-      const spanStyle: any = {}
-      if (isBold) spanStyle.fontFamily = "Helvetica-Bold"
-      if (isItalic) spanStyle.fontStyle = "italic"
-      result.push(<Text key={i} style={spanStyle}>{text}</Text>)
-    }
+    const spanStyle: any = {}
+    if (isBold) spanStyle.fontFamily = "Helvetica-Bold"
+    if (isItalic) spanStyle.fontStyle = "italic"
+    result.push(<Text key={i} style={spanStyle}>{text}</Text>)
   })
   return result
 }
