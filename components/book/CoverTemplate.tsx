@@ -108,7 +108,7 @@ const s = StyleSheet.create({
   },
   // Main title
   titleText: {
-    fontSize: 26,
+    fontSize: 22,
     fontFamily: 'Helvetica-Bold',
     color: WHITE,
     lineHeight: 1.25,
