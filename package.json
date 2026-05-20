@@ -12,6 +12,7 @@
     "@anthropic-ai/sdk": "^0.95.1",
     "@clerk/nextjs": "^5.7.5",
     "@portabletext/react": "^6.0.3",
+    "@react-pdf/renderer": "^4.5.1",
     "@sanity/client": "^7.17.0",
     "@sanity/image-url": "^2.0.3",
     "@sanity/vision": "^3.99.0",
