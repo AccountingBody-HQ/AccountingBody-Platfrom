@@ -121,6 +121,12 @@ const navSections: NavSection[] = [
           { label: 'Mock Exams',             href: '/study/mock-exams' },
         ],
       },
+      {
+        title: 'Free Tools',
+        links: [
+          { label: 'Accounting Calculators', href: '/calculators', badge: 'New', description: '22 free calculators for students' },
+        ],
+      },
     ],
     featured: {
       label:       'ACCA Study Hub',

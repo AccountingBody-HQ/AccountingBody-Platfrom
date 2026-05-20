@@ -58,7 +58,7 @@ const footerColumns: FooterColumn[] = [
       { label: 'Exam Tips',                 href: '/study' },
       { label: 'Podcast',                   href: '/about' },
       { label: 'Blog & Articles',           href: '/articles' },
-      { label: 'Free Calculators',          href: '/study' },
+      { label: 'Free Calculators',          href: '/calculators' },
     ],
   },
   {
