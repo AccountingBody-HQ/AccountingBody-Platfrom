@@ -4,7 +4,7 @@ import Link from "next/link"
 import AutoRefresh from "@/components/roodber8/AutoRefresh"
 import {
   Mail, Users, HelpCircle, Building2, Briefcase,
-  ArrowRight, TrendingUp, Factory, Inbox
+  ArrowRight, TrendingUp, Factory, Inbox, BookOpen
 } from "lucide-react"
 
 export const dynamic = "force-dynamic"
@@ -141,6 +141,7 @@ export default async function AdminCommandCentre() {
     { label: "Jobs & Firms",       sub: "Listings & applications",  href: "/roodber8/jobs-firms",      icon: Briefcase,   color: "#8b5cf6" },
     { label: "Questions",          sub: "Generate practice questions",href: "/roodber8/questions",       icon: HelpCircle,  color: "#D4A017" },
     { label: "Course Factory",     sub: "Assemble structured courses", href: "/roodber8/course-factory",  icon: Factory,     color: "#14b4a3" },
+    { label: "AB Press",           sub: "Generate KDP-ready study books", href: "/roodber8/ab-press",        icon: BookOpen,    color: "#D4A017" },
   ]
 
   return (
