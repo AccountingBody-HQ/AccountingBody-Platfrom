@@ -212,6 +212,116 @@ function buildZip(files: { name: string; data: Buffer }[]): Buffer {
   return Buffer.concat([...localHeaders, centralDir, eocd])
 }
 
+// ---- AI content reformatter ---------------------------------------------------
+function blocksToRawText(blocks: any[]): string {
+  if (!blocks || !Array.isArray(blocks)) return ''
+  return blocks
+    .filter((b: any) => b._type === 'block' && b.children)
+    .map((b: any) => {
+      const text = b.children.map((c: any) => c.text || '').join('')
+      if (b.listItem === 'bullet') return '• ' + text
+      if (b.listItem === 'number') return '1. ' + text
+      const style = b.style || 'normal'
+      if (style === 'h1' || style === 'h2') return '## ' + text
+      if (style === 'h3' || style === 'h4' || style === 'h5') return '### ' + text
+      return text
+    })
+    .filter(Boolean)
+    .join('\n')
+}
+
+function cleanTextToBlocks(cleanText: string): any[] {
+  // Convert Claude response back into simple block array
+  return cleanText
+    .split('\n')
+    .map((line: string) => line.trimEnd())
+    .filter((line: string) => line.length > 0)
+    .map((line: string, i: number) => {
+      if (line.startsWith('## ')) {
+        return { _type: 'block', _key: 'ai-' + i, style: 'h2', children: [{ _type: 'span', text: line.slice(3), marks: [] }], markDefs: [], listItem: undefined }
+      }
+      if (line.startsWith('### ')) {
+        return { _type: 'block', _key: 'ai-' + i, style: 'h3', children: [{ _type: 'span', text: line.slice(4), marks: [] }], markDefs: [], listItem: undefined }
+      }
+      if (line.startsWith('• ')) {
+        return { _type: 'block', _key: 'ai-' + i, style: 'normal', listItem: 'bullet', level: 1, children: [{ _type: 'span', text: line.slice(2), marks: [] }], markDefs: [] }
+      }
+      if (/^\d+\.\s/.test(line)) {
+        return { _type: 'block', _key: 'ai-' + i, style: 'normal', listItem: 'number', level: 1, children: [{ _type: 'span', text: line.replace(/^\d+\.\s/, ''), marks: [] }], markDefs: [] }
+      }
+      return { _type: 'block', _key: 'ai-' + i, style: 'normal', children: [{ _type: 'span', text: line, marks: [] }], markDefs: [], listItem: undefined }
+    })
+}
+
+async function reformatArticleBody(title: string, blocks: any[]): Promise<any[]> {
+  if (!blocks || blocks.length === 0) return blocks
+  const rawText = blocksToRawText(blocks)
+  if (!rawText.trim()) return blocks
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY || '',
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{
+          role: 'user',
+          content: `You are formatting study notes for a professional accounting textbook PDF.
+
+Article title: ${title}
+
+Raw content:
+${rawText}
+
+Reformat this content for print. Rules:
+- Preserve ALL content and meaning exactly - do not add or remove information
+- Fix spacing between bold terms and surrounding text (e.g. "Revenue is recorded" not "Revenueis recorded")
+- Keep bullet points starting with "• "
+- Keep numbered lists starting with "1. " "2. " etc
+- Keep headings starting with "## " or "### "
+- Plain paragraphs have no prefix
+- One blank line between sections
+- Remove any duplicate blank lines
+- Output plain text only, no markdown formatting like ** or *
+
+Output the reformatted text only, nothing else.`,
+        }],
+      }),
+    })
+    if (!response.ok) return blocks
+    const data = await response.json()
+    const cleanText = data.content?.[0]?.text || ''
+    if (!cleanText.trim()) return blocks
+    return cleanTextToBlocks(cleanText)
+  } catch {
+    return blocks
+  }
+}
+
+async function reformatCourseContent(course: any): Promise<any> {
+  const chapters = await Promise.all(
+    (course.chapters || []).map(async (chapter: any) => {
+      const lessons = await Promise.all(
+        (chapter.lessons || []).map(async (lesson: any) => {
+          const linkedArticles = await Promise.all(
+            (lesson.linkedArticles || []).map(async (article: any) => {
+              const reformattedBody = await reformatArticleBody(article.title, article.body)
+              return { ...article, body: reformattedBody }
+            })
+          )
+          return { ...lesson, linkedArticles }
+        })
+      )
+      return { ...chapter, lessons }
+    })
+  )
+  return { ...course, chapters }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -223,9 +333,12 @@ export async function POST(req: NextRequest) {
     // 1. Fetch all course content
     const course = await buildCourse(slug)
 
+    // 1b. Reformat article bodies through Claude AI for clean print formatting
+    const formattedCourse = await reformatCourseContent(course)
+
     // 2. Render interior PDF
     const interiorElement = React.createElement(BookTemplate, {
-      course,
+      course: formattedCourse,
       bookType: bookType as any,
       edition: edition || '2026/27 Edition',
       subtitle: subtitle || course.title,
