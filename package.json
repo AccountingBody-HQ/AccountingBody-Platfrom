@@ -22,6 +22,7 @@
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "clsx": "^2.1.1",
+    "docx": "^9.6.1",
     "lucide-react": "^0.577.0",
     "next": "14.2.35",
     "next-sanity": "^9.12.3",

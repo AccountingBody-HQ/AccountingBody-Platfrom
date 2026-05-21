@@ -20,7 +20,10 @@ export default function AbPressPage() {
   const [generating,  setGenerating]  = useState(false)
   const [error,       setError]       = useState('')
   const [genError,    setGenError]    = useState('')
-  const [downloadUrl, setDownloadUrl] = useState('')
+  const [downloadUrl,    setDownloadUrl]    = useState('')
+  const [wordUrl,        setWordUrl]        = useState('')
+  const [exportingWord,  setExportingWord]  = useState(false)
+  const [wordError,      setWordError]      = useState('')
 
   useEffect(() => {
     fetch(
@@ -52,6 +55,29 @@ export default function AbPressPage() {
       setError('Network error - could not load preview')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleExportWord = async () => {
+    if (!preview) return
+    setExportingWord(true); setWordError(''); setWordUrl('')
+    try {
+      const res = await fetch('/api/roodber8/ab-press/export-word', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug: slug.trim(), bookType, edition, subtitle }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        setWordError(data.error || 'Word export failed')
+        return
+      }
+      const blob = await res.blob()
+      setWordUrl(URL.createObjectURL(blob))
+    } catch {
+      setWordError('Network error - Word export failed')
+    } finally {
+      setExportingWord(false)
     }
   }
 
@@ -249,6 +275,24 @@ export default function AbPressPage() {
                   className="w-full bg-[#D4A017] hover:bg-yellow-500 disabled:opacity-50 text-[#0C1A3D] font-semibold text-sm py-3 rounded-lg transition-colors"
                 >
                   {generating ? 'Generating PDF — please wait...' : 'Generate Book'}
+                </button>
+              )}
+              {wordError ? <p className="text-red-400 text-xs mt-2">{wordError}</p> : null}
+              {wordUrl ? (
+                <a
+                  href={wordUrl}
+                  download={slug + "-" + bookType + ".docx"}
+                  className="block w-full text-center bg-blue-700 hover:bg-blue-600 text-white font-semibold text-sm py-2 rounded-lg transition-colors mt-2"
+                >
+                  Download Word Doc (.docx)
+                </a>
+              ) : (
+                <button
+                  onClick={handleExportWord}
+                  disabled={exportingWord || generating}
+                  className="w-full bg-slate-600 hover:bg-slate-500 disabled:opacity-50 text-white font-semibold text-sm py-2 rounded-lg transition-colors mt-2"
+                >
+                  {exportingWord ? 'Exporting Word...' : 'Export as Word (.docx)'}
                 </button>
               )}
             </div>
