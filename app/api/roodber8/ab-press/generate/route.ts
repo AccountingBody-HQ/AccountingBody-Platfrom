@@ -1,6 +1,6 @@
 // app/api/roodber8/ab-press/generate/route.ts
 // Accounting Body Press - PDF Generation API
-// Fetches course, renders interior + cover PDFs, returns ZIP
+// Receives pre-cleaned course content from browser, renders PDFs, returns ZIP
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { renderToBuffer } from '@react-pdf/renderer'
@@ -8,7 +8,7 @@ import React from 'react'
 import { BookTemplate } from '@/components/book/BookTemplate'
 import { CoverTemplate } from '@/components/book/CoverTemplate'
 
-export const maxDuration = 300 // 5 minutes - required for AI reformatting
+export const maxDuration = 60
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
 const DATASET    = process.env.NEXT_PUBLIC_SANITY_DATASET    ?? 'production'
@@ -74,6 +74,12 @@ async function buildCourse(slug: string) {
   return { ...course, chapters }
 }
 
+const BOOK_TYPE_LABELS: Record<string, string> = {
+  combined: 'Study Text and Practice Kit',
+  study: 'Study Text',
+  practice: 'Practice Kit',
+}
+
 function buildMetadata(subtitle: string, bookType: string, edition: string, course: any): string {
   const year = new Date().getFullYear()
   const lines = [
@@ -115,24 +121,12 @@ function buildMetadata(subtitle: string, bookType: string, edition: string, cour
   return lines.join('\n')
 }
 
-const BOOK_TYPE_LABELS: Record<string, string> = {
-  combined: 'Study Text and Practice Kit',
-  study: 'Study Text',
-  practice: 'Practice Kit',
-}
-
-// Simple ZIP builder (no external dependency)
 function u32le(n: number): Buffer {
-  const b = Buffer.alloc(4)
-  b.writeUInt32LE(n, 0)
-  return b
+  const b = Buffer.alloc(4); b.writeUInt32LE(n, 0); return b
 }
 function u16le(n: number): Buffer {
-  const b = Buffer.alloc(2)
-  b.writeUInt16LE(n, 0)
-  return b
+  const b = Buffer.alloc(2); b.writeUInt16LE(n, 0); return b
 }
-
 function crc32(buf: Buffer): number {
   const table: number[] = []
   for (let i = 0; i < 256; i++) {
@@ -144,303 +138,40 @@ function crc32(buf: Buffer): number {
   for (let i = 0; i < buf.length; i++) crc = table[(crc ^ buf[i]) & 0xff] ^ (crc >>> 8)
   return (crc ^ 0xffffffff) >>> 0
 }
-
 function buildZip(files: { name: string; data: Buffer }[]): Buffer {
   const localHeaders: Buffer[] = []
   const centralHeaders: Buffer[] = []
   let offset = 0
-
   for (const file of files) {
     const nameBytes = Buffer.from(file.name, 'utf8')
     const crc = crc32(file.data)
     const size = file.data.length
-
     const local = Buffer.concat([
-      Buffer.from([0x50, 0x4b, 0x03, 0x04]), // local file header sig
-      u16le(20),       // version needed
-      u16le(0),        // flags
-      u16le(0),        // compression (stored)
-      u16le(0),        // mod time
-      u16le(0),        // mod date
-      u32le(crc),
-      u32le(size),
-      u32le(size),
-      u16le(nameBytes.length),
-      u16le(0),        // extra field length
-      nameBytes,
-      file.data,
+      Buffer.from([0x50, 0x4b, 0x03, 0x04]),
+      u16le(20), u16le(0), u16le(0), u16le(0), u16le(0),
+      u32le(crc), u32le(size), u32le(size),
+      u16le(nameBytes.length), u16le(0),
+      nameBytes, file.data,
     ])
     localHeaders.push(local)
-
     const central = Buffer.concat([
-      Buffer.from([0x50, 0x4b, 0x01, 0x02]), // central dir sig
-      u16le(20),       // version made by
-      u16le(20),       // version needed
-      u16le(0),        // flags
-      u16le(0),        // compression
-      u16le(0),        // mod time
-      u16le(0),        // mod date
-      u32le(crc),
-      u32le(size),
-      u32le(size),
-      u16le(nameBytes.length),
-      u16le(0),        // extra
-      u16le(0),        // comment
-      u16le(0),        // disk start
-      u16le(0),        // int attrib
-      u32le(0),        // ext attrib
-      u32le(offset),
-      nameBytes,
+      Buffer.from([0x50, 0x4b, 0x01, 0x02]),
+      u16le(20), u16le(20), u16le(0), u16le(0), u16le(0), u16le(0),
+      u32le(crc), u32le(size), u32le(size),
+      u16le(nameBytes.length), u16le(0), u16le(0), u16le(0), u16le(0),
+      u32le(0), u32le(offset), nameBytes,
     ])
     centralHeaders.push(central)
     offset += local.length
   }
-
   const centralDir = Buffer.concat(centralHeaders)
-  const centralSize = centralDir.length
-  const centralOffset = offset
-
   const eocd = Buffer.concat([
-    Buffer.from([0x50, 0x4b, 0x05, 0x06]), // end of central dir sig
-    u16le(0),                        // disk number
-    u16le(0),                        // disk with central dir
-    u16le(files.length),             // entries on disk
-    u16le(files.length),             // total entries
-    u32le(centralSize),
-    u32le(centralOffset),
-    u16le(0),                        // comment length
+    Buffer.from([0x50, 0x4b, 0x05, 0x06]),
+    u16le(0), u16le(0),
+    u16le(files.length), u16le(files.length),
+    u32le(centralDir.length), u32le(offset), u16le(0),
   ])
-
   return Buffer.concat([...localHeaders, centralDir, eocd])
-}
-
-// ---- AI content reformatter ---------------------------------------------------
-function blocksToRawText(blocks: any[]): string {
-  if (!blocks || !Array.isArray(blocks)) return ''
-  return blocks
-    .filter((b: any) => b._type === 'block' && b.children)
-    .map((b: any) => {
-      const text = b.children.map((c: any) => c.text || '').join('')
-      if (b.listItem === 'bullet') return '• ' + text
-      if (b.listItem === 'number') return '1. ' + text
-      const style = b.style || 'normal'
-      if (style === 'h1' || style === 'h2') return '## ' + text
-      if (style === 'h3' || style === 'h4' || style === 'h5') return '### ' + text
-      return text
-    })
-    .filter(Boolean)
-    .join('\n')
-}
-
-function cleanTextToBlocks(cleanText: string): any[] {
-  // Convert Claude response back into simple block array
-  return cleanText
-    .split('\n')
-    .map((line: string) => line.trimEnd())
-    .filter((line: string) => line.length > 0)
-    .map((line: string, i: number) => {
-      if (line.startsWith('## ')) {
-        return { _type: 'block', _key: 'ai-' + i, style: 'h2', children: [{ _type: 'span', text: line.slice(3), marks: [] }], markDefs: [], listItem: undefined }
-      }
-      if (line.startsWith('### ')) {
-        return { _type: 'block', _key: 'ai-' + i, style: 'h3', children: [{ _type: 'span', text: line.slice(4), marks: [] }], markDefs: [], listItem: undefined }
-      }
-      if (line.startsWith('• ')) {
-        return { _type: 'block', _key: 'ai-' + i, style: 'normal', listItem: 'bullet', level: 1, children: [{ _type: 'span', text: line.slice(2), marks: [] }], markDefs: [] }
-      }
-      if (/^\d+\.\s/.test(line)) {
-        return { _type: 'block', _key: 'ai-' + i, style: 'normal', listItem: 'number', level: 1, children: [{ _type: 'span', text: line.replace(/^\d+\.\s/, ''), marks: [] }], markDefs: [] }
-      }
-      return { _type: 'block', _key: 'ai-' + i, style: 'normal', children: [{ _type: 'span', text: line, marks: [] }], markDefs: [], listItem: undefined }
-    })
-}
-
-async function reformatArticleBody(title: string, blocks: any[]): Promise<any[]> {
-  if (!blocks || blocks.length === 0) return blocks
-  const rawText = blocksToRawText(blocks)
-  if (!rawText.trim()) return blocks
-
-  const systemPrompt = `You are a senior editorial typesetter at a world-class accounting publisher, equivalent to Kaplan Publishing or BPP Learning Media. You are preparing study notes for print publication on Amazon KDP. Your output is fed directly into a PDF renderer with zero human review before printing. Every character you output matters.
-
-YOUR ROLE:
-Reformat raw CMS study note content into clean, print-ready text. You do not write content. You do not summarise. You do not interpret. You reformat — fixing spacing, structure, and typography errors introduced by the CMS export — while preserving every word, number, and fact with 100% fidelity.
-
-═══════════════════════════════════════
-SECTION 1 — ABSOLUTE CONTENT RULES
-═══════════════════════════════════════
-
-RULE 1 — PRESERVE EVERYTHING:
-Every word, sentence, number, currency amount, accounting term, journal entry, worked example, narrative scenario, and explanation must appear in your output. Do not add anything. Do not remove anything. Do not paraphrase or improve the writing.
-
-RULE 2 — PRESERVE ALL NUMBERS AND AMOUNTS EXACTLY:
-£4,200 → £4,200 (never £4200 or 4,200)
-Dr £500 → Dr £500
-20 × £15 → 20 × £15
-$5,000 → $5,000
-Net cash flow of £1,200 → Net cash flow of £1,200
-
-RULE 3 — PRESERVE ALL ACCOUNTING TERMINOLOGY EXACTLY:
-Dr, Cr, debit, credit, ledger, journal, trial balance, receivable, payable, accrual, prepayment, depreciation, amortisation, carrying amount, nominal value, double-entry, imprest, remittance — all must appear exactly as written.
-
-RULE 4 — NEVER INVENT OR FILL GAPS:
-If the raw content is incomplete or unclear, reproduce it exactly as it appears. Never guess what a missing item should say.
-
-RULE 5 — NO MARKDOWN FORMATTING:
-Never output **bold**, *italic*, __underline__, or any markdown syntax. Use only the structural prefixes defined in Section 2.
-
-═══════════════════════════════════════
-SECTION 2 — OUTPUT FORMAT SPECIFICATION
-═══════════════════════════════════════
-
-Use these prefixes exactly and consistently:
-
-  ## Major heading      → a primary section title (e.g. "## The Purchases Cycle")
-  ### Minor heading     → a sub-section title (e.g. "### Typical Sequence")
-  • Bullet item         → unordered list item (bullet character U+2022, then one space)
-  1. Numbered item      → ordered list item (digit, dot, one space) — number sequentially
-  Plain paragraph       → body text with no prefix
-
-SPACING RULES:
-- Separate every block from the next with exactly one blank line
-- Never output two or more consecutive blank lines
-- Never output a blank line at the very start or very end of your response
-
-═══════════════════════════════════════
-SECTION 3 — TYPOGRAPHY ERRORS TO FIX
-═══════════════════════════════════════
-
-The raw content comes from a rich-text CMS where bold and italic spans are stored separately. When exported to plain text, spaces between spans are lost. You must fix all such collisions.
-
-SPACING COLLISION FIXES — before/after examples:
-
-BAD:  "Revenueis recorded"
-GOOD: "Revenue is recorded"
-
-BAD:  "Thecost of the goods soldis recorded"
-GOOD: "The cost of the goods sold is recorded"
-
-BAD:  "An invoice for£500 dated 29 June"
-GOOD: "An invoice for £500 dated 29 June"
-
-BAD:  "A payment of£50 made on 30 June"
-GOOD: "A payment of £50 made on 30 June"
-
-BAD:  "for£3,000(200 × £15)"
-GOOD: "for £3,000 (200 × £15)"
-
-BAD:  "shows£4,700"
-GOOD: "shows £4,700"
-
-BAD:  "Your ledger shows Supplier Y payable of£4,200"
-GOOD: "Your ledger shows Supplier Y payable of £4,200"
-
-BAD:  "Purchase order (PO)– the buyer's authorised request"
-GOOD: "Purchase order (PO) – the buyer's authorised request"
-
-BAD:  "Supplier invoice– the supplier's request"
-GOOD: "Supplier invoice – the supplier's request"
-
-RULE: There must always be exactly one space between a word or number and the next word, currency symbol, or bracket. Fix every instance without exception.
-
-DO NOT add spaces before punctuation:
-CORRECT: "£4,200." and "£500," and "as follows:"
-WRONG:   "£4,200 ." and "£500 ," and "as follows :"
-
-═══════════════════════════════════════
-SECTION 4 — STRUCTURE DECISIONS
-═══════════════════════════════════════
-
-LISTS:
-- If bullet points and numbered items appear mixed together in the input, keep them in the order they appear but ensure each is prefixed correctly
-- If a numbered list restarts at 1 after intervening paragraph text, restart the numbering at 1
-- Never output an empty bullet or numbered item — if an item has no text, omit it entirely
-- Never output a lone bullet dot with nothing after it
-
-HEADINGS:
-- If a heading is followed immediately by another heading with no body text between, keep both — do not merge them
-- Convert h1/h2 style headings to ## prefix
-- Convert h3/h4/h5 style headings to ### prefix
-
-WORKED EXAMPLES AND SCENARIOS:
-- Narrative scenarios ("ABC Corporation records the following transactions...") must be preserved as plain paragraphs — never convert to lists
-- "Required" sections must be kept as a plain paragraph with the word "Required" followed by its bullet points
-- Worked walkthroughs must be kept intact in full
-
-BLOCKQUOTES AND CALLOUTS:
-- Render any blockquote or intro callout as a plain paragraph with no special prefix
-
-═══════════════════════════════════════
-SECTION 5 — QUALITY STANDARD
-═══════════════════════════════════════
-
-Your output must meet the editorial standard of a Kaplan or BPP printed study text:
-- Every sentence reads naturally with correct spacing
-- Every list is clean, consistent, and free of empty items
-- Every heading is correctly levelled
-- Every currency amount and accounting term is intact and correctly spaced
-- No orphaned punctuation, no double spaces, no missing spaces
-
-If you are uncertain about any item, reproduce it exactly as it appears in the input. Never guess.
-
-OUTPUT INSTRUCTION:
-Output the reformatted text only. No preamble such as "Here is the reformatted text". No sign-off. No explanation. Begin immediately with the first line of content and end immediately after the last line of content.`
-
-  const userPrompt = `ARTICLE TITLE: ${title}
-
-RAW CONTENT TO REFORMAT:
-${rawText}`
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY || '',
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 3000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }],
-      }),
-    })
-    if (!response.ok) {
-      const errText = await response.text()
-      console.error('[AB Press AI] API error:', response.status, errText)
-      return blocks
-    }
-    const data = await response.json()
-    console.log('[AB Press AI] Success for article:', title, '| blocks returned:', data.content?.length)
-    const cleanText = data.content?.[0]?.text || ''
-    if (!cleanText.trim()) {
-      console.error('[AB Press AI] Empty response for article:', title)
-      return blocks
-    }
-    return cleanTextToBlocks(cleanText)
-  } catch (err) {
-    console.error('[AB Press AI] Exception for article:', title, err)
-    return blocks
-  }
-}
-
-async function reformatCourseContent(course: any): Promise<any> {
-  const chapters = []
-  for (const chapter of (course.chapters || [])) {
-    const lessons = []
-    for (const lesson of (chapter.lessons || [])) {
-      const linkedArticles = []
-      for (const article of (lesson.linkedArticles || [])) {
-        console.log('[AB Press AI] Processing article:', article.title)
-        const reformattedBody = await reformatArticleBody(article.title, article.body)
-        linkedArticles.push({ ...article, body: reformattedBody })
-        await new Promise(resolve => setTimeout(resolve, 15000))
-      }
-      lessons.push({ ...lesson, linkedArticles })
-    }
-    chapters.push({ ...chapter, lessons })
-  }
-  return { ...course, chapters }
 }
 
 export async function POST(req: NextRequest) {
@@ -451,22 +182,19 @@ export async function POST(req: NextRequest) {
     if (!slug) return NextResponse.json({ error: 'slug is required' }, { status: 400 })
     if (!bookType) return NextResponse.json({ error: 'bookType is required' }, { status: 400 })
 
-    // 1. Fetch all course content
-    const course = await buildCourse(slug)
+    // Use pre-cleaned course from browser if provided, otherwise fetch from Sanity
+    const course = body.course ? body.course : await buildCourse(slug)
 
-    // 1b. Reformat article bodies through Claude AI for clean print formatting
-    const formattedCourse = await reformatCourseContent(course)
-
-    // 2. Render interior PDF
+    // Render interior PDF
     const interiorElement = React.createElement(BookTemplate, {
-      course: formattedCourse,
+      course,
       bookType: bookType as any,
       edition: edition || '2026/27 Edition',
       subtitle: subtitle || course.title,
     })
     const interiorPdf = await renderToBuffer(interiorElement as any)
 
-    // 3. Render cover PDF
+    // Render cover PDF
     const coverElement = React.createElement(CoverTemplate, {
       subtitle: subtitle || course.title,
       bookType: bookType as any,
@@ -474,18 +202,18 @@ export async function POST(req: NextRequest) {
     })
     const coverPdf = await renderToBuffer(coverElement as any)
 
-    // 4. Build metadata
+    // Build metadata
     const metadataText = buildMetadata(subtitle || course.title, bookType, edition || '2026/27 Edition', course)
     const metadataBuffer = Buffer.from(metadataText, 'utf8')
 
-    // 5. Package as ZIP
+    // Package as ZIP
     const zipBuffer = buildZip([
       { name: 'interior.pdf', data: interiorPdf },
       { name: 'cover.pdf', data: coverPdf },
       { name: 'metadata.txt', data: metadataBuffer },
     ])
 
-    // 6. Return ZIP
+    // Return ZIP
     const filename = slug + '-' + bookType + '-' + (edition || '2026').replace(/[^a-z0-9]/gi, '-') + '.zip'
     return new NextResponse(new Uint8Array(zipBuffer), {
       status: 200,
