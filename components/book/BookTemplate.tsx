@@ -179,12 +179,13 @@ function hasText(raw: string): boolean {
 // Renders children spans from a Sanity block with bold/italic support.
 // Each span is wrapped in its own <Text> to avoid React PDF inline flow issues.
 // Spaces are injected between spans where the CMS removed them.
-const NO_SPACE_BEFORE = new Set([".", ",", ";", ":", "!", "?", "]", "}", "%", "'", '"'])
+const NO_SPACE_BEFORE = new Set([".", ",", ";", ":", "!", "?", ")", "]", "}", "%"])
 const NO_SPACE_AFTER  = new Set(["(", "[", "{", "'", '"'])
 
 function renderSpans(children: any[]): React.ReactNode {
   if (!children || children.length === 0) return null
   const nodes: React.ReactNode[] = []
+  let lastRenderedText = "" // track last actually-rendered text
   children.forEach((c: any, i: number) => {
     const raw = sanitise(c.text || "")
     if (!raw) return
@@ -192,17 +193,16 @@ function renderSpans(children: any[]): React.ReactNode {
     const isBold   = marks.includes("strong")
     const isItalic = marks.includes("em")
     // Inject space between spans if the CMS dropped it
-    if (i > 0 && nodes.length > 0 && raw.length > 0) {
-      const prev = sanitise(children[i - 1].text || "")
-      const lastChar  = prev[prev.length - 1] || ""
+    if (lastRenderedText.length > 0 && raw.length > 0) {
+      const lastChar  = lastRenderedText[lastRenderedText.length - 1]
       const firstChar = raw[0]
-      // Inject space if chars on either side warrant it
-      // Special case: ) followed by a letter always needs a space
-      const parenFollowedByLetter = lastChar === ")" && /[A-Za-z]/.test(firstChar)
-      const normalNeedsSpace =
-        lastChar  && lastChar  !== " " && !NO_SPACE_AFTER.has(lastChar) &&
-        firstChar && firstChar !== " " && !NO_SPACE_BEFORE.has(firstChar)
-      if (parenFollowedByLetter || normalNeedsSpace) {
+      // Always inject space between two word characters with no gap
+      const needsSpace =
+        lastChar !== " " &&
+        firstChar !== " " &&
+        !NO_SPACE_BEFORE.has(firstChar) &&
+        !NO_SPACE_AFTER.has(lastChar)
+      if (needsSpace) {
         nodes.push(<Text key={"sp" + i}>{" "}</Text>)
       }
     }
@@ -210,6 +210,7 @@ function renderSpans(children: any[]): React.ReactNode {
     if (isBold)   style.fontFamily  = "Helvetica-Bold"
     if (isItalic) style.fontStyle   = "italic"
     nodes.push(<Text key={i} style={style}>{raw}</Text>)
+    lastRenderedText = raw
   })
   return nodes.length > 0 ? nodes : null
 }
