@@ -1,259 +1,301 @@
 // components/book/BookTemplate.tsx
 // Accounting Body Press - PDF Interior Template
-// KDP spec: 6x9 inch, black and white, embedded fonts
+// KDP 6x9 inch, black and white, Helvetica
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react"
-import {
-  Document, Page, Text, View, StyleSheet,
-} from "@react-pdf/renderer"
+import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer"
 
-const W = 6 * 72
-const H = 9 * 72
-const MARGIN_TOP    = 0.75 * 72
-const MARGIN_BOTTOM = 0.75 * 72
-const MARGIN_INSIDE = 0.75 * 72
-const MARGIN_OUTSIDE = 0.5 * 72
+// ── Dimensions ──────────────────────────────────────────────────────────────
+const W = 6 * 72   // 432pt
+const H = 9 * 72   // 648pt
+const MT = 0.75 * 72  // margin top
+const MB = 0.75 * 72  // margin bottom
+const MI = 0.75 * 72  // margin inside
+const MO = 0.5  * 72  // margin outside
 
+// ── Styles ───────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
   page: {
     width: W, height: H,
-    paddingTop: MARGIN_TOP + 16,
-    paddingBottom: MARGIN_BOTTOM,
-    paddingLeft: MARGIN_INSIDE,
-    paddingRight: MARGIN_OUTSIDE,
-    fontFamily: "Helvetica",
-    backgroundColor: "#ffffff",
+    paddingTop: MT + 20, paddingBottom: MB,
+    paddingLeft: MI, paddingRight: MO,
+    fontFamily: "Helvetica", backgroundColor: "#ffffff",
   },
+  // Running header
+  runningHead: {
+    position: "absolute", top: 12, right: MO,
+    fontSize: 7, color: "#aaaaaa",
+    textTransform: "uppercase", letterSpacing: 0.5,
+  },
+  runningLine: {
+    position: "absolute", top: 24, left: MI, right: MO,
+    borderBottomWidth: 0.5, borderBottomColor: "#dddddd",
+  },
+  pageNum: {
+    position: "absolute", bottom: 18, right: MO,
+    fontSize: 8, color: "#999999",
+  },
+  // Title page
   titlePage: { flex: 1, justifyContent: "center", alignItems: "center" },
   publisherLabel: {
-    fontSize: 9, color: "#666666", marginBottom: 8,
-    textTransform: "uppercase", letterSpacing: 1,
+    fontSize: 9, color: "#888888", marginBottom: 8,
+    textTransform: "uppercase", letterSpacing: 1.5,
   },
   bookTitle: {
-    fontSize: 26, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
-    textAlign: "center", marginBottom: 8,
+    fontSize: 24, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
+    textAlign: "center", marginBottom: 10, lineHeight: 1.3,
   },
-  bookSubtitle: { fontSize: 13, color: "#333333", textAlign: "center", marginBottom: 24 },
-  editionText: { fontSize: 10, color: "#666666", textAlign: "center" },
-  divider: {
+  bookTypeLabel: { fontSize: 12, color: "#555555", textAlign: "center", marginBottom: 20 },
+  editionText: { fontSize: 9, color: "#888888", textAlign: "center" },
+  titleDivider: {
     borderBottomWidth: 1, borderBottomColor: "#D4A017",
-    marginVertical: 16, width: "60%", alignSelf: "center",
+    marginVertical: 18, width: "50%", alignSelf: "center",
   },
+  // Copyright page
   copyrightPage: { flex: 1, justifyContent: "flex-end" },
-  copyrightText: { fontSize: 8, color: "#666666", marginBottom: 4 },
+  copyrightText: { fontSize: 8, color: "#666666", lineHeight: 1.6, marginBottom: 3 },
+  // Table of contents
   tocTitle: {
-    fontSize: 16, fontFamily: "Helvetica-Bold", color: "#0C1A3D", marginBottom: 16,
+    fontSize: 18, fontFamily: "Helvetica-Bold", color: "#0C1A3D", marginBottom: 20,
   },
-  tocChapter: { marginBottom: 6 },
-  tocChapterText: { fontSize: 10, fontFamily: "Helvetica-Bold", color: "#0C1A3D" },
-  tocLesson: { marginBottom: 3, paddingLeft: 12 },
+  tocChapterRow: { marginBottom: 8 },
+  tocChapterText: {
+    fontSize: 10, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
+  },
+  tocLessonRow: { paddingLeft: 14, marginBottom: 3 },
   tocLessonText: { fontSize: 9, color: "#555555" },
-  chapterHeader: { marginBottom: 20 },
-  chapterNumber: {
-    fontSize: 9, color: "#D4A017", fontFamily: "Helvetica-Bold",
-    textTransform: "uppercase", letterSpacing: 1, marginBottom: 4,
+  // Chapter header
+  chapterWrap: { marginBottom: 24 },
+  chapterLabel: {
+    fontSize: 8, color: "#D4A017", fontFamily: "Helvetica-Bold",
+    textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6,
   },
   chapterTitle: {
-    fontSize: 20, fontFamily: "Helvetica-Bold", color: "#0C1A3D", marginBottom: 6,
+    fontSize: 22, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
+    marginBottom: 8, lineHeight: 1.2,
   },
-  chapterDivider: { borderBottomWidth: 1.5, borderBottomColor: "#D4A017", marginBottom: 18 },
+  chapterRule: {
+    borderBottomWidth: 2, borderBottomColor: "#D4A017", marginBottom: 20,
+  },
+  // Lesson
   lessonTitle: {
     fontSize: 13, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
-    marginTop: 18, marginBottom: 10,
+    marginTop: 20, marginBottom: 10,
     borderLeftWidth: 3, borderLeftColor: "#D4A017", paddingLeft: 8,
   },
+  // Article
   articleTitle: {
     fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
     marginTop: 14, marginBottom: 6,
   },
-  h2Style: {
+  // Body text blocks
+  h2: {
     fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
-    marginTop: 12, marginBottom: 5,
+    marginTop: 14, marginBottom: 5,
   },
-  h3Style: {
-    fontSize: 10, fontFamily: "Helvetica-Bold", color: "#333333",
+  h3: {
+    fontSize: 10, fontFamily: "Helvetica-Bold", color: "#444444",
     marginTop: 10, marginBottom: 4,
   },
-  bodyText: {
-    fontSize: 10, color: "#222222", lineHeight: 1.8, marginBottom: 8,
+  body: {
+    fontSize: 10, color: "#1a1a1a", lineHeight: 1.8, marginBottom: 8,
   },
-  boldSpan: { fontFamily: "Helvetica-Bold" },
-  italicSpan: { fontStyle: "italic" },
-  bulletRow: { flexDirection: "row", marginBottom: 5, paddingLeft: 8 },
-  bulletDot: { fontSize: 10, color: "#D4A017", width: 14 },
-  bulletText: { fontSize: 10, color: "#222222", lineHeight: 1.8, flex: 1 },
-  noContent: { fontSize: 10, color: "#999999", lineHeight: 1.8, marginBottom: 8 },
-  practiceHeader: {
-    fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
-    marginTop: 20, marginBottom: 10, paddingTop: 12,
-    borderTopWidth: 1, borderTopColor: "#cccccc",
+  noContent: { fontSize: 9, color: "#aaaaaa", marginBottom: 6 },
+  // Lists
+  listRow: { flexDirection: "row", marginBottom: 6, paddingLeft: 6 },
+  listDot: { fontSize: 10, color: "#D4A017", width: 16, marginTop: 1 },
+  listText: { fontSize: 10, color: "#1a1a1a", lineHeight: 1.8, flex: 1 },
+  // Practice questions
+  sectionRule: {
+    borderTopWidth: 1, borderTopColor: "#dddddd",
+    marginTop: 20, marginBottom: 12,
   },
-  questionBox: {
-    marginBottom: 12, paddingTop: 8, paddingBottom: 8,
-    paddingLeft: 10, paddingRight: 8,
+  sectionHeader: {
+    fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0C1A3D", marginBottom: 10,
+  },
+  questionWrap: {
+    marginBottom: 14, paddingLeft: 10, paddingTop: 8, paddingBottom: 8,
     borderLeftWidth: 2.5, borderLeftColor: "#D4A017",
-    backgroundColor: "#fafafa",
   },
-  questionNumber: {
+  questionLabel: {
     fontSize: 8, color: "#D4A017", fontFamily: "Helvetica-Bold",
-    marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5,
+    letterSpacing: 0.5, marginBottom: 4,
   },
-  questionText: { fontSize: 10, color: "#111111", marginBottom: 8, lineHeight: 1.7 },
+  questionText: { fontSize: 10, color: "#111111", lineHeight: 1.7, marginBottom: 8 },
   optionRow: { flexDirection: "row", marginBottom: 4 },
-  optionLabel: {
-    fontSize: 9, color: "#0C1A3D", width: 18, fontFamily: "Helvetica-Bold",
+  optionLetter: {
+    fontSize: 9, color: "#0C1A3D", fontFamily: "Helvetica-Bold", width: 18,
   },
   optionText: { fontSize: 9, color: "#333333", flex: 1, lineHeight: 1.6 },
-  answerHeader: {
-    fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
-    marginTop: 16, marginBottom: 8, paddingTop: 10,
-    borderTopWidth: 1, borderTopColor: "#cccccc",
-  },
-  answerRow: { marginBottom: 10 },
+  // Answer key
+  answerWrap: { marginBottom: 10 },
   answerLabel: {
-    fontSize: 9, color: "#D4A017", fontFamily: "Helvetica-Bold", marginBottom: 3,
+    fontSize: 9, color: "#D4A017", fontFamily: "Helvetica-Bold", marginBottom: 2,
   },
   answerText: { fontSize: 9, color: "#333333", lineHeight: 1.6 },
-  pageNum: {
-    position: "absolute", bottom: 20, right: MARGIN_OUTSIDE,
-    fontSize: 8, color: "#999999",
-  },
-  runningHead: {
-    position: "absolute", top: 14, right: MARGIN_OUTSIDE,
-    fontSize: 7, color: "#aaaaaa", textTransform: "uppercase", letterSpacing: 0.5,
-  },
-  runningLine: {
-    position: "absolute", top: 26, left: MARGIN_INSIDE, right: MARGIN_OUTSIDE,
-    borderBottomWidth: 0.5, borderBottomColor: "#dddddd",
-  },
 })
 
-// ---- Inline span renderer --------------------------------------------------
-// Do not inject space before these characters
-const NO_SPACE_BEFORE = new Set([".", ",", ";", ":", "!", "?", ")", "]", "}", "'", "\n", "\r", "%"])
-// Do not inject space after these characters
-const NO_SPACE_AFTER = new Set(["(", "[", "{", "\n", "\r"])
-
-function cleanText(raw: string): string {
-  return raw.replace(/\n/g, " ").replace(/\r/g, " ")
+// ── Unicode sanitiser ────────────────────────────────────────────────────────
+// Helvetica only supports the standard Latin-1 character set.
+// Replace common Unicode characters with safe ASCII equivalents.
+function sanitise(text: string): string {
+  if (!text) return ""
+  return text
+    .replace(/\u2013/g, "-")
+    .replace(/\u2014/g, "-")
+    .replace(/\u2212/g, "-")
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\u2192/g, "->")
+    .replace(/\u2190/g, "<-")
+    .replace(/\u21D2/g, "=>")
+    .replace(/\u00D7/g, "x")
+    .replace(/\u00F7/g, "/")
+    .replace(/\u2260/g, "!=")
+    .replace(/\u2265/g, ">=")
+    .replace(/\u2264/g, "<=")
+    .replace(/\u00B1/g, "+/-")
+    .replace(/\u2022/g, "-")
+    .replace(/\u2026/g, "...")
+    .replace(/\u00a0/g, " ")
+    .replace(/\u200b/g, "")
+    .replace(/\u200c/g, "")
+    .replace(/\u200d/g, "")
+    .replace(/\ufeff/g, "")
+    .replace(/[\r\n]+/g, " ")
+    .replace(/  +/g, " ")
+    .trim()
 }
 
-function hasVisibleText(raw: string): boolean {
-  // Strip all whitespace including non-breaking space and zero-width chars
-  return raw.replace(/[\s\u00a0\u200b\u200c\u200d\ufeff]/g, "").length > 0
+// ── Visibility check ─────────────────────────────────────────────────────────
+function hasText(raw: string): boolean {
+  return raw.replace(/[\s ​‌‍﻿]/g, "").length > 0
 }
+
+// ── Span renderer ─────────────────────────────────────────────────────────────
+// Renders children spans from a Sanity block with bold/italic support.
+// Each span is wrapped in its own <Text> to avoid React PDF inline flow issues.
+// Spaces are injected between spans where the CMS removed them.
+const NO_SPACE_BEFORE = new Set([".", ",", ";", ":", "!", "?", ")", "]", "}", "%", "'", '"'])
+const NO_SPACE_AFTER  = new Set(["(", "[", "{", "'", '"'])
 
 function renderSpans(children: any[]): React.ReactNode {
   if (!children || children.length === 0) return null
-  const result: React.ReactNode[] = []
+  const nodes: React.ReactNode[] = []
   children.forEach((c: any, i: number) => {
-    const text = cleanText(c.text || "")
+    const raw = sanitise(c.text || "")
+    if (!raw) return
     const marks: string[] = c.marks || []
-    const isBold = marks.includes("strong")
+    const isBold   = marks.includes("strong")
     const isItalic = marks.includes("em")
-    // Inject space between spans where content has no surrounding whitespace
-    if (i > 0 && text.length > 0) {
-      const prevText = cleanText(children[i - 1].text || "")
-      const lastPrev = prevText[prevText.length - 1] || ""
-      const firstCurr = text[0]
-      const needsSpace =
-        prevText.length > 0 &&
-        lastPrev !== " " &&
-        !NO_SPACE_AFTER.has(lastPrev) &&
-        firstCurr !== " " &&
-        !NO_SPACE_BEFORE.has(firstCurr)
-      if (needsSpace) result.push(<Text key={"sp-" + i}>{" "}</Text>)
+    // Inject space between spans if the CMS dropped it
+    if (i > 0 && nodes.length > 0 && raw.length > 0) {
+      const prev = sanitise(children[i - 1].text || "")
+      const lastChar  = prev[prev.length - 1] || ""
+      const firstChar = raw[0]
+      if (
+        lastChar  && lastChar  !== " " && !NO_SPACE_AFTER.has(lastChar) &&
+        firstChar && firstChar !== " " && !NO_SPACE_BEFORE.has(firstChar)
+      ) {
+        nodes.push(<Text key={"sp" + i}>{" "}</Text>)
+      }
     }
-    const spanStyle: any = {}
-    if (isBold) spanStyle.fontFamily = "Helvetica-Bold"
-    if (isItalic) spanStyle.fontStyle = "italic"
-    result.push(<Text key={i} style={spanStyle}>{text}</Text>)
+    const style: any = {}
+    if (isBold)   style.fontFamily  = "Helvetica-Bold"
+    if (isItalic) style.fontStyle   = "italic"
+    nodes.push(<Text key={i} style={style}>{raw}</Text>)
   })
-  return result
+  return nodes.length > 0 ? nodes : null
 }
 
-// ---- Portable text block renderer ------------------------------------------
+// ── Block renderer ────────────────────────────────────────────────────────────
+// Converts a Sanity portable text block array into React PDF elements.
+// Handles: headings (h1-h4), normal paragraphs, bullet lists, numbered lists.
+// Empty blocks and invisible-only blocks are silently skipped.
 function renderBlocks(blocks: any[]): React.ReactNode {
   if (!blocks || !Array.isArray(blocks)) return null
-  const elements: React.ReactElement[] = []
-  let listBuffer: any[] = []
+  const out: React.ReactElement[] = []
+  let listBuf: any[] = []
+  let listKey = 0
 
   function flushList() {
-    if (listBuffer.length === 0) return
-    let numCounter = 0
-    listBuffer.forEach((item, idx) => {
-      const text = renderSpans(item.children || [])
+    if (listBuf.length === 0) return
+    let num = 0
+    listBuf.forEach((item, idx) => {
+      const content = renderSpans(item.children || [])
+      const rawText = (item.children || []).map((c: any) => c.text || "").join("")
+      if (!hasText(rawText)) return // skip empty list items
       let dot: string
       if (item.listItem === "number") {
-        numCounter++
-        dot = `${numCounter}.`
+        num++
+        dot = `${num}.`
       } else {
-        numCounter = 0
         dot = "•"
       }
-      elements.push(
-        <View key={"list-" + elements.length + "-" + idx} style={s.bulletRow}>
-          <Text style={s.bulletDot}>{dot}</Text>
-          <Text style={s.bulletText}>{text}</Text>
+      out.push(
+        <View key={`list-${listKey}-${idx}`} style={s.listRow}>
+          <Text style={s.listDot}>{dot}</Text>
+          <Text style={s.listText}>{content}</Text>
         </View>
       )
     })
-    listBuffer = []
+    listBuf = []
+    listKey++
   }
 
   blocks.forEach((b: any, i: number) => {
     if (b._type !== "block") return
-    const style = b.style || "normal"
     const children = b.children || []
-    const rawText = children.map((c: any) => c.text || "").join("").trim()
-    if (!hasVisibleText(rawText)) { flushList(); return }
+    const rawText  = children.map((c: any) => c.text || "").join("")
+    if (!hasText(rawText)) { flushList(); return }
 
+    // List items go into buffer
     if (b.listItem) {
-      if (hasVisibleText(rawText)) listBuffer.push(b)
+      listBuf.push(b)
       return
     }
 
     flushList()
 
+    const style = b.style || "normal"
+    const content = renderSpans(children)
+
     if (style === "h1") {
-      elements.push(
-        <Text key={i} style={s.articleTitle}>{renderSpans(children)}</Text>
-      )
+      out.push(<Text key={i} style={s.articleTitle}>{content}</Text>)
     } else if (style === "h2") {
-      elements.push(
-        <Text key={i} style={s.h2Style}>{renderSpans(children)}</Text>
-      )
-    } else if (style === "h3" || style === "h4") {
-      elements.push(
-        <Text key={i} style={s.h3Style}>{renderSpans(children)}</Text>
-      )
+      out.push(<Text key={i} style={s.h2}>{content}</Text>)
+    } else if (style === "h3" || style === "h4" || style === "h5") {
+      out.push(<Text key={i} style={s.h3}>{content}</Text>)
+    } else if (style === "blockquote") {
+      out.push(<Text key={i} style={[s.body, { color: "#555555", paddingLeft: 10, borderLeftWidth: 2, borderLeftColor: "#cccccc" }]}>{content}</Text>)
     } else {
-      elements.push(
-        <Text key={i} style={s.bodyText}>{renderSpans(children)}</Text>
-      )
+      out.push(<Text key={i} style={s.body}>{content}</Text>)
     }
   })
 
   flushList()
-  return elements.length > 0 ? elements : null
+  return out.length > 0 ? out : null
 }
 
+// ── Constants ─────────────────────────────────────────────────────────────────
 const LETTERS = ["A", "B", "C", "D", "E"]
 
+// ── Props ─────────────────────────────────────────────────────────────────────
 interface BookTemplateProps {
-  course: any
+  course:   any
   bookType: "combined" | "study" | "practice"
-  edition: string
+  edition:  string
   subtitle: string
 }
 
+// ── Component ─────────────────────────────────────────────────────────────────
 export function BookTemplate({ course, bookType, edition, subtitle }: BookTemplateProps) {
-  const year = new Date().getFullYear()
-  const showNotes = bookType === "combined" || bookType === "study"
+  const year         = new Date().getFullYear()
+  const showNotes    = bookType === "combined" || bookType === "study"
   const showQuestions = bookType === "combined" || bookType === "practice"
   const bookTypeLabel =
     bookType === "combined" ? "Study Text & Practice Kit"
-    : bookType === "study" ? "Study Text"
+    : bookType === "study"  ? "Study Text"
     : "Practice & Revision Kit"
 
   return (
@@ -263,76 +305,76 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
       creator="Accounting Body Press"
       producer="Accounting Body Press"
     >
-      {/* ── Title Page ── */}
+
+      {/* ── Title Page ───────────────────────────────────────────────────── */}
       <Page size={[W, H]} style={s.page}>
         <View style={s.titlePage}>
           <Text style={s.publisherLabel}>Accounting Body Press</Text>
-          <View style={s.divider} />
-          <Text style={s.bookTitle}>{subtitle}</Text>
-          <Text style={s.bookSubtitle}>{bookTypeLabel}</Text>
-          <View style={s.divider} />
+          <View style={s.titleDivider} />
+          <Text style={s.bookTitle}>{sanitise(subtitle)}</Text>
+          <Text style={s.bookTypeLabel}>{bookTypeLabel}</Text>
+          <View style={s.titleDivider} />
           <Text style={s.editionText}>{edition}</Text>
         </View>
       </Page>
 
-      {/* ── Copyright Page ── */}
+      {/* ── Copyright Page ───────────────────────────────────────────────── */}
       <Page size={[W, H]} style={s.page}>
         <View style={s.copyrightPage}>
           <Text style={s.copyrightText}>Published by Accounting Body Press</Text>
           <Text style={s.copyrightText}>Copyright {year} Accounting Body Press. All rights reserved.</Text>
           <Text style={s.copyrightText}>Written by the Accounting Body Editorial Team.</Text>
-          <Text style={[s.copyrightText, { marginTop: 8 }]}>
-            Accounting Body is an independent study platform and is not affiliated with, endorsed by,
-            or connected to ACCA, CIMA, ICAEW, or AAT. These names are used solely to identify the
-            qualifications our study materials are designed to support.
+          <Text style={[s.copyrightText, { marginTop: 10 }]}>
+            Accounting Body is an independent study platform and is not affiliated with, endorsed
+            by, or connected to ACCA, CIMA, ICAEW, or AAT. These names are used solely to identify
+            the qualifications our study materials are designed to support.
           </Text>
-          <Text style={[s.copyrightText, { marginTop: 8 }]}>
+          <Text style={[s.copyrightText, { marginTop: 6 }]}>
             No part of this publication may be reproduced without prior written permission.
           </Text>
         </View>
       </Page>
 
-      {/* ── Table of Contents ── */}
+      {/* ── Table of Contents ────────────────────────────────────────────── */}
       <Page size={[W, H]} style={s.page}>
         <Text style={s.tocTitle}>Contents</Text>
         {(course.chapters || []).map((ch: any, ci: number) => (
-          <View key={ch._key || ci}>
-            <View style={s.tocChapter}>
-              <Text style={s.tocChapterText}>Chapter {ci + 1}: {ch.chapterTitle}</Text>
-            </View>
+          <View key={ch._key || ci} style={s.tocChapterRow}>
+            <Text style={s.tocChapterText}>
+              Chapter {ci + 1}: {sanitise(ch.chapterTitle)}
+            </Text>
             {(ch.lessons || []).map((ls: any, li: number) => (
-              <View key={ls._id || li} style={s.tocLesson}>
-                <Text style={s.tocLessonText}>{ls.title}</Text>
+              <View key={ls._id || li} style={s.tocLessonRow}>
+                <Text style={s.tocLessonText}>{sanitise(ls.title)}</Text>
               </View>
             ))}
           </View>
         ))}
       </Page>
 
-      {/* ── Chapters — each chapter is its own Page ── */}
+      {/* ── Chapters ─────────────────────────────────────────────────────── */}
       {(course.chapters || []).map((ch: any, ci: number) => (
         <Page key={ch._key || ci} size={[W, H]} style={s.page}>
 
-          {/* Running header */}
-          <Text style={s.runningHead} fixed>{subtitle}</Text>
+          <Text style={s.runningHead} fixed>{sanitise(subtitle)}</Text>
           <View style={s.runningLine} fixed />
 
           {/* Chapter header */}
-          <View style={s.chapterHeader}>
-            <Text style={s.chapterNumber}>Chapter {ci + 1}</Text>
-            <Text style={s.chapterTitle}>{ch.chapterTitle}</Text>
-            <View style={s.chapterDivider} />
+          <View style={s.chapterWrap}>
+            <Text style={s.chapterLabel}>Chapter {ci + 1}</Text>
+            <Text style={s.chapterTitle}>{sanitise(ch.chapterTitle)}</Text>
+            <View style={s.chapterRule} />
           </View>
 
           {/* Lessons */}
           {(ch.lessons || []).map((ls: any, li: number) => (
             <View key={ls._id || li}>
-              <Text style={s.lessonTitle}>{ls.title}</Text>
+              <Text style={s.lessonTitle}>{sanitise(ls.title)}</Text>
 
               {/* Study Notes */}
               {showNotes && (ls.linkedArticles || []).map((art: any, ai: number) => (
                 <View key={art._id || ai}>
-                  <Text style={s.articleTitle}>{art.title}</Text>
+                  <Text style={s.articleTitle}>{sanitise(art.title)}</Text>
                   {art.body && art.body.length > 0
                     ? renderBlocks(art.body)
                     : <Text style={s.noContent}>Study notes not yet available.</Text>
@@ -346,27 +388,29 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
                 if (qs.length === 0) return null
                 return (
                   <View key={"q-" + (art._id || ai)}>
-                    <Text style={s.practiceHeader}>Practice Questions</Text>
+                    <View style={s.sectionRule} />
+                    <Text style={s.sectionHeader}>Practice Questions</Text>
                     {qs.map((q: any, qi: number) => (
-                      <View key={qi} style={s.questionBox}>
-                        <Text style={s.questionNumber}>Question {qi + 1}</Text>
-                        <Text style={s.questionText}>{q.questionText}</Text>
+                      <View key={qi} style={s.questionWrap}>
+                        <Text style={s.questionLabel}>Question {qi + 1}</Text>
+                        <Text style={s.questionText}>{sanitise(q.questionText)}</Text>
                         {(q.options || []).map((opt: any, oi: number) => (
                           <View key={oi} style={s.optionRow}>
-                            <Text style={s.optionLabel}>{LETTERS[oi]}.</Text>
-                            <Text style={s.optionText}>{opt}</Text>
+                            <Text style={s.optionLetter}>{LETTERS[oi]}.</Text>
+                            <Text style={s.optionText}>{sanitise(opt)}</Text>
                           </View>
                         ))}
                       </View>
                     ))}
-                    <Text style={s.answerHeader}>Answer Key</Text>
+                    <View style={s.sectionRule} />
+                    <Text style={s.sectionHeader}>Answer Key</Text>
                     {qs.map((q: any, qi: number) => (
-                      <View key={"a-" + qi} style={s.answerRow}>
+                      <View key={"a-" + qi} style={s.answerWrap}>
                         <Text style={s.answerLabel}>
                           Q{qi + 1}: {LETTERS[q.correctIndex ?? 0]}
                         </Text>
                         {q.explanation
-                          ? <Text style={s.answerText}>{q.explanation}</Text>
+                          ? <Text style={s.answerText}>{sanitise(q.explanation)}</Text>
                           : null}
                       </View>
                     ))}
