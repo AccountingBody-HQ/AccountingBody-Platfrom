@@ -8,6 +8,8 @@ import React from 'react'
 import { BookTemplate } from '@/components/book/BookTemplate'
 import { CoverTemplate } from '@/components/book/CoverTemplate'
 
+export const maxDuration = 300 // 5 minutes - required for AI reformatting
+
 const PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
 const DATASET    = process.env.NEXT_PUBLIC_SANITY_DATASET    ?? 'production'
 const BASE_URL   = `https://${PROJECT_ID}.api.sanity.io/v2023-05-03/data/query/${DATASET}`
@@ -427,12 +429,12 @@ async function reformatCourseContent(course: any): Promise<any> {
     (course.chapters || []).map(async (chapter: any) => {
       const lessons = await Promise.all(
         (chapter.lessons || []).map(async (lesson: any) => {
-          const linkedArticles = await Promise.all(
-            (lesson.linkedArticles || []).map(async (article: any) => {
-              const reformattedBody = await reformatArticleBody(article.title, article.body)
-              return { ...article, body: reformattedBody }
-            })
-          )
+          const linkedArticles = []
+          for (const article of (lesson.linkedArticles || [])) {
+            const reformattedBody = await reformatArticleBody(article.title, article.body)
+            linkedArticles.push({ ...article, body: reformattedBody })
+            await new Promise(resolve => setTimeout(resolve, 15000))
+          }
           return { ...lesson, linkedArticles }
         })
       )
