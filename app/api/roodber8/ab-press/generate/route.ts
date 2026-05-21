@@ -403,12 +403,21 @@ ${rawText}`
         messages: [{ role: 'user', content: userPrompt }],
       }),
     })
-    if (!response.ok) return blocks
+    if (!response.ok) {
+      const errText = await response.text()
+      console.error('[AB Press AI] API error:', response.status, errText)
+      return blocks
+    }
     const data = await response.json()
+    console.log('[AB Press AI] Success for article:', title, '| blocks returned:', data.content?.length)
     const cleanText = data.content?.[0]?.text || ''
-    if (!cleanText.trim()) return blocks
+    if (!cleanText.trim()) {
+      console.error('[AB Press AI] Empty response for article:', title)
+      return blocks
+    }
     return cleanTextToBlocks(cleanText)
-  } catch {
+  } catch (err) {
+    console.error('[AB Press AI] Exception for article:', title, err)
     return blocks
   }
 }
