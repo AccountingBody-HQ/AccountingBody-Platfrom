@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { BookTemplate } from "@/components/book/BookTemplate"
-import { CoverTemplate } from "@/components/book/CoverTemplate"
+import { FullCoverTemplate } from "@/components/book/FullCoverTemplate"
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? "4rllejq1"
 const DATASET    = process.env.NEXT_PUBLIC_SANITY_DATASET    ?? "production"
@@ -190,11 +190,18 @@ export async function POST(req: NextRequest) {
       }) as any
     )
 
+    // Count pages from interior PDF for dynamic spine width
+    const interiorStr = interiorPdf.toString("binary")
+    const pageMatches = interiorStr.match(/\/Type\s*\/Page[^s]/g)
+    const pageCount = pageMatches ? pageMatches.length : 300
+
+    // Render full wrap cover (front + spine + back) with dynamic spine
     const coverPdf = await renderToBuffer(
-      React.createElement(CoverTemplate, {
-        subtitle: subtitle || course.title,
-        bookType: bookType as any,
-        edition:  edition  || "2026/27 Edition",
+      React.createElement(FullCoverTemplate, {
+        subtitle:  subtitle || course.title,
+        bookType:  bookType as any,
+        edition:   edition  || "2026/27 Edition",
+        pageCount,
       }) as any
     )
 
