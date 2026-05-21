@@ -1,16 +1,14 @@
 // components/book/BookTemplate.tsx
 // Accounting Body Press - PDF Interior Template
 // KDP 6x9 inch, black and white, Helvetica
-// Uses @portabletext/react with custom React PDF components
+// Uses @portabletext/toolkit for correct Sanity block normalisation
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react"
 import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer"
-import { PortableText } from "@portabletext/react"
+import { nestLists, buildMarksTree, isPortableTextToolkitList, isPortableTextToolkitSpan } from "@portabletext/toolkit"
 
-// Disable hyphenation globally
 Font.registerHyphenationCallback((word: string) => [word])
 
-// ── Dimensions ───────────────────────────────────────────────────────────────
 const W  = 6 * 72
 const H  = 9 * 72
 const MT = 0.75 * 72
@@ -18,7 +16,6 @@ const MB = 0.75 * 72
 const MI = 0.75 * 72
 const MO = 0.5  * 72
 
-// ── Styles ───────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
   page: {
     width: W, height: H,
@@ -56,9 +53,7 @@ const s = StyleSheet.create({
   },
   copyrightPage: { flex: 1, justifyContent: "flex-end" },
   copyrightText: { fontSize: 8, color: "#666666", lineHeight: 1.6, marginBottom: 3 },
-  tocTitle: {
-    fontSize: 18, fontFamily: "Helvetica-Bold", color: "#0C1A3D", marginBottom: 20,
-  },
+  tocTitle: { fontSize: 18, fontFamily: "Helvetica-Bold", color: "#0C1A3D", marginBottom: 20 },
   tocChapterRow: { marginBottom: 8 },
   tocChapterText: { fontSize: 10, fontFamily: "Helvetica-Bold", color: "#0C1A3D" },
   tocLessonRow: { paddingLeft: 14, marginBottom: 3 },
@@ -78,10 +73,7 @@ const s = StyleSheet.create({
     marginTop: 20, marginBottom: 10,
     borderLeftWidth: 3, borderLeftColor: "#D4A017", paddingLeft: 8,
   },
-  articleTitle: {
-    fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
-    marginTop: 14, marginBottom: 6,
-  },
+  articleTitle: { fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0C1A3D", marginTop: 14, marginBottom: 6 },
   h2: { fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0C1A3D", marginTop: 14, marginBottom: 5 },
   h3: { fontSize: 10, fontFamily: "Helvetica-Bold", color: "#444444", marginTop: 10, marginBottom: 4 },
   body: { fontSize: 10, color: "#1a1a1a", lineHeight: 1.8, marginBottom: 8 },
@@ -120,101 +112,111 @@ function sanitise(text: string): string {
     .replace(/[\r\n]+/g, " ").replace(/  +/g, " ").trim()
 }
 
-// ── Portable text components for React PDF ────────────────────────────────────
-// These mirror PortableTextRenderer.tsx but use React PDF primitives
-function makePdfComponents(listCounterRef: { num: number }) {
-  return {
-    block: {
-      normal: ({ children }: any) => (
-        <Text style={s.body}>{children}</Text>
-      ),
-      h1: ({ children }: any) => (
-        <Text style={s.articleTitle}>{children}</Text>
-      ),
-      h2: ({ children }: any) => (
-        <Text style={s.h2}>{children}</Text>
-      ),
-      h3: ({ children }: any) => (
-        <Text style={s.h3}>{children}</Text>
-      ),
-      h4: ({ children }: any) => (
-        <Text style={s.h3}>{children}</Text>
-      ),
-      h5: ({ children }: any) => (
-        <Text style={s.h3}>{children}</Text>
-      ),
-      blockquote: ({ children }: any) => (
-        <Text style={s.blockquote}>{children}</Text>
-      ),
-    },
-    list: {
-      bullet: ({ children }: any) => (
-        <View>{children}</View>
-      ),
-      number: ({ children }: any) => {
-        listCounterRef.num = 0  // reset counter for each new numbered list
-        return <View>{children}</View>
-      },
-    },
-    listItem: {
-      bullet: ({ children }: any) => (
-        <View style={s.listRow}>
-          <Text style={s.listDot}>{"•"}</Text>
-          <Text style={s.listText}>{children}</Text>
-        </View>
-      ),
-      number: ({ children }: any) => {
-        listCounterRef.num++
-        const n = listCounterRef.num
-        return (
-          <View style={s.listRow}>
-            <Text style={s.listDot}>{n}.</Text>
-            <Text style={s.listText}>{children}</Text>
-          </View>
-        )
-      },
-    },
-    marks: {
-      strong: ({ children }: any) => (
-        <Text style={{ fontFamily: "Helvetica-Bold" }}>{children}</Text>
-      ),
-      em: ({ children }: any) => (
-        <Text style={{ fontStyle: "italic" }}>{children}</Text>
-      ),
-      code: ({ children }: any) => (
-        <Text style={{ fontFamily: "Courier" }}>{children}</Text>
-      ),
-      link: ({ children }: any) => (
-        <Text style={{ color: "#D4A017" }}>{children}</Text>
-      ),
-    },
-    types: {
-      image: () => null,
-      code: () => null,
-      tableBlock: () => null,
-      callout: ({ value }: any) => (
-        <Text style={s.body}>{sanitise(value?.body || "")}</Text>
-      ),
-      quizbankBlock: () => null,
-    },
-  }
+// ── Span renderer ─────────────────────────────────────────────────────────────
+function renderSpan(span: any, key: any): React.ReactNode {
+  if (!isPortableTextToolkitSpan(span)) return null
+  const s2 = span as any
+  const text = sanitise(s2.text || "")
+  if (!text) return null
+  const marks: string[] = s2.marks || []
+  const isBold   = marks.includes("strong")
+  const isItalic = marks.includes("em")
+  const style: any = {}
+  if (isBold)   style.fontFamily = "Helvetica-Bold"
+  if (isItalic) style.fontStyle  = "italic"
+  return <Text key={key} style={style}>{text}</Text>
 }
 
-// ── Render article body using PortableText ────────────────────────────────────
-function renderArticleBody(body: any[]) {
-  if (!body || body.length === 0) return null
-  const listCounterRef = { num: 0 }
-  const components = makePdfComponents(listCounterRef)
-  try {
-    return (
-      <PortableText
-        value={body}
-        components={components as any}
-      />
-    )
-  } catch {
-    return <Text style={s.noContent}>Content unavailable.</Text>
+// ── Mark tree renderer ────────────────────────────────────────────────────────
+function renderMarksTree(children: any[]): React.ReactNode[] {
+  const tree = buildMarksTree({ _type: "block", children, markDefs: [] } as any)
+  const nodes: React.ReactNode[] = []
+  let lastText = ""
+  tree.forEach((node: any, i: number) => {
+    const n = node as any
+    if (isPortableTextToolkitSpan(node)) {
+      const text = sanitise(n.text || "")
+      if (!text) return
+      if (lastText && !lastText.endsWith(" ") && !text.startsWith(" ") && !".,;:!?)]}%".includes(text[0])) {
+        nodes.push(<Text key={"sp" + i}>{" "}</Text>)
+      }
+      const isBold   = (n.marks || []).includes("strong")
+      const isItalic = (n.marks || []).includes("em")
+      const style: any = {}
+      if (isBold)   style.fontFamily = "Helvetica-Bold"
+      if (isItalic) style.fontStyle  = "italic"
+      nodes.push(<Text key={i} style={style}>{text}</Text>)
+      lastText = text
+    } else if (n._type === "span") {
+      const rendered = renderSpan(n, i)
+      if (rendered) { nodes.push(rendered); lastText = sanitise(n.text || "") }
+    }
+  })
+  return nodes
+}
+
+// ── Block renderer using nestLists ────────────────────────────────────────────
+function renderBlocks(blocks: any[]): React.ReactNode {
+  if (!blocks || blocks.length === 0) return null
+
+  // nestLists groups consecutive list items into list objects
+  const nested = nestLists(blocks, "html")
+  const elements: React.ReactElement[] = []
+
+  function renderNode(node: any, key: any): React.ReactElement | null {
+    // List group
+    if (isPortableTextToolkitList(node)) {
+      let counter = 0
+      const items = (node.children || []).map((item: any, idx: number) => {
+        if (!item.children) return null
+        const rawText = (item.children || []).map((c: any) => c.text || "").join("").trim()
+        if (!rawText) return null // skip empty list items
+        const content = renderMarksTree(item.children)
+        if (node.listItem === "number") {
+          counter++
+          return (
+            <View key={idx} style={s.listRow}>
+              <Text style={s.listDot}>{counter}.</Text>
+              <Text style={s.listText}>{content}</Text>
+            </View>
+          )
+        }
+        return (
+          <View key={idx} style={s.listRow}>
+            <Text style={s.listDot}>{"•"}</Text>
+            <Text style={s.listText}>{content}</Text>
+          </View>
+        )
+      }).filter(Boolean)
+      if (items.length === 0) return null
+      return <View key={key}>{items}</View>
+    }
+
+    // Regular block
+    if (node._type === "block") {
+      const children = node.children || []
+      const rawText = children.map((c: any) => c.text || "").join("").trim()
+      if (!rawText) return null // skip empty blocks
+
+      const content = renderMarksTree(children)
+      const style = node.style || "normal"
+
+      if (style === "h1") return <Text key={key} style={s.articleTitle}>{content}</Text>
+      if (style === "h2") return <Text key={key} style={s.h2}>{content}</Text>
+      if (style === "h3" || style === "h4" || style === "h5") return <Text key={key} style={s.h3}>{content}</Text>
+      if (style === "blockquote") return <Text key={key} style={s.blockquote}>{content}</Text>
+      return <Text key={key} style={s.body}>{content}</Text>
+    }
+
+    return null
   }
+
+  nested.forEach((node: any, i: number) => {
+    const el = renderNode(node, i)
+    if (el) elements.push(el)
+  })
+
+  return elements.length > 0 ? elements : null
 }
 
 const LETTERS = ["A", "B", "C", "D", "E"]
@@ -242,7 +244,6 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
       creator="Accounting Body Press"
       producer="Accounting Body Press"
     >
-      {/* Title Page */}
       <Page size={[W, H]} style={s.page}>
         <View style={s.titlePage}>
           <Text style={s.publisherLabel}>Accounting Body Press</Text>
@@ -254,7 +255,6 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
         </View>
       </Page>
 
-      {/* Copyright Page */}
       <Page size={[W, H]} style={s.page}>
         <View style={s.copyrightPage}>
           <Text style={s.copyrightText}>Published by Accounting Body Press</Text>
@@ -271,14 +271,11 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
         </View>
       </Page>
 
-      {/* Table of Contents */}
       <Page size={[W, H]} style={s.page}>
         <Text style={s.tocTitle}>Contents</Text>
         {(course.chapters || []).map((ch: any, ci: number) => (
           <View key={ch._key || ci} style={s.tocChapterRow}>
-            <Text style={s.tocChapterText}>
-              Chapter {ci + 1}: {sanitise(ch.chapterTitle)}
-            </Text>
+            <Text style={s.tocChapterText}>Chapter {ci + 1}: {sanitise(ch.chapterTitle)}</Text>
             {(ch.lessons || []).map((ls: any, li: number) => (
               <View key={ls._id || li} style={s.tocLessonRow}>
                 <Text style={s.tocLessonText}>{sanitise(ls.title)}</Text>
@@ -288,7 +285,6 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
         ))}
       </Page>
 
-      {/* Chapters */}
       {(course.chapters || []).map((ch: any, ci: number) => (
         <Page key={ch._key || ci} size={[W, H]} style={s.page}>
           <Text style={s.runningHead} fixed>{sanitise(subtitle)}</Text>
@@ -308,7 +304,7 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
                 <View key={art._id || ai}>
                   <Text style={s.articleTitle}>{sanitise(art.title)}</Text>
                   {art.body && art.body.length > 0
-                    ? renderArticleBody(art.body)
+                    ? renderBlocks(art.body)
                     : <Text style={s.noContent}>Study notes not yet available.</Text>
                   }
                 </View>
