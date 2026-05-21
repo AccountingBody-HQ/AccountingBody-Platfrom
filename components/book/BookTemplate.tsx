@@ -151,9 +151,10 @@ function makePdfComponents(listCounterRef: { num: number }) {
       bullet: ({ children }: any) => (
         <View>{children}</View>
       ),
-      number: ({ children }: any) => (
-        <View>{children}</View>
-      ),
+      number: ({ children }: any) => {
+        listCounterRef.num = 0  // reset counter for each new numbered list
+        return <View>{children}</View>
+      },
     },
     listItem: {
       bullet: ({ children }: any) => (
