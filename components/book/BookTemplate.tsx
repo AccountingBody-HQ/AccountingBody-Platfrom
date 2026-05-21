@@ -241,7 +241,7 @@ function renderBlocks(blocks: any[]): React.ReactNode {
         dot = "•"
       }
       out.push(
-        <View key={`list-${listKey}-${idx}`} style={s.listRow}>
+        <View key={`list-${listKey}-${idx}`} style={s.listRow} wrap={false}>
           <Text style={s.listDot}>{dot}</Text>
           <Text style={s.listText}>{content}</Text>
         </View>
