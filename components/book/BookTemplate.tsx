@@ -230,7 +230,8 @@ function renderBlocks(blocks: any[]): React.ReactNode {
     let num = 0
     listBuf.forEach((item, idx) => {
       const rawText = (item.children || []).map((c: any) => c.text || "").join("")
-      if (!hasText(sanitise(rawText))) return // skip empty list items
+      const sanitisedText = sanitise(rawText)
+      if (!sanitisedText || sanitisedText.trim().length === 0) return // skip empty list items
       const content = renderSpans(item.children || [])
       let dot: string
       if (item.listItem === "number") {
