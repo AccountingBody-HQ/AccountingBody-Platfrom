@@ -167,8 +167,11 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
       transform: "rotate(-90deg)",
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "space-between",
+      justifyContent: "center",
       paddingHorizontal: 20,
+    },
+    spineGap: {
+      width: 16,
     },
     spineTitle: {
       fontSize: 7,
