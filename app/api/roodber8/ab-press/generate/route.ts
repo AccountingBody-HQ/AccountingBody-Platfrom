@@ -425,22 +425,21 @@ ${rawText}`
 }
 
 async function reformatCourseContent(course: any): Promise<any> {
-  const chapters = await Promise.all(
-    (course.chapters || []).map(async (chapter: any) => {
-      const lessons = await Promise.all(
-        (chapter.lessons || []).map(async (lesson: any) => {
-          const linkedArticles = []
-          for (const article of (lesson.linkedArticles || [])) {
-            const reformattedBody = await reformatArticleBody(article.title, article.body)
-            linkedArticles.push({ ...article, body: reformattedBody })
-            await new Promise(resolve => setTimeout(resolve, 15000))
-          }
-          return { ...lesson, linkedArticles }
-        })
-      )
-      return { ...chapter, lessons }
-    })
-  )
+  const chapters = []
+  for (const chapter of (course.chapters || [])) {
+    const lessons = []
+    for (const lesson of (chapter.lessons || [])) {
+      const linkedArticles = []
+      for (const article of (lesson.linkedArticles || [])) {
+        console.log('[AB Press AI] Processing article:', article.title)
+        const reformattedBody = await reformatArticleBody(article.title, article.body)
+        linkedArticles.push({ ...article, body: reformattedBody })
+        await new Promise(resolve => setTimeout(resolve, 15000))
+      }
+      lessons.push({ ...lesson, linkedArticles })
+    }
+    chapters.push({ ...chapter, lessons })
+  }
   return { ...course, chapters }
 }
 
