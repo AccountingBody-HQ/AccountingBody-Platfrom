@@ -232,6 +232,7 @@ function renderBlocks(blocks: any[]): React.ReactNode {
       const rawText = (item.children || []).map((c: any) => c.text || "").join("")
       if (!hasText(sanitise(rawText))) return // skip empty list items
       const content = renderSpans(item.children || [])
+      if (!content) return // skip if all spans were empty after sanitise
       let dot: string
       if (item.listItem === "number") {
         num++
