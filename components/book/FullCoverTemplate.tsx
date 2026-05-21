@@ -313,8 +313,8 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
           <View style={s.spineTopGold} />
           <View style={s.spineBottomGold} />
           <View style={s.spineContent}>
-            <Text style={s.spineTitle}>{subtitle}</Text>
             <Text style={s.spinePublisher}>AB PRESS</Text>
+            <Text style={s.spineTitle}>{subtitle}</Text>
           </View>
         </View>
 
