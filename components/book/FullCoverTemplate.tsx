@@ -144,6 +144,7 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
       width: SW,
       height: TOTAL_H,
       backgroundColor: DARK_NAVY,
+      overflow: "hidden",
     },
     spineTopGold: {
       position: "absolute",
@@ -159,24 +160,29 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
     },
     spineContent: {
       position: "absolute",
-      top: 20, bottom: 20, left: 0, right: 0,
+      left: SW / 2 - (TOTAL_H - 40) / 2,
+      top: TOTAL_H / 2 - SW / 2,
+      width: TOTAL_H - 40,
+      height: SW,
+      transform: "rotate(-90deg)",
+      flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
+      paddingHorizontal: 20,
     },
     spineTitle: {
-      fontSize: Math.min(8, SW / 10),
+      fontSize: 7,
       fontFamily: "Helvetica-Bold",
       color: WHITE,
       letterSpacing: 0.5,
-      width: TOTAL_H - 80,
+      flex: 1,
       textAlign: "center",
     },
     spinePublisher: {
-      fontSize: Math.min(6, SW / 12),
+      fontSize: 6,
       fontFamily: "Helvetica",
       color: GOLD,
       letterSpacing: 1,
-
     },
     // ── BACK COVER ───────────────────────────────────────────────────────────
     backCover: {
