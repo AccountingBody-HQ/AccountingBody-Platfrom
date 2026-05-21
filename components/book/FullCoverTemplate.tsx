@@ -168,10 +168,13 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      paddingHorizontal: 20,
     },
-    spineGap: {
-      width: 16,
+    spinePublisherWrap: {
+      position: "absolute",
+      bottom: 12,
+      left: 0,
+      right: 0,
+      alignItems: "center",
     },
     spineTitle: {
       fontSize: 7,
@@ -316,8 +319,10 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
           <View style={s.spineTopGold} />
           <View style={s.spineBottomGold} />
           <View style={s.spineContent}>
-            <Text style={s.spinePublisher}>AB PRESS</Text>
             <Text style={s.spineTitle}>{subtitle}</Text>
+          </View>
+          <View style={s.spinePublisherWrap}>
+            <Text style={s.spinePublisher}>AB PRESS</Text>
           </View>
         </View>
 
