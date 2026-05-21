@@ -3,7 +3,10 @@
 // KDP 6x9 inch, black and white, Helvetica
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react"
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer"
+import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer"
+
+// Disable hyphenation globally - prevents mid-word breaks in titles and headings
+Font.registerHyphenationCallback((word: string) => [word])
 
 // ── Dimensions ──────────────────────────────────────────────────────────────
 const W = 6 * 72   // 432pt
@@ -42,7 +45,7 @@ const s = StyleSheet.create({
     textTransform: "uppercase", letterSpacing: 1.5,
   },
   bookTitle: {
-    fontSize: 24, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
+    fontSize: 22, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
     textAlign: "center", marginBottom: 10, lineHeight: 1.3,
   },
   bookTypeLabel: { fontSize: 12, color: "#555555", textAlign: "center", marginBottom: 20 },
@@ -176,7 +179,7 @@ function hasText(raw: string): boolean {
 // Renders children spans from a Sanity block with bold/italic support.
 // Each span is wrapped in its own <Text> to avoid React PDF inline flow issues.
 // Spaces are injected between spans where the CMS removed them.
-const NO_SPACE_BEFORE = new Set([".", ",", ";", ":", "!", "?", ")", "]", "}", "%", "'", '"'])
+const NO_SPACE_BEFORE = new Set([".", ",", ";", ":", "!", "?", "]", "}", "%", "'", '"'])
 const NO_SPACE_AFTER  = new Set(["(", "[", "{", "'", '"'])
 
 function renderSpans(children: any[]): React.ReactNode {
@@ -193,10 +196,13 @@ function renderSpans(children: any[]): React.ReactNode {
       const prev = sanitise(children[i - 1].text || "")
       const lastChar  = prev[prev.length - 1] || ""
       const firstChar = raw[0]
-      if (
+      // Inject space if chars on either side warrant it
+      // Special case: ) followed by a letter always needs a space
+      const parenFollowedByLetter = lastChar === ")" && /[A-Za-z]/.test(firstChar)
+      const normalNeedsSpace =
         lastChar  && lastChar  !== " " && !NO_SPACE_AFTER.has(lastChar) &&
         firstChar && firstChar !== " " && !NO_SPACE_BEFORE.has(firstChar)
-      ) {
+      if (parenFollowedByLetter || normalNeedsSpace) {
         nodes.push(<Text key={"sp" + i}>{" "}</Text>)
       }
     }
@@ -222,9 +228,9 @@ function renderBlocks(blocks: any[]): React.ReactNode {
     if (listBuf.length === 0) return
     let num = 0
     listBuf.forEach((item, idx) => {
-      const content = renderSpans(item.children || [])
       const rawText = (item.children || []).map((c: any) => c.text || "").join("")
-      if (!hasText(rawText)) return // skip empty list items
+      if (!hasText(sanitise(rawText))) return // skip empty list items
+      const content = renderSpans(item.children || [])
       let dot: string
       if (item.listItem === "number") {
         num++
