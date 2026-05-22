@@ -400,16 +400,20 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
                 )}
                 {showNotes && ls.linkedArticles && ls.linkedArticles.length > 0 && (() => {
                   const b0 = (ls.linkedArticles[0].body || [])[0]
-                  if (!b0 || b0._type !== 'block' || b0.listItem || (b0.style && b0.style !== 'normal')) return null
+                  if (!b0 || b0._type !== 'block' || b0.listItem) return null
                   const spans = renderSpans(b0.children || [])
-                  return spans ? <Text style={s.body}>{spans}</Text> : null
+                  if (!spans) return null
+                  const st = b0.style || 'normal'
+                  if (st === 'h1' || st === 'h2') return <Text style={s.h2}>{spans}</Text>
+                  if (st === 'h3' || st === 'h4' || st === 'h5') return <Text style={s.h3}>{spans}</Text>
+                  return <Text style={s.body}>{spans}</Text>
                 })()}
               </View>
 
               {/* Study Notes */}
               {showNotes && (ls.linkedArticles || []).map((art: any, ai: number) => {
                 const b0 = ai === 0 ? (art.body || [])[0] : null
-                const skipFirst = b0 && b0._type === 'block' && !b0.listItem && (!b0.style || b0.style === 'normal')
+                const skipFirst = b0 && b0._type === 'block' && !b0.listItem
                 const bodyToRender = skipFirst ? art.body.slice(1) : art.body
                 return (
                   <View key={art._id || ai}>
