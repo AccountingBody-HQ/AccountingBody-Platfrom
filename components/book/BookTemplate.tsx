@@ -398,18 +398,29 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
                 {showNotes && ls.linkedArticles && ls.linkedArticles.length > 0 && (
                   <Text style={s.articleTitle}>{sanitise(ls.linkedArticles[0].title)}</Text>
                 )}
+                {showNotes && ls.linkedArticles && ls.linkedArticles.length > 0 && (() => {
+                  const b0 = (ls.linkedArticles[0].body || [])[0]
+                  if (!b0 || b0._type !== 'block' || b0.listItem || (b0.style && b0.style !== 'normal')) return null
+                  const spans = renderSpans(b0.children || [])
+                  return spans ? <Text style={s.body}>{spans}</Text> : null
+                })()}
               </View>
 
               {/* Study Notes */}
-              {showNotes && (ls.linkedArticles || []).map((art: any, ai: number) => (
-                <View key={art._id || ai}>
-                  {ai > 0 && <Text style={s.articleTitle}>{sanitise(art.title)}</Text>}
-                  {art.body && art.body.length > 0
-                    ? renderBlocks(art.body)
-                    : <Text style={s.noContent}>Study notes not yet available.</Text>
-                  }
-                </View>
-              ))}
+              {showNotes && (ls.linkedArticles || []).map((art: any, ai: number) => {
+                const b0 = ai === 0 ? (art.body || [])[0] : null
+                const skipFirst = b0 && b0._type === 'block' && !b0.listItem && (!b0.style || b0.style === 'normal')
+                const bodyToRender = skipFirst ? art.body.slice(1) : art.body
+                return (
+                  <View key={art._id || ai}>
+                    {ai > 0 && <Text style={s.articleTitle}>{sanitise(art.title)}</Text>}
+                    {bodyToRender && bodyToRender.length > 0
+                      ? renderBlocks(bodyToRender)
+                      : (!skipFirst ? <Text style={s.noContent}>Study notes not yet available.</Text> : null)
+                    }
+                  </View>
+                )
+              })}
 
               {/* Practice Questions */}
               {showQuestions && (ls.linkedArticles || []).map((art: any, ai: number) => {
