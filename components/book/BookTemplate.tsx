@@ -372,11 +372,6 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
             <Text style={s.tocChapterText}>
               Chapter {ci + 1}: {sanitise(ch.chapterTitle)}
             </Text>
-            {(ch.lessons || []).map((ls: any, li: number) => (
-              <View key={ls._id || li} style={s.tocLessonRow}>
-                <Text style={s.tocLessonText}>{sanitise(ls.title)}</Text>
-              </View>
-            ))}
           </View>
         ))}
       </Page>
@@ -399,8 +394,6 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
           {(ch.lessons || []).map((ls: any, li: number) => (
             <View key={ls._id || li}>
               <Text style={s.lessonTitle}>{sanitise(ls.title)}</Text>
-
-              {/* Study Notes */}
               {showNotes && (ls.linkedArticles || []).map((art: any, ai: number) => (
                 <View key={art._id || ai}>
                   <Text style={s.articleTitle}>{sanitise(art.title)}</Text>
