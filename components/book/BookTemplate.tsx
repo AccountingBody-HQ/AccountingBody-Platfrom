@@ -276,6 +276,8 @@ function renderBlocks(blocks: any[]): React.ReactNode {
       for (let j = i + 1; j < blocks.length; j++) {
         const nb = blocks[j]
         if (nb._type !== "block" || nb.listItem) continue
+        const nbStyle = nb.style || "normal"
+        if (nbStyle === "h1" || nbStyle === "h2" || nbStyle === "h3" || nbStyle === "h4" || nbStyle === "h5") break
         const nRaw = (nb.children || []).map((c: any) => c.text || "").join("")
         if (!hasText(nRaw)) continue
         nextContent = renderSpans(nb.children || [])
