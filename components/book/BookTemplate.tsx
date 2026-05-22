@@ -251,10 +251,8 @@ function renderBlocks(blocks: any[]): React.ReactNode {
     listKey++
   }
 
-  const skippedIndex = new Set<number>()
   blocks.forEach((b: any, i: number) => {
     if (b._type !== "block") return
-    if (skippedIndex.has(i)) return
     const children = b.children || []
     const rawText  = children.map((c: any) => c.text || "").join("")
     if (!hasText(rawText)) { flushList(); return }
@@ -270,31 +268,12 @@ function renderBlocks(blocks: any[]): React.ReactNode {
     const style = b.style || "normal"
     const content = renderSpans(children)
 
-    const isHeading = style === "h1" || style === "h2" || style === "h3" || style === "h4" || style === "h5"
-    if (isHeading) {
-      let nextContent: React.ReactNode = null
-      for (let j = i + 1; j < blocks.length; j++) {
-        const nb = blocks[j]
-        if (nb._type !== "block" || nb.listItem) continue
-        const nbStyle = nb.style || "normal"
-        if (nbStyle === "h1" || nbStyle === "h2" || nbStyle === "h3" || nbStyle === "h4" || nbStyle === "h5") break
-        const nRaw = (nb.children || []).map((c: any) => c.text || "").join("")
-        if (!hasText(nRaw)) continue
-        nextContent = renderSpans(nb.children || [])
-        skippedIndex.add(j)
-        break
-      }
-      const headingEl = style === "h1"
-        ? <Text style={s.articleTitle}>{content}</Text>
-        : style === "h2"
-        ? <Text style={s.h2}>{content}</Text>
-        : <Text style={s.h3}>{content}</Text>
-      out.push(
-        <View key={i} wrap={false}>
-          {headingEl}
-          {nextContent ? <Text style={s.body}>{nextContent}</Text> : null}
-        </View>
-      )
+    if (style === "h1") {
+      out.push(<Text key={i} style={s.articleTitle}>{content}</Text>)
+    } else if (style === "h2") {
+      out.push(<Text key={i} style={s.h2}>{content}</Text>)
+    } else if (style === "h3" || style === "h4" || style === "h5") {
+      out.push(<Text key={i} style={s.h3}>{content}</Text>)
     } else if (style === "blockquote") {
       out.push(<Text key={i} style={[s.body, { color: "#555555", paddingLeft: 10, borderLeftWidth: 2, borderLeftColor: "#cccccc" }]}>{content}</Text>)
     } else {
