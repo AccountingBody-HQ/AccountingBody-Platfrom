@@ -372,6 +372,11 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
             <Text style={s.tocChapterText}>
               Chapter {ci + 1}: {sanitise(ch.chapterTitle)}
             </Text>
+            {(ch.lessons || []).map((ls: any, li: number) => (
+              <View key={ls._id || li} style={s.tocLessonRow}>
+                <Text style={s.tocLessonText}>{sanitise(ls.title)}</Text>
+              </View>
+            ))}
           </View>
         ))}
       </Page>
