@@ -322,6 +322,17 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
   const year         = new Date().getFullYear()
   const showNotes    = bookType === "combined" || bookType === "study"
   const showQuestions = bookType === "combined" || bookType === "practice"
+
+  function renderFirstBlock(body: any[]): React.ReactNode {
+    const firstB = (body || []).find((b: any) => b._type === 'block' && !b.listItem)
+    if (!firstB) return null
+    const spans = renderSpans(firstB.children || [])
+    if (!spans) return null
+    const st = firstB.style || 'normal'
+    if (st === 'h1' || st === 'h2') return <Text style={s.h2}>{spans}</Text>
+    if (st === 'h3' || st === 'h4' || st === 'h5') return <Text style={s.h3}>{spans}</Text>
+    return <Text style={s.body}>{spans}</Text>
+  }
   const bookTypeLabel =
     bookType === "combined" ? "Study Text & Practice Kit"
     : bookType === "study"  ? "Study Text"
@@ -398,18 +409,7 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
                 {showNotes && ls.linkedArticles && ls.linkedArticles.length > 0 && (
                   <Text style={s.articleTitle}>{sanitise(ls.linkedArticles[0].title)}</Text>
                 )}
-                {showNotes && ls.linkedArticles && ls.linkedArticles.length > 0 && (() => {
-                  const firstB = (ls.linkedArticles[0].body || []).find((b: any) =>
-                    b._type === 'block' && !b.listItem
-                  )
-                  if (!firstB) return null
-                  const spans = renderSpans(firstB.children || [])
-                  if (!spans) return null
-                  const st = firstB.style || 'normal'
-                  if (st === 'h1' || st === 'h2') return <Text style={s.h2}>{spans}</Text>
-                  if (st === 'h3' || st === 'h4' || st === 'h5') return <Text style={s.h3}>{spans}</Text>
-                  return <Text style={s.body}>{spans}</Text>
-                })()}
+                {showNotes && ls.linkedArticles && ls.linkedArticles.length > 0 && renderFirstBlock(ls.linkedArticles[0].body || [])}
               </View>
 
               {/* Study Notes */}
