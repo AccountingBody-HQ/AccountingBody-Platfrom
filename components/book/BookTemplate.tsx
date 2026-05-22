@@ -404,27 +404,28 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
           {/* Lessons */}
           {(ch.lessons || []).map((ls: any, li: number) => (
             <View key={ls._id || li}>
-              <View wrap={false}>
+              {(!showNotes || !ls.linkedArticles || ls.linkedArticles.length === 0) && (
                 <Text style={s.lessonTitle}>{sanitise(ls.title)}</Text>
-                {showNotes && ls.linkedArticles && ls.linkedArticles.length > 0 && (
-                  <Text style={s.articleTitle}>{sanitise(ls.linkedArticles[0].title)}</Text>
-                )}
-                {showNotes && ls.linkedArticles && ls.linkedArticles.length > 0 && renderFirstBlock(ls.linkedArticles[0].body || [])}
-              </View>
-
+              )}
               {/* Study Notes */}
               {showNotes && (ls.linkedArticles || []).map((art: any, ai: number) => {
                 const firstIdx = ai === 0
-                  ? (art.body || []).findIndex((b: any) =>
-                      b._type === 'block' && !b.listItem
-                    )
+                  ? (art.body || []).findIndex((b: any) => b._type === "block" && !b.listItem)
                   : -1
                 const bodyToRender = firstIdx >= 0
                   ? [...(art.body || []).slice(0, firstIdx), ...(art.body || []).slice(firstIdx + 1)]
                   : (art.body || [])
                 return (
                   <View key={art._id || ai}>
-                    {ai > 0 && <Text style={s.articleTitle}>{sanitise(art.title)}</Text>}
+                    {ai === 0 ? (
+                      <View wrap={false}>
+                        <Text style={s.lessonTitle}>{sanitise(ls.title)}</Text>
+                        <Text style={s.articleTitle}>{sanitise(art.title)}</Text>
+                        {renderFirstBlock(art.body || [])}
+                      </View>
+                    ) : (
+                      <Text style={s.articleTitle}>{sanitise(art.title)}</Text>
+                    )}
                     {bodyToRender && bodyToRender.length > 0
                       ? renderBlocks(bodyToRender)
                       : (firstIdx === -1 ? <Text style={s.noContent}>Study notes not yet available.</Text> : null)
@@ -432,7 +433,6 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
                   </View>
                 )
               })}
-
               {/* Practice Questions */}
               {showQuestions && (ls.linkedArticles || []).map((art: any, ai: number) => {
                 const qs = art.quizQuestions || []
