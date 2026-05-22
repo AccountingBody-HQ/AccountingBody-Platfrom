@@ -251,8 +251,10 @@ function renderBlocks(blocks: any[]): React.ReactNode {
     listKey++
   }
 
+  const skippedIndex = new Set<number>()
   blocks.forEach((b: any, i: number) => {
     if (b._type !== "block") return
+    if (skippedIndex.has(i)) return
     const children = b.children || []
     const rawText  = children.map((c: any) => c.text || "").join("")
     if (!hasText(rawText)) { flushList(); return }
@@ -277,6 +279,7 @@ function renderBlocks(blocks: any[]): React.ReactNode {
         const nRaw = (nb.children || []).map((c: any) => c.text || "").join("")
         if (!hasText(nRaw)) continue
         nextContent = renderSpans(nb.children || [])
+        skippedIndex.add(j)
         break
       }
       const headingEl = style === "h1"
