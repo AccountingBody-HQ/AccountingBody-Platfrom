@@ -415,21 +415,21 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
 
               {/* Study Notes */}
               {showNotes && (ls.linkedArticles || []).map((art: any, ai: number) => {
-                const firstKey = ai === 0
-                  ? ((art.body || []).find((b: any) =>
+                const firstIdx = ai === 0
+                  ? (art.body || []).findIndex((b: any) =>
                       b._type === 'block' && !b.listItem &&
                       hasText((b.children || []).map((c: any) => c.text || '').join(''))
-                    ) || {})._key || null
-                  : null
-                const bodyToRender = firstKey
-                  ? (art.body || []).filter((b: any) => b._key !== firstKey)
+                    )
+                  : -1
+                const bodyToRender = firstIdx >= 0
+                  ? [...(art.body || []).slice(0, firstIdx), ...(art.body || []).slice(firstIdx + 1)]
                   : (art.body || [])
                 return (
                   <View key={art._id || ai}>
                     {ai > 0 && <Text style={s.articleTitle}>{sanitise(art.title)}</Text>}
                     {bodyToRender && bodyToRender.length > 0
                       ? renderBlocks(bodyToRender)
-                      : (!firstKey ? <Text style={s.noContent}>Study notes not yet available.</Text> : null)
+                      : (firstIdx === -1 ? <Text style={s.noContent}>Study notes not yet available.</Text> : null)
                     }
                   </View>
                 )
