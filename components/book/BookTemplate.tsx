@@ -393,12 +393,17 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
           {/* Lessons */}
           {(ch.lessons || []).map((ls: any, li: number) => (
             <View key={ls._id || li}>
-              <Text style={s.lessonTitle}>{sanitise(ls.title)}</Text>
+              <View wrap={false}>
+                <Text style={s.lessonTitle}>{sanitise(ls.title)}</Text>
+                {showNotes && ls.linkedArticles && ls.linkedArticles.length > 0 && (
+                  <Text style={s.articleTitle}>{sanitise(ls.linkedArticles[0].title)}</Text>
+                )}
+              </View>
 
               {/* Study Notes */}
               {showNotes && (ls.linkedArticles || []).map((art: any, ai: number) => (
                 <View key={art._id || ai}>
-                  <Text style={s.articleTitle}>{sanitise(art.title)}</Text>
+                  {ai > 0 && <Text style={s.articleTitle}>{sanitise(art.title)}</Text>}
                   {art.body && art.body.length > 0
                     ? renderBlocks(art.body)
                     : <Text style={s.noContent}>Study notes not yet available.</Text>
