@@ -399,11 +399,14 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
                   <Text style={s.articleTitle}>{sanitise(ls.linkedArticles[0].title)}</Text>
                 )}
                 {showNotes && ls.linkedArticles && ls.linkedArticles.length > 0 && (() => {
-                  const b0 = (ls.linkedArticles[0].body || [])[0]
-                  if (!b0 || b0._type !== 'block' || b0.listItem) return null
-                  const spans = renderSpans(b0.children || [])
+                  const firstB = (ls.linkedArticles[0].body || []).find((b: any) =>
+                    b._type === 'block' && !b.listItem &&
+                    hasText((b.children || []).map((c: any) => c.text || '').join(''))
+                  )
+                  if (!firstB) return null
+                  const spans = renderSpans(firstB.children || [])
                   if (!spans) return null
-                  const st = b0.style || 'normal'
+                  const st = firstB.style || 'normal'
                   if (st === 'h1' || st === 'h2') return <Text style={s.h2}>{spans}</Text>
                   if (st === 'h3' || st === 'h4' || st === 'h5') return <Text style={s.h3}>{spans}</Text>
                   return <Text style={s.body}>{spans}</Text>
@@ -412,15 +415,21 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
 
               {/* Study Notes */}
               {showNotes && (ls.linkedArticles || []).map((art: any, ai: number) => {
-                const b0 = ai === 0 ? (art.body || [])[0] : null
-                const skipFirst = b0 && b0._type === 'block' && !b0.listItem
-                const bodyToRender = skipFirst ? art.body.slice(1) : art.body
+                const firstKey = ai === 0
+                  ? ((art.body || []).find((b: any) =>
+                      b._type === 'block' && !b.listItem &&
+                      hasText((b.children || []).map((c: any) => c.text || '').join(''))
+                    ) || {})._key || null
+                  : null
+                const bodyToRender = firstKey
+                  ? (art.body || []).filter((b: any) => b._key !== firstKey)
+                  : (art.body || [])
                 return (
                   <View key={art._id || ai}>
                     {ai > 0 && <Text style={s.articleTitle}>{sanitise(art.title)}</Text>}
                     {bodyToRender && bodyToRender.length > 0
                       ? renderBlocks(bodyToRender)
-                      : (!skipFirst ? <Text style={s.noContent}>Study notes not yet available.</Text> : null)
+                      : (!firstKey ? <Text style={s.noContent}>Study notes not yet available.</Text> : null)
                     }
                   </View>
                 )
