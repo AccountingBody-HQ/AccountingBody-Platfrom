@@ -400,8 +400,7 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
                 )}
                 {showNotes && ls.linkedArticles && ls.linkedArticles.length > 0 && (() => {
                   const firstB = (ls.linkedArticles[0].body || []).find((b: any) =>
-                    b._type === 'block' && !b.listItem &&
-                    hasText((b.children || []).map((c: any) => c.text || '').join(''))
+                    b._type === 'block' && !b.listItem
                   )
                   if (!firstB) return null
                   const spans = renderSpans(firstB.children || [])
@@ -417,8 +416,7 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
               {showNotes && (ls.linkedArticles || []).map((art: any, ai: number) => {
                 const firstIdx = ai === 0
                   ? (art.body || []).findIndex((b: any) =>
-                      b._type === 'block' && !b.listItem &&
-                      hasText((b.children || []).map((c: any) => c.text || '').join(''))
+                      b._type === 'block' && !b.listItem
                     )
                   : -1
                 const bodyToRender = firstIdx >= 0
