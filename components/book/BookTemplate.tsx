@@ -269,11 +269,11 @@ function renderBlocks(blocks: any[]): React.ReactNode {
     const content = renderSpans(children)
 
     if (style === "h1") {
-      out.push(<Text key={i} style={s.articleTitle}>{content}</Text>)
+      out.push(<View key={i} wrap={false}><Text style={s.articleTitle}>{content}</Text></View>)
     } else if (style === "h2") {
-      out.push(<Text key={i} style={s.h2}>{content}</Text>)
+      out.push(<View key={i} wrap={false}><Text style={s.h2}>{content}</Text></View>)
     } else if (style === "h3" || style === "h4" || style === "h5") {
-      out.push(<Text key={i} style={s.h3}>{content}</Text>)
+      out.push(<View key={i} wrap={false}><Text style={s.h3}>{content}</Text></View>)
     } else if (style === "blockquote") {
       out.push(<Text key={i} style={[s.body, { color: "#555555", paddingLeft: 10, borderLeftWidth: 2, borderLeftColor: "#cccccc" }]}>{content}</Text>)
     } else {
