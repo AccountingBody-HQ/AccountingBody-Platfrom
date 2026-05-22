@@ -171,7 +171,7 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
     },
     spinePublisherWrap: {
       position: "absolute",
-      bottom: 20,
+      bottom: 80,
       left: 0,
       right: 0,
       alignItems: "center",
