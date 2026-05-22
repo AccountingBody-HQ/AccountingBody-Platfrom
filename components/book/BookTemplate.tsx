@@ -272,27 +272,43 @@ function renderBlocks(blocks: any[]): React.ReactNode {
 
     const isHeading = style === "h1" || style === "h2" || style === "h3" || style === "h4" || style === "h5"
     if (isHeading) {
-      let nextContent: React.ReactNode = null
+      // Collect this heading + any consecutive headings + first body block
+      // All wrapped in wrap={false} so the group never orphans at bottom of page
+      const groupEls: React.ReactNode[] = []
+      const headingEl = style === "h1"
+        ? <Text key={"h-"+i} style={s.articleTitle}>{content}</Text>
+        : style === "h2"
+        ? <Text key={"h-"+i} style={s.h2}>{content}</Text>
+        : <Text key={"h-"+i} style={s.h3}>{content}</Text>
+      groupEls.push(headingEl)
       for (let j = i + 1; j < blocks.length; j++) {
         const nb = blocks[j]
         if (nb._type !== "block" || nb.listItem) continue
         const nbStyle = nb.style || "normal"
-        if (nbStyle === "h1" || nbStyle === "h2" || nbStyle === "h3" || nbStyle === "h4" || nbStyle === "h5") break
         const nRaw = (nb.children || []).map((c: any) => c.text || "").join("")
+        const isNextHeading = nbStyle === "h1" || nbStyle === "h2" || nbStyle === "h3" || nbStyle === "h4" || nbStyle === "h5"
+        if (isNextHeading) {
+          if (!hasText(nRaw)) continue
+          const nextSpans = renderSpans(nb.children || [])
+          const nextHeadingEl = nbStyle === "h1"
+            ? <Text key={"h-"+j} style={s.articleTitle}>{nextSpans}</Text>
+            : nbStyle === "h2"
+            ? <Text key={"h-"+j} style={s.h2}>{nextSpans}</Text>
+            : <Text key={"h-"+j} style={s.h3}>{nextSpans}</Text>
+          groupEls.push(nextHeadingEl)
+          skippedIndex.add(j)
+          continue
+        }
         if (!hasText(nRaw)) continue
-        nextContent = renderSpans(nb.children || [])
+        // First body block - add as anchor and skip
+        const bodySpans = renderSpans(nb.children || [])
+        groupEls.push(<Text key={"b-"+j} style={s.body}>{bodySpans}</Text>)
         skippedIndex.add(j)
         break
       }
-      const headingEl = style === "h1"
-        ? <Text style={s.articleTitle}>{content}</Text>
-        : style === "h2"
-        ? <Text style={s.h2}>{content}</Text>
-        : <Text style={s.h3}>{content}</Text>
       out.push(
         <View key={i} wrap={false}>
-          {headingEl}
-          {nextContent ? <Text style={s.body}>{nextContent}</Text> : null}
+          {groupEls}
         </View>
       )
     } else if (style === "blockquote") {
