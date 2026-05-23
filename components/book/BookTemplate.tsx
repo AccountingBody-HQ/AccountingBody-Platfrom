@@ -290,7 +290,7 @@ function renderBlocks(blocks: any[]): React.ReactNode {
         ? <Text style={s.h2}>{content}</Text>
         : <Text style={s.h3}>{content}</Text>
       out.push(
-        <View key={i} wrap={false}>
+        <View key={i} wrap={false} minPresenceAhead={120}>
           {headingEl}
           {nextContent ? <Text style={s.body}>{nextContent}</Text> : null}
         </View>
