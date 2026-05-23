@@ -407,7 +407,7 @@ function EmailSignupSection() {
             written by qualified accountants. No spam, ever.
           </p>
           <EmailSignupForm />
-          <p className="text-white/35 text-xs mt-4 text-center">
+          <p className="text-white/35 text-xs mt-4 text-center w-full">
             Join accounting students and professionals. Unsubscribe any time.
           </p>
         </div>
