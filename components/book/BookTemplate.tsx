@@ -324,14 +324,16 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
   const showQuestions = bookType === "combined" || bookType === "practice"
 
   function renderFirstBlock(body: any[]): React.ReactNode {
-    const firstB = (body || []).find((b: any) => b._type === 'block' && !b.listItem)
-    if (!firstB) return null
-    const spans = renderSpans(firstB.children || [])
-    if (!spans) return null
-    const st = firstB.style || 'normal'
-    if (st === 'h1' || st === 'h2') return <Text style={s.h2}>{spans}</Text>
-    if (st === 'h3' || st === 'h4' || st === 'h5') return <Text style={s.h3}>{spans}</Text>
-    return <Text style={s.body}>{spans}</Text>
+    for (const b of (body || [])) {
+      if (b._type !== 'block' || b.listItem) continue
+      const spans = renderSpans(b.children || [])
+      if (!spans) continue
+      const st = b.style || 'normal'
+      if (st === 'h1' || st === 'h2') return <Text style={s.h2}>{spans}</Text>
+      if (st === 'h3' || st === 'h4' || st === 'h5') return <Text style={s.h3}>{spans}</Text>
+      return <Text style={s.body}>{spans}</Text>
+    }
+    return null
   }
   const bookTypeLabel =
     bookType === "combined" ? "Study Text & Practice Kit"
@@ -410,7 +412,7 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
               {/* Study Notes */}
               {showNotes && (ls.linkedArticles || []).map((art: any, ai: number) => {
                 const firstIdx = ai === 0
-                  ? (art.body || []).findIndex((b: any) => b._type === "block" && !b.listItem)
+                  ? (art.body || []).findIndex((b: any) => b._type === "block" && !b.listItem && hasText((b.children || []).map((c: any) => c.text || "").join("")))
                   : -1
                 const bodyToRender = firstIdx >= 0
                   ? [...(art.body || []).slice(0, firstIdx), ...(art.body || []).slice(firstIdx + 1)]
