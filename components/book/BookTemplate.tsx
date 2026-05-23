@@ -309,6 +309,63 @@ function renderBlocks(blocks: any[]): React.ReactNode {
 // ── Constants ─────────────────────────────────────────────────────────────────
 const LETTERS = ["A", "B", "C", "D", "E"]
 
+const EXPLANATION_KEYS = [
+  "OVERVIEW:",
+  "DATA (INPUTS & ASSUMPTIONS):",
+  "METHOD:",
+  "SOLUTION (STEP-BY-STEP):",
+  "APPLY TO THIS CASE:",
+  "KEY TAKEAWAY:",
+  "COMMON PITFALL:",
+]
+
+function formatExplanation(text: string): React.ReactElement[] {
+  const out: React.ReactElement[] = []
+  let remaining = text.trim()
+  let keyIndex = 0
+
+  while (remaining.length > 0) {
+    let nextKeyPos = -1
+    let nextKey = ""
+    for (const key of EXPLANATION_KEYS) {
+      const pos = remaining.indexOf(key, 1)
+      if (pos > 0 && (nextKeyPos === -1 || pos < nextKeyPos)) {
+        nextKeyPos = pos
+        nextKey = key  // eslint-disable-line @typescript-eslint/no-unused-vars
+      }
+    }
+
+    let chunk: string
+    if (nextKeyPos === -1) {
+      chunk = remaining
+      remaining = ""
+    } else {
+      chunk = remaining.slice(0, nextKeyPos)
+      remaining = remaining.slice(nextKeyPos)
+    }
+
+    chunk = chunk.trim()
+    if (!chunk) continue
+
+    const colonPos = chunk.indexOf(":")
+    if (colonPos > 0 && colonPos < 40) {
+      const label = chunk.slice(0, colonPos).trim()
+      const body = chunk.slice(colonPos + 1).trim()
+      out.push(
+        <View key={keyIndex++} style={{ marginBottom: 4 }}>
+          <Text style={{ fontSize: 8, color: "#D4A017", fontFamily: "Helvetica-Bold", marginBottom: 1 }}>{label}</Text>
+          {body ? <Text style={{ fontSize: 8.5, color: "#333333", lineHeight: 1.5 }}>{body}</Text> : null}
+        </View>
+      )
+    } else {
+      out.push(
+        <Text key={keyIndex++} style={{ fontSize: 8.5, color: "#333333", lineHeight: 1.5, marginBottom: 4 }}>{chunk}</Text>
+      )
+    }
+  }
+  return out
+}
+
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface BookTemplateProps {
   course:   any
@@ -463,7 +520,7 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
                           Q{qi + 1}: {LETTERS[q.correctIndex ?? 0]}
                         </Text>
                         {q.explanation
-                          ? <Text style={s.answerText}>{sanitise(q.explanation)}</Text>
+                          ? <View>{formatExplanation(sanitise(q.explanation))}</View>
                           : null}
                       </View>
                     ))}
