@@ -501,7 +501,7 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
                     <View style={s.sectionRule} />
                     <Text style={s.sectionHeader}>Practice Questions</Text>
                     {qs.map((q: any, qi: number) => (
-                      <View key={qi} style={s.questionWrap}>
+                      <View key={qi} style={s.questionWrap} wrap={false}>
                         <Text style={s.questionLabel}>Question {qi + 1}</Text>
                         <Text style={s.questionText}>{sanitise(q.questionText)}</Text>
                         {(q.options || []).map((opt: any, oi: number) => (
