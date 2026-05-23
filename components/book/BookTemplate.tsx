@@ -420,7 +420,7 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
                 return (
                   <View key={art._id || ai}>
                     {ai === 0 ? (
-                      <View wrap={false}>
+                      <View wrap={false} minPresenceAhead={150}>
                         <Text style={s.lessonTitle}>{sanitise(ls.title)}</Text>
                         <Text style={s.articleTitle}>{sanitise(art.title)}</Text>
                         {renderFirstBlock(art.body || [])}
