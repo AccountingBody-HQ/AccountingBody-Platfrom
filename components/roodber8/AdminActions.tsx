@@ -42,7 +42,7 @@ export function StatusBadge({ id, table, currentStatus }: StatusBadgeProps) {
     if (newStatus === status) { setOpen(false); return }
     setSaving(true); setOpen(false); setError(false)
     try {
-      const res = await fetch('/api/admin/actions', {
+      const res = await fetch('/api/roodber8/actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update_status', table, id, payload: { status: newStatus } }),
@@ -109,7 +109,7 @@ export function DeleteButton({ id, table, label = 'Delete', onDeleted }: DeleteB
   async function handleDelete() {
     setDeleting(true); setError(false)
     try {
-      const res = await fetch('/api/admin/actions', {
+      const res = await fetch('/api/roodber8/actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'delete', table, id }),
@@ -179,7 +179,7 @@ export function NotesField({ id, table, initialNotes }: NotesFieldProps) {
     if (notes === (initialNotes ?? '')) return
     setSaving(true); setSaved(false); setError(false)
     try {
-      const res = await fetch('/api/admin/actions', {
+      const res = await fetch('/api/roodber8/actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update_notes', table, id, payload: { notes } }),
