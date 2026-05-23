@@ -121,7 +121,7 @@ const s = StyleSheet.create({
     borderLeftWidth: 2.5, borderLeftColor: "#D4A017",
   },
   questionLabel: {
-    fontSize: 8, color: "#D4A017", fontFamily: "Helvetica-Bold",
+    fontSize: 8, color: "#0C1A3D", fontFamily: "Helvetica-Bold",
     letterSpacing: 0.5, marginBottom: 4,
   },
   questionText: { fontSize: 10, color: "#111111", lineHeight: 1.7, marginBottom: 8 },
@@ -353,7 +353,7 @@ function formatExplanation(text: string): React.ReactElement[] {
       const body = chunk.slice(colonPos + 1).trim()
       out.push(
         <View key={keyIndex++} style={{ marginBottom: 4 }}>
-          <Text style={{ fontSize: 8, color: "#D4A017", fontFamily: "Helvetica-Bold", marginBottom: 1 }}>{label}</Text>
+          <Text style={{ fontSize: 8, color: "#000000", fontFamily: "Helvetica-Bold", marginBottom: 1 }}>{label}</Text>
           {body ? <Text style={{ fontSize: 8.5, color: "#333333", lineHeight: 1.5 }}>{body}</Text> : null}
         </View>
       )
@@ -501,7 +501,7 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
                     <View style={s.sectionRule} />
                     <Text style={s.sectionHeader}>Practice Questions</Text>
                     {qs.map((q: any, qi: number) => (
-                      <View key={qi} style={s.questionWrap}>
+                      <View key={qi} style={s.questionWrap} minPresenceAhead={80}>
                         <Text style={s.questionLabel}>Question {qi + 1}</Text>
                         <Text style={s.questionText}>{sanitise(q.questionText)}</Text>
                         {(q.options || []).map((opt: any, oi: number) => (
