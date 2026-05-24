@@ -47,12 +47,12 @@ const QUAL_SUBJECTS: Record<string, string[]> = {
 type Config = {
   qualification: string; contentType: string; subject: string
   topic: string; tone: string; length: string; difficulty: string
-  aiSummary: string; keyTerms: string
+  aiSummary: string; keyTerms: string; categoryId: string
 }
 const EMPTY: Config = {
   qualification: '', contentType: '', subject: '', topic: '',
   tone: 'Educational', length: 'standard', difficulty: 'Intermediate',
-  aiSummary: '', keyTerms: '',
+  aiSummary: '', keyTerms: '', categoryId: '',
 }
 
 const C = {
@@ -116,6 +116,14 @@ export default function ContentFactoryPage() {
   const [canonical, setCanonical]   = useState('accountingbody')
   const [docId, setDocId]           = useState('')
   const passTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [categories, setCategories] = useState<{_id:string;title:string}[]>([])
+
+  useEffect(() => {
+    fetch('/api/roodber8/categories')
+      .then(r => r.json())
+      .then(d => setCategories(d.categories ?? []))
+      .catch(() => {})
+  }, [])
 
   // Estimate pass 2 starts after ~40% of expected total duration
   const pass2Delays: Record<string, number> = { short: 18000, standard: 28000, deep: 45000 }
