@@ -309,7 +309,7 @@ export default function ContentFactoryPage() {
             <p className="text-xs mb-4" style={{ color: '#334155' }}>Be specific — the more detail you give, the better the output</p>
             <textarea value={config.topic} rows={3}
               onChange={e => setConfig(c => ({ ...c, topic: e.target.value }))}
-              placeholder="e.g. Lease accounting under IFRS 16 \u2014 right-of-use assets, lease liabilities, and disclosure requirements\u2026"
+              placeholder="e.g. Lease accounting under IFRS 16 — right-of-use assets, lease liabilities, and disclosure requirements…"
               className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder-slate-600 focus:outline-none resize-none"
               style={C.input} />
           </div>
