@@ -110,7 +110,7 @@ function extractTitle(content: string, fallback: string): string {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { content, topic, qualification, contentType, difficulty, aiSummary, keyTerms, showOnSites, canonicalOwner } = body
+    const { content, topic, qualification, contentType, difficulty, aiSummary, keyTerms, showOnSites, canonicalOwner, categoryId } = body
 
     if (!content || !qualification || !contentType || !canonicalOwner || !showOnSites?.length) {
       return NextResponse.json({ error: 'content, qualification, contentType, canonicalOwner and showOnSites are required' }, { status: 400 })
@@ -170,6 +170,11 @@ export async function POST(req: NextRequest) {
     }
     const contentId = 'AB-ART-' + String(nextNum).padStart(5, '0')
     doc.contentId = contentId
+
+      // Add category reference if selected
+      if (categoryId) {
+        doc.categories = [{ _type: 'reference', _ref: categoryId, _key: Math.random().toString(36).slice(2,10) }]
+      }
 
     const result = await client.create(doc)
 
