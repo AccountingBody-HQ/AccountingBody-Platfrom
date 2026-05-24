@@ -233,12 +233,12 @@ export default async function FreeCoursesPage() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link href="/practice-questions"
-              className="inline-flex items-center justify-center gap-2 py-3 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
+              className="inline-flex items-center justify-center gap-2 py-3 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold w-full sm:min-w-[220px]">
               Practice questions
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
             </Link>
             <Link href="/mock-exams"
-              className="inline-flex items-center justify-center gap-2 py-3 px-7 rounded-lg text-base font-semibold text-white border border-white/25 hover:bg-white/10 hover:border-white/40 transition-all">
+              className="inline-flex items-center justify-center gap-2 py-3 px-7 rounded-lg text-base font-semibold text-white border border-white/25 hover:bg-white/10 hover:border-white/40 transition-all w-full sm:min-w-[220px]">
               Mock exams
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
             </Link>
