@@ -337,6 +337,22 @@ export default function GenerateQuestionsPage() {
               </div>
             </div>
           </div>
+          <div className="rounded-2xl border p-6" style={C.card}>
+            <h2 className="text-white font-bold text-sm mb-1">Category <span style={{ color: '#475569', fontWeight: 400 }}>(optional)</span></h2>
+            <p className="text-xs mb-4" style={{ color: '#334155' }}>Assign these questions to a category — fetched live from Sanity</p>
+            {categories.length === 0 ? (
+              <p className="text-xs" style={{ color: '#334155' }}>Loading categories…</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-3">
+                {categories.map(cat => (
+                  <SelectCard key={cat._id} active={config.categoryId === cat._id} onClick={() => setConfig(c => ({ ...c, categoryId: c.categoryId === cat._id ? '' : cat._id }))}>
+                    <p className="font-semibold text-xs leading-snug">{cat.title}</p>
+                  </SelectCard>
+                ))}
+              </div>
+            )}
+          </div>
+
 
           <div className="flex justify-end">
             <button onClick={() => setStep(1)} disabled={!configValid}
