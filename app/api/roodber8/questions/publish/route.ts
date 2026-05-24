@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
       showOnSites = ['accountingbody'],
       canonicalOwner = 'accountingbody',
       sourceWpId,
+      categoryId,
     } = body
 
     if (!bundle || !bundle.questions?.length) {
@@ -115,6 +116,11 @@ export async function POST(req: NextRequest) {
     }
     const contentId = 'AB-QZ-' + String(nextNum).padStart(5, '0')
     doc.contentId = contentId
+
+      // Add manually selected category if provided
+      if (categoryId) {
+        doc.categories = [{ _type: 'reference', _ref: categoryId, _key: Math.random().toString(36).slice(2,10) }]
+      }
 
     // Auto-copy categories from source article if wpId provided
     if (sourceWpId) {
