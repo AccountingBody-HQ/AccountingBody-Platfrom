@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Sparkles, ChevronRight, Check, Loader2, AlertCircle, Send, RefreshCw, Eye, BookOpen } from 'lucide-react'
 
 const QUALIFICATIONS = ['ACCA', 'CIMA', 'ICAEW', 'AAT']
@@ -54,14 +54,14 @@ type Config = {
   qualification: string; subject: string; topic: string
   questionType: string; difficulty: string; count: number
   framework: string; noiseLevel: string; rounding: string
-  sourceWpId: string
+  sourceWpId: string; categoryId: string
 }
 
 const EMPTY: Config = {
   qualification: '', subject: '', topic: '',
   questionType: 'mcq', difficulty: 'intermediate', count: 10,
   framework: 'None', noiseLevel: 'medium', rounding: 'nearest whole number',
-  sourceWpId: '',
+  sourceWpId: '', categoryId: '',
 }
 
 type Bundle = {
@@ -85,6 +85,15 @@ export default function GenerateQuestionsPage() {
   const [canonical, setCanonical]     = useState('accountingbody')
   const [editingIdx, setEditingIdx]   = useState<number | null>(null)
   const [editDraft, setEditDraft]     = useState<any>(null)
+
+  const [categories, setCategories] = useState<{_id:string;title:string}[]>([])
+
+  useEffect(() => {
+    fetch('/api/roodber8/categories')
+      .then(r => r.json())
+      .then(d => setCategories(d.categories ?? []))
+      .catch(() => {})
+  }, [])
 
   const subjects = config.qualification ? QUAL_SUBJECTS[config.qualification] ?? [] : []
   const configValid = !!(config.qualification && config.topic.trim() && config.questionType)
