@@ -54,8 +54,8 @@ async function getArticlesByLetter(letter: string): Promise<SanityArticle[]> {
       matchConditions = Array.from({ length: 10 }, (_, i) => `title match "${i}*"`).join(' || ')
     } else {
       const u = letter.toUpperCase()
-      const l = letter.toLowerCase()
-      matchConditions = `title match "${u}*" || title match "${l}*"`
+      const next = String.fromCharCode(u.charCodeAt(0) + 1)
+      matchConditions = `title >= "${u}" && title < "${next}"`
     }
     const query = encodeURIComponent(
       `*[_type == "article" && "accountingbody" in showOnSites && (${matchConditions})] | order(title asc) { _id, title, slug, excerpt, "categoryTitle": categories[0]->title, readTime, publishedAt }`

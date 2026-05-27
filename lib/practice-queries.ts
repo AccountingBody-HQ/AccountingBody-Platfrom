@@ -69,8 +69,10 @@ export async function getPracticePosts(params: {
   if (search) {
     const isSingleLetter = /^[a-zA-Z#]$/.test(search)
     if (isSingleLetter) {
-      // A-Z letter filter — trailing wildcard on title only (GROQ supported)
-      filters.push(`title match "${search.toUpperCase()}*" || title match "${search.toLowerCase()}*"`)
+      // A-Z letter filter — range comparison to match first character only
+      const u = search.toUpperCase()
+      const next = String.fromCharCode(u.charCodeAt(0) + 1)
+      filters.push(`title >= "${u}" && title < "${next}"`)
     } else {
       // Text search — match each word across title, topic, and excerpt
       const words = search.trim().split(/\s+/).filter(Boolean)
@@ -183,7 +185,7 @@ export async function getPracticeFilters(): Promise<{
     "examBodies":   array::unique(*[_type == "practicePost" && "accountingbody" in showOnSites && defined(examBody)].examBody),
     "difficulties": array::unique(*[_type == "practicePost" && "accountingbody" in showOnSites && defined(difficulty)].difficulty),
     "topics":       array::unique(*[_type == "practicePost" && "accountingbody" in showOnSites && defined(topic)].topic),
-    "categories":   *[_type == "category"] | order(title asc) {
+    "categories":   *[_type == "category" && "accountingbody" in showOnSites && !defined(parentCategory)] | order(title asc) {
       "slug": slug.current,
       title,
       "count": count(*[_type == "practicePost" && "accountingbody" in showOnSites && references(^._id)])
