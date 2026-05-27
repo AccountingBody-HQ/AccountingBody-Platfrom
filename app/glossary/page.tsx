@@ -99,7 +99,7 @@ export default async function GlossaryPage() {
           <div className="flex flex-wrap items-center gap-x-10 gap-y-3">
             {[
               { value:'1,200+', label:'Terms defined' },
-              { value:'2,015+', label:'Study articles' },
+              { value:'3,000+', label:'Study articles' },
               { value:'4',      label:'Qualifications covered' },
               { value:'Free',   label:'Always' },
             ].map(stat => (
