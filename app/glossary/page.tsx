@@ -217,7 +217,7 @@ export default async function GlossaryPage() {
                 </div>
                 <div className="flex flex-col gap-3 md:items-end shrink-0">
                   <div className="flex items-center gap-3 bg-white/8 border border-white/10 rounded-xl px-4 py-3">
-                    <span className="font-display text-2xl text-white">2,015+</span>
+                    <span className="font-display text-2xl text-white">3,000+</span>
                     <span className="text-white/50 text-xs">study articles</span>
                   </div>
                   <div className="flex items-center gap-3 bg-white/8 border border-white/10 rounded-xl px-4 py-3">
