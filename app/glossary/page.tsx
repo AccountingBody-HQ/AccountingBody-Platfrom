@@ -21,21 +21,6 @@ const LETTERS = [
   'N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
 ]
 
-const POPULAR_GROUPS = [
-  {
-    letter: 'A',
-    terms: ['Accruals Concept','Amortisation','Asset','Audit Trail','Accounts Payable'],
-  },
-  {
-    letter: 'D',
-    terms: ['Depreciation','Deferred Tax','Dividend','Double Entry','Drawings'],
-  },
-  {
-    letter: 'P',
-    terms: ['Profit & Loss','Provisions','Present Value','Partnership','Prepayments'],
-  },
-]
-
 const CATEGORY_COLOURS = [
   'bg-navy-50 text-navy-700 border-navy-100',
   'bg-teal-50 text-teal-700 border-teal-100',
@@ -204,51 +189,7 @@ export default async function GlossaryPage() {
         </section>
       )}
 
-      {/* ════ Popular Starting Points ════════════════════════════════════════ */}
-      <section className="section bg-slate-50">
-        <div className="container-site">
-          <div className="max-w-4xl">
-            <span className="eyebrow mb-3 block">Popular Starting Points</span>
-            <h2 className="section-title mb-2">Most browsed letters</h2>
-            <p className="text-slate-500 mb-8 text-base leading-relaxed">
-              These are the terms students search for most often.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              {POPULAR_GROUPS.map(({ letter, terms }) => (
-                <div key={letter} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                  <div className="bg-navy-950 px-5 py-4 flex items-center justify-between">
-                    <span className="font-display text-2xl text-white">{letter}</span>
-                    <Link
-                      href={`/dictionary?letter=${letter}`}
-                      className="text-xs font-semibold text-gold-400 hover:text-gold-300 transition-colors flex items-center gap-1"
-                    >
-                      View all
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </Link>
-                  </div>
-                  <ul className="divide-y divide-slate-100">
-                    {terms.map(term => (
-                      <li key={term}>
-                        <Link
-                          href={`/dictionary?letter=${letter}`}
-                          className="flex items-center justify-between px-5 py-3 text-sm text-navy-950 hover:bg-slate-50 hover:text-navy-600 transition-colors group"
-                        >
-                          {term}
-                          <svg className="w-3.5 h-3.5 text-slate-300 group-hover:text-navy-500 shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                          </svg>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+
 
       {/* ════ Why Trust ══════════════════════════════════════════════════════ */}
       <section className="section bg-white">
