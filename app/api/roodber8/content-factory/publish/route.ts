@@ -157,6 +157,8 @@ export async function POST(req: NextRequest) {
       aiSummary:      aiSummary ?? '',
       aiKeyTerms:     keyTermsArr,
       aiSearchable:   true,
+      seoTitle:       title.length <= 60 ? title : title.slice(0, 60).replace(/\s+\S*$/, '...'),
+      seoDescription: (aiSummary ?? '').length <= 160 ? (aiSummary ?? '') : (aiSummary ?? '').slice(0, 160).replace(/\s+\S*$/, '...'),
     }
 
     // Content ID — query highest existing AB-ART-XXXXX and increment
