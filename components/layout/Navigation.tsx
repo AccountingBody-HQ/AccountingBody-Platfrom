@@ -213,16 +213,6 @@ const navSections: NavSection[] = [
       description: 'Verified professionals only — we review every application',
     },
   },
-  {
-    id:    'about',
-    label: 'About',
-    href:  '/about',
-  },
-  {
-    id:    'contact',
-    label: 'Contact',
-    href:  '/contact',
-  },
 ]
 
 // ── Sub-components ────────────────────────────────────────────────────────────
