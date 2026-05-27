@@ -158,7 +158,7 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
   if (!service) notFound()
 
   const [form, setForm] = useState({
-    name: '', email: '', phone: '', service_type: service.name, message: ''
+    name: '', email: '', phone: '', service_type: service.name, message: '', _h: ''
   })
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
@@ -174,7 +174,7 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'Something went wrong')
       setStatus('success')
-      setForm({ name: '', email: '', phone: '', service_type: service.name, message: '' })
+      setForm({ name: '', email: '', phone: '', service_type: service.name, message: '', _h: '' })
     } catch (err) {
       console.error(err)
       setStatus('error')
@@ -306,6 +306,8 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
                   className="w-full h-12 rounded-lg bg-navy-950 text-white font-semibold text-sm hover:bg-navy-900 transition-colors disabled:opacity-50 shadow-sm">
                   {status === 'loading' ? 'Submitting...' : 'Submit Service Brief →'}
                 </button>
+                {/* Honeypot — hidden from real users, bots fill it */}
+                <input type="text" value={form._h} onChange={(e) => setForm({ ...form, _h: e.target.value })} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
                 <p className="text-xs text-slate-400 text-center">
                   All briefs are reviewed by our team. We will confirm your engagement scope and fee before any work commences.
                 </p>

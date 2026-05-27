@@ -142,6 +142,7 @@ const stats = [
 function EmailSignup() {
   const [email,  setEmail]  = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [honeypot, setHoneypot] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -151,7 +152,7 @@ function EmailSignup() {
       await fetch('/api/subscribe', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email }),
+        body:    JSON.stringify({ email, _h: honeypot }),
       })
       setStatus('success')
       setEmail('')
@@ -191,6 +192,9 @@ function EmailSignup() {
               className="w-full h-14 px-4 rounded-lg text-base bg-white/10 border border-white/30 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all" style={{ fontSize: "16px", WebkitAppearance: "none" }}
               required
               autoComplete="email"
+            />
+            {/* Honeypot — hidden from real users, bots fill it */}
+            <input type="text" value={honeypot} onChange={e => setHoneypot(e.target.value)} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true"
               disabled={status === 'loading'}
             />
             <button

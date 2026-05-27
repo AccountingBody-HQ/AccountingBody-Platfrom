@@ -10,7 +10,10 @@ export async function POST(req: NextRequest) {
   )
 
   try {
-    const { email } = await req.json()
+    const { email, _h } = await req.json()
+
+    // Honeypot — bots fill this, real users never do
+    if (_h) return NextResponse.json({ success: true })
 
     if (!email || !email.includes('@')) {
       return NextResponse.json({ error: 'Invalid email address.' }, { status: 400 })

@@ -4,6 +4,7 @@ import { useState } from 'react'
 export default function EmailSignupForm() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [email, setEmail] = useState('')
+  const [honeypot, setHoneypot] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -12,7 +13,7 @@ export default function EmailSignupForm() {
       const res = await fetch('/api/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, _h: honeypot }),
       })
       if (!res.ok) throw new Error()
       setStatus('success')
@@ -58,6 +59,8 @@ export default function EmailSignupForm() {
       >
         {status === 'loading' ? 'Subscribing...' : 'Subscribe free'}
       </button>
+      {/* Honeypot — hidden from real users, bots fill it */}
+      <input type="text" value={honeypot} onChange={e => setHoneypot(e.target.value)} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
       {status === 'error' && (
         <p className="text-red-400 text-xs text-center">Something went wrong. Please try again.</p>
       )}

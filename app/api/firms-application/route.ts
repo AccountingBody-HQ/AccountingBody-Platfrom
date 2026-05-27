@@ -11,7 +11,10 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { practice_name, contact_name, email, phone, website, practice_type, location, specialisms, about } = body
+    const { practice_name, contact_name, email, phone, website, practice_type, location, specialisms, about, _h } = body
+
+    // Honeypot — bots fill this, real users never do
+    if (_h) return NextResponse.json({ success: true })
 
     if (!contact_name || !email || !practice_type || !location || !about) {
       return NextResponse.json({ error: 'Required fields are missing.' }, { status: 400 })

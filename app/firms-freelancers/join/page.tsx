@@ -15,7 +15,7 @@ export default function JoinNetworkPage() {
   const [applicantType, setApplicantType] = useState<ApplicantType | null>(null)
   const [form, setForm] = useState({
     practice_name: '', contact_name: '', email: '', phone: '', website: '',
-    practice_type: '', location: '', specialisms: '', about: '',
+    practice_type: '', location: '', specialisms: '', about: '', _h: '',
   })
   const [qualifications, setQualifications] = useState<string[]>([])
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
@@ -87,7 +87,7 @@ export default function JoinNetworkPage() {
               </div>
               <h2 className="font-display text-2xl text-navy-950 mb-3">Application Received</h2>
               <p className="text-slate-500 leading-relaxed max-w-md mx-auto">Thank you for your application. Our team will review your credentials and professional standing. We aim to review all applications within 5 working days. You will hear from us once your application has been assessed.</p>
-              <button onClick={() => { setStatus('idle'); setApplicantType(null); setQualifications([]); setForm({ practice_name: '', contact_name: '', email: '', phone: '', website: '', practice_type: '', location: '', specialisms: '', about: '' }) }}
+              <button onClick={() => { setStatus('idle'); setApplicantType(null); setQualifications([]); setForm({ practice_name: '', contact_name: '', email: '', phone: '', website: '', practice_type: '', location: '', specialisms: '', about: '', _h: '' }) }}
                 className="mt-6 text-sm font-medium text-navy-700 hover:text-gold-600 transition-colors">
                 Submit another application
               </button>
@@ -257,6 +257,8 @@ export default function JoinNetworkPage() {
                       </p>
                     </div>
                     {status === 'error' && <p className="text-red-500 text-sm mb-4">Something went wrong. Please try again.</p>}
+                    {/* Honeypot — hidden from real users, bots fill it */}
+                    <input type="text" value={form._h} onChange={(e) => setForm({ ...form, _h: e.target.value })} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
                     <button type="submit" disabled={status === 'loading'}
                       className="w-full bg-navy-950 hover:bg-navy-900 text-white font-semibold h-12 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50">
                       {status === 'loading' ? 'Submitting...' : 'Submit Application'}

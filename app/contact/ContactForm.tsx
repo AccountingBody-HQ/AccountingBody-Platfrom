@@ -34,6 +34,7 @@ export default function ContactForm() {
       subject:   (form.elements.namedItem('subject') as HTMLSelectElement).value,
       message:   (form.elements.namedItem('message') as HTMLTextAreaElement).value.trim(),
       subscribe: (form.elements.namedItem('subscribe') as HTMLInputElement).checked,
+      _h:        (form.elements.namedItem('_h') as HTMLInputElement).value,
     }
     try {
       const res  = await fetch('/api/contact', {
@@ -58,7 +59,7 @@ export default function ContactForm() {
     try {
       const res = await fetch('/api/contact', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, subscribe: true, subscribeOnly: true }),
+        body: JSON.stringify({ email, subscribe: true, subscribeOnly: true, _h: '' }),
       })
       if (!res.ok) throw new Error()
       setSubState('success')
@@ -144,6 +145,8 @@ export default function ContactForm() {
                 <p className="text-sm text-red-700">{errorMsg || 'Something went wrong. Please try again.'}</p>
               </div>
             )}
+            {/* Honeypot — hidden from real users, bots fill it */}
+            <input type="text" name="_h" defaultValue="" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
             <button type="submit" disabled={formState === 'loading'}
               className="w-full h-12 rounded-lg bg-navy-950 text-white text-sm font-semibold hover:bg-navy-900 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 shadow-sm">
               {formState === 'loading' ? (

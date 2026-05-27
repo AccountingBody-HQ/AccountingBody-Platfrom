@@ -11,7 +11,10 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { name, email, phone, service_type, message } = body
+    const { name, email, phone, service_type, message, _h } = body
+
+    // Honeypot — bots fill this, real users never do
+    if (_h) return NextResponse.json({ success: true })
 
     if (!name || !email || !message || !service_type) {
       return NextResponse.json({ error: 'Name, email, service and message are required.' }, { status: 400 })
