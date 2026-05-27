@@ -7,10 +7,31 @@ import { PortableText } from '@portabletext/react'
 
 function renderSpans(children: any[], markDefs?: any[]): React.ReactNode {
   if (!children) return null
-  return children.map((span: any, i: number) => {
+
+  const result: React.ReactNode[] = []
+  let lastText = ''
+  let lastMarks: string[] = []
+  let seenNonEmpty = false
+
+  children.forEach((span: any, i: number) => {
     const text: string = span.text ?? ''
     const marks: string[] = span.marks ?? []
-    if (marks.length === 0) return <React.Fragment key={i}>{text}</React.Fragment>
+
+    if (text === '') {
+      result.push(<React.Fragment key={i} />)
+      return
+    }
+
+    const marksChanged = JSON.stringify(marks) !== JSON.stringify(lastMarks)
+
+    const needsSpace =
+      seenNonEmpty &&
+      marksChanged &&
+      !/\s$/.test(lastText) &&
+      !/^\s/.test(text) &&
+      !/^[.,;:!?)\]'"—–\u2026]/.test(text) &&
+      !/[(\["']$/.test(lastText)
+
     let node: React.ReactNode = text
     for (const mark of marks) {
       if (mark === 'strong') {
@@ -26,16 +47,29 @@ function renderSpans(children: any[], markDefs?: any[]): React.ReactNode {
         }
       }
     }
-    return <React.Fragment key={i}>{node}</React.Fragment>
+
+    result.push(
+      <React.Fragment key={i}>
+        {needsSpace ? ' ' : null}
+        {node}
+      </React.Fragment>
+    )
+
+    lastText = text
+    lastMarks = marks
+    seenNonEmpty = true
   })
+
+  return result
 }
 
-const pStyle = {
+const listStyle = {
   fontFamily: 'DM Sans, sans-serif',
   fontSize: '17px',
   lineHeight: '1.75' as const,
   color: '#1e293b',
   marginBottom: '1.25rem',
+  paddingLeft: '1.5rem',
 }
 
 export default function ArticleBody({ body }: { body: any[] }) {
@@ -48,7 +82,7 @@ export default function ArticleBody({ body }: { body: any[] }) {
         components={{
           block: {
             normal: ({ value }: any) => (
-              <p style={pStyle}>{renderSpans(value.children, value.markDefs)}</p>
+              <p style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '17px', lineHeight: '1.75', color: '#1e293b', marginBottom: '1.25rem' }}>{renderSpans(value.children, value.markDefs)}</p>
             ),
             h1: ({ value }: any) => (
               <h1 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '2rem', fontWeight: '700', color: '#0C1A3D', marginBottom: '1rem', marginTop: '2rem' }}>{renderSpans(value.children, value.markDefs)}</h1>
@@ -68,10 +102,10 @@ export default function ArticleBody({ body }: { body: any[] }) {
           },
           list: {
             bullet: ({ children }: any) => (
-              <ul style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '17px', lineHeight: '1.75', color: '#1e293b', marginBottom: '1.25rem', paddingLeft: '1.5rem', listStyleType: 'disc' }}>{children}</ul>
+              <ul style={{ ...listStyle, listStyleType: 'disc' }}>{children}</ul>
             ),
             number: ({ children }: any) => (
-              <ol style={{ fontFamily: 'DM Sans, sans-serif', fontSize: '17px', lineHeight: '1.75', color: '#1e293b', marginBottom: '1.25rem', paddingLeft: '1.5rem', listStyleType: 'decimal' }}>{children}</ol>
+              <ol style={{ ...listStyle, listStyleType: 'decimal' }}>{children}</ol>
             ),
           },
           listItem: {
