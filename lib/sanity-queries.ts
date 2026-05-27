@@ -192,7 +192,7 @@ export interface GlossaryCategory {
 }
 
 export async function getGlossaryCategories(): Promise<GlossaryCategory[]> {
-  const query = `*[_type == "category"] | order(title asc) {
+  const query = `*[_type == "category" && "accountingbody" in showOnSites && !defined(parentCategory)] | order(title asc) {
     "slug": slug.current,
     title,
     "count": count(*[_type == "article" && "accountingbody" in showOnSites && references(^._id)])
