@@ -19,14 +19,14 @@ export interface PracticePost {
   relatedArticle?: { title: string; slug: string } | null
 }
 
-// No caching — all practice data is always fresh from Sanity
+// 5-minute cache — fresh enough for practice data, avoids Sanity API overages
 async function sanityFetch<T>(query: string, params: Record<string, string> = {}): Promise<T | null> {
   try {
     if (!PROJECT_ID) return null
     const encodedQuery  = encodeURIComponent(query)
     const encodedParams = Object.entries(params).map(([k, v]) => `$${k}=${encodeURIComponent(JSON.stringify(v))}`).join("&")
     const url = `https://${PROJECT_ID}.api.sanity.io/v${API_VER}/data/query/${DATASET}?query=${encodedQuery}${encodedParams ? `&${encodedParams}` : ""}`
-    const res = await fetch(url, { cache: "no-store" })
+    const res = await fetch(url, { next: { revalidate: 300 } })
     if (!res.ok) return null
     const data = await res.json()
     return (data.result ?? null) as T
