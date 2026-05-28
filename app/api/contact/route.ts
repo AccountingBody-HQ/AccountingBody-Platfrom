@@ -13,6 +13,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { name, email, subject, message, subscribe, subscribeOnly, _h } = body
 
+    // Detect platform from Referer header
+    const referer = req.headers.get('referer') || ''
+    const isEthioTax = referer.includes('ethiotax.com')
+    const brand = isEthioTax
+      ? { name: 'EthioTax', domain: 'ethiotax.com', email: 'info@accountingbody.com', color: '#1A4731', textColor: '#fff' }
+      : { name: 'Accounting Body', domain: 'accountingbody.com', email: 'info@accountingbody.com', color: '#0C1A3D', textColor: '#fff' }
+
     // Honeypot — bots fill this, real users never do
     if (_h) return NextResponse.json({ success: true })
 
@@ -59,7 +66,7 @@ export async function POST(req: NextRequest) {
 
     // Notify team
     await resend.emails.send({
-      from: 'Accounting Body <info@accountingbody.com>',
+      from: `${brand.name} <${brand.email}>`,
       to: 'info@accountingbody.com',
       subject: `New Contact Submission — ${subject ?? 'General Enquiry'}`,
       html: `
@@ -67,8 +74,8 @@ export async function POST(req: NextRequest) {
         <html>
         <body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
           <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
-            <div style="background:#0C1A3D;padding:32px 40px;">
-              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">Accounting Body</p>
+            <div style="background:${brand.color};padding:32px 40px;">
+              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name}</p>
               <h1 style="color:#fff;font-size:22px;margin:0;line-height:1.3;">New Contact Submission</h1>
             </div>
             <div style="padding:32px 40px;">
@@ -119,16 +126,16 @@ export async function POST(req: NextRequest) {
 
     // Send acknowledgment to client
     await resend.emails.send({
-      from: 'Accounting Body <info@accountingbody.com>',
+      from: `${brand.name} <${brand.email}>`,
       to: email,
-      subject: 'We have received your message — Accounting Body',
+      subject: `We have received your message — ${brand.name}`,
       html: `
         <!DOCTYPE html>
         <html>
         <body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
           <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
-            <div style="background:#0C1A3D;padding:32px 40px;">
-              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">Accounting Body</p>
+            <div style="background:${brand.color};padding:32px 40px;">
+              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name}</p>
               <h1 style="color:#fff;font-size:22px;margin:0;line-height:1.3;">We have received your message.</h1>
             </div>
             <div style="padding:32px 40px;">
@@ -139,13 +146,13 @@ export async function POST(req: NextRequest) {
                 <p style="margin:0;color:#475569;font-size:13px;line-height:1.6;">${message.split('\n').join('<br>')}</p>
               </div>
               <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 28px;">If you have anything to add, simply reply to this email.</p>
-              <a href="https://accountingbody.com"
+              <a href="https://${brand.domain}"
                 style="display:inline-block;background:#D4A017;color:#0a0f2e;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;">
-                Visit Accounting Body →
+                Visit ${brand.name} →
               </a>
             </div>
             <div style="padding:20px 40px;border-top:1px solid #e2e8f0;">
-              <p style="margin:0;color:#94a3b8;font-size:12px;">Accounting Body · Professional Services Network</p>
+              <p style="margin:0;color:#94a3b8;font-size:12px;">${brand.name} · Professional Services Network</p>
             </div>
           </div>
         </body>
