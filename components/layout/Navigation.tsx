@@ -541,10 +541,10 @@ export function Navigation() {
             className="flex items-center gap-2 shrink-0 mr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 rounded"
             aria-label="AccountingBody home"
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-              <rect x="0"  y="0" width="9" height="20" rx="2" fill="#1e3a7a"/>
-              <rect x="11" y="0" width="9" height="9"  rx="2" fill="#1e3a7a"/>
-              <rect x="11" y="11" width="9" height="9" rx="2" fill="#1e3a7a"/>
+            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0"  y="0"  width="11" height="24" rx="2.5" fill="#1e3a7a"/>
+              <rect x="13" y="0"  width="11" height="11" rx="2.5" fill="#1e3a7a"/>
+              <rect x="13" y="13" width="11" height="11" rx="2.5" fill="#1e3a7a"/>
             </svg>
             <span className="font-sans font-semibold hidden sm:block" style={{ color: '#1e3a7a', fontSize: '21px', lineHeight: '24px' }}>
               Accounting Body<sup style={{ fontSize: '20px', verticalAlign: 'top', position: 'relative', top: '4px' }}>®</sup>
