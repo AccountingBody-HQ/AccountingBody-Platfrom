@@ -46,7 +46,7 @@ export interface ExamBodyStat {
 async function sanityFetch<T>(
   query: string,
   params: Record<string, string> = {},
-  revalidate = 0,
+  revalidate = 3600,
 ): Promise<T | null> {
   try {
     if (!PROJECT_ID) return null
