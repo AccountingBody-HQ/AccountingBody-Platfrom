@@ -29,21 +29,21 @@ export async function POST(req: NextRequest) {
     }
 
     await resend.emails.send({
-      from: 'Accounting Body <hello@accountingbody.com>',
+      from: `${brand.name} <${brand.email}>`,
       to: email,
-      subject: 'You are subscribed — Accounting Body',
+      subject: `You are subscribed — ${brand.name}`,
       html: `
         <!DOCTYPE html>
         <html>
         <body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
           <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
             <div style="background:#0a0f2e;padding:32px 40px;">
-              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">Accounting Body</p>
+              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name}</p>
               <h1 style="color:#fff;font-size:24px;margin:0;line-height:1.3;">You are subscribed.</h1>
             </div>
             <div style="padding:32px 40px;">
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 28px;">No spam. Unsubscribe any time.</p>
-              <a href="https://accountingbody.com/study"
+              <a href="https://${brand.domain}/study"
                 style="display:inline-block;background:#D4A017;color:#0a0f2e;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;">
                 Start studying free →
               </a>
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     })
 
     await resend.emails.send({
-      from: 'Accounting Body <hello@accountingbody.com>',
+      from: `${brand.name} <${brand.email}>`,
       to: 'info@accountingbody.com',
       subject: 'New subscriber — ' + email,
       html: `
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
         <body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
           <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
             <div style="background:#0a0f2e;padding:32px 40px;">
-              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">Accounting Body — Admin</p>
+              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name} — Admin</p>
               <h1 style="color:#fff;font-size:24px;margin:0;line-height:1.3;">New subscriber.</h1>
             </div>
             <div style="padding:32px 40px;">
