@@ -12,6 +12,13 @@ export async function POST(req: NextRequest) {
   try {
     const { email, _h } = await req.json()
 
+    // Detect platform from Referer header
+    const referer = req.headers.get('referer') || ''
+    const isEthioTax = referer.includes('ethiotax.com')
+    const brand = isEthioTax
+      ? { name: 'EthioTax', domain: 'ethiotax.com', email: 'hello@accountingbody.com', color: '#1A4731' }
+      : { name: 'Accounting Body', domain: 'accountingbody.com', email: 'hello@accountingbody.com', color: '#0C1A3D' }
+
     // Honeypot — bots fill this, real users never do
     if (_h) return NextResponse.json({ success: true })
 
