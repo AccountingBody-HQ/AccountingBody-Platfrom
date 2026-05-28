@@ -103,6 +103,8 @@ export async function POST(req: NextRequest) {
       quizQuestions,
       showOnSites,
       canonicalOwner,
+      seoTitle:       title.length <= 60 ? title : title.slice(0, 60).replace(/\s+\S*$/, '...'),
+      seoDescription: (bundle.excerpt ?? '').length <= 160 ? (bundle.excerpt ?? '') : (bundle.excerpt ?? '').slice(0, 160).replace(/\s+\S*$/, '...'),
     }
 
     // Content ID — query highest existing AB-QZ-XXXXX and increment
