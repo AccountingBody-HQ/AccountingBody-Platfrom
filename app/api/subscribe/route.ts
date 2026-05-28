@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         <html>
         <body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
           <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
-            <div style="background:#0a0f2e;padding:32px 40px;">
+            <div style="background:${brand.color};padding:32px 40px;">
               <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name}</p>
               <h1 style="color:#fff;font-size:24px;margin:0;line-height:1.3;">You are subscribed.</h1>
             </div>
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
         <html>
         <body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
           <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
-            <div style="background:#0a0f2e;padding:32px 40px;">
+            <div style="background:${brand.color};padding:32px 40px;">
               <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name} — Admin</p>
               <h1 style="color:#fff;font-size:24px;margin:0;line-height:1.3;">New subscriber.</h1>
             </div>
