@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { getStudyLandingData, getCategoryCounts } from '@/lib/sanity-queries'
 import { getPracticePostCount } from '@/lib/practice-queries'
 
@@ -195,6 +196,17 @@ const SUBJECT_AREAS = [
 ]
 
 export default async function StudyPage() {
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  const eticpaCard = {
+    code: 'ETICPA', slug: 'eticpa',
+    description: "Ethiopia's national accountancy body — CPA and ATQ qualifications for finance professionals.",
+    accent: 'bg-[#1A4731]', badgeBg: 'bg-[#f0f7f4]', badgeText: 'text-[#1A4731]',
+    highlights: ['CPA Professional', 'ATQ Foundation', 'ATQ Advanced', 'Ethiopian Taxation'],
+  }
+  const activeExamBodies = isEthioTax
+    ? [eticpaCard, ...EXAM_BODIES.filter(b => b.slug !== 'icaew')]
+    : EXAM_BODIES
   const [liveData, categoryCounts, practicePostCount] = await Promise.all([
     getStudyLandingData(),
     getCategoryCounts(),
@@ -243,7 +255,7 @@ export default async function StudyPage() {
             <p className="text-slate-500 text-lg leading-relaxed">Select your qualification to browse all study notes for that pathway.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {EXAM_BODIES.map((body) => {
+            {activeExamBodies.map((body) => {
               const articleCount = liveMap[body.code.toLowerCase()]
               return (
                 <Link key={body.slug} href={`/study/${body.slug}`}
