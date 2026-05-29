@@ -140,13 +140,13 @@ const qualificationPaths = [
     highlights:  ['Operational level', 'Management level', 'Strategic level', 'Case Study prep'],
   },
   {
-    code:        'ICAEW',
-    slug:        'icaew',
-    description: 'ACA qualification — Certificate, Professional, and Advanced levels.',
-    accent:      'bg-[#8B0000]',
-    badgeBg:     'bg-red-50',
-    badgeText:   'text-red-800',
-    highlights:  ['Certificate level', 'Professional level', 'Advanced level', 'Case Study'],
+    code:        'ETICPA',
+    slug:        'eticpa',
+    description: "Ethiopia's national accountancy body — CPA and ATQ qualifications for finance professionals.",
+    accent:      'bg-[#1A4731]',
+    badgeBg:     'bg-[#f0f7f4]',
+    badgeText:   'text-[#1A4731]',
+    highlights:  ['CPA Professional', 'ATQ Foundation', 'ATQ Advanced', 'Ethiopian Taxation'],
   },
   {
     code:        'AAT',
@@ -163,7 +163,7 @@ const howItWorks = [
   {
     step:  '01',
     title: 'Choose your qualification',
-    body:  'Select from ACCA, CIMA, ICAEW, or AAT. Browse by paper, subject area, or exam level to find exactly what you need.',
+    body:  'Select from ACCA, CIMA, ETICPA, or AAT. Browse by paper, subject area, or exam level to find exactly what you need.',
   },
   {
     step:  '02',
@@ -575,7 +575,7 @@ export default async function HomePage() {
 
           <p className="text-xs text-slate-400 border-t border-slate-100 pt-5">
             Accounting Body is an independent study platform and is not affiliated with,
-            endorsed by, or connected to ACCA, CIMA, ICAEW, or AAT. These names are used
+            endorsed by, or connected to ACCA, CIMA, AAT, or ETICPA. These names are used
             solely to identify the qualifications our study materials are designed to support.
           </p>
 
