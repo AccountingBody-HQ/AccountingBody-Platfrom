@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: '%s | Accounting Body',
   },
   description:
-    'The definitive platform for ACCA, CIMA, ICAEW and AAT. Study notes, practice questions, and professional connections for accounting qualification students.',
+    'Professional accounting services, expert network and study platform for ACCA, CIMA, ICAEW and AAT — serving clients and students worldwide.',
   keywords: [
     'accounting education', 'ACCA study', 'CIMA study', 'AAT study notes',
     'ICAEW ACA', 'accounting practice questions', 'finance qualifications',
