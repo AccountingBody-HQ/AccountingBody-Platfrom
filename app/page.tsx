@@ -421,8 +421,7 @@ function EmailSignupSection() {
 
 export default async function HomePage() {
   const headersList = await headers()
-  const host = headersList.get('x-forwarded-host') ?? headersList.get('host') ?? ''
-  const isEthioTax = host.includes('ethiotax.com')
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
   const activeQualificationPaths = isEthioTax
     ? qualificationPaths.map(q =>
         q.slug === 'icaew'
