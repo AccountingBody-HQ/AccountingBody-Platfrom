@@ -60,7 +60,13 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     }
   }
 
-  return NextResponse.next()
+  const requestHeaders = new Headers(req.headers)
+  const forwardedHost = req.headers.get('x-forwarded-host') ?? ''
+  const host = req.headers.get('host') ?? ''
+  if (forwardedHost.includes('ethiotax.com') || host.includes('ethiotax.com')) {
+    requestHeaders.set('x-et-platform', 'ethiotax')
+  }
+  return NextResponse.next({ request: { headers: requestHeaders } })
 })
 
 export const config = {
