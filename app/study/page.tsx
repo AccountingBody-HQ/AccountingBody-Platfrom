@@ -240,7 +240,7 @@ export default async function StudyPage() {
               </span>
             </h1>
             <p className="text-white/65 text-xl leading-relaxed max-w-2xl">
-              Study notes, worked examples, and exam technique guides for ACCA, CIMA, ICAEW and AAT.
+              {isEthioTax ? 'Study notes, worked examples, and exam technique guides for ACCA, CIMA, ETICPA and AAT.' : 'Study notes, worked examples, and exam technique guides for ACCA, CIMA, ICAEW and AAT.'}
             </p>
           </div>
         </div>
@@ -295,7 +295,7 @@ export default async function StudyPage() {
             <span className="eyebrow mb-3 block">Browse by Subject</span>
             <h2 className="section-title mb-4">Or explore by topic</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              All subject notes apply across ACCA, CIMA, ICAEW and AAT — find what you need by topic.
+              {isEthioTax ? 'All subject notes apply across ACCA, CIMA, ETICPA and AAT — find what you need by topic.' : 'All subject notes apply across ACCA, CIMA, ICAEW and AAT — find what you need by topic.'}
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -340,7 +340,7 @@ export default async function StudyPage() {
           <span className="eyebrow text-gold-400 mb-4 block">Practice Questions</span>
           <h2 className="font-display text-4xl text-white mb-4 leading-tight">Ready to test your knowledge?</h2>
           <p className="text-white/65 text-lg mb-8 max-w-xl mx-auto leading-relaxed">
-            Thousands of exam-standard practice questions for ACCA, CIMA, ICAEW and AAT.
+            {isEthioTax ? 'Thousands of exam-standard practice questions for ACCA, CIMA, ETICPA and AAT.' : 'Thousands of exam-standard practice questions for ACCA, CIMA, ICAEW and AAT.'}
           </p>
           <Link href="/practice-questions"
             className="inline-flex items-center gap-2 h-13 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
