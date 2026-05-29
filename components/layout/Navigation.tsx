@@ -465,22 +465,15 @@ function MobileMenu({ open, onClose, onSearch, sections }: { open: boolean; onCl
 
 // ── Main Navigation ───────────────────────────────────────────────────────────
 
-export function Navigation({ isEthioTax = false }: { isEthioTax?: boolean }) {
-  const sections = isEthioTax
+export function Navigation({ studyQualificationLinks }: { studyQualificationLinks?: NavLink[] }) {
+  const sections = studyQualificationLinks
     ? navSections.map(section => {
         if (section.id !== 'study') return section
         return {
           ...section,
           groups: section.groups?.map(group => {
             if (group.title !== 'By Qualification') return group
-            return {
-              ...group,
-              links: group.links.map(link =>
-                link.href === '/study/icaew'
-                  ? { ...link, label: 'ETICPA / CPA', href: '/study/eticpa', description: "Ethiopia's national CPA qualification" }
-                  : link
-              ),
-            }
+            return { ...group, links: studyQualificationLinks }
           }),
         }
       })

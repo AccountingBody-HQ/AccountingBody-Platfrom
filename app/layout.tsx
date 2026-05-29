@@ -68,6 +68,14 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  const studyQualificationLinks = isEthioTax
+    ? [
+        { label: 'ETICPA / CPA', href: '/study/eticpa', description: "Ethiopia's national CPA qualification" },
+        { label: 'ACCA',         href: '/study/acca',   badge: 'Popular', description: 'All 13 ACCA papers covered' },
+        { label: 'CIMA',         href: '/study/cima',   description: 'Certificate to Strategic level' },
+        { label: 'AAT',          href: '/study/aat',    description: 'Level 2, 3 and 4 coverage' },
+      ]
+    : undefined
   return (
     <ClerkProvider>
       <html lang="en-GB" className="scroll-smooth">
@@ -90,7 +98,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               />
             </noscript>
           )}
-          <Navigation isEthioTax={isEthioTax} />
+          <Navigation studyQualificationLinks={studyQualificationLinks} />
           <main
             className="flex-1"
             style={{ paddingTop: 'var(--nav-height, 64px)' }}
