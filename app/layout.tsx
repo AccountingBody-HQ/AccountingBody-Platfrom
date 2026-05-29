@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     siteName: 'Accounting Body',
     title: 'Accounting Body — Everything You Need for Accounting & Finance',
     description:
-      'Study notes, practice questions, and professional connections for ACCA, CIMA, ICAEW and AAT students.',
+      'Professional accounting services, expert network and study platform for ACCA, CIMA, ICAEW and AAT — serving clients and students worldwide.',
     images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Accounting Body' }],
   },
   twitter: {
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     site: '@accountingbody',
     creator: '@accountingbody',
     title: 'Accounting Body — Everything You Need for Accounting & Finance',
-    description: 'Study notes, practice questions, and professional connections for ACCA, CIMA, ICAEW and AAT.',
+    description: 'Professional accounting services, expert network and study platform for ACCA, CIMA, ICAEW and AAT — serving clients and students worldwide.',
     images: ['/og-default.png'],
   },
   robots: {
