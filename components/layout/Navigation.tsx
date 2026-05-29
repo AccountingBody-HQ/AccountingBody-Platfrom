@@ -339,7 +339,7 @@ function MegaMenu({ section, onClose }: { section: NavSection; onClose: () => vo
 }
 
 // ── Mobile nav ────────────────────────────────────────────────────────────────
-function MobileMenu({ open, onClose, onSearch }: { open: boolean; onClose: () => void; onSearch: () => void }) {
+function MobileMenu({ open, onClose, onSearch, sections }: { open: boolean; onClose: () => void; onSearch: () => void; sections: NavSection[] }) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
 
   return (
@@ -699,6 +699,7 @@ export function Navigation({ isEthioTax = false }: { isEthioTax?: boolean }) {
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
         onSearch={() => router.push('/search')}
+        sections={sections}
       />
     </>
   )
