@@ -4,6 +4,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { headers } from 'next/headers'
 import EmailSignupForm from '@/components/EmailSignupForm'
 import HeroSearch from '@/components/HeroSearch'
 
@@ -419,6 +420,24 @@ function EmailSignupSection() {
 // ── PAGE ──────────────────────────────────────────────────────────────────────
 
 export default async function HomePage() {
+  const headersList = await headers()
+  const host = headersList.get('host') ?? ''
+  const isEthioTax = host.includes('ethiotax.com')
+  const activeQualificationPaths = isEthioTax
+    ? qualificationPaths.map(q =>
+        q.slug === 'icaew'
+          ? {
+              code:        'ETICPA',
+              slug:        'eticpa',
+              description: "Ethiopia's national accountancy body — CPA and ATQ qualifications for finance professionals.",
+              accent:      'bg-[#1A4731]',
+              badgeBg:     'bg-[#f0f7f4]',
+              badgeText:   'text-[#1A4731]',
+              highlights:  ['CPA Professional', 'ATQ Foundation', 'ATQ Advanced', 'Ethiopian Taxation'],
+            }
+          : q
+      )
+    : qualificationPaths
   const sanityArticles = await getFeaturedArticles()
   const articles = sanityArticles.length > 0 ? sanityArticles : placeholderArticles
 
@@ -537,7 +556,7 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-            {qualificationPaths.map(q => (
+            {activeQualificationPaths.map(q => (
               <Link
                 key={q.slug}
                 href={`/study/${q.slug}`}
