@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { headers } from "next/headers";
 export const runtime = "edge";
-export const alt = "EthioTax — Accounting, Tax & Business Consulting";
+export const alt = "Accounting Body — Everything You Need for Accounting & Finance";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export default async function OGImage() {
