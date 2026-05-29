@@ -381,7 +381,7 @@ function MobileMenu({ open, onClose, onSearch }: { open: boolean; onClose: () =>
 
         {/* Nav items */}
         <nav className="flex-1 overflow-y-auto py-2">
-          {navSections.map(section => {
+          {sections.map(section => {
             const isExpanded  = expandedSection === section.id
             const hasDropdown = Boolean(section.groups?.length)
 
@@ -465,7 +465,26 @@ function MobileMenu({ open, onClose, onSearch }: { open: boolean; onClose: () =>
 
 // ── Main Navigation ───────────────────────────────────────────────────────────
 
-export function Navigation() {
+export function Navigation({ isEthioTax = false }: { isEthioTax?: boolean }) {
+  const sections = isEthioTax
+    ? navSections.map(section => {
+        if (section.id !== 'study') return section
+        return {
+          ...section,
+          groups: section.groups?.map(group => {
+            if (group.title !== 'By Qualification') return group
+            return {
+              ...group,
+              links: group.links.map(link =>
+                link.href === '/study/icaew'
+                  ? { ...link, label: 'ETICPA / CPA', href: '/study/eticpa', description: "Ethiopia's national CPA qualification" }
+                  : link
+              ),
+            }
+          }),
+        }
+      })
+    : navSections
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [mobileOpen,     setMobileOpen]     = useState(false)
   const [scrolled,       setScrolled]       = useState(false)
@@ -553,7 +572,7 @@ export function Navigation() {
 
           {/* Desktop nav */}
           <nav className="hidden lg:flex items-center justify-center gap-0.5" aria-label="Main navigation">
-            {navSections.map(section => {
+            {sections.map(section => {
               const isActive      = activeDropdown === section.id
               const hasDropdown   = Boolean(section.groups?.length)
               const isCurrentPage = section.href

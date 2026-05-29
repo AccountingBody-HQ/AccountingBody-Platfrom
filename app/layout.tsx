@@ -8,6 +8,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Navigation } from '@/components/layout/Navigation'
+import { headers } from 'next/headers'
 import { Footer } from '@/components/layout/Footer'
 import CookieConsent from '@/components/CookieConsent'
 import ScrollToTop from '@/components/ScrollToTop'
@@ -64,7 +65,9 @@ export const metadata: Metadata = {
   alternates: { canonical: SITE_URL },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
   return (
     <ClerkProvider>
       <html lang="en-GB" className="scroll-smooth">
@@ -87,7 +90,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               />
             </noscript>
           )}
-          <Navigation />
+          <Navigation isEthioTax={isEthioTax} />
           <main
             className="flex-1"
             style={{ paddingTop: 'var(--nav-height, 64px)' }}
