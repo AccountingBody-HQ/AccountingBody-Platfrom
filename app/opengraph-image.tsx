@@ -57,7 +57,7 @@ export default async function OGImage() {
           Everything You Need for Accounting & Finance
         </div>
         <div style={{ color: "#D4A017", fontSize: "22px", fontWeight: "500", textAlign: "center", marginBottom: "12px" }}>
-          The UK's Leading Accounting Education Platform
+          The UK&apos;s Leading Accounting Education Platform
         </div>
         <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "18px", textAlign: "center" }}>
           Professional Services · Study Platform · Expert Network
