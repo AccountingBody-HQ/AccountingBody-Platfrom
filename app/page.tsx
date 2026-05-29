@@ -422,20 +422,17 @@ function EmailSignupSection() {
 export default async function HomePage() {
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  const eticpaCard = {
+    code:        'ETICPA',
+    slug:        'eticpa',
+    description: "Ethiopia's national accountancy body — CPA and ATQ qualifications for finance professionals.",
+    accent:      'bg-[#1A4731]',
+    badgeBg:     'bg-[#f0f7f4]',
+    badgeText:   'text-[#1A4731]',
+    highlights:  ['CPA Professional', 'ATQ Foundation', 'ATQ Advanced', 'Ethiopian Taxation'],
+  }
   const activeQualificationPaths = isEthioTax
-    ? qualificationPaths.map(q =>
-        q.slug === 'icaew'
-          ? {
-              code:        'ETICPA',
-              slug:        'eticpa',
-              description: "Ethiopia's national accountancy body — CPA and ATQ qualifications for finance professionals.",
-              accent:      'bg-[#1A4731]',
-              badgeBg:     'bg-[#f0f7f4]',
-              badgeText:   'text-[#1A4731]',
-              highlights:  ['CPA Professional', 'ATQ Foundation', 'ATQ Advanced', 'Ethiopian Taxation'],
-            }
-          : q
-      )
+    ? [eticpaCard, ...qualificationPaths.filter(q => q.slug !== 'icaew')]
     : qualificationPaths
   const sanityArticles = await getFeaturedArticles()
   const articles = sanityArticles.length > 0 ? sanityArticles : placeholderArticles
