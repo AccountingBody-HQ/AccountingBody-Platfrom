@@ -489,6 +489,7 @@ export default async function HomePage() {
       accentText:  '#1A4731',
     },
   ]
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const etStudyPillars = [
     {
       id:          'eticpa',
