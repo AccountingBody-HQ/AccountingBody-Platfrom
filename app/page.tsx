@@ -515,9 +515,11 @@ export default async function HomePage() {
             </div>
 
             {/* Search box */}
+            {!isEthioTax && (
             <div className="w-full mb-10">
               <HeroSearch />
             </div>
+            )}
 
             <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
               {(isEthioTax ? [
