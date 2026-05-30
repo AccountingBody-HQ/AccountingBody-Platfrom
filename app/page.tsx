@@ -1333,20 +1333,20 @@ export default async function HomePage() {
         <section className="bg-white border-t border-slate-200 py-8">
           <div className="container-site">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div>
+              <div className="text-center sm:text-left">
                 <p className="font-display text-xl text-navy-950">Ready to get started?</p>
                 <p className="text-sm text-slate-500 mt-0.5">Talk to us today — or explore our services first.</p>
               </div>
-              <div className="flex items-center gap-3 shrink-0">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto shrink-0">
                 <Link
                   href="/get-help"
-                  className="h-10 px-5 flex items-center text-sm font-medium rounded-lg border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors"
+                  className="h-10 px-5 flex items-center justify-center text-sm font-medium rounded-lg border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors"
                 >
                   Explore our services
                 </Link>
                 <Link
                   href="https://wa.me/447825730440?text=Hello%20EthioTax%2C%20I%20would%20like%20to%20enquire%20about%20your%20services."
-                  className="h-10 px-5 flex items-center text-sm font-semibold rounded-lg text-white hover:opacity-90 transition-colors shadow-sm"
+                  className="h-10 px-5 flex items-center justify-center text-sm font-semibold rounded-lg text-white hover:opacity-90 transition-colors shadow-sm"
                   style={{backgroundColor: '#1A4731'}}
                 >
                   Talk to us on WhatsApp
