@@ -451,6 +451,44 @@ export default async function HomePage() {
       body:  'EthioTax tracks your deadlines, sends annual reminders and proactively advises as your needs grow. One relationship. Complete financial support.',
     },
   ]
+  const etPillars = [
+    {
+      id:          'tax',
+      title:       'Tax & Compliance',
+      description: 'EthioTax manages your tax obligations across every jurisdiction you live and work in. UK Self Assessment, US returns, Ethiopian ERCA filings and cross-border treaty claims.',
+      href:        '/get-help',
+      highlights:  ['UK Self Assessment', 'US & Canadian returns', 'Ethiopian ERCA filing', 'Cross-border tax planning'],
+      iconBg:      '#1A4731',
+      accentText:  '#1A4731',
+    },
+    {
+      id:          'accounting',
+      title:       'Accounting & Bookkeeping',
+      description: 'Monthly bookkeeping, annual accounts, management reporting and software setup. ETICPA-standard accounts for Ethiopian entities. Clean, accurate, on time.',
+      href:        '/get-help',
+      highlights:  ['Monthly bookkeeping', 'Annual accounts', 'Management reports', 'Xero & QuickBooks setup'],
+      iconBg:      '#1A4731',
+      accentText:  '#1A4731',
+    },
+    {
+      id:          'consulting',
+      title:       'Business Consulting',
+      description: 'Company formation, business plans, financial modelling and diaspora investment structuring. We navigate Ethiopian and international regulatory requirements for you.',
+      href:        '/get-help',
+      highlights:  ['Company formation', 'Business plans', 'Diaspora investment', 'Financial modelling'],
+      iconBg:      '#1A4731',
+      accentText:  '#1A4731',
+    },
+    {
+      id:          'payroll',
+      title:       'Payroll & Audit',
+      description: 'UK PAYE, Ethiopian payroll withholding and pension auto-enrolment managed end to end. ETICPA-standard audit and assurance for Ethiopian entities and diaspora businesses.',
+      href:        '/get-help',
+      highlights:  ['UK PAYE processing', 'Ethiopian payroll', 'Pension auto-enrolment', 'ETICPA-standard audit'],
+      iconBg:      '#1A4731',
+      accentText:  '#1A4731',
+    },
+  ]
   const etTrustPoints = [
     {
       title: 'The Vetting Premium',
@@ -724,47 +762,96 @@ export default async function HomePage() {
       <section className="section bg-white">
         <div className="container-site">
 
-          <div className="max-w-2xl mb-12">
-            <span className="eyebrow mb-3 block">The Full Platform</span>
-            <h2 className="section-title mb-4">Education and professional services, in one place</h2>
-            <p className="text-slate-500 text-lg leading-relaxed">
-              Accounting Body combines a world-class accounting study platform with a managed professional services network. Whether you are studying for your exams or need expert accounting support — we have you covered.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {pillars.map((pillar) => (
-              <Link
-                key={pillar.id}
-                href={pillar.href}
-                className="group flex flex-col bg-white rounded-xl border-2 border-slate-200 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
-              >
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${pillar.iconBg} ${pillar.iconColor}`}>
-                  {pillar.icon}
-                </div>
-                <h3 className="font-display text-lg text-navy-950 mb-2 group-hover:text-navy-700 transition-colors">
-                  {pillar.title}
-                </h3>
-                <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
-                  {pillar.description}
+          {isEthioTax ? (
+            <>
+              <div className="max-w-2xl mb-12">
+                <span className="eyebrow mb-3 block">Our Services</span>
+                <h2 className="section-title mb-4">Everything your business and finances need — managed for you</h2>
+                <p className="text-slate-500 text-lg leading-relaxed">
+                  EthioTax coordinates qualified Ethiopian-origin professionals across every service your business needs. One relationship. Every jurisdiction. Delivered to your door.
                 </p>
-                <ul className="space-y-1.5 mb-5">
-                  {pillar.highlights.map(h => (
-                    <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
-                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${pillar.iconBg}`} />
-                      {h}
-                    </li>
-                  ))}
-                </ul>
-                <span className={`flex items-center gap-1.5 text-xs font-semibold ${pillar.accentText} group-hover:gap-2.5 transition-all`}>
-                  Explore
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </span>
-              </Link>
-            ))}
-          </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {etPillars.map((pillar) => (
+                  <Link
+                    key={pillar.id}
+                    href={pillar.href}
+                    className="group flex flex-col bg-white rounded-xl border-2 border-slate-200 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+                  >
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{backgroundColor: pillar.iconBg}}>
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeWidth="1.75" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="font-display text-lg mb-2 group-hover:opacity-80 transition-colors" style={{color: '#1A4731'}}>
+                      {pillar.title}
+                    </h3>
+                    <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
+                      {pillar.description}
+                    </p>
+                    <ul className="space-y-1.5 mb-5">
+                      {pillar.highlights.map(h => (
+                        <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
+                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{backgroundColor: '#C9982A'}} />
+                          {h}
+                        </li>
+                      ))}
+                    </ul>
+                    <span className="flex items-center gap-1.5 text-xs font-semibold group-hover:gap-2.5 transition-all" style={{color: '#1A4731'}}>
+                      Get a free quote
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="max-w-2xl mb-12">
+                <span className="eyebrow mb-3 block">The Full Platform</span>
+                <h2 className="section-title mb-4">Education and professional services, in one place</h2>
+                <p className="text-slate-500 text-lg leading-relaxed">
+                  Accounting Body combines a world-class accounting study platform with a managed professional services network. Whether you are studying for your exams or need expert accounting support — we have you covered.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {pillars.map((pillar) => (
+                  <Link
+                    key={pillar.id}
+                    href={pillar.href}
+                    className="group flex flex-col bg-white rounded-xl border-2 border-slate-200 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+                  >
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${pillar.iconBg} ${pillar.iconColor}`}>
+                      {pillar.icon}
+                    </div>
+                    <h3 className="font-display text-lg text-navy-950 mb-2 group-hover:text-navy-700 transition-colors">
+                      {pillar.title}
+                    </h3>
+                    <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
+                      {pillar.description}
+                    </p>
+                    <ul className="space-y-1.5 mb-5">
+                      {pillar.highlights.map(h => (
+                        <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${pillar.iconBg}`} />
+                          {h}
+                        </li>
+                      ))}
+                    </ul>
+                    <span className={`flex items-center gap-1.5 text-xs font-semibold ${pillar.accentText} group-hover:gap-2.5 transition-all`}>
+                      Explore
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
 
         </div>
       </section>
