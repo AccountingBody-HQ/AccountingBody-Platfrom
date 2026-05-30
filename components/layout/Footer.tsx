@@ -4,7 +4,7 @@
 
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -234,6 +234,10 @@ function ExtIcon() {
 
 // ── Main Footer ───────────────────────────────────────────────────────────────
 export function Footer() {
+  const [isEthioTax, setIsEthioTax] = React.useState(false)
+  useEffect(() => {
+    setIsEthioTax(window.location.hostname.includes('ethiotax.com'))
+  }, [])
   return (
     <footer className="bg-navy-950 text-white" aria-label="Site footer">
 
@@ -263,12 +267,19 @@ export function Footer() {
           <div className="lg:col-span-2 space-y-6">
             {/* Logo */}
             <Link href="/" className="inline-flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 rounded">
-              <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <rect x="0"  y="0"  width="9" height="20" fill="#ffffff"/>
-                <rect x="11" y="0"  width="9" height="9"  fill="#ffffff"/>
-                <rect x="11" y="11" width="9" height="9"  fill="#ffffff"/>
-              </svg>
-              <span className="font-sans font-semibold" style={{ color: '#ffffff', fontSize: '21px', lineHeight: '24px' }}>Accounting Body<sup style={{ fontSize: '20px', verticalAlign: 'top', position: 'relative', top: '4px' }}>®</sup></span>
+              {isEthioTax ? (
+                <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M16 2L4 8v8c0 7 5.4 13.5 12 15.5C22.6 29.5 28 23 28 16V8L16 2z" fill="#C9982A"/>
+                  <path d="M16 7l-2.5 5-5.5.8 4 3.9-.95 5.5L16 19.5l4.95 2.7-.95-5.5 4-3.9-5.5-.8z" fill="#1A4731"/>
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="0"  y="0"  width="9" height="20" fill="#ffffff"/>
+                  <rect x="11" y="0"  width="9" height="9"  fill="#ffffff"/>
+                  <rect x="11" y="11" width="9" height="9"  fill="#ffffff"/>
+                </svg>
+              )}
+              <span className="font-sans font-semibold" style={{ color: '#ffffff', fontSize: '21px', lineHeight: '24px' }}>{isEthioTax ? <>EthioTax<sup style={{ fontSize: '20px', verticalAlign: 'top', position: 'relative', top: '4px' }}>®</sup></> : <>Accounting Body<sup style={{ fontSize: '20px', verticalAlign: 'top', position: 'relative', top: '4px' }}>®</sup></>}</span>
             </Link>
 
             <p className="text-sm text-white/55 leading-relaxed max-w-xs">
