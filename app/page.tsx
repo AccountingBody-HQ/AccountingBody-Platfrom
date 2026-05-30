@@ -642,18 +642,18 @@ export default async function HomePage() {
 
           <div className="max-w-2xl mx-auto text-center mb-16">
             <span className="eyebrow mb-3 block">How It Works</span>
-            <h2 className="section-title mb-4">Three steps to exam success</h2>
+            <h2 className="section-title mb-4">{isEthioTax ? 'Five steps to a managed service' : 'Three steps to exam success'}</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              From choosing your qualification to walking into the exam room with confidence.
+              {isEthioTax ? 'From your first inquiry to long-term financial partnership — EthioTax manages every step.' : 'From choosing your qualification to walking into the exam room with confidence.'}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
-            {howItWorks.map((step, i) => (
+          <div className={`grid grid-cols-1 gap-0 ${isEthioTax ? 'md:grid-cols-5' : 'md:grid-cols-3'}`}>
+            {(isEthioTax ? etHowItWorks : howItWorks).map((step, i) => (
               <div key={step.step} className="relative flex flex-col items-start md:items-center text-left md:text-center px-0 md:px-8">
 
                 {/* Connector line between steps */}
-                {i < howItWorks.length - 1 && (
+                {i < (isEthioTax ? etHowItWorks : howItWorks).length - 1 && (
                   <div className="hidden md:block absolute top-9 left-[calc(50%+2.5rem)] right-0 h-px bg-slate-200" />
                 )}
 
@@ -670,10 +670,10 @@ export default async function HomePage() {
 
           <div className="mt-14 flex justify-center">
             <Link
-              href="/study"
+              href={isEthioTax ? "/get-help" : "/study"}
               className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors"
             >
-              Start your journey
+              {isEthioTax ? 'Get a free quote' : 'Start your journey'}
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
