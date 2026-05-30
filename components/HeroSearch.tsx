@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function HeroSearch() {
+export default function HeroSearch({ placeholder = 'Search study notes, practice questions, glossary…' }: { placeholder?: string }) {
   const [query, setQuery] = useState('')
   const router = useRouter()
 
@@ -29,7 +29,7 @@ export default function HeroSearch() {
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Search study notes, practice questions, glossary…"
+          placeholder={placeholder}
           className="flex-1 py-4 px-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
           autoComplete="off"
         />
