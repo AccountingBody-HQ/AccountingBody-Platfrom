@@ -316,7 +316,7 @@ export function Footer() {
 
           {/* ── Link columns ────────────────────────────────────────────── */}
           <div className="lg:col-span-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
-            {[...footerColumns, professionalsColumn].map(column => (
+            {[...footerColumns.slice(0,3), professionalsColumn, ...footerColumns.slice(3)].map(column => (
               <div key={column.title}>
                 <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">
                   {column.title}
