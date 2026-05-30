@@ -266,7 +266,7 @@ export function Footer() {
           {/* ── Brand column ────────────────────────────────────────────── */}
           <div className="lg:col-span-2 space-y-6">
             {/* Logo */}
-            <Link href="/" className="inline-flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 rounded">
+            <Link href="/" id="et-footer-logo" className="inline-flex items-center gap-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 rounded">
               {isEthioTax ? (
                 <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
                   <path d="M16 2L4 8v8c0 7 5.4 13.5 12 15.5C22.6 29.5 28 23 28 16V8L16 2z" fill="#C9982A"/>
