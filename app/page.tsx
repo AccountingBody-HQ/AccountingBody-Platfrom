@@ -743,7 +743,7 @@ export default async function HomePage() {
       <section className="section bg-slate-50">
         <div className="container-site">
 
-          <div className="max-w-2xl mx-auto text-center mb-16">
+          <div className={isEthioTax ? "max-w-2xl mb-16" : "max-w-2xl mx-auto text-center mb-16"}>
             <span className="eyebrow mb-3 block">How It Works</span>
             <h2 className="section-title mb-4">{isEthioTax ? 'Five steps to a managed service' : 'Three steps to exam success'}</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
@@ -796,7 +796,7 @@ export default async function HomePage() {
           {isEthioTax ? (
             <>
               {/* ── Section header ── */}
-              <div className="text-center max-w-3xl mx-auto mb-14">
+              <div className="max-w-3xl mb-14">
                 <span className="eyebrow mb-3 block">What EthioTax Offers</span>
                 <h2 className="section-title mb-4">Professional services and study — everything in one place</h2>
                 <p className="text-slate-500 text-lg leading-relaxed">
@@ -1006,7 +1006,7 @@ export default async function HomePage() {
         /* ── EthioTax: Why EthioTax ── */
         <section className="section bg-slate-50">
           <div className="container-site">
-            <div className="text-center max-w-2xl mx-auto mb-14">
+            <div className="max-w-2xl mb-14">
               <span className="eyebrow mb-3 block">Why EthioTax</span>
               <h2 className="section-title mb-4">Eight reasons the community trusts us</h2>
               <p className="text-slate-500 text-lg leading-relaxed">
