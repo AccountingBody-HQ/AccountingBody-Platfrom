@@ -177,6 +177,33 @@ const howItWorks = [
     body:  'Exam-standard questions with instant feedback. Track your progress and walk into the exam room knowing you are ready.',
   },
 ]
+const etHowItWorks = [
+  {
+    step:  '01',
+    title: 'Tell us what you need',
+    body:  'Contact EthioTax by WhatsApp, email or our website form — in English, Amharic or Afaan Oromoo. We respond within 24 hours, every time.',
+  },
+  {
+    step:  '02',
+    title: 'We prepare your proposal',
+    body:  'EthioTax qualifies your requirement, selects the right professional from our verified network, and delivers a clear fixed-fee proposal within 72 hours.',
+  },
+  {
+    step:  '03',
+    title: 'We manage everything',
+    body:  'Once you approve, EthioTax briefs the professional, monitors progress and quality-checks every deliverable before it reaches you.',
+  },
+  {
+    step:  '04',
+    title: 'You receive the work',
+    body:  'EthioTax delivers your completed work with a covering note. We follow up within 5 days to confirm your satisfaction.',
+  },
+  {
+    step:  '05',
+    title: 'We stay with you',
+    body:  'EthioTax tracks your deadlines, sends annual reminders and proactively advises as your needs grow. One relationship. Complete financial support.',
+  },
+]
 
 const pillars = [
   {
