@@ -61,16 +61,7 @@ const footerColumns: FooterColumn[] = [
       { label: 'Free Calculators',          href: '/calculators' },
     ],
   },
-  {
-    title: 'Professionals',
-    links: [
-      { label: 'Find an Accountant',        href: '/firms-freelancers/directory' },
-      { label: 'List Your Firm',            href: '/firms-freelancers/join' },
-      { label: 'Post a Job',                href: '/hire-talent/post-a-job' },
-      { label: 'Freelancer Directory',      href: '/firms-freelancers/directory' },
-      { label: 'CPD Resources',             href: '/firms-freelancers' },
-    ],
-  },
+
   {
     title: 'Company',
     links: [
@@ -139,7 +130,7 @@ const stats = [
 ]
 
 // ── Email Signup Widget ───────────────────────────────────────────────────────
-function EmailSignup() {
+function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
   const [email,  setEmail]  = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [honeypot, setHoneypot] = useState('')
@@ -167,11 +158,12 @@ function EmailSignup() {
         Stay Updated
       </p>
       <h3 className="font-display text-white text-lg mb-1.5">
-        Free exam tips &amp; study notes
+        {isEthioTax ? 'EthioTax community updates' : 'Free exam tips & study notes'}
       </h3>
       <p className="text-sm text-white/60 mb-4 leading-relaxed">
-        Weekly study tips, exam technique guides, and new question releases.
-        No spam, unsubscribe any time.
+        {isEthioTax
+          ? 'Tax deadlines, ERCA updates and Ethiopian business insights. No spam, ever.'
+          : 'Weekly study tips, exam technique guides, and new question releases. No spam, unsubscribe any time.'}
       </p>
 
       {status === 'success' ? (
@@ -235,6 +227,17 @@ function ExtIcon() {
 // ── Main Footer ───────────────────────────────────────────────────────────────
 export function Footer() {
   const [isEthioTax, setIsEthioTax] = React.useState(false)
+
+  const professionalsColumn: FooterColumn = {
+    title: 'Professionals',
+    links: [
+      { label: isEthioTax ? 'Get Professional Help' : 'Find an Accountant', href: isEthioTax ? '/get-help' : '/firms-freelancers/directory' },
+      { label: isEthioTax ? 'Join as a Provider' : 'List Your Firm',        href: isEthioTax ? '/firms-freelancers' : '/firms-freelancers/join' },
+      { label: 'Post a Job',                href: '/hire-talent/post-a-job' },
+      { label: 'Freelancer Directory',      href: '/firms-freelancers/directory' },
+      { label: 'CPD Resources',             href: '/firms-freelancers' },
+    ],
+  }
   useEffect(() => {
     setIsEthioTax(window.location.hostname.includes('ethiotax.com'))
   }, [])
@@ -283,12 +286,13 @@ export function Footer() {
             </Link>
 
             <p className="text-sm text-white/55 leading-relaxed max-w-xs">
-              Everything you need for accounting and finance in one place. Study notes,
-              practice questions, and professional connections for ACCA, CIMA, ICAEW and AAT.
+              {isEthioTax
+                ? 'EthioTax delivers professional accounting, tax, audit, payroll and business consulting to the Ethiopian community worldwide. Qualified professionals. Amharic and Afaan Oromoo service available.'
+                : 'Everything you need for accounting and finance in one place. Study notes, practice questions, and professional connections for ACCA, CIMA, ICAEW and AAT.'}
             </p>
 
             {/* Email signup */}
-            <EmailSignup />
+            <EmailSignup isEthioTax={isEthioTax} />
 
             {/* Social links */}
             <div>
@@ -312,7 +316,7 @@ export function Footer() {
 
           {/* ── Link columns ────────────────────────────────────────────── */}
           <div className="lg:col-span-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
-            {footerColumns.map(column => (
+            {[...footerColumns, professionalsColumn].map(column => (
               <div key={column.title}>
                 <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">
                   {column.title}
