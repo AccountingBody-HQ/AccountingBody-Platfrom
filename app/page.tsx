@@ -1198,6 +1198,104 @@ export default async function HomePage() {
             <p className="text-xs text-slate-400 border-t border-slate-100 pt-5">
               EthioTax is an independent study platform and is not affiliated with, endorsed by, or connected to ACCA, CIMA, ETICPA, or AAT. These names are used solely to identify the qualifications our study materials are designed to support.
             </p>
+
+            {/* ── 3 Resource Cards ── */}
+            <div className="mt-12">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="h-px flex-1 bg-slate-200" />
+                <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-slate-200 bg-white">
+                  <span className="w-2 h-2 rounded-full" style={{backgroundColor: '#1A4731'}} />
+                  <span className="text-xs font-semibold uppercase tracking-widest" style={{color: '#1A4731'}}>Study Resources</span>
+                </div>
+                <div className="h-px flex-1 bg-slate-200" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <Link
+                  href="/study"
+                  className="group flex flex-col bg-white rounded-xl border-2 border-slate-200 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+                >
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{backgroundColor: '#1A4731'}}>
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="1.75" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  <h3 className="font-display text-lg mb-2" style={{color: '#1A4731'}}>Study Notes & Resources</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
+                    Comprehensive study notes for ETICPA, ACCA, CIMA and AAT — written by qualified accountants and updated every exam sitting.
+                  </p>
+                  <ul className="space-y-1.5 mb-5">
+                    {['All qualifications covered', 'Worked examples', 'Examiner insights', 'Always free to start'].map(h => (
+                      <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{backgroundColor: '#C9982A'}} />
+                        {h}
+                      </li>
+                    ))}
+                  </ul>
+                  <span className="flex items-center gap-1.5 text-xs font-semibold group-hover:gap-2.5 transition-all" style={{color: '#1A4731'}}>
+                    Browse study notes
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </span>
+                </Link>
+                <Link
+                  href="/practice-questions"
+                  className="group flex flex-col bg-white rounded-xl border-2 border-slate-200 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+                >
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{backgroundColor: '#1A4731'}}>
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="1.75" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                  </div>
+                  <h3 className="font-display text-lg mb-2" style={{color: '#1A4731'}}>Practice Questions</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
+                    MCQs, written tasks and full mock exams built to exam standard. Instant marking with detailed explanations for every question.
+                  </p>
+                  <ul className="space-y-1.5 mb-5">
+                    {['20,000+ questions', 'Full mock exams', 'Instant marking', 'Detailed solutions'].map(h => (
+                      <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{backgroundColor: '#C9982A'}} />
+                        {h}
+                      </li>
+                    ))}
+                  </ul>
+                  <span className="flex items-center gap-1.5 text-xs font-semibold group-hover:gap-2.5 transition-all" style={{color: '#1A4731'}}>
+                    Start practising
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </span>
+                </Link>
+                <Link
+                  href="/firms-freelancers"
+                  className="group flex flex-col bg-white rounded-xl border-2 border-slate-200 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+                >
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{backgroundColor: '#C9982A'}}>
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="1.75" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-display text-lg mb-2" style={{color: '#1A4731'}}>Join as a Provider</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
+                    Are you a qualified Ethiopian-origin accounting professional? Join the EthioTax provider network and receive matched client engagements.
+                  </p>
+                  <ul className="space-y-1.5 mb-5">
+                    {['ACCA, CIMA, ETICPA, CPA welcome', 'Flexible engagements', 'Managed by EthioTax', 'Global network'].map(h => (
+                      <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{backgroundColor: '#C9982A'}} />
+                        {h}
+                      </li>
+                    ))}
+                  </ul>
+                  <span className="flex items-center gap-1.5 text-xs font-semibold group-hover:gap-2.5 transition-all" style={{color: '#C9982A'}}>
+                    Apply to join
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </span>
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
       )}
