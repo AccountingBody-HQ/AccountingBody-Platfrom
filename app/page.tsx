@@ -467,11 +467,11 @@ export default async function HomePage() {
           <div className="max-w-4xl">
 
             <p className="text-gold-400 text-xs font-semibold uppercase tracking-widest mb-7">
-              Professional Accounting Services &nbsp;&middot;&nbsp; Study Platform &nbsp;&middot;&nbsp; Trusted Since 2018
+              {isEthioTax ? "For the Ethiopian Community — Worldwide · አማርኛ · Afaan Oromoo" : "Professional Accounting Services · Study Platform · Trusted Since 2018"}
             </p>
 
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.025em' }}>
-              Your accounting
+              {isEthioTax ? 'The accounting experts' : 'Your accounting'}
               <br />
               <span
                 style={{
@@ -481,34 +481,36 @@ export default async function HomePage() {
                   backgroundClip: 'text',
                 }}
               >
-                education &amp; services
+                {isEthioTax ? 'built for Ethiopia' : 'education & services'}
               </span>
               <br />
-              platform.
+              {isEthioTax ? 'and its diaspora.' : 'platform.'}
             </h1>
 
             <p className="text-white/65 text-xl leading-relaxed mb-6 max-w-2xl">
-              Study for globally recognised accounting and finance qualifications with expert notes and practice questions — and access Accounting Body&apos;s managed professional services network for tax, audit, bookkeeping, and advisory.
+              {isEthioTax ? 'EthioTax delivers professional accounting, tax, audit, payroll and business consulting to Ethiopian individuals and businesses — in Ethiopia and across the global diaspora. Qualified professionals. Amharic and Afaan Oromoo service available.' : 'Study for globally recognised accounting and finance qualifications with expert notes and practice questions — and access our managed professional services network for tax, audit, bookkeeping, and advisory.'}
             </p>
             <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
-              One platform. Two pillars. Education and professional services, managed to the same standard.
+              {isEthioTax ? 'UK · USA · Canada · UAE · Ethiopia · Sweden · Australia' : 'One platform. Two pillars. Education and professional services, managed to the same standard.'}
             </p>
 
             <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-16">
               <Link
-                href="/study"
+                href={isEthioTax ? "https://wa.me/447825730440?text=Hello%20EthioTax%2C%20I%20would%20like%20to%20enquire%20about%20your%20services." : "/study"}
+                target={isEthioTax ? "_blank" : undefined}
+                rel={isEthioTax ? "noopener noreferrer" : undefined}
                 className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold"
               >
-                Start studying free
+                {isEthioTax ? 'Talk to us on WhatsApp' : 'Start studying free'}
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </Link>
               <Link
-                href="/get-help"
+                href={isEthioTax ? "/get-help" : "/get-help"}
                 className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-medium text-white border border-white/25 hover:bg-white/10 hover:border-white/40 transition-all"
               >
-                Explore our services
+                {isEthioTax ? 'Explore our services' : 'Explore our services'}
               </Link>
             </div>
 
@@ -518,12 +520,17 @@ export default async function HomePage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
-              {[
+              {(isEthioTax ? [
+                { value: 'Tax & Accounting', label: 'for individuals & businesses' },
+                { value: 'Cross-Border', label: 'expertise' },
+                { value: 'Amharic & Afaan Oromoo', label: 'service available' },
+                { value: 'Global', label: 'diaspora coverage' },
+              ] : [
                 { value: '3,000+',   label: 'articles' },
                 { value: '20,000+',  label: 'practice questions' },
                 { value: 'Top Global Qualifications', label: '' },
                 { value: 'Free',     label: 'to start' },
-              ].map(item => (
+              ]).map(item => (
                 <div key={item.label} className="flex items-baseline gap-2">
                   <span className="text-white font-display text-xl">{item.value}</span>
                   <span className="text-white/40 text-sm">{item.label}</span>
