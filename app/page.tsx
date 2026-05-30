@@ -507,7 +507,7 @@ export default async function HomePage() {
     {
       id:          'cima',
       title:       'CIMA',
-      description: 'The world's largest management accounting body. Certificate to Strategic level — full coverage for every stage of your journey.',
+      description: "The world's largest management accounting body. Certificate to Strategic level — full coverage for every stage of your journey.",
       href:        '/study/cima',
       highlights:  ['Certificate level', 'Operational level', 'Management level', 'Strategic level'],
     },
