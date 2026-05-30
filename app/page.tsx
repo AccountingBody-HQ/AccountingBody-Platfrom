@@ -428,7 +428,7 @@ export default async function HomePage() {
     {
       step:  '01',
       title: 'Tell us what you need',
-      body:  'Contact EthioTax by WhatsApp, email or our website form — in English, Amharic or Afaan Oromoo. We respond within 24 hours, every time.',
+      body:  'Contact EthioTax by WhatsApp, email or our website form — in English, Amharic or Afaan Oromoo. We respond within 24 hours, every time. የእርስዎን ነገር የኍረስ ዘግ ታነበናለህ። Afaan Oromoo’ttiin nu dubbifta.',
     },
     {
       step:  '02',
