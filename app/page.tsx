@@ -575,7 +575,7 @@ export default async function HomePage() {
       {/* ════════════════════════════════════════════════════════════════
           1. HERO
           ════════════════════════════════════════════════════════════════ */}
-      <section className={`relative overflow-hidden bg-navy-950 flex items-center ${isEthioTax ? 'py-20' : 'min-h-[85vh]'}`}>
+      <section className={`relative overflow-hidden bg-navy-950 flex items-center ${isEthioTax ? '' : 'min-h-[85vh]'}`}>
 
         <div className="absolute inset-0 pointer-events-none">
           <div
@@ -603,7 +603,7 @@ export default async function HomePage() {
             </p>
 
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.025em' }}>
-              {isEthioTax ? 'The accounting experts' : 'Your accounting'}
+              {isEthioTax ? 'The accounting and finance experts' : 'Your accounting'}
               <br />
               <span
                 style={{
