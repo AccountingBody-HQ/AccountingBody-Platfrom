@@ -851,52 +851,7 @@ export default async function HomePage() {
                 </div>
               </div>
 
-              {/* ── Bottom half: Study Platform ── */}
-              <div>
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="h-px flex-1 bg-slate-200" />
-                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-slate-200 bg-white">
-                    <span className="w-2 h-2 rounded-full bg-teal-600" />
-                    <span className="text-xs font-semibold uppercase tracking-widest text-teal-700">Study Platform</span>
-                  </div>
-                  <div className="h-px flex-1 bg-slate-200" />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                  {etStudyPillars.map((pillar) => (
-                    <Link
-                      key={pillar.id}
-                      href={pillar.href}
-                      className="group flex flex-col bg-white rounded-xl border-2 border-slate-200 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
-                    >
-                      <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 bg-teal-600">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeWidth="1.75" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                      </div>
-                      <h3 className="font-display text-lg text-teal-700 mb-2 group-hover:opacity-80 transition-colors">
-                        {pillar.title}
-                      </h3>
-                      <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
-                        {pillar.description}
-                      </p>
-                      <ul className="space-y-1.5 mb-5">
-                        {pillar.highlights.map(h => (
-                          <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
-                            <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-teal-600" />
-                            {h}
-                          </li>
-                        ))}
-                      </ul>
-                      <span className="flex items-center gap-1.5 text-xs font-semibold text-teal-700 group-hover:gap-2.5 transition-all">
-                        Start studying free
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                        </svg>
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
+
             </>
           ) : (
             <>
