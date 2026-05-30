@@ -677,7 +677,7 @@ export default async function HomePage() {
       {/* ════════════════════════════════════════════════════════════════
           2. QUALIFICATION PATHWAYS
           ════════════════════════════════════════════════════════════════ */}
-      <section className="section bg-white">
+      {!isEthioTax && <section className="section bg-white">
         <div className="container-site">
 
           <div className="max-w-2xl mb-12">
@@ -733,7 +733,7 @@ export default async function HomePage() {
           </p>
 
         </div>
-      </section>
+      </section>}
 
 
       {/* ════════════════════════════════════════════════════════════════
@@ -951,25 +951,52 @@ export default async function HomePage() {
       {/* ════════════════════════════════════════════════════════════════
           5. STATS BAR
           ════════════════════════════════════════════════════════════════ */}
-      <section className="bg-slate-50 border-y border-slate-200">
-        <div className="container-site py-10">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {stats.map((stat, i) => (
-              <div
-                key={stat.label}
-                className={`flex flex-col items-start ${i < stats.length - 1 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}`}
-              >
-                <div className="w-9 h-9 rounded-lg bg-navy-50 flex items-center justify-center text-navy-600 mb-3">
-                  {stat.icon}
+      {isEthioTax ? (
+        <section className="bg-slate-50 border-y border-slate-200">
+          <div className="container-site py-10">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                { value: '24hr', label: 'Response Guarantee', sublabel: 'Every inquiry, every channel' },
+                { value: '72hr', label: 'Fixed-Fee Proposal', sublabel: 'Clear scope, clear price' },
+                { value: '100%', label: 'Quality Checked', sublabel: 'Every deliverable reviewed' },
+                { value: 'Global', label: 'Diaspora Coverage', sublabel: 'UK, USA, Canada, UAE, Ethiopia & more' },
+              ].map((stat, i) => (
+                <div
+                  key={stat.label}
+                  className={`flex flex-col items-start ${i < 3 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}`}
+                >
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-3" style={{backgroundColor: '#f0f7f4'}}>
+                    <span className="text-lg font-bold" style={{color: '#1A4731'}}>✓</span>
+                  </div>
+                  <span className="stat-number mb-1" style={{color: '#1A4731'}}>{stat.value}</span>
+                  <span className="text-sm font-semibold text-navy-950">{stat.label}</span>
+                  <span className="text-xs text-slate-400 mt-0.5">{stat.sublabel}</span>
                 </div>
-                <span className="stat-number mb-1">{stat.value}</span>
-                <span className="text-sm font-semibold text-navy-950">{stat.label}</span>
-                <span className="text-xs text-slate-400 mt-0.5">{stat.sublabel}</span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : (
+        <section className="bg-slate-50 border-y border-slate-200">
+          <div className="container-site py-10">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+              {stats.map((stat, i) => (
+                <div
+                  key={stat.label}
+                  className={`flex flex-col items-start ${i < stats.length - 1 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}`}
+                >
+                  <div className="w-9 h-9 rounded-lg bg-navy-50 flex items-center justify-center text-navy-600 mb-3">
+                    {stat.icon}
+                  </div>
+                  <span className="stat-number mb-1">{stat.value}</span>
+                  <span className="text-sm font-semibold text-navy-950">{stat.label}</span>
+                  <span className="text-xs text-slate-400 mt-0.5">{stat.sublabel}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
 
       {/* ════════════════════════════════════════════════════════════════
@@ -1165,38 +1192,145 @@ export default async function HomePage() {
 
 
       {/* ════════════════════════════════════════════════════════════════
+          ET: QUALIFICATION PATHWAYS — shown after Why EthioTax on ET only
+          ════════════════════════════════════════════════════════════════ */}
+      {isEthioTax && (
+        <section className="section bg-white">
+          <div className="container-site">
+            <div className="max-w-2xl mb-12">
+              <span className="eyebrow mb-3 block">Qualification Pathways</span>
+              <h2 className="section-title mb-4">Study with EthioTax — free to start</h2>
+              <p className="text-slate-500 text-lg leading-relaxed">
+                EthioTax supports the next generation of Ethiopian finance professionals. Full coverage for ETICPA, ACCA, CIMA and AAT — study notes, practice questions and mock exams.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+              {activeQualificationPaths.map(q => (
+                <Link
+                  key={q.slug}
+                  href={`/study/${q.slug}`}
+                  className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+                >
+                  <div className={`h-1.5 ${q.accent}`} />
+                  <div className="p-6 flex flex-col flex-1">
+                    <div className="flex items-start justify-between mb-4">
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${q.badgeBg} ${q.badgeText}`}>
+                        {q.code}
+                      </span>
+                    </div>
+                    <h3 className="font-display text-base text-navy-950 leading-snug mb-2 group-hover:text-navy-700 transition-colors">
+                      {q.code}
+                    </h3>
+                    <p className="text-xs text-slate-500 mb-4 leading-relaxed flex-1">{q.description}</p>
+                    <ul className="space-y-1.5 mb-5">
+                      {q.highlights.map(h => (
+                        <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${q.accent}`} />
+                          {h}
+                        </li>
+                      ))}
+                    </ul>
+                    <span className={`flex items-center gap-1.5 text-xs font-semibold ${q.badgeText} group-hover:gap-2.5 transition-all`}>
+                      Browse {q.code} notes
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <p className="text-xs text-slate-400 border-t border-slate-100 pt-5">
+              EthioTax is an independent study platform and is not affiliated with, endorsed by, or connected to ACCA, CIMA, ETICPA, or AAT. These names are used solely to identify the qualifications our study materials are designed to support.
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════
           8. EMAIL SIGNUP
           ════════════════════════════════════════════════════════════════ */}
-      <EmailSignupSection />
-
+      {isEthioTax ? (
+        <section className="section-navy section relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-white/5 blur-3xl" />
+            <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full" style={{backgroundColor: 'rgba(201,152,42,0.1)'}} />
+          </div>
+          <div className="container-site relative z-10">
+            <div className="max-w-2xl mx-auto text-center">
+              <span className="eyebrow text-gold-400 mb-4 block">Stay Ahead</span>
+              <h2 className="font-display text-4xl text-white mb-4 leading-tight">
+                EthioTax updates, straight to your inbox
+              </h2>
+              <p className="text-white/65 text-lg mb-8 leading-relaxed">
+                Tax deadlines, ERCA updates, ETICPA news and Ethiopian business insights — delivered to your inbox. No spam, ever.
+              </p>
+              <EmailSignupForm />
+              <div className="w-full flex justify-center mt-4">
+                <p className="text-white/35 text-xs text-center">Join the EthioTax community. Unsubscribe any time.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : (
+        <EmailSignupSection />
+      )}
 
       {/* ════════════════════════════════════════════════════════════════
           9. BOTTOM CTA
           ════════════════════════════════════════════════════════════════ */}
-      <section className="bg-white border-t border-slate-200 py-8">
-        <div className="container-site">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-              <p className="font-display text-xl text-navy-950">Ready to get started?</p>
-              <p className="text-sm text-slate-500 mt-0.5">Study for free — or engage our professional services team.</p>
-            </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <Link
-                href="/get-help"
-                className="h-10 px-5 flex items-center text-sm font-medium rounded-lg border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors"
-              >
-                Explore our services
-              </Link>
-              <Link
-                href="/study"
-                className="h-10 px-5 flex items-center text-sm font-semibold rounded-lg bg-navy-950 text-white hover:bg-navy-900 transition-colors shadow-sm"
-              >
-                Start studying free
-              </Link>
+      {isEthioTax ? (
+        <section className="bg-white border-t border-slate-200 py-8">
+          <div className="container-site">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <p className="font-display text-xl text-navy-950">Ready to get started?</p>
+                <p className="text-sm text-slate-500 mt-0.5">Talk to us today — or explore our services first.</p>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <Link
+                  href="/get-help"
+                  className="h-10 px-5 flex items-center text-sm font-medium rounded-lg border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors"
+                >
+                  Explore our services
+                </Link>
+                <Link
+                  href="https://wa.me/447825730440?text=Hello%20EthioTax%2C%20I%20would%20like%20to%20enquire%20about%20your%20services."
+                  className="h-10 px-5 flex items-center text-sm font-semibold rounded-lg text-white hover:opacity-90 transition-colors shadow-sm"
+                  style={{backgroundColor: '#1A4731'}}
+                >
+                  Talk to us on WhatsApp
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : (
+        <section className="bg-white border-t border-slate-200 py-8">
+          <div className="container-site">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <p className="font-display text-xl text-navy-950">Ready to get started?</p>
+                <p className="text-sm text-slate-500 mt-0.5">Study for free — or engage our professional services team.</p>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <Link
+                  href="/get-help"
+                  className="h-10 px-5 flex items-center text-sm font-medium rounded-lg border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors"
+                >
+                  Explore our services
+                </Link>
+                <Link
+                  href="/study"
+                  className="h-10 px-5 flex items-center text-sm font-semibold rounded-lg bg-navy-950 text-white hover:bg-navy-900 transition-colors shadow-sm"
+                >
+                  Start studying free
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
     </>
   )
