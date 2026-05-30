@@ -489,6 +489,36 @@ export default async function HomePage() {
       accentText:  '#1A4731',
     },
   ]
+  const etStudyPillars = [
+    {
+      id:          'eticpa',
+      title:       'ETICPA / CPA',
+      description: "Ethiopia's national accountancy body. The CPA and ATQ qualifications for finance professionals working in or with Ethiopia.",
+      href:        '/study/eticpa',
+      highlights:  ['CPA Professional', 'ATQ Foundation', 'ATQ Advanced', 'Ethiopian Taxation'],
+    },
+    {
+      id:          'acca',
+      title:       'ACCA',
+      description: 'The global gold standard in professional accounting. All 13 papers covered with study notes, practice questions and mock exams.',
+      href:        '/study/acca',
+      highlights:  ['All 13 papers', 'Study notes', 'Practice questions', 'Mock exams'],
+    },
+    {
+      id:          'cima',
+      title:       'CIMA',
+      description: 'The world's largest management accounting body. Certificate to Strategic level — full coverage for every stage of your journey.',
+      href:        '/study/cima',
+      highlights:  ['Certificate level', 'Operational level', 'Management level', 'Strategic level'],
+    },
+    {
+      id:          'aat',
+      title:       'AAT',
+      description: 'The practical accounting qualification. Level 2, 3 and 4 fully covered — the ideal foundation before ACCA or CIMA.',
+      href:        '/study/aat',
+      highlights:  ['Level 2 Foundation', 'Level 3 Advanced', 'Level 4 Professional', 'Free to start'],
+    },
+  ]
   const etTrustPoints = [
     {
       title: 'The Vetting Premium',
@@ -764,47 +794,108 @@ export default async function HomePage() {
 
           {isEthioTax ? (
             <>
-              <div className="max-w-2xl mb-12">
-                <span className="eyebrow mb-3 block">Our Services</span>
-                <h2 className="section-title mb-4">Everything your business and finances need — managed for you</h2>
+              {/* ── Section header ── */}
+              <div className="text-center max-w-3xl mx-auto mb-14">
+                <span className="eyebrow mb-3 block">What EthioTax Offers</span>
+                <h2 className="section-title mb-4">Professional services and study — everything in one place</h2>
                 <p className="text-slate-500 text-lg leading-relaxed">
-                  EthioTax coordinates qualified Ethiopian-origin professionals across every service your business needs. One relationship. Every jurisdiction. Delivered to your door.
+                  EthioTax delivers fully managed professional services for the Ethiopian community, and a world-class study platform for the next generation of Ethiopian finance professionals.
                 </p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {etPillars.map((pillar) => (
-                  <Link
-                    key={pillar.id}
-                    href={pillar.href}
-                    className="group flex flex-col bg-white rounded-xl border-2 border-slate-200 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
-                  >
-                    <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{backgroundColor: pillar.iconBg}}>
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeWidth="1.75" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <h3 className="font-display text-lg mb-2 group-hover:opacity-80 transition-colors" style={{color: '#1A4731'}}>
-                      {pillar.title}
-                    </h3>
-                    <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
-                      {pillar.description}
-                    </p>
-                    <ul className="space-y-1.5 mb-5">
-                      {pillar.highlights.map(h => (
-                        <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
-                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{backgroundColor: '#C9982A'}} />
-                          {h}
-                        </li>
-                      ))}
-                    </ul>
-                    <span className="flex items-center gap-1.5 text-xs font-semibold group-hover:gap-2.5 transition-all" style={{color: '#1A4731'}}>
-                      Get a free quote
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                      </svg>
-                    </span>
-                  </Link>
-                ))}
+
+              {/* ── Top half: Professional Services ── */}
+              <div className="mb-10">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="h-px flex-1 bg-slate-200" />
+                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-slate-200 bg-white">
+                    <span className="w-2 h-2 rounded-full" style={{backgroundColor: '#1A4731'}} />
+                    <span className="text-xs font-semibold uppercase tracking-widest" style={{color: '#1A4731'}}>Professional Services</span>
+                  </div>
+                  <div className="h-px flex-1 bg-slate-200" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                  {etPillars.map((pillar) => (
+                    <Link
+                      key={pillar.id}
+                      href={pillar.href}
+                      className="group flex flex-col bg-white rounded-xl border-2 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+                      style={{borderColor: '#1A4731'}}
+                    >
+                      <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{backgroundColor: '#1A4731'}}>
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeWidth="1.75" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <h3 className="font-display text-lg mb-2 group-hover:opacity-80 transition-colors" style={{color: '#1A4731'}}>
+                        {pillar.title}
+                      </h3>
+                      <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
+                        {pillar.description}
+                      </p>
+                      <ul className="space-y-1.5 mb-5">
+                        {pillar.highlights.map(h => (
+                          <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
+                            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{backgroundColor: '#C9982A'}} />
+                            {h}
+                          </li>
+                        ))}
+                      </ul>
+                      <span className="flex items-center gap-1.5 text-xs font-semibold group-hover:gap-2.5 transition-all" style={{color: '#1A4731'}}>
+                        Get a free quote
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Bottom half: Study Platform ── */}
+              <div>
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="h-px flex-1 bg-slate-200" />
+                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-slate-200 bg-white">
+                    <span className="w-2 h-2 rounded-full bg-teal-600" />
+                    <span className="text-xs font-semibold uppercase tracking-widest text-teal-700">Study Platform</span>
+                  </div>
+                  <div className="h-px flex-1 bg-slate-200" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                  {etStudyPillars.map((pillar) => (
+                    <Link
+                      key={pillar.id}
+                      href={pillar.href}
+                      className="group flex flex-col bg-white rounded-xl border-2 border-slate-200 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+                    >
+                      <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 bg-teal-600">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeWidth="1.75" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                      </div>
+                      <h3 className="font-display text-lg text-teal-700 mb-2 group-hover:opacity-80 transition-colors">
+                        {pillar.title}
+                      </h3>
+                      <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
+                        {pillar.description}
+                      </p>
+                      <ul className="space-y-1.5 mb-5">
+                        {pillar.highlights.map(h => (
+                          <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
+                            <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-teal-600" />
+                            {h}
+                          </li>
+                        ))}
+                      </ul>
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-teal-700 group-hover:gap-2.5 transition-all">
+                        Start studying free
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
               </div>
             </>
           ) : (
