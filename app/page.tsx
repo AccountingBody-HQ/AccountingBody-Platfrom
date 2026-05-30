@@ -451,6 +451,40 @@ export default async function HomePage() {
       body:  'EthioTax tracks your deadlines, sends annual reminders and proactively advises as your needs grow. One relationship. Complete financial support.',
     },
   ]
+  const etTrustPoints = [
+    {
+      title: 'The Vetting Premium',
+      body: 'Every professional in our network is qualified, referenced, licensed and performance-monitored. You never deal with an unverified provider.',
+    },
+    {
+      title: 'The Convenience Premium',
+      body: 'One inquiry. One point of contact. EthioTax manages every step from brief to delivery - you focus on your business, not your accountant.',
+    },
+    {
+      title: 'The Community Premium',
+      body: 'We understand Amharic, Afaan Oromoo, ERCA, Ethiopian business law and the cross-border reality of diaspora life. Generalist firms do not.',
+    },
+    {
+      title: 'The Quality Assurance Premium',
+      body: 'Every deliverable is reviewed by EthioTax before it reaches you. No raw output. No surprises. Guaranteed professional standard.',
+    },
+    {
+      title: 'The Cross-Border Expertise Premium',
+      body: 'UK, USA, Canada, UAE, Ethiopia and beyond. We coordinate professionals across every jurisdiction the diaspora calls home.',
+    },
+    {
+      title: 'The Relationship Continuity Premium',
+      body: 'EthioTax remembers every engagement. We track your deadlines, send annual reminders and proactively advise as your needs grow.',
+    },
+    {
+      title: 'The Amharic Accessibility Premium',
+      body: 'Professional financial services in your language. English, Amharic or Afaan Oromoo - you choose, we deliver.',
+    },
+    {
+      title: 'The Ecosystem Premium',
+      body: 'EthioTax is the first pillar of a complete Ethiopian financial services ecosystem. BirrBank finance marketplace coming next.',
+    },
+  ]
   const eticpaCard = {
     code:        'ETICPA',
     slug:        'eticpa',
@@ -807,83 +841,149 @@ export default async function HomePage() {
       {/* ════════════════════════════════════════════════════════════════
           7. TRUST & AUTHORITY
           ════════════════════════════════════════════════════════════════ */}
-      <section className="section bg-slate-50">
-        <div className="container-site">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-
-            <div>
-              <span className="eyebrow mb-3 block">Why Accounting Body</span>
-              <h2 className="section-title mb-6">Content you can actually trust</h2>
-              <p className="text-slate-500 text-lg leading-relaxed mb-8">
-                The internet is full of accounting content written by people who have
-                never sat an exam. Every piece of content on Accounting Body is written
-                or reviewed by someone who has.
+      {isEthioTax ? (
+        /* ── EthioTax: Why EthioTax ── */
+        <section className="section bg-slate-50">
+          <div className="container-site">
+            <div className="text-center max-w-2xl mx-auto mb-14">
+              <span className="eyebrow mb-3 block">Why EthioTax</span>
+              <h2 className="section-title mb-4">Eight reasons the community trusts us</h2>
+              <p className="text-slate-500 text-lg leading-relaxed">
+                EthioTax is not a directory. We are not a marketplace. We are a fully managed professional services coordinator built specifically for the Ethiopian community.
               </p>
-              <div className="space-y-5">
-                {trustPoints.map(point => (
-                  <div key={point.title} className="flex gap-4">
-                    <div className="w-9 h-9 rounded-lg bg-navy-50 flex items-center justify-center text-navy-700 shrink-0 mt-0.5">
-                      {point.icon}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-14">
+              {etTrustPoints.map((point, i) => (
+                <div key={point.title} className="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-4 text-white text-sm font-bold shrink-0" style={{backgroundColor: '#1A4731'}}>
+                    {String(i + 1).padStart(2, '0')}
+                  </div>
+                  <h4 className="font-semibold text-sm mb-2" style={{color: '#1A4731'}}>{point.title}</h4>
+                  <p className="text-sm text-slate-500 leading-relaxed">{point.body}</p>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-lg max-w-2xl mx-auto">
+              <div className="p-8 relative overflow-hidden" style={{backgroundColor: '#1A4731'}}>
+                <div
+                  className="absolute inset-0 opacity-20"
+                  style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #C9982A 0%, transparent 50%)' }}
+                />
+                <div className="relative z-10">
+                  <p className="text-xs font-semibold uppercase tracking-widest mb-5" style={{color: '#C9982A'}}>
+                    Client experience
+                  </p>
+                  <div className="text-6xl font-display leading-none mb-2 opacity-60" style={{color: '#C9982A'}}>&ldquo;</div>
+                  <p className="text-white text-base leading-relaxed mb-6">
+                    EthioTax handled my UK self-assessment and my Ethiopian business accounts at the same time. One contact, one invoice, zero stress. I did not have to explain my situation twice.
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0" style={{backgroundColor: '#C9982A', color: '#1A4731'}}>
+                      T
                     </div>
                     <div>
-                      <h4 className="font-semibold text-navy-950 mb-1 text-sm">{point.title}</h4>
-                      <p className="text-sm text-slate-500 leading-relaxed">{point.body}</p>
+                      <span className="text-white text-sm font-semibold block">Tigist A.</span>
+                      <span className="text-white/50 text-xs">Business owner, London</span>
                     </div>
                   </div>
-                ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-3 divide-x divide-slate-200 bg-white">
+                <div className="p-5 flex flex-col items-center text-center">
+                  <span className="font-display text-2xl leading-none mb-1" style={{color: '#1A4731'}}>24hr</span>
+                  <span className="text-slate-500 text-xs font-medium">Response guarantee</span>
+                </div>
+                <div className="p-5 flex flex-col items-center text-center">
+                  <span className="font-display text-2xl leading-none mb-1" style={{color: '#1A4731'}}>72hr</span>
+                  <span className="text-slate-500 text-xs font-medium">Fixed-fee proposal</span>
+                </div>
+                <div className="p-5 flex flex-col items-center text-center">
+                  <span className="font-display text-2xl leading-none mb-1" style={{color: '#1A4731'}}>100%</span>
+                  <span className="text-slate-500 text-xs font-medium">Quality checked</span>
+                </div>
               </div>
             </div>
+          </div>
+        </section>
+      ) : (
+        /* ── AccountingBody: original section unchanged ── */
+        <section className="section bg-slate-50">
+          <div className="container-site">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
-            <div className="relative">
-              <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-lg">
-
-                {/* Quote card */}
-                <div className="bg-navy-950 p-8 relative overflow-hidden">
-                  <div
-                    className="absolute inset-0 opacity-20"
-                    style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 50%)' }}
-                  />
-                  <div className="relative z-10">
-                    <p className="text-gold-400 text-xs font-semibold uppercase tracking-widest mb-5">
-                      Student experience
-                    </p>
-                    {/* Large quote mark */}
-                    <div className="text-gold-500 text-6xl font-display leading-none mb-2 opacity-60">&ldquo;</div>
-                    <p className="text-white text-base leading-relaxed mb-6">
-                      Accounting Body has been my go-to resource throughout my
-                      qualification journey. The study notes and practice questions
-                      are genuinely exam standard.
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gold-500 flex items-center justify-center text-navy-950 text-sm font-bold shrink-0">
-                        S
+              <div>
+                <span className="eyebrow mb-3 block">Why Accounting Body</span>
+                <h2 className="section-title mb-6">Content you can actually trust</h2>
+                <p className="text-slate-500 text-lg leading-relaxed mb-8">
+                  The internet is full of accounting content written by people who have
+                  never sat an exam. Every piece of content on Accounting Body is written
+                  or reviewed by someone who has.
+                </p>
+                <div className="space-y-5">
+                  {trustPoints.map(point => (
+                    <div key={point.title} className="flex gap-4">
+                      <div className="w-9 h-9 rounded-lg bg-navy-50 flex items-center justify-center text-navy-700 shrink-0 mt-0.5">
+                        {point.icon}
                       </div>
                       <div>
-                        <span className="text-white text-sm font-semibold block">Sarah M.</span>
-                        <span className="text-white/50 text-xs">Professional accounting student, UK</span>
+                        <h4 className="font-semibold text-navy-950 mb-1 text-sm">{point.title}</h4>
+                        <p className="text-sm text-slate-500 leading-relaxed">{point.body}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-lg">
+
+                  {/* Quote card */}
+                  <div className="bg-navy-950 p-8 relative overflow-hidden">
+                    <div
+                      className="absolute inset-0 opacity-20"
+                      style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 50%)' }}
+                    />
+                    <div className="relative z-10">
+                      <p className="text-gold-400 text-xs font-semibold uppercase tracking-widest mb-5">
+                        Student experience
+                      </p>
+                      <div className="text-gold-500 text-6xl font-display leading-none mb-2 opacity-60">&ldquo;</div>
+                      <p className="text-white text-base leading-relaxed mb-6">
+                        Accounting Body has been my go-to resource throughout my
+                        qualification journey. The study notes and practice questions
+                        are genuinely exam standard.
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gold-500 flex items-center justify-center text-navy-950 text-sm font-bold shrink-0">
+                          S
+                        </div>
+                        <div>
+                          <span className="text-white text-sm font-semibold block">Sarah M.</span>
+                          <span className="text-white/50 text-xs">Professional accounting student, UK</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Stats row */}
-                <div className="grid grid-cols-2 divide-x divide-slate-200 bg-white">
-                  <div className="p-6 flex flex-col items-center text-center">
-                    <span className="font-display text-3xl text-navy-950 leading-none mb-1">Since 2018</span>
-                    <span className="text-slate-500 text-xs font-medium">Trusted by educators</span>
+                  {/* Stats row */}
+                  <div className="grid grid-cols-2 divide-x divide-slate-200 bg-white">
+                    <div className="p-6 flex flex-col items-center text-center">
+                      <span className="font-display text-3xl text-navy-950 leading-none mb-1">Since 2018</span>
+                      <span className="text-slate-500 text-xs font-medium">Trusted by educators</span>
+                    </div>
+                    <div className="p-6 flex flex-col items-center text-center">
+                      <span className="font-display text-3xl text-navy-950 leading-none mb-1">Top Global</span>
+                      <span className="text-slate-500 text-xs font-medium">Qualifications covered</span>
+                    </div>
                   </div>
-                  <div className="p-6 flex flex-col items-center text-center">
-                    <span className="font-display text-3xl text-navy-950 leading-none mb-1">Top Global</span>
-                    <span className="text-slate-500 text-xs font-medium">Qualifications covered</span>
-                  </div>
-                </div>
 
+                </div>
               </div>
-            </div>
 
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
 
       {/* ════════════════════════════════════════════════════════════════
