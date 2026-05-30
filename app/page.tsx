@@ -423,6 +423,7 @@ function EmailSignupSection() {
 export default async function HomePage() {
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const etHowItWorks = [
     {
       step:  '01',
