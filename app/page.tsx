@@ -1305,11 +1305,7 @@ export default async function HomePage() {
           8. EMAIL SIGNUP
           ════════════════════════════════════════════════════════════════ */}
       {isEthioTax ? (
-        <section className="section-navy section relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-white/5 blur-3xl" />
-            <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-white/5 blur-3xl" />
-          </div>
+        <section className="section-navy section">
           <div className="container-site relative z-10">
             <div className="max-w-2xl mx-auto text-center">
               <span className="eyebrow text-gold-400 mb-4 block">Stay Ahead</span>
