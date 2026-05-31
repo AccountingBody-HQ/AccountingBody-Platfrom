@@ -298,10 +298,15 @@ export default function GetHelpPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {[
-              { name: 'Tax Advice', slug: 'tax-advice', desc: 'Personal and corporate tax planning, compliance, and advisory services.' },
-              { name: 'Bookkeeping', slug: 'bookkeeping', desc: 'Accurate, up-to-date financial records maintained by our professionals.' },
-              { name: 'Payroll', slug: 'payroll', desc: 'End-to-end payroll management — processing, submissions and pension compliance.' },
-              { name: 'Financial Planning', slug: 'financial-planning', desc: 'Strategic financial planning, cash flow forecasting, and budgeting.' },
+              { name: 'Tax Advice', slug: 'tax-advice', desc: 'Personal and corporate tax planning, compliance, and advisory services delivered by our qualified tax specialists.' },
+              { name: 'Bookkeeping', slug: 'bookkeeping', desc: 'Accurate, up-to-date financial records maintained by our bookkeeping professionals.' },
+              { name: 'Payroll', slug: 'payroll', desc: 'End-to-end payroll management — processing, statutory submissions, payslips, and pension compliance.' },
+              { name: 'Financial Planning', slug: 'financial-planning', desc: 'Strategic financial planning, cash flow forecasting, and budgeting to help your business grow.' },
+              { name: 'Audit', slug: 'audit', desc: 'Statutory and voluntary audit services delivered by our qualified audit professionals.' },
+              { name: 'Business Advisory', slug: 'business-advisory', desc: 'Strategic business advice, growth planning, and performance improvement for ambitious businesses.' },
+              { name: 'Company Formation', slug: 'company-formation', desc: 'Register your limited company correctly and compliantly — fast, affordable, and stress-free.' },
+              { name: 'VAT & Sales Tax', slug: 'vat', desc: 'VAT registration, returns, and advisory — MTD compliant and always on time.' },
+              { name: 'Self Assessment', slug: 'self-assessment', desc: 'Personal tax return preparation and submission handled by our specialists — accurate and filed on time.' },
             ].map((s) => (
               <a key={s.name} href={'/get-help/' + s.slug}
                 className="group bg-white rounded-xl border border-slate-200 p-6 hover:border-gold-400 hover:shadow-lg transition-all duration-200 block">
