@@ -465,19 +465,26 @@ function MobileMenu({ open, onClose, onSearch, sections }: { open: boolean; onCl
 
 // ── Main Navigation ───────────────────────────────────────────────────────────
 
-export function Navigation({ studyQualificationLinks }: { studyQualificationLinks?: NavLink[] }) {
-  const sections = studyQualificationLinks
-    ? navSections.map(section => {
-        if (section.id !== 'study') return section
-        return {
-          ...section,
-          groups: section.groups?.map(group => {
-            if (group.title !== 'By Qualification') return group
-            return { ...group, links: studyQualificationLinks }
-          }),
-        }
-      })
-    : navSections
+export function Navigation({ studyQualificationLinks, etGetHelpLinks }: { studyQualificationLinks?: NavLink[], etGetHelpLinks?: { groups: { title: string, links: NavLink[] }[], cta: { label: string, href: string, description: string } } }) {
+  const sections = navSections.map(section => {
+    if (section.id === 'study' && studyQualificationLinks) {
+      return {
+        ...section,
+        groups: section.groups?.map(group => {
+          if (group.title !== 'By Qualification') return group
+          return { ...group, links: studyQualificationLinks }
+        }),
+      }
+    }
+    if (section.id === 'get-help' && etGetHelpLinks) {
+      return {
+        ...section,
+        groups: etGetHelpLinks.groups,
+        cta: etGetHelpLinks.cta,
+      }
+    }
+    return section
+  })
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [mobileOpen,     setMobileOpen]     = useState(false)
   const [scrolled,       setScrolled]       = useState(false)

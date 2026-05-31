@@ -4,36 +4,43 @@ import { useState, useEffect } from 'react'
 const etServices = [
   {
     category: 'Accounting & Bookkeeping',
+    href: '/get-help/accounting-bookkeeping',
     description: 'Accurate books, annual accounts and management reports — handled end to end.',
     bullets: ['Monthly & quarterly bookkeeping', 'Annual accounts preparation', 'Xero, QuickBooks & Sage setup', 'ETICPA-standard Ethiopian accounts'],
   },
   {
     category: 'Tax Filing & Compliance',
+    href: '/get-help/tax-filing-compliance',
     description: 'UK, US, Canadian and Ethiopian tax returns — cross-border expertise for the diaspora.',
     bullets: ['UK Self Assessment & corporation tax', 'US Federal returns, FBAR & FATCA', 'Ethiopian ERCA income & business tax', 'Cross-border tax planning & relief'],
   },
   {
     category: 'Business Consulting',
+    href: '/get-help/business-consulting',
     description: 'Strategic advice, business plans and diaspora investment structuring.',
     bullets: ['Business plan & financial modelling', 'Diaspora investment in Ethiopia', 'Market entry & exit planning', 'Business performance & valuation'],
   },
   {
     category: 'Payroll Services',
+    href: '/get-help/payroll-services',
     description: 'UK PAYE, Ethiopian payroll and pension compliance — fully managed.',
     bullets: ['UK PAYE setup & monthly processing', 'Ethiopian payroll & ERCA compliance', 'Pension auto-enrolment (UK)', 'US payroll tax & W-2 preparation'],
   },
   {
     category: 'Company Formation',
+    href: '/get-help/company-formation',
     description: 'UK, US, Canadian and Ethiopian company registration — fast and fully compliant.',
     bullets: ['UK limited company — Companies House', 'USA LLC & corporation registration', 'Ethiopian business & trade licence', 'Registered office & company secretary'],
   },
   {
     category: 'Audit & Assurance',
+    href: '/get-help/audit-assurance',
     description: 'Statutory audit, ETICPA-standard audit and assurance reports for lenders and investors.',
     bullets: ['Statutory audit via FRC registered firm', 'ETICPA-standard audit for Ethiopian entities', 'Internal audit & controls review', 'Due diligence for acquisitions'],
   },
   {
     category: 'Financial Planning',
+    href: '/get-help/financial-planning-advisory',
     description: 'Personal financial planning, retirement planning and property investment structuring.',
     bullets: ['Personal financial planning', 'Retirement planning for diaspora professionals', 'Property investment — UK & Ethiopia', 'Business finance & funding advisory'],
   },
@@ -189,7 +196,7 @@ export default function GetHelpPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {etServices.map((s) => (
-                <a key={s.category} href="/wa" target="_blank" rel="noopener noreferrer"
+                <a key={s.category} href={s.href}
                   className="group flex flex-col bg-white rounded-2xl p-6 md:p-8 border-l-4 border border-[#1A4731] hover:border-l-[#C9982A] hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 no-underline">
                   <div className="flex items-start gap-5 mb-5">
                     <div className="w-[52px] h-[52px] rounded-xl bg-[#1A4731] flex items-center justify-center shrink-0">
