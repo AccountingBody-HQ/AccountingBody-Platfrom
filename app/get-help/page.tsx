@@ -143,11 +143,11 @@ export default function GetHelpPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <a href="/wa" target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center h-[52px] px-8 bg-[#C9982A] text-[#1A4731] text-sm font-bold rounded-xl hover:opacity-90 transition-opacity">
+                  className="inline-flex items-center justify-center h-[52px] px-8 min-w-[210px] bg-[#C9982A] text-[#1A4731] text-sm font-bold rounded-xl hover:opacity-90 transition-opacity">
                   Talk to us on WhatsApp →
                 </a>
                 <a href="#services"
-                  className="inline-flex items-center justify-center h-[52px] px-8 border-2 border-white/30 text-white text-sm font-semibold rounded-xl hover:bg-white/10 transition-colors">
+                  className="inline-flex items-center justify-center h-[52px] px-8 min-w-[210px] border-2 border-white/30 text-white text-sm font-semibold rounded-xl hover:bg-white/10 transition-colors">
                   View all services
                 </a>
               </div>
