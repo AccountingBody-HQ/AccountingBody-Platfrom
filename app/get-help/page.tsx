@@ -256,11 +256,11 @@ export default function GetHelpPage() {
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-3">
                 <a href="/wa" target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center h-[52px] px-8 bg-[#1A4731] text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity">
+                  className="inline-flex items-center justify-center h-[52px] w-full sm:w-[220px] bg-[#1A4731] text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity">
                   Talk to us on WhatsApp
                 </a>
                 <a href="/contact"
-                  className="inline-flex items-center justify-center h-[52px] px-8 border-2 border-[#1A4731] text-[#1A4731] text-sm font-semibold rounded-xl hover:bg-[#f0f7f4] transition-colors">
+                  className="inline-flex items-center justify-center h-[52px] w-full sm:w-[220px] border-2 border-[#1A4731] text-[#1A4731] text-sm font-semibold rounded-xl hover:bg-[#f0f7f4] transition-colors">
                   Send us a message
                 </a>
               </div>
