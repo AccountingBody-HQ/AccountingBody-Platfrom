@@ -156,27 +156,27 @@ export default function GetHelpPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" style={{ alignItems: 'stretch' }}>
               {etServices.map((s) => (
                 <a key={s.category} href="/wa" target="_blank" rel="noopener noreferrer"
-                  className="group flex flex-col bg-white rounded-2xl p-7 border border-slate-100 hover:border-transparent hover:shadow-2xl transition-all duration-300 cursor-pointer"
-                  style={{ textDecoration: 'none' }}>
-                  <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-110"
+                  className="group flex flex-col rounded-2xl p-7 transition-all duration-300 cursor-pointer hover:shadow-2xl hover:-translate-y-1"
+                  style={{ textDecoration: 'none', backgroundColor: '#ffffff', border: '2px solid #1A4731' }}>
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-105"
                     style={{ backgroundColor: '#1A4731' }}
                     dangerouslySetInnerHTML={{ __html: s.svg }} />
-                  <h3 className="font-display text-lg font-bold mb-2 transition-colors duration-200"
+                  <h3 className="font-display text-xl font-bold mb-2"
                     style={{ color: '#1A4731' }}>{s.category}</h3>
-                  <p className="text-sm leading-relaxed mb-4" style={{ color: '#6b7280' }}>{s.description}</p>
-                  <ul className="space-y-2 flex-1">
+                  <p className="text-sm leading-relaxed mb-5" style={{ color: '#6b7280' }}>{s.description}</p>
+                  <ul className="space-y-2.5 flex-1">
                     {s.bullets.map(b => (
                       <li key={b} className="flex items-start gap-2.5 text-sm" style={{ color: '#374151' }}>
-                        <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: '#C9982A' }} />
+                        <span className="mt-1.5 w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: '#C9982A' }} />
                         {b}
                       </li>
                     ))}
                   </ul>
-                  <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between">
-                    <span className="text-sm font-semibold transition-colors duration-200" style={{ color: '#C9982A' }}>Get a free quote</span>
-                    <span className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 group-hover:translate-x-1"
-                      style={{ backgroundColor: '#f0f7f4' }}>
-                      <svg className="w-4 h-4" fill="none" stroke="#1A4731" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                  <div className="mt-6 pt-5 flex items-center justify-between" style={{ borderTop: '1px solid #e8f0eb' }}>
+                    <span className="text-sm font-bold" style={{ color: '#C9982A' }}>Get a free quote →</span>
+                    <span className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 group-hover:translate-x-1"
+                      style={{ backgroundColor: '#1A4731' }}>
+                      <svg className="w-4 h-4" fill="none" stroke="#ffffff" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                     </span>
                   </div>
                 </a>
