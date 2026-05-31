@@ -195,7 +195,7 @@ export default function GetHelpPage() {
                 Qualified professionals. Amharic and Afaan Oromoo service available. UK · USA · Canada · UAE · Ethiopia and beyond.
               </p>
               <div className="flex flex-wrap gap-4">
-                <a href="https://wa.me/447825730440?text=Hello%20EthioTax%2C%20I%20would%20like%20to%20enquire%20about%20your%20services."
+                <a href="/wa"
                   target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 h-12 px-7 text-sm font-semibold rounded-lg transition-colors"
                   style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>
@@ -256,7 +256,7 @@ export default function GetHelpPage() {
                       </li>
                     ))}
                   </ul>
-                  <a href="https://wa.me/447825730440?text=Hello%20EthioTax%2C%20I%20would%20like%20to%20enquire%20about%20your%20services."
+                  <a href="/wa"
                     target="_blank" rel="noopener noreferrer"
                     className="mt-5 inline-flex items-center gap-1 text-xs font-semibold transition-all"
                     style={{ color: '#C9982A' }}>
@@ -304,7 +304,7 @@ export default function GetHelpPage() {
               Contact EthioTax today. We respond within 24 hours in English, Amharic or Afaan Oromoo.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a href="https://wa.me/447825730440?text=Hello%20EthioTax%2C%20I%20would%20like%20to%20enquire%20about%20your%20services."
+              <a href="/wa"
                 target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 h-12 px-8 text-sm font-semibold rounded-lg transition-colors"
                 style={{ backgroundColor: '#1A4731', color: '#ffffff' }}>

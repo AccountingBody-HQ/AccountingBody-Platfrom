@@ -628,7 +628,7 @@ export default async function HomePage() {
 
             <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-16">
               <Link
-                href={isEthioTax ? "https://wa.me/447825730440?text=Hello%20EthioTax%2C%20I%20would%20like%20to%20enquire%20about%20your%20services." : "/study"}
+                href={isEthioTax ? "/wa" : "/study"}
                 target={isEthioTax ? "_blank" : undefined}
                 rel={isEthioTax ? "noopener noreferrer" : undefined}
                 className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold"
@@ -1345,7 +1345,7 @@ export default async function HomePage() {
                   Explore our services
                 </Link>
                 <Link
-                  href="https://wa.me/447825730440?text=Hello%20EthioTax%2C%20I%20would%20like%20to%20enquire%20about%20your%20services."
+                  href="/wa"
                   className="h-10 px-5 flex items-center justify-center text-sm font-semibold rounded-lg text-white hover:opacity-90 transition-colors shadow-sm"
                   style={{backgroundColor: '#1A4731'}}
                 >
