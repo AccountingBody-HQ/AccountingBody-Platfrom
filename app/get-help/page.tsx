@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 const etServices = [
   {
     category: 'Accounting & Bookkeeping',
-    icon: '📒',
+    icon: (<svg viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg' className='w-10 h-10'><rect width='40' height='40' rx='10' fill='#f0f7f4'/><rect x='11' y='9' width='14' height='22' rx='2' stroke='#1A4731' strokeWidth='1.6'/><path d='M17 15h6M17 19h6M17 23h4' stroke='#C9982A' strokeWidth='1.6' strokeLinecap='round'/></svg>),
     description: 'Monthly and quarterly bookkeeping, annual accounts, management reports and software setup.',
     items: [
       'Monthly and quarterly bookkeeping',
@@ -18,7 +18,7 @@ const etServices = [
   },
   {
     category: 'Tax Filing & Compliance',
-    icon: '🧾',
+    icon: (<svg viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg' className='w-10 h-10'><rect width='40' height='40' rx='10' fill='#f0f7f4'/><path d='M12 10h16v22l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5V10z' stroke='#1A4731' strokeWidth='1.6' strokeLinejoin='round'/><path d='M16 16h8M16 20h8M16 24h5' stroke='#C9982A' strokeWidth='1.6' strokeLinecap='round'/></svg>),
     description: 'UK, US, Canadian, and Ethiopian tax returns. Cross-border expertise for the diaspora.',
     items: [
       'UK Self Assessment — employment, rental, overseas income',
@@ -32,7 +32,7 @@ const etServices = [
   },
   {
     category: 'Business Consulting & Strategy',
-    icon: '📊',
+    icon: (<svg viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg' className='w-10 h-10'><rect width='40' height='40' rx='10' fill='#f0f7f4'/><rect x='10' y='24' width='5' height='7' rx='1' fill='#1A4731' opacity='0.3' stroke='#1A4731' strokeWidth='1.4'/><rect x='17' y='18' width='5' height='13' rx='1' fill='#1A4731' opacity='0.5' stroke='#1A4731' strokeWidth='1.4'/><rect x='24' y='12' width='5' height='19' rx='1' fill='#1A4731' stroke='#1A4731' strokeWidth='1.4'/><path d='M11 10v22h20' stroke='#C9982A' strokeWidth='1.6' strokeLinecap='round'/></svg>),
     description: 'Business plans, financial modelling, diaspora investment structuring and strategic advisory.',
     items: [
       'Business plan development for startups and growth businesses',
@@ -45,7 +45,7 @@ const etServices = [
   },
   {
     category: 'Payroll Services',
-    icon: '💳',
+    icon: (<svg viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg' className='w-10 h-10'><rect width='40' height='40' rx='10' fill='#f0f7f4'/><rect x='8' y='13' width='24' height='15' rx='3' stroke='#1A4731' strokeWidth='1.6'/><path d='M8 18h24' stroke='#1A4731' strokeWidth='1.6'/><rect x='12' y='22' width='6' height='2.5' rx='1' fill='#C9982A'/><circle cx='26' cy='23' r='2' fill='#1A4731' opacity='0.3'/><circle cx='29' cy='23' r='2' fill='#1A4731' opacity='0.6'/></svg>),
     description: 'UK PAYE, Ethiopian payroll, pension auto-enrolment and cross-border payroll compliance.',
     items: [
       'UK PAYE setup, monthly processing and RTI filing',
@@ -57,7 +57,7 @@ const etServices = [
   },
   {
     category: 'Company Formation & Registration',
-    icon: '🏢',
+    icon: (<svg viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg' className='w-10 h-10'><rect width='40' height='40' rx='10' fill='#f0f7f4'/><rect x='10' y='12' width='13' height='19' rx='1.5' stroke='#1A4731' strokeWidth='1.6'/><path d='M23 18h7v13H23' stroke='#1A4731' strokeWidth='1.6' strokeLinejoin='round'/><path d='M14 16h2M18 16h2M14 20h2M18 20h2M14 24h2M18 24h2' stroke='#C9982A' strokeWidth='1.4' strokeLinecap='round'/><path d='M16 31v-4h3v4' stroke='#1A4731' strokeWidth='1.4' strokeLinejoin='round'/></svg>),
     description: 'UK, US, Canadian and Ethiopian company registration handled end to end.',
     items: [
       'UK limited company — Companies House and HMRC registration',
@@ -69,7 +69,7 @@ const etServices = [
   },
   {
     category: 'Audit & Assurance',
-    icon: '✅',
+    icon: (<svg viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg' className='w-10 h-10'><rect width='40' height='40' rx='10' fill='#f0f7f4'/><rect x='10' y='10' width='20' height='20' rx='3' stroke='#1A4731' strokeWidth='1.6'/><path d='M15 20l4 4 7-8' stroke='#C9982A' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/></svg>),
     description: 'Statutory audit, ETICPA-standard audit, internal controls review and due diligence.',
     items: [
       'Statutory audit for UK companies (via FRC registered partner firm)',
@@ -81,7 +81,7 @@ const etServices = [
   },
   {
     category: 'Financial Planning & Advisory',
-    icon: '📈',
+    icon: (<svg viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg' className='w-10 h-10'><rect width='40' height='40' rx='10' fill='#f0f7f4'/><path d='M10 30h22' stroke='#1A4731' strokeWidth='1.6' strokeLinecap='round'/><path d='M12 26l6-7 4 4 8-10' stroke='#C9982A' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'/><circle cx='12' cy='26' r='1.5' fill='#1A4731'/><circle cx='18' cy='19' r='1.5' fill='#1A4731'/><circle cx='22' cy='23' r='1.5' fill='#1A4731'/><circle cx='30' cy='13' r='1.5' fill='#C9982A'/></svg>),
     description: 'Personal financial planning, retirement planning and property investment structuring.',
     items: [
       'Personal financial planning — savings, investments, protection',
