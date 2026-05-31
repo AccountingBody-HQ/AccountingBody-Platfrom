@@ -233,7 +233,7 @@ export default function TaxFilingCompliancePage() {
                 <div className="w-[52px] h-[52px] rounded-full bg-[#C9982A] flex items-center justify-center text-[#1A4731] font-extrabold text-base mb-4 shrink-0">
                   {item.step}
                 </div>
-                <h3 className="text-white text-[14px] font-semibold mb-2">{item.title}</h3>
+                <h3 className="font-display text-white text-[15px] font-bold mb-2">{item.title}</h3>
                 <p className="text-white/50 text-[12px] leading-relaxed">{item.desc}</p>
               </div>
             ))}
