@@ -107,14 +107,13 @@ export default function GetHelpPage() {
               </p>
               <div className="flex flex-wrap gap-4">
                 <a href="/wa" target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 h-13 px-8 text-sm font-semibold rounded-xl transition-all hover:opacity-90"
-                  style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '52px' }}>
-                  Talk to us on WhatsApp
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                  className="inline-flex items-center justify-center gap-2 text-sm font-semibold rounded-xl transition-all hover:opacity-90"
+                  style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '52px', minWidth: '220px', padding: '0 32px' }}>
+                  Talk to us on WhatsApp →
                 </a>
                 <a href="#services"
-                  className="inline-flex items-center gap-2 px-8 text-sm font-semibold rounded-xl border border-white/30 text-white hover:bg-white/10 transition-all"
-                  style={{ height: '52px' }}>
+                  className="inline-flex items-center justify-center gap-2 text-sm font-semibold rounded-xl border-2 text-white hover:bg-white/10 transition-all"
+                  style={{ borderColor: 'rgba(255,255,255,0.4)', height: '52px', minWidth: '220px', padding: '0 32px' }}>
                   View all services
                 </a>
               </div>
@@ -230,13 +229,13 @@ export default function GetHelpPage() {
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <a href="/wa" target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-10 text-sm font-semibold rounded-xl transition-all hover:opacity-90"
-                  style={{ backgroundColor: '#1A4731', color: '#ffffff', height: '52px' }}>
+                  className="inline-flex items-center justify-center text-sm font-semibold rounded-xl transition-all hover:opacity-90"
+                  style={{ backgroundColor: '#1A4731', color: '#ffffff', height: '52px', minWidth: '220px', padding: '0 32px' }}>
                   Talk to us on WhatsApp
                 </a>
                 <a href="/contact"
-                  className="inline-flex items-center gap-2 px-10 text-sm font-semibold rounded-xl border-2 transition-all hover:bg-slate-50"
-                  style={{ borderColor: '#1A4731', color: '#1A4731', height: '52px' }}>
+                  className="inline-flex items-center justify-center text-sm font-semibold rounded-xl border-2 transition-all hover:bg-slate-50"
+                  style={{ borderColor: '#1A4731', color: '#1A4731', height: '52px', minWidth: '220px', padding: '0 32px' }}>
                   Send us a message
                 </a>
               </div>
