@@ -90,7 +90,7 @@ export default function TaxFilingCompliancePage() {
               Tax Filing & Compliance
             </h1>
             <p className="text-white/70 text-xl leading-relaxed mb-4 max-w-2xl">
-              Multi-jurisdiction tax returns, cross-border planning and full compliance — handled by qualified tax professionals who understand the Ethiopian diaspora&apos;s unique tax position.
+              Multi-jurisdiction tax returns, cross-border planning and full compliance — handled by qualified tax professionals who understand the Ethiopian diaspora&#39;s unique tax position.
             </p>
             <p className="text-white/45 text-base leading-relaxed mb-10 max-w-2xl">
               UK · USA · Canada · UAE · Ethiopia · Australia · Sweden and beyond. Whatever your situation, wherever you are based, EthioTax manages your tax obligations end to end.
