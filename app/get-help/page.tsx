@@ -4,109 +4,110 @@ import { useState, useEffect } from 'react'
 const etServices = [
   {
     category: 'Accounting & Bookkeeping',
-    description: 'Accurate books, annual accounts and management reports — handled end to end by qualified professionals.',
-    bullets: ['Monthly & quarterly bookkeeping', 'Annual accounts — sole traders & limited companies', 'Xero, QuickBooks & Sage setup', 'ETICPA-standard Ethiopian accounts'],
+    description: 'Accurate books, annual accounts and management reports — handled end to end.',
+    bullets: ['Monthly & quarterly bookkeeping', 'Annual accounts preparation', 'Xero, QuickBooks & Sage setup', 'ETICPA-standard Ethiopian accounts'],
   },
   {
     category: 'Tax Filing & Compliance',
-    description: 'UK, US, Canadian and Ethiopian tax returns — cross-border expertise built for the diaspora.',
-    bullets: ['UK Self Assessment & corporation tax', 'US Federal returns, FBAR & FATCA', 'Ethiopian ERCA income & business tax', 'Cross-border tax planning & double taxation relief'],
+    description: 'UK, US, Canadian and Ethiopian tax returns — cross-border expertise for the diaspora.',
+    bullets: ['UK Self Assessment & corporation tax', 'US Federal returns, FBAR & FATCA', 'Ethiopian ERCA income & business tax', 'Cross-border tax planning & relief'],
   },
   {
     category: 'Business Consulting',
-    description: 'Strategic advice, business plans and diaspora investment structuring for growth-stage businesses.',
-    bullets: ['Business plan development & financial modelling', 'Diaspora investment in Ethiopia — structuring & regulatory navigation', 'Market entry strategy & exit planning', 'Business performance review & valuation'],
+    description: 'Strategic advice, business plans and diaspora investment structuring.',
+    bullets: ['Business plan & financial modelling', 'Diaspora investment in Ethiopia', 'Market entry & exit planning', 'Business performance & valuation'],
   },
   {
     category: 'Payroll Services',
-    description: 'UK PAYE, Ethiopian payroll and pension compliance — fully managed from setup to filing.',
-    bullets: ['UK PAYE setup, monthly processing & RTI filing', 'Ethiopian payroll & ERCA compliance', 'Pension auto-enrolment (UK) & P11D reporting', 'US payroll tax & W-2 preparation'],
+    description: 'UK PAYE, Ethiopian payroll and pension compliance — fully managed.',
+    bullets: ['UK PAYE setup & monthly processing', 'Ethiopian payroll & ERCA compliance', 'Pension auto-enrolment (UK)', 'US payroll tax & W-2 preparation'],
   },
   {
     category: 'Company Formation',
-    description: 'UK, US, Canadian and Ethiopian company registration handled end to end — fast and fully compliant.',
-    bullets: ['UK limited company — Companies House & HMRC', 'USA LLC & corporation — state selection & EIN', 'Ethiopian business registration & trade licence', 'Registered office & company secretary services'],
+    description: 'UK, US, Canadian and Ethiopian company registration — fast and fully compliant.',
+    bullets: ['UK limited company — Companies House', 'USA LLC & corporation registration', 'Ethiopian business & trade licence', 'Registered office & company secretary'],
   },
   {
     category: 'Audit & Assurance',
-    description: 'Statutory audit, ETICPA-standard audit and assurance reports for lenders, investors and grant bodies.',
-    bullets: ['Statutory audit via FRC registered partner firm', 'ETICPA-standard audit for Ethiopian entities', 'Internal audit & controls review', 'Due diligence for business acquisitions'],
+    description: 'Statutory audit, ETICPA-standard audit and assurance reports for lenders and investors.',
+    bullets: ['Statutory audit via FRC registered firm', 'ETICPA-standard audit for Ethiopian entities', 'Internal audit & controls review', 'Due diligence for acquisitions'],
   },
   {
-    category: 'Financial Planning & Advisory',
-    description: 'Personal financial planning, retirement planning and property investment structuring for diaspora professionals.',
-    bullets: ['Personal financial planning — savings, investments & protection', 'Retirement planning for diaspora professionals', 'Property investment structuring — UK & Ethiopia', 'Business finance & funding advisory'],
+    category: 'Financial Planning',
+    description: 'Personal financial planning, retirement planning and property investment structuring.',
+    bullets: ['Personal financial planning', 'Retirement planning for diaspora professionals', 'Property investment — UK & Ethiopia', 'Business finance & funding advisory'],
   },
 ]
 
 const etProcess = [
   { step: '01', title: 'Contact EthioTax', desc: 'Via WhatsApp, email or our website. We respond within 24 hours in English, Amharic or Afaan Oromoo.' },
-  { step: '02', title: 'We Qualify Your Brief', desc: 'EthioTax reviews your requirements and sources the right qualified professional from our network.' },
+  { step: '02', title: 'We Qualify Your Brief', desc: 'EthioTax reviews your requirements and sources the right qualified professional.' },
   { step: '03', title: 'Fixed-Fee Proposal', desc: 'A clear, fixed-fee proposal within 72 hours. No surprises. No hidden costs.' },
   { step: '04', title: 'EthioTax Manages Delivery', desc: 'We instruct, monitor and quality-check every deliverable before it reaches you.' },
-  { step: '05', title: 'Delivered to You', desc: 'You receive the completed work. We follow up and proactively track your next deadline.' },
+  { step: '05', title: 'Delivered to You', desc: 'You receive the completed work. We follow up and track your next deadline.' },
 ]
 
-const icons: Record<string, JSX.Element> = {
-  'Accounting & Bookkeeping': (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="5" y="2" width="13" height="24" rx="1.5" stroke="#C9982A" strokeWidth="1.8"/>
-      <rect x="5" y="2" width="4" height="24" rx="1" fill="#C9982A" fillOpacity="0.25"/>
-      <path d="M11 8h5M11 13h5M11 18h4" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
-      <path d="M21 9v10" stroke="#C9982A" strokeWidth="1.8" strokeLinecap="round"/>
-      <path d="M19 9h4M19 19h4" stroke="#C9982A" strokeWidth="1.4" strokeLinecap="round"/>
+function ServiceIcon({ category }: { category: string }) {
+  const style = { width: 28, height: 28 }
+  if (category === 'Accounting & Bookkeeping') return (
+    <svg {...style} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="2" width="14" height="24" rx="2" stroke="#C9982A" strokeWidth="1.8"/>
+      <rect x="4" y="2" width="4" height="24" fill="#C9982A" fillOpacity="0.2" rx="1"/>
+      <path d="M10 8h6M10 13h6M10 18h4" stroke="white" strokeWidth="1.7" strokeLinecap="round"/>
+      <path d="M22 8v12M20 8h4M20 20h4" stroke="#C9982A" strokeWidth="1.6" strokeLinecap="round"/>
     </svg>
-  ),
-  'Tax Filing & Compliance': (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M7 4h14v20l-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4V4z" stroke="#C9982A" strokeWidth="1.8" strokeLinejoin="round"/>
-      <path d="M10 10h8M10 14h8M10 18h5" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
+  )
+  if (category === 'Tax Filing & Compliance') return (
+    <svg {...style} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 3h16v22l-2.5-1.8-2.5 1.8-2.5-1.8-2.5 1.8-2.5-1.8-2.5 1.8V3z" stroke="#C9982A" strokeWidth="1.8" strokeLinejoin="round"/>
+      <path d="M10 10h8M10 14h8M10 18h5" stroke="white" strokeWidth="1.7" strokeLinecap="round"/>
+      <path d="M10 7h3" stroke="#C9982A" strokeWidth="1.4" strokeLinecap="round"/>
     </svg>
-  ),
-  'Business Consulting': (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M4 24h22" stroke="#C9982A" strokeWidth="1.8" strokeLinecap="round"/>
-      <rect x="4" y="16" width="5" height="8" rx="1" fill="#C9982A" fillOpacity="0.3" stroke="#C9982A" strokeWidth="1.4"/>
-      <rect x="12" y="11" width="5" height="13" rx="1" fill="#C9982A" fillOpacity="0.5" stroke="#C9982A" strokeWidth="1.4"/>
-      <rect x="20" y="5" width="5" height="19" rx="1" fill="#C9982A" stroke="#C9982A" strokeWidth="1.4"/>
-      <path d="M6 14l5-5 4 4 6-8" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  )
+  if (category === 'Business Consulting') return (
+    <svg {...style} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="17" width="5" height="8" rx="1" fill="#C9982A" fillOpacity="0.35" stroke="#C9982A" strokeWidth="1.5"/>
+      <rect x="11" y="12" width="5" height="13" rx="1" fill="#C9982A" fillOpacity="0.55" stroke="#C9982A" strokeWidth="1.5"/>
+      <rect x="19" y="5" width="5" height="20" rx="1" fill="#C9982A" stroke="#C9982A" strokeWidth="1.5"/>
+      <path d="M3 24h22" stroke="white" strokeWidth="1.7" strokeLinecap="round"/>
+      <path d="M5 15l7-7 4 4 7-9" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
-  ),
-  'Payroll Services': (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="3" y="8" width="22" height="14" rx="2.5" stroke="#C9982A" strokeWidth="1.8"/>
-      <path d="M3 13h22" stroke="#C9982A" strokeWidth="1.6"/>
-      <rect x="7" y="17" width="7" height="3" rx="1.5" fill="#C9982A"/>
-      <circle cx="21" cy="18.5" r="2" fill="white" fillOpacity="0.35"/>
+  )
+  if (category === 'Payroll Services') return (
+    <svg {...style} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="8" width="24" height="14" rx="2.5" stroke="#C9982A" strokeWidth="1.8"/>
+      <path d="M2 13h24" stroke="#C9982A" strokeWidth="1.6"/>
+      <rect x="6" y="17" width="8" height="3" rx="1.5" fill="#C9982A"/>
+      <circle cx="21" cy="18.5" r="2" fill="white" fillOpacity="0.3"/>
       <circle cx="24" cy="18.5" r="2" fill="white" fillOpacity="0.6"/>
     </svg>
-  ),
-  'Company Formation': (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="3" y="10" width="14" height="16" rx="1.5" stroke="#C9982A" strokeWidth="1.8"/>
-      <path d="M17 14h8v12H17" stroke="#C9982A" strokeWidth="1.8" strokeLinejoin="round"/>
-      <path d="M7 14h3M7 18h3M7 22h3" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
-      <path d="M20 18h3M20 22h3" stroke="#C9982A" strokeWidth="1.4" strokeLinecap="round"/>
-      <path d="M9 26v-4h3v4" stroke="#C9982A" strokeWidth="1.4" strokeLinejoin="round"/>
+  )
+  if (category === 'Company Formation') return (
+    <svg {...style} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="10" width="15" height="17" rx="1.5" stroke="#C9982A" strokeWidth="1.8"/>
+      <path d="M17 14h9v13H17" stroke="#C9982A" strokeWidth="1.8" strokeLinejoin="round"/>
+      <path d="M6 14h4M6 18h4M6 22h4" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
+      <path d="M20 18h4M20 22h4" stroke="#C9982A" strokeWidth="1.4" strokeLinecap="round"/>
+      <path d="M8 27v-5h3v5" stroke="#C9982A" strokeWidth="1.5" strokeLinejoin="round"/>
     </svg>
-  ),
-  'Audit & Assurance': (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="4" y="4" width="20" height="20" rx="3" stroke="#C9982A" strokeWidth="1.8"/>
-      <path d="M9 14l4 4 7-8" stroke="#C9982A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M4 11h3M4 17h3" stroke="white" strokeWidth="1.4" strokeLinecap="round" fillOpacity="0.5"/>
+  )
+  if (category === 'Audit & Assurance') return (
+    <svg {...style} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="3" width="22" height="22" rx="3.5" stroke="#C9982A" strokeWidth="1.8"/>
+      <path d="M8 14l5 5 8-9" stroke="#C9982A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M3 10h4M3 18h4" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
-  ),
-  'Financial Planning & Advisory': (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M4 24h22" stroke="#C9982A" strokeWidth="1.8" strokeLinecap="round"/>
-      <path d="M6 20l6-8 5 5 7-10" stroke="#C9982A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <circle cx="6" cy="20" r="2" fill="white"/>
-      <circle cx="12" cy="12" r="2" fill="white"/>
-      <circle cx="17" cy="17" r="2" fill="white"/>
-      <circle cx="24" cy="7" r="2.5" fill="#C9982A"/>
+  )
+  return (
+    <svg {...style} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 24h22" stroke="#C9982A" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M5 20l7-9 5 5 7-11" stroke="#C9982A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="5" cy="20" r="2" fill="white"/>
+      <circle cx="12" cy="11" r="2" fill="white"/>
+      <circle cx="17" cy="16" r="2" fill="white"/>
+      <circle cx="24" cy="5" r="2.5" fill="#C9982A"/>
     </svg>
-  ),
+  )
 }
 
 export default function GetHelpPage() {
@@ -122,33 +123,31 @@ export default function GetHelpPage() {
 
   if (isEthioTax) {
     return (
-      <main className="min-h-screen" style={{ backgroundColor: '#F7F8F4' }}>
+      <main className="min-h-screen bg-[#F7F8F4]">
 
         {/* HERO */}
-        <section style={{ backgroundColor: '#1A4731', paddingTop: '80px', paddingBottom: '80px' }}>
+        <section className="py-20 md:py-28 bg-[#1A4731]">
           <div className="container-site">
-            <div style={{ maxWidth: '680px' }}>
-              <nav style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255,255,255,0.4)', fontSize: '13px', marginBottom: '32px' }}>
-                <a href="/" style={{ color: 'rgba(255,255,255,0.4)', textDecoration: 'none' }}>Home</a>
+            <div className="max-w-2xl">
+              <nav className="flex items-center gap-2 text-white/40 text-sm mb-8">
+                <a href="/" className="hover:text-white/70 transition-colors">Home</a>
                 <span>›</span>
-                <span style={{ color: 'rgba(255,255,255,0.7)' }}>Our Services</span>
+                <span className="text-white/70">Our Services</span>
               </nav>
-              <p style={{ color: '#C9982A', fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '20px' }}>
-                EthioTax Professional Services
-              </p>
-              <h1 style={{ color: '#ffffff', fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.025em', marginBottom: '24px', fontFamily: 'var(--font-display, serif)' }}>
+              <p className="text-[#C9982A] text-[11px] font-bold uppercase tracking-[0.12em] mb-5">EthioTax Professional Services</p>
+              <h1 className="font-display text-white text-4xl md:text-5xl lg:text-[56px] font-bold leading-[1.1] tracking-tight mb-6">
                 Professional services,<br />managed by EthioTax
               </h1>
-              <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '18px', lineHeight: 1.7, marginBottom: '40px', maxWidth: '560px' }}>
+              <p className="text-white/65 text-lg md:text-xl leading-relaxed mb-10 max-w-xl">
                 You tell us what you need — EthioTax sources the right qualified professional, manages the engagement, and delivers quality-checked work. UK · USA · Canada · UAE · Ethiopia.
               </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+              <div className="flex flex-col sm:flex-row gap-3">
                 <a href="/wa" target="_blank" rel="noopener noreferrer"
-                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '52px', padding: '0 32px', backgroundColor: '#C9982A', color: '#1A4731', fontSize: '14px', fontWeight: 700, borderRadius: '10px', textDecoration: 'none', minWidth: '210px' }}>
+                  className="inline-flex items-center justify-center h-[52px] px-8 bg-[#C9982A] text-[#1A4731] text-sm font-bold rounded-xl hover:opacity-90 transition-opacity">
                   Talk to us on WhatsApp →
                 </a>
                 <a href="#services"
-                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '52px', padding: '0 32px', backgroundColor: 'transparent', color: '#ffffff', fontSize: '14px', fontWeight: 600, borderRadius: '10px', textDecoration: 'none', border: '2px solid rgba(255,255,255,0.35)', minWidth: '210px' }}>
+                  className="inline-flex items-center justify-center h-[52px] px-8 border-2 border-white/30 text-white text-sm font-semibold rounded-xl hover:bg-white/10 transition-colors">
                   View all services
                 </a>
               </div>
@@ -157,19 +156,19 @@ export default function GetHelpPage() {
         </section>
 
         {/* TRUST BAR */}
-        <section style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e8f0eb', padding: '32px 0' }}>
+        <section className="bg-white border-b border-[#e8f0eb] py-8">
           <div className="container-site">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px' }}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { value: '24hr', label: 'Response Guarantee', sub: 'Every inquiry, every channel' },
                 { value: '72hr', label: 'Fixed-Fee Proposal', sub: 'Clear scope, clear price' },
                 { value: '100%', label: 'Quality Checked', sub: 'Every deliverable reviewed' },
                 { value: 'Global', label: 'Diaspora Coverage', sub: 'UK, USA, Canada, UAE & Ethiopia' },
               ].map(stat => (
-                <div key={stat.value} style={{ textAlign: 'center', padding: '16px 8px' }}>
-                  <p style={{ color: '#1A4731', fontSize: '28px', fontWeight: 800, marginBottom: '4px', fontFamily: 'var(--font-display, serif)' }}>{stat.value}</p>
-                  <p style={{ color: '#1A4731', fontSize: '13px', fontWeight: 600, marginBottom: '2px' }}>{stat.label}</p>
-                  <p style={{ color: '#9ca3af', fontSize: '12px' }}>{stat.sub}</p>
+                <div key={stat.value} className="text-center py-4 px-2">
+                  <p className="font-display text-[28px] font-extrabold text-[#1A4731] mb-1">{stat.value}</p>
+                  <p className="text-[#1A4731] text-[13px] font-semibold mb-0.5">{stat.label}</p>
+                  <p className="text-gray-400 text-[12px]">{stat.sub}</p>
                 </div>
               ))}
             </div>
@@ -177,67 +176,41 @@ export default function GetHelpPage() {
         </section>
 
         {/* SERVICES */}
-        <section id="services" style={{ padding: '80px 0' }}>
+        <section id="services" className="py-20 md:py-24">
           <div className="container-site">
-            <div style={{ maxWidth: '600px', marginBottom: '56px' }}>
-              <p style={{ color: '#1A4731', fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '12px' }}>What EthioTax Delivers</p>
-              <h2 style={{ color: '#111827', fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: '16px', fontFamily: 'var(--font-display, serif)' }}>
+            <div className="max-w-2xl mb-14">
+              <p className="text-[#1A4731] text-[11px] font-bold uppercase tracking-[0.12em] mb-3">What EthioTax Delivers</p>
+              <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-gray-900 mb-4">
                 A full suite of professional services for the Ethiopian community
               </h2>
-              <p style={{ color: '#6b7280', fontSize: '17px', lineHeight: 1.7 }}>
+              <p className="text-gray-500 text-lg leading-relaxed">
                 Every service is coordinated and quality-checked by EthioTax. Qualified Ethiopian-origin professionals. Amharic and Afaan Oromoo available.
               </p>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
-              {etServices.map((s, idx) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {etServices.map((s) => (
                 <a key={s.category} href="/wa" target="_blank" rel="noopener noreferrer"
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    backgroundColor: '#ffffff',
-                    borderRadius: '16px',
-                    padding: '32px',
-                    borderLeft: '4px solid #1A4731',
-                    border: '1px solid #e8f0eb',
-                    borderLeftWidth: '4px',
-                    borderLeftColor: '#1A4731',
-                    textDecoration: 'none',
-                    transition: 'all 0.2s ease',
-                    cursor: 'pointer',
-                    gridColumn: idx === 6 ? '1 / -1' : 'auto',
-                  }}
-                  onMouseEnter={e => {
-                    const el = e.currentTarget
-                    el.style.borderLeftColor = '#C9982A'
-                    el.style.boxShadow = '0 8px 30px rgba(0,0,0,0.10)'
-                    el.style.transform = 'translateY(-2px)'
-                  }}
-                  onMouseLeave={e => {
-                    const el = e.currentTarget
-                    el.style.borderLeftColor = '#1A4731'
-                    el.style.boxShadow = 'none'
-                    el.style.transform = 'translateY(0)'
-                  }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', marginBottom: '16px' }}>
-                    <div style={{ width: '52px', height: '52px', borderRadius: '12px', backgroundColor: '#1A4731', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      {icons[s.category]}
+                  className="group flex flex-col bg-white rounded-2xl p-6 md:p-8 border-l-4 border border-[#1A4731] hover:border-l-[#C9982A] hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 no-underline">
+                  <div className="flex items-start gap-5 mb-5">
+                    <div className="w-[52px] h-[52px] rounded-xl bg-[#1A4731] flex items-center justify-center shrink-0">
+                      <ServiceIcon category={s.category} />
                     </div>
                     <div>
-                      <h3 style={{ color: '#111827', fontSize: '18px', fontWeight: 700, marginBottom: '6px', fontFamily: 'var(--font-display, serif)' }}>{s.category}</h3>
-                      <p style={{ color: '#6b7280', fontSize: '14px', lineHeight: 1.6 }}>{s.description}</p>
+                      <h3 className="font-display text-[17px] font-bold text-gray-900 mb-1.5">{s.category}</h3>
+                      <p className="text-gray-500 text-sm leading-relaxed">{s.description}</p>
                     </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '24px', paddingLeft: '72px' }}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-6 pl-[72px]">
                     {s.bullets.map(b => (
-                      <div key={b} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#C9982A', flexShrink: 0, marginTop: '7px' }} />
-                        <span style={{ color: '#374151', fontSize: '13px', lineHeight: 1.5 }}>{b}</span>
+                      <div key={b} className="flex items-start gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#C9982A] shrink-0 mt-[7px]" />
+                        <span className="text-gray-600 text-[13px] leading-snug">{b}</span>
                       </div>
                     ))}
                   </div>
-                  <div style={{ paddingLeft: '72px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#C9982A', fontSize: '13px', fontWeight: 700 }}>Get a free quote →</span>
-                    <span style={{ color: '#9ca3af', fontSize: '12px' }}>Opens WhatsApp</span>
+                  <div className="pl-[72px] flex items-center justify-between pt-4 border-t border-gray-100">
+                    <span className="text-[#C9982A] text-[13px] font-bold">Get a free quote →</span>
+                    <span className="text-gray-400 text-[12px]">Opens WhatsApp</span>
                   </div>
                 </a>
               ))}
@@ -246,25 +219,25 @@ export default function GetHelpPage() {
         </section>
 
         {/* PROCESS */}
-        <section style={{ backgroundColor: '#1A4731', padding: '80px 0' }}>
+        <section className="bg-[#1A4731] py-20 md:py-24">
           <div className="container-site">
-            <div style={{ textAlign: 'center', marginBottom: '56px' }}>
-              <p style={{ color: '#C9982A', fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '16px' }}>How It Works</p>
-              <h2 style={{ color: '#ffffff', fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '16px', fontFamily: 'var(--font-display, serif)' }}>
+            <div className="text-center mb-14">
+              <p className="text-[#C9982A] text-[11px] font-bold uppercase tracking-[0.12em] mb-4">How It Works</p>
+              <h2 className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight mb-4">
                 Five steps to a managed service
               </h2>
-              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '17px', maxWidth: '480px', margin: '0 auto' }}>
+              <p className="text-white/55 text-lg max-w-md mx-auto">
                 EthioTax manages every stage. You deal with us — we handle the rest.
               </p>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '24px', maxWidth: '1000px', margin: '0 auto' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 max-w-5xl mx-auto">
               {etProcess.map((item) => (
-                <div key={item.step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                  <div style={{ width: '52px', height: '52px', borderRadius: '50%', backgroundColor: '#C9982A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1A4731', fontWeight: 800, fontSize: '16px', marginBottom: '16px' }}>
+                <div key={item.step} className="flex flex-col items-center text-center">
+                  <div className="w-[52px] h-[52px] rounded-full bg-[#C9982A] flex items-center justify-center text-[#1A4731] font-extrabold text-base mb-4 shrink-0">
                     {item.step}
                   </div>
-                  <h3 style={{ color: '#ffffff', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>{item.title}</h3>
-                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', lineHeight: 1.6 }}>{item.desc}</p>
+                  <h3 className="text-white text-[14px] font-semibold mb-2">{item.title}</h3>
+                  <p className="text-white/50 text-[12px] leading-relaxed">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -272,22 +245,22 @@ export default function GetHelpPage() {
         </section>
 
         {/* CTA */}
-        <section style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e8f0eb', padding: '72px 0' }}>
+        <section className="bg-white border-t border-[#e8f0eb] py-20">
           <div className="container-site">
-            <div style={{ maxWidth: '560px', margin: '0 auto', textAlign: 'center' }}>
-              <h2 style={{ color: '#1A4731', fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '16px', fontFamily: 'var(--font-display, serif)' }}>
+            <div className="max-w-lg mx-auto text-center">
+              <h2 className="font-display text-3xl md:text-4xl font-bold text-[#1A4731] tracking-tight mb-4">
                 Ready to get started?
               </h2>
-              <p style={{ color: '#6b7280', fontSize: '17px', lineHeight: 1.7, marginBottom: '40px' }}>
+              <p className="text-gray-500 text-lg leading-relaxed mb-10">
                 Contact EthioTax today. We respond within 24 hours in English, Amharic or Afaan Oromoo.
               </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '12px' }}>
+              <div className="flex flex-col sm:flex-row justify-center gap-3">
                 <a href="/wa" target="_blank" rel="noopener noreferrer"
-                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '52px', padding: '0 36px', backgroundColor: '#1A4731', color: '#ffffff', fontSize: '14px', fontWeight: 700, borderRadius: '10px', textDecoration: 'none', minWidth: '210px' }}>
+                  className="inline-flex items-center justify-center h-[52px] px-8 bg-[#1A4731] text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity">
                   Talk to us on WhatsApp
                 </a>
                 <a href="/contact"
-                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '52px', padding: '0 36px', backgroundColor: 'transparent', color: '#1A4731', fontSize: '14px', fontWeight: 600, borderRadius: '10px', textDecoration: 'none', border: '2px solid #1A4731', minWidth: '210px' }}>
+                  className="inline-flex items-center justify-center h-[52px] px-8 border-2 border-[#1A4731] text-[#1A4731] text-sm font-semibold rounded-xl hover:bg-[#f0f7f4] transition-colors">
                   Send us a message
                 </a>
               </div>
