@@ -190,7 +190,7 @@ export default function GetHelpPage() {
                 A full suite of professional services for the Ethiopian community
               </h2>
               <p className="text-gray-500 text-lg leading-relaxed">
-                Every service is coordinated and quality-checked by EthioTax. Qualified Ethiopian-origin professionals. Amharic and Afaan Oromoo available.
+                Every service is managed and quality-checked by EthioTax. Qualified Ethiopian-origin specialists. Amharic and Afaan Oromoo available.
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
