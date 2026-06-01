@@ -141,7 +141,7 @@ export default function PayrollServicesPage() {
                 Complete payroll management — every jurisdiction, every pay period
               </h2>
               <p className="text-gray-500 text-lg leading-relaxed mb-8">
-                Running payroll correctly is a legal obligation — not an option. Late or incorrect submissions attract penalties, and errors in tax calculations or pension contributions create serious problems for employers and employees alike. EthioTax coordinates qualified payroll professionals who manage every aspect of your payroll obligations, wherever your business operates.
+                Running payroll correctly is a legal obligation — not an option. Late or incorrect submissions attract penalties, and errors in tax calculations or pension contributions create serious problems for employers and employees alike. EthioTax manages qualified payroll specialists who oversee every aspect of your payroll obligations, wherever your business operates.
               </p>
               <ul className="space-y-3">
                 {[

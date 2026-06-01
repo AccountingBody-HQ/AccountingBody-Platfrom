@@ -23,16 +23,16 @@ const countries = [
 
 const whyEthioTax = [
   { title: 'Diaspora Financial Complexity', desc: 'Ethiopian diaspora professionals often have assets, income and obligations across multiple countries. Our advisors understand this complexity and plan across your full financial picture.' },
-  { title: 'UK and Ethiopian Property Expertise', desc: 'We coordinate advisors who specialise in property investment structuring — both in the UK and in Ethiopia — helping you invest correctly and tax-efficiently.' },
-  { title: 'Retirement Planning Across Borders', desc: 'Planning for retirement when you have worked and saved in multiple countries requires specialist knowledge. EthioTax coordinates professionals who understand cross-border pension and retirement planning.' },
-  { title: 'Holistic, Coordinated Advice', desc: 'Financial planning, tax and accounting are interconnected. EthioTax coordinates across all three — ensuring your financial plan is consistent with your tax position and your business accounts.' },
+  { title: 'UK and Ethiopian Property Expertise', desc: 'Our team manages advisors who specialise in property investment structuring — both in the UK and in Ethiopia — helping you invest correctly and tax-efficiently.' },
+  { title: 'Retirement Planning Across Borders', desc: 'Planning for retirement when you have worked and saved in multiple countries requires specialist knowledge. EthioTax manages specialists who understand cross-border pension and retirement planning.' },
+  { title: 'Holistic, Integrated Advice', desc: 'Financial planning, tax and accounting are interconnected. EthioTax manages across all three — ensuring your financial plan is consistent with your tax position and your business accounts.' },
 ]
 
 const process = [
   { step: '01', title: 'Submit Your Brief', desc: 'Complete the enquiry form below. Tell us your financial situation and what you are trying to achieve.' },
   { step: '02', title: 'We Review & Qualify', desc: 'EthioTax reviews your brief within 24 hours and confirms the right advisor for your situation.' },
   { step: '03', title: 'Fixed-Fee Proposal', desc: 'We send a clear, fixed-fee proposal within 72 hours. No surprises.' },
-  { step: '04', title: 'EthioTax Manages Delivery', desc: 'We coordinate the financial planning professional and oversee every stage of the engagement.' },
+  { step: '04', title: 'EthioTax Manages Delivery', desc: 'We manage the financial planning specialist and oversee every stage of the engagement.' },
   { step: '05', title: 'Plan Delivered & Reviewed', desc: 'You receive your financial plan. We follow up to answer questions and support implementation.' },
 ]
 
@@ -93,10 +93,10 @@ export default function FinancialPlanningPage() {
               Financial Planning & Advisory
             </h1>
             <p className="text-green-100 text-xl leading-relaxed mb-4 max-w-2xl">
-              Personal financial planning, retirement planning, property investment structuring and business finance advisory — coordinated by EthioTax for the Ethiopian community worldwide.
+              Personal financial planning, retirement planning, property investment structuring and business finance advisory — managed by EthioTax for the Ethiopian community worldwide.
             </p>
             <p className="text-green-200 text-sm leading-relaxed mb-10 max-w-2xl">
-              Whether you are planning for retirement, investing in property in the UK or Ethiopia, or seeking funding for your business, EthioTax coordinates the right qualified advisor for your situation.
+              Whether you are planning for retirement, investing in property in the UK or Ethiopia, or seeking funding for your business, EthioTax manages the right qualified advisor for your situation.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <a href="#enquire"
@@ -141,7 +141,7 @@ export default function FinancialPlanningPage() {
                 Financial planning and advisory across your full financial picture
               </h2>
               <p className="text-gray-500 text-lg leading-relaxed mb-8">
-                The financial lives of Ethiopian diaspora professionals are often complex — income in one country, savings in another, property in a third, and obligations back in Ethiopia. Making good financial decisions requires an advisor who understands this complexity. EthioTax coordinates qualified financial planners and advisors who see your full picture and help you plan with confidence.
+                The financial lives of Ethiopian diaspora professionals are often complex — income in one country, savings in another, property in a third, and obligations back in Ethiopia. Making good financial decisions requires an advisor who understands this complexity. EthioTax manages qualified financial planners and advisors who see your full picture and help you plan with confidence.
               </p>
               <ul className="space-y-3">
                 {[

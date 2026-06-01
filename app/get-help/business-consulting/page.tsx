@@ -25,7 +25,7 @@ const whyEthioTax = [
   { title: 'Diaspora Investment Expertise', desc: 'We understand the regulatory, legal and financial landscape for Ethiopians investing from abroad — structuring investments correctly to protect your capital and maximise returns.' },
   { title: 'Ethiopia Market Knowledge', desc: 'Our professionals have direct knowledge of the Ethiopian business environment — EIC registration, trade licences, sector regulations and the practical realities of operating in Ethiopia.' },
   { title: 'International Business Standards', desc: 'We produce business plans, financial models and strategic documents that meet the standard required by international lenders, investors and grant bodies worldwide.' },
-  { title: 'End-to-End Coordination', desc: 'From initial strategy through to implementation support — EthioTax coordinates every element and manages the professionals involved, so you have one point of contact throughout.' },
+  { title: 'End-to-End Management', desc: 'From initial strategy through to implementation support — EthioTax manages every element and oversees the specialists involved, so you have one point of contact throughout.' },
 ]
 
 const process = [
@@ -96,7 +96,7 @@ export default function BusinessConsultingPage() {
               Business plans, financial modelling, diaspora investment structuring and strategic advisory — delivered by qualified professionals who understand Ethiopian business globally.
             </p>
             <p className="text-green-200 text-sm leading-relaxed mb-10 max-w-2xl">
-              Whether you are starting a business, growing an existing one, investing in Ethiopia from abroad, or seeking funding — EthioTax coordinates the expertise you need.
+              Whether you are starting a business, growing an existing one, investing in Ethiopia from abroad, or seeking funding — EthioTax manages the expertise you need.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <a href="#enquire"
@@ -141,7 +141,7 @@ export default function BusinessConsultingPage() {
                 Strategic business support — from startup to scale
               </h2>
               <p className="text-gray-500 text-lg leading-relaxed mb-8">
-                Whether you are launching a new business, seeking investment, expanding into Ethiopia or growing an established company, EthioTax coordinates qualified business consultants and advisors who understand the Ethiopian business environment — both locally and across the global diaspora.
+                Whether you are launching a new business, seeking investment, expanding into Ethiopia or growing an established company, EthioTax manages qualified business consultants and advisors who understand the Ethiopian business environment — both locally and across the global diaspora.
               </p>
               <ul className="space-y-3">
                 {[

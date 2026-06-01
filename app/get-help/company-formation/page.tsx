@@ -141,7 +141,7 @@ export default function CompanyFormationPage() {
                 Company registration across every major jurisdiction
               </h2>
               <p className="text-gray-500 text-lg leading-relaxed mb-8">
-                Registering a company correctly is the foundation of every business. The wrong structure, the wrong jurisdiction or an error in the registration process can create costly problems later. EthioTax coordinates qualified professionals who manage the entire formation process — from choosing the right structure through to full registration and post-incorporation setup.
+                Registering a company correctly is the foundation of every business. The wrong structure, the wrong jurisdiction or an error in the registration process can create costly problems later. EthioTax manages qualified specialists who oversee the entire formation process — from choosing the right structure through to full registration and post-incorporation setup.
               </p>
               <ul className="space-y-3">
                 {[

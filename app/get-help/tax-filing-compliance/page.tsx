@@ -141,7 +141,7 @@ export default function TaxFilingCompliancePage() {
                 Comprehensive tax services — every jurisdiction, every situation
               </h2>
               <p className="text-gray-500 text-lg leading-relaxed mb-8">
-                Tax obligations for the Ethiopian diaspora are often complex — multiple jurisdictions, overseas income, remittances, Ethiopian property and investments, and dual tax treaty positions. EthioTax coordinates qualified tax professionals who understand this complexity and manage your full tax position.
+                Tax obligations for the Ethiopian diaspora are often complex — multiple jurisdictions, overseas income, remittances, Ethiopian property and investments, and dual tax treaty positions. EthioTax manages qualified tax specialists who understand this complexity and oversee your full tax position.
               </p>
               <ul className="space-y-3">
                 {[

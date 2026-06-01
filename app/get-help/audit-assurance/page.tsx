@@ -22,9 +22,9 @@ const countries = [
 ]
 
 const whyEthioTax = [
-  { title: 'ETICPA-Standard Audit', desc: 'We coordinate ETICPA-qualified auditors for Ethiopian entities — meeting the standard required by Ethiopian regulatory bodies, lenders and investors operating in Ethiopia.' },
+  { title: 'ETICPA-Standard Audit', desc: 'Our team manages ETICPA-qualified auditors for Ethiopian entities — meeting the standard required by Ethiopian regulatory bodies, lenders and investors operating in Ethiopia.' },
   { title: 'FRC Registered Audit Partners', desc: 'For UK statutory audits requiring FRC registration, EthioTax works with fully authorised audit firms — ensuring full regulatory compliance for companies that meet the audit threshold.' },
-  { title: 'Cross-Border Assurance', desc: 'For businesses operating across Ethiopia and the diaspora, we coordinate assurance engagements that meet the requirements of multiple jurisdictions simultaneously.' },
+  { title: 'Cross-Border Assurance', desc: 'For businesses operating across Ethiopia and the diaspora, our team manages assurance engagements that meet the requirements of multiple jurisdictions simultaneously.' },
   { title: 'Independence & Quality', desc: 'Every audit and assurance engagement is managed to the highest professional standard. EthioTax quality-checks all deliverables before they reach you.' },
 ]
 
@@ -32,7 +32,7 @@ const process = [
   { step: '01', title: 'Submit Your Brief', desc: 'Complete the enquiry form below. Tell us what type of audit or assurance you need and why.' },
   { step: '02', title: 'We Review & Scope', desc: 'EthioTax reviews your brief within 24 hours and confirms the right engagement type and professional.' },
   { step: '03', title: 'Fixed-Fee Proposal', desc: 'We send a clear, fixed-fee proposal within 72 hours. No surprises.' },
-  { step: '04', title: 'EthioTax Manages the Engagement', desc: 'We coordinate the audit professional, manage fieldwork and oversee every stage.' },
+  { step: '04', title: 'EthioTax Manages the Engagement', desc: 'We manage the audit professional, oversee fieldwork and quality-check every stage.' },
   { step: '05', title: 'Report Delivered', desc: 'You receive the completed, signed audit or assurance report. We follow up to confirm it meets your requirements.' },
 ]
 
@@ -93,10 +93,10 @@ export default function AuditAssurancePage() {
               Audit & Assurance
             </h1>
             <p className="text-green-100 text-xl leading-relaxed mb-4 max-w-2xl">
-              Statutory audit, ETICPA-standard audit, internal controls review and assurance reports for lenders, investors and grant bodies — coordinated by EthioTax.
+              Statutory audit, ETICPA-standard audit, internal controls review and assurance reports for lenders, investors and grant bodies — managed by EthioTax.
             </p>
             <p className="text-green-200 text-sm leading-relaxed mb-10 max-w-2xl">
-              Whether you need a statutory audit in the UK, an ETICPA-standard audit in Ethiopia, or an assurance report for an international lender, EthioTax coordinates the right qualified professional for your engagement.
+              Whether you need a statutory audit in the UK, an ETICPA-standard audit in Ethiopia, or an assurance report for an international lender, EthioTax manages the right qualified specialist for your engagement.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <a href="#enquire"
@@ -141,7 +141,7 @@ export default function AuditAssurancePage() {
                 Audit and assurance services across every standard and jurisdiction
               </h2>
               <p className="text-gray-500 text-lg leading-relaxed mb-8">
-                Audit and assurance engagements require independence, technical expertise and the right professional authorisation. EthioTax coordinates qualified auditors and assurance professionals — whether you need a UK statutory audit, an ETICPA-standard audit for an Ethiopian entity, or an assurance report for an international investor or lender.
+                Audit and assurance engagements require independence, technical expertise and the right professional authorisation. EthioTax manages qualified auditors and assurance specialists — whether you need a UK statutory audit, an ETICPA-standard audit for an Ethiopian entity, or an assurance report for an international investor or lender.
               </p>
               <ul className="space-y-3">
                 {[

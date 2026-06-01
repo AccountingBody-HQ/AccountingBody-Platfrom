@@ -141,7 +141,7 @@ export default function AccountingBookkeepingPage() {
                 Complete accounting services — every business type, every location
               </h2>
               <p className="text-gray-500 text-lg leading-relaxed mb-8">
-                Good bookkeeping and accurate accounts are the foundation of every healthy business. Without them you cannot make informed decisions, file your returns correctly, or understand how your business is truly performing. EthioTax coordinates qualified accounting professionals who maintain your books and prepare your accounts to the standard required — wherever your business operates.
+                Good bookkeeping and accurate accounts are the foundation of every healthy business. Without them you cannot make informed decisions, file your returns correctly, or understand how your business is truly performing. EthioTax manages qualified accounting specialists who maintain your books and prepare your accounts to the standard required — wherever your business operates.
               </p>
               <ul className="space-y-3">
                 {[
