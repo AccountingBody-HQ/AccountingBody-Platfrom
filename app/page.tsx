@@ -1147,6 +1147,71 @@ export default async function HomePage() {
       )}
 
 
+
+      {/* ════════════════════════════════════════════════════════════════
+          ET: TESTIMONIALS — shown after Why EthioTax on ET only
+          ════════════════════════════════════════════════════════════════ */}
+      {isEthioTax && (
+        <section className="section" style={{ backgroundColor: '#f0f7f4' }}>
+          <div className="container-site">
+            <div className="max-w-2xl mb-12">
+              <span className="eyebrow mb-3 block">Client Stories</span>
+              <h2 className="section-title mb-4">What our clients say</h2>
+              <p className="text-slate-500 text-lg leading-relaxed">
+                EthioTax clients across the UK, USA and Canada share their experience.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white rounded-2xl p-8 border" style={{ borderColor: '#d1e8db' }}>
+                <div className="flex gap-1 mb-4">
+                  {[1,2,3,4,5].map(s => (
+                    <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
+                  ))}
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed mb-6">&ldquo;EthioTax handled my UK Self Assessment quickly and professionally. They understood my situation straight away and the whole process was straightforward. I will not be going anywhere else.&rdquo;</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-sm" style={{ backgroundColor: '#1A4731' }}>TA</div>
+                  <div>
+                    <p className="font-semibold text-gray-900 text-sm">Tigist A.</p>
+                    <p className="text-gray-400 text-xs">Business owner &mdash; London, UK</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl p-8 border" style={{ borderColor: '#d1e8db' }}>
+                <div className="flex gap-1 mb-4">
+                  {[1,2,3,4,5].map(s => (
+                    <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
+                  ))}
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed mb-6">&ldquo;I needed advice on structuring a diaspora investment in Ethiopia. EthioTax provided a clear proposal within 72 hours and guided me through the entire process. Excellent service.&rdquo;</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-sm" style={{ backgroundColor: '#1A4731' }}>DM</div>
+                  <div>
+                    <p className="font-semibold text-gray-900 text-sm">Dawit M.</p>
+                    <p className="text-gray-400 text-xs">Finance professional &mdash; Washington DC, USA</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl p-8 border" style={{ borderColor: '#d1e8db' }}>
+                <div className="flex gap-1 mb-4">
+                  {[1,2,3,4,5].map(s => (
+                    <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
+                  ))}
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed mb-6">&ldquo;Managing accounts across two countries was always complicated. EthioTax handled everything and I could communicate in Amharic throughout. Professional, reliable and highly recommended.&rdquo;</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-sm" style={{ backgroundColor: '#1A4731' }}>SG</div>
+                  <div>
+                    <p className="font-semibold text-gray-900 text-sm">Selam G.</p>
+                    <p className="text-gray-400 text-xs">Business owner &mdash; Toronto, Canada</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ════════════════════════════════════════════════════════════════
           ET: QUALIFICATION PATHWAYS — shown after Why EthioTax on ET only
           ════════════════════════════════════════════════════════════════ */}
