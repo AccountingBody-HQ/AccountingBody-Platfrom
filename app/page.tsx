@@ -771,7 +771,7 @@ export default async function HomePage() {
             ))}
           </div>
 
-          <div className="mt-14 flex justify-center">
+          <div className="mt-14 flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href={isEthioTax ? "/get-help" : "/study"}
               className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors"
@@ -781,6 +781,18 @@ export default async function HomePage() {
                 <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </Link>
+            {isEthioTax && (
+              <Link
+                href="/how-it-works"
+                className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold border-2 transition-colors"
+                style={{ borderColor: '#1A4731', color: '#1A4731' }}
+              >
+                See how it works
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            )}
           </div>
 
         </div>
