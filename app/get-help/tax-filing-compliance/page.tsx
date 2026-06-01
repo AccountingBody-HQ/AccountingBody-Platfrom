@@ -76,32 +76,31 @@ export default function TaxFilingCompliancePage() {
           <div className="absolute inset-0 opacity-[0.03]"
             style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         </div>
-        <div className="container-site relative z-10">
-          <nav className="flex items-center gap-2 text-white/40 text-sm mb-10">
-            <a href="/" className="hover:text-white/70 transition-colors">Home</a>
-            <span>›</span>
-            <a href="/get-help" className="hover:text-white/70 transition-colors">Services</a>
-            <span>›</span>
+        <div className="max-w-5xl mx-auto px-6 relative z-10">
+          <nav className="flex items-center gap-2 text-sm mb-6">
+            <a href="/" style={{ color: '#C9982A' }}>Home</a>
+            <span className="text-green-200 mx-1">›</span>
+            <a href="/get-help" className="text-green-200">Services</a>
+            <span className="text-green-200 mx-1">›</span>
             <span className="text-white/70">Tax Filing & Compliance</span>
           </nav>
           <div className="max-w-3xl">
-            <p className="text-[#C9982A] text-[11px] font-bold uppercase tracking-[0.12em] mb-5">EthioTax Professional Services</p>
-            <h1 className="font-display text-white text-4xl md:text-5xl lg:text-[56px] font-bold leading-[1.1] tracking-tight mb-6">
+            <h1 className="font-display text-4xl md:text-5xl text-white mb-6">
               Tax Filing & Compliance
             </h1>
-            <p className="text-white/70 text-xl leading-relaxed mb-4 max-w-2xl">
+            <p className="text-green-100 text-xl leading-relaxed mb-4 max-w-2xl">
               Multi-jurisdiction tax returns, cross-border planning and full compliance — handled by qualified tax professionals who understand the Ethiopian diaspora&#39;s unique tax position.
             </p>
-            <p className="text-white/45 text-base leading-relaxed mb-10 max-w-2xl">
+            <p className="text-green-200 text-sm leading-relaxed mb-10 max-w-2xl">
               UK · USA · Canada · UAE · Ethiopia · Australia · Sweden and beyond. Whatever your situation, wherever you are based, EthioTax manages your tax obligations end to end.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <a href="#enquire"
-                className="inline-flex items-center justify-center h-[52px] w-full sm:w-[240px] bg-[#C9982A] text-[#1A4731] text-sm font-bold rounded-xl hover:opacity-90 transition-opacity">
+                className="inline-flex items-center justify-center h-[52px] w-full sm:w-[240px] font-semibold text-sm rounded-xl" style={{ backgroundColor: '#C9982A', color: '#fff' }}>
                 Enquire about this service
               </a>
               <a href="/get-help"
-                className="inline-flex items-center justify-center h-[52px] w-full sm:w-[240px] border-2 border-white/30 text-white text-sm font-semibold rounded-xl hover:bg-white/10 transition-colors">
+                className="inline-flex items-center justify-center h-[52px] w-full sm:w-[240px] border-2 border-white text-white font-semibold text-sm rounded-xl">
                 View all services
               </a>
             </div>
@@ -188,7 +187,7 @@ export default function TaxFilingCompliancePage() {
                 <h3 className="font-display text-xl font-bold text-white mb-2">Not sure what you need?</h3>
                 <p className="text-white/65 text-sm leading-relaxed mb-5">Tell us your situation and we will advise on exactly what is required — no obligation, no cost.</p>
                 <a href="#enquire"
-                  className="inline-flex items-center justify-center h-[44px] w-full bg-[#C9982A] text-[#1A4731] text-sm font-bold rounded-xl hover:opacity-90 transition-opacity">
+                  className="inline-flex items-center justify-center h-[44px] w-full font-semibold text-sm rounded-xl" style={{ backgroundColor: '#C9982A', color: '#fff' }}>
                   Submit a free enquiry
                 </a>
               </div>

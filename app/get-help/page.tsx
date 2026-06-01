@@ -133,20 +133,19 @@ export default function GetHelpPage() {
       <main className="min-h-screen bg-[#F7F8F4]">
 
         {/* HERO */}
-        <section className="py-20 md:py-28 bg-[#1A4731]">
-          <div className="container-site">
-            <div className="max-w-2xl">
-              <nav className="flex items-center gap-2 text-white/40 text-sm mb-8">
-                <a href="/" className="hover:text-white/70 transition-colors">Home</a>
-                <span>›</span>
-                <span className="text-white/70">Our Services</span>
+        <section className="py-20 bg-[#1A4731]">
+          <div className="max-w-5xl mx-auto px-6">
+            <div className="max-w-3xl">
+              <nav className="flex items-center gap-2 text-sm mb-6">
+                <a href="/" style={{ color: '#C9982A' }}>Home</a>
+                <span className="text-green-200 mx-1">›</span>
+                <span className="text-green-200">Our Services</span>
               </nav>
-              <p className="text-[#C9982A] text-[11px] font-bold uppercase tracking-[0.12em] mb-5">EthioTax Professional Services</p>
-              <h1 className="font-display text-white text-4xl md:text-5xl lg:text-[56px] font-bold leading-[1.1] tracking-tight mb-6">
+              <h1 className="font-display text-white text-4xl md:text-5xl mb-6">
                 Professional services,<br />managed by EthioTax
               </h1>
-              <p className="text-white/65 text-lg md:text-xl leading-relaxed mb-10 max-w-xl">
-                You tell us what you need — EthioTax sources the right qualified professional, manages the engagement, and delivers quality-checked work. UK · USA · Canada · UAE · Ethiopia.
+              <p className="text-green-100 text-xl max-w-3xl mb-10">
+                Our team of specialists delivers accounting, tax, audit, payroll and business consulting — fully managed, to the highest professional standards. UK · USA · Canada · UAE · Ethiopia.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <a href="/wa" target="_blank" rel="noopener noreferrer"
