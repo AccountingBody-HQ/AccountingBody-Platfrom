@@ -54,12 +54,16 @@ export default function CompanyFormationPage() {
     if (form._h) return
     setStatus('loading')
     try {
-      await fetch('/api/help-request', {
+      const res = await fetch('/api/help-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, service: 'Company Formation' }),
+        body: JSON.stringify({ ...form, service_type: 'Company Formation' }),
       })
-      setStatus('success')
+      if (res.ok) {
+        setStatus('success')
+      } else {
+        setStatus('error')
+      }
     } catch {
       setStatus('error')
     }

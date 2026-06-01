@@ -54,12 +54,16 @@ export default function PayrollServicesPage() {
     if (form._h) return
     setStatus('loading')
     try {
-      await fetch('/api/help-request', {
+      const res = await fetch('/api/help-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, service: 'Payroll Services' }),
+        body: JSON.stringify({ ...form, service_type: 'Payroll Services' }),
       })
-      setStatus('success')
+      if (res.ok) {
+        setStatus('success')
+      } else {
+        setStatus('error')
+      }
     } catch {
       setStatus('error')
     }

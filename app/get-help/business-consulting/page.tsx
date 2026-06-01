@@ -54,12 +54,16 @@ export default function BusinessConsultingPage() {
     if (form._h) return
     setStatus('loading')
     try {
-      await fetch('/api/help-request', {
+      const res = await fetch('/api/help-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, service: 'Business Consulting' }),
+        body: JSON.stringify({ ...form, service_type: 'Business Consulting' }),
       })
-      setStatus('success')
+      if (res.ok) {
+        setStatus('success')
+      } else {
+        setStatus('error')
+      }
     } catch {
       setStatus('error')
     }
