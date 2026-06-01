@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 
 export default function HowItWorksPage() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isEthioTax, setIsEthioTax] = useState(false)
 
   useEffect(() => {
