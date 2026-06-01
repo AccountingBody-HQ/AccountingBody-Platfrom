@@ -539,7 +539,7 @@ export default async function HomePage() {
     },
     {
       title: 'The Cross-Border Expertise Premium',
-      body: 'UK, USA, Canada, UAE, Ethiopia and beyond. We coordinate professionals across every jurisdiction the diaspora calls home.',
+      body: 'UK, USA, Canada, UAE, Ethiopia and beyond. Our specialists operate across every jurisdiction the diaspora calls home.',
     },
     {
       title: 'The Relationship Continuity Premium',
@@ -1022,7 +1022,7 @@ export default async function HomePage() {
               <span className="eyebrow mb-3 block">Why EthioTax</span>
               <h2 className="section-title mb-4">Eight reasons the community trusts us</h2>
               <p className="text-slate-500 text-lg leading-relaxed">
-                EthioTax is not a directory. We are not a marketplace. We are a fully managed professional services coordinator built specifically for the Ethiopian community.
+                EthioTax is not a directory. We are not a marketplace. We are a fully managed professional services firm built specifically for the Ethiopian community.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-14">
