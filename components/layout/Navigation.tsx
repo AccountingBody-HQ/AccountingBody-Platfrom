@@ -465,26 +465,37 @@ function MobileMenu({ open, onClose, onSearch, sections }: { open: boolean; onCl
 
 // ── Main Navigation ───────────────────────────────────────────────────────────
 
-export function Navigation({ studyQualificationLinks, etGetHelpLinks }: { studyQualificationLinks?: NavLink[], etGetHelpLinks?: { groups: { title: string, links: NavLink[] }[], cta: { label: string, href: string, description: string } } }) {
-  const sections = navSections.map(section => {
-    if (section.id === 'study' && studyQualificationLinks) {
-      return {
-        ...section,
-        groups: section.groups?.map(group => {
-          if (group.title !== 'By Qualification') return group
-          return { ...group, links: studyQualificationLinks }
-        }),
+export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyLinks }: { studyQualificationLinks?: NavLink[], etGetHelpLinks?: { groups: { title: string, links: NavLink[] }[], cta: { label: string, href: string, description: string } }, etCompanyLinks?: { groups: { title: string, links: NavLink[] }[], cta: { label: string, href: string, description: string } } }) {
+  const etCompanySection: NavSection | null = etCompanyLinks ? {
+    id: 'company',
+    label: 'Company',
+    href: '/about-ethiotax',
+    groups: etCompanyLinks.groups,
+    cta: etCompanyLinks.cta,
+  } : null
+
+  const sections = [
+    ...navSections.map(section => {
+      if (section.id === 'study' && studyQualificationLinks) {
+        return {
+          ...section,
+          groups: section.groups?.map(group => {
+            if (group.title !== 'By Qualification') return group
+            return { ...group, links: studyQualificationLinks }
+          }),
+        }
       }
-    }
-    if (section.id === 'get-help' && etGetHelpLinks) {
-      return {
-        ...section,
-        groups: etGetHelpLinks.groups,
-        cta: etGetHelpLinks.cta,
+      if (section.id === 'get-help' && etGetHelpLinks) {
+        return {
+          ...section,
+          groups: etGetHelpLinks.groups,
+          cta: etGetHelpLinks.cta,
+        }
       }
-    }
-    return section
-  })
+      return section
+    }),
+    ...(etCompanySection ? [etCompanySection] : []),
+  ]
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [mobileOpen,     setMobileOpen]     = useState(false)
   const [scrolled,       setScrolled]       = useState(false)

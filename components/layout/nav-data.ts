@@ -59,3 +59,30 @@ export const ICAEW_STUDY_LINKS: NavLink[] = [
   { label: 'AAT',         href: '/study/aat',                       description: 'Level 2, 3 and 4 coverage' },
   { label: 'ICAEW / ACA', href: '/study/icaew',                     description: 'ACA qualification pathway' },
 ]
+
+// ET Company Navigation Links — added Session 37
+export const ET_COMPANY_LINKS = {
+  groups: [
+    {
+      title: 'About',
+      links: [
+        { label: 'About EthioTax', href: '/about-ethiotax', description: 'Our mission, values and team of specialists' },
+        { label: 'How It Works',   href: '/how-it-works',   description: 'A fully managed service, from start to finish' },
+        { label: 'FAQ',            href: '/faq',            description: 'Everything you need to know about working with us' },
+      ],
+    },
+    {
+      title: 'Get Started',
+      links: [
+        { label: 'Enquire About a Service', href: '/get-help',     description: 'Tell us what you need — we respond within 24 hours' },
+        { label: 'Talk to Us on WhatsApp',  href: '/wa',           description: 'Speak to our team directly' },
+        { label: 'Join as a Provider',      href: '/firms-freelancers', description: 'Apply to join the EthioTax specialist network' },
+      ],
+    },
+  ],
+  cta: {
+    label: 'About EthioTax →',
+    href: '/about-ethiotax',
+    description: 'Managed professional services for the Ethiopian community',
+  },
+}
