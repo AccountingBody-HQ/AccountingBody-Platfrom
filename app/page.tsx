@@ -1036,46 +1036,7 @@ export default async function HomePage() {
                 </div>
               ))}
             </div>
-            <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-lg max-w-2xl mx-auto">
-              <div className="p-8 relative overflow-hidden" style={{backgroundColor: '#1A4731'}}>
-                <div
-                  className="absolute inset-0 opacity-20"
-                  style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #C9982A 0%, transparent 50%)' }}
-                />
-                <div className="relative z-10">
-                  <p className="text-xs font-semibold uppercase tracking-widest mb-5" style={{color: '#C9982A'}}>
-                    Client experience
-                  </p>
-                  <div className="text-6xl font-display leading-none mb-2 opacity-60" style={{color: '#C9982A'}}>&ldquo;</div>
-                  <p className="text-white text-base leading-relaxed mb-6">
-                    I needed advice on structuring a diaspora investment in Ethiopia. EthioTax provided a clear proposal within 72 hours and guided me through the entire process. Excellent service.
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0" style={{backgroundColor: '#C9982A', color: '#1A4731'}}>
-                      D
-                    </div>
-                    <div>
-                      <span className="text-white text-sm font-semibold block">Dawit M.</span>
-                      <span className="text-white/50 text-xs">Finance professional, Washington DC</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 divide-x divide-slate-200 bg-white">
-                <div className="p-5 flex flex-col items-center text-center">
-                  <span className="font-display text-2xl leading-none mb-1" style={{color: '#1A4731'}}>24hr</span>
-                  <span className="text-slate-500 text-xs font-medium">Response guarantee</span>
-                </div>
-                <div className="p-5 flex flex-col items-center text-center">
-                  <span className="font-display text-2xl leading-none mb-1" style={{color: '#1A4731'}}>72hr</span>
-                  <span className="text-slate-500 text-xs font-medium">Fixed-fee proposal</span>
-                </div>
-                <div className="p-5 flex flex-col items-center text-center">
-                  <span className="font-display text-2xl leading-none mb-1" style={{color: '#1A4731'}}>100%</span>
-                  <span className="text-slate-500 text-xs font-medium">Quality checked</span>
-                </div>
-              </div>
-            </div>
+
           </div>
         </section>
       ) : (
@@ -1174,48 +1135,63 @@ export default async function HomePage() {
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white rounded-2xl p-8 border" style={{ borderColor: '#d1e8db' }}>
-                <div className="flex gap-1 mb-4">
-                  {[1,2,3,4,5].map(s => (
-                    <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
-                  ))}
-                </div>
-                <p className="text-gray-600 text-sm leading-relaxed mb-6">&ldquo;EthioTax handled my UK Self Assessment quickly and professionally. They understood my situation straight away and the whole process was straightforward. I will not be going anywhere else.&rdquo;</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-sm" style={{ backgroundColor: '#1A4731' }}>TA</div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">Tigist A.</p>
-                    <p className="text-gray-400 text-xs">Business owner &mdash; London, UK</p>
+              {/* Tigist */}
+              <div className="rounded-2xl overflow-hidden shadow-lg relative" style={{ backgroundColor: '#1A4731' }}>
+                <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #C9982A 0%, transparent 50%)' }} />
+                <div className="relative z-10 p-8">
+                  <div className="flex gap-1 mb-4">
+                    {[1,2,3,4,5].map(s => (
+                      <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
+                    ))}
+                  </div>
+                  <div className="text-4xl font-display leading-none mb-2 opacity-60" style={{ color: '#C9982A' }}>&ldquo;</div>
+                  <p className="text-white text-sm leading-relaxed mb-6">EthioTax handled my UK Self Assessment quickly and professionally. They understood my situation straight away and the whole process was straightforward. I will not be going anywhere else.</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0" style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>TA</div>
+                    <div>
+                      <p className="font-semibold text-white text-sm">Tigist A.</p>
+                      <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>Business owner &mdash; London, UK</p>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl p-8 border" style={{ borderColor: '#d1e8db' }}>
-                <div className="flex gap-1 mb-4">
-                  {[1,2,3,4,5].map(s => (
-                    <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
-                  ))}
-                </div>
-                <p className="text-gray-600 text-sm leading-relaxed mb-6">&ldquo;I needed advice on structuring a diaspora investment in Ethiopia. EthioTax provided a clear proposal within 72 hours and guided me through the entire process. Excellent service.&rdquo;</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-sm" style={{ backgroundColor: '#1A4731' }}>DM</div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">Dawit M.</p>
-                    <p className="text-gray-400 text-xs">Finance professional &mdash; Washington DC, USA</p>
+              {/* Dawit */}
+              <div className="rounded-2xl overflow-hidden shadow-lg relative" style={{ backgroundColor: '#1A4731' }}>
+                <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #C9982A 0%, transparent 50%)' }} />
+                <div className="relative z-10 p-8">
+                  <div className="flex gap-1 mb-4">
+                    {[1,2,3,4,5].map(s => (
+                      <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
+                    ))}
+                  </div>
+                  <div className="text-4xl font-display leading-none mb-2 opacity-60" style={{ color: '#C9982A' }}>&ldquo;</div>
+                  <p className="text-white text-sm leading-relaxed mb-6">I needed advice on structuring a diaspora investment in Ethiopia. EthioTax provided a clear proposal within 72 hours and guided me through the entire process. Excellent service.</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0" style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>DM</div>
+                    <div>
+                      <p className="font-semibold text-white text-sm">Dawit M.</p>
+                      <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>Finance professional &mdash; Washington DC, USA</p>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl p-8 border" style={{ borderColor: '#d1e8db' }}>
-                <div className="flex gap-1 mb-4">
-                  {[1,2,3,4,5].map(s => (
-                    <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
-                  ))}
-                </div>
-                <p className="text-gray-600 text-sm leading-relaxed mb-6">&ldquo;Managing accounts across two countries was always complicated. EthioTax handled everything and I could communicate in Amharic throughout. Professional, reliable and highly recommended.&rdquo;</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-sm" style={{ backgroundColor: '#1A4731' }}>SG</div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">Selam G.</p>
-                    <p className="text-gray-400 text-xs">Business owner &mdash; Toronto, Canada</p>
+              {/* Selam */}
+              <div className="rounded-2xl overflow-hidden shadow-lg relative" style={{ backgroundColor: '#1A4731' }}>
+                <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #C9982A 0%, transparent 50%)' }} />
+                <div className="relative z-10 p-8">
+                  <div className="flex gap-1 mb-4">
+                    {[1,2,3,4,5].map(s => (
+                      <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
+                    ))}
+                  </div>
+                  <div className="text-4xl font-display leading-none mb-2 opacity-60" style={{ color: '#C9982A' }}>&ldquo;</div>
+                  <p className="text-white text-sm leading-relaxed mb-6">Managing accounts across two countries was always complicated. EthioTax handled everything and I could communicate in Amharic throughout. Professional, reliable and highly recommended.</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0" style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>SG</div>
+                    <div>
+                      <p className="font-semibold text-white text-sm">Selam G.</p>
+                      <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>Business owner &mdash; Toronto, Canada</p>
+                    </div>
                   </div>
                 </div>
               </div>
