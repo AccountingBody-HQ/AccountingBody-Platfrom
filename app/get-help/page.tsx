@@ -250,6 +250,14 @@ export default function GetHelpPage() {
           </div>
         </section>
 
+        {/* DISCLAIMER */}
+        <section className="py-12 bg-white border-t" style={{ borderColor: '#e8f0eb' }}>
+          <div className="max-w-5xl mx-auto px-6">
+            <p className="text-gray-400 text-xs leading-relaxed max-w-3xl">
+              All professional work, filings and regulatory submissions are prepared and carried out by qualified specialists. EthioTax manages your engagement and maintains service standards throughout.
+            </p>
+          </div>
+        </section>
         {/* CTA */}
         <section className="bg-white border-t border-[#e8f0eb] py-20">
           <div className="container-site">
