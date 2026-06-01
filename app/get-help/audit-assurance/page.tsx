@@ -42,7 +42,7 @@ const otherServices = [
   { name: 'Business Consulting', href: '/get-help/business-consulting' },
   { name: 'Payroll Services', href: '/get-help/payroll-services' },
   { name: 'Company Formation', href: '/get-help/company-formation' },
-  { name: 'Financial Planning', href: '/get-help/financial-planning' },
+  { name: 'Financial Planning', href: '/get-help/financial-planning-advisory' },
 ]
 
 export default function AuditAssurancePage() {
