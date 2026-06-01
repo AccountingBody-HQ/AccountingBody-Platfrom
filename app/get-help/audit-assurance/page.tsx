@@ -155,7 +155,7 @@ export default function AuditAssurancePage() {
                   'Compliance audit for regulatory submissions',
                   'Agreed-upon procedures engagements',
                   'Financial statement review engagements',
-                  'Group audit coordination for businesses with Ethiopian and international operations',
+                  'Group audit management for businesses with Ethiopian and international operations',
                   'Pre-audit preparation and financial statement review',
                 ].map(b => (
                   <li key={b} className="flex items-start gap-3">
