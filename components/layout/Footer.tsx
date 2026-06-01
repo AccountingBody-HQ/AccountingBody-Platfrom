@@ -228,7 +228,17 @@ function ExtIcon() {
 export function Footer() {
   const [isEthioTax, setIsEthioTax] = React.useState(false)
 
-  const professionalsColumn: FooterColumn = {
+  const companyColumn: FooterColumn = isEthioTax ? {
+    title: 'Company',
+    links: [
+      { label: 'About EthioTax', href: '/about-ethiotax' },
+      { label: 'How It Works',   href: '/how-it-works' },
+      { label: 'FAQ',            href: '/faq' },
+      { label: 'Contact',        href: '/contact' },
+    ],
+  } : footerColumns[footerColumns.length - 1]
+
+    const professionalsColumn: FooterColumn = {
     title: 'Professionals',
     links: [
       { label: isEthioTax ? 'Get Professional Help' : 'Find an Accountant', href: isEthioTax ? '/get-help' : '/firms-freelancers/directory' },
@@ -316,7 +326,7 @@ export function Footer() {
 
           {/* ── Link columns ────────────────────────────────────────────── */}
           <div className="lg:col-span-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
-            {[...footerColumns.slice(0,3), professionalsColumn, ...footerColumns.slice(3)].map(column => (
+            {[...footerColumns.slice(0,3), professionalsColumn, companyColumn].map(column => (
               <div key={column.title}>
                 <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">
                   {column.title}
