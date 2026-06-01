@@ -1048,15 +1048,15 @@ export default async function HomePage() {
                   </p>
                   <div className="text-6xl font-display leading-none mb-2 opacity-60" style={{color: '#C9982A'}}>&ldquo;</div>
                   <p className="text-white text-base leading-relaxed mb-6">
-                    EthioTax handled my UK self-assessment and my Ethiopian business accounts at the same time. One contact, one invoice, zero stress. I did not have to explain my situation twice.
+                    I needed advice on structuring a diaspora investment in Ethiopia. EthioTax provided a clear proposal within 72 hours and guided me through the entire process. Excellent service.
                   </p>
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0" style={{backgroundColor: '#C9982A', color: '#1A4731'}}>
-                      T
+                      D
                     </div>
                     <div>
-                      <span className="text-white text-sm font-semibold block">Tigist A.</span>
-                      <span className="text-white/50 text-xs">Business owner, London</span>
+                      <span className="text-white text-sm font-semibold block">Dawit M.</span>
+                      <span className="text-white/50 text-xs">Finance professional, Washington DC</span>
                     </div>
                   </div>
                 </div>
