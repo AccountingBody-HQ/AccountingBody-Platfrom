@@ -7,19 +7,20 @@ import { HelpCircle, Mail, Search } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-async function getSubmissions(filters: { search?: string; serviceType?: string; status?: string }) {
+async function getSubmissions(filters: { search?: string; serviceType?: string; status?: string; platform?: string }) {
   noStore()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SECRET_KEY!
   )
 
-  let helpQuery = supabase.from('help_requests').select('*').eq('platform', 'ab').order('created_at', { ascending: false })
+  const platformFilter = filters.platform || 'ab'
+  let helpQuery = supabase.from('help_requests').select('*').eq('platform', platformFilter).order('created_at', { ascending: false })
   if (filters.status)      helpQuery = helpQuery.eq('status', filters.status)
   if (filters.serviceType) helpQuery = helpQuery.eq('service_type', filters.serviceType)
   if (filters.search)      helpQuery = helpQuery.or('name.ilike.%' + filters.search + '%,email.ilike.%' + filters.search + '%')
 
-  let contactQuery = supabase.from('contact_submissions').select('*').eq('platform', 'ab').order('created_at', { ascending: false })
+  let contactQuery = supabase.from('contact_submissions').select('*').eq('platform', platformFilter).order('created_at', { ascending: false })
   if (filters.search) contactQuery = contactQuery.or('name.ilike.%' + filters.search + '%,email.ilike.%' + filters.search + '%')
 
   const [{ data: helpRequests }, { data: contactSubmissions }] = await Promise.all([helpQuery, contactQuery])
@@ -33,7 +34,7 @@ async function getSubmissions(filters: { search?: string; serviceType?: string; 
 async function getServiceTypes() {
   noStore()
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!)
-  const { data } = await supabase.from('help_requests').select('service_type').eq('platform', 'ab').not('service_type', 'is', null)
+  const { data } = await supabase.from('help_requests').select('service_type').not('service_type', 'is', null)
   const types = Array.from(new Set((data ?? []).map((r: any) => r.service_type).filter(Boolean)))
   return types as string[]
 }
@@ -41,15 +42,16 @@ async function getServiceTypes() {
 export default async function SubmissionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string; service?: string; status?: string }>
+  searchParams: Promise<{ search?: string; service?: string; status?: string; platform?: string }>
 }) {
   const sp          = await searchParams
   const search      = sp.search ?? ''
   const serviceType = sp.service ?? ''
   const status      = sp.status ?? ''
+  const platform    = sp.platform ?? 'ab'
 
   const [{ helpRequests, contactSubmissions }, serviceTypes] = await Promise.all([
-    getSubmissions({ search, serviceType, status }),
+    getSubmissions({ search, serviceType, status, platform }),
     getServiceTypes(),
   ])
 
@@ -116,6 +118,12 @@ export default async function SubmissionsPage({
             <option value="in_progress">In Progress</option>
             <option value="resolved">Resolved</option>
             <option value="closed">Closed</option>
+          </select>
+          <select name="platform" defaultValue={platform}
+            className="rounded-xl px-3 py-2 text-sm focus:outline-none"
+            style={{ background: '#111827', border: '1px solid #1f2937', color: platform ? '#ffffff' : '#475569' }}>
+            <option value="ab">AccountingBody</option>
+            <option value="et">EthioTax</option>
           </select>
           <button type="submit"
             className="px-4 py-2 rounded-xl text-sm font-semibold"
