@@ -11,11 +11,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const article = await getArticleBySlug(slug)
   if (!article) return {}
   const canonicalUrl = resolveCanonicalUrl(article)
+  const metaTitle = article.seoTitle || article.title
+  const metaDesc  = article.seoDescription || article.excerpt
+  const brand     = canonicalUrl?.includes('ethiotax.com') ? 'EthioTax' : 'Accounting Body'
   return {
-    title:       `${article.title} | Accounting Body`,
-    description: article.excerpt,
+    title:       `${metaTitle} | ${brand}`,
+    description: metaDesc,
     ...(canonicalUrl ? { alternates: { canonical: canonicalUrl } } : {}),
-    openGraph: { title: article.title, description: article.excerpt, type: 'article' },
+    openGraph: { title: metaTitle, description: metaDesc, type: 'article' },
   }
 }
 

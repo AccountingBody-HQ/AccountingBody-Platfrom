@@ -27,6 +27,8 @@ export interface ArticleSummary {
 
 export interface ArticleFull extends ArticleSummary {
   body:                unknown[]
+  seoTitle?:           string
+  seoDescription?:     string
   canonicalOwner?:     string
   showOnSites?:        string[]
   mcqUrl?:             string
@@ -115,9 +117,11 @@ export async function getArticlesByCategory(categorySlug: string): Promise<Artic
 
 export async function getArticleBySlug(slug: string): Promise<ArticleFull | null> {
   const query = `
-    *[_type == "article" && "accountingbody" in showOnSites && slug.current == $slug][0] {
+    *[_type == "article" && slug.current == $slug][0] {
       ${SUMMARY_FIELDS},
       body[]{ ..., _type == "tableBlock" => { _type, _key, headers, rows[]{ _type, _key, cells } } },
+      seoTitle,
+      seoDescription,
       canonicalOwner,
       showOnSites,
       mcqUrl,
@@ -132,7 +136,7 @@ export async function getArticleBySlug(slug: string): Promise<ArticleFull | null
 }
 
 export async function getAllArticlePaths(): Promise<Array<{ category: string; slug: string }>> {
-  const query = `*[_type == "article" && "accountingbody" in showOnSites] { "slug": slug.current, examBody }`
+  const query = `*[_type == "article" && ("accountingbody" in showOnSites || "ethiotax" in showOnSites)] { "slug": slug.current, examBody }`
   const all   = await sanityFetch<{ slug: string; examBody?: string[] }[]>(query)
   if (!all) return []
   const paths: Array<{ category: string; slug: string }> = []
