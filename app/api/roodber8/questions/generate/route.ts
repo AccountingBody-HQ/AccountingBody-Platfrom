@@ -712,6 +712,52 @@ All references to standards, rates, or thresholds must be caveated as illustrati
 All invented figures must be specific and non-round. All invented company names must be realistic.
 Explanations must teach — not just state the correct answer.
 `,
+
+  'ETICPA / CPA': `
+QUALIFICATION PROFILE — ETICPA CPA (internal calibration only):
+Established under Proclamation No. 1372/2025, the ETiCPA CPA is Ethiopia's national professional accounting credential. The detailed examination syllabus is under active development as of 2026. Questions must therefore be calibrated to the broad professional competency domains of the qualification: financial reporting under IFRS as adopted in Ethiopia, audit and assurance under ISAs, Ethiopian taxation under ERCA, management accounting, and professional ethics under IFAC standards.
+
+EXAM STRUCTURE AWARENESS:
+- Examination format is under development. Calibrate to professional-level constructed response and scenario-based questions appropriate for a CPA-level candidate.
+- Difficulty register: Foundation questions test knowledge and application. Intermediate questions require multi-step reasoning and Ethiopian context application. Advanced questions require professional judgement, evaluation, and advisory responses.
+
+QUESTION CALIBRATION:
+- All scenarios must use Ethiopian Birr (ETB) as currency.
+- All business scenarios must reference Ethiopian companies, Ethiopian regulatory bodies (ERCA, AABE), and Ethiopian commercial law.
+- Financial reporting questions must reference IFRS standards by number and title, applied to Ethiopian public interest entities.
+- Taxation questions must reference ERCA, Ethiopian income tax schedules (Schedule A for employment, Schedule C for business), VAT under Ethiopian VAT Proclamation, and withholding tax. Always caveat that rates are subject to change.
+- Audit questions must reference ISAs by number and apply them to the Ethiopian regulatory environment.
+- Ethics questions must reference the IFAC Code of Ethics / IESBA framework.
+- Never mention ETiCPA or ETICPA in the question text or explanation. Use "professional accounting examination" or "CPA examination level" instead.
+- MCQ distractors must reflect common errors in Ethiopian accounting practice — misapplication of IFRS to Ethiopian entities, ERCA filing errors, incorrect tax schedule classification.
+`,
+
+  'ETICPA / ATQ': `
+QUALIFICATION PROFILE — ETICPA ATQ (internal calibration only):
+The ETiCPA ATQ is a two-level qualification: Level 1 Foundation Technician and Level 2 Advanced Technician. Questions must be calibrated to the specific level and module selected.
+
+LEVEL 1 — FOUNDATION TECHNICIAN (Introduction to Accounting, Cost Accounting, Business Skills, Ethiopian Business Law):
+- Examination format: Structured assessments. Objective and short-answer questions.
+- Difficulty register: Foundation only. Build from first principles. Every term defined before use. Ethiopian business context throughout.
+- Introduction to Accounting: Double entry, books of prime entry, ledger accounts, trial balance, basic financial statements. Ethiopian Birr throughout.
+- Cost Accounting: Cost classification, absorption costing basics, FIFO and weighted average inventory valuation.
+- Business Skills: Professional communication, numeracy, teamwork, digital tools.
+- Ethiopian Business Law: Ethiopian Commercial Code, types of business entity, contract law, employment law basics.
+- MCQ distractors: Debit/credit confusion, incorrect cost classification, wrong entity type under Ethiopian Commercial Code.
+- Never mention ETiCPA or ETICPA in question text. Use "accounting technician level" instead.
+
+LEVEL 2 — ADVANCED TECHNICIAN (Financial Accounting, Management Accounting, Assurance Controls and Ethics, Ethiopian Taxation, Ethiopian Public Sector Accounting):
+- Examination format: Scenario-based assessments. Constructed response and calculation questions.
+- Difficulty register: Intermediate and Advanced. Assume Level 1 knowledge. Multi-step scenarios with Ethiopian business context.
+- Financial Accounting: Full financial statements under IFRS for SMEs. Accruals, prepayments, depreciation, bad debts. Partnership and company accounts.
+- Management Accounting: Marginal and absorption costing, contribution analysis, break-even, budgeting, variance analysis.
+- Assurance Controls and Ethics: Internal controls, internal audit role, fraud prevention, IFAC Code of Ethics.
+- Ethiopian Taxation: ERCA administration, Schedule A employment income tax, Schedule C business income tax (presumptive and actual), VAT, withholding tax, turnover tax, filing obligations.
+- Ethiopian Public Sector Accounting: IFMIS, cash vs accruals basis, government budget structure, public procurement.
+- All scenarios use Ethiopian Birr. All tax scenarios reference ERCA and caveat rates as subject to change.
+- MCQ distractors: IFRS for SMEs misapplication, wrong tax schedule, incorrect VAT treatment, public vs private sector accounting confusion.
+- Never mention ETiCPA or ETICPA in question text. Use "accounting technician level" instead.
+`,
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
