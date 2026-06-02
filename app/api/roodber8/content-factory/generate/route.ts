@@ -148,6 +148,54 @@ LEVEL 4 — PROFESSIONAL DIPLOMA:
 - Marking expectations: Technically accurate financial statements. Correct deferred tax workings. Justified recommendations on financing decisions. Professional explanations of audit procedures and findings. Quality of reasoning in written tasks is assessed, not just technical accuracy.
 - Worked example standard: A limited company with share capital, deferred tax, revaluation reserve, and dividends. A budget with flexed analysis and variance commentary. A tax computation with business and personal income sources. An audit scenario with three risks requiring procedures.
 - What students struggle with here: deferred tax (especially on timing differences), drafting professional quality written responses, integrating across subjects in the synoptic, partnership accounts especially on admission and retirement of partners.`,
+
+  'ETICPA / CPA': `
+QUALIFICATION CALIBRATION — ETHIOPIAN CERTIFIED PUBLIC ACCOUNTANT (CPA):
+Established under Proclamation No. 1372/2025, the ETiCPA CPA qualification is Ethiopia's national professional accounting credential. It certifies competence in accounting, auditing, taxation, and ethical practice to internationally aligned standards. The qualification follows a five-stage pathway: Eligibility and Registration, Examinations, Practical Experience, Certification, and Continuous Professional Development.
+
+NOTE: The detailed CPA examination syllabus is under active development by ETiCPA as of 2026. Content must therefore be calibrated to the broad competency domains of the qualification rather than specific examination papers. Focus on the technical areas that define professional CPA-level competence in an Ethiopian context: financial reporting under IFRS as adopted in Ethiopia, audit and assurance under ISAs, Ethiopian taxation under ERCA, management accounting, and professional ethics under IFAC standards.
+
+CONTENT CALIBRATION:
+- Audience: Accounting graduates and professionals pursuing Ethiopia's national CPA designation. Many will have prior accounting education. Content should build professional-level depth and practical application, not repeat undergraduate fundamentals.
+- Ethiopian context is essential: Reference Ethiopian Financial Reporting Standards (EFRS), the Ethiopian Revenues and Customs Authority (ERCA), the Accounting and Auditing Board of Ethiopia (AABE), and Ethiopian commercial law where relevant. Do not treat Ethiopian practice as identical to UK or US practice.
+- IFRS alignment: Ethiopia has adopted IFRS for public interest entities. Reference IFRS standards by number and title. Where Ethiopian adoption differs from the full IFRS suite, note the difference.
+- Professional ethics: Reference the IFAC Code of Ethics. ETiCPA members are bound by international ethical standards — content on ethics must reflect the IESBA framework: integrity, objectivity, professional competence and due care, confidentiality, professional behaviour.
+- Command verb register: apply, analyse, evaluate, advise, assess, prepare, explain, calculate, recommend, justify, discuss the implications of.
+- Worked example standard: Ethiopian business scenarios — a listed Ethiopian company, an SME registered with AABE, a government-affiliated entity, a company operating across Ethiopian regions. Use Ethiopian Birr (ETB) as the currency in worked examples. Reference Ethiopian regulatory bodies and tax rates (with caveat that rates change).
+- What candidates need most: Ethiopian-specific application of IFRS, ERCA tax compliance for businesses and individuals, audit procedures under ISAs in the Ethiopian regulatory environment, professional ethics in Ethiopian practice contexts.
+- CRITICAL: Never mention ETiCPA or ETICPA by name in published output. Use "professional accounting examination level" or "CPA examination level" instead.`,
+
+  'ETICPA / ATQ': `
+QUALIFICATION CALIBRATION — ACCOUNTING TECHNICIAN QUALIFICATION (ATQ):
+The ETiCPA ATQ is a two-level employer-oriented qualification designed to address Ethiopia's middle-level financial skills gap. It develops ethical, work-ready finance professionals for Ethiopia's public and private sectors. Level 1 is the Foundation Technician level. Level 2 is the Advanced Technician level.
+
+LEVEL 1 — FOUNDATION TECHNICIAN:
+Modules: Introduction to Accounting, Cost Accounting, Business Skills, Ethiopian Business Law.
+- Examination format: Structured assessments testing foundational knowledge and practical application.
+- Content calibration: Build from absolute first principles. Students are new to accounting or have minimal prior knowledge. Every accounting term must be defined before use. Ethiopian business context must be prominent — examples should reference Ethiopian businesses, Ethiopian Birr, and Ethiopian commercial practice.
+- Introduction to Accounting: Double entry bookkeeping, books of prime entry, ledger accounts, trial balance, basic financial statements. The accounting equation. Types of business entity under Ethiopian law. The role of accountants in Ethiopian organisations.
+- Cost Accounting: Cost classification (fixed, variable, direct, indirect). Cost centres and cost units. Basic absorption costing. Inventory valuation (FIFO, weighted average). Labour cost recording.
+- Business Skills: Communication in professional contexts. Numeracy and data interpretation. Working in teams. Professional conduct. Digital tools in accounting.
+- Ethiopian Business Law: Ethiopian Commercial Code — types of business entity (sole trader, partnership, private limited company, share company). Contract law fundamentals. Employment law basics. Consumer protection.
+- Command verb register: identify, define, state, record, calculate, prepare, classify, describe, explain.
+- Marking expectations: Correct double entry. Accurate calculations. Clear, brief written explanations. Right or wrong on numerical tasks.
+- Worked example standard: A small Ethiopian sole trader or private limited company. Simple monthly transactions. Bank reconciliation. Basic cost statement. All figures in Ethiopian Birr.
+- What students struggle with here: debit and credit direction confusion, distinguishing capital from revenue expenditure, applying Ethiopian business law terminology accurately.
+
+LEVEL 2 — ADVANCED TECHNICIAN:
+Modules: Financial Accounting, Management Accounting, Assurance Controls and Ethics, Ethiopian Taxation, Ethiopian Public Sector Accounting.
+- Examination format: Scenario-based assessments requiring preparation of financial statements, management reports, and analytical responses.
+- Content calibration: Assume Level 1 foundation. Focus on preparing complete financial statements, applying management accounting tools, understanding assurance and internal controls, computing Ethiopian tax liabilities, and applying public sector accounting principles relevant to Ethiopia.
+- Financial Accounting: Preparation of financial statements for sole traders and limited companies under IFRS for SMEs. Adjustments — accruals, prepayments, depreciation, bad debts. Partnership accounts. Company accounts including share capital and retained earnings.
+- Management Accounting: Marginal and absorption costing. Contribution analysis. Break-even analysis. Budgeting and variance analysis. Relevant cost decision-making. Working capital management.
+- Assurance Controls and Ethics: Internal controls — purpose, types, and limitations. The role of internal audit. Fraud awareness and prevention. IFAC Code of Ethics — integrity, objectivity, confidentiality, professional competence. Ethical dilemmas in practice.
+- Ethiopian Taxation: ERCA tax administration. Employment income tax (Schedule A). Business income tax (Schedule C) — presumptive and actual regime. VAT under Ethiopian VAT Proclamation. Withholding tax. Turnover tax for small businesses. Filing obligations and penalties.
+- Ethiopian Public Sector Accounting: The Integrated Financial Management Information System (IFMIS). Cash basis vs accruals basis in public sector. Ethiopian government budget structure. Public procurement principles. Financial reporting for public bodies.
+- Command verb register: prepare, calculate, analyse, apply, explain, advise, reconcile, assess, describe, evaluate.
+- Marking expectations: Complete financial statements with correct adjustments. Accurate variance analysis. Correct Ethiopian tax computations. Professional written explanations. Quality of reasoning matters at this level.
+- Worked example standard: An Ethiopian private limited company with multiple adjustments. A budget with flexed analysis. An Ethiopian tax computation for a business and its employees. A public sector entity preparing its annual accounts.
+- What students struggle with here: applying IFRS for SMEs correctly to Ethiopian practice, Ethiopian VAT partial exemption rules, distinguishing presumptive from actual business income tax, public sector accounting conventions.
+- CRITICAL: Never mention ETiCPA or ETICPA by name in published output. Use "accounting technician level" or "ATQ examination level" instead.`,
 }
 
 // ═══════════════════════════════════════════════════════════════════════
