@@ -612,12 +612,16 @@ export default function GenerateQuestionsPage() {
             <div className="grid grid-cols-3 gap-3">
               {['accountingbody', 'hrlake', 'ethiotax'].map(site => (
                 <button key={site}
-                  onClick={() => { if (site === 'accountingbody') return; setShowOnSites(prev => prev.includes(site) ? prev.filter(s => s !== site) : [...prev, site]) }}
+                  onClick={() => {
+                    const isEticpa = config.qualification.startsWith('ETICPA')
+                    if (site === 'accountingbody' && !isEticpa) return
+                    setShowOnSites(prev => prev.includes(site) ? prev.filter(s => s !== site) : [...prev, site])
+                  }}
                   className="rounded-xl p-4 text-left transition-all" style={showOnSites.includes(site) ? C.active : C.idle}>
                   <div className="flex items-center justify-between mb-1">
                     <p className="font-semibold text-sm capitalize">{site}</p>
                     {showOnSites.includes(site) && <Check size={13} style={{ color: '#D4A017' }} />}
-                    {site === 'accountingbody' && <span className="text-xs" style={{ color: '#D4A017' }}>Required</span>}
+                    {site === 'accountingbody' && !config.qualification.startsWith('ETICPA') && <span className="text-xs" style={{ color: '#D4A017' }}>Required</span>}
                   </div>
                 </button>
               ))}
