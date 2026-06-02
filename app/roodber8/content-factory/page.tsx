@@ -260,7 +260,7 @@ export default function ContentFactoryPage() {
                   : i === step
                     ? { background: '#D4A017', color: '#0C1A3D' }
                     : { background: 'rgba(255,255,255,0.04)', color: '#334155' }}>
-                {i < step ? '\u2713' : i + 1}
+                {i < step ? '✓' : i + 1}
               </span>
               <span className="text-sm font-semibold">{s}</span>
             </div>
@@ -320,7 +320,7 @@ export default function ContentFactoryPage() {
               </div>
               <input type="text" value={config.subject}
                 onChange={e => setConfig(c => ({ ...c, subject: e.target.value }))}
-                placeholder="Or type a custom subject / paper name\u2026"
+                placeholder="Or type a custom subject / paper name..."
                 className="w-full rounded-xl px-4 py-3 text-white text-sm placeholder-slate-600 focus:outline-none mt-2"
                 style={C.input} />
             </div>
@@ -428,7 +428,7 @@ export default function ContentFactoryPage() {
               {[
                 { label: 'Qualification', value: config.qualification },
                 { label: 'Content Type',  value: config.contentType   },
-                { label: 'Subject',       value: config.subject || '\u2014' },
+                { label: 'Subject',       value: config.subject || '—' },
                 { label: 'Difficulty',    value: config.difficulty    },
                 { label: 'Tone',          value: config.tone          },
                 { label: 'Length',        value: LENGTHS.find(l => l.value === config.length)?.label ?? config.length },
@@ -474,7 +474,7 @@ export default function ContentFactoryPage() {
               className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl disabled:opacity-40"
               style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
               {generating
-                ? <><Loader2 size={14} className="animate-spin" /> {generatingPass === 1 ? 'Authoring\u2026' : 'Reviewing\u2026'}</>
+                ? <><Loader2 size={14} className="animate-spin" /> {generatingPass === 1 ? 'Authoring...' : 'Reviewing...'}</>
                 : <><Sparkles size={14} /> Generate Content</>}
             </button>
           </div>
@@ -601,7 +601,7 @@ export default function ContentFactoryPage() {
               className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl disabled:opacity-40"
               style={{ background: '#059669', color: '#ffffff' }}>
               {publishing
-                ? <><Loader2 size={14} className="animate-spin" /> Publishing\u2026</>
+                ? <><Loader2 size={14} className="animate-spin" /> Publishing...</>
                 : <><Send size={14} /> Publish to Sanity</>}
             </button>
           </div>
