@@ -539,20 +539,13 @@ export default function ContentFactoryPage() {
               {['accountingbody', 'hrlake', 'ethiotax'].map(site => (
                 <button key={site}
                   onClick={() => {
-                    const isEticpa = config.qualification.startsWith('ETICPA')
-                    if (site === 'accountingbody' && !isEticpa) return
                     setShowOnSites(prev => prev.includes(site) ? prev.filter(s => s !== site) : [...prev, site])
                   }}
                   className="rounded-xl p-4 text-left transition-all"
-                  style={showOnSites.includes(site)
-                    ? C.active
-                    : site === 'accountingbody' && !config.qualification.startsWith('ETICPA')
-                      ? { ...C.active, opacity: 0.6 }
-                      : C.idle}>
+                  style={showOnSites.includes(site) ? C.active : C.idle}>
                   <div className="flex items-center justify-between mb-1">
                     <p className="font-semibold text-sm capitalize">{site}</p>
                     {showOnSites.includes(site) && <Check size={13} style={{ color: '#3b82f6' }} />}
-                    {site === 'accountingbody' && !config.qualification.startsWith('ETICPA') && <span className="text-xs" style={{ color: '#D4A017' }}>Required</span>}
                   </div>
                   <p className="text-xs" style={{ color: '#334155' }}>{site}.com</p>
                 </button>
