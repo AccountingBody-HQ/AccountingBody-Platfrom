@@ -221,8 +221,8 @@ export default function ContentFactoryPage() {
 
   function reset() {
     setStep(0); setConfig(EMPTY); setGenerated(''); setEdited('')
-    setPublished(false); setError(''); setShowOnSites(['accountingbody'])
-    setCanonical('accountingbody'); setDocId('')
+    setPublished(false); setError('')
+    setShowOnSites(['accountingbody']); setCanonical('accountingbody'); setDocId('')
   }
 
   const seo = seoScore()
