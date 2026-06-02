@@ -152,7 +152,6 @@ export async function POST(req: NextRequest) {
       contentType:    mappedType,
       difficulty:     mappedDiff,
       publishedAt:    now,
-      status:        'published',
       showOnSites,
       canonicalOwner,
       aiSummary:      aiSummary ?? '',
