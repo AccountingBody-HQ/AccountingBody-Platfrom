@@ -90,6 +90,8 @@ export default function CourseFactoryPage() {
   const [level,       setLevel]       = useState('beginner')
   const [status,      setStatus]      = useState('draft')
   const [isFeatured,  setIsFeatured]  = useState(false)
+  const [showOnSites, setShowOnSites] = useState<string[]>(['accountingbody'])
+  const [canonical,   setCanonical]   = useState('accountingbody')
 
   // Content assembly
   const [chapters,    setChapters]    = useState<Chapter[]>([
@@ -369,7 +371,7 @@ This will permanently delete the course and all its lesson documents from Sanity
       level,
       status,
       isFeatured,
-      showOnSites: ['accountingbody'],
+      showOnSites,
       chapters:    chapters.map((ch, ci) => ({
         _type:        'chapter',
         _key:         ch.id,
@@ -537,6 +539,46 @@ This will permanently delete the course and all its lesson documents from Sanity
           />
           <span className="text-sm text-slate-600">Feature this course on the homepage</span>
         </label>
+        {/* ── Publish To ── */}
+        <div className="pt-2 space-y-3">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Publish To</p>
+          <div className="flex gap-2 flex-wrap">
+            {['accountingbody', 'ethiotax', 'hrlake'].map(site => (
+              <button
+                key={site}
+                onClick={() => setShowOnSites(prev =>
+                  prev.includes(site) ? prev.filter(s => s !== site) : [...prev, site]
+                )}
+                className="rounded-lg px-3 py-2 text-xs font-semibold transition-all border"
+                style={showOnSites.includes(site)
+                  ? { background: 'rgba(37,99,235,0.12)', border: '1px solid #2563eb', color: '#fff' }
+                  : { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#64748b' }}
+              >
+                {showOnSites.includes(site) && <span className="mr-1">&#10003;</span>}
+                {site}
+                {site === 'accountingbody' && <span className="ml-2 text-yellow-400 text-xs">Required</span>}
+              </button>
+            ))}
+          </div>
+          <div className="space-y-1 pt-1">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Canonical Owner</p>
+            <div className="flex gap-2 flex-wrap">
+              {['accountingbody', 'ethiotax', 'hrlake'].map(site => (
+                <button
+                  key={site}
+                  onClick={() => setCanonical(site)}
+                  className="rounded-lg px-3 py-2 text-xs font-semibold transition-all border"
+                  style={canonical === site
+                    ? { background: 'rgba(16,185,129,0.12)', border: '1px solid #10b981', color: '#10b981' }
+                    : { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#64748b' }}
+                >
+                  {canonical === site && <span className="mr-1">&#10003;</span>}
+                  {site}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ── Step 2: Content ID Fetch ── */}
