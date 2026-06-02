@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Sparkles, ChevronRight, BookOpen, Edit3, Check, Loader2, AlertCircle, Send } from 'lucide-react'
 
-const QUALIFICATIONS = ['ACCA', 'CIMA', 'ICAEW', 'AAT']
+const QUALIFICATIONS = ['ACCA', 'CIMA', 'ICAEW', 'AAT', 'ETICPA / CPA', 'ETICPA / ATQ']
 
 const CONTENT_TYPES = [
   { label: 'Study Note',                       desc: 'Exam-focused topic breakdown'         },
@@ -42,6 +42,8 @@ const QUAL_SUBJECTS: Record<string, string[]> = {
   CIMA:  ['Business Economics (BA1)', 'Fundamentals of Management Accounting (BA2)', 'Fundamentals of Financial Accounting (BA3)', 'Fundamentals of Ethics (BA4)', 'Management Accounting (P1)', 'Advanced Management Accounting (P2)', 'Risk Management (P3)', 'Financial Reporting (F1)', 'Advanced Financial Reporting (F2)', 'Financial Strategy (F3)', 'Organisational Management (E1)', 'Project and Relationship Management (E2)', 'Strategic Management (E3)', 'Case Study'],
   ICAEW: ['Accounting (A)', 'Assurance (As)', 'Business, Technology and Finance (BTF)', 'Law (L)', 'Management Information (MI)', 'Principles of Taxation (PoT)', 'Financial Accounting and Reporting (FAR)', 'Audit and Assurance (AA)', 'Business Strategy and Technology (BST)', 'Financial Management (FM)', 'Tax Compliance (TC)', 'Corporate Reporting (CR)', 'Strategic Business Management (SBM)', 'Case Study'],
   AAT:   ['Bookkeeping Transactions (BTRN)', 'Bookkeeping Controls (BKCL)', 'Introduction to Payroll (ITPF)', 'Business Environment (BENV)', 'Financial Accounting: Preparing Financial Statements (FAPS)', 'Management Accounting Techniques (MATS)', 'Tax Processes for Businesses (TPFB)', 'Business Awareness (BUAW)', 'Advanced Bookkeeping (AVBK)', 'Financial Statements of Limited Companies (FSLC)', 'Management Accounting: Decision and Control (MDCL)', 'Management Accounting: Budgeting (MABU)', 'Business Tax (BNTA)', 'Personal Tax (PNTA)', 'Audit and Assurance (AUDT)', 'Cash and Financial Management (CAFM)', 'Credit and Debt Management (CDMT)', 'Synoptic Assessment'],
+  'ETICPA / CPA': ['Financial Reporting (IFRS)', 'Audit and Assurance (ISAs)', 'Ethiopian Taxation (ERCA)', 'Management Accounting', 'Professional Ethics (IFAC)', 'Financial Management', 'Business Law (Ethiopian Commercial Code)', 'Public Sector Accounting'],
+  'ETICPA / ATQ': ['Introduction to Accounting (Level 1)', 'Cost Accounting (Level 1)', 'Business Skills (Level 1)', 'Ethiopian Business Law (Level 1)', 'Financial Accounting (Level 2)', 'Management Accounting (Level 2)', 'Assurance Controls and Ethics (Level 2)', 'Ethiopian Taxation (Level 2)', 'Ethiopian Public Sector Accounting (Level 2)'],
 }
 
 type Config = {
@@ -114,6 +116,18 @@ export default function ContentFactoryPage() {
   const [error, setError]           = useState('')
   const [showOnSites, setShowOnSites] = useState<string[]>(['accountingbody'])
   const [canonical, setCanonical]   = useState('accountingbody')
+
+  // Auto-default showOnSites and canonical for ETICPA qualifications
+  const handleQualificationSelect = (qual: string) => {
+    setConfig(prev => ({ ...prev, qualification: qual, subject: '' }))
+    if (qual.startsWith('ETICPA')) {
+      setShowOnSites(['ethiotax'])
+      setCanonical('ethiotax')
+    } else {
+      setShowOnSites(['accountingbody'])
+      setCanonical('accountingbody')
+    }
+  }
   const [docId, setDocId]           = useState('')
   const passTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [categories, setCategories] = useState<{_id:string;title:string}[]>([])
@@ -272,7 +286,7 @@ export default function ContentFactoryPage() {
             <p className="text-xs mb-4" style={{ color: '#334155' }}>Which qualification is this content for?</p>
             <div className="grid grid-cols-4 gap-3">
               {QUALIFICATIONS.map(q => (
-                <SelectCard key={q} active={config.qualification === q} onClick={() => setConfig(c => ({ ...c, qualification: q, subject: '' }))}>
+                <SelectCard key={q} active={config.qualification === q} onClick={() => handleQualificationSelect(q)}>
                   <BookOpen size={14} className="mb-2 opacity-60" />
                   <p className="font-bold text-sm">{q}</p>
                 </SelectCard>
