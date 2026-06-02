@@ -534,7 +534,7 @@ export default function ContentFactoryPage() {
         <div className="space-y-5">
           <div className="rounded-2xl border p-6" style={C.card}>
             <h2 className="text-white font-bold text-sm mb-1">Show On Sites</h2>
-            <p className="text-xs mb-4" style={{ color: '#334155' }}>Which platforms should display this content? AccountingBody is required.</p>
+            <p className="text-xs mb-4" style={{ color: '#334155' }}>Which platforms should display this content? Select all that apply.</p>
             <div className="grid grid-cols-3 gap-3">
               {['accountingbody', 'hrlake', 'ethiotax'].map(site => (
                 <button key={site}
