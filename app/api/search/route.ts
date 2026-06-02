@@ -53,7 +53,7 @@ function buildGroups(q: string): string[][] {
   }).filter(g => g.length > 0)
 }
 
-function makeGroq(groups: string[][], mode: 'AND' | 'OR'): string {
+function makeGroq(groups: string[][], mode: 'AND' | 'OR', site: string): string {
   const clause = (group: string[]) =>
     '(' + group.map(w =>
       `title match "${w}*" || term match "${w}*" || excerpt match "${w}*" || definition match "${w}*" || category match "${w}*"`
@@ -62,7 +62,7 @@ function makeGroq(groups: string[][], mode: 'AND' | 'OR'): string {
   const filters = groups.map(clause).join(join)
   return `*[
     _type in ["article","practicePost","course","quiz","dictionaryTerm"]
-    && "accountingbody" in showOnSites
+    && "${site}" in showOnSites
     && (${filters})
   ] | order(publishedAt desc) [0..39] {
     _id, _type, title, term,
@@ -86,14 +86,17 @@ export async function GET(req: NextRequest) {
   }
   const q = req.nextUrl.searchParams.get('q') ?? ''
   if (q.trim().length < 2) return NextResponse.json([])
+  const referer = req.headers.get('referer') ?? ''
+  const host    = req.headers.get('x-forwarded-host') ?? req.headers.get('host') ?? ''
+  const site    = (referer.includes('ethiotax.com') || host.includes('ethiotax.com')) ? 'ethiotax' : 'accountingbody'
 
-  const groups = buildGroups(q)
+  const groups  = buildGroups(q)
   if (groups.length === 0) return NextResponse.json([])
 
   try {
-    const andResults = await querySanity(makeGroq(groups, 'AND'))
+    const andResults = await querySanity(makeGroq(groups, 'AND', site))
     if (andResults.length > 0) return NextResponse.json(andResults)
-    const orResults = await querySanity(makeGroq(groups, 'OR'))
+    const orResults = await querySanity(makeGroq(groups, 'OR', site))
     return NextResponse.json(orResults)
   } catch {
     return NextResponse.json([])
