@@ -1,7 +1,9 @@
 // app/sitemap.ts
 import { MetadataRoute } from 'next'
+import { headers } from 'next/headers'
 
-const BASE_URL = 'https://accountingbody.com'
+const AB_BASE_URL = 'https://accountingbody.com'
+const ET_BASE_URL = 'https://ethiotax.com'
 
 async function querySanity<T>(groq: string): Promise<T[]> {
   try {
@@ -23,7 +25,69 @@ async function querySanity<T>(groq: string): Promise<T[]> {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
-  // ── 1. STATIC PAGES ───────────────────────────────────────────────────────
+  // ── PLATFORM DETECTION ───────────────────────────────────────────────────
+  const headersList = await headers()
+  const host = headersList.get('x-forwarded-host') ?? headersList.get('host') ?? ''
+  const isET = host.includes('ethiotax.com')
+  const BASE_URL = isET ? ET_BASE_URL : AB_BASE_URL
+
+  // ── ETHIOTAX SITEMAP ─────────────────────────────────────────────────────
+  if (isET) {
+    const etStaticPages: MetadataRoute.Sitemap = [
+      { url: ET_BASE_URL,                                                      lastModified: new Date(), changeFrequency: 'daily',   priority: 1.0 },
+      { url: `${ET_BASE_URL}/get-help`,                                        lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.9 },
+      { url: `${ET_BASE_URL}/get-help/tax-filing-compliance`,                  lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.9 },
+      { url: `${ET_BASE_URL}/get-help/accounting-bookkeeping`,                 lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.9 },
+      { url: `${ET_BASE_URL}/get-help/business-consulting`,                    lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.9 },
+      { url: `${ET_BASE_URL}/get-help/payroll-services`,                       lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.9 },
+      { url: `${ET_BASE_URL}/get-help/company-formation`,                      lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.9 },
+      { url: `${ET_BASE_URL}/get-help/audit-assurance`,                        lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.9 },
+      { url: `${ET_BASE_URL}/get-help/financial-planning-advisory`,            lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.9 },
+      { url: `${ET_BASE_URL}/how-it-works`,                                    lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
+      { url: `${ET_BASE_URL}/about-ethiotax`,                                  lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+      { url: `${ET_BASE_URL}/faq`,                                             lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+      { url: `${ET_BASE_URL}/study`,                                           lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.8 },
+      { url: `${ET_BASE_URL}/study/eticpa`,                                    lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.85 },
+      { url: `${ET_BASE_URL}/study/acca`,                                      lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.8 },
+      { url: `${ET_BASE_URL}/study/cima`,                                      lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.8 },
+      { url: `${ET_BASE_URL}/study/aat`,                                       lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.8 },
+      { url: `${ET_BASE_URL}/free-courses`,                                    lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.75 },
+      { url: `${ET_BASE_URL}/practice-questions`,                              lastModified: new Date(), changeFrequency: 'daily',   priority: 0.8 },
+      { url: `${ET_BASE_URL}/articles`,                                        lastModified: new Date(), changeFrequency: 'daily',   priority: 0.8 },
+      { url: `${ET_BASE_URL}/glossary`,                                        lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+      { url: `${ET_BASE_URL}/dictionary`,                                      lastModified: new Date(), changeFrequency: 'monthly', priority: 0.65 },
+      { url: `${ET_BASE_URL}/calculators`,                                     lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+      { url: `${ET_BASE_URL}/mock-exams`,                                      lastModified: new Date(), changeFrequency: 'monthly', priority: 0.65 },
+      { url: `${ET_BASE_URL}/firms-freelancers`,                               lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.7 },
+      { url: `${ET_BASE_URL}/firms-freelancers/join`,                          lastModified: new Date(), changeFrequency: 'monthly', priority: 0.65 },
+      { url: `${ET_BASE_URL}/firms-freelancers/directory`,                     lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
+      { url: `${ET_BASE_URL}/contact`,                                         lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
+      { url: `${ET_BASE_URL}/privacy-policy`,                                  lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.3 },
+      { url: `${ET_BASE_URL}/terms`,                                           lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.3 },
+      { url: `${ET_BASE_URL}/cookie-policy`,                                   lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.3 },
+      { url: `${ET_BASE_URL}/accessibility`,                                   lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.3 },
+    ]
+
+    // ET articles — only articles tagged for ethiotax
+    const etArticles = await querySanity<{ slug: string; updatedAt: string }>(`
+      *[_type == "article" && "ethiotax" in showOnSites && defined(slug.current)] | order(_updatedAt desc) {
+        "slug": slug.current,
+        "updatedAt": _updatedAt
+      }
+    `)
+
+    return [
+      ...etStaticPages,
+      ...etArticles.map(a => ({
+        url:             `${ET_BASE_URL}/articles/${a.slug}`,
+        lastModified:    new Date(a.updatedAt),
+        changeFrequency: 'monthly' as const,
+        priority:        0.75,
+      })),
+    ]
+  }
+
+  // ── ACCOUNTINGBODY SITEMAP (unchanged) ───────────────────────────────────
   const staticPages: MetadataRoute.Sitemap = [
     { url: BASE_URL,                         lastModified: new Date(), changeFrequency: 'daily',   priority: 1.0 },
     { url: `${BASE_URL}/study`,              lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.9 },
@@ -43,7 +107,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/terms`,              lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.3 },
     { url: `${BASE_URL}/cookie-policy`,      lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.3 },
 
-    // Exam body landing pages
     ...['acca', 'cima', 'aat', 'icaew'].map(body => ({
       url:             `${BASE_URL}/study/${body}`,
       lastModified:    new Date(),
@@ -51,7 +114,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority:        0.85,
     })),
 
-    // Glossary A–Z letter pages
     ...'abcdefghijklmnopqrstuvwxyz'.split('').map(letter => ({
       url:             `${BASE_URL}/glossary/${letter}`,
       lastModified:    new Date(),
@@ -60,11 +122,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   ]
 
-  // ── 2. ARTICLES ───────────────────────────────────────────────────────────
-  // Only articles where Accounting Body is the canonical owner are submitted
-  // to Google. Articles owned by hrlake or ethiotax are excluded — each site
-  // claims only what it owns. showOnSites controls display; canonicalOwner
-  // controls SEO ownership.
   const articles = await querySanity<{ slug: string; updatedAt: string }>(`
     *[_type == "article" && canonicalOwner == "accountingbody" && defined(slug.current)] {
       "slug": slug.current,
@@ -72,7 +129,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   `)
 
-  // ── 3. PRACTICE POSTS ─────────────────────────────────────────────────────
   const practicePosts = await querySanity<{ slug: string; updatedAt: string }>(`
     *[_type == "practicePost"] {
       "slug": slug.current,
@@ -80,7 +136,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   `)
 
-  // ── 4. COURSES ────────────────────────────────────────────────────────────
   const courses = await querySanity<{ slug: string; updatedAt: string }>(`
     *[_type == "course"] {
       "slug": slug.current,
@@ -88,7 +143,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   `)
 
-  // ── 5. LESSONS ────────────────────────────────────────────────────────────
   const lessons = await querySanity<{ slug: string; courseSlug: string; updatedAt: string }>(`
     *[_type == "lesson"] {
       "slug": slug.current,
@@ -97,7 +151,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   `)
 
-  // ── 6. QUIZZES ────────────────────────────────────────────────────────────
   const quizzes = await querySanity<{ slug: string; updatedAt: string }>(`
     *[_type == "quiz"] {
       "slug": slug.current,
@@ -105,7 +158,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   `)
 
-  // ── 7. DICTIONARY TERMS ───────────────────────────────────────────────────
   const terms = await querySanity<{ slug: string; updatedAt: string }>(`
     *[_type == "dictionaryTerm"] {
       "slug": slug.current,
