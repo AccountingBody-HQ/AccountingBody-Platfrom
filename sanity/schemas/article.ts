@@ -39,7 +39,7 @@ export default defineType({
     defineField({ name: 'abcmDifficulty', title: 'ABCM Difficulty', type: 'string', group: 'abcm' }),
     defineField({ name: 'abcmFramework', title: 'ABCM Framework', type: 'string', group: 'abcm' }),
     defineField({ name: 'abcmExamBody', title: 'ABCM Exam Body', type: 'string', group: 'abcm' }),
-    defineField({ name: 'examBody', title: 'Exam Bodies', type: 'array', group: 'abcm', description: 'Select all qualifications this article applies to', of: [{ type: 'string' }], options: { list: [{ title: 'ACCA', value: 'acca' }, { title: 'CIMA', value: 'cima' }, { title: 'ICAEW', value: 'icaew' }, { title: 'AAT', value: 'aat' }], layout: 'grid' } }),
+    defineField({ name: 'examBody', title: 'Exam Bodies', type: 'array', group: 'abcm', description: 'Select all qualifications this article applies to', of: [{ type: 'string' }], options: { list: [{ title: 'ACCA', value: 'acca' }, { title: 'CIMA', value: 'cima' }, { title: 'ICAEW', value: 'icaew' }, { title: 'AAT', value: 'aat' }, { title: 'ETICPA / CPA', value: 'eticpa-cpa' }, { title: 'ETICPA / ATQ', value: 'eticpa-atq' }], layout: 'grid' } }),
     defineField({ name: 'abcmQuestionType', title: 'ABCM Question Type', type: 'string', group: 'abcm' }),
     defineField({ name: 'showInLatestInsights', title: 'Show in Latest Insights', type: 'boolean', group: 'content', initialValue: false, description: 'When enabled this article appears in the Latest Insights section on the homepage.' }),
     defineField({ name: 'isHotTopic', title: 'Mark as Hot Topic', type: 'boolean', group: 'content', initialValue: false, description: 'Adds a Hot badge to this article card on the homepage.' }),
