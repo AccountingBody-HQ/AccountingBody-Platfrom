@@ -475,7 +475,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
   } : null
 
   const sections = [
-    ...navSections.map(section => {
+    ...navSections.filter(section => !(etGetHelpLinks && section.id === 'global-payroll')).map(section => {
       if (section.id === 'study' && studyQualificationLinks) {
         return {
           ...section,
