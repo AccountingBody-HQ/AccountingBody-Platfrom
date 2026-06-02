@@ -33,6 +33,12 @@ export default function SettingsPage() {
     { label: "Contact form tested end-to-end", done: false },
     { label: "Subscribe form tested end-to-end", done: false },
     { label: "WordPress content migration", done: false },
+    { label: "EthioTax: HMRC AML registration", done: false },
+    { label: "EthioTax: ICO GDPR registration", done: false },
+    { label: "EthioTax: Terms of Service (UK solicitor)", done: false },
+    { label: "EthioTax: First real client testimonial", done: false },
+    { label: "EthioTax: GSC sitemap submitted", done: false },
+    { label: "EthioTax: Sanity content tagged for ET", done: false },
   ]
 
   const completedCount = checklist.filter((i) => i.done).length
@@ -116,7 +122,7 @@ export default function SettingsPage() {
             { label: "Auth", value: "Clerk" },
             { label: "Email", value: "Resend" },
             { label: "Deployment", value: "Vercel" },
-            { label: "Qualifications", value: "ACCA, CIMA, ICAEW, AAT" },
+            { label: "Qualifications", value: "ACCA, CIMA, ICAEW, AAT, ETICPA CPA, ETICPA ATQ" },
             { label: "Repository", value: "AccountingBody-Platfrom" },
           ].map((item) => (
             <div key={item.label}>
