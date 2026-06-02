@@ -19,7 +19,30 @@ const schemaTypes = [article, practicePost, quizbankQuiz, quizbankBlock, tableBl
 
 const structure = (S: any) =>
   S.list().title('Content').items([
-    S.listItem().title('Articles').child(S.documentTypeList('article').title('Articles')),
+    // Articles — filtered by platform
+    S.listItem().title('Articles').child(
+      S.list().title('Articles').items([
+        S.listItem().title('All Articles').child(
+          S.documentTypeList('article').title('All Articles')
+        ),
+        S.divider(),
+        S.listItem().title('EthioTax Articles').child(
+          S.documentList().title('EthioTax Articles')
+            .filter('_type == "article" && "ethiotax" in showOnSites')
+            .defaultOrdering([{ field: '_createdAt', direction: 'desc' }])
+        ),
+        S.listItem().title('AccountingBody Articles').child(
+          S.documentList().title('AccountingBody Articles')
+            .filter('_type == "article" && "accountingbody" in showOnSites')
+            .defaultOrdering([{ field: '_createdAt', direction: 'desc' }])
+        ),
+        S.listItem().title('HRLake Articles').child(
+          S.documentList().title('HRLake Articles')
+            .filter('_type == "article" && "hrlake" in showOnSites')
+            .defaultOrdering([{ field: '_createdAt', direction: 'desc' }])
+        ),
+      ])
+    ),
     S.listItem().title('Practice Posts').child(S.documentTypeList('practicePost').title('Practice Posts')),
     S.listItem().title('QuizBank Quizzes').child(S.documentTypeList('quizbankQuiz').title('QuizBank Quizzes')),
     S.divider(),
