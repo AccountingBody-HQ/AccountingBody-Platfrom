@@ -11,6 +11,7 @@ const EDITIONS = ['2025/26 Edition', '2026/27 Edition', '2027/28 Edition']
 
 export default function AbPressPage() {
   const [courses,     setCourses]     = useState([] as any[])
+  const [platform,    setPlatform]    = useState('accountingbody')
   const [slug,        setSlug]        = useState('')
   const [bookType,    setBookType]    = useState('study')
   const [edition,     setEdition]     = useState('2026/27 Edition')
@@ -26,14 +27,18 @@ export default function AbPressPage() {
   const [wordError,      setWordError]      = useState('')
 
   useEffect(() => {
+    setCourses([])
+    setSlug('')
+    setPreview(null)
+    setDownloadUrl('')
     fetch(
       'https://4rllejq1.api.sanity.io/v2023-05-03/data/query/production?query=' +
-      encodeURIComponent('*[_type=="course" && "accountingbody" in showOnSites && (status == "published" || !defined(status))]{_id, title, slug}')
+      encodeURIComponent('*[_type=="course" && "' + platform + '" in showOnSites && (status == "published" || !defined(status))]{_id, title, slug}')
     )
       .then(r => r.json())
       .then(d => setCourses(d.result || []))
       .catch(() => setCourses([]))
-  }, [])
+  }, [platform])
 
   const handleCourseSelect = (e: any) => {
     const selected = courses.find((c: any) => c.slug.current === e.target.value)
@@ -122,6 +127,15 @@ export default function AbPressPage() {
           {/* Step 1 - Course */}
           <div className="bg-[#081428] rounded-xl p-6 border border-slate-700">
             <h2 className="text-sm font-semibold text-[#D4A017] uppercase tracking-wide mb-4">Step 1 — Select Course</h2>
+            <label className="block text-xs text-slate-400 mb-1">Platform</label>
+            <select
+              value={platform}
+              onChange={e => setPlatform(e.target.value)}
+              className="w-full bg-[#0C1A3D] border border-slate-600 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#D4A017] mb-3"
+            >
+              <option value="accountingbody">AccountingBody</option>
+              <option value="ethiotax">EthioTax</option>
+            </select>
             <label className="block text-xs text-slate-400 mb-1">Published Course</label>
             <select
               value={slug}
