@@ -24,6 +24,9 @@ async function getStats() {
     { count: jobsCount },
     { count: openHelpCount },
     { count: pendingFirmsCount },
+    { count: etHelpCount },
+    { count: etSubscriberCount },
+    { count: etOpenHelpCount },
   ] = await Promise.all([
     supabase.from("contact_submissions").select("*", { count: "exact", head: true }).eq("platform", "ab"),
     supabase.from("email_subscribers").select("*", { count: "exact", head: true }).eq("platform", "ab"),
@@ -32,6 +35,10 @@ async function getStats() {
     supabase.from("job_listings").select("*", { count: "exact", head: true }),
     supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("platform", "ab").eq("status", "open"),
     supabase.from("firms_applications").select("*", { count: "exact", head: true }).eq("platform", "ab").in("status", ["pending", "under_review"]),
+    // EthioTax stats
+    supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("platform", "et"),
+    supabase.from("email_subscribers").select("*", { count: "exact", head: true }).eq("platform", "et"),
+    supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("platform", "et").eq("status", "open"),
   ])
 
   const { data: recentSubmissions } = await supabase
@@ -55,6 +62,12 @@ async function getStats() {
     .order("created_at", { ascending: false })
     .limit(5)
 
+  const { data: etRecentHelpRequests } = await supabase
+    .from("help_requests")
+    .select("id, name, email, service_type, status, created_at")
+    .eq("platform", "et")
+    .order("created_at", { ascending: false })
+    .limit(5)
   const { data: pendingFirms } = await supabase
     .from("firms_applications")
     .select("id, firm_name, contact_email, firm_type, status, created_at")
@@ -75,6 +88,10 @@ async function getStats() {
     recentSubscribers:   (recentSubscribers   ?? []) as Array<{id: string; email: string; subscribed_at: string}>,
     recentHelpRequests:  (recentHelpRequests  ?? []) as Array<{id: string; name: string; email: string; service_type: string; status: string; created_at: string}>,
     pendingFirms:        (pendingFirms        ?? []) as Array<{id: string; firm_name: string; contact_email: string; firm_type: string; status: string; created_at: string}>,
+    etHelpCount:         etHelpCount         ?? 0,
+    etSubscriberCount:   etSubscriberCount   ?? 0,
+    etOpenHelpCount:     etOpenHelpCount     ?? 0,
+    etRecentHelpRequests: (etRecentHelpRequests ?? []) as Array<{id: string; name: string; email: string; service_type: string; status: string; created_at: string}>,
   }
 }
 
@@ -152,7 +169,7 @@ export default async function AdminCommandCentre() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white mb-1">Command Centre</h1>
         <p className="text-sm" style={{ color: "#475569" }}>
-          Live platform overview — {stats.subscriberCount} subscribers · {stats.contactCount} contact submissions · {stats.helpCount} help requests
+          AB: {stats.subscriberCount} subscribers · {stats.contactCount} contacts · {stats.helpCount} help requests &nbsp;|&nbsp; ET: {stats.etSubscriberCount} subscribers · {stats.etHelpCount} help requests · {stats.etOpenHelpCount} open
         </p>
       </div>
 
