@@ -4,13 +4,15 @@
 import { useState, useEffect } from 'react'
 import { Sparkles, ChevronRight, Check, Loader2, AlertCircle, Send, RefreshCw, Eye, BookOpen } from 'lucide-react'
 
-const QUALIFICATIONS = ['ACCA', 'CIMA', 'ICAEW', 'AAT']
+const QUALIFICATIONS = ['ACCA', 'CIMA', 'ICAEW', 'AAT', 'ETICPA / CPA', 'ETICPA / ATQ']
 
 const QUAL_SUBJECTS: Record<string, string[]> = {
   ACCA:  ['Business and Technology', 'Management Accounting', 'Financial Accounting', 'Corporate and Business Law', 'Performance Management', 'Taxation', 'Financial Reporting', 'Audit and Assurance', 'Financial Management', 'Strategic Business Leader', 'Strategic Business Reporting', 'Advanced Financial Management', 'Advanced Performance Management', 'Advanced Taxation', 'Advanced Audit and Assurance'],
   CIMA:  ['Business Economics', 'Fundamentals of Management Accounting', 'Fundamentals of Financial Accounting', 'Fundamentals of Ethics', 'Management Accounting', 'Advanced Management Accounting', 'Risk Management', 'Financial Reporting', 'Advanced Financial Reporting', 'Financial Strategy', 'Organisational Management', 'Project and Relationship Management', 'Strategic Management'],
   ICAEW: ['Accounting', 'Assurance', 'Business Technology and Finance', 'Law', 'Management Information', 'Principles of Taxation', 'Financial Accounting and Reporting', 'Audit and Assurance', 'Business Strategy and Technology', 'Financial Management', 'Tax Compliance', 'Corporate Reporting', 'Strategic Business Management'],
   AAT:   ['Bookkeeping Transactions', 'Bookkeeping Controls', 'Introduction to Payroll', 'Business Environment', 'Financial Accounting: Preparing Financial Statements', 'Management Accounting Techniques', 'Tax Processes for Businesses', 'Business Awareness', 'Advanced Bookkeeping', 'Financial Statements of Limited Companies', 'Management Accounting: Decision and Control', 'Management Accounting: Budgeting', 'Business Tax', 'Personal Tax', 'Audit and Assurance', 'Cash and Financial Management', 'Credit and Debt Management'],
+  'ETICPA / CPA': ['Financial Reporting (IFRS)', 'Audit and Assurance (ISAs)', 'Ethiopian Taxation (ERCA)', 'Management Accounting', 'Professional Ethics (IFAC)', 'Financial Management', 'Business Law (Ethiopian Commercial Code)', 'Public Sector Accounting'],
+  'ETICPA / ATQ': ['Introduction to Accounting (Level 1)', 'Cost Accounting (Level 1)', 'Business Skills (Level 1)', 'Ethiopian Business Law (Level 1)', 'Financial Accounting (Level 2)', 'Management Accounting (Level 2)', 'Assurance Controls and Ethics (Level 2)', 'Ethiopian Taxation (Level 2)', 'Ethiopian Public Sector Accounting (Level 2)'],
 }
 
 const QUESTION_TYPES = [
@@ -83,6 +85,18 @@ export default function GenerateQuestionsPage() {
   const [docSlug, setDocSlug]         = useState('')
   const [showOnSites, setShowOnSites] = useState<string[]>(['accountingbody'])
   const [canonical, setCanonical]     = useState('accountingbody')
+
+  // Auto-default showOnSites and canonical for ETICPA qualifications
+  const handleQualificationSelect = (qual: string) => {
+    setConfig(prev => ({ ...prev, qualification: qual, subject: '' }))
+    if (qual.startsWith('ETICPA')) {
+      setShowOnSites(['ethiotax'])
+      setCanonical('ethiotax')
+    } else {
+      setShowOnSites(['accountingbody'])
+      setCanonical('accountingbody')
+    }
+  }
   const [editingIdx, setEditingIdx]   = useState<number | null>(null)
   const [editDraft, setEditDraft]     = useState<any>(null)
 
@@ -230,7 +244,7 @@ export default function GenerateQuestionsPage() {
             <p className="text-xs mb-4" style={{ color: '#334155' }}>Which qualification level should these questions target?</p>
             <div className="grid grid-cols-4 gap-3">
               {QUALIFICATIONS.map(q => (
-                <SelectCard key={q} active={config.qualification === q} onClick={() => setConfig(c => ({ ...c, qualification: q, subject: '' }))}>
+                <SelectCard key={q} active={config.qualification === q} onClick={() => handleQualificationSelect(q)}>
                   <BookOpen size={13} className="mb-2 opacity-60" />
                   <p className="font-bold text-sm">{q}</p>
                 </SelectCard>
