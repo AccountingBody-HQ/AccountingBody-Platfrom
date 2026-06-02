@@ -7,13 +7,14 @@ import { Users } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-async function getSubscribers(filters: { status?: string; source?: string }) {
+async function getSubscribers(filters: { status?: string; source?: string; platform?: string }) {
   noStore()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SECRET_KEY!
   )
-  let query = supabase.from('email_subscribers').select('*', { count: 'exact' }).eq('platform', 'ab').order('subscribed_at', { ascending: false })
+  const platformFilter = filters.platform || 'ab'
+  let query = supabase.from('email_subscribers').select('*', { count: 'exact' }).eq('platform', platformFilter).order('subscribed_at', { ascending: false })
   if (filters.status) query = query.eq('status', filters.status)
   if (filters.source) query = query.eq('source', filters.source)
   const { data, count } = await query
@@ -23,21 +24,22 @@ async function getSubscribers(filters: { status?: string; source?: string }) {
 async function getSources() {
   noStore()
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!)
-  const { data } = await supabase.from('email_subscribers').select('source').eq('platform', 'ab').not('source', 'is', null)
+  const { data } = await supabase.from('email_subscribers').select('source').not('source', 'is', null)
   return Array.from(new Set((data ?? []).map((r: any) => r.source).filter(Boolean))) as string[]
 }
 
 export default async function SubscribersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; source?: string }>
+  searchParams: Promise<{ status?: string; source?: string; platform?: string }>
 }) {
   const sp     = await searchParams
   const status = sp.status ?? ''
   const source = sp.source ?? ''
+  const platform = sp.platform ?? 'ab'
 
   const [{ subscribers, total }, sources] = await Promise.all([
-    getSubscribers({ status, source }),
+    getSubscribers({ status, source, platform }),
     getSources(),
   ])
 
@@ -81,6 +83,12 @@ export default async function SubscribersPage({
       <div className="rounded-2xl border p-4 mb-6 flex items-center gap-3 flex-wrap"
         style={{ background: '#0d1424', borderColor: '#1a2238' }}>
         <form method="GET" className="flex items-center gap-3 flex-wrap">
+          <select name="platform" defaultValue={platform}
+            className="rounded-xl px-3 py-2 text-sm focus:outline-none"
+            style={{ background: '#111827', border: '1px solid #1f2937', color: '#ffffff' }}>
+            <option value="ab">AccountingBody</option>
+            <option value="et">EthioTax</option>
+          </select>
           <select name="status" defaultValue={status}
             className="rounded-xl px-3 py-2 text-sm focus:outline-none"
             style={{ background: '#111827', border: '1px solid #1f2937', color: status ? '#ffffff' : '#475569' }}>
