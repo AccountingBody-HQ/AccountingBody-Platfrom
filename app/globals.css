@@ -579,3 +579,12 @@
   .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
   .safe-top    { padding-top:    env(safe-area-inset-top); }
 }
+
+/* ── Hide Google Translate banner (ET language switcher) ─────────────────── */
+.goog-te-banner-frame,
+iframe.goog-te-banner-frame,
+.goog-te-balloon-frame { display: none !important; }
+body { top: 0 !important; position: static !important; }
+.goog-te-gadget { display: none !important; }
+.skiptranslate { display: none !important; }
+.goog-text-highlight { background: none !important; box-shadow: none !important; }
