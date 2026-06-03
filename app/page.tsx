@@ -5,6 +5,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { headers } from 'next/headers'
+import { ETText } from '@/components/ETText'
 import EmailSignupForm from '@/components/EmailSignupForm'
 import HeroSearch from '@/components/HeroSearch'
 
@@ -599,11 +600,11 @@ export default async function HomePage() {
           <div className="max-w-4xl">
 
             <p className="text-gold-400 text-xs font-semibold uppercase tracking-widest mb-7">
-              {isEthioTax ? "For the Ethiopian Community — Worldwide · አማርኛ · Afaan Oromoo" : "Professional Accounting Services · Study Platform · Trusted Since 2018"}
+              {isEthioTax ? <ETText en="For the Ethiopian Community — Worldwide · አማርኛ · Afaan Oromoo" am="ተሳዜ ጁሎሰ ነአ — ዓለም ዓለም · አማርኛ · Afaan Oromoo" om="Hawaasa Itoophiyaa Addunyaa—tti · Afaan Oromoo · Amaariffa" /> : "Professional Accounting Services · Study Platform · Trusted Since 2018"}
             </p>
 
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.025em' }}>
-              {isEthioTax ? 'The accounting and finance experts' : 'Your accounting'}
+              {isEthioTax ? <ETText en='The accounting and finance experts' am='የሐሳብ፡መስረ	እና የመረጃ መየ᎖ኈዎች' om='Ogeeyyiin herrega fi maallaqaa' /> : 'Your accounting'}
               <br />
               <span
                 style={{
@@ -613,17 +614,17 @@ export default async function HomePage() {
                   backgroundClip: 'text',
                 }}
               >
-                {isEthioTax ? 'built for Ethiopia' : 'education & services'}
+                {isEthioTax ? <ETText en='built for Ethiopia' am='ለኢትዮጵያ የተገለጸ' om='Itoophiyaaf kan ijaarame' /> : 'education & services'}
               </span>
               <br />
-              {isEthioTax ? 'and its diaspora.' : 'platform.'}
+              {isEthioTax ? <ETText en='and its diaspora.' am='እና ዲያስፖራዋድ.' om='fi sabboontota ishee.' /> : 'platform.'}
             </h1>
 
             <p className="text-white/65 text-xl leading-relaxed mb-6 max-w-2xl">
-              {isEthioTax ? 'EthioTax delivers professional accounting, tax, audit, payroll and business consulting to Ethiopian individuals and businesses — in Ethiopia and across the global diaspora. Qualified professionals. Amharic and Afaan Oromoo service available.' : 'Study for globally recognised accounting and finance qualifications with expert notes and practice questions — and access our managed professional services network for tax, audit, bookkeeping, and advisory.'}
+              {isEthioTax ? <ETText en='EthioTax delivers professional accounting, tax, audit, payroll and business consulting to Ethiopian individuals and businesses — in Ethiopia and across the global diaspora. Qualified professionals. Amharic and Afaan Oromoo service available.' am='EthioTax ለኢትዮጵያውያን ስረሮች እና ዩነሳዘ ምግብ መፄዘ ኬለታሽ ፃወሸዠዊን በላወት ቤኪሉነት ይሰጋል። በኢትዮጵያ እና በዓለም ተሳዜ ጁሎሰ። የተመረጡ የተቀለቀሉ ምሉወሾች። በአማርኛ እና በአፋን ዎሮሞ የሚሰጥ ደሕኳ ይገኘ።' om='EthioTax herrega ogummaa, gibira, to’annoo, mindaa fi gorsa daldala— dhuunfaafi dhaabbilee Itoophiyaatiif ni kenna — biyya keessattis ta’ee diasporaa addunyaa guutuu keessatti. Ogeeyyii leenjifamoo. Tajaajila Afaan Oromoo fi Amaariffa ni kennina.' /> : 'Study for globally recognised accounting and finance qualifications with expert notes and practice questions — and access our managed professional services network for tax, audit, bookkeeping, and advisory.'}
             </p>
             <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
-              {isEthioTax ? 'UK · USA · Canada · UAE · Ethiopia · Sweden · Australia' : 'One platform. Two pillars. Education and professional services, managed to the same standard.'}
+              {isEthioTax ? <ETText en='UK · USA · Canada · UAE · Ethiopia · Sweden · Australia' am='እንግሊከን · አሜሪካ · ካናዳ · ዩኤይ · ኢትዮጵያ · ስዊዲን · ኣስትሬይላ' om='UK · USA · Canada · UAE · Itoophiyaa · Sweden · Awustiraaliyaa' /> : 'One platform. Two pillars. Education and professional services, managed to the same standard.'}
             </p>
 
             <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-16">
