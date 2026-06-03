@@ -5,7 +5,6 @@
 import React from 'react'
 import Link from 'next/link'
 import { headers } from 'next/headers'
-import { ETHomePage } from '@/components/ETHomePage'
 import EmailSignupForm from '@/components/EmailSignupForm'
 import HeroSearch from '@/components/HeroSearch'
 
@@ -573,9 +572,6 @@ export default async function HomePage() {
   return (
     <>
 
-      {/* ET: full translated homepage — client component */}
-      {isEthioTax ? <ETHomePage /> : (
-      <>
       {/* ════════════════════════════════════════════════════════════════
           1. HERO
           ════════════════════════════════════════════════════════════════ */}
@@ -971,10 +967,7 @@ export default async function HomePage() {
       )}
 
 
-      </>
-      )}
-
-            {/* ════════════════════════════════════════════════════════════════
+      {/* ════════════════════════════════════════════════════════════════
           6. FEATURED ARTICLES
           ════════════════════════════════════════════════════════════════ */}
       <section className="section bg-white">
