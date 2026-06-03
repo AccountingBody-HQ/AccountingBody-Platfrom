@@ -270,7 +270,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                   {article.examBody?.length && (
                     <div className="flex justify-between items-start text-sm gap-2">
                       <dt className="text-slate-500 shrink-0">Qualification</dt>
-                      <dd className="flex flex-wrap gap-1 justify-end">
+                      <dd className="flex flex-wrap gap-1 justify-end" translate="no">
                         {article.examBody.map((body: string) => {
                           const cls = EXAM_BODY_BADGE[body.toUpperCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200'
                           return <span key={body} className={`text-xs font-bold px-2 py-0.5 rounded-md border ${cls}`} translate="no">{body.toUpperCase()}</span>
