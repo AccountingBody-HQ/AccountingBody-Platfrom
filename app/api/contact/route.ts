@@ -23,6 +23,13 @@ export async function POST(req: NextRequest) {
     // Honeypot — bots fill this, real users never do
     if (_h) return NextResponse.json({ success: true })
 
+    // Spam filters — language agnostic, safe for all users
+    const BLOCKED_DOMAINS = ['hardfer.com', 'mailinator.com', 'guerrillamail.com', 'trashmail.com', 'tempmail.com', 'yopmail.com', 'sharklasers.com', 'dispostable.com', 'maildrop.cc']
+    const emailDomain = email?.split('@')[1]?.toLowerCase() ?? ''
+    if (BLOCKED_DOMAINS.includes(emailDomain)) return NextResponse.json({ success: true })
+    if (message && message.trim().length < 20) return NextResponse.json({ success: true })
+    if (message && !message.trim().includes(' ')) return NextResponse.json({ success: true })
+
     if (!email) {
       return NextResponse.json({ error: 'Email is required.' }, { status: 400 })
     }
