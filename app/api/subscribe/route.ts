@@ -22,6 +22,11 @@ export async function POST(req: NextRequest) {
     // Honeypot — bots fill this, real users never do
     if (_h) return NextResponse.json({ success: true })
 
+    // Block disposable email domains
+    const BLOCKED_DOMAINS = ['hardfer.com', 'mailinator.com', 'guerrillamail.com', 'trashmail.com', 'tempmail.com', 'yopmail.com', 'sharklasers.com', 'dispostable.com', 'maildrop.cc']
+    const emailDomain = email?.split('@')[1]?.toLowerCase() ?? ''
+    if (BLOCKED_DOMAINS.includes(emailDomain)) return NextResponse.json({ success: true })
+
     if (!email || !email.includes('@')) {
       return NextResponse.json({ error: 'Invalid email address.' }, { status: 400 })
     }
