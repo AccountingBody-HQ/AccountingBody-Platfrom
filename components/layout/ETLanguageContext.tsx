@@ -22,12 +22,6 @@ const LanguageContext = createContext<LanguageContextValue>({
 
 const COOKIE_NAME = 'et_language'
 
-function getCookie(name: string): string | null {
-  if (typeof document === 'undefined') return null
-  const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'))
-  return match ? decodeURIComponent(match[1]) : null
-}
-
 function setCookie(name: string, value: string) {
   const expires = new Date()
   expires.setFullYear(expires.getFullYear() + 1)
