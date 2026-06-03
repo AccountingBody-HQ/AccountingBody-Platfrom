@@ -4,7 +4,8 @@
 
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import Script from 'next/script'
 import Link from 'next/link'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -134,6 +135,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
   const [email,  setEmail]  = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [honeypot, setHoneypot] = useState('')
+  const turnstileWidgetId = React.useRef<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -143,10 +145,11 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
       await fetch('/api/subscribe', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, _h: honeypot }),
+        body:    JSON.stringify({ email, _h: honeypot, 'cf-turnstile-response': (document.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement)?.value ?? '' }),
       })
       setStatus('success')
       setEmail('')
+      if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
     } catch {
       setStatus('error')
     }

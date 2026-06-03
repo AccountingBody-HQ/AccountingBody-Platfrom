@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import Script from 'next/script'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
@@ -116,6 +117,7 @@ export default function GlobalPayrollServicePage({ params }: { params: { slug: s
     name: '', email: '', phone: '', service_type: service.name, message: '', _h: ''
   })
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const turnstileWidgetId = useRef<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -130,6 +132,7 @@ export default function GlobalPayrollServicePage({ params }: { params: { slug: s
       if (!res.ok) throw new Error(json.error ?? 'Something went wrong')
       setStatus('success')
       setForm({ name: '', email: '', phone: '', service_type: service.name, message: '', _h: '' })
+      if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
     } catch (err) {
       console.error(err)
       setStatus('error')
@@ -262,6 +265,17 @@ export default function GlobalPayrollServicePage({ params }: { params: { slug: s
                   {status === 'loading' ? 'Submitting...' : 'Submit Service Brief →'}
                 </button>
                 {/* Honeypot — hidden from real users, bots fill it */}
+                {/* Turnstile invisible widget */}
+                <div
+                  ref={(el) => {
+                    if (el && window.turnstile && !turnstileWidgetId.current) {
+                      turnstileWidgetId.current = window.turnstile.render(el, {
+                        sitekey: '0x4AAAAADeWpXpm7NrIBZp_',
+                        size: 'invisible',
+                      })
+                    }
+                  }}
+                />
                 <input type="text" value={form._h} onChange={(e) => setForm({ ...form, _h: e.target.value })} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
                 <p className="text-xs text-slate-400 text-center">
                   All briefs are reviewed by our team. We will confirm your engagement scope and fee before any work commences.
