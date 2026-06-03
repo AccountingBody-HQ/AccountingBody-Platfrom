@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import Script from 'next/script'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
