@@ -106,7 +106,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
                 const active = letters.includes(l)
                 return (
                   <a key={l} href={active ? `#letter-${l}` : undefined} aria-disabled={!active}
-                    className={['w-7 h-7 rounded flex items-center justify-center text-xs font-bold transition-colors', active ? 'bg-navy-50 text-navy-700 hover:bg-navy-950 hover:text-white cursor-pointer' : 'text-slate-300 cursor-default'].join(' ')}>
+                    className={['w-7 h-7 rounded flex items-center justify-center text-xs font-bold transition-colors', active ? 'bg-navy-50 text-navy-700 hover:bg-navy-950 hover:text-white cursor-pointer' : 'text-slate-300 cursor-default'].join(' ')} translate='no'>
                     {l}
                   </a>
                 )
