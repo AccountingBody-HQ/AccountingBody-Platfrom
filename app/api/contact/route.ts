@@ -36,6 +36,9 @@ export async function POST(req: NextRequest) {
 
     // Newsletter-only path (footer subscribe form)
     if (subscribeOnly) {
+      const BLOCKED_DOMAINS_SUB = ['hardfer.com', 'mailinator.com', 'guerrillamail.com', 'trashmail.com', 'tempmail.com', 'yopmail.com', 'sharklasers.com', 'dispostable.com', 'maildrop.cc']
+      const subEmailDomain = email?.split('@')[1]?.toLowerCase() ?? ''
+      if (BLOCKED_DOMAINS_SUB.includes(subEmailDomain)) return NextResponse.json({ success: true })
       const { error: subError } = await supabase
         .from('email_subscribers')
         .upsert({ email, platform: 'ab', status: 'subscribed', source: 'contact_form' }, { onConflict: 'email' })
