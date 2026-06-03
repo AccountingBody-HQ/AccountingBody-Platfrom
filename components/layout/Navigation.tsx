@@ -380,6 +380,9 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
           </button>
         </div>
 
+        {/* Language switcher — ET only, below header */}
+        {isEthioTax && <MobileLangSwitcher />}
+
         {/* Nav items */}
         <nav className="flex-1 overflow-y-auto py-2">
           {sections.map(section => {
@@ -447,9 +450,8 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
           })}
         </nav>
 
-        {/* Mobile footer — language switcher (ET only) + search */}
+        {/* Mobile footer — search */}
         <div className="border-t border-slate-200">
-          {isEthioTax && <MobileLangSwitcher />}
           <div className="p-5">
             <button
               onClick={() => { onSearch(); onClose() }}
