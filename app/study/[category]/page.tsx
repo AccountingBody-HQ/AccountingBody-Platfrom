@@ -133,7 +133,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
                 <div key={letter} id={`letter-${letter}`} className="scroll-mt-16">
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-11 h-11 rounded-xl bg-navy-950 flex items-center justify-center shrink-0">
-                      <span className="font-display text-xl text-white font-bold">{letter}</span>
+                      <span className="font-display text-xl text-white font-bold" translate="no">{letter}</span>
                     </div>
                     <div className="h-px flex-1 bg-slate-200" />
                     <span className="text-xs text-slate-400 font-medium shrink-0">{groupArticles.length} {groupArticles.length === 1 ? 'article' : 'articles'}</span>

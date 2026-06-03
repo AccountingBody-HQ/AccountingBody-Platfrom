@@ -136,7 +136,7 @@ export default async function GlossaryPage() {
                   href={`/dictionary?letter=${letter}`}
                   className="group w-12 h-12 flex items-center justify-center rounded-xl bg-white border border-slate-200 hover:border-navy-950 hover:bg-navy-950 transition-all duration-150 shadow-sm hover:shadow"
                 >
-                  <span className="text-base font-bold text-navy-700 group-hover:text-white transition-colors">
+                  <span className="text-base font-bold text-navy-700 group-hover:text-white transition-colors" translate="no">
                     {letter}
                   </span>
                 </Link>
