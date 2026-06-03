@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { LanguageSwitcher } from './LanguageSwitcher'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -660,6 +661,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
 
           {/* Desktop right actions — search (always visible) */}
           <div className="hidden lg:flex items-center justify-end shrink-0">
+            {etGetHelpLinks && <LanguageSwitcher />}
             <form onSubmit={handleSearchSubmit} className="relative">
               <svg
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
