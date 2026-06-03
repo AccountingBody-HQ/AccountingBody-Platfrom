@@ -1029,7 +1029,7 @@ export default async function HomePage() {
               {etTrustPoints.map((point, i) => (
                 <div key={point.title} className="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-4 text-white text-sm font-bold shrink-0" style={{backgroundColor: '#1A4731'}}>
-                    {String(i + 1).padStart(2, '0')}
+                    <span translate="no">{String(i + 1).padStart(2, '0')}</span>
                   </div>
                   <h4 className="font-semibold text-sm mb-2" style={{color: '#1A4731'}}>{point.title}</h4>
                   <p className="text-sm text-slate-500 leading-relaxed">{point.body}</p>
