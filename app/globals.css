@@ -588,3 +588,6 @@ body { top: 0 !important; position: static !important; }
 .goog-te-gadget { display: none !important; }
 .skiptranslate { display: none !important; }
 .goog-text-highlight { background: none !important; box-shadow: none !important; }
+
+/* ── Prevent Google Translate font duplication ───────────────────────────── */
+font { display: inline !important; }
