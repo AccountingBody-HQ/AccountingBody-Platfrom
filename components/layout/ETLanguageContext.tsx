@@ -34,54 +34,47 @@ function setCookie(name: string, value: string) {
   document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`
 }
 
-function triggerGoogleTranslate(langCode: string, attempts = 0) {
+function setGoogTransCookie(langCode: string) {
   if (typeof document === 'undefined') return
-
-  // For English — restore original page
   if (langCode === 'en') {
-    const frame = document.querySelector('.goog-te-banner-frame') as HTMLIFrameElement | null
-    if (frame) {
-      const btn = frame.contentDocument?.querySelector('.goog-te-banner-close') as HTMLElement | null
-      if (btn) { btn.click(); return }
-    }
-    // Alternative: use the restore original link
-    const restoreLink = document.querySelector('#\:1\.restore') as HTMLElement | null
-    if (restoreLink) { restoreLink.click(); return }
-    // Fallback: reload the page without translation cookie
-    const url = new URL(window.location.href)
-    url.searchParams.delete('googtrans')
-    window.location.href = url.toString()
-    return
+    // Remove googtrans cookie to restore English
+    document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+    document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + window.location.hostname + ';'
+  } else {
+    const value = '/en/' + langCode
+    document.cookie = 'googtrans=' + value + '; path=/;'
+    document.cookie = 'googtrans=' + value + '; path=/; domain=' + window.location.hostname + ';'
   }
+  // Reload to apply translation
+  window.location.reload()
+}
 
-  const select = document.querySelector('.goog-te-combo') as HTMLSelectElement | null
-  if (select) {
-    select.value = langCode
-    select.dispatchEvent(new Event('change'))
-    return
+function detectCurrentLanguage(): Language {
+  if (typeof document === 'undefined') return 'en'
+  const match = document.cookie.match(/googtrans=\/en\/([a-z]+)/)
+  if (match) {
+    const code = match[1]
+    if (code === 'am') return 'am'
+    if (code === 'om') return 'om'
   }
-
-  // Retry up to 10 times with increasing delay
-  if (attempts < 10) {
-    setTimeout(() => triggerGoogleTranslate(langCode, attempts + 1), 300 * (attempts + 1))
-  }
+  return 'en'
 }
 
 export function ETLanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>('en')
 
   useEffect(() => {
-    const saved = getCookie(COOKIE_NAME)
-    if (saved === 'am' || saved === 'om') {
-      setLanguageState(saved as Language)
-      setTimeout(() => triggerGoogleTranslate(GT_CODES[saved as Language]), 1500)
-    }
+    // Detect language from googtrans cookie on load
+    const current = detectCurrentLanguage()
+    setLanguageState(current)
+    // Also sync our own cookie
+    setCookie(COOKIE_NAME, current)
   }, [])
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang)
     setCookie(COOKIE_NAME, lang)
-    triggerGoogleTranslate(GT_CODES[lang])
+    setGoogTransCookie(GT_CODES[lang])
   }
 
   return (
