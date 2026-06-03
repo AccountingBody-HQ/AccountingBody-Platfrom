@@ -5,7 +5,7 @@ import { useETLanguage, Language } from './ETLanguageContext'
 
 const languages: { code: Language; label: string; full: string }[] = [
   { code: 'en', label: 'EN', full: 'English' },
-  { code: 'am', label: 'አማ', full: 'አማርኛ' },
+  { code: 'am', label: '\u12a0\u121b', full: '\u12a0\u121b\u122d\u129b' },
   { code: 'om', label: 'OM', full: 'Afaan Oromoo' },
 ]
 

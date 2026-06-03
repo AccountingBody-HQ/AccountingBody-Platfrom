@@ -21,7 +21,28 @@ export async function NavigationWrapper() {
   )
 
   if (isEthioTax) {
-    return <ETLanguageProvider>{nav}</ETLanguageProvider>
+    return (
+      <ETLanguageProvider>
+        {/* Google Translate — ET only, hidden widget */}
+        <div id="google_translate_element" style={{ display: 'none' }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              function googleTranslateElementInit() {
+                new google.translate.TranslateElement({
+                  pageLanguage: 'en',
+                  includedLanguages: 'am,om,en',
+                  autoDisplay: false,
+                  layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+                }, 'google_translate_element');
+              }
+            `,
+          }}
+        />
+        <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" />
+        {nav}
+      </ETLanguageProvider>
+    )
   }
 
   return nav
