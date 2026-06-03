@@ -1,5 +1,6 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import Script from 'next/script'
 
 const countries = [
   'Afghanistan','Albania','Algeria','Andorra','Angola','Antigua and Barbuda','Argentina','Armenia','Australia','Austria','Azerbaijan',
@@ -48,6 +49,7 @@ const otherServices = [
 export default function BusinessConsultingPage() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', country: '', language: '', message: '', _h: '' })
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const turnstileWidgetId = useRef<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -57,20 +59,29 @@ export default function BusinessConsultingPage() {
       const res = await fetch('/api/help-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, service_type: 'Business Consulting' }),
+        body: JSON.stringify({ ...form, 'cf-turnstile-response': (document.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement)?.value ?? '', service_type: 'Business Consulting' }),
       })
       if (res.ok) {
         setStatus('success')
+        if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
       } else {
         setStatus('error')
+        if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
       }
     } catch {
       setStatus('error')
+      if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
     }
   }
 
+
   return (
-    <main className="min-h-screen bg-[#F7F8F4]">
+    <>
+      <Script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+        strategy="afterInteractive"
+      />
+      <main className="min-h-screen bg-[#F7F8F4]">
 
       {/* HERO */}
       <section className="bg-[#1A4731] py-20 md:py-28 relative overflow-hidden">
@@ -335,6 +346,17 @@ export default function BusinessConsultingPage() {
                   className="w-full h-[52px] rounded-xl bg-[#1A4731] text-white font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50">
                   {status === 'loading' ? 'Submitting...' : 'Submit Enquiry →'}
                 </button>
+                {/* Turnstile invisible widget */}
+                <div
+                  ref={(el) => {
+                    if (el && window.turnstile && !turnstileWidgetId.current) {
+                      turnstileWidgetId.current = window.turnstile.render(el, {
+                        sitekey: '0x4AAAAADeWpXpm7NrIBZp_',
+                        size: 'invisible',
+                      })
+                    }
+                  }}
+                />
                 <input type="text" value={form._h} onChange={e => setForm({ ...form, _h: e.target.value })} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
                 <p className="text-xs text-gray-400 text-center">
                   EthioTax will review your enquiry and respond within 24 hours. No work commences without your approval of scope and fee.
@@ -375,7 +397,7 @@ export default function BusinessConsultingPage() {
           </div>
         </div>
       </section>
-
-    </main>
+      </main>
+    </>
   )
 }

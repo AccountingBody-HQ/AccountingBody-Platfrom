@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
 
+async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
+  if (!token) return false
+  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      secret: process.env.TURNSTILE_SECRET_KEY,
+      response: token,
+      remoteip: ip,
+    }),
+  })
+  const data = await res.json()
+  return data.success === true
+}
+
 export async function POST(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
   const supabase = createClient(
@@ -18,12 +33,19 @@ export async function POST(req: NextRequest) {
     const brand = isEthioTax
       ? { name: 'EthioTax', domain: 'ethiotax.com', email: 'info@accountingbody.com', color: '#1A4731' }
       : { name: 'Accounting Body', domain: 'accountingbody.com', email: 'info@accountingbody.com', color: '#0C1A3D' }
-    const { name, email, phone, service_type, message, _h } = body
 
-    // Honeypot — bots fill this, real users never do
+    const { name, email, phone, service_type, message, _h } = body
+    const turnstileToken = body['cf-turnstile-response'] ?? ''
+
+    // Honeypot
     if (_h) return NextResponse.json({ success: true })
 
-    // Spam filters — language agnostic, safe for all users
+    // Turnstile verification
+    const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
+    const turnstileValid = await verifyTurnstile(turnstileToken, ip)
+    if (!turnstileValid) return NextResponse.json({ success: true })
+
+    // Spam filters
     const BLOCKED_DOMAINS = ['hardfer.com', 'mailinator.com', 'guerrillamail.com', 'trashmail.com', 'tempmail.com', 'yopmail.com', 'sharklasers.com', 'dispostable.com', 'maildrop.cc']
     const emailDomain = email?.split('@')[1]?.toLowerCase() ?? ''
     if (BLOCKED_DOMAINS.includes(emailDomain)) return NextResponse.json({ success: true })
@@ -57,7 +79,7 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: 'info@accountingbody.com',
-      subject: `New Service Brief — ${service_type}`,
+      subject: `New Service Brief \u2014 ${service_type}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -125,7 +147,7 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: email,
-      subject: `We have received your enquiry — ${service_type}`,
+      subject: `We have received your enquiry \u2014 ${service_type}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -144,11 +166,11 @@ export async function POST(req: NextRequest) {
               <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 28px;">If you have any additional information to add, simply reply to this email.</p>
               <a href="https://${brand.domain}/get-help"
                 style="display:inline-block;background:#D4A017;color:#0a0f2e;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;">
-                View our services →
+                View our services \u2192
               </a>
             </div>
             <div style="padding:20px 40px;border-top:1px solid #e2e8f0;">
-              <p style="margin:0;color:#94a3b8;font-size:12px;">${brand.name} · Professional Services Network</p>
+              <p style="margin:0;color:#94a3b8;font-size:12px;">${brand.name} \u00b7 Professional Services Network</p>
             </div>
           </div>
         </body>

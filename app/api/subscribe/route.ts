@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
 
+async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
+  if (!token) return false
+  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      secret: process.env.TURNSTILE_SECRET_KEY,
+      response: token,
+      remoteip: ip,
+    }),
+  })
+  const data = await res.json()
+  return data.success === true
+}
+
 export async function POST(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
   const supabase = createClient(
@@ -10,7 +25,9 @@ export async function POST(req: NextRequest) {
   )
 
   try {
-    const { email, _h } = await req.json()
+    const body = await req.json()
+    const { email, _h } = body
+    const turnstileToken = body['cf-turnstile-response'] ?? ''
 
     // Detect platform from Referer header
     const referer = req.headers.get('referer') || ''
@@ -19,8 +36,13 @@ export async function POST(req: NextRequest) {
       ? { name: 'EthioTax', domain: 'ethiotax.com', email: 'hello@accountingbody.com', color: '#1A4731' }
       : { name: 'Accounting Body', domain: 'accountingbody.com', email: 'hello@accountingbody.com', color: '#0C1A3D' }
 
-    // Honeypot — bots fill this, real users never do
+    // Honeypot
     if (_h) return NextResponse.json({ success: true })
+
+    // Turnstile verification
+    const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
+    const turnstileValid = await verifyTurnstile(turnstileToken, ip)
+    if (!turnstileValid) return NextResponse.json({ success: true })
 
     // Block disposable email domains
     const BLOCKED_DOMAINS = ['hardfer.com', 'mailinator.com', 'guerrillamail.com', 'trashmail.com', 'tempmail.com', 'yopmail.com', 'sharklasers.com', 'dispostable.com', 'maildrop.cc']
@@ -43,7 +65,7 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: email,
-      subject: `You are subscribed — ${brand.name}`,
+      subject: `You are subscribed \u2014 ${brand.name}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -57,7 +79,7 @@ export async function POST(req: NextRequest) {
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 28px;">No spam. Unsubscribe any time.</p>
               <a href="https://${brand.domain}/study"
                 style="display:inline-block;background:#D4A017;color:#0a0f2e;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;">
-                Start studying free →
+                Start studying free \u2192
               </a>
             </div>
           </div>
@@ -69,14 +91,14 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: 'info@accountingbody.com',
-      subject: 'New subscriber — ' + email,
+      subject: 'New subscriber \u2014 ' + email,
       html: `
         <!DOCTYPE html>
         <html>
         <body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
           <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
             <div style="background:${brand.color};padding:32px 40px;">
-              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name} — Admin</p>
+              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name} \u2014 Admin</p>
               <h1 style="color:#fff;font-size:24px;margin:0;line-height:1.3;">New subscriber.</h1>
             </div>
             <div style="padding:32px 40px;">
@@ -85,7 +107,7 @@ export async function POST(req: NextRequest) {
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 28px;"><strong>Time:</strong> ` + new Date().toUTCString() + `</p>
               <a href="https://accountingbody.com/admin/subscribers"
                 style="display:inline-block;background:#D4A017;color:#0a0f2e;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;">
-                View all subscribers →
+                View all subscribers \u2192
               </a>
             </div>
           </div>

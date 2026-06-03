@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
 
+async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
+  if (!token) return false
+  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      secret: process.env.TURNSTILE_SECRET_KEY,
+      response: token,
+      remoteip: ip,
+    }),
+  })
+  const data = await res.json()
+  return data.success === true
+}
+
 export async function POST(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
   const supabase = createClient(
@@ -12,6 +27,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const { name, email, subject, message, subscribe, subscribeOnly, _h } = body
+    const turnstileToken = body['cf-turnstile-response'] ?? ''
 
     // Detect platform from Referer header
     const referer = req.headers.get('referer') || ''
@@ -23,7 +39,12 @@ export async function POST(req: NextRequest) {
     // Honeypot — bots fill this, real users never do
     if (_h) return NextResponse.json({ success: true })
 
-    // Spam filters — language agnostic, safe for all users
+    // Turnstile verification
+    const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
+    const turnstileValid = await verifyTurnstile(turnstileToken, ip)
+    if (!turnstileValid) return NextResponse.json({ success: true })
+
+    // Spam filters
     const BLOCKED_DOMAINS = ['hardfer.com', 'mailinator.com', 'guerrillamail.com', 'trashmail.com', 'tempmail.com', 'yopmail.com', 'sharklasers.com', 'dispostable.com', 'maildrop.cc']
     const emailDomain = email?.split('@')[1]?.toLowerCase() ?? ''
     if (BLOCKED_DOMAINS.includes(emailDomain)) return NextResponse.json({ success: true })
@@ -70,7 +91,6 @@ export async function POST(req: NextRequest) {
         .upsert({ email, platform: 'ab', status: 'subscribed', source: 'contact_form' }, { onConflict: 'email' })
       if (subError) {
         console.error('Subscribe error (non-fatal):', subError)
-        // Non-fatal — contact was saved, subscription failed silently
       }
     }
 
@@ -158,11 +178,11 @@ export async function POST(req: NextRequest) {
               <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 28px;">If you have anything to add, simply reply to this email.</p>
               <a href="https://${brand.domain}"
                 style="display:inline-block;background:#D4A017;color:#0a0f2e;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;">
-                Visit ${brand.name} →
+                Visit ${brand.name} \u2192
               </a>
             </div>
             <div style="padding:20px 40px;border-top:1px solid #e2e8f0;">
-              <p style="margin:0;color:#94a3b8;font-size:12px;">${brand.name} · Professional Services Network</p>
+              <p style="margin:0;color:#94a3b8;font-size:12px;">${brand.name} \u00b7 Professional Services Network</p>
             </div>
           </div>
         </body>
