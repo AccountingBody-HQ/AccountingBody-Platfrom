@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LanguageSwitcher } from './LanguageSwitcher'
+import { LanguageSwitcher, MobileLangSwitcher } from './LanguageSwitcher'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -340,7 +340,7 @@ function MegaMenu({ section, onClose }: { section: NavSection; onClose: () => vo
 }
 
 // ── Mobile nav ────────────────────────────────────────────────────────────────
-function MobileMenu({ open, onClose, onSearch, sections }: { open: boolean; onClose: () => void; onSearch: () => void; sections: NavSection[] }) {
+function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: boolean; onClose: () => void; onSearch: () => void; sections: NavSection[]; isEthioTax?: boolean }) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
 
   return (
@@ -447,17 +447,20 @@ function MobileMenu({ open, onClose, onSearch, sections }: { open: boolean; onCl
           })}
         </nav>
 
-        {/* Mobile search CTA */}
-        <div className="p-5 border-t border-slate-200">
-          <button
-            onClick={() => { onSearch(); onClose() }}
-            className="flex items-center justify-center gap-2 w-full h-10 px-4 rounded-lg text-sm font-semibold text-navy-950 border border-slate-300 hover:border-navy-950 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            Search the platform
-          </button>
+        {/* Mobile footer — language switcher (ET only) + search */}
+        <div className="border-t border-slate-200">
+          {isEthioTax && <MobileLangSwitcher />}
+          <div className="p-5">
+            <button
+              onClick={() => { onSearch(); onClose() }}
+              className="flex items-center justify-center gap-2 w-full h-10 px-4 rounded-lg text-sm font-semibold text-navy-950 border border-slate-300 hover:border-navy-950 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Search the platform
+            </button>
+          </div>
         </div>
       </div>
     </>
@@ -660,8 +663,13 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           </nav>
 
           {/* Desktop right actions — search (always visible) */}
-          <div className="hidden lg:flex items-center justify-end shrink-0">
-            {etGetHelpLinks && <LanguageSwitcher />}
+          <div className="hidden lg:flex items-center justify-end gap-3 shrink-0">
+            {etGetHelpLinks && (
+              <div className="flex items-center">
+                <LanguageSwitcher />
+              </div>
+            )}
+            <div className="w-px h-5 bg-slate-200" />
             <form onSubmit={handleSearchSubmit} className="relative">
               <svg
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
@@ -713,6 +721,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
         onClose={() => setMobileOpen(false)}
         onSearch={() => router.push('/search')}
         sections={sections}
+        isEthioTax={Boolean(etGetHelpLinks)}
       />
     </>
   )
