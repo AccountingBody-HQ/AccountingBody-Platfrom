@@ -52,7 +52,7 @@ function AuthorBio({ article }: { article: ArticleFull }) {
         <div className="w-12 h-12 rounded-full shrink-0 overflow-hidden bg-navy-200 flex items-center justify-center">
           {image?.asset?.url
             ? <Image src={image.asset.url} alt={name} width={48} height={48} className="w-full h-full object-cover" />
-            : <span className="font-display text-lg text-navy-700 font-bold">{name.charAt(0).toUpperCase()}</span>
+            : <span className="font-display text-lg text-navy-700 font-bold" translate="no">{name.charAt(0).toUpperCase()}</span>
           }
         </div>
         <div className="flex-1 min-w-0">
@@ -175,7 +175,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
               const cls = EXAM_BODY_BADGE[body.toUpperCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200'
               return (
                 <span key={body} className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-md border ${cls}`}>
-                  {body.toUpperCase()}
+                  <span translate="no">{body.toUpperCase()}</span>
                 </span>
               )
             })}
@@ -273,7 +273,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                       <dd className="flex flex-wrap gap-1 justify-end">
                         {article.examBody.map((body: string) => {
                           const cls = EXAM_BODY_BADGE[body.toUpperCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200'
-                          return <span key={body} className={`text-xs font-bold px-2 py-0.5 rounded-md border ${cls}`}>{body.toUpperCase()}</span>
+                          return <span key={body} className={`text-xs font-bold px-2 py-0.5 rounded-md border ${cls}`} translate="no">{body.toUpperCase()}</span>
                         })}
                       </dd>
                     </div>
