@@ -268,7 +268,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                 </p>
                 <dl className="space-y-3">
                   {article.examBody?.length && (
-                    <div className="flex justify-between items-start text-sm gap-2">
+                    <div className="flex justify-between items-start text-sm gap-2" translate="no">
                       <dt className="text-slate-500 shrink-0">Qualification</dt>
                       <dd className="flex flex-wrap gap-1 justify-end" translate="no">
                         {article.examBody.map((body: string) => {
