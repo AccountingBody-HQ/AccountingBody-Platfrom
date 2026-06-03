@@ -762,7 +762,7 @@ export default async function HomePage() {
 
                 {/* Step number circle */}
                 <div className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full bg-white border-2 border-gold-500 mb-6 shadow-sm">
-                  <span className="font-display text-xl font-bold text-gold-500">{step.step}</span>
+                  <span className="font-display text-xl font-bold text-gold-500" translate="no">{step.step}</span>
                 </div>
 
                 <h3 className="font-display text-lg text-navy-950 mb-3">{step.title}</h3>
