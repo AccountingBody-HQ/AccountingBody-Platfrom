@@ -108,7 +108,7 @@ function LetterNav({ activeLetter }: { activeLetter: string }) {
                 : 'bg-white text-slate-600 border border-slate-200 hover:border-navy-950 hover:text-navy-950 hover:bg-navy-50',
             ].join(' ')}
           >
-            {letter}
+            <span translate="no">{letter}</span>
           </Link>
         )
       })}
@@ -120,7 +120,7 @@ function ArticleRow({ article }: { article: SanityArticle }) {
   return (
     <article className="group flex flex-col sm:flex-row sm:items-start gap-4 py-5 border-b border-slate-100 last:border-0">
       <div className="hidden sm:flex w-10 h-10 rounded-lg bg-navy-50 border border-navy-100 items-center justify-center shrink-0 mt-0.5">
-        <span className="text-sm font-bold text-navy-700">{article.title.charAt(0).toUpperCase()}</span>
+        <span className="text-sm font-bold text-navy-700" translate="no">{article.title.charAt(0).toUpperCase()}</span>
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2 mb-1.5">
@@ -222,7 +222,7 @@ export default async function DictionaryPage({
                     href={`/dictionary?letter=${l}`}
                     className="w-10 h-10 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-sm font-bold text-navy-700 hover:bg-navy-950 hover:text-white hover:border-navy-950 transition-all"
                   >
-                    {l}
+                    <span translate="no">{l}</span>
                   </Link>
                 ))}
               </div>
