@@ -575,7 +575,7 @@ export default async function HomePage() {
       {/* ════════════════════════════════════════════════════════════════
           1. HERO
           ════════════════════════════════════════════════════════════════ */}
-      <section className={`relative overflow-hidden bg-navy-950 flex items-center ${isEthioTax ? '' : 'min-h-[85vh]'}`}>
+      <section className={`relative overflow-hidden bg-navy-950 flex items-center ${isEthioTax ? '' : 'py-24 md:py-36'}`}>
 
         <div className="absolute inset-0 pointer-events-none">
           <div
