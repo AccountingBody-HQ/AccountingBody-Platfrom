@@ -75,6 +75,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           )}
           <link rel="dns-prefetch" href="//fonts.googleapis.com" />
           <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
           <link rel="dns-prefetch" href="//www.googletagmanager.com" />
           {/* GTM loaded by CookieConsent only after user consent — GDPR compliant */}
         </head>
