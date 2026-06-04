@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'How It Works | EthioTax',
+  title: 'How It Works',
   description: 'See how EthioTax manages your accounting, tax and business needs from start to finish. A fully managed service built exclusively for the Ethiopian community.',
   openGraph: {
-    title: 'How It Works | EthioTax',
+    title: 'How It Works',
     description: 'See how EthioTax manages your accounting, tax and business needs from start to finish. A fully managed service built exclusively for the Ethiopian community.',
     url: 'https://ethiotax.com/how-it-works',
     siteName: 'EthioTax',
