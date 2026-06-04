@@ -177,7 +177,7 @@ export default async function PracticeQuestionsPage({
                     href={buildUrl({ letter: l, page: 1 })}
                     className={`w-8 h-8 rounded-lg text-xs font-semibold flex items-center justify-center transition-colors ${letter === l ? 'bg-navy-950 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-navy-300'}`}
                   >
-                    {l}
+                    <span translate="no">{l}</span>
                   </Link>
                 ))}
               </div>

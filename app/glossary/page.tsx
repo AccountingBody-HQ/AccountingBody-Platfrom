@@ -78,7 +78,7 @@ export default async function GlossaryPage() {
                   href={`/dictionary?letter=${l}`}
                   className="px-3 py-1.5 rounded-md text-xs font-bold bg-white/8 text-white/60 border border-white/12 hover:bg-white/15 hover:text-white/90 transition-all"
                 >
-                  {l}
+                  <span translate="no">{l}</span>
                 </Link>
               ))}
               <span className="text-white/25 text-xs">…</span>
