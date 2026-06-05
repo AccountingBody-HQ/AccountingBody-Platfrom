@@ -2,7 +2,17 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import Script from 'next/script'
+
+declare global {
+  interface Window {
+    turnstile: {
+      render: (container: string | HTMLElement, options: Record<string, unknown>) => string
+      reset: (widgetId: string) => void
+    }
+  }
+}
 
 const firmTypes = ['Accounting Firm','Audit Firm','Tax Consultancy','Bookkeeping Practice','Payroll Bureau','Financial Planning Practice','Business Advisory Practice','Other']
 const independentTypes = ['Chartered Accountant','Certified Accountant','Bookkeeper','Tax Advisor','Payroll Specialist','Financial Planner','Auditor','Management Accountant','Other']
@@ -19,13 +29,16 @@ export default function JoinNetworkPage() {
   })
   const [qualifications, setQualifications] = useState<string[]>([])
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const turnstileWidgetId = useRef<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus('loading')
+    const token = (document.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement)?.value ?? ''
     const payload = {
       ...form,
       about: `[${applicantType === 'firm' ? 'FIRM' : 'INDEPENDENT'}] Qualifications: ${qualifications.join(', ')}. ${form.about}`,
+      'cf-turnstile-response': token,
     }
     try {
       const res = await fetch('/api/firms-application', {
@@ -36,6 +49,7 @@ export default function JoinNetworkPage() {
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'Something went wrong')
       setStatus('success')
+      if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
     } catch (err) {
       console.error(err)
       setStatus('error')
@@ -53,7 +67,9 @@ export default function JoinNetworkPage() {
   }
 
   return (
-    <main className="min-h-screen bg-surface">
+    <>
+      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
+      <main className="min-h-screen bg-surface">
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-navy-950 py-16 md:py-20">
@@ -278,6 +294,15 @@ export default function JoinNetworkPage() {
                     {status === 'error' && <p className="text-red-500 text-sm mb-4">Something went wrong. Please try again.</p>}
                     {/* Honeypot — hidden from real users, bots fill it */}
                     <input type="text" value={form._h} onChange={(e) => setForm({ ...form, _h: e.target.value })} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
+                    {/* Turnstile invisible widget */}
+                    <div ref={(el) => {
+                      if (el && window.turnstile && !turnstileWidgetId.current) {
+                        turnstileWidgetId.current = window.turnstile.render(el, {
+                          sitekey: '0x4AAAAADeWpXpm7NrIBZp_',
+                          size: 'invisible',
+                        })
+                      }
+                    }} />
                     <button type="submit" disabled={status === 'loading'}
                       className="w-full bg-navy-950 hover:bg-navy-900 text-white font-semibold h-12 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50">
                       {status === 'loading' ? 'Submitting...' : 'Submit Application'}
@@ -295,5 +320,6 @@ export default function JoinNetworkPage() {
         </div>
       </section>
     </main>
+    </>
   )
 }

@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
 
+async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
+  if (!token) return false
+  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      secret: process.env.TURNSTILE_SECRET_KEY,
+      response: token,
+      remoteip: ip,
+    }),
+  })
+  const data = await res.json()
+  return data.success === true
+}
+
 export async function POST(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
   const supabase = createClient(
@@ -19,6 +34,10 @@ export async function POST(req: NextRequest) {
       ? { name: 'EthioTax', domain: 'ethiotax.com', email: 'info@accountingbody.com', color: '#1A4731' }
       : { name: 'Accounting Body', domain: 'accountingbody.com', email: 'info@accountingbody.com', color: '#0C1A3D' }
     const { practice_name, contact_name, email, phone, website, practice_type, location, years_of_experience, languages, specialisms, about, _h } = body
+    const turnstileToken = body['cf-turnstile-response'] ?? ''
+    const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
+    const turnstileValid = await verifyTurnstile(turnstileToken, ip)
+    if (!turnstileValid) return NextResponse.json({ error: 'Security check failed. Please try again.' }, { status: 400 })
 
     // Honeypot — bots fill this, real users never do
     if (_h) return NextResponse.json({ success: true })
