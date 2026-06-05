@@ -2,7 +2,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { unstable_noStore as noStore } from 'next/cache'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
-import { StatusBadge, DeleteButton, ReplyButton, NotesField, FirmApplicationCard } from '@/components/roodber8/AdminActions'
+import { FirmApplicationCard, ReplyButton, DeleteButton } from '@/components/roodber8/AdminActions'
 import { Briefcase, Building2, Search } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
