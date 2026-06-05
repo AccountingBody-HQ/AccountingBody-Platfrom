@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     const brand = isEthioTax
       ? { name: 'EthioTax', domain: 'ethiotax.com', email: 'info@accountingbody.com', color: '#1A4731' }
       : { name: 'Accounting Body', domain: 'accountingbody.com', email: 'info@accountingbody.com', color: '#0C1A3D' }
-    const { practice_name, contact_name, email, phone, website, practice_type, location, specialisms, about, _h } = body
+    const { practice_name, contact_name, email, phone, website, practice_type, location, years_of_experience, languages, specialisms, about, _h } = body
 
     // Honeypot — bots fill this, real users never do
     if (_h) return NextResponse.json({ success: true })
@@ -43,6 +43,8 @@ export async function POST(req: NextRequest) {
         contact_phone: phone || null,
         website: website || null,
         firm_type: practice_type || null,
+        years_of_experience: years_of_experience || null,
+        languages: languages || null,
         message: messageBody,
         platform: 'ab',
       }])
@@ -125,6 +127,22 @@ export async function POST(req: NextRequest) {
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
                     <span style="color:#0C1A3D;font-size:14px;">${location}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
+                    <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Years of Experience</span>
+                  </td>
+                  <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
+                    <span style="color:#0C1A3D;font-size:14px;">${years_of_experience || 'Not specified'}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
+                    <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Languages</span>
+                  </td>
+                  <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
+                    <span style="color:#0C1A3D;font-size:14px;">${languages || 'Not specified'}</span>
                   </td>
                 </tr>
                 <tr>

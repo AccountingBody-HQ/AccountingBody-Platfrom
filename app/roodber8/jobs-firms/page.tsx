@@ -114,11 +114,48 @@ export default async function JobsFirmsPage() {
                         <span>{item.created_at ? new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</span>
                       </div>
 
-                      {item.message && (
-                        <div className="rounded-xl p-3 mt-2" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid #1a2238' }}>
-                          <p className="text-xs leading-relaxed" style={{ color: '#64748b' }}>{item.message}</p>
-                        </div>
-                      )}
+                      <div className="rounded-xl p-4 mt-3 space-y-2" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid #1a2238' }}>
+                        {(() => {
+                          const msg = item.message ?? ''
+                          const locationMatch = msg.match(/Location: ([^\n]+)/)
+                          const specialismsMatch = msg.match(/Specialisms: ([^\n]+)/)
+                          const aboutText = msg.replace(/Location: [^\n]+\n?/, '').replace(/Specialisms: [^\n]+\n?/, '').trim()
+                          return (
+                            <>
+                              {locationMatch && (
+                                <div className="flex gap-2 text-xs">
+                                  <span className="font-semibold uppercase tracking-wider shrink-0" style={{ color: '#94a3b8', minWidth: '110px' }}>Location</span>
+                                  <span style={{ color: '#cbd5e1' }}>{locationMatch[1]}</span>
+                                </div>
+                              )}
+                              {item.years_of_experience && (
+                                <div className="flex gap-2 text-xs">
+                                  <span className="font-semibold uppercase tracking-wider shrink-0" style={{ color: '#94a3b8', minWidth: '110px' }}>Experience</span>
+                                  <span style={{ color: '#cbd5e1' }}>{item.years_of_experience}</span>
+                                </div>
+                              )}
+                              {item.languages && (
+                                <div className="flex gap-2 text-xs">
+                                  <span className="font-semibold uppercase tracking-wider shrink-0" style={{ color: '#94a3b8', minWidth: '110px' }}>Languages</span>
+                                  <span style={{ color: '#cbd5e1' }}>{item.languages}</span>
+                                </div>
+                              )}
+                              {specialismsMatch && (
+                                <div className="flex gap-2 text-xs">
+                                  <span className="font-semibold uppercase tracking-wider shrink-0" style={{ color: '#94a3b8', minWidth: '110px' }}>Specialisms</span>
+                                  <span style={{ color: '#cbd5e1' }}>{specialismsMatch[1]}</span>
+                                </div>
+                              )}
+                              {aboutText && (
+                                <div className="flex gap-2 text-xs pt-1 border-t" style={{ borderColor: '#1a2238' }}>
+                                  <span className="font-semibold uppercase tracking-wider shrink-0" style={{ color: '#94a3b8', minWidth: '110px' }}>About</span>
+                                  <span className="leading-relaxed" style={{ color: '#64748b' }}>{aboutText}</span>
+                                </div>
+                              )}
+                            </>
+                          )
+                        })()}
+                      </div>
                       <NotesField id={item.id} table="firms_applications" initialNotes={item.notes} />
                     </div>
 

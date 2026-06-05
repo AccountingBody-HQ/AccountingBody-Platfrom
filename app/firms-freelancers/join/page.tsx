@@ -15,7 +15,7 @@ export default function JoinNetworkPage() {
   const [applicantType, setApplicantType] = useState<ApplicantType | null>(null)
   const [form, setForm] = useState({
     practice_name: '', contact_name: '', email: '', phone: '', website: '',
-    practice_type: '', location: '', specialisms: '', about: '', _h: '',
+    practice_type: '', location: '', years_of_experience: '', languages: '', specialisms: '', about: '', _h: '',
   })
   const [qualifications, setQualifications] = useState<string[]>([])
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
@@ -87,7 +87,7 @@ export default function JoinNetworkPage() {
               </div>
               <h2 className="font-display text-2xl text-navy-950 mb-3">Application Received</h2>
               <p className="text-slate-500 leading-relaxed max-w-md mx-auto">Thank you for your application. Our team will review your credentials and professional standing. We aim to review all applications within 5 working days. You will hear from us once your application has been assessed.</p>
-              <button onClick={() => { setStatus('idle'); setApplicantType(null); setQualifications([]); setForm({ practice_name: '', contact_name: '', email: '', phone: '', website: '', practice_type: '', location: '', specialisms: '', about: '', _h: '' }) }}
+              <button onClick={() => { setStatus('idle'); setApplicantType(null); setQualifications([]); setForm({ practice_name: '', contact_name: '', email: '', phone: '', website: '', practice_type: '', location: '', years_of_experience: '', languages: '', specialisms: '', about: '', _h: '' }) }}
                 className="mt-6 text-sm font-medium text-navy-700 hover:text-gold-600 transition-colors">
                 Submit another application
               </button>
@@ -199,6 +199,25 @@ export default function JoinNetworkPage() {
                       <label className="block text-sm font-semibold text-navy-950 mb-2">Location / Country *</label>
                       <input required type="text" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })}
                         className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" placeholder="e.g. London, UK / Johannesburg, South Africa / New York, USA" />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-navy-950 mb-2">Years of Experience</label>
+                        <select value={form.years_of_experience} onChange={(e) => setForm({ ...form, years_of_experience: e.target.value })}
+                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent bg-white">
+                          <option value="">Select</option>
+                          <option value="0-2 years">0–2 years</option>
+                          <option value="3-5 years">3–5 years</option>
+                          <option value="6-10 years">6–10 years</option>
+                          <option value="10+ years">10+ years</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-navy-950 mb-2">Languages Spoken</label>
+                        <input type="text" value={form.languages} onChange={(e) => setForm({ ...form, languages: e.target.value })}
+                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                          placeholder="e.g. English, Amharic, Afaan Oromoo" />
+                      </div>
                     </div>
                   </div>
 

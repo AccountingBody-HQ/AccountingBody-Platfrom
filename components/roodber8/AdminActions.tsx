@@ -239,17 +239,74 @@ interface ReplyButtonProps {
   subject?: string
   name?: string
 }
-
 export function ReplyButton({ email, subject, name }: ReplyButtonProps) {
+  const [open, setOpen] = useState(false)
+  const [message, setMessage] = useState('')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle')
   if (!email) return null
-  const mailtoSubject = subject ? 'Re: ' + subject : 'Re: Your enquiry'
-  const mailtoBody = name ? 'Dear ' + name + ',' : ''
-  const href = 'mailto:' + email + '?subject=' + encodeURIComponent(mailtoSubject) + '&body=' + encodeURIComponent(mailtoBody)
+  const defaultSubject = subject || 'Re: Your enquiry'
+
+  const handleSend = async () => {
+    if (!message.trim()) return
+    setStatus('loading')
+    try {
+      const res = await fetch('/api/roodber8/reply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: email, name, subject: defaultSubject, message }),
+      })
+      if (!res.ok) throw new Error('Failed')
+      setStatus('sent')
+      setTimeout(() => { setOpen(false); setStatus('idle'); setMessage('') }, 2000)
+    } catch {
+      setStatus('error')
+    }
+  }
+
   return (
-    <a href={href}
-      className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors"
-      style={{ background: 'rgba(37,99,235,0.1)', color: '#60a5fa', border: '1px solid rgba(37,99,235,0.2)' }}>
-      ✉ Reply
-    </a>
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors"
+        style={{ background: 'rgba(37,99,235,0.1)', color: '#60a5fa', border: '1px solid rgba(37,99,235,0.2)' }}>
+        ✉ Reply
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
+          <div className="w-full max-w-lg rounded-2xl p-6 space-y-4" style={{ background: '#0d1424', border: '1px solid #1a2238' }}>
+            <div className="flex items-center justify-between">
+              <p className="text-white font-bold text-sm">Reply to {name || email}</p>
+              <button onClick={() => { setOpen(false); setStatus('idle'); setMessage('') }} className="text-slate-400 hover:text-white text-lg leading-none">×</button>
+            </div>
+            <div className="rounded-lg px-3 py-2 text-xs" style={{ background: 'rgba(255,255,255,0.04)', color: '#94a3b8' }}>
+              <span className="font-semibold">To:</span> {email}<br/>
+              <span className="font-semibold">Subject:</span> {defaultSubject}
+            </div>
+            <textarea
+              rows={7}
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              placeholder="Type your reply here..."
+              className="w-full rounded-lg px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{ background: 'rgba(255,255,255,0.06)', color: '#e2e8f0', border: '1px solid #1a2238' }}
+            />
+            {status === 'error' && <p className="text-red-400 text-xs">Failed to send. Please try again.</p>}
+            {status === 'sent' && <p className="text-green-400 text-xs">✓ Reply sent successfully.</p>}
+            <div className="flex justify-end gap-2">
+              <button onClick={() => { setOpen(false); setStatus('idle'); setMessage('') }}
+                className="text-xs font-semibold px-4 py-2 rounded-lg"
+                style={{ background: 'rgba(255,255,255,0.06)', color: '#94a3b8' }}>
+                Cancel
+              </button>
+              <button onClick={handleSend} disabled={status === 'loading' || !message.trim()}
+                className="text-xs font-semibold px-4 py-2 rounded-lg disabled:opacity-50"
+                style={{ background: '#2563eb', color: '#fff' }}>
+                {status === 'loading' ? 'Sending...' : 'Send Reply'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
