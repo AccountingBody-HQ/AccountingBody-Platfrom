@@ -30,6 +30,7 @@ export default function JoinNetworkPage() {
   const [qualifications, setQualifications] = useState<string[]>([])
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const turnstileWidgetId = useRef<string | null>(null)
+  const isEthioTax = typeof window !== 'undefined' && window.location.hostname.includes('ethiotax.com')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -228,12 +229,14 @@ export default function JoinNetworkPage() {
                           <option value="10+ years">10+ years</option>
                         </select>
                       </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-navy-950 mb-2">Languages Spoken</label>
-                        <input type="text" value={form.languages} onChange={(e) => setForm({ ...form, languages: e.target.value })}
-                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
-                          placeholder="e.g. English, Amharic, Afaan Oromoo" />
-                      </div>
+                      {(isEthioTax || applicantType === 'independent') && (
+                        <div>
+                          <label className="block text-sm font-semibold text-navy-950 mb-2">Languages Spoken</label>
+                          <input type="text" value={form.languages} onChange={(e) => setForm({ ...form, languages: e.target.value })}
+                            className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                            placeholder={isEthioTax ? "e.g. English, Amharic, Afaan Oromoo" : "e.g. English, French, Spanish"} />
+                        </div>
+                      )}
                     </div>
                   </div>
 
