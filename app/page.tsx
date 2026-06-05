@@ -1142,7 +1142,7 @@ export default async function HomePage() {
                     <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
                   ))}
                 </div>
-                <div className="text-4xl font-display leading-none mb-3 opacity-40" style={{ color: '#1A4731' }}>&ldquo;</div>
+                <div className="text-4xl font-display leading-none mb-3 opacity-40" style={{ color: '#1A4731' }} translate="no">&ldquo;</div>
                 <p className="text-gray-700 text-sm leading-relaxed mb-6 flex-1">EthioTax handled my UK Self Assessment quickly and professionally. They understood my situation straight away and the whole process was straightforward. I will not be going anywhere else.</p>
                 <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: '#e8f0eb' }}>
                   <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white" style={{ backgroundColor: '#1A4731' }}>TA</div>
@@ -1159,7 +1159,7 @@ export default async function HomePage() {
                     <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
                   ))}
                 </div>
-                <div className="text-4xl font-display leading-none mb-3 opacity-40" style={{ color: '#1A4731' }}>&ldquo;</div>
+                <div className="text-4xl font-display leading-none mb-3 opacity-40" style={{ color: '#1A4731' }} translate="no">&ldquo;</div>
                 <p className="text-gray-700 text-sm leading-relaxed mb-6 flex-1">I needed advice on structuring a diaspora investment in Ethiopia. EthioTax provided a clear proposal within 72 hours and guided me through the entire process. Excellent service.</p>
                 <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: '#e8f0eb' }}>
                   <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white" style={{ backgroundColor: '#1A4731' }}>DM</div>
@@ -1176,7 +1176,7 @@ export default async function HomePage() {
                     <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
                   ))}
                 </div>
-                <div className="text-4xl font-display leading-none mb-3 opacity-40" style={{ color: '#1A4731' }}>&ldquo;</div>
+                <div className="text-4xl font-display leading-none mb-3 opacity-40" style={{ color: '#1A4731' }} translate="no">&ldquo;</div>
                 <p className="text-gray-700 text-sm leading-relaxed mb-6 flex-1">Managing accounts across two countries was always complicated. EthioTax handled everything and I could communicate in Amharic throughout. Professional, reliable and highly recommended.</p>
                 <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: '#e8f0eb' }}>
                   <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white" style={{ backgroundColor: '#1A4731' }}>SG</div>
