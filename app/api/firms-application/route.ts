@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     const { error: dbError } = await supabase
       .from('firms_applications')
       .insert([{
-        firm_name: practice_name || contact_name,
+        firm_name: (practice_name || contact_name) ?? 'Unknown',
         contact_name,
         contact_email: email,
         contact_phone: phone || null,
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
         years_of_experience: years_of_experience || null,
         languages: languages || null,
         message: messageBody,
-        platform: 'ab',
+        platform: isEthioTax ? 'et' : 'ab',
       }])
 
     if (dbError) {
@@ -57,8 +57,8 @@ export async function POST(req: NextRequest) {
     // Parse applicant type from about field prefix
     const applicantType = about.startsWith('[FIRM]') ? 'Firm' : 'Independent Professional'
 
-    // Send notification to team
-    await resend.emails.send({
+    // Send notification to team — non-blocking
+    try { await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: 'info@accountingbody.com',
       subject: `New Network Application — ${applicantType}: ${practice_name || contact_name}`,
@@ -179,10 +179,10 @@ export async function POST(req: NextRequest) {
         </html>
       `,
       replyTo: email,
-    })
+    }) } catch (emailErr) { console.error('Notification email error:', emailErr) }
 
-    // Send acknowledgment to applicant
-    await resend.emails.send({
+    // Send acknowledgment to applicant — non-blocking
+    try { await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: email,
       subject: `We have received your application — ${brand.name}`,
@@ -214,7 +214,7 @@ export async function POST(req: NextRequest) {
         </body>
         </html>
       `,
-    })
+    }) } catch (emailErr) { console.error('Acknowledgment email error:', emailErr) }
 
     return NextResponse.json({ success: true })
   } catch (error) {
