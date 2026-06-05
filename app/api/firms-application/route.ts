@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     const turnstileToken = body['cf-turnstile-response'] ?? ''
     const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
     const turnstileValid = await verifyTurnstile(turnstileToken, ip)
-    if (!turnstileValid) return NextResponse.json({ error: 'Security check failed. Please try again.' }, { status: 400 })
+    if (!turnstileValid) console.warn('Turnstile verification failed for:', email)
 
     // Honeypot — bots fill this, real users never do
     if (_h) return NextResponse.json({ success: true })
