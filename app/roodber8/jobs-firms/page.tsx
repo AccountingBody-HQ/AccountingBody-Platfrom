@@ -3,19 +3,22 @@ import { createClient } from '@supabase/supabase-js'
 import { unstable_noStore as noStore } from 'next/cache'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
 import { StatusBadge, DeleteButton, ReplyButton, NotesField } from '@/components/roodber8/AdminActions'
-import { Briefcase, Building2, Globe } from 'lucide-react'
+import { Briefcase, Building2, Globe, Search } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-async function getJobsAndFirms() {
+async function getJobsAndFirms(filters: { search?: string; status?: string }) {
   noStore()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SECRET_KEY!
   )
+  let firmsQuery = supabase.from('firms_applications').select('*').order('created_at', { ascending: false })
+  if (filters.status) firmsQuery = firmsQuery.eq('status', filters.status)
+  if (filters.search) firmsQuery = firmsQuery.or('firm_name.ilike.%' + filters.search + '%,contact_name.ilike.%' + filters.search + '%,contact_email.ilike.%' + filters.search + '%')
   const [{ data: jobListings }, { data: firmsApplications }] = await Promise.all([
     supabase.from('job_listings').select('*').order('created_at', { ascending: false }),
-    supabase.from('firms_applications').select('*').order('created_at', { ascending: false }),
+    firmsQuery,
   ])
   return {
     jobListings:       (jobListings ?? [])       as any[],
@@ -23,8 +26,15 @@ async function getJobsAndFirms() {
   }
 }
 
-export default async function JobsFirmsPage() {
-  const { jobListings, firmsApplications } = await getJobsAndFirms()
+export default async function JobsFirmsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ search?: string; status?: string }>
+}) {
+  const sp     = await searchParams
+  const search = sp.search ?? ''
+  const status = sp.status ?? ''
+  const { jobListings, firmsApplications } = await getJobsAndFirms({ search, status })
 
   const pendingCount  = firmsApplications.filter((f: any) => f.status === 'pending' || !f.status).length
   const approvedCount = firmsApplications.filter((f: any) => f.status === 'approved').length
@@ -68,6 +78,36 @@ export default async function JobsFirmsPage() {
             <p className="text-xs font-bold uppercase tracking-wider" style={{ color: s.color }}>{s.label}</p>
           </div>
         ))}
+      </div>
+
+      {/* Filter bar */}
+      <div className="rounded-2xl border p-4 mb-6 flex items-center gap-3 flex-wrap"
+        style={{ background: '#0d1424', borderColor: '#1a2238' }}>
+        <form method="GET" className="flex items-center gap-3 flex-wrap flex-1">
+          <div className="flex items-center gap-2 flex-1 min-w-48 rounded-xl px-3 py-2"
+            style={{ background: '#111827', border: '1px solid #1f2937' }}>
+            <Search size={13} style={{ color: '#475569' }} />
+            <input name="search" defaultValue={search} placeholder="Search name or email..."
+              className="bg-transparent text-white text-sm flex-1 focus:outline-none placeholder-slate-600"
+              style={{ minWidth: 0 }} />
+          </div>
+          <select name="status" defaultValue={status}
+            className="rounded-xl px-3 py-2 text-sm focus:outline-none"
+            style={{ background: '#111827', border: '1px solid #1f2937', color: status ? '#ffffff' : '#475569' }}>
+            <option value="">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <button type="submit"
+            className="px-4 py-2 rounded-xl text-sm font-semibold"
+            style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+            Filter
+          </button>
+          {(search || status) && (
+            <a href="/roodber8/jobs-firms" className="text-xs font-semibold" style={{ color: '#475569' }}>Clear</a>
+          )}
+        </form>
       </div>
 
       {/* Firm Applications */}
@@ -119,7 +159,7 @@ export default async function JobsFirmsPage() {
                           const msg = item.message ?? ''
                           const locationMatch = msg.match(/Location: ([^\n]+)/)
                           const specialismsMatch = msg.match(/Specialisms: ([^\n]+)/)
-                          const aboutText = msg.replace(/Location: [^\n]+\n?/, '').replace(/Specialisms: [^\n]+\n?/, '').trim()
+                          const aboutText = msg.replace(/Location: [^\n]+\n?/, '').replace(/Specialisms: [^\n]+\n?/, '').replace(/\[(FIRM|INDEPENDENT)\]\s*Qualifications:[^.]+\./, '').replace(/By submitting this application[^)]+acceptance into the network\.?/i, '').trim()
                           return (
                             <>
                               {locationMatch && (
