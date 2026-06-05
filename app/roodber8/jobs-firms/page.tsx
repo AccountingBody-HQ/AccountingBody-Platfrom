@@ -159,7 +159,14 @@ export default async function JobsFirmsPage({
                           const msg = item.message ?? ''
                           const locationMatch = msg.match(/Location: ([^\n]+)/)
                           const specialismsMatch = msg.match(/Specialisms: ([^\n]+)/)
-                          const aboutText = msg.replace(/Location: [^\n]+\n?/, '').replace(/Specialisms: [^\n]+\n?/, '').replace(/\[(FIRM|INDEPENDENT)\]\s*Qualifications:[^.]+\./, '').replace(/By submitting this application[^)]+acceptance into the network\.?/i, '').trim()
+                          const qualsMatch = msg.match(/\[(FIRM|INDEPENDENT)\]\s*Qualifications:\s*([^.]+)/)
+                          const qualsText = qualsMatch ? qualsMatch[2].trim() : null
+                          const aboutText = msg
+                            .replace(/Location: [^\n]+\n?/g, '')
+                            .replace(/Specialisms: [^\n]+\n?/g, '')
+                            .replace(/\[(FIRM|INDEPENDENT)\]\s*Qualifications:[^.]*\.?/g, '')
+                            .replace(/By submitting this application.*?acceptance into the network\.?/gi, '')
+                            .trim()
                           return (
                             <>
                               {locationMatch && (
@@ -178,6 +185,12 @@ export default async function JobsFirmsPage({
                                 <div className="flex gap-2 text-xs">
                                   <span className="font-semibold uppercase tracking-wider shrink-0" style={{ color: '#94a3b8', minWidth: '110px' }}>Languages</span>
                                   <span style={{ color: '#cbd5e1' }}>{item.languages}</span>
+                                </div>
+                              )}
+                              {qualsText && (
+                                <div className="flex gap-2 text-xs">
+                                  <span className="font-semibold uppercase tracking-wider shrink-0" style={{ color: '#94a3b8', minWidth: '110px' }}>Qualifications</span>
+                                  <span style={{ color: '#cbd5e1' }}>{qualsText}</span>
                                 </div>
                               )}
                               {specialismsMatch && (
