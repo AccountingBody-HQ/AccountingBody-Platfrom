@@ -2,8 +2,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { unstable_noStore as noStore } from 'next/cache'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
-import { StatusBadge, DeleteButton, ReplyButton, NotesField } from '@/components/roodber8/AdminActions'
-import { Briefcase, Building2, Globe, Search } from 'lucide-react'
+import { StatusBadge, DeleteButton, ReplyButton, NotesField, FirmApplicationCard } from '@/components/roodber8/AdminActions'
+import { Briefcase, Building2, Search } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -125,129 +125,9 @@ export default async function JobsFirmsPage({
           <div className="px-6 py-12 text-center text-sm" style={{ color: '#334155' }}>No applications yet.</div>
         ) : (
           <div className="divide-y" style={{ borderColor: '#1a2238' }}>
-            {firmsApplications.map((item: any) => {
-              return (
-                <div key={item.id} className="px-6 py-6 hover:bg-white/[0.015] transition-colors">
-                  {(() => {
-                    const msg = item.message ?? ''
-                    const locationMatch = msg.match(/Location: ([^\n]+)/)
-                    const specialismsMatch = msg.match(/Specialisms: ([^\n]+)/)
-                    const qualsMatch = msg.match(/\[(FIRM|INDEPENDENT)\]\s*Qualifications:\s*([^.]+)/)
-                    const qualsText = qualsMatch ? qualsMatch[2].trim() : null
-                    const aboutText = msg
-                      .replace(/Location: [^\n]+\n?/g, '')
-                      .replace(/Specialisms: [^\n]+\n?/g, '')
-                      .replace(/\[(FIRM|INDEPENDENT)\]\s*Qualifications:[^.]*\.?/g, '')
-                      .replace(/By submitting this application.*?acceptance into the network\.?/gi, '')
-                      .trim()
-                    const quals = qualsText ? qualsText.split(',').map((q: string) => q.trim()).filter(Boolean) : []
-                    const specs = specialismsMatch ? specialismsMatch[1].split(',').map((s: string) => s.trim()).filter(Boolean) : []
-                    return (
-                      <>
-                        {/* Header row */}
-                        <div className="flex items-start justify-between gap-4 mb-4">
-                          <div className="flex items-center gap-3 flex-wrap">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0"
-                              style={{ background: 'rgba(139,92,246,0.15)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.25)' }}>
-                              {(item.firm_name ?? item.contact_name ?? '?')[0].toUpperCase()}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <p className="text-white font-bold text-sm">{item.firm_name ?? '—'}</p>
-                                {item.firm_type && (
-                                  <span className="text-xs font-semibold px-2 py-0.5 rounded-lg"
-                                    style={{ background: 'rgba(139,92,246,0.1)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.2)' }}>
-                                    {item.firm_type}
-                                  </span>
-                                )}
-                                <StatusBadge id={item.id} table="firms_applications" currentStatus={item.status ?? 'pending'} />
-                              </div>
-                              <div className="flex items-center gap-3 mt-1 text-xs flex-wrap" style={{ color: '#475569' }}>
-                                <span className="font-medium" style={{ color: '#94a3b8' }}>{item.contact_name ?? '—'}</span>
-                                <a href={'mailto:' + item.contact_email} style={{ color: '#60a5fa' }}>{item.contact_email ?? '—'}</a>
-                                {item.contact_phone && <span>{item.contact_phone}</span>}
-                                {item.website && (
-                                  <a href={item.website} target="_blank" rel="noopener noreferrer"
-                                    className="flex items-center gap-1 hover:opacity-80" style={{ color: '#60a5fa' }}>
-                                    <Globe size={10} /> Website
-                                  </a>
-                                )}
-                                <span>{item.created_at ? new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <ReplyButton email={item.contact_email} name={item.contact_name} subject={'Re: Your application — ' + (item.firm_name ?? '')} />
-                            <DeleteButton id={item.id} table="firms_applications" />
-                          </div>
-                        </div>
-
-                        {/* Detail grid */}
-                        <div className="grid grid-cols-2 gap-x-8 gap-y-3 mb-4 pl-13" style={{ paddingLeft: '52px' }}>
-                          {locationMatch && (
-                            <div>
-                              <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#475569' }}>Location</p>
-                              <p className="text-sm" style={{ color: '#cbd5e1' }}>{locationMatch[1]}</p>
-                            </div>
-                          )}
-                          {(item.years_of_experience || item.languages) && (
-                            <div>
-                              <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#475569' }}>Experience / Languages</p>
-                              <p className="text-sm" style={{ color: '#cbd5e1' }}>
-                                {[item.years_of_experience, item.languages].filter(Boolean).join(' · ')}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Qualifications chips */}
-                        {quals.length > 0 && (
-                          <div className="mb-3 pl-13" style={{ paddingLeft: '52px' }}>
-                            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#475569' }}>Qualifications</p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {quals.map((q: string) => (
-                                <span key={q} className="text-xs font-semibold px-2.5 py-1 rounded-lg"
-                                  style={{ background: 'rgba(16,185,129,0.08)', color: '#34d399', border: '1px solid rgba(16,185,129,0.2)' }}>
-                                  {q}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Specialisms chips */}
-                        {specs.length > 0 && (
-                          <div className="mb-3 pl-13" style={{ paddingLeft: '52px' }}>
-                            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#475569' }}>Specialisms</p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {specs.map((s: string) => (
-                                <span key={s} className="text-xs font-semibold px-2.5 py-1 rounded-lg"
-                                  style={{ background: 'rgba(37,99,235,0.08)', color: '#60a5fa', border: '1px solid rgba(37,99,235,0.2)' }}>
-                                  {s}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* About text */}
-                        {aboutText && (
-                          <div className="mb-4 pl-13 pb-3 border-b" style={{ paddingLeft: '52px', borderColor: '#1a2238' }}>
-                            <p className="text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#475569' }}>About</p>
-                            <p className="text-sm leading-relaxed" style={{ color: '#64748b' }}>{aboutText}</p>
-                          </div>
-                        )}
-
-                        {/* Internal notes */}
-                        <div style={{ paddingLeft: '52px' }}>
-                          <NotesField id={item.id} table="firms_applications" initialNotes={item.notes} />
-                        </div>
-                      </>
-                    )
-                  })()}
-                </div>
-              )
-            })}
+            {firmsApplications.map((item: any) => (
+              <FirmApplicationCard key={item.id} item={item} />
+            ))}
           </div>
         )}
       </div>

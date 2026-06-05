@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { Trash2, Loader2 } from 'lucide-react'
+import { Trash2, Loader2, ChevronDown, Globe } from 'lucide-react'
 
 // ── Status Update Dropdown ────────────────────────────────────────────────────
 const STATUS_OPTIONS: Record<string, string[]> = {
@@ -308,5 +308,171 @@ export function ReplyButton({ email, subject, name }: ReplyButtonProps) {
         </div>
       )}
     </>
+  )
+}
+
+// ── Firm Application Card (Accordion) ────────────────────────────────────────
+interface FirmApplicationCardProps {
+  item: {
+    id: string
+    firm_name?: string
+    contact_name?: string
+    contact_email?: string
+    contact_phone?: string
+    website?: string
+    firm_type?: string
+    status?: string
+    message?: string
+    years_of_experience?: string
+    languages?: string
+    notes?: string
+    created_at?: string
+  }
+}
+
+export function FirmApplicationCard({ item }: FirmApplicationCardProps) {
+  const [expanded, setExpanded] = useState(false)
+
+  const msg = item.message ?? ''
+  const locationMatch = msg.match(/Location: ([^\n]+)/)
+  const specialismsMatch = msg.match(/Specialisms: ([^\n]+)/)
+  const qualsMatch = msg.match(/\[(FIRM|INDEPENDENT)\]\s*Qualifications:\s*([^.]+)/)
+  const qualsText = qualsMatch ? qualsMatch[2].trim() : null
+  const aboutText = msg
+    .replace(/Location: [^\n]+\n?/g, '')
+    .replace(/Specialisms: [^\n]+\n?/g, '')
+    .replace(/\[(FIRM|INDEPENDENT)\]\s*Qualifications:[^.]*\.?/g, '')
+    .replace(/By submitting this application.*?acceptance into the network\.?/gi, '')
+    .trim()
+  const quals = qualsText ? qualsText.split(',').map((q: string) => q.trim()).filter(Boolean) : []
+  const specs = specialismsMatch ? specialismsMatch[1].split(',').map((s: string) => s.trim()).filter(Boolean) : []
+
+  return (
+    <div className="border-b last:border-b-0 transition-colors hover:bg-white/[0.01]" style={{ borderColor: '#1a2238' }}>
+      {/* ── Collapsed header — always visible ── */}
+      <div className="px-6 py-4 flex items-center gap-4">
+        {/* Avatar */}
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0"
+          style={{ background: 'rgba(139,92,246,0.15)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.25)' }}>
+          {(item.firm_name ?? item.contact_name ?? '?')[0].toUpperCase()}
+        </div>
+
+        {/* Name + badges */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-white font-bold text-sm">{item.firm_name ?? '—'}</p>
+            {item.firm_type && (
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-lg"
+                style={{ background: 'rgba(139,92,246,0.1)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.2)' }}>
+                {item.firm_type}
+              </span>
+            )}
+            <StatusBadge id={item.id} table="firms_applications" currentStatus={item.status ?? 'pending'} />
+          </div>
+          <div className="flex items-center gap-3 mt-0.5 text-xs flex-wrap" style={{ color: '#475569' }}>
+            <span style={{ color: '#94a3b8' }}>{item.contact_name ?? '—'}</span>
+            <a href={'mailto:' + item.contact_email} style={{ color: '#60a5fa' }}>{item.contact_email ?? '—'}</a>
+            {locationMatch && <span>{locationMatch[1]}</span>}
+            <span>{item.created_at ? new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</span>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-2 shrink-0">
+          <ReplyButton email={item.contact_email ?? ''} name={item.contact_name} subject={'Re: Your application — ' + (item.firm_name ?? '')} />
+          <DeleteButton id={item.id} table="firms_applications" />
+          <button
+            onClick={() => setExpanded(e => !e)}
+            className="flex items-center justify-center w-7 h-7 rounded-lg transition-colors"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #1a2238' }}
+            aria-label={expanded ? 'Collapse' : 'Expand'}>
+            <ChevronDown size={14} style={{ color: '#475569', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+          </button>
+        </div>
+      </div>
+
+      {/* ── Expanded details ── */}
+      {expanded && (
+        <div className="px-6 pb-6 space-y-5" style={{ paddingLeft: '64px' }}>
+
+          {/* Detail grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {locationMatch && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#475569' }}>Location</p>
+                <p className="text-sm" style={{ color: '#cbd5e1' }}>{locationMatch[1]}</p>
+              </div>
+            )}
+            {(item.years_of_experience || item.languages) && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#475569' }}>Experience / Languages</p>
+                <p className="text-sm" style={{ color: '#cbd5e1' }}>
+                  {[item.years_of_experience, item.languages].filter(Boolean).join(' · ')}
+                </p>
+              </div>
+            )}
+            {item.contact_phone && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#475569' }}>Phone</p>
+                <p className="text-sm" style={{ color: '#cbd5e1' }}>{item.contact_phone}</p>
+              </div>
+            )}
+            {item.website && (
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: '#475569' }}>Website</p>
+                <a href={item.website} target="_blank" rel="noopener noreferrer"
+                  className="text-sm flex items-center gap-1 hover:opacity-80" style={{ color: '#60a5fa' }}>
+                  <Globe size={11} /> {item.website}
+                </a>
+              </div>
+            )}
+          </div>
+
+          {/* Qualifications chips */}
+          {quals.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#475569' }}>Qualifications</p>
+              <div className="flex flex-wrap gap-1.5">
+                {quals.map((q: string) => (
+                  <span key={q} className="text-xs font-semibold px-2.5 py-1 rounded-lg"
+                    style={{ background: 'rgba(16,185,129,0.08)', color: '#34d399', border: '1px solid rgba(16,185,129,0.2)' }}>
+                    {q}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Specialisms chips */}
+          {specs.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#475569' }}>Specialisms</p>
+              <div className="flex flex-wrap gap-1.5">
+                {specs.map((s: string) => (
+                  <span key={s} className="text-xs font-semibold px-2.5 py-1 rounded-lg"
+                    style={{ background: 'rgba(37,99,235,0.08)', color: '#60a5fa', border: '1px solid rgba(37,99,235,0.2)' }}>
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* About */}
+          {aboutText && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: '#475569' }}>About</p>
+              <p className="text-sm leading-relaxed" style={{ color: '#64748b' }}>{aboutText}</p>
+            </div>
+          )}
+
+          {/* Internal notes */}
+          <div className="pt-3 border-t" style={{ borderColor: '#1a2238' }}>
+            <NotesField id={item.id} table="firms_applications" initialNotes={item.notes} />
+          </div>
+
+        </div>
+      )}
+    </div>
   )
 }
