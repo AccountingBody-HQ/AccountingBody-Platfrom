@@ -704,9 +704,6 @@ export default async function HomePage() {
                       {q.code}
                     </span>
                   </div>
-                  <h3 className="font-display text-base text-navy-950 leading-snug mb-2 group-hover:text-navy-700 transition-colors">
-                    {q.code}
-                  </h3>
                   <p className="text-xs text-slate-500 mb-4 leading-relaxed flex-1">{q.description}</p>
                   <ul className="space-y-1.5 mb-5">
                     {q.highlights.map(h => (
@@ -1218,9 +1215,6 @@ export default async function HomePage() {
                         {q.code}
                       </span>
                     </div>
-                    <h3 className="font-display text-base text-navy-950 leading-snug mb-2 group-hover:text-navy-700 transition-colors">
-                      {q.code}
-                    </h3>
                     <p className="text-xs text-slate-500 mb-4 leading-relaxed flex-1">{q.description}</p>
                     <ul className="space-y-1.5 mb-5">
                       {q.highlights.map(h => (
