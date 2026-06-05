@@ -575,7 +575,7 @@ export default async function HomePage() {
       {/* ════════════════════════════════════════════════════════════════
           1. HERO
           ════════════════════════════════════════════════════════════════ */}
-      <section className={`relative overflow-hidden bg-navy-950 flex items-center ${isEthioTax ? '' : 'pt-12 pb-20 md:pt-16 md:pb-28'}`}>
+      <section className={`relative overflow-hidden bg-navy-950 flex items-center ${isEthioTax ? '' : 'pb-20 md:pb-28'}`}>
 
         <div className="absolute inset-0 pointer-events-none">
           <div
