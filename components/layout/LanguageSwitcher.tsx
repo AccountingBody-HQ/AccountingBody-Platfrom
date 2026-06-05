@@ -24,6 +24,7 @@ export function LanguageSwitcher() {
           key={code}
           onClick={() => setLanguage(code)}
           title={full}
+          translate="no"
           aria-pressed={language === code}
           aria-label={`Switch to ${full}`}
           className={[
@@ -56,6 +57,7 @@ export function MobileLangSwitcher() {
             onClick={() => setLanguage(code)}
             aria-pressed={language === code}
             aria-label={`Switch to ${full}`}
+            translate="no"
             className={[
               'flex-1 flex flex-col items-center justify-center py-2.5 text-xs font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-gold-500',
               i > 0 ? 'border-l border-slate-200' : '',
