@@ -4,6 +4,7 @@
 // Added: Vercel Analytics, Vercel Speed Insights, Clerk Auth
 
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
@@ -14,54 +15,71 @@ import ScrollToTop from '@/components/ScrollToTop'
 import './globals.css'
 
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accountingbody.com'
+const AB_URL = 'https://accountingbody.com'
+const ET_URL = 'https://ethiotax.com'
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: {
-    default: 'Accounting Body — Everything You Need for Accounting & Finance',
-    template: '%s | Accounting Body',
-  },
-  description:
-    'Professional accounting services, expert network and study platform for ACCA, CIMA, ICAEW and AAT — serving clients and students worldwide.',
-  keywords: [
-    'accounting education', 'ACCA study', 'CIMA study', 'AAT study notes',
-    'ICAEW ACA', 'accounting practice questions', 'finance qualifications',
-    'bookkeeping courses', 'accounting glossary', 'hire accountant',
-  ],
-  authors: [{ name: 'AccountingBody', url: SITE_URL }],
-  creator: 'AccountingBody',
-  publisher: 'AccountingBody Ltd',
-  openGraph: {
-    type: 'website',
-    locale: 'en_GB',
-    url: SITE_URL,
-    siteName: 'Accounting Body',
-    title: 'Accounting Body — Everything You Need for Accounting & Finance',
-    description:
-      'Professional accounting services, expert network and study platform for ACCA, CIMA, ICAEW and AAT — serving clients and students worldwide.',
-    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Accounting Body' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    site: '@accountingbody',
-    creator: '@accountingbody',
-    title: 'Accounting Body — Everything You Need for Accounting & Finance',
-    description: 'Professional accounting services, expert network and study platform for ACCA, CIMA, ICAEW and AAT — serving clients and students worldwide.',
-    images: ['/og-default.png'],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true, 'max-video-preview': -1, 'max-image-preview': 'large', 'max-snippet': -1 },
-  },
-  icons: {
-    icon: [{ url: '/favicon.ico', sizes: 'any' }, { url: '/icon.svg', type: 'image/svg+xml' }],
-    apple: '/apple-touch-icon.png',
-  },
-  manifest: '/site.webmanifest',
-  verification: { google: process.env.NEXT_PUBLIC_ADSENSE_VERIFICATION },
+export async function generateMetadata(): Promise<Metadata> {
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  const SITE_URL = isEthioTax ? ET_URL : AB_URL
 
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: {
+      default: isEthioTax
+        ? 'EthioTax — Accounting, Tax & Business Consulting'
+        : 'Accounting Body — Everything You Need for Accounting & Finance',
+      template: isEthioTax ? '%s | EthioTax' : '%s | Accounting Body',
+    },
+    description: isEthioTax
+      ? 'Professional accounting, tax and business consulting services built exclusively for the Ethiopian community in the UK and worldwide.'
+      : 'Professional accounting services, expert network and study platform for ACCA, CIMA, ICAEW and AAT — serving clients and students worldwide.',
+    keywords: [
+      'accounting education', 'ACCA study', 'CIMA study', 'AAT study notes',
+      'ICAEW ACA', 'accounting practice questions', 'finance qualifications',
+      'bookkeeping courses', 'accounting glossary', 'hire accountant',
+    ],
+    authors: [{ name: isEthioTax ? 'EthioTax' : 'AccountingBody', url: SITE_URL }],
+    creator: isEthioTax ? 'EthioTax' : 'AccountingBody',
+    publisher: isEthioTax ? 'EthioTax Ltd' : 'AccountingBody Ltd',
+    alternates: { canonical: SITE_URL },
+    openGraph: {
+      type: 'website',
+      locale: 'en_GB',
+      url: SITE_URL,
+      siteName: isEthioTax ? 'EthioTax' : 'Accounting Body',
+      title: isEthioTax
+        ? 'EthioTax — Accounting, Tax & Business Consulting'
+        : 'Accounting Body — Everything You Need for Accounting & Finance',
+      description: isEthioTax
+        ? 'Professional accounting, tax and business consulting services built exclusively for the Ethiopian community in the UK and worldwide.'
+        : 'Professional accounting services, expert network and study platform for ACCA, CIMA, ICAEW and AAT — serving clients and students worldwide.',
+      images: [{ url: '/og-default.png', width: 1200, height: 630, alt: isEthioTax ? 'EthioTax' : 'Accounting Body' }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      site: isEthioTax ? '@ethiotax' : '@accountingbody',
+      creator: isEthioTax ? '@ethiotax' : '@accountingbody',
+      title: isEthioTax
+        ? 'EthioTax — Accounting, Tax & Business Consulting'
+        : 'Accounting Body — Everything You Need for Accounting & Finance',
+      description: isEthioTax
+        ? 'Professional accounting, tax and business consulting services built exclusively for the Ethiopian community in the UK and worldwide.'
+        : 'Professional accounting services, expert network and study platform for ACCA, CIMA, ICAEW and AAT — serving clients and students worldwide.',
+      images: ['/og-default.png'],
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: { index: true, follow: true, 'max-video-preview': -1, 'max-image-preview': 'large', 'max-snippet': -1 },
+    },
+    icons: {
+      icon: [{ url: '/favicon.ico', sizes: 'any' }, { url: '/icon.svg', type: 'image/svg+xml' }],
+      apple: '/apple-touch-icon.png',
+    },
+    manifest: '/site.webmanifest',
+    verification: { google: process.env.NEXT_PUBLIC_ADSENSE_VERIFICATION },
+  }
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
