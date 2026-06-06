@@ -61,7 +61,7 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   verification: { google: process.env.NEXT_PUBLIC_ADSENSE_VERIFICATION },
-  alternates: { canonical: SITE_URL },
+
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

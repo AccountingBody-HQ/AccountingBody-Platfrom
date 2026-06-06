@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: { absolute: 'Get Help | EthioTax Professional Services' },
   description: 'Explore EthioTax professional services — tax filing, accounting, payroll, business consulting, company formation, audit and financial planning for the Ethiopian community.',
+  alternates: { canonical: 'https://ethiotax.com/get-help' },
   openGraph: {
     title: { absolute: 'Get Help | EthioTax Professional Services' },
     description: 'Explore EthioTax professional services — tax filing, accounting, payroll, business consulting, company formation, audit and financial planning for the Ethiopian community.',

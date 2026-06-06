@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Accounting & Bookkeeping | EthioTax',
   description: 'Professional accounting and bookkeeping services tailored for Ethiopian businesses and individuals. Stay compliant and in control of your finances with EthioTax.',
+  alternates: { canonical: 'https://ethiotax.com/get-help/accounting-bookkeeping' },
   openGraph: {
     title: 'Accounting & Bookkeeping | EthioTax',
     description: 'Professional accounting and bookkeeping services tailored for Ethiopian businesses and individuals. Stay compliant and in control of your finances with EthioTax.',

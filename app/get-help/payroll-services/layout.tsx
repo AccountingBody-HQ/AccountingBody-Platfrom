@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Payroll Services | EthioTax',
   description: 'Reliable payroll services for Ethiopian businesses. EthioTax manages your payroll accurately and on time so you can focus on running your business.',
+  alternates: { canonical: 'https://ethiotax.com/get-help/payroll-services' },
   openGraph: {
     title: 'Payroll Services | EthioTax',
     description: 'Reliable payroll services for Ethiopian businesses. EthioTax manages your payroll accurately and on time so you can focus on running your business.',

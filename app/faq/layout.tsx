@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Frequently Asked Questions',
   description: 'Got questions about EthioTax? Find answers to the most common questions about our accounting, tax and business consulting services for the Ethiopian community.',
+  alternates: { canonical: 'https://ethiotax.com/faq' },
   openGraph: {
     title: 'Frequently Asked Questions',
     description: 'Got questions about EthioTax? Find answers to the most common questions about our accounting, tax and business consulting services for the Ethiopian community.',
