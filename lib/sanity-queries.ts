@@ -215,3 +215,10 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
   if (!result) return {}
   return Object.fromEntries(result.map(r => [r.slug, r.count]))
 }
+
+export async function getETICPAArticles(): Promise<ArticleSummary[]> {
+  const query = `*[_type == "article" && "ethiotax" in showOnSites] | order(title asc) {
+    ${SUMMARY_FIELDS}
+  }`
+  return (await sanityFetch<ArticleSummary[]>(query, {})) ?? []
+}
