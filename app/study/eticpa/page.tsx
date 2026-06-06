@@ -345,10 +345,7 @@ export default async function ETICPAStudyPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {SUBJECT_AREAS.map(area => (
               <Link key={area.slug} href={`/study/${area.slug}`}
-                className="group flex items-start gap-5 p-6 rounded-xl border bg-white transition-all duration-200 hover:shadow-lg"
-                style={{ borderColor: '#e2e8f0' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#C9982A' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#e2e8f0' }}>
+                className="group flex items-start gap-5 p-6 rounded-xl border border-slate-200 bg-white transition-all duration-200 hover:shadow-lg hover:border-[#C9982A]">
                 <div className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 transition-all"
                   style={{ backgroundColor: '#f0f7f4', border: '1px solid #d1e8db' }}>
                   {area.icon}
