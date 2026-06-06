@@ -319,7 +319,7 @@ export default async function ETICPAStudyPage() {
 
           {articles.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {articles.map((article, index) => (
+              {articles.map((article) => (
                 <ArticleCard key={article._id} article={article} />
               ))}
             </div>
