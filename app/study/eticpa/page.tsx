@@ -6,29 +6,49 @@ import type { ArticleSummary } from '@/lib/sanity-queries'
 
 export const revalidate = 3600
 
-const CPA_PATHWAY = [
+// ATQ — Accounting Technician Qualification (confirmed published structure)
+const ATQ_LEVELS = [
   {
-    level: 'Foundation',
-    code: 'ATQ Foundation',
-    description: 'The entry point for Ethiopian accounting professionals. Covers core financial accounting, business law and Ethiopian taxation principles.',
-    subjects: ['Financial Accounting', 'Business Mathematics & Statistics', 'Economics', 'Business Law & Ethics', 'Ethiopian Tax System'],
+    level: 'Level 1',
+    code: 'Foundation Technician',
+    description: 'The entry point into Ethiopian professional accountancy. Builds the core financial and legal knowledge needed to work in any accounting environment.',
+    modules: [
+      { name: 'Introduction to Accounting', desc: 'Principles of double-entry bookkeeping, the accounting equation and preparation of basic financial statements.' },
+      { name: 'Cost Accounting', desc: 'Cost classification, costing methods, and how cost information supports business decision-making.' },
+      { name: 'Business Skills', desc: 'Professional communication, workplace competencies and the skills required in a modern finance function.' },
+      { name: 'Ethiopian Business Law', desc: 'Ethiopian commercial law, contract law, business organisations and the legal framework governing financial practice.' },
+    ],
     status: 'available',
+    badge: 'Start here',
   },
   {
-    level: 'Advanced',
-    code: 'ATQ Advanced',
-    description: 'Builds on Foundation with deeper financial management, audit and assurance, and advanced Ethiopian tax practice.',
-    subjects: ['Advanced Financial Accounting', 'Financial Management', 'Audit & Assurance', 'Advanced Taxation', 'Management Accounting'],
+    level: 'Level 2',
+    code: 'Advanced Technician',
+    description: 'Develops deeper technical competence across financial reporting, taxation and assurance — preparing candidates for senior technician roles.',
+    modules: [
+      { name: 'Financial Accounting', desc: 'Preparation of financial statements under Ethiopian GAAP, accounting standards and financial reporting requirements.' },
+      { name: 'Management Accounting', desc: 'Budgeting, variance analysis, performance measurement and management reporting for organisations.' },
+      { name: 'Assurance, Controls & Ethics', desc: 'Internal controls, audit procedures, professional ethics and the assurance framework.' },
+      { name: 'Ethiopian Taxation', desc: 'ERCA requirements, income tax, VAT, customs duty and tax compliance for individuals and businesses.' },
+      { name: 'Ethiopian Public Sector Accounting', desc: 'Government accounting standards, public financial management and reporting for public sector entities.' },
+    ],
     status: 'coming-soon',
-  },
-  {
-    level: 'Professional',
-    code: 'CPA Professional',
-    description: 'The pinnacle of Ethiopian professional accountancy. Strategic leadership, complex financial reporting and professional ethics at the highest level.',
-    subjects: ['Strategic Financial Management', 'Corporate Reporting', 'Advanced Audit', 'Strategic Management', 'Professional Ethics'],
-    status: 'coming-soon',
+    badge: null,
   },
 ]
+
+// CPA — Certified Public Accountant (structure under development by ETICPA)
+const CPA_STATUS = {
+  title: 'CPA — Certified Public Accountant',
+  description: 'The pinnacle of Ethiopian professional accountancy. The CPA qualification covers approximately 13 papers including globally aligned standards and Ethiopian-specific requirements. ETICPA is currently finalising the full syllabus.',
+  pathway: [
+    { step: '01', title: 'Eligibility & Registration', desc: 'Meet entry requirements and register with ETICPA.' },
+    { step: '02', title: 'Examinations', desc: 'Complete structured assessments across all required papers.' },
+    { step: '03', title: 'Practical Experience', desc: 'Supervised training in a recognised accounting environment.' },
+    { step: '04', title: 'Certification', desc: 'Obtain the CPA designation awarded by ETICPA.' },
+    { step: '05', title: 'Continuing Development', desc: 'Maintain competence through annual CPD requirements.' },
+  ],
+}
 
 const SUBJECT_AREAS = [
   {
@@ -245,63 +265,111 @@ export default async function ETICPAStudyPage() {
         </div>
       </section>
 
-      {/* QUALIFICATION PATHWAYS */}
+      {/* ATQ QUALIFICATION PATHWAYS */}
       <section id="pathways" className="section bg-slate-50 border-t border-slate-100">
         <div className="container-site">
+
+          {/* ATQ Header */}
           <div className="max-w-2xl mb-12">
-            <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>Qualification Pathways</span>
-            <h2 className="section-title mb-4">Three levels. One destination.</h2>
+            <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>ATQ — Accounting Technician Qualification</span>
+            <h2 className="section-title mb-4">Two levels. Real-world ready.</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              The ETICPA pathway progresses from ATQ Foundation through ATQ Advanced to the CPA Professional qualification. Each level builds on the last.
+              The ATQ is ETICPA&apos;s employer-oriented qualification — designed to close Ethiopia&apos;s middle-level finance skills gap and produce work-ready accounting professionals for both public and private sectors.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {CPA_PATHWAY.map((path, index) => (
-              <div key={path.code}
+
+          {/* ATQ Level Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-20">
+            {ATQ_LEVELS.map((level, index) => (
+              <div key={level.code}
                 className="relative flex flex-col bg-white rounded-xl border overflow-hidden"
                 style={{ borderColor: index === 0 ? '#1A4731' : '#e2e8f0' }}>
-                {index === 0 && (
+                {level.badge && (
                   <div className="absolute top-4 right-4">
                     <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>
-                      Start here
+                      {level.badge}
                     </span>
                   </div>
                 )}
                 <div className="h-1.5" style={{ backgroundColor: index === 0 ? '#1A4731' : '#cbd5e1' }} />
-                <div className="p-7 flex flex-col flex-1">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
+                <div className="p-8 flex flex-col flex-1">
+                  {/* Level header */}
+                  <div className="flex items-center gap-3 mb-5">
+                    <span className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
                       style={{ backgroundColor: index === 0 ? '#1A4731' : '#94a3b8' }}>
                       {index + 1}
                     </span>
-                    <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: index === 0 ? '#1A4731' : '#94a3b8' }}>
-                      {path.level}
-                    </span>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: index === 0 ? '#1A4731' : '#94a3b8' }}>{level.level}</p>
+                      <h3 className="font-display text-xl text-navy-950">{level.code}</h3>
+                    </div>
                   </div>
-                  <h3 className="font-display text-xl text-navy-950 mb-3">{path.code}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed mb-6 flex-1">{path.description}</p>
-                  <div className="space-y-2 mb-6">
-                    {path.subjects.map(subject => (
-                      <div key={subject} className="flex items-center gap-2 text-xs text-slate-600">
-                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: index === 0 ? '#1A4731' : '#cbd5e1' }} />
-                        {subject}
+                  <p className="text-sm text-slate-500 leading-relaxed mb-6">{level.description}</p>
+
+                  {/* Modules */}
+                  <div className="space-y-3 mb-6 flex-1">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-400 mb-3">Modules</p>
+                    {level.modules.map((mod) => (
+                      <div key={mod.name} className="flex items-start gap-3 p-3 rounded-lg" style={{ backgroundColor: index === 0 ? '#f0f7f4' : '#f8fafc' }}>
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ backgroundColor: index === 0 ? '#1A4731' : '#94a3b8' }} />
+                        <div>
+                          <p className="text-xs font-semibold text-navy-950 mb-0.5">{mod.name}</p>
+                          <p className="text-xs text-slate-500 leading-relaxed">{mod.desc}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
-                  {path.status === 'available' ? (
+
+                  {/* CTA */}
+                  {level.status === 'available' ? (
                     <Link href="#study-notes"
-                      className="inline-flex items-center gap-2 text-xs font-semibold transition-all"
+                      className="inline-flex items-center gap-2 text-sm font-semibold transition-all mt-2"
                       style={{ color: '#1A4731' }}>
                       Browse study notes
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                     </Link>
                   ) : (
-                    <span className="text-xs font-semibold text-slate-400">Study notes coming soon</span>
+                    <span className="text-xs font-semibold text-slate-400 mt-2">Study notes coming soon</span>
                   )}
                 </div>
               </div>
             ))}
           </div>
+
+          {/* CPA Section */}
+          <div className="rounded-2xl border overflow-hidden" style={{ borderColor: '#d1e8db' }}>
+            <div className="px-8 py-6 border-b" style={{ backgroundColor: '#1A4731', borderColor: '#0d2b1f' }}>
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wide mb-2 block" style={{ color: '#C9982A' }}>CPA — Certified Public Accountant</span>
+                  <h3 className="font-display text-2xl text-white">The professional summit</h3>
+                </div>
+                <span className="text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 text-white/70">Syllabus under development</span>
+              </div>
+            </div>
+            <div className="p-8 bg-white">
+              <p className="text-slate-600 leading-relaxed mb-8 max-w-3xl">{CPA_STATUS.description}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                {CPA_STATUS.pathway.map((step) => (
+                  <div key={step.step} className="rounded-xl p-4 border" style={{ borderColor: '#d1e8db', backgroundColor: '#f0f7f4' }}>
+                    <p className="font-display text-2xl font-bold mb-2" style={{ color: '#C9982A' }}>{step.step}</p>
+                    <p className="text-sm font-semibold text-navy-950 mb-1">{step.title}</p>
+                    <p className="text-xs text-slate-500 leading-relaxed">{step.desc}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-between flex-wrap gap-4">
+                <p className="text-sm text-slate-500">ETICPA is finalising the full CPA syllabus. We will publish complete study notes as soon as the official papers are confirmed.</p>
+                <a href="https://www.eticpa.et/our-qualifications/" target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm font-semibold shrink-0"
+                  style={{ color: '#1A4731' }}>
+                  View on ETICPA website
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                </a>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 
