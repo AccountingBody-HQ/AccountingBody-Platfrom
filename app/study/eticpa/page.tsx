@@ -182,13 +182,13 @@ export default async function ETICPAStudyPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="#study-notes"
-                className="inline-flex items-center justify-center gap-2 px-8 rounded-lg text-sm font-semibold transition-colors"
-                style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '48px', boxSizing: 'border-box' }}>
+                className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors"
+                style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '48px', minWidth: '220px', boxSizing: 'border-box' }}>
                 Browse study notes
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </Link>
               <Link href="#pathways"
-                className="inline-flex items-center justify-center gap-2 px-8 rounded-lg text-sm font-semibold border-2 border-white/30 text-white hover:border-white/60 transition-colors" style={{ height: '48px', boxSizing: 'border-box' }}>
+                className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold border-2 border-white/30 text-white hover:border-white/60 transition-colors" style={{ height: '48px', minWidth: '220px', boxSizing: 'border-box' }}>
                 View qualification pathways
               </Link>
             </div>
@@ -387,14 +387,14 @@ export default async function ETICPAStudyPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/get-help"
-                  className="inline-flex items-center justify-center gap-2 px-8 rounded-lg text-sm font-semibold transition-colors"
-                  style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '48px', boxSizing: 'border-box' }}>
+                  className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors"
+                  style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '48px', minWidth: '200px', boxSizing: 'border-box' }}>
                   Explore our services
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                 </Link>
                 <Link href="/how-it-works"
-                  className="inline-flex items-center justify-center gap-2 px-8 rounded-lg text-sm font-semibold border-2 text-white transition-colors"
-                  style={{ borderColor: 'rgba(255,255,255,0.3)', height: '48px', boxSizing: 'border-box' }}>
+                  className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold border-2 text-white transition-colors"
+                  style={{ borderColor: 'rgba(255,255,255,0.3)', height: '48px', minWidth: '200px', boxSizing: 'border-box' }}>
                   How it works
                 </Link>
               </div>
