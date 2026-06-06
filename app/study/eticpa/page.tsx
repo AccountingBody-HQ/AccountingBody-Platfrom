@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { getETICPAArticles } from '@/lib/sanity-queries'
 import type { ArticleSummary } from '@/lib/sanity-queries'
 
@@ -140,6 +142,9 @@ function ArticleCard({ article }: { article: ArticleSummary }) {
 }
 
 export default async function ETICPAStudyPage() {
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  if (!isEthioTax) redirect('/study')
   const articles = await getETICPAArticles()
 
   return (
