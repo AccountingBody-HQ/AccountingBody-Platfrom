@@ -105,7 +105,7 @@ const SUBJECT_AREAS = [
   },
 ]
 
-function ArticleCard({ article, index }: { article: ArticleSummary; index: number }) {
+function ArticleCard({ article }: { article: ArticleSummary }) {
   const href = `/study/eticpa/${article.slug.current}`
   return (
     <Link
@@ -199,7 +199,7 @@ export default async function ETICPAStudyPage() {
               <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>The Qualification</span>
               <h2 className="section-title mb-6">Why ETICPA is the qualification Ethiopian professionals must hold</h2>
               <p className="text-slate-600 text-lg leading-relaxed mb-6">
-                ETICPA — the Ethiopian Institute of Certified Public Accountants — is Ethiopia's national professional accountancy body. Its qualifications are the benchmark for finance professionals working in or with Ethiopia.
+                ETICPA — the Ethiopian Institute of Certified Public Accountants — is Ethiopia&apos;s national professional accountancy body. Its qualifications are the benchmark for finance professionals working in or with Ethiopia.
               </p>
               <p className="text-slate-600 text-lg leading-relaxed mb-8">
                 Whether you are building a career inside Ethiopia, managing finances for a diaspora business, or advising clients with Ethiopian operations — the CPA and ATQ qualifications give you the credibility, legal standing and technical expertise that employers and regulators demand.
