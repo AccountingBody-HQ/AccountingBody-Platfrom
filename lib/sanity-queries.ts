@@ -56,11 +56,9 @@ async function sanityFetch<T>(
     const encodedParams = Object.entries(params)
       .map(([k, v]) => `$${k}=${encodeURIComponent(JSON.stringify(v))}`)
       .join('&')
-    const url = `https://${PROJECT_ID}.api.sanity.io/v${API_VER}/data/query/${DATASET}?query=${encodedQuery}${encodedParams ? `&${encodedParams}` : ''}`
-    const token = process.env.SANITY_API_TOKEN
+    const url = `https://${PROJECT_ID}.apicdn.sanity.io/v${API_VER}/data/query/${DATASET}?query=${encodedQuery}${encodedParams ? `&${encodedParams}` : ''}`
     const res = await fetch(url, {
       next: { revalidate },
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
     if (!res.ok) return null
     const data = await res.json()
