@@ -283,10 +283,9 @@ export default async function ETICPAStudyPage() {
           {/* ATQ Level Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-20">
             {ATQ_LEVELS.map((level, index) => (
-              <div key={level.code}
-                className="relative flex flex-col bg-white rounded-xl border overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer"
-                style={{ borderColor: '#1A4731' }}
-                onClick={() => window.location.href = level.href}>
+              <Link key={level.code} href={level.href}
+                className="relative flex flex-col bg-white rounded-xl border overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+                style={{ borderColor: '#1A4731' }}>
                 {level.badge && (
                   <div className="absolute top-4 right-4">
                     <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>
@@ -313,8 +312,7 @@ export default async function ETICPAStudyPage() {
                   <div className="space-y-3 mb-6 flex-1">
                     <p className="text-xs font-bold uppercase tracking-wide text-slate-400 mb-3">Modules</p>
                     {level.modules.map((mod) => (
-                      <Link key={mod.name} href={mod.href}
-                        onClick={(e) => e.stopPropagation()}
+                      <span key={mod.name}
                         className="flex items-start gap-3 p-3 rounded-lg group hover:bg-[#e6f2ec] transition-colors"
                         style={{ backgroundColor: '#f0f7f4' }}>
                         <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ backgroundColor: '#1A4731' }} />
@@ -323,20 +321,19 @@ export default async function ETICPAStudyPage() {
                           <p className="text-xs text-slate-500 leading-relaxed">{mod.desc}</p>
                         </div>
                         <svg className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[#1A4731] opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                      </Link>
+                      </span>
                     ))}
                   </div>
 
                   {/* CTA */}
-                  <Link href={level.href}
-                    onClick={(e) => e.stopPropagation()}
+                  <span
                     className="inline-flex items-center gap-2 text-sm font-semibold transition-all mt-2"
                     style={{ color: '#1A4731' }}>
                     View all modules
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                  </Link>
+                  </span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 
