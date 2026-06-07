@@ -12,11 +12,12 @@ const ATQ_LEVELS = [
     level: 'Level 1',
     code: 'Foundation Technician',
     description: 'The entry point into Ethiopian professional accountancy. Builds the core financial and legal knowledge needed to work in any accounting environment.',
+    href: '/study/eticpa/atq/level-1',
     modules: [
-      { name: 'Introduction to Accounting', desc: 'Principles of double-entry bookkeeping, the accounting equation and preparation of basic financial statements.' },
-      { name: 'Cost Accounting', desc: 'Cost classification, costing methods, and how cost information supports business decision-making.' },
-      { name: 'Business Skills', desc: 'Professional communication, workplace competencies and the skills required in a modern finance function.' },
-      { name: 'Ethiopian Business Law', desc: 'Ethiopian commercial law, contract law, business organisations and the legal framework governing financial practice.' },
+      { name: 'Introduction to Accounting', desc: 'Principles of double-entry bookkeeping, the accounting equation and preparation of basic financial statements.', href: '/study/eticpa/atq/level-1/introduction-to-accounting' },
+      { name: 'Cost Accounting', desc: 'Cost classification, costing methods, and how cost information supports business decision-making.', href: '/study/eticpa/atq/level-1/cost-accounting' },
+      { name: 'Business Skills', desc: 'Professional communication, workplace competencies and the skills required in a modern finance function.', href: '/study/eticpa/atq/level-1/business-skills' },
+      { name: 'Ethiopian Business Law', desc: 'Ethiopian commercial law, contract law, business organisations and the legal framework governing financial practice.', href: '/study/eticpa/atq/level-1/ethiopian-business-law' },
     ],
     status: 'available',
     badge: 'Start here',
@@ -25,14 +26,15 @@ const ATQ_LEVELS = [
     level: 'Level 2',
     code: 'Advanced Technician',
     description: 'Develops deeper technical competence across financial reporting, taxation and assurance — preparing candidates for senior technician roles.',
+    href: '/study/eticpa/atq/level-2',
     modules: [
-      { name: 'Financial Accounting', desc: 'Preparation of financial statements under Ethiopian GAAP, accounting standards and financial reporting requirements.' },
-      { name: 'Management Accounting', desc: 'Budgeting, variance analysis, performance measurement and management reporting for organisations.' },
-      { name: 'Assurance, Controls & Ethics', desc: 'Internal controls, audit procedures, professional ethics and the assurance framework.' },
-      { name: 'Ethiopian Taxation', desc: 'ERCA requirements, income tax, VAT, customs duty and tax compliance for individuals and businesses.' },
-      { name: 'Ethiopian Public Sector Accounting', desc: 'Government accounting standards, public financial management and reporting for public sector entities.' },
+      { name: 'Financial Accounting', desc: 'Preparation of financial statements under Ethiopian GAAP, accounting standards and financial reporting requirements.', href: '/study/eticpa/atq/level-2/financial-accounting' },
+      { name: 'Management Accounting', desc: 'Budgeting, variance analysis, performance measurement and management reporting for organisations.', href: '/study/eticpa/atq/level-2/management-accounting' },
+      { name: 'Assurance, Controls & Ethics', desc: 'Internal controls, audit procedures, professional ethics and the assurance framework.', href: '/study/eticpa/atq/level-2/assurance-controls-ethics' },
+      { name: 'Ethiopian Taxation', desc: 'ERCA requirements, income tax, VAT, customs duty and tax compliance for individuals and businesses.', href: '/study/eticpa/atq/level-2/ethiopian-taxation' },
+      { name: 'Ethiopian Public Sector Accounting', desc: 'Government accounting standards, public financial management and reporting for public sector entities.', href: '/study/eticpa/atq/level-2/ethiopian-public-sector-accounting' },
     ],
-    status: 'coming-soon',
+    status: 'available',
     badge: null,
   },
 ]
@@ -282,8 +284,9 @@ export default async function ETICPAStudyPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-20">
             {ATQ_LEVELS.map((level, index) => (
               <div key={level.code}
-                className="relative flex flex-col bg-white rounded-xl border overflow-hidden"
-                style={{ borderColor: index === 0 ? '#1A4731' : '#e2e8f0' }}>
+                className="relative flex flex-col bg-white rounded-xl border overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer"
+                style={{ borderColor: '#1A4731' }}
+                onClick={() => window.location.href = level.href}>
                 {level.badge && (
                   <div className="absolute top-4 right-4">
                     <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>
@@ -291,51 +294,47 @@ export default async function ETICPAStudyPage() {
                     </span>
                   </div>
                 )}
-                <div className="h-1.5" style={{ backgroundColor: index === 0 ? '#1A4731' : '#cbd5e1' }} />
+                <div className="h-1.5" style={{ backgroundColor: '#1A4731' }} />
                 <div className="p-8 flex flex-col flex-1">
                   {/* Level header */}
                   <div className="flex items-center gap-3 mb-5">
                     <span className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
-                      style={{ backgroundColor: index === 0 ? '#1A4731' : '#94a3b8' }}>
+                      style={{ backgroundColor: '#1A4731' }}>
                       {index + 1}
                     </span>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: index === 0 ? '#1A4731' : '#94a3b8' }}>{level.level}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#1A4731' }}>{level.level}</p>
                       <h3 className="font-display text-xl text-navy-950">{level.code}</h3>
                     </div>
                   </div>
                   <p className="text-sm text-slate-500 leading-relaxed mb-6">{level.description}</p>
 
-                  {/* Modules */}
+                  {/* Modules — each clickable */}
                   <div className="space-y-3 mb-6 flex-1">
                     <p className="text-xs font-bold uppercase tracking-wide text-slate-400 mb-3">Modules</p>
                     {level.modules.map((mod) => (
-                      <div key={mod.name} className="flex items-start gap-3 p-3 rounded-lg" style={{ backgroundColor: index === 0 ? '#f0f7f4' : '#f8fafc' }}>
-                        <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ backgroundColor: index === 0 ? '#1A4731' : '#94a3b8' }} />
-                        <div>
-                          <p className="text-xs font-semibold text-navy-950 mb-0.5">{mod.name}</p>
+                      <Link key={mod.name} href={mod.href}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-start gap-3 p-3 rounded-lg group hover:bg-[#e6f2ec] transition-colors"
+                        style={{ backgroundColor: '#f0f7f4' }}>
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ backgroundColor: '#1A4731' }} />
+                        <div className="flex-1">
+                          <p className="text-xs font-semibold text-navy-950 mb-0.5 group-hover:text-[#1A4731] transition-colors">{mod.name}</p>
                           <p className="text-xs text-slate-500 leading-relaxed">{mod.desc}</p>
                         </div>
-                      </div>
+                        <svg className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[#1A4731] opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                      </Link>
                     ))}
                   </div>
 
                   {/* CTA */}
-                  {level.status === 'available' ? (
-                    <Link href="/study/eticpa/atq/level-1"
-                      className="inline-flex items-center gap-2 text-sm font-semibold transition-all mt-2"
-                      style={{ color: '#1A4731' }}>
-                      Start Level 1
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                    </Link>
-                  ) : (
-                    <Link href="/study/eticpa/atq/level-2"
-                      className="inline-flex items-center gap-2 text-sm font-semibold transition-all mt-2"
-                      style={{ color: '#94a3b8' }}>
-                      Start Level 2
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                    </Link>
-                  )}
+                  <Link href={level.href}
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-2 text-sm font-semibold transition-all mt-2"
+                    style={{ color: '#1A4731' }}>
+                    View all modules
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                  </Link>
                 </div>
               </div>
             ))}
