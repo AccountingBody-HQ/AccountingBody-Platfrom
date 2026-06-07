@@ -46,15 +46,30 @@ const QUAL_SUBJECTS: Record<string, string[]> = {
   'ETICPA / ATQ': ['Introduction to Accounting (Level 1)', 'Cost Accounting (Level 1)', 'Business Skills (Level 1)', 'Ethiopian Business Law (Level 1)', 'Financial Accounting (Level 2)', 'Management Accounting (Level 2)', 'Assurance Controls and Ethics (Level 2)', 'Ethiopian Taxation (Level 2)', 'Ethiopian Public Sector Accounting (Level 2)'],
 }
 
+// Maps ETICPA/ATQ subject to level and module values for Sanity
+const ETICPA_SUBJECT_MAP: Record<string, { level: string; module: string }> = {
+  'Introduction to Accounting (Level 1)':        { level: 'level-1', module: 'introduction-to-accounting' },
+  'Cost Accounting (Level 1)':                   { level: 'level-1', module: 'cost-accounting' },
+  'Business Skills (Level 1)':                   { level: 'level-1', module: 'business-skills' },
+  'Ethiopian Business Law (Level 1)':            { level: 'level-1', module: 'ethiopian-business-law' },
+  'Financial Accounting (Level 2)':              { level: 'level-2', module: 'financial-accounting' },
+  'Management Accounting (Level 2)':             { level: 'level-2', module: 'management-accounting' },
+  'Assurance Controls and Ethics (Level 2)':     { level: 'level-2', module: 'assurance-controls-ethics' },
+  'Ethiopian Taxation (Level 2)':                { level: 'level-2', module: 'ethiopian-taxation' },
+  'Ethiopian Public Sector Accounting (Level 2)':{ level: 'level-2', module: 'ethiopian-public-sector-accounting' },
+}
+
 type Config = {
   qualification: string; contentType: string; subject: string
   topic: string; tone: string; length: string; difficulty: string
   aiSummary: string; keyTerms: string; categoryId: string
+  eticpaLevel: string; eticpaModule: string; eticpaTopic: string
 }
 const EMPTY: Config = {
   qualification: '', contentType: '', subject: '', topic: '',
   tone: 'Educational', length: 'standard', difficulty: 'Intermediate',
   aiSummary: '', keyTerms: '', categoryId: '',
+  eticpaLevel: '', eticpaModule: '', eticpaTopic: '',
 }
 
 const C = {

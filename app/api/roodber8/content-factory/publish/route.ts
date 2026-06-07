@@ -110,7 +110,7 @@ function extractTitle(content: string, fallback: string): string {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { content, topic, qualification, contentType, difficulty, aiSummary, keyTerms, showOnSites, canonicalOwner, categoryId } = body
+    const { content, topic, subject, qualification, contentType, difficulty, aiSummary, keyTerms, showOnSites, canonicalOwner, categoryId, eticpaTopic } = body
 
     if (!content || !qualification || !contentType || !canonicalOwner || !showOnSites?.length) {
       return NextResponse.json({ error: 'content, qualification, contentType, canonicalOwner and showOnSites are required' }, { status: 400 })
@@ -145,6 +145,20 @@ export async function POST(req: NextRequest) {
       'ETICPA / ATQ': ['eticpa-atq'],
     }
     const examBody = EXAM_BODY_MAP[qualification] ?? ['acca', 'cima', 'icaew', 'aat']
+
+    // Auto-derive ETICPA level and module from subject
+    const ETICPA_SUBJECT_MAP: Record<string, { level: string; module: string }> = {
+      'Introduction to Accounting (Level 1)':         { level: 'level-1', module: 'introduction-to-accounting' },
+      'Cost Accounting (Level 1)':                    { level: 'level-1', module: 'cost-accounting' },
+      'Business Skills (Level 1)':                    { level: 'level-1', module: 'business-skills' },
+      'Ethiopian Business Law (Level 1)':             { level: 'level-1', module: 'ethiopian-business-law' },
+      'Financial Accounting (Level 2)':               { level: 'level-2', module: 'financial-accounting' },
+      'Management Accounting (Level 2)':              { level: 'level-2', module: 'management-accounting' },
+      'Assurance Controls and Ethics (Level 2)':      { level: 'level-2', module: 'assurance-controls-ethics' },
+      'Ethiopian Taxation (Level 2)':                 { level: 'level-2', module: 'ethiopian-taxation' },
+      'Ethiopian Public Sector Accounting (Level 2)': { level: 'level-2', module: 'ethiopian-public-sector-accounting' },
+    }
+    const eticpaMapping = qualification === 'ETICPA / ATQ' ? ETICPA_SUBJECT_MAP[subject] ?? null : null
     const mappedType  = CONTENT_TYPE_MAP[contentType] ?? 'article'
     const mappedDiff  = DIFFICULTY_MAP[difficulty] ?? 'intermediate'
     const keyTermsArr = keyTerms ? keyTerms.split(',').map((t: string) => t.trim()).filter(Boolean) : []
@@ -165,6 +179,11 @@ export async function POST(req: NextRequest) {
       aiSummary:      aiSummary ?? '',
       aiKeyTerms:     keyTermsArr,
       aiSearchable:   true,
+      ...(eticpaMapping ? {
+        eticpaLevel:  eticpaMapping.level,
+        eticpaModule: eticpaMapping.module,
+        eticpaTopic:  eticpaTopic ?? topic ?? '',
+      } : {}),
       seoTitle:       title.length <= 60 ? title : title.slice(0, 60).replace(/\s+\S*$/, '...'),
       seoDescription: (aiSummary ?? '').length <= 160 ? (aiSummary ?? '') : (aiSummary ?? '').slice(0, 160).replace(/\s+\S*$/, '...'),
     }
