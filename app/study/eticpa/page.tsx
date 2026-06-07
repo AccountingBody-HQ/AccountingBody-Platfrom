@@ -322,14 +322,19 @@ export default async function ETICPAStudyPage() {
 
                   {/* CTA */}
                   {level.status === 'available' ? (
-                    <Link href="#study-notes"
+                    <Link href="/study/eticpa/atq/level-1"
                       className="inline-flex items-center gap-2 text-sm font-semibold transition-all mt-2"
                       style={{ color: '#1A4731' }}>
-                      Browse study notes
+                      Start Level 1
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                     </Link>
                   ) : (
-                    <span className="text-xs font-semibold text-slate-400 mt-2">Study notes coming soon</span>
+                    <Link href="/study/eticpa/atq/level-2"
+                      className="inline-flex items-center gap-2 text-sm font-semibold transition-all mt-2"
+                      style={{ color: '#94a3b8' }}>
+                      Start Level 2
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                    </Link>
                   )}
                 </div>
               </div>
@@ -360,12 +365,20 @@ export default async function ETICPAStudyPage() {
               </div>
               <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-between flex-wrap gap-4">
                 <p className="text-sm text-slate-500">ETICPA is finalising the full CPA syllabus. We will publish complete study notes as soon as the official papers are confirmed.</p>
+                <div className="flex items-center gap-4 flex-wrap">
+                <Link href="/study/eticpa/cpa"
+                  className="inline-flex items-center gap-2 text-sm font-semibold shrink-0"
+                  style={{ color: '#1A4731' }}>
+                  View CPA page
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                </Link>
                 <a href="https://www.eticpa.et/our-qualifications/" target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-sm font-semibold shrink-0"
                   style={{ color: '#1A4731' }}>
                   View on ETICPA website
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
                 </a>
+                </div>
               </div>
             </div>
           </div>
