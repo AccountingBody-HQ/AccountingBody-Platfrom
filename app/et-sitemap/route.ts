@@ -48,6 +48,21 @@ export async function GET() {
     // Study
     url('/study',                                  0.8,  'weekly'),
     url('/study/eticpa',                           0.85, 'weekly'),
+    // ETICPA ATQ Level 1
+    url('/study/eticpa/atq/level-1',                              0.85, 'weekly'),
+    url('/study/eticpa/atq/level-1/introduction-to-accounting',   0.85, 'weekly'),
+    url('/study/eticpa/atq/level-1/cost-accounting',              0.85, 'weekly'),
+    url('/study/eticpa/atq/level-1/business-skills',              0.85, 'weekly'),
+    url('/study/eticpa/atq/level-1/ethiopian-business-law',       0.85, 'weekly'),
+    // ETICPA ATQ Level 2
+    url('/study/eticpa/atq/level-2',                                      0.85, 'weekly'),
+    url('/study/eticpa/atq/level-2/financial-accounting',                 0.85, 'weekly'),
+    url('/study/eticpa/atq/level-2/management-accounting',                0.85, 'weekly'),
+    url('/study/eticpa/atq/level-2/assurance-controls-ethics',            0.85, 'weekly'),
+    url('/study/eticpa/atq/level-2/ethiopian-taxation',                   0.85, 'weekly'),
+    url('/study/eticpa/atq/level-2/ethiopian-public-sector-accounting',   0.85, 'weekly'),
+    // ETICPA CPA
+    url('/study/eticpa/cpa',                       0.8,  'monthly'),
     url('/study/acca',                             0.8,  'weekly'),
     url('/study/cima',                             0.8,  'weekly'),
     url('/study/aat',                              0.8,  'weekly'),
