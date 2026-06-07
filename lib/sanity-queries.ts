@@ -222,7 +222,7 @@ export async function getETICPAArticles(): Promise<ArticleSummary[]> {
 }
 
 export async function getETICPAModuleArticles(level: string, module: string): Promise<ArticleSummary[]> {
-  const query = `*[_type == "article" && canonicalOwner == "ethiotax" && eticpaLevel == $level && eticpaModule == $module] | order(title asc) {
+  const query = `*[_type == "article" && "ethiotax" in showOnSites && eticpaLevel == $level && eticpaModule == $module] | order(title asc) {
     ${SUMMARY_FIELDS}
   }`
   return (await sanityFetch<ArticleSummary[]>(query, { level, module })) ?? []
