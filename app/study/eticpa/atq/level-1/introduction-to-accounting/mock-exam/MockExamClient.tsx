@@ -58,6 +58,16 @@ export default function MockExamClient({ level, module, moduleName, backHref }: 
   }, [phase, secondsLeft])
 
   const answered = Object.keys(answers).length
+  const handleSubmit = () => {
+    const unanswered = questions.length - answered
+    if (unanswered > 0) {
+      const ok = window.confirm(
+        `You have ${unanswered} unanswered question${unanswered === 1 ? '' : 's'}. Unanswered questions are marked incorrect. Submit anyway?`
+      )
+      if (!ok) return
+    }
+    setPhase('results')
+  }
   const score = questions.reduce((acc, q, i) => acc + (answers[i] === q.correctIndex ? 1 : 0), 0)
   const pct = questions.length ? Math.round((score / questions.length) * 100) : 0
   const mins = Math.floor(secondsLeft / 60)
@@ -202,9 +212,16 @@ export default function MockExamClient({ level, module, moduleName, backHref }: 
           <button onClick={() => setCurrent(c => Math.min(questions.length - 1, c + 1))}
             className="h-11 px-5 rounded-lg text-sm font-semibold transition-colors" style={{ backgroundColor: GREEN, color: 'white' }}>Next →</button>
         ) : (
-          <button onClick={() => setPhase('results')}
+          <button onClick={handleSubmit}
             className="h-11 px-5 rounded-lg text-sm font-semibold transition-colors" style={{ backgroundColor: GOLD, color: GREEN }}>Submit Exam</button>
         )}
+      </div>
+      {/* Always-available submit */}
+      <div className="mt-4 text-center">
+        <button onClick={handleSubmit}
+          className="h-11 px-6 rounded-lg text-sm font-semibold border-2 transition-colors"
+          style={{ borderColor: GOLD, color: GREEN }}>Finish &amp; submit exam</button>
+        <p className="text-xs text-slate-400 mt-2">{answered} of {questions.length} answered — you can submit at any time.</p>
       </div>
 
       {/* Question grid */}
