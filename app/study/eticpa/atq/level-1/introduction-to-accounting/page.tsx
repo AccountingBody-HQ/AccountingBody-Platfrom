@@ -20,13 +20,6 @@ const MODULE = {
     'Produce basic financial statements including the income statement and balance sheet',
     'Apply key accounting concepts and standards to practical scenarios',
   ],
-  topics: [
-    { name: 'The Accounting Equation', slug: 'the-accounting-equation' },
-    { name: 'Double Entry Bookkeeping', slug: 'double-entry-bookkeeping' },
-    { name: 'The Trial Balance', slug: 'the-trial-balance' },
-    { name: 'Financial Statements', slug: 'financial-statements' },
-    { name: 'Accounting Concepts & Standards', slug: 'accounting-concepts-and-standards' },
-  ],
   nextModule: { name: 'Cost Accounting', href: '/study/eticpa/atq/level-1/cost-accounting' },
 }
 
@@ -133,25 +126,6 @@ export default async function IntroductionToAccountingPage() {
                 ))}
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* TOPICS */}
-      <section id="topics" className="section bg-slate-50 border-t border-slate-100">
-        <div className="container-site">
-          <div className="max-w-2xl mb-12">
-            <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>Syllabus</span>
-            <h2 className="section-title mb-4">Core topics in this module</h2>
-            <p className="text-slate-500 text-lg leading-relaxed">Five core topics make up Introduction to Accounting, progressing from foundational concepts to full financial statement preparation.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {MODULE.topics.map((topic, i) => (
-              <div key={topic.slug} className="flex items-center gap-4 p-5 rounded-xl bg-white border border-slate-200">
-                <span className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 text-white" style={{ backgroundColor: '#1A4731' }}>{i + 1}</span>
-                <p className="text-sm font-semibold text-navy-950">{topic.name}</p>
-              </div>
-            ))}
           </div>
         </div>
       </section>
