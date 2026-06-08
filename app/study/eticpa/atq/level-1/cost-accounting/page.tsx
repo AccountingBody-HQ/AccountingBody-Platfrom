@@ -207,7 +207,7 @@ export default async function CostAccountingPage() {
               Start Mock Exam
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
             </Link>
-            <p className="text-white/40 text-xs mt-4">Questions are added automatically as new practice sets are published.</p>
+            <p className="text-white/40 text-xs mt-4 text-center">Questions are added automatically as new practice sets are published.</p>
           </div>
         </div>
       </section>
