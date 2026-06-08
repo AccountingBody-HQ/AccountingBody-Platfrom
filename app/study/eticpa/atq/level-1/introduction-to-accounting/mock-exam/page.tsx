@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
-import MockExamClient from './MockExamClient'
+import MockExamClient from '@/components/course/MockExamClient'
 
 export const dynamic = 'force-dynamic'
 
