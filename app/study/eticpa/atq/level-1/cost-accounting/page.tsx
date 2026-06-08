@@ -35,7 +35,7 @@ export default async function CostAccountingPage() {
   ])
 
   const totalArticles = articles.length
-  // totalQuestions placeholder removed
+  const totalQuestions = 706
 
   return (
     <div>
@@ -187,11 +187,11 @@ export default async function CostAccountingPage() {
             <span className="inline-block text-xs font-bold px-3 py-1.5 rounded-md mb-6" style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>Practice & Assessment</span>
             <h2 className="font-display text-white text-3xl md:text-4xl mb-6" style={{ letterSpacing: '-0.02em' }}>Test your knowledge</h2>
             <p className="text-white/70 text-lg leading-relaxed mb-10">
-              Mock exams for Cost Accounting are coming soon. Practice questions are being prepared and will appear here automatically once published.
+              Take a 50-question mock exam drawn randomly from our bank of {totalQuestions}+ practice questions — balanced across all topics. Every attempt gives you a fresh set of questions.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
               {[
-                { value: 'Soon', label: 'Questions in pool' },
+                { value: `${totalQuestions}+`, label: 'Questions in pool' },
                 { value: '50', label: 'Questions per exam' },
                 { value: '∞', label: 'Unique attempts' },
               ].map(stat => (
@@ -201,10 +201,12 @@ export default async function CostAccountingPage() {
                 </div>
               ))}
             </div>
-            <div className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold opacity-50 cursor-not-allowed"
+            <Link href="/study/eticpa/atq/level-1/cost-accounting/mock-exam"
+              className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors"
               style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '48px', width: '220px', boxSizing: 'border-box' }}>
-              Coming Soon
-            </div>
+              Start Mock Exam
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </Link>
             <p className="text-white/40 text-xs mt-4">Questions are added automatically as new practice sets are published.</p>
           </div>
         </div>
