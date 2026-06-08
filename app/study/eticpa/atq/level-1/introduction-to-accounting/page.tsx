@@ -113,7 +113,7 @@ export default async function IntroductionToAccountingPage() {
               {MODULE.description}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/study/courses/eticpa-atq-l1-introduction-to-accounting/lessons/eticpa-atq-l1-introduction-to-accounting-ch1-l1"
+              <Link href="/free-courses/eticpa-atq-l1-introduction-to-accounting"
                 className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors"
                 style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '48px', width: '220px', boxSizing: 'border-box' }}>
                 Start Course
