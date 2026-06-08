@@ -28,7 +28,7 @@ export default function MockExamClient({ level, module, moduleName, backHref }: 
   const [current, setCurrent] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [poolTotal, setPoolTotal] = useState(0)
+  // poolTotal removed
   const [secondsLeft, setSecondsLeft] = useState(50 * 90) // 90s per question
   const [reviewIdx, setReviewIdx] = useState<number | null>(null)
 
@@ -39,7 +39,7 @@ export default function MockExamClient({ level, module, moduleName, backHref }: 
       const data = await res.json()
       if (data.error || !data.questions?.length) { setError(data.error || 'No questions available yet.'); setLoading(false); return }
       setQuestions(data.questions)
-      setPoolTotal(data.poolTotal || 0)
+      // poolTotal not needed
       setAnswers({})
       setCurrent(0)
       setSecondsLeft(Math.min(data.questions.length, 50) * 90)

@@ -1,6 +1,4 @@
 // app/api/eticpa/mock-exam/route.ts
-// ETICPA Mock Exam — pulls all practice questions tagged to a module,
-// balances selection across topics, returns a fresh randomised set.
 import { NextRequest, NextResponse } from 'next/server'
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
@@ -33,12 +31,12 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export async function GET(req: NextRequest) {
-  const level  = req.nextUrl.searchParams.get('level')  ?? 'level-1'
-  const module = req.nextUrl.searchParams.get('module') ?? 'introduction-to-accounting'
-  const count  = parseInt(req.nextUrl.searchParams.get('count') ?? '50', 10)
+  const level      = req.nextUrl.searchParams.get('level')      ?? 'level-1'
+  const moduleSlug = req.nextUrl.searchParams.get('module')     ?? 'introduction-to-accounting'
+  const count      = parseInt(req.nextUrl.searchParams.get('count') ?? '50', 10)
 
   const query = encodeURIComponent(`
-    *[_type == "practicePost" && eticpaLevel == "${level}" && eticpaModule == "${module}" && "ethiotax" in showOnSites]{
+    *[_type == "practicePost" && eticpaLevel == "${level}" && eticpaModule == "${moduleSlug}" && "ethiotax" in showOnSites]{
       title,
       "questions": quizQuestions[]{ questionText, options, correctIndex, explanation, difficulty, primaryTopic }
     }
@@ -53,7 +51,6 @@ export async function GET(req: NextRequest) {
     const data = await res.json()
     const posts: { title: string; questions: (QuizQuestion & { primaryTopic?: string })[] }[] = data.result ?? []
 
-    // Group questions by source post (each post = one topic group)
     const groups: PoolQuestion[][] = []
     let poolTotal = 0
     for (const post of posts) {
@@ -73,7 +70,6 @@ export async function GET(req: NextRequest) {
 
     if (poolTotal === 0) return NextResponse.json({ questions: [], poolTotal: 0 })
 
-    // Balanced round-robin selection across topic groups
     const selected: PoolQuestion[] = []
     const target = Math.min(count, poolTotal)
     let idx = 0
