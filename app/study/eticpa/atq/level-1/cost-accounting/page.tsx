@@ -42,7 +42,7 @@ export default async function CostAccountingPage() {
   ])
 
   const totalArticles = articles.length
-  const totalQuestions = 0
+  // totalQuestions placeholder removed
 
   return (
     <div>
