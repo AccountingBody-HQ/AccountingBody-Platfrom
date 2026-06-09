@@ -68,6 +68,7 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
     page: {
       width:  TOTAL_W,
       height: TOTAL_H,
+      fontFamily: "BookSans",
       backgroundColor: NAVY,
       padding: 0,
       margin: 0,
