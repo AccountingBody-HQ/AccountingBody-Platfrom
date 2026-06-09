@@ -138,7 +138,7 @@ function SkeletonCard() {
   )
 }
 
-function SearchInner() {
+function SearchInner({ isEthioTax }: { isEthioTax: boolean }) {
   const router       = useRouter()
   const searchParams = useSearchParams()
 
@@ -147,11 +147,6 @@ function SearchInner() {
   const [results,    setResults]    = useState<SearchResult[]>([])
   const [loading,    setLoading]    = useState(false)
   const [searched,   setSearched]   = useState(false)
-  const [isEthioTax, setIsEthioTax] = useState(false)
-  useEffect(() => {
-    const cookie = document.cookie.split('; ').find(r => r.startsWith('x-et-platform='))
-    setIsEthioTax(cookie?.split('=')[1] === 'ethiotax')
-  }, [])
   const POPULAR_SEARCHES = isEthioTax ? ET_POPULAR_SEARCHES : AB_POPULAR_SEARCHES
   const debounceRef                 = useRef<ReturnType<typeof setTimeout>>()
   const inputRef                    = useRef<HTMLInputElement>(null)
@@ -335,7 +330,10 @@ function SearchInner() {
   )
 }
 
-export default function SearchPage() {
+export default async function SearchPage() {
+  const { headers } = await import('next/headers')
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
   return (
     <Suspense fallback={
       <div className="bg-navy-950 min-h-screen flex items-center justify-center">
@@ -345,7 +343,7 @@ export default function SearchPage() {
         </svg>
       </div>
     }>
-      <SearchInner />
+      <SearchInner isEthioTax={isEthioTax} />
     </Suspense>
   )
 }
