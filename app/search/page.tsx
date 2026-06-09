@@ -138,7 +138,12 @@ function SkeletonCard() {
   )
 }
 
-function SearchInner({ isEthioTax }: { isEthioTax: boolean }) {
+function SearchInner() {
+  const [isEthioTax, setIsEthioTax] = useState(false)
+  useEffect(() => {
+    const cookie = document.cookie.split('; ').find(r => r.startsWith('x-et-platform='))
+    setIsEthioTax(cookie?.split('=')[1] === 'ethiotax')
+  }, [])
   const router       = useRouter()
   const searchParams = useSearchParams()
 
@@ -330,10 +335,7 @@ function SearchInner({ isEthioTax }: { isEthioTax: boolean }) {
   )
 }
 
-export default async function SearchPage() {
-  const { headers } = await import('next/headers')
-  const headersList = await headers()
-  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+export default function SearchPage() {
   return (
     <Suspense fallback={
       <div className="bg-navy-950 min-h-screen flex items-center justify-center">
@@ -343,7 +345,7 @@ export default async function SearchPage() {
         </svg>
       </div>
     }>
-      <SearchInner isEthioTax={isEthioTax} />
+      <SearchInner />
     </Suspense>
   )
 }
