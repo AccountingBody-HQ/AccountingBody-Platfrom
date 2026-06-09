@@ -53,10 +53,12 @@ const CPA_STATUS = {
 }
 
 const SUBJECT_AREAS = [
+  // Level 1 — Foundation Technician
   {
-    name: 'Financial Accounting',
-    description: 'Financial statements, double-entry bookkeeping, accounting standards and reporting under Ethiopian GAAP.',
-    slug: 'financial-accounting',
+    name: 'Introduction to Accounting',
+    description: 'Principles of double-entry bookkeeping, the accounting equation and preparation of basic financial statements.',
+    href: '/study/eticpa/atq/level-1/introduction-to-accounting',
+    level: 'ATQ Level 1',
     icon: (
       <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
         <rect x="8" y="6" width="24" height="36" rx="3" stroke="#1A4731" strokeWidth="2"/>
@@ -67,45 +69,10 @@ const SUBJECT_AREAS = [
     ),
   },
   {
-    name: 'Ethiopian Taxation',
-    description: 'ERCA requirements, income tax, VAT, customs duty and tax compliance for individuals and businesses in Ethiopia.',
-    slug: 'taxation',
-    icon: (
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
-        <rect x="10" y="8" width="28" height="32" rx="3" stroke="#1A4731" strokeWidth="2"/>
-        <path d="M17 18h14M17 24h14M17 30h8" stroke="#1A4731" strokeWidth="1.5" strokeLinecap="round"/>
-        <circle cx="35" cy="13" r="6" fill="#1A4731"/>
-        <path d="M32 13h6M35 10v6" stroke="#C9982A" strokeWidth="1.5" strokeLinecap="round"/>
-      </svg>
-    ),
-  },
-  {
-    name: 'Audit & Assurance',
-    description: 'Audit procedures, internal controls, risk assessment and ETICPA-standard assurance for Ethiopian entities.',
-    slug: 'audit-assurance',
-    icon: (
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
-        <circle cx="22" cy="22" r="12" stroke="#1A4731" strokeWidth="2"/>
-        <path d="M30 30l8 8" stroke="#1A4731" strokeWidth="2.5" strokeLinecap="round"/>
-        <path d="M17 22l3 3 6-6" stroke="#C9982A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-  },
-  {
-    name: 'Financial Management',
-    description: 'Investment appraisal, working capital, corporate finance and financial decision-making for Ethiopian businesses.',
-    slug: 'financial-management',
-    icon: (
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
-        <path d="M8 36l9-10 6 6 10-14 7 7" stroke="#C9982A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M8 14v22h32" stroke="#1A4731" strokeWidth="2" strokeLinecap="round"/>
-      </svg>
-    ),
-  },
-  {
-    name: 'Management Accounting',
-    description: 'Budgeting, cost analysis, performance measurement and management reporting for Ethiopian organisations.',
-    slug: 'management-accounting',
+    name: 'Cost Accounting',
+    description: 'Cost classification, costing methods and how cost information supports business decision-making.',
+    href: '/study/eticpa/atq/level-1/cost-accounting',
+    level: 'ATQ Level 1',
     icon: (
       <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
         <rect x="8" y="28" width="8" height="12" rx="1.5" fill="#f0f7f4" stroke="#1A4731" strokeWidth="1.5"/>
@@ -116,14 +83,96 @@ const SUBJECT_AREAS = [
     ),
   },
   {
-    name: 'Business Law & Ethics',
-    description: 'Ethiopian commercial law, corporate governance, professional ethics and regulatory compliance.',
-    slug: 'business-management',
+    name: 'Business Skills',
+    description: 'Professional communication, workplace competencies and the skills required in a modern finance function.',
+    href: '/study/eticpa/atq/level-1/business-skills',
+    level: 'ATQ Level 1',
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
+        <circle cx="24" cy="16" r="7" stroke="#1A4731" strokeWidth="2"/>
+        <path d="M10 38c0-7.732 6.268-14 14-14s14 6.268 14 14" stroke="#1A4731" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M20 28l4 4 4-4" stroke="#C9982A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+  },
+  {
+    name: 'Ethiopian Business Law',
+    description: 'Ethiopian commercial law, contract law, business organisations and the legal framework governing financial practice.',
+    href: '/study/eticpa/atq/level-1/ethiopian-business-law',
+    level: 'ATQ Level 1',
     icon: (
       <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
         <rect x="16" y="24" width="16" height="16" rx="2" stroke="#1A4731" strokeWidth="2"/>
         <circle cx="24" cy="16" r="6" stroke="#1A4731" strokeWidth="2"/>
         <path d="M24 24v-2" stroke="#C9982A" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  // Level 2 — Advanced Technician
+  {
+    name: 'Financial Accounting',
+    description: 'Preparation of financial statements under Ethiopian GAAP, accounting standards and financial reporting requirements.',
+    href: '/study/eticpa/atq/level-2/financial-accounting',
+    level: 'ATQ Level 2',
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
+        <path d="M8 36l9-10 6 6 10-14 7 7" stroke="#C9982A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M8 14v22h32" stroke="#1A4731" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  {
+    name: 'Management Accounting',
+    description: 'Budgeting, variance analysis, performance measurement and management reporting for organisations.',
+    href: '/study/eticpa/atq/level-2/management-accounting',
+    level: 'ATQ Level 2',
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
+        <rect x="10" y="8" width="28" height="32" rx="3" stroke="#1A4731" strokeWidth="2"/>
+        <path d="M17 18h14M17 24h14M17 30h8" stroke="#1A4731" strokeWidth="1.5" strokeLinecap="round"/>
+        <circle cx="35" cy="13" r="6" fill="#1A4731"/>
+        <path d="M32 13h6M35 10v6" stroke="#C9982A" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  {
+    name: 'Assurance, Controls & Ethics',
+    description: 'Internal controls, audit procedures, professional ethics and the assurance framework for Ethiopian entities.',
+    href: '/study/eticpa/atq/level-2/assurance-controls-ethics',
+    level: 'ATQ Level 2',
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
+        <circle cx="22" cy="22" r="12" stroke="#1A4731" strokeWidth="2"/>
+        <path d="M30 30l8 8" stroke="#1A4731" strokeWidth="2.5" strokeLinecap="round"/>
+        <path d="M17 22l3 3 6-6" stroke="#C9982A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+  },
+  {
+    name: 'Ethiopian Taxation',
+    description: 'ERCA requirements, income tax, VAT, customs duty and tax compliance for individuals and businesses in Ethiopia.',
+    href: '/study/eticpa/atq/level-2/ethiopian-taxation',
+    level: 'ATQ Level 2',
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
+        <rect x="8" y="6" width="24" height="36" rx="3" stroke="#1A4731" strokeWidth="2"/>
+        <path d="M14 20h12M14 26h12M14 32h8" stroke="#C9982A" strokeWidth="2" strokeLinecap="round"/>
+        <path d="M28 6v8h8" stroke="#1A4731" strokeWidth="2" strokeLinejoin="round"/>
+        <rect x="28" y="14" width="12" height="16" rx="2" fill="#f0f7f4" stroke="#1A4731" strokeWidth="1.5"/>
+      </svg>
+    ),
+  },
+  {
+    name: 'Ethiopian Public Sector Accounting',
+    description: 'Government accounting standards, public financial management and reporting for public sector entities.',
+    href: '/study/eticpa/atq/level-2/ethiopian-public-sector-accounting',
+    level: 'ATQ Level 2',
+    icon: (
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
+        <rect x="6" y="22" width="36" height="20" rx="2" stroke="#1A4731" strokeWidth="2"/>
+        <path d="M24 8l18 14H6L24 8z" stroke="#1A4731" strokeWidth="2" strokeLinejoin="round"/>
+        <rect x="18" y="30" width="12" height="12" rx="1" stroke="#C9982A" strokeWidth="1.5"/>
+        <path d="M24 30v12" stroke="#C9982A" strokeWidth="1.5"/>
       </svg>
     ),
   },
@@ -426,13 +475,15 @@ export default async function ETICPAStudyPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {SUBJECT_AREAS.map(area => (
-              <Link key={area.slug} href={`/study/${area.slug}`}
+              <Link key={area.href} href={area.href}
                 className="group flex items-start gap-5 p-6 rounded-xl border border-slate-200 bg-white transition-all duration-200 hover:shadow-lg hover:border-[#C9982A]">
                 <div className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 transition-all"
                   style={{ backgroundColor: '#f0f7f4', border: '1px solid #d1e8db' }}>
                   {area.icon}
                 </div>
                 <div className="flex-1 min-w-0">
+                  <span className="inline-block text-xs font-bold px-2 py-0.5 rounded mb-1.5"
+                    style={{ backgroundColor: '#f0f7f4', color: '#1A4731' }}>{area.level}</span>
                   <h3 className="font-display text-base text-navy-950 group-hover:text-[#1A4731] transition-colors leading-snug mb-1">{area.name}</h3>
                   <p className="text-xs text-slate-500 leading-relaxed mb-2">{area.description}</p>
                   <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#1A4731]">

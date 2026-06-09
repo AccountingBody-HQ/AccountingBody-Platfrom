@@ -215,7 +215,7 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
 }
 
 export async function getETICPAArticles(): Promise<ArticleSummary[]> {
-  const query = `*[_type == "article" && canonicalOwner == "ethiotax"] | order(title asc) {
+  const query = `*[_type == "article" && "ethiotax" in showOnSites] | order(_createdAt desc)[0...8] {
     ${SUMMARY_FIELDS}
   }`
   return (await sanityFetch<ArticleSummary[]>(query, {})) ?? []
