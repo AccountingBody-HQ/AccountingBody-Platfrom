@@ -23,7 +23,7 @@ const MODULE = {
 }
 
 const COURSE_SLUG = 'eticpa-atq-level-2-management-accounting'
-const totalQuestions = 437
+const totalQuestions = 3000
 
 export default async function ManagementAccountingPage() {
   const headersList = await headers()

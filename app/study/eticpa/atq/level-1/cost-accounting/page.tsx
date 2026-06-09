@@ -35,7 +35,7 @@ export default async function CostAccountingPage() {
   ])
 
   const totalArticles = articles.length
-  const totalQuestions = 706
+  const totalQuestions = 3000
 
   return (
     <div>

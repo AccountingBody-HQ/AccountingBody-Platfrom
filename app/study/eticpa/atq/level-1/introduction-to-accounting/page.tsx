@@ -34,7 +34,7 @@ export default async function IntroductionToAccountingPage() {
   ])
 
   const totalArticles = articles.length
-  const totalQuestions = 775
+  const totalQuestions = 3000
 
   return (
     <div>

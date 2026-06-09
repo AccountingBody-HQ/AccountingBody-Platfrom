@@ -24,7 +24,7 @@ const MODULE = {
 }
 
 const COURSE_SLUG = 'eticpa-atq-level-2-assurance-controls-ethics'
-const totalQuestions = 390
+const totalQuestions = 3000
 
 export default async function AssuranceControlsEthicsPage() {
   const headersList = await headers()
