@@ -191,6 +191,16 @@ function hasText(raw: string): boolean {
   return raw.replace(/[\s ​‌‍﻿]/g, "").length > 0
 }
 
+// ── Title de-duplication ─────────────────────────────────────────────────────
+// Chapter, lesson and article titles are often identical in the CMS.
+// Printing all three creates a triple heading. Compare normalised titles
+// and suppress lower-level titles that repeat a higher-level one.
+function sameTitle(a?: string, b?: string): boolean {
+  const norm = (t?: string) => sanitise(t || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
+  const na = norm(a)
+  return na !== "" && na === norm(b)
+}
+
 // ── Span renderer ─────────────────────────────────────────────────────────────
 // Renders children spans from a Sanity block with bold/italic support.
 // Each span is wrapped in its own <Text> to avoid React PDF inline flow issues.
@@ -479,7 +489,7 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
           {/* Lessons */}
           {(ch.lessons || []).map((ls: any, li: number) => (
             <View key={ls._id || li}>
-              {(!showNotes || !ls.linkedArticles || ls.linkedArticles.length === 0) && (
+              {(!showNotes || !ls.linkedArticles || ls.linkedArticles.length === 0) && !sameTitle(ls.title, ch.chapterTitle) && (
                 <Text style={s.lessonTitle}>{sanitise(ls.title)}</Text>
               )}
               {/* Study Notes */}
@@ -494,12 +504,12 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
                   <View key={art._id || ai}>
                     {ai === 0 ? (
                       <View wrap={false} minPresenceAhead={150}>
-                        <Text style={s.lessonTitle}>{sanitise(ls.title)}</Text>
-                        <Text style={s.articleTitle}>{sanitise(art.title)}</Text>
+                        {sameTitle(ls.title, ch.chapterTitle) ? null : <Text style={s.lessonTitle}>{sanitise(ls.title)}</Text>}
+                        {sameTitle(art.title, ls.title) || sameTitle(art.title, ch.chapterTitle) ? null : <Text style={s.articleTitle}>{sanitise(art.title)}</Text>}
                         {renderFirstBlock(art.body || [])}
                       </View>
                     ) : (
-                      <Text style={s.articleTitle}>{sanitise(art.title)}</Text>
+                      sameTitle(art.title, ls.title) || sameTitle(art.title, ch.chapterTitle) ? null : <Text style={s.articleTitle}>{sanitise(art.title)}</Text>
                     )}
                     {bodyToRender && bodyToRender.length > 0
                       ? renderBlocks(bodyToRender)
