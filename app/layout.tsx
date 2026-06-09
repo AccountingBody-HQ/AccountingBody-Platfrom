@@ -89,7 +89,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <html lang="en-GB" className="scroll-smooth">
         <head>
           {process.env.NEXT_PUBLIC_ADSENSE_ID && (
+            <>
             <meta name="google-adsense-account" content={process.env.NEXT_PUBLIC_ADSENSE_ID} />
+            <script
+              async
+              src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_ID}`}
+              crossOrigin="anonymous"
+            />
+            </>
           )}
           <link rel="dns-prefetch" href="//fonts.googleapis.com" />
           <link rel="dns-prefetch" href="//fonts.gstatic.com" />
