@@ -30,10 +30,13 @@ const FILTERS: { id: ContentType; label: string }[] = [
   { id: 'dictionaryTerm', label: 'Glossary'           },
 ]
 
-const POPULAR_SEARCHES = [
-  'ETICPA ATQ', 'double entry', 'VAT Ethiopia',
-  'income tax', 'financial statements', 'cost accounting',
-  'trial balance', 'ERCA', 'audit',
+const ET_POPULAR_SEARCHES = [
+  'ETICPA ATQ', 'VAT Ethiopia', 'income tax',
+  'trial balance', 'cost accounting', 'ERCA', 'audit',
+]
+const AB_POPULAR_SEARCHES = [
+  'double entry', 'financial statements', 'cash flow',
+  'ratio analysis', 'depreciation', 'trial balance', 'audit',
 ]
 
 function getUrl(r: SearchResult): string {
@@ -144,6 +147,11 @@ function SearchInner() {
   const [results,    setResults]    = useState<SearchResult[]>([])
   const [loading,    setLoading]    = useState(false)
   const [searched,   setSearched]   = useState(false)
+  const [isEthioTax, setIsEthioTax] = useState(false)
+  useEffect(() => {
+    setIsEthioTax(window.location.hostname.includes('ethiotax'))
+  }, [])
+  const POPULAR_SEARCHES = isEthioTax ? ET_POPULAR_SEARCHES : AB_POPULAR_SEARCHES
   const debounceRef                 = useRef<ReturnType<typeof setTimeout>>()
   const inputRef                    = useRef<HTMLInputElement>(null)
 
