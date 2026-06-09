@@ -149,7 +149,8 @@ function SearchInner() {
   const [searched,   setSearched]   = useState(false)
   const [isEthioTax, setIsEthioTax] = useState(false)
   useEffect(() => {
-    setIsEthioTax(window.location.hostname.includes('ethiotax'))
+    const cookie = document.cookie.split('; ').find(r => r.startsWith('x-et-platform='))
+    setIsEthioTax(cookie?.split('=')[1] === 'ethiotax')
   }, [])
   const POPULAR_SEARCHES = isEthioTax ? ET_POPULAR_SEARCHES : AB_POPULAR_SEARCHES
   const debounceRef                 = useRef<ReturnType<typeof setTimeout>>()
