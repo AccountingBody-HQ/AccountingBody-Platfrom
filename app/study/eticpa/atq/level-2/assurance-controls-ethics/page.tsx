@@ -2,79 +2,39 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { getETICPAModuleArticles } from '@/lib/sanity-queries'
-import type { ArticleSummary } from '@/lib/sanity-queries'
+import { getCourseBySlug } from '@/lib/coursesNew'
 
 export const revalidate = 3600
 
 const MODULE = {
   level: 'level-2',
-  levelLabel: 'Level 2 — Advanced Technician',
   slug: 'assurance-controls-ethics',
   name: 'Assurance, Controls & Ethics',
-  description: 'Build the professional integrity and assurance expertise that defines a trusted finance professional. This module covers internal controls, audit procedures, professional ethics, risk assessment and assurance engagements — the disciplines that protect organisations and uphold public trust in Ethiopian finance.',
+  description: 'Understand the external audit process from acceptance to reporting. Evaluate internal control systems, apply professional ethics, and develop the audit judgement required for the ETICPA ATQ Level 2 qualification.',
   outcomes: [
-    'Design and evaluate internal control systems for Ethiopian organisations',
-    'Apply audit procedures to assess the reliability of financial information',
-    'Demonstrate professional ethics and integrity in all finance activities',
-    'Identify and assess risks within an organisational context',
-    'Plan and execute assurance engagements in accordance with professional standards',
+    'Explain the purpose of external audit and the regulatory framework governing auditors',
+    'Apply professional ethics and independence requirements in practice',
+    'Identify and assess audit risk and plan an audit engagement',
+    'Evaluate internal control systems and identify weaknesses',
+    'Gather and evaluate audit evidence using tests of controls and substantive procedures',
+    'Complete the audit and communicate findings through the auditor\'s report',
   ],
-  topics: [
-    { name: 'Internal Controls', slug: 'internal-controls' },
-    { name: 'Audit Procedures', slug: 'audit-procedures' },
-    { name: 'Professional Ethics', slug: 'professional-ethics' },
-    { name: 'Risk Assessment', slug: 'risk-assessment' },
-    { name: 'Assurance Engagements', slug: 'assurance-engagements' },
-  ],
-  prevModule: {
-    name: 'Management Accounting',
-    href: '/study/eticpa/atq/level-2/management-accounting',
-  },
-  nextModule: {
-    name: 'Ethiopian Taxation',
-    href: '/study/eticpa/atq/level-2/ethiopian-taxation',
-  },
+  prevModule: { name: 'Management Accounting', href: '/study/eticpa/atq/level-2/management-accounting' },
+  nextModule: { name: 'Ethiopian Taxation', href: '/study/eticpa/atq/level-2/ethiopian-taxation' },
 }
 
-function ArticleCard({ article }: { article: ArticleSummary }) {
-  return (
-    <Link
-      href={`/study/eticpa/${article.slug.current}`}
-      className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
-    >
-      <div className="h-1 bg-[#1A4731]" />
-      <div className="p-6 flex flex-col flex-1">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-[#f0f7f4] text-[#1A4731]">
-            ATQ Level 2
-          </span>
-          {article.readTime && (
-            <span className="text-xs text-slate-400">{article.readTime} min read</span>
-          )}
-        </div>
-        <h3 className="font-display text-base text-navy-950 leading-snug mb-3 group-hover:text-[#1A4731] transition-colors flex-1">
-          {article.title}
-        </h3>
-        {article.excerpt && (
-          <p className="text-xs text-slate-500 leading-relaxed mb-4 line-clamp-2">{article.excerpt}</p>
-        )}
-        <span className="flex items-center gap-1.5 text-xs font-semibold text-[#1A4731] group-hover:gap-2.5 transition-all mt-auto">
-          Read note
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </span>
-      </div>
-    </Link>
-  )
-}
+const COURSE_SLUG = 'eticpa-atq-level-2-assurance-controls-ethics'
+const totalQuestions = 390
 
 export default async function AssuranceControlsEthicsPage() {
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
   if (!isEthioTax) redirect('/study')
 
-  const articles = await getETICPAModuleArticles(MODULE.level, MODULE.slug)
+  const [articles, course] = await Promise.all([
+    getETICPAModuleArticles(MODULE.level, MODULE.slug),
+    getCourseBySlug(COURSE_SLUG),
+  ])
 
   return (
     <div>
@@ -99,9 +59,7 @@ export default async function AssuranceControlsEthicsPage() {
           </nav>
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-6">
-              <span className="text-xs font-bold px-3 py-1.5 rounded-md" style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>
-                ATQ Level 2
-              </span>
+              <span className="text-xs font-bold px-3 py-1.5 rounded-md" style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>ATQ Level 2</span>
               <span className="text-xs font-semibold text-white/50">Advanced Technician</span>
             </div>
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.025em' }}>
@@ -111,20 +69,18 @@ export default async function AssuranceControlsEthicsPage() {
                 & Ethics
               </span>
             </h1>
-            <p className="text-white/70 text-xl leading-relaxed max-w-2xl mb-10">
-              {MODULE.description}
-            </p>
+            <p className="text-white/70 text-xl leading-relaxed max-w-2xl mb-10">{MODULE.description}</p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="#study-notes"
+              <Link href={`/free-courses/${COURSE_SLUG}`}
                 className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors"
                 style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '48px', width: '220px', boxSizing: 'border-box' }}>
-                Browse study notes
+                Start Course
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </Link>
-              <Link href="#topics"
+              <Link href="#mock-exam"
                 className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold border-2 border-white/30 text-white hover:border-white/60 transition-colors"
                 style={{ height: '48px', width: '220px', boxSizing: 'border-box' }}>
-                View all topics
+                Take Mock Exam
               </Link>
             </div>
           </div>
@@ -139,7 +95,7 @@ export default async function AssuranceControlsEthicsPage() {
               <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>Module Overview</span>
               <h2 className="section-title mb-6">What this module covers</h2>
               <p className="text-slate-600 text-lg leading-relaxed mb-8">
-                Assurance, Controls & Ethics is the third module of ATQ Level 2. It develops the professional standards and assurance skills that underpin trust in financial reporting — covering everything from internal controls to ethical decision-making.
+                Assurance, Controls & Ethics is the third module of ATQ Level 2. It introduces the external audit process, internal control evaluation, and the professional ethics framework that underpins all assurance work.
               </p>
               <div className="space-y-3">
                 <p className="text-xs font-bold uppercase tracking-wide text-slate-400 mb-4">Learning Outcomes</p>
@@ -160,8 +116,8 @@ export default async function AssuranceControlsEthicsPage() {
                   { label: 'Qualification', value: 'ATQ — Accounting Technician Qualification' },
                   { label: 'Level', value: 'Level 2 — Advanced Technician' },
                   { label: 'Module', value: 'Assurance, Controls & Ethics' },
-                  { label: 'Topics', value: '5 core topics' },
                   { label: 'Study Notes', value: `${articles.length} published` },
+                  { label: 'Mock Exam', value: `${totalQuestions}+ questions` },
                 ].map(item => (
                   <div key={item.label} className="flex justify-between items-center py-3 border-b border-white/60">
                     <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{item.label}</span>
@@ -174,58 +130,83 @@ export default async function AssuranceControlsEthicsPage() {
         </div>
       </section>
 
-      {/* TOPICS */}
-      <section id="topics" className="section bg-slate-50 border-t border-slate-100">
-        <div className="container-site">
-          <div className="max-w-2xl mb-12">
-            <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>Syllabus</span>
-            <h2 className="section-title mb-4">All topics in this module</h2>
-            <p className="text-slate-500 text-lg leading-relaxed">
-              Five core topics make up Assurance, Controls & Ethics. Study notes are published for each topic as they are completed.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {MODULE.topics.map((topic, i) => (
-              <div key={topic.slug} className="flex items-center gap-4 p-5 rounded-xl bg-white border border-slate-200">
-                <span className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 text-white"
-                  style={{ backgroundColor: '#1A4731' }}>
-                  {i + 1}
-                </span>
-                <p className="text-sm font-semibold text-navy-950">{topic.name}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* STUDY NOTES */}
-      <section id="study-notes" className="section bg-white border-t border-slate-100">
-        <div className="container-site">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-12">
-            <div className="max-w-2xl">
-              <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>Study Notes</span>
-              <h2 className="section-title mb-4">Assurance, Controls & Ethics notes</h2>
+      {/* COURSE STRUCTURE */}
+      {course && course.chapters && course.chapters.length > 0 && (
+        <section className="section bg-slate-50 border-t border-slate-100">
+          <div className="container-site">
+            <div className="max-w-2xl mb-12">
+              <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>Course Structure</span>
+              <h2 className="section-title mb-4">How the course is organised</h2>
               <p className="text-slate-500 text-lg leading-relaxed">
-                Professionally written study notes covering every topic in this module — free and built for exam success.
+                The course is structured into {course.chapters.length} units covering the full Assurance, Controls & Ethics syllabus.
               </p>
             </div>
-            <div className="shrink-0 text-right">
-              <p className="font-display text-4xl" style={{ color: '#1A4731' }}>{articles.length}</p>
-              <p className="text-slate-400 text-sm">notes published</p>
-            </div>
-          </div>
-          {articles.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {articles.map((article) => (
-                <ArticleCard key={article._id} article={article} />
+            <div className="space-y-4">
+              {course.chapters.map((chapter: { _key: string; chapterTitle: string; lessons: { _id: string; slug: { current: string }; title: string }[] }) => (
+                <div key={chapter._key} className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                  <div className="px-6 py-4 border-b border-slate-100" style={{ backgroundColor: '#f0f7f4' }}>
+                    <h3 className="font-semibold text-sm" style={{ color: '#1A4731' }}>{chapter.chapterTitle}</h3>
+                  </div>
+                  {chapter.lessons && chapter.lessons.length > 0 && (
+                    <div className="divide-y divide-slate-100">
+                      {chapter.lessons.map((lesson: { _id: string; slug: { current: string }; title: string }, lessonIndex: number) => (
+                        <Link key={lesson._id} href={`/free-courses/${COURSE_SLUG}/learn/${lesson.slug?.current}`}
+                          className="flex items-center gap-4 px-6 py-3.5 hover:bg-slate-50 transition-colors group">
+                          <span className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold shrink-0"
+                            style={{ borderColor: '#1A4731', color: '#1A4731' }}>{lessonIndex + 1}</span>
+                          <span className="text-sm text-slate-700 group-hover:text-[#1A4731] transition-colors">{lesson.title}</span>
+                          <svg className="w-4 h-4 ml-auto text-slate-300 group-hover:text-[#1A4731] transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                          </svg>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
-          ) : (
-            <div className="rounded-2xl p-12 text-center border" style={{ borderColor: '#d1e8db', backgroundColor: '#f0f7f4' }}>
-              <p className="font-display text-xl text-navy-950 mb-2">Study notes coming soon</p>
-              <p className="text-slate-500 text-sm">Use Content Factory to publish notes for this module. They will appear here automatically.</p>
+            <div className="mt-8 text-center">
+              <Link href={`/free-courses/${COURSE_SLUG}`}
+                className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors"
+                style={{ backgroundColor: '#1A4731', color: 'white', height: '48px', width: '220px', boxSizing: 'border-box' }}>
+                Start Course
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+              </Link>
             </div>
-          )}
+          </div>
+        </section>
+      )}
+
+      {/* MOCK EXAM */}
+      <section id="mock-exam" className="section border-t border-slate-100" style={{ backgroundColor: '#1A4731' }}>
+        <div className="container-site">
+          <div className="max-w-2xl mx-auto text-center">
+            <span className="eyebrow mb-3 block" style={{ color: '#C9982A' }}>Mock Exam</span>
+            <h2 className="font-display text-white mb-4" style={{ fontSize: '2rem' }}>Test your knowledge</h2>
+            <p className="text-white/70 text-lg leading-relaxed mb-10">
+              Practice with real exam-style questions drawn from the full Assurance, Controls & Ethics question pool.
+            </p>
+            <div className="grid grid-cols-3 gap-6 mb-10">
+              {[
+                { value: `${totalQuestions}+`, label: 'Questions in pool' },
+                { value: '50', label: 'Per exam attempt' },
+                { value: '\u221e', label: 'Unlimited attempts' },
+              ].map(stat => (
+                <div key={stat.label} className="text-center">
+                  <p className="font-display text-3xl font-bold mb-1" style={{ color: '#C9982A' }}>{stat.value}</p>
+                  <p className="text-white/50 text-xs">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+            <Link href="/study/eticpa/atq/level-2/assurance-controls-ethics/mock-exam"
+              className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors"
+              style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '48px', width: '220px', boxSizing: 'border-box' }}>
+              Start Mock Exam
+            </Link>
+            <p className="text-white/40 text-xs mt-4 text-center mx-auto">
+              Questions are added automatically as new practice sets are published.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -237,12 +218,12 @@ export default async function AssuranceControlsEthicsPage() {
               className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold border-2 transition-colors"
               style={{ borderColor: '#1A4731', color: '#1A4731', height: '48px', width: '220px', boxSizing: 'border-box' }}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" /></svg>
-              {MODULE.prevModule.name}
+              Management Accounting
             </Link>
             <Link href={MODULE.nextModule.href}
               className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors"
               style={{ backgroundColor: '#1A4731', color: 'white', height: '48px', width: '220px', boxSizing: 'border-box' }}>
-              Next: {MODULE.nextModule.name}
+              Ethiopian Taxation
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
             </Link>
           </div>
