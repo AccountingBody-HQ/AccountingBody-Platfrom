@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import ComingSoonExamCard from '@/components/course/ComingSoonExamCard'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 
@@ -471,20 +472,7 @@ export default async function ETICPAStudyPage() {
                 </span>
               </Link>
             ) : (
-              <button key={exam.name}
-                onClick={() => alert('Mock exam coming soon — check back once study content is published for this module.')}
-                className="group flex flex-col p-6 rounded-xl border border-slate-200 bg-white transition-all duration-200 hover:shadow-lg hover:border-slate-300 text-left cursor-pointer">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-md"
-                    style={{ backgroundColor: '#f0f7f4', color: '#1A4731' }}>{exam.level}</span>
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-slate-100 text-slate-400">Coming Soon</span>
-                </div>
-                <h3 className="font-display text-base text-slate-400 leading-snug mb-1">{exam.name}</h3>
-                <p className="text-xs text-slate-400 leading-relaxed mb-4">Study content being prepared</p>
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold mt-auto text-slate-300">
-                  Coming soon
-                </span>
-              </button>
+              <ComingSoonExamCard key={exam.name} name={exam.name} level={exam.level} />
             ))}
           </div>
         </div>
