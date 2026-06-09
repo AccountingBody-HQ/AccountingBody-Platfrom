@@ -1,8 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
-import { getETICPAArticles } from '@/lib/sanity-queries'
-import type { ArticleSummary } from '@/lib/sanity-queries'
 
 export const revalidate = 3600
 
@@ -178,46 +176,25 @@ const SUBJECT_AREAS = [
   },
 ]
 
-function ArticleCard({ article }: { article: ArticleSummary }) {
-  const href = `/study/eticpa/${article.slug.current}`
-  return (
-    <Link
-      href={href}
-      className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
-    >
-      <div className="h-1 bg-[#1A4731]" />
-      <div className="p-6 flex flex-col flex-1">
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-[#f0f7f4] text-[#1A4731]">
-            ATQ Foundation
-          </span>
-          {article.readTime && (
-            <span className="text-xs text-slate-400">{article.readTime} min read</span>
-          )}
-        </div>
-        <h3 className="font-display text-base text-navy-950 leading-snug mb-3 group-hover:text-[#1A4731] transition-colors flex-1">
-          {article.title}
-        </h3>
-        {article.excerpt && (
-          <p className="text-xs text-slate-500 leading-relaxed mb-4 line-clamp-2">{article.excerpt}</p>
-        )}
-        <span className="flex items-center gap-1.5 text-xs font-semibold text-[#1A4731] group-hover:gap-2.5 transition-all mt-auto">
-          Read note
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </span>
-      </div>
-    </Link>
-  )
-}
+
+const MOCK_EXAMS = [
+  // Level 1
+  { name: 'Introduction to Accounting', level: 'ATQ Level 1', live: true,  questions: 718, href: '/study/eticpa/atq/level-1/introduction-to-accounting/mock-exam' },
+  { name: 'Cost Accounting',             level: 'ATQ Level 1', live: true,  questions: 706, href: '/study/eticpa/atq/level-1/cost-accounting/mock-exam' },
+  { name: 'Business Skills',             level: 'ATQ Level 1', live: false, questions: 0,   href: '' },
+  { name: 'Ethiopian Business Law',      level: 'ATQ Level 1', live: false, questions: 0,   href: '' },
+  // Level 2
+  { name: 'Financial Accounting',                  level: 'ATQ Level 2', live: true,  questions: 784, href: '/study/eticpa/atq/level-2/financial-accounting/mock-exam' },
+  { name: 'Management Accounting',                 level: 'ATQ Level 2', live: true,  questions: 437, href: '/study/eticpa/atq/level-2/management-accounting/mock-exam' },
+  { name: 'Assurance, Controls & Ethics',          level: 'ATQ Level 2', live: true,  questions: 390, href: '/study/eticpa/atq/level-2/assurance-controls-ethics/mock-exam' },
+  { name: 'Ethiopian Taxation',                    level: 'ATQ Level 2', live: false, questions: 0,   href: '' },
+  { name: 'Ethiopian Public Sector Accounting',    level: 'ATQ Level 2', live: false, questions: 0,   href: '' },
+]
 
 export default async function ETICPAStudyPage() {
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
   if (!isEthioTax) redirect('/study')
-  const articles = await getETICPAArticles()
-
   return (
     <div>
 
@@ -252,10 +229,10 @@ export default async function ETICPAStudyPage() {
               Study notes, worked examples and exam guides for the CPA and ATQ qualifications — written for Ethiopian finance professionals, wherever you are in the world.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="#study-notes"
+              <Link href="#modules"
                 className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors"
                 style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '48px', minWidth: '220px', boxSizing: 'border-box' }}>
-                Browse study notes
+                Browse modules
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </Link>
               <Link href="#pathways"
@@ -431,46 +408,14 @@ export default async function ETICPAStudyPage() {
         </div>
       </section>
 
-      {/* STUDY NOTES */}
-      <section id="study-notes" className="section bg-white border-t border-slate-100">
-        <div className="container-site">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-12">
-            <div className="max-w-2xl">
-              <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>Study Notes</span>
-              <h2 className="section-title mb-4">Start studying today</h2>
-              <p className="text-slate-500 text-lg leading-relaxed">
-                Professionally written study notes for the ETICPA qualification — free, comprehensive and built for exam success.
-              </p>
-            </div>
-            <div className="shrink-0 text-right">
-              <p className="font-display text-4xl" style={{ color: '#1A4731' }}>{articles.length}</p>
-              <p className="text-slate-400 text-sm">notes published</p>
-            </div>
-          </div>
-
-          {articles.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {articles.map((article) => (
-                <ArticleCard key={article._id} article={article} />
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-2xl p-12 text-center border" style={{ borderColor: '#d1e8db', backgroundColor: '#f0f7f4' }}>
-              <p className="font-display text-xl text-navy-950 mb-2">Study notes being published</p>
-              <p className="text-slate-500 text-sm">New ETICPA study notes are added every week.</p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* SUBJECT AREAS */}
-      <section className="section bg-slate-50 border-t border-slate-100">
+      {/* BROWSE BY SUBJECT */}
+      <section id="modules" className="section bg-white border-t border-slate-100">
         <div className="container-site">
           <div className="max-w-2xl mb-12">
-            <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>Subject Areas</span>
+            <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>ATQ Modules</span>
             <h2 className="section-title mb-4">Browse by subject</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              All ETICPA subject areas — from Ethiopian taxation to financial management. Find exactly what you need for your exam.
+              All 9 ETICPA ATQ modules — select your subject to access study notes, worked examples and exam guides.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -492,6 +437,54 @@ export default async function ETICPAStudyPage() {
                   </span>
                 </div>
               </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* MOCK EXAMS */}
+      <section className="section bg-slate-50 border-t border-slate-100">
+        <div className="container-site">
+          <div className="max-w-2xl mb-12">
+            <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>Practice Exams</span>
+            <h2 className="section-title mb-4">Take a mock exam</h2>
+            <p className="text-slate-500 text-lg leading-relaxed">
+              Test your knowledge with timed mock exams — 50 questions per attempt, drawn from a live question bank. Free and unlimited attempts.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {MOCK_EXAMS.map(exam => exam.live ? (
+              <Link key={exam.href} href={exam.href}
+                className="group flex flex-col p-6 rounded-xl border border-slate-200 bg-white transition-all duration-200 hover:shadow-lg hover:border-[#1A4731]">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-md"
+                    style={{ backgroundColor: '#f0f7f4', color: '#1A4731' }}>{exam.level}</span>
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-md"
+                    style={{ backgroundColor: '#1A4731', color: '#C9982A' }}>Live</span>
+                </div>
+                <h3 className="font-display text-base text-navy-950 group-hover:text-[#1A4731] transition-colors leading-snug mb-1">{exam.name}</h3>
+                <p className="text-xs text-slate-500 leading-relaxed mb-4">{exam.questions}+ questions in pool</p>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold mt-auto"
+                  style={{ color: '#1A4731' }}>
+                  Start mock exam
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                </span>
+              </Link>
+            ) : (
+              <button key={exam.name}
+                onClick={() => alert('Mock exam coming soon — check back once study content is published for this module.')}
+                className="group flex flex-col p-6 rounded-xl border border-slate-200 bg-white transition-all duration-200 hover:shadow-lg hover:border-slate-300 text-left cursor-pointer">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-md"
+                    style={{ backgroundColor: '#f0f7f4', color: '#1A4731' }}>{exam.level}</span>
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-slate-100 text-slate-400">Coming Soon</span>
+                </div>
+                <h3 className="font-display text-base text-slate-400 leading-snug mb-1">{exam.name}</h3>
+                <p className="text-xs text-slate-400 leading-relaxed mb-4">Study content being prepared</p>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold mt-auto text-slate-300">
+                  Coming soon
+                </span>
+              </button>
             ))}
           </div>
         </div>
