@@ -648,7 +648,12 @@ export default async function HomePage() {
 
             {/* Search box */}
             <div className="w-full mb-10">
-              <HeroSearch placeholder={isEthioTax ? "Search tax guides, accounting articles, ETICPA resources…" : "Search study notes, practice questions, glossary…"} />
+              <HeroSearch
+                placeholder={isEthioTax ? "Search tax guides, accounting articles, ETICPA resources…" : "Search study notes, practice questions, glossary…"}
+                popularTerms={isEthioTax
+                  ? ['ETICPA ATQ', 'VAT Ethiopia', 'Income tax', 'Trial balance', 'Cash flow']
+                  : ['ACCA F3', 'Deferred tax', 'CIMA OCS', 'AAT Level 3', 'Cash flow']}
+              />
             </div>
 
             <div className="flex flex-wrap items-center gap-x-8 gap-y-3">

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function HeroSearch({ placeholder = 'Search study notes, practice questions, glossary…' }: { placeholder?: string }) {
+export default function HeroSearch({ placeholder = 'Search study notes, practice questions, glossary…', popularTerms = ['ACCA F3', 'Deferred tax', 'CIMA OCS', 'AAT Level 3', 'Cash flow'] }: { placeholder?: string; popularTerms?: string[] }) {
   const [query, setQuery] = useState('')
   const router = useRouter()
 
@@ -65,7 +65,7 @@ export default function HeroSearch({ placeholder = 'Search study notes, practice
       {/* Popular searches */}
       <div className="flex flex-wrap items-center gap-2 mt-4">
         <span className="text-white/35 text-xs">Popular:</span>
-        {['ACCA F3', 'Deferred tax', 'CIMA OCS', 'AAT Level 3', 'Cash flow'].map(term => (
+        {popularTerms.map(term => (
           <button
             key={term}
             type="button"
