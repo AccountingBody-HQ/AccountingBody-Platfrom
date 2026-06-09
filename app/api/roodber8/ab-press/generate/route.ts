@@ -8,6 +8,9 @@ import React from "react"
 import { BookTemplate } from "@/components/book/BookTemplate"
 import { FullCoverTemplate } from "@/components/book/FullCoverTemplate"
 
+// Vercel Pro: allow up to 300s for large book renders (silently ignored on free plan)
+export const maxDuration = 300
+
 const PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? "4rllejq1"
 const DATASET    = process.env.NEXT_PUBLIC_SANITY_DATASET    ?? "production"
 const BASE_URL   = `https://${PROJECT_ID}.api.sanity.io/v2023-05-03/data/query/${DATASET}`
