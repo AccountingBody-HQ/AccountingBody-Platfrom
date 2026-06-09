@@ -63,10 +63,17 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   const requestHeaders = new Headers(req.headers)
   const forwardedHost = req.headers.get('x-forwarded-host') ?? ''
   const host = req.headers.get('host') ?? ''
-  if (forwardedHost.includes('ethiotax.com') || host.includes('ethiotax.com')) {
+  const isEthioTax = forwardedHost.includes('ethiotax.com') || host.includes('ethiotax.com')
+  if (isEthioTax) {
     requestHeaders.set('x-et-platform', 'ethiotax')
   }
-  return NextResponse.next({ request: { headers: requestHeaders } })
+  const response = NextResponse.next({ request: { headers: requestHeaders } })
+  response.cookies.set('x-et-platform', isEthioTax ? 'ethiotax' : 'accountingbody', {
+    path: '/',
+    sameSite: 'lax',
+    httpOnly: false,
+  })
+  return response
 })
 
 export const config = {
