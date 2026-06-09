@@ -13,14 +13,14 @@ Font.registerHyphenationCallback((word: string) => [word])
 // KDP requires all fonts embedded in the uploaded PDF.
 const FONT_BASE = "https://accountingbody.com/fonts"
 Font.register({
-  family: "Helvetica",
+  family: "BookSans",
   fonts: [
     { src: FONT_BASE + "/LiberationSans-Regular.ttf" },
     { src: FONT_BASE + "/LiberationSans-Italic.ttf", fontStyle: "italic" },
   ],
 })
 Font.register({
-  family: "Helvetica-Bold",
+  family: "BookSans-Bold",
   src: FONT_BASE + "/LiberationSans-Bold.ttf",
 })
 
@@ -99,11 +99,11 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
       paddingHorizontal: BLEED + 28,
     },
     frontBottomPublisher: {
-      fontSize: 11, fontFamily: "Helvetica-Bold",
+      fontSize: 11, fontFamily: "BookSans-Bold",
       color: NAVY, letterSpacing: 0.5,
     },
     frontBottomEdition: {
-      fontSize: 8, fontFamily: "Helvetica",
+      fontSize: 8, fontFamily: "BookSans",
       color: GOLD, letterSpacing: 1,
     },
     frontContent: {
@@ -117,7 +117,7 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
       alignItems: "flex-start",
     },
     monogram: {
-      fontSize: 48, fontFamily: "Helvetica-Bold",
+      fontSize: 48, fontFamily: "BookSans-Bold",
       color: GOLD, lineHeight: 1,
     },
     bookTypePill: {
@@ -125,11 +125,11 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
       paddingHorizontal: 10, paddingVertical: 4, marginTop: 6,
     },
     bookTypeText: {
-      fontSize: 7, fontFamily: "Helvetica-Bold",
+      fontSize: 7, fontFamily: "BookSans-Bold",
       color: GOLD, letterSpacing: 2,
     },
     publisherLine: {
-      fontSize: 8, fontFamily: "Helvetica-Bold",
+      fontSize: 8, fontFamily: "BookSans-Bold",
       color: SILVER, letterSpacing: 3,
       marginTop: 48, marginBottom: 16,
     },
@@ -138,7 +138,7 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
       width: 48, marginBottom: 20,
     },
     titleText: {
-      fontSize: 22, fontFamily: "Helvetica-Bold",
+      fontSize: 22, fontFamily: "BookSans-Bold",
       color: WHITE, lineHeight: 1.25, marginBottom: 24,
     },
     authorRow: {
@@ -149,7 +149,7 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
       width: 20, marginRight: 10,
     },
     authorText: {
-      fontSize: 8, fontFamily: "Helvetica",
+      fontSize: 8, fontFamily: "BookSans",
       color: SILVER, letterSpacing: 1,
     },
     // ── SPINE ────────────────────────────────────────────────────────────────
@@ -194,7 +194,7 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
     },
     spineTitle: {
       fontSize: 7,
-      fontFamily: "Helvetica-Bold",
+      fontFamily: "BookSans-Bold",
       color: WHITE,
       letterSpacing: 0.5,
       flex: 1,
@@ -202,7 +202,7 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
     },
     spinePublisher: {
       fontSize: 6,
-      fontFamily: "Helvetica",
+      fontFamily: "BookSans",
       color: GOLD,
       letterSpacing: 1,
     },
@@ -231,11 +231,11 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
       paddingHorizontal: BLEED + 28,
     },
     backBottomLeft: {
-      fontSize: 9, fontFamily: "Helvetica-Bold",
+      fontSize: 9, fontFamily: "BookSans-Bold",
       color: NAVY,
     },
     backBottomIsbn: {
-      fontSize: 7, fontFamily: "Helvetica",
+      fontSize: 7, fontFamily: "BookSans",
       color: NAVY, letterSpacing: 0.5,
     },
     backContent: {
@@ -244,7 +244,7 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
       right: BLEED + 36, bottom: 88,
     },
     backMonogram: {
-      fontSize: 32, fontFamily: "Helvetica-Bold",
+      fontSize: 32, fontFamily: "BookSans-Bold",
       color: GOLD, marginBottom: 16,
     },
     backGoldRule: {
@@ -252,16 +252,16 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
       width: 36, marginBottom: 20,
     },
     backTitle: {
-      fontSize: 14, fontFamily: "Helvetica-Bold",
+      fontSize: 14, fontFamily: "BookSans-Bold",
       color: WHITE, marginBottom: 6, lineHeight: 1.3,
     },
     backLabel: {
-      fontSize: 8, fontFamily: "Helvetica-Bold",
+      fontSize: 8, fontFamily: "BookSans-Bold",
       color: GOLD, letterSpacing: 1.5,
       marginBottom: 24,
     },
     backDesc: {
-      fontSize: 9, fontFamily: "Helvetica",
+      fontSize: 9, fontFamily: "BookSans",
       color: SILVER, lineHeight: 1.7, marginBottom: 24,
     },
     backFeatureRow: {
@@ -272,7 +272,7 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
       fontSize: 9, color: GOLD, width: 14, marginTop: 1,
     },
     backFeatureText: {
-      fontSize: 9, fontFamily: "Helvetica",
+      fontSize: 9, fontFamily: "BookSans",
       color: WHITE, flex: 1, lineHeight: 1.5,
     },
     backPublisherBlock: {
@@ -280,11 +280,11 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
       bottom: 88 + 16, left: BLEED + 36 + 6,
     },
     backPublisherName: {
-      fontSize: 8, fontFamily: "Helvetica-Bold",
+      fontSize: 8, fontFamily: "BookSans-Bold",
       color: SILVER, letterSpacing: 1,
     },
     backWebsite: {
-      fontSize: 7, fontFamily: "Helvetica",
+      fontSize: 7, fontFamily: "BookSans",
       color: GOLD, marginTop: 2,
     },
   })

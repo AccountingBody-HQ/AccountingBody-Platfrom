@@ -13,14 +13,14 @@ Font.registerHyphenationCallback((word: string) => [word])
 // KDP requires all fonts embedded in the uploaded PDF.
 const FONT_BASE = "https://accountingbody.com/fonts"
 Font.register({
-  family: "Helvetica",
+  family: "BookSans",
   fonts: [
     { src: FONT_BASE + "/LiberationSans-Regular.ttf" },
     { src: FONT_BASE + "/LiberationSans-Italic.ttf", fontStyle: "italic" },
   ],
 })
 Font.register({
-  family: "Helvetica-Bold",
+  family: "BookSans-Bold",
   src: FONT_BASE + "/LiberationSans-Bold.ttf",
 })
 
@@ -38,7 +38,7 @@ const s = StyleSheet.create({
     width: W, height: H,
     paddingTop: MT + 20, paddingBottom: MB,
     paddingLeft: MI, paddingRight: MO,
-    fontFamily: "Helvetica", backgroundColor: "#ffffff",
+    fontFamily: "BookSans", backgroundColor: "#ffffff",
   },
   // Running header
   runningHead: {
@@ -61,7 +61,7 @@ const s = StyleSheet.create({
     textTransform: "uppercase", letterSpacing: 1.5,
   },
   bookTitle: {
-    fontSize: 22, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
+    fontSize: 22, fontFamily: "BookSans-Bold", color: "#0C1A3D",
     textAlign: "center", marginBottom: 10, lineHeight: 1.3,
   },
   bookTypeLabel: { fontSize: 12, color: "#555555", textAlign: "center", marginBottom: 20 },
@@ -75,22 +75,22 @@ const s = StyleSheet.create({
   copyrightText: { fontSize: 8, color: "#666666", lineHeight: 1.6, marginBottom: 3 },
   // Table of contents
   tocTitle: {
-    fontSize: 18, fontFamily: "Helvetica-Bold", color: "#0C1A3D", marginBottom: 20,
+    fontSize: 18, fontFamily: "BookSans-Bold", color: "#0C1A3D", marginBottom: 20,
   },
   tocChapterRow: { marginBottom: 8 },
   tocChapterText: {
-    fontSize: 10, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
+    fontSize: 10, fontFamily: "BookSans-Bold", color: "#0C1A3D",
   },
   tocLessonRow: { paddingLeft: 14, marginBottom: 3 },
   tocLessonText: { fontSize: 9, color: "#555555" },
   // Chapter header
   chapterWrap: { marginBottom: 24 },
   chapterLabel: {
-    fontSize: 8, color: "#D4A017", fontFamily: "Helvetica-Bold",
+    fontSize: 8, color: "#D4A017", fontFamily: "BookSans-Bold",
     textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6,
   },
   chapterTitle: {
-    fontSize: 22, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
+    fontSize: 22, fontFamily: "BookSans-Bold", color: "#0C1A3D",
     marginBottom: 8, lineHeight: 1.2,
   },
   chapterRule: {
@@ -98,22 +98,22 @@ const s = StyleSheet.create({
   },
   // Lesson
   lessonTitle: {
-    fontSize: 13, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
+    fontSize: 13, fontFamily: "BookSans-Bold", color: "#0C1A3D",
     marginTop: 20, marginBottom: 10,
     borderLeftWidth: 3, borderLeftColor: "#D4A017", paddingLeft: 8,
   },
   // Article
   articleTitle: {
-    fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
+    fontSize: 11, fontFamily: "BookSans-Bold", color: "#0C1A3D",
     marginTop: 14, marginBottom: 6,
   },
   // Body text blocks
   h2: {
-    fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0C1A3D",
+    fontSize: 11, fontFamily: "BookSans-Bold", color: "#0C1A3D",
     marginTop: 14, marginBottom: 5,
   },
   h3: {
-    fontSize: 10, fontFamily: "Helvetica-Bold", color: "#444444",
+    fontSize: 10, fontFamily: "BookSans-Bold", color: "#444444",
     marginTop: 10, marginBottom: 4,
   },
   body: {
@@ -130,26 +130,26 @@ const s = StyleSheet.create({
     marginTop: 20, marginBottom: 12,
   },
   sectionHeader: {
-    fontSize: 11, fontFamily: "Helvetica-Bold", color: "#0C1A3D", marginBottom: 10,
+    fontSize: 11, fontFamily: "BookSans-Bold", color: "#0C1A3D", marginBottom: 10,
   },
   questionWrap: {
     marginBottom: 14, paddingLeft: 10, paddingTop: 8, paddingBottom: 8,
     borderLeftWidth: 2.5, borderLeftColor: "#D4A017",
   },
   questionLabel: {
-    fontSize: 8, color: "#0C1A3D", fontFamily: "Helvetica-Bold",
+    fontSize: 8, color: "#0C1A3D", fontFamily: "BookSans-Bold",
     letterSpacing: 0.5, marginBottom: 4,
   },
   questionText: { fontSize: 10, color: "#111111", lineHeight: 1.7, marginBottom: 8 },
   optionRow: { flexDirection: "row", marginBottom: 4 },
   optionLetter: {
-    fontSize: 9, color: "#0C1A3D", fontFamily: "Helvetica-Bold", width: 18,
+    fontSize: 9, color: "#0C1A3D", fontFamily: "BookSans-Bold", width: 18,
   },
   optionText: { fontSize: 9, color: "#333333", flex: 1, lineHeight: 1.6 },
   // Answer key
   answerWrap: { marginBottom: 10 },
   answerLabel: {
-    fontSize: 9, color: "#D4A017", fontFamily: "Helvetica-Bold", marginBottom: 2,
+    fontSize: 9, color: "#D4A017", fontFamily: "BookSans-Bold", marginBottom: 2,
   },
   answerText: { fontSize: 9, color: "#333333", lineHeight: 1.6 },
 })
@@ -223,7 +223,7 @@ function renderSpans(children: any[]): React.ReactNode {
       }
     }
     const style: any = {}
-    if (isBold)   style.fontFamily  = "Helvetica-Bold"
+    if (isBold)   style.fontFamily  = "BookSans-Bold"
     if (isItalic) style.fontStyle   = "italic"
     nodes.push(<Text key={i} style={style}>{raw}</Text>)
     lastRenderedText = raw
@@ -369,7 +369,7 @@ function formatExplanation(text: string): React.ReactElement[] {
       const body = chunk.slice(colonPos + 1).trim()
       out.push(
         <View key={keyIndex++} style={{ marginBottom: 4 }} wrap={false}>
-          <Text style={{ fontSize: 8, color: "#000000", fontFamily: "Helvetica-Bold", marginBottom: 1 }}>{label}</Text>
+          <Text style={{ fontSize: 8, color: "#000000", fontFamily: "BookSans-Bold", marginBottom: 1 }}>{label}</Text>
           {body ? <Text style={{ fontSize: 8.5, color: "#333333", lineHeight: 1.5 }}>{body}</Text> : null}
         </View>
       )
