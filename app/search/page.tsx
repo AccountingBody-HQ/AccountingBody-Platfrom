@@ -31,9 +31,9 @@ const FILTERS: { id: ContentType; label: string }[] = [
 ]
 
 const POPULAR_SEARCHES = [
-  'ACCA F3', 'deferred tax', 'CIMA OCS', 'double entry',
-  'AAT Level 3', 'financial statements', 'cash flow',
-  'ratio analysis', 'ICAEW ACA', 'VAT',
+  'ETICPA ATQ', 'double entry', 'VAT Ethiopia',
+  'income tax', 'financial statements', 'cost accounting',
+  'trial balance', 'ERCA', 'audit',
 ]
 
 function getUrl(r: SearchResult): string {
@@ -210,7 +210,7 @@ function SearchInner() {
                 type="search"
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Search for ACCA F3, deferred tax, CIMA OCS…"
+                placeholder="Search for ETICPA ATQ, VAT Ethiopia, income tax…"
                 className="w-full h-14 pl-12 pr-12 rounded-xl text-base bg-white/10 border border-white/20 text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
                 aria-label="Search Accounting Body"
                 autoComplete="off"

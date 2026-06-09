@@ -1,195 +1,163 @@
-// app/mock-exams/page.tsx
-// Accounting Body — Mock Exams
-// Full timed mock exams catalogue, reusing the practice questions design language.
-
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
+import ComingSoonExamCard from '@/components/course/ComingSoonExamCard'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Mock Exams | Accounting Body',
-  description: 'Full timed mock exams for ACCA, CIMA, ICAEW and AAT. Instant marking, performance reports, and exam-standard questions.',
+  title: 'Mock Exams | ETICPA ATQ | EthioTax',
+  description: 'Free timed mock exams for the ETICPA ATQ qualification. 50 questions per attempt, drawn from a 3,000+ question bank. Unlimited attempts.',
 }
 
-const EXAM_BODIES = [
-  { code: 'ACCA',  slug: 'acca',  accent: 'bg-[#004B8D]', badgeBg: 'bg-blue-50',    badgeText: 'text-[#004B8D]', papers: ['BT', 'MA', 'FA', 'LW', 'PM', 'TX', 'FR', 'AA', 'FM', 'SBL', 'SBR', 'ATX', 'APM', 'AFM', 'AAA'] },
-  { code: 'CIMA',  slug: 'cima',  accent: 'bg-[#0081C6]', badgeBg: 'bg-sky-50',     badgeText: 'text-[#0081C6]', papers: ['E1', 'P1', 'F1', 'E2', 'P2', 'F2', 'E3', 'P3', 'F3'] },
-  { code: 'AAT',   slug: 'aat',   accent: 'bg-[#00857A]', badgeBg: 'bg-teal-50',    badgeText: 'text-teal-700',  papers: ['Level 2', 'Level 3', 'Level 4', 'Synoptic'] },
-  { code: 'ICAEW', slug: 'icaew', accent: 'bg-[#8B0000]', badgeBg: 'bg-red-50',     badgeText: 'text-red-800',   papers: ['Accounting', 'Tax', 'Law', 'Business', 'Case Study'] },
+export const dynamic = 'force-dynamic'
+
+const MOCK_EXAMS = [
+  // Level 1
+  { name: 'Introduction to Accounting', level: 'ATQ Level 1', live: true,  href: '/study/eticpa/atq/level-1/introduction-to-accounting/mock-exam' },
+  { name: 'Cost Accounting',             level: 'ATQ Level 1', live: true,  href: '/study/eticpa/atq/level-1/cost-accounting/mock-exam' },
+  { name: 'Business Skills',             level: 'ATQ Level 1', live: false, href: '' },
+  { name: 'Ethiopian Business Law',      level: 'ATQ Level 1', live: false, href: '' },
+  // Level 2
+  { name: 'Financial Accounting',                level: 'ATQ Level 2', live: true,  href: '/study/eticpa/atq/level-2/financial-accounting/mock-exam' },
+  { name: 'Management Accounting',               level: 'ATQ Level 2', live: true,  href: '/study/eticpa/atq/level-2/management-accounting/mock-exam' },
+  { name: 'Assurance, Controls & Ethics',        level: 'ATQ Level 2', live: true,  href: '/study/eticpa/atq/level-2/assurance-controls-ethics/mock-exam' },
+  { name: 'Ethiopian Taxation',                  level: 'ATQ Level 2', live: false, href: '' },
+  { name: 'Ethiopian Public Sector Accounting',  level: 'ATQ Level 2', live: false, href: '' },
 ]
 
-const FEATURES = [
-  {
-    title: 'Timed exam conditions',
-    body: 'Every mock runs under real exam time pressure with an on-screen countdown. Pause is disabled once started.',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" strokeWidth="2" stroke="currentColor" fill="none" />
-        <path strokeLinecap="round" strokeWidth="2" d="M12 6v6l4 2" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Instant marking',
-    body: 'Results appear the moment you submit. MCQs are auto-marked; written questions show model answers side by side.',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Performance reports',
-    body: 'See exactly which topics you dropped marks on — so every revision session is targeted, not random.',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Exam-standard questions',
-    body: 'Written by qualified accountants and updated every sitting. Same style, same difficulty, same mark schemes.',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-      </svg>
-    ),
-  },
-]
+export default async function MockExamsPage() {
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  if (!isEthioTax) redirect('/study')
 
-export default function MockExamsPage() {
   return (
     <div>
-
-      {/* ── HERO ─────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-navy-950 py-20 md:py-28">
+      {/* HERO */}
+      <section className="relative overflow-hidden py-20 md:py-28" style={{ backgroundColor: '#1A4731' }}>
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-25"
-            style={{ background: 'radial-gradient(ellipse at center top, #3a4f9a 0%, transparent 70%)' }} />
           <div className="absolute inset-0 opacity-[0.04]"
-            style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
-          <div className="absolute bottom-0 right-0 w-1/2 h-1/2 opacity-10"
-            style={{ background: 'radial-gradient(ellipse at bottom right, #D4A017 0%, transparent 60%)' }} />
+            style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-20"
+            style={{ background: 'radial-gradient(ellipse at center top, #C9982A 0%, transparent 70%)' }} />
         </div>
         <div className="container-site relative z-10">
-          <div className="max-w-4xl">
-            <nav className="flex items-center gap-2 text-white/40 text-sm mb-8">
-              <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-              <Link href="/study" className="hover:text-white/70 transition-colors">Study</Link>
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-              <span className="text-white/70">Mock Exams</span>
-            </nav>
-            <span className="eyebrow text-gold-400 mb-4 block">Mock Exams</span>
+          <nav className="flex items-center gap-2 text-white/40 text-sm mb-8">
+            <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+            <Link href="/study" className="hover:text-white/70 transition-colors">Study</Link>
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+            <Link href="/study/eticpa" className="hover:text-white/70 transition-colors">ETICPA</Link>
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+            <span className="text-white/70">Mock Exams</span>
+          </nav>
+          <div className="max-w-3xl">
+            <span className="inline-block text-xs font-bold px-3 py-1.5 rounded-md mb-6"
+              style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>
+              ETICPA ATQ — Practice Exams
+            </span>
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.025em' }}>
-              Practice under
+              Test your knowledge.
               <br />
-              <span style={{ background: 'linear-gradient(135deg, #D4A017 0%, #e8c050 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                real exam conditions.
+              <span style={{ background: 'linear-gradient(135deg, #C9982A 0%, #e8c050 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                Build exam confidence.
               </span>
             </h1>
-            <p className="text-white/65 text-xl leading-relaxed mb-10 max-w-2xl">
-              Full timed mock exams for ACCA, CIMA, ICAEW and AAT.
-              Instant marking, topic-level performance reports, and exam-standard questions.
+            <p className="text-white/70 text-xl leading-relaxed max-w-2xl mb-10">
+              Free timed mock exams for every ETICPA ATQ module — 50 questions per attempt, drawn from a 3,000+ question bank. Balanced across all topics. Unlimited attempts.
             </p>
-            <div className="flex flex-wrap items-center gap-4">
-              <Link href="/practice-questions"
-                className="inline-flex items-center gap-2 h-13 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
-                Browse practice questions
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </Link>
-              <Link href="/study"
-                className="inline-flex items-center gap-2 h-13 px-7 rounded-lg text-base font-medium text-white border border-white/25 hover:bg-white/10 hover:border-white/40 transition-all">
-                Back to Study
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link href="/study/eticpa"
+                className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold border-2 border-white/30 text-white hover:border-white/60 transition-colors"
+                style={{ height: '48px', minWidth: '220px', boxSizing: 'border-box' }}>
+                Back to ETICPA Hub
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── FEATURES ─────────────────────────────────────────────────── */}
-      <section className="bg-white border-b border-slate-200">
-        <div className="container-site py-12">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {FEATURES.map((f, i, arr) => (
-              <div key={f.title} className={['flex flex-col', i < arr.length - 1 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''].join(' ')}>
-                <div className="w-9 h-9 rounded-lg bg-navy-50 flex items-center justify-center text-navy-700 mb-3">
-                  {f.icon}
-                </div>
-                <h3 className="font-semibold text-navy-950 text-sm mb-1">{f.title}</h3>
-                <p className="text-xs text-slate-500 leading-relaxed">{f.body}</p>
+      {/* STATS BAR */}
+      <section className="bg-white border-b border-slate-100">
+        <div className="container-site py-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
+            {[
+              { value: '3,000+', label: 'Questions in pool' },
+              { value: '50',     label: 'Questions per exam' },
+              { value: '∞',      label: 'Unlimited attempts' },
+              { value: '5',      label: 'Live exams now' },
+            ].map(stat => (
+              <div key={stat.label} className="text-center">
+                <p className="font-display text-3xl font-bold mb-1" style={{ color: '#1A4731' }}>{stat.value}</p>
+                <p className="text-xs text-slate-400">{stat.label}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── EXAM BODY GRID ────────────────────────────────────────────── */}
+      {/* MOCK EXAM CARDS */}
       <section className="section bg-slate-50">
         <div className="container-site">
-          <div className="max-w-2xl mb-10">
-            <span className="eyebrow mb-3 block">Choose Your Qualification</span>
-            <h2 className="section-title mb-4">Select your exam to begin</h2>
+          <div className="max-w-2xl mb-12">
+            <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>All Modules</span>
+            <h2 className="section-title mb-4">Choose your exam</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              Mock exams for ACCA, CIMA, ICAEW and AAT. Each one mirrors the real exam format exactly.
+              Select any live module to start a 50-question timed exam. New modules unlock as study content is published.
             </p>
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {EXAM_BODIES.map(body => (
-              <Link key={body.slug} href={`/practice-questions?exam=${body.slug}&type=mock-exam`}
-                className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
-                <div className={['h-1.5', body.accent].join(' ')} />
+            {MOCK_EXAMS.map(exam => exam.live ? (
+              <Link key={exam.href} href={exam.href}
+                className="group flex flex-col rounded-xl border border-slate-200 bg-white overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-1 hover:border-[#C9982A]">
+                <div className="h-1" style={{ backgroundColor: '#1A4731' }} />
                 <div className="p-6 flex flex-col flex-1">
-                  <div className="flex items-start justify-between mb-4">
-                    <span className={['text-xs font-bold px-2.5 py-1 rounded-md', body.badgeBg, body.badgeText].join(' ')}>
-                      {body.code}
+                  <div className="flex items-center justify-between mb-5">
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-md"
+                      style={{ backgroundColor: '#f0f7f4', color: '#1A4731' }}>{exam.level}</span>
+                    <span className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md"
+                      style={{ backgroundColor: '#1A4731', color: '#C9982A' }}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#C9982A] animate-pulse" />
+                      Live
                     </span>
-                    <span className="text-xs text-slate-400">{body.papers.length} papers</span>
                   </div>
-                  <h3 className="font-display text-lg text-navy-950 mb-3 group-hover:text-navy-700 transition-colors">
-                    {body.code} Mock Exams
-                  </h3>
-                  <div className="flex flex-wrap gap-1.5 mb-5 flex-1">
-                    {body.papers.map(p => (
-                      <span key={p} className="text-2xs px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                        {p}
-                      </span>
-                    ))}
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+                    style={{ backgroundColor: '#f0f7f4', border: '1px solid #d1e8db' }}>
+                    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
+                      <circle cx="24" cy="26" r="14" stroke="#1A4731" strokeWidth="2"/>
+                      <path d="M24 18v8l5 3" stroke="#C9982A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M20 8h8M24 8v4" stroke="#1A4731" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
                   </div>
-                  <span className={['flex items-center gap-1.5 text-xs font-semibold group-hover:gap-2.5 transition-all', body.badgeText].join(' ')}>
-                    Start a mock exam
+                  <h3 className="font-display text-base text-navy-950 group-hover:text-[#1A4731] transition-colors leading-snug mb-2">{exam.name}</h3>
+                  <div className="flex items-center gap-4 mb-5">
+                    <div>
+                      <p className="font-display text-xl font-bold" style={{ color: '#1A4731' }}>3,000+</p>
+                      <p className="text-xs text-slate-400">questions in pool</p>
+                    </div>
+                    <div className="w-px h-8 bg-slate-100" />
+                    <div>
+                      <p className="font-display text-xl font-bold" style={{ color: '#1A4731' }}>50</p>
+                      <p className="text-xs text-slate-400">per attempt</p>
+                    </div>
+                    <div className="w-px h-8 bg-slate-100" />
+                    <div>
+                      <p className="font-display text-xl font-bold" style={{ color: '#1A4731' }}>∞</p>
+                      <p className="text-xs text-slate-400">attempts</p>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold mt-auto group-hover:gap-2.5 transition-all"
+                    style={{ color: '#1A4731' }}>
+                    Start mock exam
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                   </span>
                 </div>
               </Link>
+            ) : (
+              <ComingSoonExamCard key={exam.name} name={exam.name} level={exam.level} />
             ))}
           </div>
         </div>
       </section>
-
-      {/* ── BOTTOM CTA ───────────────────────────────────────────────── */}
-      <section className="bg-white border-t border-slate-200 py-8">
-        <div className="container-site">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-              <p className="font-display text-xl text-navy-950">Not ready for a full mock?</p>
-              <p className="text-sm text-slate-500 mt-0.5">Start with topic-level practice questions instead.</p>
-            </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <Link href="/study"
-                className="h-10 px-5 flex items-center text-sm font-medium rounded-lg border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors">
-                Study
-              </Link>
-              <Link href="/practice-questions"
-                className="h-10 px-5 flex items-center text-sm font-semibold rounded-lg bg-navy-950 text-white hover:bg-navy-900 transition-colors shadow-sm">
-                Practice questions
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
     </div>
   )
 }
