@@ -652,7 +652,7 @@ export default async function HomePage() {
                 placeholder={isEthioTax ? "Search tax guides, accounting articles, ETICPA resources…" : "Search study notes, practice questions, glossary…"}
                 popularTerms={isEthioTax
                   ? ['ETICPA ATQ', 'VAT Ethiopia', 'Income tax', 'Trial balance', 'Cash flow']
-                  : ['ACCA F3', 'Deferred tax', 'CIMA OCS', 'AAT Level 3', 'Cash flow']}
+                  : ['Double entry', 'Financial statements', 'Cash flow', 'Depreciation', 'Trial balance']}
               />
             </div>
 
