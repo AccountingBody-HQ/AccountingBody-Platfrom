@@ -483,7 +483,7 @@ export default async function ETICPAStudyPage() {
                   {/* Stats */}
                   <div className="flex items-center gap-4 mb-5">
                     <div>
-                      <p className="font-display text-xl font-bold" style={{ color: '#1A4731' }}>{exam.questions}+</p>
+                      <p className="font-display text-xl font-bold" style={{ color: '#1A4731' }}>3,000+</p>
                       <p className="text-xs text-slate-400">questions in pool</p>
                     </div>
                     <div className="w-px h-8 bg-slate-100" />
