@@ -10,7 +10,7 @@ const MODULE = {
   level: 'level-2',
   levelLabel: 'Level 2 — Advanced Technician',
   slug: 'ethiopian-public-sector-accounting',
-  name: 'Ethiopian Public Sector Accounting',
+  name: 'Public Sector Accounting',
   description: 'Develop specialist expertise in Ethiopian government finance. This module covers public financial management, government accounting standards, budget execution, public sector audit and accountability — essential knowledge for finance professionals working in or with Ethiopian public institutions.',
   outcomes: [
     'Explain the framework of public financial management in Ethiopia',
@@ -222,8 +222,7 @@ export default async function EthiopianPublicSectorAccountingPage() {
             </div>
           ) : (
             <div className="rounded-2xl p-12 text-center border" style={{ borderColor: '#d1e8db', backgroundColor: '#f0f7f4' }}>
-              <p className="font-display text-xl text-navy-950 mb-2">Study notes coming soon</p>
-              <p className="text-slate-500 text-sm">Use Content Factory to publish notes for this module. They will appear here automatically.</p>
+              <p className="font-display text-xl text-navy-950 mb-2">Study notes coming soon — check back shortly.</p>
             </div>
           )}
         </div>

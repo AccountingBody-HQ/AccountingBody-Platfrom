@@ -31,7 +31,7 @@ const MODULE = {
     href: '/study/eticpa/atq/level-1/cost-accounting',
   },
   nextModule: {
-    name: 'Ethiopian Business Law',
+    name: 'Business Law',
     href: '/study/eticpa/atq/level-1/ethiopian-business-law',
   },
 }
@@ -222,8 +222,7 @@ export default async function BusinessSkillsPage() {
             </div>
           ) : (
             <div className="rounded-2xl p-12 text-center border" style={{ borderColor: '#d1e8db', backgroundColor: '#f0f7f4' }}>
-              <p className="font-display text-xl text-navy-950 mb-2">Study notes coming soon</p>
-              <p className="text-slate-500 text-sm">Use Content Factory to publish notes for this module. They will appear here automatically.</p>
+              <p className="font-display text-xl text-navy-950 mb-2">Study notes coming soon — check back shortly.</p>
             </div>
           )}
         </div>
