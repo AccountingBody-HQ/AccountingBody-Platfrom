@@ -8,6 +8,22 @@ import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/rendere
 // Disable hyphenation globally - prevents mid-word breaks in titles and headings
 Font.registerHyphenationCallback((word: string) => [word])
 
+// Embed real fonts (Liberation Sans - metric-compatible with Helvetica).
+// Registered under the standard names so all existing styles work unchanged.
+// KDP requires all fonts embedded in the uploaded PDF.
+const FONT_BASE = "https://accountingbody.com/fonts"
+Font.register({
+  family: "Helvetica",
+  fonts: [
+    { src: FONT_BASE + "/LiberationSans-Regular.ttf" },
+    { src: FONT_BASE + "/LiberationSans-Italic.ttf", fontStyle: "italic" },
+  ],
+})
+Font.register({
+  family: "Helvetica-Bold",
+  src: FONT_BASE + "/LiberationSans-Bold.ttf",
+})
+
 // ── Dimensions ──────────────────────────────────────────────────────────────
 const W = 6 * 72   // 432pt
 const H = 9 * 72   // 648pt
