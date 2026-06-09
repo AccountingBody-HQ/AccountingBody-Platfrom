@@ -456,20 +456,54 @@ export default async function ETICPAStudyPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {MOCK_EXAMS.map(exam => exam.live ? (
               <Link key={exam.href} href={exam.href}
-                className="group flex flex-col p-6 rounded-xl border border-slate-200 bg-white transition-all duration-200 hover:shadow-lg hover:border-[#1A4731]">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-md"
-                    style={{ backgroundColor: '#f0f7f4', color: '#1A4731' }}>{exam.level}</span>
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-md"
-                    style={{ backgroundColor: '#1A4731', color: '#C9982A' }}>Live</span>
+                className="group flex flex-col rounded-xl border border-slate-200 bg-white overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-1 hover:border-[#C9982A]">
+                <div className="h-1" style={{ backgroundColor: '#1A4731' }} />
+                <div className="p-6 flex flex-col flex-1">
+                  {/* Header row */}
+                  <div className="flex items-center justify-between mb-5">
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-md"
+                      style={{ backgroundColor: '#f0f7f4', color: '#1A4731' }}>{exam.level}</span>
+                    <span className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md"
+                      style={{ backgroundColor: '#1A4731', color: '#C9982A' }}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#C9982A] animate-pulse" />
+                      Live
+                    </span>
+                  </div>
+                  {/* Icon */}
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+                    style={{ backgroundColor: '#f0f7f4', border: '1px solid #d1e8db' }}>
+                    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
+                      <circle cx="24" cy="26" r="14" stroke="#1A4731" strokeWidth="2"/>
+                      <path d="M24 18v8l5 3" stroke="#C9982A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M20 8h8M24 8v4" stroke="#1A4731" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  {/* Title */}
+                  <h3 className="font-display text-base text-navy-950 group-hover:text-[#1A4731] transition-colors leading-snug mb-2">{exam.name}</h3>
+                  {/* Stats */}
+                  <div className="flex items-center gap-4 mb-5">
+                    <div>
+                      <p className="font-display text-xl font-bold" style={{ color: '#1A4731' }}>{exam.questions}+</p>
+                      <p className="text-xs text-slate-400">questions in pool</p>
+                    </div>
+                    <div className="w-px h-8 bg-slate-100" />
+                    <div>
+                      <p className="font-display text-xl font-bold" style={{ color: '#1A4731' }}>50</p>
+                      <p className="text-xs text-slate-400">per attempt</p>
+                    </div>
+                    <div className="w-px h-8 bg-slate-100" />
+                    <div>
+                      <p className="font-display text-xl font-bold" style={{ color: '#1A4731' }}>∞</p>
+                      <p className="text-xs text-slate-400">attempts</p>
+                    </div>
+                  </div>
+                  {/* CTA */}
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold mt-auto group-hover:gap-2.5 transition-all"
+                    style={{ color: '#1A4731' }}>
+                    Start mock exam
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                  </span>
                 </div>
-                <h3 className="font-display text-base text-navy-950 group-hover:text-[#1A4731] transition-colors leading-snug mb-1">{exam.name}</h3>
-                <p className="text-xs text-slate-500 leading-relaxed mb-4">{exam.questions}+ questions in pool</p>
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold mt-auto"
-                  style={{ color: '#1A4731' }}>
-                  Start mock exam
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                </span>
               </Link>
             ) : (
               <ComingSoonExamCard key={exam.name} name={exam.name} level={exam.level} />
