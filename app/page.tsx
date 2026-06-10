@@ -734,126 +734,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════════════════════════
-          2. QUALIFICATION PATHWAYS
-          ════════════════════════════════════════════════════════════════ */}
-      {!isEthioTax && <section className="section bg-white">
-        <div className="container-site">
-
-          <div className="max-w-2xl mb-12">
-            <span className="eyebrow mb-3 block">Qualification Pathways</span>
-            <h2 className="section-title mb-4">Choose your qualification</h2>
-            <p className="text-slate-500 text-lg leading-relaxed">
-              Full coverage from foundation to strategic level. Select your qualification
-              to explore study notes, practice questions, and exam resources.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-            {activeQualificationPaths.map(q => (
-              <Link
-                key={q.slug}
-                href={`/study/${q.slug}`}
-                className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
-              >
-                <div className={`h-1.5 ${q.accent}`} />
-                <div className="p-6 flex flex-col flex-1">
-                  <div className="flex items-start justify-between mb-4">
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${q.badgeBg} ${q.badgeText}`}>
-                      {q.code}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 mb-4 leading-relaxed flex-1">{q.description}</p>
-                  <ul className="space-y-1.5 mb-5">
-                    {q.highlights.map(h => (
-                      <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
-                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${q.accent}`} />
-                        {h}
-                      </li>
-                    ))}
-                  </ul>
-                  <span className={`flex items-center gap-1.5 text-xs font-semibold ${q.badgeText} group-hover:gap-2.5 transition-all`}>
-                    Browse {q.code} notes
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          <p className="text-xs text-slate-400 border-t border-slate-100 pt-5">
-            Accounting Body is an independent study platform and is not affiliated with,
-            endorsed by, or connected to ACCA, CIMA, ICAEW, or AAT. These names are used
-            solely to identify the qualifications our study materials are designed to support.
-          </p>
-
-        </div>
-      </section>}
-
-
-      {/* ════════════════════════════════════════════════════════════════
-          3. HOW IT WORKS
-          ════════════════════════════════════════════════════════════════ */}
-      <section className="section bg-slate-50">
-        <div className="container-site">
-
-          <div className={isEthioTax ? "max-w-2xl mb-16" : "max-w-2xl mx-auto text-center mb-16"}>
-            <span className="eyebrow mb-3 block">How It Works</span>
-            <h2 className="section-title mb-4">{isEthioTax ? 'Five steps to a managed service' : 'Three steps to exam success'}</h2>
-            <p className="text-slate-500 text-lg leading-relaxed">
-              {isEthioTax ? 'From your first inquiry to long-term financial partnership — EthioTax manages every step.' : 'From choosing your qualification to walking into the exam room with confidence.'}
-            </p>
-          </div>
-
-          <div className={`grid grid-cols-1 gap-0 ${isEthioTax ? 'md:grid-cols-5' : 'md:grid-cols-3'}`}>
-            {(isEthioTax ? etHowItWorks : howItWorks).map((step, i) => (
-              <div key={step.step} className="relative flex flex-col items-start md:items-center text-left md:text-center px-0 md:px-8">
-
-                {/* Connector line between steps */}
-                {i < (isEthioTax ? etHowItWorks : howItWorks).length - 1 && (
-                  <div className="hidden md:block absolute top-9 left-[calc(50%+2.5rem)] right-0 h-px bg-slate-200" />
-                )}
-
-                {/* Step number circle */}
-                <div className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full bg-white border-2 border-gold-500 mb-6 shadow-sm">
-                  <span className="font-display text-xl font-bold text-gold-500" translate="no">{step.step}</span>
-                </div>
-
-                <h3 className="font-display text-lg text-navy-950 mb-3">{step.title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed max-w-xs">{step.body}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-14 flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href={isEthioTax ? "/get-help" : "/study"}
-              className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors"
-            >
-              {isEthioTax ? 'Get a free quote' : 'Start your journey'}
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
-            {isEthioTax && (
-              <Link
-                href="/how-it-works"
-                className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold border-2 transition-colors"
-                style={{ borderColor: '#1A4731', color: '#1A4731' }}
-              >
-                See how it works
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-            )}
-          </div>
-
-        </div>
-      </section>
-
 
       {/* ════════════════════════════════════════════════════════════════
           4. PLATFORM FEATURES
@@ -1021,6 +901,126 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+
+      {/* ════════════════════════════════════════════════════════════════
+          3. HOW IT WORKS
+          ════════════════════════════════════════════════════════════════ */}
+      <section className="section bg-slate-50">
+        <div className="container-site">
+
+          <div className={isEthioTax ? "max-w-2xl mb-16" : "max-w-2xl mx-auto text-center mb-16"}>
+            <span className="eyebrow mb-3 block">How It Works</span>
+            <h2 className="section-title mb-4">{isEthioTax ? 'Five steps to a managed service' : 'Three steps to exam success'}</h2>
+            <p className="text-slate-500 text-lg leading-relaxed">
+              {isEthioTax ? 'From your first inquiry to long-term financial partnership — EthioTax manages every step.' : 'From choosing your qualification to walking into the exam room with confidence.'}
+            </p>
+          </div>
+
+          <div className={`grid grid-cols-1 gap-0 ${isEthioTax ? 'md:grid-cols-5' : 'md:grid-cols-3'}`}>
+            {(isEthioTax ? etHowItWorks : howItWorks).map((step, i) => (
+              <div key={step.step} className="relative flex flex-col items-start md:items-center text-left md:text-center px-0 md:px-8">
+
+                {/* Connector line between steps */}
+                {i < (isEthioTax ? etHowItWorks : howItWorks).length - 1 && (
+                  <div className="hidden md:block absolute top-9 left-[calc(50%+2.5rem)] right-0 h-px bg-slate-200" />
+                )}
+
+                {/* Step number circle */}
+                <div className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full bg-white border-2 border-gold-500 mb-6 shadow-sm">
+                  <span className="font-display text-xl font-bold text-gold-500" translate="no">{step.step}</span>
+                </div>
+
+                <h3 className="font-display text-lg text-navy-950 mb-3">{step.title}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed max-w-xs">{step.body}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-14 flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href={isEthioTax ? "/get-help" : "/study"}
+              className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors"
+            >
+              {isEthioTax ? 'Get a free quote' : 'Start your journey'}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+            {isEthioTax && (
+              <Link
+                href="/how-it-works"
+                className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold border-2 transition-colors"
+                style={{ borderColor: '#1A4731', color: '#1A4731' }}
+              >
+                See how it works
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            )}
+          </div>
+
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════
+          2. QUALIFICATION PATHWAYS
+          ════════════════════════════════════════════════════════════════ */}
+      {!isEthioTax && <section className="section bg-white">
+        <div className="container-site">
+
+          <div className="max-w-2xl mb-12">
+            <span className="eyebrow mb-3 block">Qualification Pathways</span>
+            <h2 className="section-title mb-4">Choose your qualification</h2>
+            <p className="text-slate-500 text-lg leading-relaxed">
+              Full coverage from foundation to strategic level. Select your qualification
+              to explore study notes, practice questions, and exam resources.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+            {activeQualificationPaths.map(q => (
+              <Link
+                key={q.slug}
+                href={`/study/${q.slug}`}
+                className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+              >
+                <div className={`h-1.5 ${q.accent}`} />
+                <div className="p-6 flex flex-col flex-1">
+                  <div className="flex items-start justify-between mb-4">
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${q.badgeBg} ${q.badgeText}`}>
+                      {q.code}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mb-4 leading-relaxed flex-1">{q.description}</p>
+                  <ul className="space-y-1.5 mb-5">
+                    {q.highlights.map(h => (
+                      <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
+                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${q.accent}`} />
+                        {h}
+                      </li>
+                    ))}
+                  </ul>
+                  <span className={`flex items-center gap-1.5 text-xs font-semibold ${q.badgeText} group-hover:gap-2.5 transition-all`}>
+                    Browse {q.code} notes
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <p className="text-xs text-slate-400 border-t border-slate-100 pt-5">
+            Accounting Body is an independent study platform and is not affiliated with,
+            endorsed by, or connected to ACCA, CIMA, ICAEW, or AAT. These names are used
+            solely to identify the qualifications our study materials are designed to support.
+          </p>
+
+        </div>
+      </section>}
 
 
       {/* ════════════════════════════════════════════════════════════════
