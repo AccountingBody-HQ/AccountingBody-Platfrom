@@ -184,12 +184,26 @@ export async function POST(req: NextRequest) {
 
     const course = await buildCourse(slug)
 
+    // Pass 1: probe render - collect the start page of every chapter
+    const pageMap: Record<number, number> = {}
+    await renderToBuffer(
+      React.createElement(BookTemplate, {
+        course,
+        bookType: bookType as any,
+        edition:  edition  || "2026/27 Edition",
+        subtitle: subtitle || course.title,
+        onChapterPage: (ci: number, page: number) => { pageMap[ci] = page },
+      }) as any
+    )
+
+    // Pass 2: final render with TOC page numbers filled in
     const interiorPdf = await renderToBuffer(
       React.createElement(BookTemplate, {
         course,
         bookType: bookType as any,
         edition:  edition  || "2026/27 Edition",
         subtitle: subtitle || course.title,
+        pageMap,
       }) as any
     )
 
