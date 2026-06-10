@@ -146,7 +146,7 @@ export default function ContactForm() {
                 </label>
                 <select id="subject" name="subject" required defaultValue=""
                   className="w-full h-11 px-4 rounded-lg border border-slate-300 text-sm text-navy-950 bg-white focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition">
-                  <option value="" disabled>Select a subject\u2026</option>
+                  <option value="" disabled>Select a subject…</option>
                   {subjects.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
@@ -161,7 +161,7 @@ export default function ContactForm() {
                 <input id="subscribe" name="subscribe" type="checkbox" defaultChecked
                   className="w-4 h-4 mt-0.5 rounded border-slate-300 text-navy-950 focus:ring-navy-950 shrink-0" />
                 <label htmlFor="subscribe" className="text-sm text-slate-600 leading-relaxed cursor-pointer">
-                  Also subscribe me to the free weekly email \u2014 exam tips and study guides written by qualified accountants.
+                  Also subscribe me to the free weekly email — exam tips and study guides written by qualified accountants.
                 </label>
               </div>
               {formState === 'error' && (
