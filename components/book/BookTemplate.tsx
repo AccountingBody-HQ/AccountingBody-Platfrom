@@ -124,6 +124,21 @@ const s = StyleSheet.create({
   listRow: { flexDirection: "row", marginBottom: 6, paddingLeft: 6 },
   listDot: { fontSize: 10, color: "#D4A017", width: 16, marginTop: 1 },
   listText: { fontSize: 10, color: "#1a1a1a", lineHeight: 1.8, flex: 1 },
+  // Financial tables (auto-detected from label: amount list runs)
+  finTable: {
+    marginVertical: 8, marginLeft: 6,
+    borderTopWidth: 1, borderTopColor: "#0C1A3D",
+    borderBottomWidth: 1, borderBottomColor: "#0C1A3D",
+  },
+  finRow: {
+    flexDirection: "row", justifyContent: "space-between",
+    paddingVertical: 3.5, paddingHorizontal: 8,
+    borderBottomWidth: 0.5, borderBottomColor: "#e3e3e3",
+  },
+  finRowTotal: { borderTopWidth: 0.8, borderTopColor: "#999999", backgroundColor: "#F7F6F2" },
+  finLabel: { fontSize: 10, color: "#1a1a1a", flex: 1, paddingRight: 10 },
+  finAmount: { fontSize: 10, color: "#1a1a1a", textAlign: "right", minWidth: 60 },
+  finTextBold: { fontFamily: "BookSans-Bold" },
   // Practice questions
   sectionRule: {
     borderTopWidth: 1, borderTopColor: "#dddddd",
@@ -251,28 +266,68 @@ function renderBlocks(blocks: any[]): React.ReactNode {
   let listBuf: any[] = []
   let listKey = 0
 
+  // Entire item text must be "Label: amount" to qualify as a financial row
+  const FIN_ROW = /^(.{2,60}?):\s*([-(]?[\u00a3$\u20ac]?\s?\d[\d,]*(?:\.\d+)?\s?\)?%?)$/
+
   function flushList() {
     if (listBuf.length === 0) return
+    const items = listBuf
+      .map((item, idx) => ({
+        item, idx,
+        rawText: sanitise((item.children || []).map((c: any) => c.text || "").join("")),
+      }))
+      .filter(({ rawText }) => hasText(rawText))
+    let i = 0
     let num = 0
-    listBuf.forEach((item, idx) => {
-      const rawText = (item.children || []).map((c: any) => c.text || "").join("")
-      if (!hasText(sanitise(rawText))) return // skip empty list items
-      const content = renderSpans(item.children || [])
-      if (!content) return // skip if all spans were empty after sanitise
-      let dot: string
-      if (item.listItem === "number") {
-        num++
-        dot = `${num}.`
-      } else {
-        dot = "•"
+    while (i < items.length) {
+      // Detect a run of 2+ consecutive financial rows (bullets only, never numbered steps)
+      if (items[i].item.listItem !== "number" && FIN_ROW.test(items[i].rawText)) {
+        let j = i
+        const rows: { label: string; amount: string }[] = []
+        while (j < items.length && items[j].item.listItem !== "number") {
+          const m = items[j].rawText.match(FIN_ROW)
+          if (!m) break
+          rows.push({ label: m[1].trim(), amount: m[2].trim() })
+          j++
+        }
+        if (rows.length >= 2) {
+          out.push(
+            <View key={`tbl-${listKey}-${i}`} style={s.finTable}>
+              {rows.map((r, ri) => {
+                const isTotal = /^(total|net|gross|balance)\b/i.test(r.label)
+                return (
+                  <View key={ri} style={[s.finRow, isTotal ? s.finRowTotal : {}]} wrap={false}>
+                    <Text style={[s.finLabel, isTotal ? s.finTextBold : {}]}>{r.label}</Text>
+                    <Text style={[s.finAmount, isTotal ? s.finTextBold : {}]}>{r.amount}</Text>
+                  </View>
+                )
+              })}
+            </View>
+          )
+          i = j
+          continue
+        }
       }
-      out.push(
-        <View key={`list-${listKey}-${idx}`} style={s.listRow} wrap={false}>
-          <Text style={s.listDot}>{dot}</Text>
-          <Text style={s.listText}>{content}</Text>
-        </View>
-      )
-    })
+      // Fallback: render exactly as before
+      const { item, idx } = items[i]
+      const content = renderSpans(item.children || [])
+      if (content) {
+        let dot: string
+        if (item.listItem === "number") {
+          num++
+          dot = `${num}.`
+        } else {
+          dot = "\u2022"
+        }
+        out.push(
+          <View key={`list-${listKey}-${idx}`} style={s.listRow} wrap={false}>
+            <Text style={s.listDot}>{dot}</Text>
+            <Text style={s.listText}>{content}</Text>
+          </View>
+        )
+      }
+      i++
+    }
     listBuf = []
     listKey++
   }
