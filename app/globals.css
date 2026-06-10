@@ -224,10 +224,10 @@
   }
 
   /* ── Scrollbar ────────────────────────────────────────────── */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: var(--color-slate-100); }
-  ::-webkit-scrollbar-thumb { background: var(--color-slate-300); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--color-slate-400); }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #f1f5f9; }
+  ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
   /* ── Tables ───────────────────────────────────────────────── */
   table { width: 100%; border-collapse: collapse; }
