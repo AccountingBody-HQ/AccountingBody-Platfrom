@@ -144,7 +144,8 @@ const s = StyleSheet.create({
     paddingVertical: 4, paddingHorizontal: 8,
     backgroundColor: "#0C1A3D",
   },
-  finHeaderCell: { fontSize: 9, color: "#ffffff", fontFamily: "BookSans-Bold", flex: 1 },
+  finHeaderCell: { fontSize: 9, color: "#ffffff", fontFamily: "BookSans-Bold", flexGrow: 1, flexBasis: 0, paddingRight: 6 },
+  finCell: { fontSize: 9.5, color: "#1a1a1a", lineHeight: 1.5, flexGrow: 1, flexBasis: 0, paddingRight: 6 },
   // Practice questions
   sectionRule: {
     borderTopWidth: 1, borderTopColor: "#dddddd",
@@ -345,21 +346,28 @@ function renderBlocks(blocks: any[]): React.ReactNode {
       const headers: string[] = (b.headers || []).map((h: any) => sanitise(String(h ?? "")))
       const rows: string[][] = (b.rows || []).map((r: any) => (r.cells || []).map((c: any) => sanitise(String(c ?? ""))))
       if (rows.length === 0 && headers.length === 0) return
+      const colCount = Math.max(headers.length, ...rows.map((r) => r.length), 1)
+      const pad = (cells: string[]) => Array.from({ length: colCount }, (_, ci) => cells[ci] ?? "")
+      const numericCol = Array.from({ length: colCount }, (_, ci) =>
+        ci > 0 &&
+        rows.some((r) => /\d/.test(r[ci] || "")) &&
+        rows.every((r) => !(r[ci] || "").trim() || /^[-(]?[\u00a3$\u20ac]?\s?[-\d][\d,.]*\s?\)?%?$/.test((r[ci] || "").trim()))
+      )
       out.push(
-        <View key={"tb-" + i} style={s.finTable} wrap={false}>
+        <View key={"tb-" + i} style={s.finTable}>
           {headers.some((h) => h.length > 0) ? (
             <View style={s.finHeaderRow}>
-              {headers.map((h, hi) => (
-                <Text key={hi} style={[s.finHeaderCell, hi > 0 ? { textAlign: "right" } : {}]}>{h}</Text>
+              {pad(headers).map((h, hi) => (
+                <Text key={hi} style={[s.finHeaderCell, numericCol[hi] ? { textAlign: "right" } : {}]}>{h}</Text>
               ))}
             </View>
           ) : null}
           {rows.map((cells, ri) => {
             const isTotal = /^(total|net|gross|balance)\b/i.test(cells[0] || "")
             return (
-              <View key={ri} style={[s.finRow, isTotal ? s.finRowTotal : {}]}>
-                {cells.map((c, ci) => (
-                  <Text key={ci} style={[ci === 0 ? s.finLabel : s.finAmount, isTotal ? s.finTextBold : {}]}>{c}</Text>
+              <View key={ri} style={[s.finRow, isTotal ? s.finRowTotal : {}]} wrap={false}>
+                {pad(cells).map((c, ci) => (
+                  <Text key={ci} style={[s.finCell, numericCol[ci] ? { textAlign: "right" } : {}, isTotal ? s.finTextBold : {}]}>{c}</Text>
                 ))}
               </View>
             )
