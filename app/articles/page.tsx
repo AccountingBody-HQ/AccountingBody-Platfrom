@@ -67,18 +67,18 @@ export default async function ArticlesPage() {
           </nav>
           {isEthioTax ? (
             <>
-              <p className="text-[#C9982A] text-[11px] font-bold uppercase tracking-[0.12em] mb-4">Latest Insights</p>
-              <h1 className="font-display text-white text-4xl md:text-5xl mb-4 leading-tight">Featured Articles</h1>
+              <p className="text-[#C9982A] text-[11px] font-bold uppercase tracking-[0.12em] mb-4">News & Insights</p>
+              <h1 className="font-display text-white text-4xl md:text-5xl mb-4 leading-tight">Latest from EthioTax</h1>
               <p className="text-white/60 text-xl leading-relaxed max-w-2xl">
-                Curated articles and insights for Ethiopian finance professionals and the diaspora community.
+                Industry updates, tax briefs, accounting news and insights — curated for Ethiopian finance professionals and the diaspora.
               </p>
             </>
           ) : (
             <>
-              <span className="eyebrow text-gold-400 mb-4 block">Study Notes</span>
-              <h1 className="font-display text-white text-4xl md:text-5xl mb-4 leading-tight">Articles &amp; Study Notes</h1>
+              <p className="text-gold-400 text-[11px] font-bold uppercase tracking-[0.12em] mb-4">News & Insights</p>
+              <h1 className="font-display text-white text-4xl md:text-5xl mb-4 leading-tight">Latest from Accounting Body</h1>
               <p className="text-white/60 text-xl leading-relaxed max-w-2xl">
-                Written and reviewed by qualified accountants for ACCA, CIMA, ICAEW, and AAT.
+                Industry updates, accounting news, finance briefs and the latest insights — all in one place.
               </p>
             </>
           )}
@@ -134,12 +134,6 @@ export default async function ArticlesPage() {
                           Hot Topic
                         </span>
                       )}
-                      {examBodyFirst && (
-                        <span className={"hidden md:block text-xs font-medium px-2 py-0.5 rounded-md border " + badgeClass}>
-                          {examBodyFirst.toUpperCase()}
-                        </span>
-                      )}
-                      {article.readTime && <span className="hidden md:block text-xs text-slate-400">{article.readTime} min</span>}
                       {posted && <span className="hidden md:block text-xs text-slate-400">{posted}</span>}
                       <svg className="w-4 h-4 text-slate-300 group-hover:text-navy-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
