@@ -580,10 +580,10 @@
 .goog-te-banner-frame,
 iframe.goog-te-banner-frame,
 .goog-te-balloon-frame { display: none !important; }
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #6b7280; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+::-webkit-scrollbar { width: 12px; height: 10px; }
+::-webkit-scrollbar-track { background: #f8fafc; }
+::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 5px; border: 2px solid #f8fafc; }
+::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
 body { top: 0 !important; position: static !important; }
 .goog-te-gadget { display: none !important; }
