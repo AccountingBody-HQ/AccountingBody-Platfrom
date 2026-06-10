@@ -1,5 +1,5 @@
-'use client'
-import { useState, useEffect } from 'react'
+import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 
 const etServices = [
   {
@@ -117,14 +117,9 @@ function ServiceIcon({ category }: { category: string }) {
   )
 }
 
-export default function GetHelpPage() {
-  const [isEthioTax, setIsEthioTax] = useState(false)
-
-  useEffect(() => {
-    const cookie = document.cookie.split('; ').find(r => r.startsWith('x-et-platform='))
-    setIsEthioTax(cookie?.split('=')[1] === 'ethiotax')
-    window.scrollTo(0, 0)
-  }, [])
+export default async function GetHelpPage() {
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
 
   if (isEthioTax) {
     return (
@@ -256,6 +251,7 @@ export default function GetHelpPage() {
             </p>
           </div>
         </section>
+
         {/* CTA */}
         <section className="bg-white border-t border-[#e8f0eb] py-20">
           <div className="container-site">
