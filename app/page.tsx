@@ -1192,7 +1192,7 @@ export default async function HomePage() {
                 EthioTax clients across the UK, USA and Canada share their experience.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
               {/* Tigist */}
               <div className="bg-white rounded-2xl p-8 shadow-sm border-t-4 flex flex-col" style={{ borderTopColor: '#C9982A' }}>
                 <div className="flex gap-1 mb-4">
@@ -1201,7 +1201,7 @@ export default async function HomePage() {
                   ))}
                 </div>
                 <div className="text-4xl font-display leading-none mb-3 opacity-40" style={{ color: '#1A4731' }} translate="no">&ldquo;</div>
-                <p className="text-gray-700 text-sm leading-relaxed mb-6 flex-1">EthioTax handled my UK Self Assessment quickly and professionally. They understood my situation straight away and the whole process was straightforward. I will not be going anywhere else.</p>
+                <p className="text-gray-700 text-sm leading-relaxed mb-6">EthioTax handled my UK Self Assessment quickly and professionally. They understood my situation straight away and the whole process was straightforward. I will not be going anywhere else.</p>
                 <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: '#e8f0eb' }}>
                   <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white" style={{ backgroundColor: '#1A4731' }}>TA</div>
                   <div>
@@ -1218,7 +1218,7 @@ export default async function HomePage() {
                   ))}
                 </div>
                 <div className="text-4xl font-display leading-none mb-3 opacity-40" style={{ color: '#1A4731' }} translate="no">&ldquo;</div>
-                <p className="text-gray-700 text-sm leading-relaxed mb-6 flex-1">I needed advice on structuring a diaspora investment in Ethiopia. EthioTax provided a clear proposal within 72 hours and guided me through the entire process. Excellent service.</p>
+                <p className="text-gray-700 text-sm leading-relaxed mb-6">I needed advice on structuring a diaspora investment in Ethiopia. EthioTax provided a clear proposal within 72 hours and guided me through the entire process. Excellent service.</p>
                 <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: '#e8f0eb' }}>
                   <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white" style={{ backgroundColor: '#1A4731' }}>DM</div>
                   <div>
@@ -1235,7 +1235,7 @@ export default async function HomePage() {
                   ))}
                 </div>
                 <div className="text-4xl font-display leading-none mb-3 opacity-40" style={{ color: '#1A4731' }} translate="no">&ldquo;</div>
-                <p className="text-gray-700 text-sm leading-relaxed mb-6 flex-1">Managing accounts across two countries was always complicated. EthioTax handled everything and I could communicate in Amharic throughout. Professional, reliable and highly recommended.</p>
+                <p className="text-gray-700 text-sm leading-relaxed mb-6">Managing accounts across two countries was always complicated. EthioTax handled everything and I could communicate in Amharic throughout. Professional, reliable and highly recommended.</p>
                 <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: '#e8f0eb' }}>
                   <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white" style={{ backgroundColor: '#1A4731' }}>SG</div>
                   <div>
