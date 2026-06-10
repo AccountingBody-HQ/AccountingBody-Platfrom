@@ -139,6 +139,12 @@ const s = StyleSheet.create({
   finLabel: { fontSize: 10, color: "#1a1a1a", flex: 1, paddingRight: 10 },
   finAmount: { fontSize: 10, color: "#1a1a1a", textAlign: "right", minWidth: 60 },
   finTextBold: { fontFamily: "BookSans-Bold" },
+  finHeaderRow: {
+    flexDirection: "row", justifyContent: "space-between",
+    paddingVertical: 4, paddingHorizontal: 8,
+    backgroundColor: "#0C1A3D",
+  },
+  finHeaderCell: { fontSize: 9, color: "#ffffff", fontFamily: "BookSans-Bold", flex: 1 },
   // Practice questions
   sectionRule: {
     borderTopWidth: 1, borderTopColor: "#dddddd",
@@ -334,6 +340,34 @@ function renderBlocks(blocks: any[]): React.ReactNode {
 
   const skippedIndex = new Set<number>()
   blocks.forEach((b: any, i: number) => {
+    if (b._type === "tableBlock") {
+      flushList()
+      const headers: string[] = (b.headers || []).map((h: any) => sanitise(String(h ?? "")))
+      const rows: string[][] = (b.rows || []).map((r: any) => (r.cells || []).map((c: any) => sanitise(String(c ?? ""))))
+      if (rows.length === 0 && headers.length === 0) return
+      out.push(
+        <View key={"tb-" + i} style={s.finTable} wrap={false}>
+          {headers.some((h) => h.length > 0) ? (
+            <View style={s.finHeaderRow}>
+              {headers.map((h, hi) => (
+                <Text key={hi} style={[s.finHeaderCell, hi > 0 ? { textAlign: "right" } : {}]}>{h}</Text>
+              ))}
+            </View>
+          ) : null}
+          {rows.map((cells, ri) => {
+            const isTotal = /^(total|net|gross|balance)\b/i.test(cells[0] || "")
+            return (
+              <View key={ri} style={[s.finRow, isTotal ? s.finRowTotal : {}]}>
+                {cells.map((c, ci) => (
+                  <Text key={ci} style={[ci === 0 ? s.finLabel : s.finAmount, isTotal ? s.finTextBold : {}]}>{c}</Text>
+                ))}
+              </View>
+            )
+          })}
+        </View>
+      )
+      return
+    }
     if (b._type !== "block") return
     if (skippedIndex.has(i)) return
     const children = b.children || []
