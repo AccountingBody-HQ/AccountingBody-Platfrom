@@ -733,8 +733,55 @@ export default async function HomePage() {
 
         </div>
       </section>
-
-
+      {/* ════════════════════════════════════════════════════════════════
+          5. STATS BAR
+          ════════════════════════════════════════════════════════════════ */}
+      {isEthioTax ? (
+        <section className="bg-slate-50 border-y border-slate-200">
+          <div className="container-site py-10">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                { value: '24hr', label: 'Response Guarantee', sublabel: 'Every inquiry, every channel' },
+                { value: '72hr', label: 'Fixed-Fee Proposal', sublabel: 'Clear scope, clear price' },
+                { value: '100%', label: 'Quality Checked', sublabel: 'Every deliverable reviewed' },
+                { value: 'Global', label: 'Diaspora Coverage', sublabel: 'UK, USA, Canada, UAE, Ethiopia & more' },
+              ].map((stat, i) => (
+                <div
+                  key={stat.label}
+                  className={`flex flex-col items-start ${i < 3 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}`}
+                >
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-3" style={{backgroundColor: '#f0f7f4'}}>
+                    <span className="text-lg font-bold" style={{color: '#1A4731'}}>✓</span>
+                  </div>
+                  <span className="stat-number mb-1" style={{color: '#1A4731'}}>{stat.value}</span>
+                  <span className="text-sm font-semibold text-navy-950">{stat.label}</span>
+                  <span className="text-xs text-slate-400 mt-0.5">{stat.sublabel}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : (
+        <section className="bg-slate-50 border-y border-slate-200">
+          <div className="container-site py-10">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+              {stats.map((stat, i) => (
+                <div
+                  key={stat.label}
+                  className={`flex flex-col items-start ${i < stats.length - 1 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}`}
+                >
+                  <div className="w-9 h-9 rounded-lg bg-navy-50 flex items-center justify-center text-navy-600 mb-3">
+                    {stat.icon}
+                  </div>
+                  <span className="stat-number mb-1">{stat.value}</span>
+                  <span className="text-sm font-semibold text-navy-950">{stat.label}</span>
+                  <span className="text-xs text-slate-400 mt-0.5">{stat.sublabel}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
       {/* ════════════════════════════════════════════════════════════════
           4. PLATFORM FEATURES
           ════════════════════════════════════════════════════════════════ */}
@@ -853,54 +900,6 @@ export default async function HomePage() {
 
 
       {/* ════════════════════════════════════════════════════════════════
-          5. STATS BAR
-          ════════════════════════════════════════════════════════════════ */}
-      {isEthioTax ? (
-        <section className="bg-slate-50 border-y border-slate-200">
-          <div className="container-site py-10">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-              {[
-                { value: '24hr', label: 'Response Guarantee', sublabel: 'Every inquiry, every channel' },
-                { value: '72hr', label: 'Fixed-Fee Proposal', sublabel: 'Clear scope, clear price' },
-                { value: '100%', label: 'Quality Checked', sublabel: 'Every deliverable reviewed' },
-                { value: 'Global', label: 'Diaspora Coverage', sublabel: 'UK, USA, Canada, UAE, Ethiopia & more' },
-              ].map((stat, i) => (
-                <div
-                  key={stat.label}
-                  className={`flex flex-col items-start ${i < 3 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}`}
-                >
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-3" style={{backgroundColor: '#f0f7f4'}}>
-                    <span className="text-lg font-bold" style={{color: '#1A4731'}}>✓</span>
-                  </div>
-                  <span className="stat-number mb-1" style={{color: '#1A4731'}}>{stat.value}</span>
-                  <span className="text-sm font-semibold text-navy-950">{stat.label}</span>
-                  <span className="text-xs text-slate-400 mt-0.5">{stat.sublabel}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      ) : (
-        <section className="bg-slate-50 border-y border-slate-200">
-          <div className="container-site py-10">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-              {stats.map((stat, i) => (
-                <div
-                  key={stat.label}
-                  className={`flex flex-col items-start ${i < stats.length - 1 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}`}
-                >
-                  <div className="w-9 h-9 rounded-lg bg-navy-50 flex items-center justify-center text-navy-600 mb-3">
-                    {stat.icon}
-                  </div>
-                  <span className="stat-number mb-1">{stat.value}</span>
-                  <span className="text-sm font-semibold text-navy-950">{stat.label}</span>
-                  <span className="text-xs text-slate-400 mt-0.5">{stat.sublabel}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
 
       {/* ════════════════════════════════════════════════════════════════
