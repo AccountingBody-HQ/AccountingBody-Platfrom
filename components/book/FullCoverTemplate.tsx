@@ -153,6 +153,20 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
       fontSize: 8, fontFamily: "BookSans",
       color: SILVER, letterSpacing: 1,
     },
+    // Ledger-line motif - fills the lower front field
+    frontLedger: {
+      position: "absolute",
+      left: BLEED + 28,
+      right: BLEED + 28 + 6,
+      bottom: 72 + 44,
+      alignItems: "flex-end",
+    },
+    frontLedgerLine: {
+      height: 1.2, backgroundColor: GOLD, marginBottom: 16,
+    },
+    frontLedgerAnchor: {
+      width: 34, height: 5, backgroundColor: GOLD, marginTop: 6,
+    },
     // ── SPINE ────────────────────────────────────────────────────────────────
     spine: {
       position: "absolute",
@@ -346,6 +360,20 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
         {/* ── FRONT COVER ── */}
         <View style={s.frontCover}>
           <View style={s.frontRightStripe} />
+          {/* Ledger-line motif */}
+          <View style={s.frontLedger}>
+            {[
+              { w: "100%", o: 0.5 },
+              { w: "86%",  o: 0.42 },
+              { w: "72%",  o: 0.34 },
+              { w: "58%",  o: 0.26 },
+              { w: "44%",  o: 0.18 },
+              { w: "30%",  o: 0.12 },
+            ].map((ln, i) => (
+              <View key={i} style={[s.frontLedgerLine, { width: ln.w, opacity: ln.o } as any]} />
+            ))}
+            <View style={s.frontLedgerAnchor} />
+          </View>
           <View style={s.frontBottomBar}>
             <Text style={s.frontBottomPublisher}>Accounting Body Press</Text>
             <Text style={s.frontBottomEdition}>{edition}</Text>
