@@ -79,6 +79,43 @@ async function querySanity(groq: string) {
   return data.result ?? []
 }
 
+function scoreResult(result: Record<string, unknown>, q: string): number {
+  const query = q.toLowerCase().trim()
+  const title = ((result.title as string) || (result.term as string) || '').toLowerCase()
+  const excerpt = ((result.excerpt as string) || (result.definition as string) || '').toLowerCase()
+
+  // Score 4: exact full title match
+  if (title === query) return 4
+
+  // Score 3: title starts with query
+  if (title.startsWith(query)) return 3
+
+  // Score 2: title contains query
+  if (title.includes(query)) return 2
+
+  // Score 1: any query word found in title
+  const words = query.split(/\s+/).filter(w => w.length >= 2)
+  const titleWordMatch = words.some(w => title.includes(w))
+  if (titleWordMatch) return 1
+
+  // Score 0: match only in excerpt/definition
+  if (excerpt.includes(query)) return 0
+
+  return -1
+}
+
+function sortByRelevance(results: Record<string, unknown>[], q: string): Record<string, unknown>[] {
+  return [...results].sort((a, b) => {
+    const scoreA = scoreResult(a, q)
+    const scoreB = scoreResult(b, q)
+    if (scoreB !== scoreA) return scoreB - scoreA
+    // Tiebreaker: most recent first
+    const dateA = new Date((a.publishedAt as string) || 0).getTime()
+    const dateB = new Date((b.publishedAt as string) || 0).getTime()
+    return dateB - dateA
+  })
+}
+
 export async function GET(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
   if (!checkRateLimit(ip)) {
@@ -95,9 +132,11 @@ export async function GET(req: NextRequest) {
 
   try {
     const andResults = await querySanity(makeGroq(groups, 'AND', site))
-    if (andResults.length > 0) return NextResponse.json(andResults)
+    if (andResults.length > 0) {
+      return NextResponse.json(sortByRelevance(andResults, q))
+    }
     const orResults = await querySanity(makeGroq(groups, 'OR', site))
-    return NextResponse.json(orResults)
+    return NextResponse.json(sortByRelevance(orResults, q))
   } catch {
     return NextResponse.json([])
   }
