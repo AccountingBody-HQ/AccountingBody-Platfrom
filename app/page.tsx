@@ -682,6 +682,59 @@ export default async function HomePage() {
 
 
       {/* ════════════════════════════════════════════════════════════════
+          2. LATEST INSIGHTS
+          ════════════════════════════════════════════════════════════════ */}
+      <section className={`section ${isEthioTax ? 'bg-[#f0f7f4]' : 'bg-white'}`}>
+        <div className="container-site">
+
+          <div className="flex items-end justify-between mb-10 gap-4">
+            <div>
+              <span className={`eyebrow mb-3 block`}>
+                {isEthioTax ? 'News & Insights' : 'Latest Content'}
+              </span>
+              <h2 className="section-title">
+                {isEthioTax ? 'Latest from EthioTax' : 'Latest Insights'}
+              </h2>
+              <p className="text-slate-500 text-base leading-relaxed mt-2 max-w-xl">
+                {isEthioTax
+                  ? 'Industry updates, tax briefs and insights for Ethiopian finance professionals and the diaspora.'
+                  : 'The latest accounting news, finance briefs and study insights from our editorial team.'}
+              </p>
+            </div>
+            <Link
+              href="/articles"
+              className={`shrink-0 flex items-center gap-1.5 text-sm font-semibold transition-colors whitespace-nowrap ${isEthioTax ? 'text-[#1A4731] hover:text-[#C9982A]' : 'text-navy-700 hover:text-gold-500'}`}
+            >
+              View all
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {articles.slice(0, 4).map(article => (
+              <ArticleCard key={article._id} article={article as typeof placeholderArticles[0]} />
+            ))}
+          </div>
+
+          <div className="mt-8 text-center">
+            <Link
+              href="/articles"
+              className={`inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold transition-colors shadow-sm ${isEthioTax ? 'text-white hover:opacity-90' : 'bg-navy-950 text-white hover:bg-navy-900'}`}
+              style={isEthioTax ? {backgroundColor: '#1A4731'} : {}}
+            >
+              {isEthioTax ? 'Browse all insights' : 'Browse all 3,000+ articles'}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════
           2. QUALIFICATION PATHWAYS
           ════════════════════════════════════════════════════════════════ */}
       {!isEthioTax && <section className="section bg-white">
@@ -968,50 +1021,6 @@ export default async function HomePage() {
           </div>
         </section>
       )}
-
-
-      {/* ════════════════════════════════════════════════════════════════
-          6. FEATURED ARTICLES
-          ════════════════════════════════════════════════════════════════ */}
-      <section className="section bg-white">
-        <div className="container-site">
-
-          <div className="flex items-end justify-between mb-10 gap-4">
-            <div>
-              <span className="eyebrow mb-3 block">Latest Content</span>
-              <h2 className="section-title">Latest Insights</h2>
-            </div>
-            <Link
-              href="/articles"
-              className="shrink-0 flex items-center gap-1.5 text-sm font-semibold text-navy-700 hover:text-gold-500 transition-colors whitespace-nowrap"
-            >
-              View all
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {articles.slice(0, 4).map(article => (
-              <ArticleCard key={article._id} article={article as typeof placeholderArticles[0]} />
-            ))}
-          </div>
-
-          <div className="mt-8 text-center">
-            <Link
-              href="/study"
-              className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors shadow-sm"
-            >
-              Browse all 3,000+ articles
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
-          </div>
-
-        </div>
-      </section>
 
 
       {/* ════════════════════════════════════════════════════════════════
