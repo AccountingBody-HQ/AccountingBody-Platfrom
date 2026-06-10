@@ -119,14 +119,12 @@ function ServiceIcon({ category }: { category: string }) {
 
 export default function GetHelpPage() {
   const [isEthioTax, setIsEthioTax] = useState(false)
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setIsEthioTax(window.location.hostname.includes('ethiotax.com'))
-    setMounted(true)
+    const cookie = document.cookie.split('; ').find(r => r.startsWith('x-et-platform='))
+    setIsEthioTax(cookie?.split('=')[1] === 'ethiotax')
+    window.scrollTo(0, 0)
   }, [])
-
-  if (!mounted) return null
 
   if (isEthioTax) {
     return (
