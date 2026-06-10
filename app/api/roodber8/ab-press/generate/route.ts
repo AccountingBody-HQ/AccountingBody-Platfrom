@@ -138,7 +138,7 @@ function buildFidelity(course: any, stats: { mcqFailed: string[]; mcqNotFound: s
         articles++
         const body = art.body || []
         for (const b of body) {
-          if (b._type !== "block") droppedTypes[b._type] = (droppedTypes[b._type] || 0) + 1
+          if (b._type !== "block" && b._type !== "tableBlock") droppedTypes[b._type] = (droppedTypes[b._type] || 0) + 1
         }
         const hasContent = body.some((b: any) =>
           b._type === "block" &&
