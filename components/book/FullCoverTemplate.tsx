@@ -153,19 +153,16 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
       fontSize: 8, fontFamily: "BookSans",
       color: SILVER, letterSpacing: 1,
     },
-    // Ledger-line motif - fills the lower front field
-    frontLedger: {
+    // Ascending-bars motif - abstract bar chart, fills the lower front field
+    frontBars: {
       position: "absolute",
-      left: BLEED + 28,
       right: BLEED + 28 + 6,
-      bottom: 72 + 44,
+      bottom: 72,
+      flexDirection: "row",
       alignItems: "flex-end",
     },
-    frontLedgerLine: {
-      height: 1.2, backgroundColor: GOLD, marginBottom: 16,
-    },
-    frontLedgerAnchor: {
-      width: 34, height: 5, backgroundColor: GOLD, marginTop: 6,
+    frontBar: {
+      width: 30, marginLeft: 12, backgroundColor: GOLD,
     },
     // ── SPINE ────────────────────────────────────────────────────────────────
     spine: {
@@ -360,19 +357,17 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
         {/* ── FRONT COVER ── */}
         <View style={s.frontCover}>
           <View style={s.frontRightStripe} />
-          {/* Ledger-line motif */}
-          <View style={s.frontLedger}>
+          {/* Ascending-bars motif */}
+          <View style={s.frontBars}>
             {[
-              { w: "100%", o: 0.5 },
-              { w: "86%",  o: 0.42 },
-              { w: "72%",  o: 0.34 },
-              { w: "58%",  o: 0.26 },
-              { w: "44%",  o: 0.18 },
-              { w: "30%",  o: 0.12 },
-            ].map((ln, i) => (
-              <View key={i} style={[s.frontLedgerLine, { width: ln.w, opacity: ln.o } as any]} />
+              { h: 54,  o: 0.22 },
+              { h: 92,  o: 0.38 },
+              { h: 132, o: 0.56 },
+              { h: 176, o: 0.76 },
+              { h: 224, o: 1 },
+            ].map((b, i) => (
+              <View key={i} style={[s.frontBar, { height: b.h, opacity: b.o } as any]} />
             ))}
-            <View style={s.frontLedgerAnchor} />
           </View>
           <View style={s.frontBottomBar}>
             <Text style={s.frontBottomPublisher}>Accounting Body Press</Text>
