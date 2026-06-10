@@ -580,7 +580,7 @@
 .goog-te-banner-frame,
 iframe.goog-te-banner-frame,
 .goog-te-balloon-frame { display: none !important; }
-::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar { width: 12px; height: 12px; }
 ::-webkit-scrollbar-track { background: #e2e8f0; }
 ::-webkit-scrollbar-thumb { background: #64748b; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #475569; }
