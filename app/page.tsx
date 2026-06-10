@@ -28,12 +28,13 @@ interface SanityArticle {
 
 // ── Sanity fetch ──────────────────────────────────────────────────────────────
 
-async function getFeaturedArticles(): Promise<SanityArticle[]> {
+async function getFeaturedArticles(platform: string): Promise<SanityArticle[]> {
   try {
     const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
     const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
+    const site = platform === 'ethiotax' ? 'ethiotax' : 'accountingbody'
     const query = encodeURIComponent(
-      `*[_type == "article" && "accountingbody" in showOnSites && showInLatestInsights == true] | order(publishedAt desc) [0..7] {
+      `*[_type == "article" && "${site}" in showOnSites && showInLatestInsights == true] | order(publishedAt desc) [0..7] {
         _id, title, slug, excerpt, examBody, readTime, publishedAt,
         showInLatestInsights, isHotTopic, insightTag,
         "categoryTitle": categories[0]->title,
@@ -49,7 +50,7 @@ async function getFeaturedArticles(): Promise<SanityArticle[]> {
     const results = data.result ?? []
     if (results.length === 0) {
       const fallbackQuery = encodeURIComponent(
-        `*[_type == "article" && "accountingbody" in showOnSites] | order(publishedAt desc) [0..3] {
+        `*[_type == "article" && "${site}" in showOnSites] | order(publishedAt desc) [0..3] {
           _id, title, slug, excerpt, examBody, readTime, publishedAt,
           showInLatestInsights, isHotTopic, insightTag,
           "categoryTitle": categories[0]->title,
@@ -566,7 +567,7 @@ export default async function HomePage() {
   const activeQualificationPaths = isEthioTax
     ? [eticpaCard, ...qualificationPaths.filter(q => q.slug !== 'icaew')]
     : qualificationPaths
-  const sanityArticles = await getFeaturedArticles()
+  const sanityArticles = await getFeaturedArticles(isEthioTax ? 'ethiotax' : 'accountingbody')
   const articles = sanityArticles.length > 0 ? sanityArticles : placeholderArticles
 
   return (
