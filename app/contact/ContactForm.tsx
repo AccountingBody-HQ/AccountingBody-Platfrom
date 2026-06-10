@@ -197,7 +197,7 @@ export default function ContactForm() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                     </svg>
-                    Sending\u2026
+                    Sending…
                   </>
                 ) : 'Send message'}
               </button>
@@ -217,7 +217,7 @@ export default function ContactForm() {
             <span className="eyebrow text-gold-400 mb-3 block">Stay Ahead</span>
             <h2 className="font-display text-2xl text-white mb-2 leading-tight">Free exam tips, straight to your inbox</h2>
             <p className="text-white/60 text-sm leading-relaxed mb-6 max-w-lg">
-              Weekly study tips and new question releases \u2014 written by qualified accountants.
+              Weekly study tips and new question releases — written by qualified accountants.
               Join 12,000+ accounting students and professionals.
             </p>
             {subscribeState === 'success' ? (
@@ -225,7 +225,7 @@ export default function ContactForm() {
                 <svg className="w-5 h-5 text-gold-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <p className="text-white text-sm font-medium">You are subscribed \u2014 welcome!</p>
+                <p className="text-white text-sm font-medium">You are subscribed — welcome!</p>
               </div>
             ) : (
               <form onSubmit={handleSubscribeSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md">
@@ -244,7 +244,7 @@ export default function ContactForm() {
                 />
                 <button type="submit" disabled={subscribeState === 'loading'}
                   className="h-12 px-6 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 disabled:opacity-60 transition-colors whitespace-nowrap">
-                  {subscribeState === 'loading' ? 'Subscribing\u2026' : 'Subscribe free'}
+                  {subscribeState === 'loading' ? 'Subscribing…' : 'Subscribe free'}
                 </button>
               </form>
             )}
