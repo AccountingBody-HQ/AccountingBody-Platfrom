@@ -661,6 +661,39 @@ export function BookTemplate({ course, bookType, edition, subtitle, pageMap, onC
           <Text style={s.pageNum} render={({ pageNumber }) => String(pageNumber)} fixed />
         </Page>
       )}
+
+      {/* ── Closing page: About AB Press ──────────────────────────────────── */}
+      <Page size={[W, H]} style={s.page}>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <Text style={s.publisherLabel}>About Accounting Body Press</Text>
+          <View style={s.titleDivider} />
+          <Text style={[s.body, { textAlign: "center", maxWidth: 300 }]}>
+            Accounting Body Press publishes structured study texts and practice kits
+            for learners preparing for professional accounting qualifications.
+            Every title is developed by the Accounting Body Editorial Team and is
+            designed to pair clear explanation with rigorous practice.
+          </Text>
+          <Text style={[s.body, { textAlign: "center", marginTop: 14, fontFamily: "BookSans-Bold", color: "#0C1A3D" }]}>
+            accountingbody.com
+          </Text>
+          <View style={s.titleDivider} />
+          <Text style={[s.copyrightText, { textAlign: "center", maxWidth: 320 }]}>
+            Accounting Body is an independent study platform and is not affiliated with,
+            endorsed by, or connected to ACCA, CIMA, ICAEW, or AAT. These names are used
+            solely to identify the qualifications our study materials are designed to support.
+          </Text>
+        </View>
+      </Page>
+
+      {/* ── Notes pages ───────────────────────────────────────────────────── */}
+      {[1, 2].map((n) => (
+        <Page key={"notes-" + n} size={[W, H]} style={s.page}>
+          <Text style={[s.sectionHeader, { marginBottom: 16 }]}>Notes</Text>
+          {Array.from({ length: 22 }).map((_, li) => (
+            <View key={li} style={{ borderBottomWidth: 0.5, borderBottomColor: "#dddddd", height: 22 }} />
+          ))}
+        </Page>
+      ))}
     </Document>
   )
 }
