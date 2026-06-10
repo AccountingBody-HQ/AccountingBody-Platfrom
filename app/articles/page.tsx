@@ -18,13 +18,6 @@ interface ArticleSummary {
   isHotTopic?:           boolean
 }
 
-const EXAM_BODY_BADGE: Record<string, string> = {
-  acca:  'bg-blue-50 text-[#004B8D] border-blue-200',
-  cima:  'bg-sky-50 text-[#0081C6] border-sky-200',
-  aat:   'bg-teal-50 text-teal-700 border-teal-200',
-  icaew: 'bg-red-50 text-red-800 border-red-200',
-}
-
 async function getArticles(site: string): Promise<ArticleSummary[]> {
   try {
     if (!PROJECT_ID) return []
@@ -109,8 +102,6 @@ export default async function ArticlesPage() {
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
               {articles.map(article => {
                 const examBodyFirst = Array.isArray(article.examBody) ? article.examBody[0] : article.examBody
-                const examBodyKey = examBodyFirst?.toLowerCase() ?? ''
-                const badgeClass = EXAM_BODY_BADGE[examBodyKey] ?? 'bg-slate-100 text-slate-600 border-slate-200'
                 const href = examBodyFirst
                   ? `/study/${examBodyFirst.toLowerCase()}/${article.slug.current}`
                   : `/articles/${article.slug.current}`
