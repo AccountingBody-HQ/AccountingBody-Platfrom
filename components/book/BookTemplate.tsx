@@ -492,6 +492,15 @@ export function BookTemplate({ course, bookType, edition, subtitle, pageMap, onC
             </View>
           </View>
         ))}
+        {showQuestions && (
+          <View style={s.tocChapterRow}>
+            <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
+              <Text style={s.tocChapterText}>Answers and Explanations</Text>
+              <View style={{ flex: 1, borderBottomWidth: 0.7, borderBottomColor: "#bbbbbb", borderBottomStyle: "dotted", marginHorizontal: 4, marginBottom: 2 }} />
+              <Text style={s.tocChapterText}>{pageMap && pageMap[(course.chapters || []).length] ? String(pageMap[(course.chapters || []).length]) : ""}</Text>
+            </View>
+          </View>
+        )}
       </Page>
 
       {/* ── Chapters ─────────────────────────────────────────────────────── */}
@@ -574,6 +583,7 @@ export function BookTemplate({ course, bookType, edition, subtitle, pageMap, onC
           <Text style={s.runningHead} fixed>{sanitise(subtitle)}</Text>
           <View style={s.runningLine} fixed />
           <View style={s.chapterWrap}>
+            <Text style={{ fontSize: 0.1 }} render={({ pageNumber }) => { if (onChapterPage) onChapterPage((course.chapters || []).length, pageNumber); return "" }} />
             <Text style={s.chapterLabel}>Answers</Text>
             <Text style={s.chapterTitle}>Answers and Explanations</Text>
             <View style={s.chapterRule} />
