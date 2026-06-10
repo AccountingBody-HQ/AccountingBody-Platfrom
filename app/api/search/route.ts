@@ -56,7 +56,7 @@ function buildGroups(q: string): string[][] {
 function makeGroq(groups: string[][], mode: 'AND' | 'OR', site: string): string {
   const clause = (group: string[]) =>
     '(' + group.map(w =>
-      `title match "${w}*" || term match "${w}*" || excerpt match "${w}*" || definition match "${w}*" || category match "${w}*"`
+      `title match "${w}*" || term match "${w}*" || excerpt match "${w}*" || definition match "${w}*" || category match "${w}*" || examBody match "${w}*" || eticpaModule match "${w}*"`
     ).join(' || ') + ')'
   const join    = mode === 'AND' ? ' && ' : ' || '
   const filters = groups.map(clause).join(join)
