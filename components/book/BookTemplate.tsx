@@ -420,6 +420,22 @@ export function BookTemplate({ course, bookType, edition, subtitle, pageMap, onC
     }
     return null
   }
+  // Flat list of all questions in a chapter with continuous numbering.
+  // Used by the end-of-chapter Questions section and the end-of-book Answers part.
+  function chapterQuestionList(ch: any) {
+    const list: { q: any; num: number }[] = []
+    let n = 0
+    for (const ls of (ch.lessons || [])) {
+      for (const art of (ls.linkedArticles || [])) {
+        for (const q of (art.quizQuestions || [])) {
+          n++
+          list.push({ q, num: n })
+        }
+      }
+    }
+    return list
+  }
+
   const bookTypeLabel =
     bookType === "combined" ? "Study Text & Practice Kit"
     : bookType === "study"  ? "Study Text"
@@ -525,47 +541,61 @@ export function BookTemplate({ course, bookType, edition, subtitle, pageMap, onC
                   </View>
                 )
               })}
-              {/* Practice Questions */}
-              {showQuestions && (ls.linkedArticles || []).map((art: any, ai: number) => {
-                const qs = art.quizQuestions || []
-                if (qs.length === 0) return null
-                return (
-                  <View key={"q-" + (art._id || ai)}>
-                    <View style={s.sectionRule} />
-                    <Text style={s.sectionHeader}>Practice Questions</Text>
-                    {qs.map((q: any, qi: number) => (
-                      <View key={qi} style={s.questionWrap} wrap={false}>
-                        <Text style={s.questionLabel}>Question {qi + 1}</Text>
-                        <Text style={s.questionText}>{sanitise(q.questionText)}</Text>
-                        {(q.options || []).map((opt: any, oi: number) => (
-                          <View key={oi} style={s.optionRow}>
-                            <Text style={s.optionLetter}>{LETTERS[oi]}.</Text>
-                            <Text style={s.optionText}>{sanitise(opt)}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    ))}
-                    <View style={s.sectionRule} />
-                    <Text style={s.sectionHeader}>Answer Key</Text>
-                    {qs.map((q: any, qi: number) => (
-                      <View key={"a-" + qi} style={s.answerWrap}>
-                        <Text style={s.answerLabel}>
-                          Q{qi + 1}: {LETTERS[q.correctIndex ?? 0]}
-                        </Text>
-                        {q.explanation
-                          ? <View>{formatExplanation(sanitise(q.explanation))}</View>
-                          : null}
-                      </View>
-                    ))}
-                  </View>
-                )
-              })}
             </View>
           ))}
+
+          {/* End-of-chapter Questions (answers are at the back of the book) */}
+          {showQuestions && chapterQuestionList(ch).length > 0 && (
+            <View>
+              <View style={s.sectionRule} />
+              <Text style={s.sectionHeader}>End of Chapter Questions</Text>
+              {chapterQuestionList(ch).map(({ q, num }: { q: any; num: number }) => (
+                <View key={num} style={s.questionWrap} wrap={false}>
+                  <Text style={s.questionLabel}>Question {num}</Text>
+                  <Text style={s.questionText}>{sanitise(q.questionText)}</Text>
+                  {(q.options || []).map((opt: any, oi: number) => (
+                    <View key={oi} style={s.optionRow}>
+                      <Text style={s.optionLetter}>{LETTERS[oi]}.</Text>
+                      <Text style={s.optionText}>{sanitise(opt)}</Text>
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </View>
+          )}
 
           <Text style={s.pageNum} render={({ pageNumber }) => String(pageNumber)} fixed />
         </Page>
       ))}
+
+      {/* ── Answers and Explanations (back of book) ─────────────────────── */}
+      {showQuestions && (
+        <Page size={[W, H]} style={s.page}>
+          <Text style={s.runningHead} fixed>{sanitise(subtitle)}</Text>
+          <View style={s.runningLine} fixed />
+          <View style={s.chapterWrap}>
+            <Text style={s.chapterLabel}>Answers</Text>
+            <Text style={s.chapterTitle}>Answers and Explanations</Text>
+            <View style={s.chapterRule} />
+          </View>
+          {(course.chapters || []).map((ch: any, ci: number) => {
+            const list = chapterQuestionList(ch)
+            if (list.length === 0) return null
+            return (
+              <View key={ch._key || ci}>
+                <Text style={s.sectionHeader}>Chapter {ci + 1}: {sanitise(ch.chapterTitle)}</Text>
+                {list.map(({ q, num }: { q: any; num: number }) => (
+                  <View key={num} style={s.answerWrap}>
+                    <Text style={s.answerLabel}>Q{num}: {LETTERS[q.correctIndex ?? 0]}</Text>
+                    {q.explanation ? <View>{formatExplanation(sanitise(q.explanation))}</View> : null}
+                  </View>
+                ))}
+              </View>
+            )
+          })}
+          <Text style={s.pageNum} render={({ pageNumber }) => String(pageNumber)} fixed />
+        </Page>
+      )}
     </Document>
   )
 }
