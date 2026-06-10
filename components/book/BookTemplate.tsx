@@ -398,10 +398,12 @@ interface BookTemplateProps {
   bookType: "combined" | "study" | "practice"
   edition:  string
   subtitle: string
+  pageMap?: Record<number, number>
+  onChapterPage?: (ci: number, page: number) => void
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export function BookTemplate({ course, bookType, edition, subtitle }: BookTemplateProps) {
+export function BookTemplate({ course, bookType, edition, subtitle, pageMap, onChapterPage }: BookTemplateProps) {
   const year         = new Date().getFullYear()
   const showNotes    = bookType === "combined" || bookType === "study"
   const showQuestions = bookType === "combined" || bookType === "practice"
@@ -465,9 +467,13 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
         <Text style={s.tocTitle}>Contents</Text>
         {(course.chapters || []).map((ch: any, ci: number) => (
           <View key={ch._key || ci} style={s.tocChapterRow}>
-            <Text style={s.tocChapterText}>
-              Chapter {ci + 1}: {sanitise(ch.chapterTitle)}
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
+              <Text style={s.tocChapterText}>
+                Chapter {ci + 1}: {sanitise(ch.chapterTitle)}
+              </Text>
+              <View style={{ flex: 1, borderBottomWidth: 0.7, borderBottomColor: "#bbbbbb", borderBottomStyle: "dotted", marginHorizontal: 4, marginBottom: 2 }} />
+              <Text style={s.tocChapterText}>{pageMap && pageMap[ci] ? String(pageMap[ci]) : ""}</Text>
+            </View>
           </View>
         ))}
       </Page>
@@ -481,6 +487,7 @@ export function BookTemplate({ course, bookType, edition, subtitle }: BookTempla
 
           {/* Chapter header */}
           <View style={s.chapterWrap}>
+            <Text style={{ fontSize: 0.1 }} render={({ pageNumber }) => { if (onChapterPage) onChapterPage(ci, pageNumber); return "" }} />
             <Text style={s.chapterLabel}>Chapter {ci + 1}</Text>
             <Text style={s.chapterTitle}>{sanitise(ch.chapterTitle)}</Text>
             <View style={s.chapterRule} />
