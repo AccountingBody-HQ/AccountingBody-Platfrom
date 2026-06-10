@@ -1192,58 +1192,44 @@ export default async function HomePage() {
                 EthioTax clients across the UK, USA and Canada share their experience.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-              {/* Tigist */}
-              <div className="bg-white rounded-2xl p-8 shadow-sm border-t-4 flex flex-col" style={{ borderTopColor: '#C9982A' }}>
-                <div className="flex gap-1 mb-4">
-                  {[1,2,3,4,5].map(s => (
-                    <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
-                  ))}
-                </div>
-                <div className="text-4xl font-display leading-none mb-3 opacity-40" style={{ color: '#1A4731' }} translate="no">&ldquo;</div>
-                <p className="text-gray-700 text-sm leading-relaxed mb-6">EthioTax handled my UK Self Assessment quickly and professionally. They understood my situation straight away and the whole process was straightforward. I will not be going anywhere else.</p>
-                <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: '#e8f0eb' }}>
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white" style={{ backgroundColor: '#1A4731' }}>TA</div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">Tigist A.</p>
-                    <p className="text-gray-400 text-xs">Business owner &mdash; London, UK</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6" style={{alignItems: 'start'}}>
+              {[
+                {
+                  initials: 'TA',
+                  name: 'Tigist A.',
+                  role: 'Business owner — London, UK',
+                  quote: 'EthioTax handled my UK Self Assessment quickly and professionally. They understood my situation straight away and the whole process was straightforward. I will not be going anywhere else.',
+                },
+                {
+                  initials: 'DM',
+                  name: 'Dawit M.',
+                  role: 'Finance professional — Washington DC, USA',
+                  quote: 'I needed advice on structuring a diaspora investment in Ethiopia. EthioTax provided a clear proposal within 72 hours and guided me through the entire process. Excellent service.',
+                },
+                {
+                  initials: 'SG',
+                  name: 'Selam G.',
+                  role: 'Business owner — Toronto, Canada',
+                  quote: 'Managing accounts across two countries was always complicated. EthioTax handled everything and I could communicate in Amharic throughout. Professional, reliable and highly recommended.',
+                },
+              ].map((t) => (
+                <div key={t.name} className="bg-white rounded-2xl p-8 shadow-sm" style={{borderTop: '4px solid #C9982A'}}>
+                  <div className="flex gap-1 mb-4">
+                    {[1,2,3,4,5].map(s => (
+                      <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
+                    ))}
+                  </div>
+                  <div className="text-4xl font-display leading-none mb-3 opacity-40" style={{ color: '#1A4731' }} translate="no">&ldquo;</div>
+                  <p className="text-gray-700 text-sm leading-relaxed mb-6">{t.quote}</p>
+                  <div className="flex items-center gap-3 pt-4" style={{borderTop: '1px solid #e8f0eb'}}>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white" style={{ backgroundColor: '#1A4731' }} translate="no">{t.initials}</div>
+                    <div>
+                      <p className="font-semibold text-gray-900 text-sm">{t.name}</p>
+                      <p className="text-gray-400 text-xs">{t.role}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-              {/* Dawit */}
-              <div className="bg-white rounded-2xl p-8 shadow-sm border-t-4 flex flex-col" style={{ borderTopColor: '#C9982A' }}>
-                <div className="flex gap-1 mb-4">
-                  {[1,2,3,4,5].map(s => (
-                    <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
-                  ))}
-                </div>
-                <div className="text-4xl font-display leading-none mb-3 opacity-40" style={{ color: '#1A4731' }} translate="no">&ldquo;</div>
-                <p className="text-gray-700 text-sm leading-relaxed mb-6">I needed advice on structuring a diaspora investment in Ethiopia. EthioTax provided a clear proposal within 72 hours and guided me through the entire process. Excellent service.</p>
-                <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: '#e8f0eb' }}>
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white" style={{ backgroundColor: '#1A4731' }}>DM</div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">Dawit M.</p>
-                    <p className="text-gray-400 text-xs">Finance professional &mdash; Washington DC, USA</p>
-                  </div>
-                </div>
-              </div>
-              {/* Selam */}
-              <div className="bg-white rounded-2xl p-8 shadow-sm border-t-4 flex flex-col" style={{ borderTopColor: '#C9982A' }}>
-                <div className="flex gap-1 mb-4">
-                  {[1,2,3,4,5].map(s => (
-                    <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
-                  ))}
-                </div>
-                <div className="text-4xl font-display leading-none mb-3 opacity-40" style={{ color: '#1A4731' }} translate="no">&ldquo;</div>
-                <p className="text-gray-700 text-sm leading-relaxed mb-6">Managing accounts across two countries was always complicated. EthioTax handled everything and I could communicate in Amharic throughout. Professional, reliable and highly recommended.</p>
-                <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: '#e8f0eb' }}>
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white" style={{ backgroundColor: '#1A4731' }}>SG</div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">Selam G.</p>
-                    <p className="text-gray-400 text-xs">Business owner &mdash; Toronto, Canada</p>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
