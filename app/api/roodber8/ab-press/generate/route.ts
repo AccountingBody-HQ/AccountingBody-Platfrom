@@ -121,6 +121,58 @@ function buildMetadata(subtitle: string, bookType: string, edition: string, cour
   return lines.join("\n")
 }
 
+// ── KDP pre-flight checks ────────────────────────────────────────────────────
+// Inspects the rendered PDFs and certifies KDP-readiness in the ZIP.
+function buildPreflight(interiorPdf: Buffer, coverPdf: Buffer, pageCount: number, subtitle: string, bookType: string): string {
+  const interiorStr = interiorPdf.toString("binary")
+  const coverStr    = coverPdf.toString("binary")
+  const checks: { name: string; pass: boolean; detail: string }[] = []
+
+  // 1. Fonts embedded (TrueType font files present, no standard-font fallback)
+  const hasEmbedded   = /\/FontFile2/.test(interiorStr) && /\/FontFile2/.test(coverStr)
+  const hasStdHelv    = /\/BaseFont\s*\/Helvetica[^-]/.test(interiorStr) || /\/BaseFont\s*\/Helvetica[^-]/.test(coverStr)
+  checks.push({ name: "Fonts embedded", pass: hasEmbedded && !hasStdHelv,
+    detail: hasEmbedded && !hasStdHelv ? "Liberation Sans embedded in interior and cover" : "Non-embedded font detected - KDP may reject" })
+
+  // 2. Page count within KDP paperback limits (6x9 black and white: 24-828)
+  const pagesOk = pageCount >= 24 && pageCount <= 828
+  checks.push({ name: "Page count", pass: pagesOk, detail: pageCount + " pages (KDP limit 24-828)" })
+
+  // 3. Cover dimensions match the spine formula for this page count
+  const spineIn   = Math.max(pageCount * 0.002252, 0.5)
+  const expectedW = (6.125 * 2 + spineIn) * 72
+  const expectedH = 9.25 * 72
+  const boxMatch  = coverStr.match(/\/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*\]/)
+  const coverW    = boxMatch ? parseFloat(boxMatch[1]) : 0
+  const coverH    = boxMatch ? parseFloat(boxMatch[2]) : 0
+  const coverOk   = Math.abs(coverW - expectedW) < 1 && Math.abs(coverH - expectedH) < 1
+  checks.push({ name: "Cover dimensions", pass: coverOk,
+    detail: coverW.toFixed(2) + " x " + coverH.toFixed(2) + " pts (expected " + expectedW.toFixed(2) + " x " + expectedH.toFixed(2) + ", spine " + spineIn.toFixed(3) + "in)" })
+
+  // 4. Interior trim is 6x9
+  const trimOk = /\/MediaBox\s*\[\s*0\s+0\s+432\s+648\s*\]/.test(interiorStr)
+  checks.push({ name: "Interior trim 6x9", pass: trimOk, detail: trimOk ? "432 x 648 pts confirmed" : "Unexpected interior page size" })
+
+  // 5. Title present
+  checks.push({ name: "Title metadata", pass: subtitle.trim().length > 0, detail: subtitle || "MISSING" })
+
+  const allPass = checks.every((c) => c.pass)
+  const lines = [
+    "ACCOUNTING BODY PRESS - KDP PRE-FLIGHT REPORT",
+    "=============================================",
+    "",
+    "Book: " + subtitle + " (" + bookType + ")",
+    "Generated: " + new Date().toISOString(),
+    "",
+    ...checks.map((c) => (c.pass ? "[PASS] " : "[FAIL] ") + c.name + " - " + c.detail),
+    "",
+    allPass
+      ? "VERDICT: KDP-READY - upload interior.pdf and cover.pdf as-is."
+      : "VERDICT: NOT READY - resolve [FAIL] items before uploading to KDP.",
+  ]
+  return lines.join("\n")
+}
+
 // ── ZIP builder (no external dependency) ─────────────────────────────────────
 function u32le(n: number): Buffer {
   const b = Buffer.alloc(4); b.writeUInt32LE(n, 0); return b
@@ -227,10 +279,16 @@ export async function POST(req: NextRequest) {
       "utf8"
     )
 
+    const preflightBuffer = Buffer.from(
+      buildPreflight(interiorPdf, coverPdf, pageCount, subtitle || course.title, bookType),
+      "utf8"
+    )
+
     const zip      = buildZip([
-      { name: "interior.pdf", data: interiorPdf },
-      { name: "cover.pdf",    data: coverPdf    },
-      { name: "metadata.txt", data: metaBuffer  },
+      { name: "interior.pdf",         data: interiorPdf     },
+      { name: "cover.pdf",            data: coverPdf        },
+      { name: "metadata.txt",         data: metaBuffer      },
+      { name: "preflight-report.txt", data: preflightBuffer },
     ])
     const filename = `${slug}-${bookType}.zip`
 
