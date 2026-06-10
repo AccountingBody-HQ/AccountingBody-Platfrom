@@ -153,16 +153,28 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
       fontSize: 8, fontFamily: "BookSans",
       color: SILVER, letterSpacing: 1,
     },
-    // Ascending-bars motif - abstract bar chart, fills the lower front field
-    frontBars: {
+    // Brand-mark motif - the AB three-rectangle logo, enlarged
+    // Geometry: full-height rect (9x20) + two squares (9x9) at x=11, scaled 11x
+    frontMark: {
       position: "absolute",
       right: BLEED + 28 + 6,
-      bottom: 72,
-      flexDirection: "row",
-      alignItems: "flex-end",
+      bottom: 72 + 36,
+      width: 220, height: 220,
     },
-    frontBar: {
-      width: 30, marginLeft: 12, backgroundColor: GOLD,
+    frontMarkTall: {
+      position: "absolute", left: 0, top: 0,
+      width: 99, height: 220, borderRadius: 10,
+      borderWidth: 2.5, borderColor: GOLD,
+    },
+    frontMarkTopSq: {
+      position: "absolute", left: 121, top: 0,
+      width: 99, height: 99, borderRadius: 10,
+      borderWidth: 2.5, borderColor: GOLD,
+    },
+    frontMarkBotSq: {
+      position: "absolute", left: 121, top: 121,
+      width: 99, height: 99, borderRadius: 10,
+      backgroundColor: GOLD,
     },
     // ── SPINE ────────────────────────────────────────────────────────────────
     spine: {
@@ -357,17 +369,11 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
         {/* ── FRONT COVER ── */}
         <View style={s.frontCover}>
           <View style={s.frontRightStripe} />
-          {/* Ascending-bars motif */}
-          <View style={s.frontBars}>
-            {[
-              { h: 54,  o: 0.22 },
-              { h: 92,  o: 0.38 },
-              { h: 132, o: 0.56 },
-              { h: 176, o: 0.76 },
-              { h: 224, o: 1 },
-            ].map((b, i) => (
-              <View key={i} style={[s.frontBar, { height: b.h, opacity: b.o } as any]} />
-            ))}
+          {/* Brand-mark motif - enlarged AB logo geometry */}
+          <View style={s.frontMark}>
+            <View style={s.frontMarkTall} />
+            <View style={s.frontMarkTopSq} />
+            <View style={s.frontMarkBotSq} />
           </View>
           <View style={s.frontBottomBar}>
             <Text style={s.frontBottomPublisher}>Accounting Body Press</Text>
