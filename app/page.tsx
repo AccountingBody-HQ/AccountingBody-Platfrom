@@ -523,36 +523,28 @@ export default async function HomePage() {
   ]
   const etTrustPoints = [
     {
-      title: 'The Vetting Premium',
-      body: 'Every professional in our network is qualified, referenced, licensed and performance-monitored. You never deal with an unverified provider.',
+      number: '01',
+      title: 'Verified Professionals Only',
+      body: 'Every specialist in the EthioTax network is qualified, referenced and performance-monitored. You never deal with an unverified provider — ever.',
+      stat: '100%', statLabel: 'Verified',
     },
     {
-      title: 'The Convenience Premium',
-      body: 'One inquiry. One point of contact. EthioTax manages every step from brief to delivery - you focus on your business, not your accountant.',
+      number: '02',
+      title: 'Built for the Ethiopian Community',
+      body: 'We understand Amharic, Afaan Oromoo, ERCA, Ethiopian business law and the cross-border reality of diaspora life. Generalist firms simply do not.',
+      stat: '4+', statLabel: 'Languages',
     },
     {
-      title: 'The Community Premium',
-      body: 'We understand Amharic, Afaan Oromoo, ERCA, Ethiopian business law and the cross-border reality of diaspora life. Generalist firms do not.',
+      number: '03',
+      title: 'Every Deliverable Reviewed',
+      body: 'EthioTax quality-checks every piece of work before it reaches you. No raw output. No surprises. A guaranteed professional standard, every time.',
+      stat: '100%', statLabel: 'Quality Checked',
     },
     {
-      title: 'The Quality Assurance Premium',
-      body: 'Every deliverable is reviewed by EthioTax before it reaches you. No raw output. No surprises. Guaranteed professional standard.',
-    },
-    {
-      title: 'The Cross-Border Expertise Premium',
-      body: 'UK, USA, Canada, UAE, Ethiopia and beyond. Our specialists operate across every jurisdiction the diaspora calls home.',
-    },
-    {
-      title: 'The Relationship Continuity Premium',
-      body: 'EthioTax remembers every engagement. We track your deadlines, send annual reminders and proactively advise as your needs grow.',
-    },
-    {
-      title: 'The Amharic Accessibility Premium',
-      body: 'Professional financial services in your language. English, Amharic or Afaan Oromoo - you choose, we deliver.',
-    },
-    {
-      title: 'The Ecosystem Premium',
-      body: 'EthioTax is the first pillar of a complete Ethiopian financial services ecosystem. BirrBank finance marketplace coming next.',
+      number: '04',
+      title: 'Global Diaspora Coverage',
+      body: 'UK, USA, Canada, UAE, Ethiopia and beyond. Our specialists operate across every jurisdiction the diaspora calls home — one firm, every border.',
+      stat: '6+', statLabel: 'Countries',
     },
   ]
   const eticpaCard = {
@@ -1027,25 +1019,80 @@ export default async function HomePage() {
           ════════════════════════════════════════════════════════════════ */}
       {isEthioTax ? (
         /* ── EthioTax: Why EthioTax ── */
-        <section className="section bg-slate-50">
-          <div className="container-site">
-            <div className="max-w-2xl mb-14">
-              <span className="eyebrow mb-3 block">Why EthioTax</span>
-              <h2 className="section-title mb-4">Eight reasons the community trusts us</h2>
-              <p className="text-slate-500 text-lg leading-relaxed">
-                EthioTax is not a directory. We are not a marketplace. We are a fully managed professional services firm built specifically for the Ethiopian community.
+        <section className="relative overflow-hidden py-24" style={{backgroundColor: '#1A4731'}}>
+          {/* Background texture */}
+          <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
+            style={{backgroundImage: 'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)', backgroundSize: '60px 60px'}} />
+          <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none"
+            style={{background: 'radial-gradient(ellipse at top right, #C9982A 0%, transparent 60%)'}} />
+
+          <div className="container-site relative z-10">
+
+            {/* Header */}
+            <div className="max-w-3xl mb-16">
+              <p className="text-[#C9982A] text-[11px] font-bold uppercase tracking-[0.15em] mb-4">Why EthioTax</p>
+              <h2 className="font-display text-white text-4xl md:text-5xl leading-tight mb-5" style={{letterSpacing: '-0.02em'}}>
+                Not a directory.<br />Not a marketplace.<br />A managed service.
+              </h2>
+              <p className="text-white/55 text-lg leading-relaxed max-w-2xl">
+                EthioTax is built exclusively for the Ethiopian community — every professional vetted, every deliverable reviewed, every engagement managed end to end.
               </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-14">
-              {etTrustPoints.map((point, i) => (
-                <div key={point.title} className="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-4 text-white text-sm font-bold shrink-0" style={{backgroundColor: '#1A4731'}}>
-                    <span translate="no">{String(i + 1).padStart(2, '0')}</span>
+
+            {/* 4 Premium Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              {etTrustPoints.map((point) => (
+                <div key={point.title}
+                  className="group relative flex flex-col rounded-2xl p-7 transition-all duration-300 hover:-translate-y-1"
+                  style={{backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)'}}>
+
+                  {/* Gold top accent line */}
+                  <div className="absolute top-0 left-7 right-7 h-[2px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{backgroundColor: '#C9982A'}} />
+
+                  {/* Number */}
+                  <p className="font-display text-[48px] leading-none font-bold mb-5 opacity-20 text-white" translate="no">
+                    {point.number}
+                  </p>
+
+                  {/* Title */}
+                  <h3 className="font-display text-white text-[17px] font-bold mb-3 leading-snug">
+                    {point.title}
+                  </h3>
+
+                  {/* Body */}
+                  <p className="text-white/55 text-sm leading-relaxed flex-1 mb-6">
+                    {point.body}
+                  </p>
+
+                  {/* Stat */}
+                  <div className="pt-5 border-t border-white/10 flex items-baseline gap-2">
+                    <span className="font-display text-2xl font-bold" style={{color: '#C9982A'}}>{point.stat}</span>
+                    <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{point.statLabel}</span>
                   </div>
-                  <h4 className="font-semibold text-sm mb-2" style={{color: '#1A4731'}}>{point.title}</h4>
-                  <p className="text-sm text-slate-500 leading-relaxed">{point.body}</p>
+
                 </div>
               ))}
+            </div>
+
+            {/* Bottom CTA */}
+            <div className="mt-14 flex flex-col sm:flex-row items-start gap-4">
+              <a href="/get-help"
+                className="inline-flex items-center gap-2 h-12 px-7 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+                style={{backgroundColor: '#C9982A', color: '#1A4731'}}>
+                Get a free quote
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </a>
+              <a href="/how-it-works"
+                className="inline-flex items-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold border transition-colors hover:bg-white/10"
+                style={{borderColor: 'rgba(255,255,255,0.25)', color: 'white'}}>
+                See how it works
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </a>
             </div>
 
           </div>
