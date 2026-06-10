@@ -223,11 +223,7 @@
     border-radius: var(--radius-sm);
   }
 
-  /* ── Scrollbar ────────────────────────────────────────────── */
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-track { background: #f1f5f9; }
-  ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
 
   /* ── Tables ───────────────────────────────────────────────── */
   table { width: 100%; border-collapse: collapse; }
@@ -584,6 +580,11 @@
 .goog-te-banner-frame,
 iframe.goog-te-banner-frame,
 .goog-te-balloon-frame { display: none !important; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #e2e8f0; }
+::-webkit-scrollbar-thumb { background: #64748b; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #475569; }
+
 body { top: 0 !important; position: static !important; }
 .goog-te-gadget { display: none !important; }
 .skiptranslate { display: none !important; }
