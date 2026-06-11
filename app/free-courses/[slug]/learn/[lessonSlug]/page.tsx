@@ -176,8 +176,8 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                 </span>
               </div>
               <h1
-                className="font-display text-navy-950 mb-5"
-                style={{ fontSize: 'clamp(2rem, 4vw, 2.8rem)', lineHeight: 1.08, letterSpacing: '-0.03em' }}
+                className="font-display mb-5"
+                style={{ fontSize: 'clamp(2rem, 4vw, 2.8rem)', lineHeight: 1.08, letterSpacing: '-0.03em', color: brand }}
               >
                 {lesson.title}
               </h1>
