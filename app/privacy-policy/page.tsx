@@ -1,19 +1,62 @@
 // app/privacy-policy/page.tsx
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { headers } from 'next/headers'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — Accounting Body',
-  description: 'How Accounting Body collects, uses, and protects your personal data. Last updated March 2026.',
+  title: 'Privacy Policy',
+  description: 'How we collect, use, and protect your personal data. Last updated March 2026.',
 }
 
-export default function PrivacyPolicyPage() {
+export default async function PrivacyPolicyPage() {
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  const platformName = isEthioTax ? 'EthioTax' : 'Accounting Body'
+  const platformUrl  = isEthioTax ? 'ethiotax.com' : 'accountingbody.com'
+  const privacyEmail = isEthioTax ? 'privacy@ethiotax.com' : 'privacy@accountingbody.com'
+  const heroBg       = isEthioTax ? '#1A4731' : undefined
+
+  const sections = [
+    {
+      id: 'who-we-are', title: '1. Who we are',
+      body: `${platformName} operates the website ${platformUrl} — an accounting and finance education platform. For privacy questions email ${privacyEmail}.`,
+    },
+    {
+      id: 'what-we-collect', title: '2. Data we collect',
+      body: 'We collect: name and email when you register; contact form submissions; newsletter opt-ins; usage analytics (pages visited, device type, approximate country); and cookies. See our Cookie Policy for cookie details.',
+    },
+    {
+      id: 'how-we-use', title: '3. How we use your data',
+      body: 'We use your data to: provide and improve the platform; respond to contact enquiries; send the weekly newsletter to subscribers who opted in; manage Pro subscriptions; and monitor performance. We do not sell your data.',
+    },
+    {
+      id: 'third-parties', title: '4. Third parties',
+      body: 'We use: Supabase (database); Vercel (hosting); Clerk (authentication); Lemon Squeezy (payments — we never store card details ourselves); and Cloudflare (DNS and security). All processors handle your data in compliance with applicable data protection law.',
+    },
+    {
+      id: 'cookies', title: '5. Cookies',
+      body: 'We use cookies for authentication, site performance, and optional analytics. See our full Cookie Policy for details.',
+    },
+    {
+      id: 'your-rights', title: '6. Your rights',
+      body: `Under UK GDPR you have the right to access, correct, delete, restrict, and port your data, and to withdraw consent at any time. Email ${privacyEmail}. You may also complain to the ICO at ico.org.uk.`,
+    },
+    {
+      id: 'retention', title: '7. Data retention',
+      body: 'Contact submissions: 24 months. Email subscribers: until unsubscribed + 30 days. Account data: lifetime of account + 90 days. Usage analytics: anonymised after 26 months.',
+    },
+    {
+      id: 'contact', title: '8. Contact us',
+      body: `Email: ${privacyEmail}. Contact form: ${platformUrl}/contact. This policy was last updated March 2026.`,
+    },
+  ]
+
   return (
     <>
-      <section className="relative overflow-hidden bg-navy-950 py-16 md:py-20">
+      <section className="relative overflow-hidden py-16 md:py-20" style={{ background: heroBg ?? '#0C1A3D' }}>
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[80%] opacity-20"
-            style={{ background: 'radial-gradient(ellipse at center top, #3a4f9a 0%, transparent 70%)' }} />
+            style={{ background: isEthioTax ? 'radial-gradient(ellipse at center top, rgba(212,160,23,0.3) 0%, transparent 70%)' : 'radial-gradient(ellipse at center top, #3a4f9a 0%, transparent 70%)' }} />
         </div>
         <div className="container-site relative z-10">
           <span className="eyebrow text-gold-400 mb-4 block">Legal</span>
@@ -45,45 +88,12 @@ export default function PrivacyPolicyPage() {
             <div className="lg:col-span-3 space-y-10">
               <div className="border-l-4 border-gold-400 pl-5">
                 <p className="text-slate-600 text-base leading-relaxed">
-                  Accounting Body is committed to protecting your privacy. This policy explains what personal data
+                  {platformName} is committed to protecting your privacy. This policy explains what personal data
                   we collect, how we use it, and the rights you have over it.
                 </p>
               </div>
 
-              {[
-                {
-                  id: 'who-we-are', title: '1. Who we are',
-                  body: 'Accounting Body operates the website accountingbody.com — an accounting and finance education platform. For privacy questions email privacy@accountingbody.com.',
-                },
-                {
-                  id: 'what-we-collect', title: '2. Data we collect',
-                  body: 'We collect: name and email when you register; contact form submissions; newsletter opt-ins; usage analytics (pages visited, device type, approximate country); and cookies. See our Cookie Policy for cookie details.',
-                },
-                {
-                  id: 'how-we-use', title: '3. How we use your data',
-                  body: 'We use your data to: provide and improve the platform; respond to contact enquiries; send the weekly newsletter to subscribers who opted in; manage Pro subscriptions; and monitor performance. We do not sell your data.',
-                },
-                {
-                  id: 'third-parties', title: '4. Third parties',
-                  body: 'We use: Supabase (database); Vercel (hosting); Clerk (authentication); Lemon Squeezy (payments — we never store card details ourselves); and Cloudflare (DNS and security). All processors handle your data in compliance with applicable data protection law.',
-                },
-                {
-                  id: 'cookies', title: '5. Cookies',
-                  body: 'We use cookies for authentication, site performance, and optional analytics. See our full Cookie Policy for details.',
-                },
-                {
-                  id: 'your-rights', title: '6. Your rights',
-                  body: 'Under UK GDPR you have the right to access, correct, delete, restrict, and port your data, and to withdraw consent at any time. Email privacy@accountingbody.com. You may also complain to the ICO at ico.org.uk.',
-                },
-                {
-                  id: 'retention', title: '7. Data retention',
-                  body: 'Contact submissions: 24 months. Email subscribers: until unsubscribed + 30 days. Account data: lifetime of account + 90 days. Usage analytics: anonymised after 26 months.',
-                },
-                {
-                  id: 'contact', title: '8. Contact us',
-                  body: 'Email: privacy@accountingbody.com. Contact form: accountingbody.com/contact. This policy was last updated March 2026.',
-                },
-              ].map(s => (
+              {sections.map(s => (
                 <div key={s.id} id={s.id} className="scroll-mt-8">
                   <h2 className="font-display text-xl text-navy-950 mb-3">{s.title}</h2>
                   <p className="text-slate-500 leading-relaxed text-sm">{s.body}</p>
