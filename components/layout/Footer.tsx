@@ -230,7 +230,7 @@ export function Footer() {
       { label: 'CIMA Study Hub',            href: '/study/cima' },
       { label: 'AAT Study Hub',             href: '/study/aat' },
       { label: 'All Qualifications',        href: '/study' },
-      { label: 'Free Courses',              href: '/courses', new: true },
+      { label: 'Free Courses',              href: '/free-courses', new: true },
     ] : [
       { label: 'ACCA Study Hub',            href: '/study/acca',    badge: 'Popular' },
       { label: 'CIMA Study Hub',            href: '/study/cima' },
