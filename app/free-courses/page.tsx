@@ -78,9 +78,17 @@ const WHY_FREE = [
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 
-export default async function FreeCoursesPage() {
+export default async function FreeCoursesPage({ searchParams }: { searchParams: { level?: string } }) {
   const sanityCourses = await getCourses()
-  const courses = sanityCourses.length > 0 ? sanityCourses : PLACEHOLDER_COURSES
+  const allCourses = sanityCourses.length > 0 ? sanityCourses : PLACEHOLDER_COURSES
+
+  const activeLevel = searchParams.level
+    ? searchParams.level.charAt(0).toUpperCase() + searchParams.level.slice(1)
+    : null
+
+  const courses = activeLevel
+    ? allCourses.filter(c => c.level?.toLowerCase() === activeLevel.toLowerCase())
+    : allCourses
 
   // Group by category
   const grouped = courses.reduce<Record<string, SanityCourse[]>>((acc, c) => {
@@ -91,6 +99,7 @@ export default async function FreeCoursesPage() {
   }, {})
 
   const examBodies = Object.keys(grouped).sort()
+  const LEVELS = ['Beginner', 'Intermediate', 'Advanced', 'Professional']
 
   return (
     <div>
@@ -125,10 +134,14 @@ export default async function FreeCoursesPage() {
               Written by qualified accountants. Built-in practice questions. Always free to start.
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              {examBodies.map(body => (
-                <a key={body} href={`#${body.toLowerCase()}`}
-                  className="px-3 py-1.5 rounded-md text-xs font-semibold bg-white/8 text-white/60 border border-white/12 hover:bg-white/15 hover:text-white/90 transition-all">
-                  {body}
+              <a href="/free-courses"
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold border transition-all ${!activeLevel ? 'bg-gold-500 text-navy-950 border-gold-500' : 'bg-white/8 text-white/60 border-white/12 hover:bg-white/15 hover:text-white/90'}`}>
+                All Courses
+              </a>
+              {LEVELS.map(level => (
+                <a key={level} href={`/free-courses?level=${level.toLowerCase()}`}
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold border transition-all ${activeLevel === level ? 'bg-gold-500 text-navy-950 border-gold-500' : 'bg-white/8 text-white/60 border-white/12 hover:bg-white/15 hover:text-white/90'}`}>
+                  {level}
                 </a>
               ))}
             </div>
