@@ -84,21 +84,19 @@ const SUMMARY_FIELDS = `
 `
 
 export async function getStudyLandingData(): Promise<ExamBodyStat[]> {
-  const query = `*[_type == "article" && "accountingbody" in showOnSites] {
-    "examBody": examBody
+  const examBodies = ['acca', 'cima', 'icaew', 'aat', 'eticpa-atq']
+  const query = `{
+    "acca":      count(*[_type == "article" && "accountingbody" in showOnSites && "acca" in examBody]),
+    "cima":      count(*[_type == "article" && "accountingbody" in showOnSites && "cima" in examBody]),
+    "icaew":     count(*[_type == "article" && "accountingbody" in showOnSites && "icaew" in examBody]),
+    "aat":       count(*[_type == "article" && "accountingbody" in showOnSites && "aat" in examBody]),
+    "eticpa-atq":count(*[_type == "article" && "accountingbody" in showOnSites && "eticpa-atq" in examBody])
   }`
-  const all = await sanityFetch<{ examBody: string[] }[]>(query, {}, 3600)
-  if (!all) return []
-  const map: Record<string, number> = {}
-  for (const a of all) {
-    if (!a.examBody?.length) continue
-    for (const body of a.examBody) {
-      map[body] = (map[body] ?? 0) + 1
-    }
-  }
-  return Object.entries(map).map(([examBody, count]) => ({
+  const counts = await sanityFetch<Record<string, number>>(query, {}, 3600)
+  if (!counts) return []
+  return examBodies.map(examBody => ({
     examBody,
-    count,
+    count: counts[examBody] ?? 0,
     latestArticle: null as unknown as ArticleSummary,
   }))
 }
@@ -108,9 +106,9 @@ const QUAL_SLUGS = ["acca", "cima", "icaew", "aat"]
 export async function getArticlesByCategory(categorySlug: string): Promise<ArticleSummary[]> {
   const isQualPage = QUAL_SLUGS.includes(categorySlug.toLowerCase())
   const query = isQualPage
-    ? `*[_type == "article" && "accountingbody" in showOnSites] | order(title asc) { ${SUMMARY_FIELDS} }`
+    ? `*[_type == "article" && "accountingbody" in showOnSites && $slug in examBody] | order(title asc) { ${SUMMARY_FIELDS} }`
     : `*[_type == "article" && "accountingbody" in showOnSites && categories[]->.slug.current match $cat] | order(title asc) { ${SUMMARY_FIELDS} }`
-  return (await sanityFetch<ArticleSummary[]>(query, { cat: categorySlug })) ?? []
+  return (await sanityFetch<ArticleSummary[]>(query, { cat: categorySlug, slug: categorySlug })) ?? []
 }
 
 export async function getArticleBySlug(slug: string): Promise<ArticleFull | null> {
