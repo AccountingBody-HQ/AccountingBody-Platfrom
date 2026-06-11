@@ -68,7 +68,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
       {/* TOP BAR */}
       <header
         className="sticky top-16 z-40 border-b"
-        style={{ background: '#0C1A3D', borderColor: 'rgba(255,255,255,0.06)' }}
+        style={{ background: brand, borderColor: 'rgba(255,255,255,0.06)' }}
       >
         <div className="flex items-stretch" style={{ minHeight: 56 }}>
 
@@ -192,7 +192,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
             {/* Video */}
             {lesson.videoUrl && (
               <div className="mb-10 rounded-3xl overflow-hidden border" style={{ boxShadow: '0 20px 60px rgba(12,26,61,0.15)', borderColor: 'rgba(0,0,0,0.06)' }}>
-                <div style={{ aspectRatio: '16/9', background: '#0C1A3D' }}>
+                <div style={{ aspectRatio: '16/9', background: brand }}>
                   <iframe
                     src={lesson.videoUrl.replace('watch?v=', 'embed/')}
                     style={{ width: '100%', height: '100%' }}
