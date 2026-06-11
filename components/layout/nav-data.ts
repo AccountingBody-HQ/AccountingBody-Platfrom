@@ -20,8 +20,8 @@ export interface NavSection {
 }
 
 export const ETICPA_STUDY_LINKS: NavLink[] = [
-  { label: 'ETICPA / CPA', href: '/study/eticpa', description: "Ethiopia's national CPA qualification" },
-  { label: 'ACCA',         href: '/study/acca',   badge: 'Popular', description: 'All 13 ACCA papers covered' },
+  { label: 'ETICPA / CPA', href: '/study/eticpa', badge: 'Popular', description: "Ethiopia's national CPA qualification" },
+  { label: 'ACCA',         href: '/study/acca',   description: 'All 13 ACCA papers covered' },
   { label: 'CIMA',         href: '/study/cima',   description: 'Certificate to Strategic level' },
   { label: 'AAT',          href: '/study/aat',    description: 'Level 2, 3 and 4 coverage' },
 ]
