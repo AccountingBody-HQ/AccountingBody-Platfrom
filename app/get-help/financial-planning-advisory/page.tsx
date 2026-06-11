@@ -152,7 +152,7 @@ export default function FinancialPlanningPage() {
                 Financial planning and advisory across your full financial picture
               </h2>
               <p className="text-gray-500 text-lg leading-relaxed mb-8">
-                The financial lives of Ethiopian diaspora professionals are often complex — income in one country, savings in another, property in a third, and obligations back in Ethiopia. Making good financial decisions requires an advisor who understands this complexity. EthioTax manages qualified financial planners and advisors who see your full picture and help you plan with confidence.
+                The finances of Ethiopian diaspora professionals are often complex — income in one country, savings in another, property in a third, and obligations back in Ethiopia. Making good financial decisions requires an advisor who understands this complexity. EthioTax manages qualified financial planners and advisors who see your full picture and help you plan with confidence.
               </p>
               <ul className="space-y-3">
                 {[
