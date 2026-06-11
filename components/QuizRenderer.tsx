@@ -464,7 +464,7 @@ function QuestionItem({ entry, index, submitted, answers, writing, revealed, set
                 }`}
               >
                 <span className="flex items-center gap-3">
-                  <span className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 text-xs font-bold ${
+                  <span translate="no" className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 text-xs font-bold ${
                     isThisRight ? 'bg-teal-500 border-teal-500 text-white' :
                     isThisWrong ? 'bg-red-500 border-red-500 text-white' :
                     isSelected  ? 'bg-navy-950 border-navy-950 text-white' :
