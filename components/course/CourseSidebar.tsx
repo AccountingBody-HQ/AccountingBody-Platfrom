@@ -23,6 +23,7 @@ interface CourseSidebarProps {
   totalLessons: number
   currentLessonSlug: string
   allLessons: string[]
+  brandBg?: string
 }
 
 export default function CourseSidebar({
@@ -31,6 +32,7 @@ export default function CourseSidebar({
   totalLessons,
   currentLessonSlug,
   allLessons,
+  brandBg = '#081428',
 }: CourseSidebarProps) {
   const getInitialOpen = () => {
     const stored = typeof window !== 'undefined'
@@ -69,7 +71,7 @@ export default function CourseSidebar({
       className="hidden lg:flex flex-col shrink-0"
       style={{
         width: 'clamp(240px, 24vw, 340px)',
-        background: '#081428',
+        background: brandBg,
         position: 'sticky',
         top: 'calc(4rem + 56px)',
         maxHeight: 'calc(100vh - 4rem - 56px)',

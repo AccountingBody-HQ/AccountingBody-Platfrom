@@ -155,6 +155,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
           totalLessons={totalLessons}
           currentLessonSlug={params.lessonSlug}
           allLessons={allLessons}
+          brandBg={isEthioTax ? '#0d2b1a' : '#081428'}
         />
 
         {/* LESSON CONTENT */}
