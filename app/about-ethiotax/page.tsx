@@ -1,14 +1,9 @@
-'use client'
+import { headers } from 'next/headers'
 
-import React, { useEffect, useState } from 'react'
-
-export default function AboutEthioTaxPage() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isEthioTax, setIsEthioTax] = useState(false)
-
-  useEffect(() => {
-    setIsEthioTax(window.location.hostname.includes('ethiotax.com'))
-  }, [])
+export default async function AboutEthioTaxPage() {
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  if (!isEthioTax) return null
 
   return (
     <main className="min-h-screen bg-white">
