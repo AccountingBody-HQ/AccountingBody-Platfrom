@@ -166,18 +166,19 @@ const navSections: NavSection[] = [
       {
         title: 'Question Types',
         links: [
-          { label: 'MCQ Question Banks',   href: '/practice-questions',        badge: 'New', description: '50,000+ exam-style MCQs' },
-          { label: 'Mock Examinations',    href: '/study/mock-exams',            description: 'Full timed mock exams' },
+          { label: 'MCQ Questions',     href: '/practice-questions?type=mcq',      badge: 'New', description: 'Multiple choice — 4 options, one correct answer' },
+          { label: 'Scenario',          href: '/practice-questions?type=scenario',              description: 'Case-based questions with linked exhibit' },
+          { label: 'Writing',           href: '/practice-questions?type=writing',               description: 'Constructed response with model answer' },
+          { label: 'Mock Examinations', href: '/study/mock-exams',                              description: 'Full timed mock exams' },
         ],
       },
       {
         title: 'By Difficulty',
         links: [
-          { label: 'All Questions',    href: '/practice-questions' },
+          { label: 'All Questions',     href: '/practice-questions' },
           { label: 'Beginner',          href: '/practice-questions?difficulty=beginner' },
           { label: 'Intermediate',      href: '/practice-questions?difficulty=intermediate' },
           { label: 'Advanced',          href: '/practice-questions?difficulty=advanced' },
-          { label: 'Mock Examinations', href: '/study/mock-exams' },
         ],
       },
     ],
