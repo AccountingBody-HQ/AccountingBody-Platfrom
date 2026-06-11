@@ -220,7 +220,13 @@ function ExtIcon() {
 
 // ── Main Footer ───────────────────────────────────────────────────────────────
 export function Footer() {
-  const [isEthioTax, setIsEthioTax] = React.useState(false)
+  const [isEthioTax, setIsEthioTax] = React.useState(() => {
+    if (typeof document !== 'undefined') {
+      const cookie = document.cookie.split('; ').find(r => r.startsWith('x-et-platform='))
+      return cookie?.split('=')[1] === 'ethiotax'
+    }
+    return false
+  })
 
   const studyColumn: FooterColumn = {
     title: 'Study',
@@ -268,7 +274,8 @@ export function Footer() {
     ],
   }
   useEffect(() => {
-    setIsEthioTax(window.location.hostname.includes('ethiotax.com'))
+    const cookie = document.cookie.split('; ').find(r => r.startsWith('x-et-platform='))
+    setIsEthioTax(cookie?.split('=')[1] === 'ethiotax')
   }, [])
   return (
     <footer className="bg-navy-950 text-white" aria-label="Site footer">
