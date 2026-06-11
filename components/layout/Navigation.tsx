@@ -144,8 +144,7 @@ const navSections: NavSection[] = [
       {
         title: 'Free Courses',
         links: [
-          { label: 'All Courses',             href: '/courses',                    badge: 'New', description: 'All structured learning paths' },
-          { label: 'All Courses',              href: '/free-courses',                         description: 'All structured learning paths' },
+          { label: 'All Courses',             href: '/free-courses',               badge: 'New', description: 'All structured learning paths' },
           { label: 'Beginner Courses',         href: '/free-courses?level=beginner',          description: 'Start from the foundations' },
           { label: 'Intermediate Courses',     href: '/free-courses?level=intermediate',      description: 'Build on your knowledge' },
           { label: 'Advanced Courses',         href: '/free-courses?level=advanced',          description: 'Master complex topics' },
