@@ -498,7 +498,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           cta: etGetHelpLinks.cta,
         }
       }
-      if (section.id === 'practice-questions') {
+      if (section.id === 'practice') {
         const isET = Boolean(etGetHelpLinks)
         return {
           ...section,
@@ -508,7 +508,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
               ...group,
               links: group.links.map(link =>
                 link.label === 'Mock Examinations'
-                  ? { ...link, href: isET ? '/study/mock-exams' : '/practice-questions' }
+                  ? { ...link, href: isET ? '/study/mock-exams' : '/practice-questions', label: isET ? 'Mock Examinations' : 'All Practice Questions', description: isET ? 'Full timed mock exams' : 'Browse all practice question sets' }
                   : link
               ),
             }
