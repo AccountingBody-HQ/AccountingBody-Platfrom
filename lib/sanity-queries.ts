@@ -202,14 +202,23 @@ export async function getGlossaryCategories(): Promise<GlossaryCategory[]> {
   return result.filter(c => c.count > 0)
 }
 
-export async function getCategoryCounts(): Promise<Record<string, number>> {
-  const query = `*[_type == "category"]{
-    "slug": slug.current,
-    "count": count(*[_type == "article" && "accountingbody" in showOnSites && references(^._id)])
+export async function getCategoryCounts(platform: string = 'accountingbody'): Promise<Record<string, number>> {
+  const site = platform === 'ethiotax' ? 'ethiotax' : 'accountingbody'
+  const query = `{
+    "financial-accounting":  count(*[_type == "article" && "${site}" in showOnSites && categories[]->.slug.current match "financial-accounting"]),
+    "financial-management":  count(*[_type == "article" && "${site}" in showOnSites && categories[]->.slug.current match "financial-management"]),
+    "management-accounting": count(*[_type == "article" && "${site}" in showOnSites && categories[]->.slug.current match "management-accounting"]),
+    "financial-market":      count(*[_type == "article" && "${site}" in showOnSites && categories[]->.slug.current match "financial-market"]),
+    "business-management":   count(*[_type == "article" && "${site}" in showOnSites && categories[]->.slug.current match "business-management"]),
+    "audit-assurance":       count(*[_type == "article" && "${site}" in showOnSites && categories[]->.slug.current match "audit-assurance"]),
+    "taxation":              count(*[_type == "article" && "${site}" in showOnSites && categories[]->.slug.current match "taxation"]),
+    "economics":             count(*[_type == "article" && "${site}" in showOnSites && categories[]->.slug.current match "economics"]),
+    "cryptocurrency":        count(*[_type == "article" && "${site}" in showOnSites && categories[]->.slug.current match "cryptocurrency"]),
+    "tools-templates":       count(*[_type == "article" && "${site}" in showOnSites && categories[]->.slug.current match "tools-templates"])
   }`
-  const result = await sanityFetch<{ slug: string; count: number }[]>(query, {}, 3600)
+  const result = await sanityFetch<Record<string, number>>(query, {}, 3600)
   if (!result) return {}
-  return Object.fromEntries(result.map(r => [r.slug, r.count]))
+  return result
 }
 
 export async function getETICPAArticles(): Promise<ArticleSummary[]> {

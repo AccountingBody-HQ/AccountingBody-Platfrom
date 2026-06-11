@@ -209,7 +209,7 @@ export default async function StudyPage() {
     : EXAM_BODIES
   const [liveData, categoryCounts, practicePostCount] = await Promise.all([
     getStudyLandingData(),
-    getCategoryCounts(),
+    getCategoryCounts(isEthioTax ? 'ethiotax' : 'accountingbody'),
     getPracticePostCount(),
   ])
   const liveMap = Object.fromEntries(liveData.map(d => [d.examBody, d.count]))
