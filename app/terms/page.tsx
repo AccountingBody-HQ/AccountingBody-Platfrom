@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service — Accounting Body',
+  title: 'Terms of Service',
   description: 'The terms and conditions governing your use of Accounting Body. Last updated March 2026.',
 }
 
