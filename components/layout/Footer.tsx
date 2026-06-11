@@ -4,7 +4,7 @@
 
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -219,14 +219,7 @@ function ExtIcon() {
 }
 
 // ── Main Footer ───────────────────────────────────────────────────────────────
-export function Footer() {
-  const [isEthioTax, setIsEthioTax] = React.useState(() => {
-    if (typeof document !== 'undefined') {
-      const cookie = document.cookie.split('; ').find(r => r.startsWith('x-et-platform='))
-      return cookie?.split('=')[1] === 'ethiotax'
-    }
-    return false
-  })
+export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
 
   const studyColumn: FooterColumn = {
     title: 'Study',
@@ -273,10 +266,7 @@ export function Footer() {
       { label: 'CPD Resources',             href: '/study' },
     ],
   }
-  useEffect(() => {
-    const cookie = document.cookie.split('; ').find(r => r.startsWith('x-et-platform='))
-    setIsEthioTax(cookie?.split('=')[1] === 'ethiotax')
-  }, [])
+
   return (
     <footer className="bg-navy-950 text-white" aria-label="Site footer">
 

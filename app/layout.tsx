@@ -83,6 +83,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
 
   return (
     <ClerkProvider>
@@ -122,7 +124,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           >
             {children}
           </main>
-          <Footer />
+          <Footer isEthioTax={isEthioTax} />
           <CookieConsent gtmId={GTM_ID ?? ''} />
           <ScrollToTop />
           <Analytics />
