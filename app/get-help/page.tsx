@@ -188,7 +188,7 @@ export default async function GetHelpPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {etServices.map((s) => (
                 <a key={s.category} href={s.href}
-                  className="group flex flex-col bg-white rounded-2xl p-6 md:p-8 border-l-4 border border-[#1A4731] hover:border-l-[#C9982A] hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 no-underline">
+                  className="group flex flex-col bg-white rounded-2xl p-6 md:p-8 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 no-underline" style={{border: "1px solid #e2e8f0", borderLeft: "4px solid #1A4731"}} onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.borderLeftColor="#C9982A"} onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.borderLeftColor="#1A4731"}>
                   <div className="flex items-start gap-5 mb-5">
                     <div className="w-[52px] h-[52px] rounded-xl bg-[#1A4731] flex items-center justify-center shrink-0">
                       <ServiceIcon category={s.category} />
