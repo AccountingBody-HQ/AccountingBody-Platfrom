@@ -4,6 +4,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import { getLessonData, getCourseBySlug, getPublishedCourses } from '@/lib/coursesNew'
 import MarkCompleteButton, { CourseProgressBar, ResetLessonButton, ResetChapterInlineButton } from '@/components/course/ProgressTracker'
 import CourseSidebar from '@/components/course/CourseSidebar'
@@ -35,6 +36,13 @@ export async function generateMetadata({ params }: { params: { slug: string; les
 }
 
 export default async function FreeCoursesLessonPage({ params }: { params: { slug: string; lessonSlug: string } }) {
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  const brand = isEthioTax ? '#1A4731' : '#0C1A3D'
+  const brandMid = isEthioTax ? '#1e5438' : '#162756'
+  const brandDark = isEthioTax ? '#163d28' : '#0e2048'
+  const brandAlpha = isEthioTax ? 'rgba(26,71,49,0.08)' : 'rgba(12,26,61,0.08)'
+
   const data = await getLessonData(params.slug, params.lessonSlug)
   if (!data) notFound()
   const { course, lesson, chapterTitle, prevLesson, nextLesson } = data
@@ -158,7 +166,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
               <div className="flex flex-wrap items-center gap-2 mb-5">
                 <span
                   className="text-[0.65rem] font-black uppercase tracking-[0.1em] px-3 py-1.5 rounded-full"
-                  style={{ background: 'rgba(12,26,61,0.08)', color: '#0C1A3D' }}
+                  style={{ background: brandAlpha, color: brand }}
                 >
                   {chapterTitle}
                 </span>
@@ -198,7 +206,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
             {lesson.linkedArticles?.length > 0 && (
               <div className="mb-10">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#0C1A3D' }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: brand }}>
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
@@ -301,7 +309,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                   <Link
                     href={lesson.externalQuizUrl}
                     className="h-10 px-5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 transition-all hover:-translate-y-0.5"
-                    style={{ background: '#0C1A3D', color: '#fff', boxShadow: '0 4px 12px rgba(12,26,61,0.25)' }}
+                    style={{ background: brand, color: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}
                   >
                     Practice
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -325,7 +333,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
             <div className="mb-3 rounded-3xl overflow-hidden" style={{ boxShadow: '0 8px 40px rgba(12,26,61,0.12)' }}>
               <div
                 className="px-8 py-7 flex flex-col sm:flex-row sm:items-center gap-5"
-                style={{ background: 'linear-gradient(135deg, #0C1A3D 0%, #162756 50%, #0e2048 100%)' }}
+                style={{ background: `linear-gradient(135deg, ${brand} 0%, ${brandMid} 50%, ${brandDark} 100%)` }}
               >
                 <div className="flex-1">
                   <p className="font-display text-white mb-1.5" style={{ fontSize: '1.35rem', lineHeight: 1.15 }}>
@@ -380,7 +388,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                 <Link
                   href={`/free-courses/${course.slug.current}/learn/${nextLesson.slug}`}
                   className="flex items-center justify-end gap-3 p-5 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl group text-right"
-                  style={{ background: 'linear-gradient(135deg, #0C1A3D 0%, #162756 100%)', boxShadow: '0 4px 20px rgba(12,26,61,0.25)' }}
+                  style={{ background: `linear-gradient(135deg, ${brand} 0%, ${brandMid} 100%)`, boxShadow: '0 4px 20px rgba(0,0,0,0.25)' }}
                 >
                   <div className="min-w-0">
                     <p className="text-[0.6rem] font-black uppercase tracking-[0.12em] mb-1" style={{ color: 'rgba(212,160,23,0.6)' }}>Next Lesson</p>
