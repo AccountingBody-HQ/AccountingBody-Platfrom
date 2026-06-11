@@ -51,21 +51,23 @@ export async function getPracticePostCount(): Promise<number> {
 }
 
 export async function getPracticePosts(params: {
-  examBody?:    string
-  difficulty?:  string
-  topic?:       string
-  search?:      string
-  category?:    string
-  page?:        number
-  perPage?:     number
-  sortBy?:      string
+  examBody?:      string
+  difficulty?:    string
+  topic?:         string
+  search?:        string
+  category?:      string
+  questionType?:  string
+  page?:          number
+  perPage?:       number
+  sortBy?:        string
 }): Promise<{ posts: PracticePost[]; total: number }> {
-  const { examBody, difficulty, topic, search, category, page = 1, perPage = 12, sortBy = 'alpha' } = params
+  const { examBody, difficulty, topic, search, category, questionType, page = 1, perPage = 12, sortBy = 'alpha' } = params
   const filters: string[] = ["_type == \"practicePost\"", "\"accountingbody\" in showOnSites"]
-  if (examBody)   filters.push(`examBody == "${examBody}"`)
-  if (difficulty) filters.push(`difficulty == "${difficulty}"`)
-  if (topic)      filters.push(`topic == "${topic}"`)
-  if (category)   filters.push(`categories[]->.slug.current match "${category}"`)
+  if (examBody)      filters.push(`examBody == "${examBody}"`)
+  if (difficulty)    filters.push(`difficulty == "${difficulty}"`)
+  if (topic)         filters.push(`topic == "${topic}"`)
+  if (category)      filters.push(`categories[]->.slug.current match "${category}"`)
+  if (questionType)  filters.push(`questionType == "${questionType}"`)
   if (search) {
     const isSingleLetter = /^[a-zA-Z#]$/.test(search)
     if (isSingleLetter) {

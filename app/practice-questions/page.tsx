@@ -22,27 +22,29 @@ const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 export default async function PracticeQuestionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ difficulty?: string; search?: string; page?: string; letter?: string; sort?: string; category?: string }>
+  searchParams: Promise<{ difficulty?: string; search?: string; page?: string; letter?: string; sort?: string; category?: string; type?: string }>
 }) {
-  const sp         = await searchParams
-  const difficulty = sp.difficulty ?? ''
-  const search     = sp.search ?? ''
-  const page       = Math.max(1, parseInt(sp.page ?? '1', 10))
-  const letter     = sp.letter ?? ''
-  const sort       = sp.sort ?? 'alpha'
-  const category   = sp.category ?? ''
+  const sp           = await searchParams
+  const difficulty   = sp.difficulty ?? ''
+  const search       = sp.search ?? ''
+  const page         = Math.max(1, parseInt(sp.page ?? '1', 10))
+  const letter       = sp.letter ?? ''
+  const sort         = sp.sort ?? 'alpha'
+  const category     = sp.category ?? ''
+  const questionType = sp.type ?? ''
 
   // Build search term — letter filter takes priority over text search
   const searchTerm = letter ? letter : (search || undefined)
 
   const [{ posts, total }, filters] = await Promise.all([
     getPracticePosts({
-      difficulty: difficulty || undefined,
-      search:     searchTerm,
-      category:   category || undefined,
+      difficulty:   difficulty || undefined,
+      search:       searchTerm,
+      category:     category || undefined,
+      questionType: questionType || undefined,
       page,
-      perPage:    PER_PAGE,
-      sortBy:     sort,
+      perPage:      PER_PAGE,
+      sortBy:       sort,
     }),
     getPracticeFilters(),
   ])
