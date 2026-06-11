@@ -41,10 +41,7 @@ const footerColumns: FooterColumn[] = [
     title: 'Practice',
     links: [
       { label: 'MCQ Question Banks',        href: '/practice-questions' },
-      { label: 'Written Answer Practice',   href: '/practice-questions' },
       { label: 'Mock Exams',                href: '/mock-exams' },
-      { label: 'Past Papers',               href: '/practice-questions' },
-      { label: 'Case Studies',              href: '/practice-questions' },
       { label: 'All Practice',              href: '/practice-questions' },
     ],
   },
@@ -52,11 +49,9 @@ const footerColumns: FooterColumn[] = [
     title: 'Resources',
     links: [
       { label: 'Accounting Glossary',       href: '/glossary' },
-      { label: 'Accounting Dictionary',      href: '/dictionary' },
+      { label: 'Accounting Dictionary',     href: '/dictionary' },
       { label: 'Ask a Question',            href: '/get-help' },
-      { label: 'Community Forums',          href: '/get-help' },
       { label: 'Exam Tips',                 href: '/study' },
-      { label: 'Podcast',                   href: '/about' },
       { label: 'Blog & Articles',           href: '/articles' },
       { label: 'Free Calculators',          href: '/calculators' },
     ],
@@ -68,9 +63,6 @@ const footerColumns: FooterColumn[] = [
       { label: 'About Us',                  href: '/about' },
       { label: 'Contact',                   href: '/contact' },
       { label: 'Advertise',                 href: '/contact' },
-      { label: 'Partnerships',              href: '/contact' },
-      { label: 'Careers',                   href: '/about' },
-      { label: 'Press',                     href: '/about' },
     ],
   },
 ]
@@ -260,13 +252,18 @@ export function Footer() {
     ],
   } : footerColumns[footerColumns.length - 1]
 
-    const professionalsColumn: FooterColumn = {
+    const professionalsColumn: FooterColumn = isEthioTax ? {
     title: 'Professionals',
     links: [
-      { label: isEthioTax ? 'Get Professional Help' : 'Find an Accountant', href: isEthioTax ? '/get-help' : '/firms-freelancers/directory' },
-      { label: isEthioTax ? 'Join as a Provider' : 'List Your Firm',        href: isEthioTax ? '/firms-freelancers' : '/firms-freelancers/join' },
-      { label: 'Post a Job',                href: '/hire-talent/post-a-job' },
-      { label: 'Freelancer Directory',      href: '/firms-freelancers/directory' },
+      { label: 'Get Professional Help',     href: '/get-help' },
+      { label: 'Join as a Provider',        href: '/firms-freelancers' },
+      { label: 'CPD Resources',             href: '/study' },
+    ],
+  } : {
+    title: 'Professionals',
+    links: [
+      { label: 'Find an Accountant',        href: '/firms-freelancers' },
+      { label: 'List Your Firm',            href: '/firms-freelancers/join' },
       { label: 'CPD Resources',             href: '/study' },
     ],
   }
@@ -348,7 +345,26 @@ export function Footer() {
 
           {/* ── Link columns ────────────────────────────────────────────── */}
           <div className="lg:col-span-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
-            {[studyColumn, ...footerColumns.slice(1,3), professionalsColumn, companyColumn].map(column => (
+            {[studyColumn, ...(isEthioTax ? [
+              {
+                title: 'Practice',
+                links: [
+                  { label: 'MCQ Question Banks',  href: '/practice-questions' },
+                  { label: 'Mock Exams',          href: '/study/mock-exams' },
+                  { label: 'All Practice',        href: '/practice-questions' },
+                ],
+              },
+              {
+                title: 'Resources',
+                links: [
+                  { label: 'Accounting Glossary',    href: '/glossary' },
+                  { label: 'Accounting Dictionary',  href: '/dictionary' },
+                  { label: 'Get Help',               href: '/get-help' },
+                  { label: 'Blog & Articles',        href: '/articles' },
+                  { label: 'Free Calculators',       href: '/calculators' },
+                ],
+              },
+            ] : footerColumns.slice(1,3)), professionalsColumn, companyColumn].map(column => (
               <div key={column.title}>
                 <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">
                   {column.title}
