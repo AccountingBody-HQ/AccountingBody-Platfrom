@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Cookie Policy — Accounting Body',
+  title: 'Cookie Policy',
   description: 'How Accounting Body uses cookies and how to manage your preferences. Last updated March 2026.',
 }
 
