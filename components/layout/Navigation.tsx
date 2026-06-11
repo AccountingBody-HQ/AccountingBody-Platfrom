@@ -498,6 +498,23 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           cta: etGetHelpLinks.cta,
         }
       }
+      if (section.id === 'practice-questions') {
+        const isET = Boolean(etGetHelpLinks)
+        return {
+          ...section,
+          groups: section.groups?.map(group => {
+            if (group.title !== 'Question Types') return group
+            return {
+              ...group,
+              links: group.links.map(link =>
+                link.label === 'Mock Examinations'
+                  ? { ...link, href: isET ? '/study/mock-exams' : '/practice-questions' }
+                  : link
+              ),
+            }
+          }),
+        }
+      }
       return section
     }),
     ...(etCompanySection ? [etCompanySection] : []),
