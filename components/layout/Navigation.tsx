@@ -132,7 +132,7 @@ const navSections: NavSection[] = [
     featured: {
       label:       'ACCA Study Hub',
       href:        '/study/acca',
-      description: 'Complete ACCA study notes, question banks, and past papers for all 13 exams. Updated for 2025.',
+      description: 'Complete ACCA study notes, question banks, and past papers for all 13 exams.',
     },
   },
 
@@ -653,12 +653,24 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                     </button>
                   </div>
 
-                  {isActive && (
+                  <div
+                    style={{
+                      visibility: isActive ? 'visible' : 'hidden',
+                      opacity: isActive ? 1 : 0,
+                      pointerEvents: isActive ? 'auto' : 'none',
+                      transition: 'opacity 120ms ease, visibility 120ms ease',
+                      position: 'absolute',
+                      top: '100%',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      zIndex: 50,
+                    }}
+                  >
                     <MegaMenu
                       section={section}
                       onClose={() => setActiveDropdown(null)}
                     />
-                  )}
+                  </div>
                 </div>
               )
             })}
