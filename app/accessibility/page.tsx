@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Accessibility Statement — Accounting Body',
+  title: 'Accessibility Statement',
   description: 'Accounting Body is committed to making its website accessible to everyone. Read our accessibility statement.',
 }
 
