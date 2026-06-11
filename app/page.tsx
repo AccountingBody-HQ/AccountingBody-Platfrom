@@ -43,7 +43,7 @@ async function getFeaturedArticles(platform: string): Promise<SanityArticle[]> {
     )
     const res = await fetch(
       `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
-      { next: { revalidate: 1800 } }
+      { next: { revalidate: 300 } }
     )
     if (!res.ok) return []
     const data = await res.json()
@@ -59,7 +59,7 @@ async function getFeaturedArticles(platform: string): Promise<SanityArticle[]> {
       )
       const fallbackRes = await fetch(
         `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${fallbackQuery}`,
-        { next: { revalidate: 1800 } }
+        { next: { revalidate: 300 } }
       )
       if (!fallbackRes.ok) return []
       const fallbackData = await fallbackRes.json()
