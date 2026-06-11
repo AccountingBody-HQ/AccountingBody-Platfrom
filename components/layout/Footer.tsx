@@ -230,6 +230,26 @@ function ExtIcon() {
 export function Footer() {
   const [isEthioTax, setIsEthioTax] = React.useState(false)
 
+  const studyColumn: FooterColumn = {
+    title: 'Study',
+    links: isEthioTax ? [
+      { label: 'ETICPA / CPA',              href: '/study/eticpa',  badge: 'Popular' },
+      { label: 'ACCA Study Hub',            href: '/study/acca' },
+      { label: 'CIMA Study Hub',            href: '/study/cima' },
+      { label: 'AAT Study Hub',             href: '/study/aat' },
+      { label: 'All Qualifications',        href: '/study' },
+      { label: 'Free Courses',              href: '/courses', new: true },
+    ] : [
+      { label: 'ACCA Study Hub',            href: '/study/acca',    badge: 'Popular' },
+      { label: 'CIMA Study Hub',            href: '/study/cima' },
+      { label: 'AAT Study Hub',             href: '/study/aat' },
+      { label: 'ICAEW / ACA',              href: '/study/icaew' },
+      { label: 'All Qualifications',        href: '/study' },
+      { label: 'Study Planner',             href: '/study', new: true },
+      { label: 'Free Courses',              href: '/courses', new: true },
+    ],
+  }
+
   const companyColumn: FooterColumn = isEthioTax ? {
     title: 'Company',
     links: [
@@ -247,7 +267,7 @@ export function Footer() {
       { label: isEthioTax ? 'Join as a Provider' : 'List Your Firm',        href: isEthioTax ? '/firms-freelancers' : '/firms-freelancers/join' },
       { label: 'Post a Job',                href: '/hire-talent/post-a-job' },
       { label: 'Freelancer Directory',      href: '/firms-freelancers/directory' },
-      { label: 'CPD Resources',             href: '/firms-freelancers' },
+      { label: 'CPD Resources',             href: '/study' },
     ],
   }
   useEffect(() => {
@@ -328,7 +348,7 @@ export function Footer() {
 
           {/* ── Link columns ────────────────────────────────────────────── */}
           <div className="lg:col-span-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
-            {[...footerColumns.slice(0,3), professionalsColumn, companyColumn].map(column => (
+            {[studyColumn, ...footerColumns.slice(1,3), professionalsColumn, companyColumn].map(column => (
               <div key={column.title}>
                 <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">
                   {column.title}
