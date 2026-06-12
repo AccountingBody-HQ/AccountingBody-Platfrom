@@ -28,8 +28,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
 
     // Detect platform from Referer header
-    const referer = req.headers.get('referer') || ''
-    const isEthioTax = referer.includes('ethiotax.com')
+    const isEthioTax = req.headers.get('x-et-platform') === 'ethiotax'
     const brand = isEthioTax
       ? { name: 'EthioTax', domain: 'ethiotax.com', email: 'info@accountingbody.com', color: '#1A4731' }
       : { name: 'Accounting Body', domain: 'accountingbody.com', email: 'info@accountingbody.com', color: '#0C1A3D' }
