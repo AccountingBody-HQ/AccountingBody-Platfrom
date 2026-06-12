@@ -1,6 +1,7 @@
 // app/accessibility/page.tsx
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { headers } from 'next/headers'
 
 export const metadata: Metadata = {
   title: 'Accessibility Statement',
@@ -40,7 +41,11 @@ const known = [
   'The Sanity Studio editor interface (available to content editors only) uses third-party components that may not fully meet all WCAG criteria.',
 ]
 
-export default function AccessibilityPage() {
+export default async function AccessibilityPage() {
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  const platformName = isEthioTax ? 'EthioTax' : 'Accounting Body'
+  const heroBg = isEthioTax ? '#1A4731' : '#0C1A3D'
   return (
     <>
       <section className="relative overflow-hidden bg-navy-950 py-16 md:py-20">
