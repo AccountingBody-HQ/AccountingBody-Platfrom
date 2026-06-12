@@ -122,10 +122,6 @@ export default async function AccessibilityPage() {
                     className="inline-flex items-center gap-2 h-10 px-5 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors">
                     Contact us
                   </Link>
-                  <a href="mailto:accessibility@accountingbody.com"
-                    className="inline-flex items-center h-10 px-5 rounded-lg text-sm font-medium text-white border border-white/25 hover:bg-white/10 transition-colors">
-                    accessibility@accountingbody.com
-                  </a>
                 </div>
               </div>
             </div>
