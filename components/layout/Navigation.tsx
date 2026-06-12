@@ -482,12 +482,25 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
 
   const sections = [
     ...navSections.filter(section => !(etGetHelpLinks && section.id === 'global-payroll')).map(section => {
-      if (section.id === 'study' && studyQualificationLinks) {
+      if (section.id === 'study') {
+        const isET = Boolean(etGetHelpLinks)
         return {
           ...section,
           groups: section.groups?.map(group => {
-            if (group.title !== 'By Qualification') return group
-            return { ...group, links: studyQualificationLinks }
+            if (group.title === 'By Qualification' && studyQualificationLinks) {
+              return { ...group, links: studyQualificationLinks }
+            }
+            if (group.title === 'By Subject') {
+              return {
+                ...group,
+                links: group.links.map(link =>
+                  link.label === 'Mock Exams'
+                    ? { ...link, href: isET ? '/study/mock-exams' : '/practice-questions' }
+                    : link
+                ),
+              }
+            }
+            return group
           }),
         }
       }
