@@ -13,6 +13,7 @@ const cookies = [
       { name: '__session',      provider: 'Clerk',       purpose: 'Maintains your login session.',                     duration: '7 days' },
       { name: '_cf_clearance',  provider: 'Cloudflare',  purpose: 'Security — proves your browser passed a challenge.', duration: '30 mins' },
       { name: 'sb-*',           provider: 'Supabase',    purpose: 'Stores authentication tokens for account data.',    duration: '7 days' },
+      { name: 'x-et-platform',  provider: 'Accounting Body', purpose: 'Identifies which platform (Accounting Body or EthioTax) the visitor is using. No personal data stored.', duration: 'Session' },
     ],
   },
   { category: 'Analytics',  bar: 'bg-navy-800',  always: false,
@@ -21,11 +22,7 @@ const cookies = [
       { name: '_ga',    provider: 'Google Analytics', purpose: 'Tracks pages visited and time on site (optional).',          duration: '2 years' },
     ],
   },
-  { category: 'Functional', bar: 'bg-gold-500',  always: false,
-    items: [
-      { name: 'ab_preferences', provider: 'Accounting Body', purpose: 'Stores your preferences such as calculator settings.', duration: '1 year' },
-    ],
-  },
+
 ]
 
 export default function CookiePolicyPage() {
