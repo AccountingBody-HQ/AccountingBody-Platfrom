@@ -48,7 +48,7 @@ export default async function AccessibilityPage() {
   const heroBg = isEthioTax ? '#1A4731' : '#0C1A3D'
   return (
     <>
-      <section className="relative overflow-hidden bg-navy-950 py-16 md:py-20">
+      <section className="relative overflow-hidden py-16 md:py-20" style={{ background: heroBg }}>
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[80%] opacity-20"
             style={{ background: 'radial-gradient(ellipse at center top, #3a4f9a 0%, transparent 70%)' }} />
@@ -66,7 +66,7 @@ export default async function AccessibilityPage() {
 
             <div className="border-l-4 border-gold-400 pl-5 mb-10">
               <p className="text-slate-600 text-base leading-relaxed">
-                Accounting Body is committed to ensuring that its website is accessible to everyone —
+                {platformName} is committed to ensuring that its website is accessible to everyone —
                 including people with disabilities. We aim to conform to the Web Content Accessibility
                 Guidelines (WCAG) 2.1 at Level AA.
               </p>
@@ -103,7 +103,7 @@ export default async function AccessibilityPage() {
 
             <h2 className="font-display text-2xl text-navy-950 mb-4">Feedback and contact</h2>
             <p className="text-slate-500 text-sm leading-relaxed mb-6">
-              We welcome feedback on the accessibility of Accounting Body. If you experience any barriers
+              We welcome feedback on the accessibility of {platformName}. If you experience any barriers
               or have suggestions for improvement, please get in touch. We aim to respond to accessibility
               feedback within 5 business days.
             </p>
@@ -132,7 +132,7 @@ export default async function AccessibilityPage() {
 
             <h2 className="font-display text-2xl text-navy-950 mb-4">Technical information</h2>
             <p className="text-slate-500 text-sm leading-relaxed mb-3">
-              Accounting Body is built with Next.js 14 using semantic HTML5, Tailwind CSS, and
+              {platformName} is built with Next.js 14 using semantic HTML5, Tailwind CSS, and
               React. The site is tested using keyboard navigation, the WAVE accessibility tool,
               and VoiceOver on macOS.
             </p>
