@@ -42,8 +42,10 @@ export async function POST(req: NextRequest) {
 
     // Turnstile verification
     const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
-    const turnstileValid = await verifyTurnstile(turnstileToken, ip)
-    if (!turnstileValid) return NextResponse.json({ success: true })
+    if (turnstileToken) {
+      const turnstileValid = await verifyTurnstile(turnstileToken, ip)
+      if (!turnstileValid) return NextResponse.json({ success: true })
+    }
 
     // Spam filters
     const BLOCKED_DOMAINS = ['hardfer.com', 'mailinator.com', 'guerrillamail.com', 'trashmail.com', 'tempmail.com', 'yopmail.com', 'sharklasers.com', 'dispostable.com', 'maildrop.cc']
