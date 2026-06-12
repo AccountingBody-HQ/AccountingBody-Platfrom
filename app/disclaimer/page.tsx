@@ -33,7 +33,7 @@ export default async function DisclaimerPage() {
     {
       id: 'exam-content', title: '3. Exam content and syllabus accuracy',
       body: [
-        `Professional accounting qualifications — including ACCA, CIMA, AAT, ETICPA, and others — are managed by independent examining bodies whose syllabuses can change at any time. ${platformName} strives to keep content current, but cannot guarantee it reflects the very latest syllabus.`,
+        `Professional accounting qualifications — including ACCA, CIMA, AAT, ${isEthioTax ? 'ETICPA' : 'ICAEW'}, and others — are managed by independent examining bodies whose syllabuses can change at any time. ${platformName} strives to keep content current, but cannot guarantee it reflects the very latest syllabus.`,
         `Always cross-reference with the official published syllabus. ${platformName} is not affiliated with, endorsed by, or officially connected to any professional body.`,
       ],
     },
