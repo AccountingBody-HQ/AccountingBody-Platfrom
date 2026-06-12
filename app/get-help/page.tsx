@@ -280,7 +280,7 @@ export default async function GetHelpPage() {
   }
 
   return (
-    <main className="min-h-screen bg-surface">
+    <main className="bg-surface">
       <section className="relative overflow-hidden bg-navy-950 py-20 md:py-28">
         <div className="container-site relative z-10">
           <div className="max-w-3xl">
