@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
 
     const { error: dbError } = await supabase
       .from('email_subscribers')
-      .upsert({ email, platform: 'ab', status: 'subscribed', source: 'footer', subscribed_at: new Date().toISOString() }, { onConflict: 'email' })
+      .upsert({ email, platform: isEthioTax ? 'et' : 'ab', status: 'subscribed', source: 'footer', subscribed_at: new Date().toISOString() }, { onConflict: 'email' })
 
     if (dbError) {
       console.error('Supabase error:', dbError)
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: email,
-      subject: `You are subscribed \u2014 ${brand.name}`,
+      subject: `You are subscribed — ${brand.name}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 28px;">No spam. Unsubscribe any time.</p>
               <a href="https://${brand.domain}/study"
                 style="display:inline-block;background:#D4A017;color:#0a0f2e;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;">
-                Start studying free \u2192
+                Start studying free →
               </a>
             </div>
           </div>
@@ -92,23 +92,23 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: 'info@accountingbody.com',
-      subject: 'New subscriber \u2014 ' + email,
+      subject: 'New subscriber — ' + email,
       html: `
         <!DOCTYPE html>
         <html>
         <body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
           <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
             <div style="background:${brand.color};padding:32px 40px;">
-              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name} \u2014 Admin</p>
+              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name} — Admin</p>
               <h1 style="color:#fff;font-size:24px;margin:0;line-height:1.3;">New subscriber.</h1>
             </div>
             <div style="padding:32px 40px;">
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 8px;"><strong>Email:</strong> ` + email + `</p>
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 8px;"><strong>Source:</strong> Footer signup</p>
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 28px;"><strong>Time:</strong> ` + new Date().toUTCString() + `</p>
-              <a href="https://accountingbody.com/admin/subscribers"
+              <a href="https://accountingbody.com/roodber8"
                 style="display:inline-block;background:#D4A017;color:#0a0f2e;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;">
-                View all subscribers \u2192
+                View all subscribers →
               </a>
             </div>
           </div>

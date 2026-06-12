@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: 'info@accountingbody.com',
-      subject: `New Service Brief \u2014 ${service_type}`,
+      subject: `New Service Brief — ${service_type}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -148,7 +148,7 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: email,
-      subject: `We have received your enquiry \u2014 ${service_type}`,
+      subject: `We have received your enquiry — ${service_type}`,
       html: `
         <!DOCTYPE html>
         <html>
