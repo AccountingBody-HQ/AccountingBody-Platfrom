@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
               <h1 style="color:#fff;font-size:24px;margin:0;line-height:1.3;">New subscriber.</h1>
             </div>
             <div style="padding:32px 40px;">
-              <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 8px;"><strong>Email:</strong> ` + email + `</p>
+              <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 8px;"><strong>Email:</strong> <span style="color:#475569;text-decoration:none;">` + email + `</span></p>
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 8px;"><strong>Source:</strong> Footer signup</p>
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 28px;"><strong>Time:</strong> ` + new Date().toUTCString() + `</p>
               <a href="https://accountingbody.com/roodber8"
