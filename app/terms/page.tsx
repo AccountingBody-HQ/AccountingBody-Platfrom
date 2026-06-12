@@ -34,10 +34,9 @@ const sections = [
   },
   {
     id: 'subscriptions',
-    title: '4. Pro subscriptions and payments',
+    title: '4. Subscriptions and payments',
     body: [
-      'Pro subscriptions are billed monthly (£29/month) or annually (£249/year) via Lemon Squeezy. Prices include VAT where applicable. You may cancel your subscription at any time from your account settings.',
-      'Cancellation takes effect at the end of the current billing period. We do not offer refunds for partial billing periods except where required by law. If you believe you have been charged in error, contact us within 14 days.',
+      'Accounting Body is currently free to use. A Pro subscription tier is planned for the future. When introduced, full pricing and payment terms will be published here in advance.',
     ],
   },
   {
