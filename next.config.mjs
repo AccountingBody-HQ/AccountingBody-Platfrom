@@ -42,6 +42,13 @@ const nextConfig = {
         destination: '/free-courses/:path*',
         permanent: true,
       },
+
+      // Legacy WordPress URLs — safe redirects (no existing routes affected)
+      { source: '/module/:slug', destination: '/articles/:slug', permanent: true },
+      { source: '/firms', destination: '/firms-freelancers', permanent: true },
+      { source: '/all-resources', destination: '/study', permanent: true },
+      { source: '/study-hub', destination: '/study', permanent: true },
+      { source: '/practitioner-apply', destination: '/firms-freelancers/join', permanent: true },
     ]
   },
 }
