@@ -99,7 +99,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/dictionary`,         lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/free-courses`,       lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.8 },
     { url: `${BASE_URL}/get-help`,           lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.7 },
-    { url: `${BASE_URL}/firms`,              lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.7 },
+    { url: `${BASE_URL}/firms-freelancers`,  lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.7 },
     { url: `${BASE_URL}/search`,             lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE_URL}/about`,              lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE_URL}/contact`,            lastModified: new Date(), changeFrequency: 'monthly', priority: 0.5 },
@@ -114,12 +114,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority:        0.85,
     })),
 
-    ...'abcdefghijklmnopqrstuvwxyz'.split('').map(letter => ({
-      url:             `${BASE_URL}/glossary/${letter}`,
-      lastModified:    new Date(),
-      changeFrequency: 'monthly' as const,
-      priority:        0.55,
-    })),
   ]
 
   const articles = await querySanity<{ slug: string; updatedAt: string }>(`
@@ -151,12 +145,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   `)
 
-  const quizzes = await querySanity<{ slug: string; updatedAt: string }>(`
-    *[_type == "quiz"] {
-      "slug": slug.current,
-      "updatedAt": _updatedAt
-    }
-  `)
 
   const terms = await querySanity<{ slug: string; updatedAt: string }>(`
     *[_type == "dictionaryTerm"] {
@@ -186,17 +174,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority:        0.80,
     })),
     ...lessons.filter(l => l.courseSlug && l.slug).map(l => ({
-      url:             `${BASE_URL}/freecourses/${l.courseSlug}/learn/${l.slug}`,
+      url:             `${BASE_URL}/free-courses/${l.courseSlug}/learn/${l.slug}`,
       lastModified:    new Date(l.updatedAt),
       changeFrequency: 'monthly' as const,
       priority:        0.60,
     })),
-    ...quizzes.map(q => ({
-      url:             `${BASE_URL}/quiz/${q.slug}`,
-      lastModified:    new Date(q.updatedAt),
-      changeFrequency: 'monthly' as const,
-      priority:        0.60,
-    })),
+
     ...terms.map(t => ({
       url:             `${BASE_URL}/glossary/${t.slug}`,
       lastModified:    new Date(t.updatedAt),
