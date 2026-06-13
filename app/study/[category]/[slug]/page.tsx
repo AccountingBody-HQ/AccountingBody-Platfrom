@@ -16,11 +16,11 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   const { slug } = await params
   const article = await getArticleBySlug(slug)
   if (!article) return {}
-  const canonicalUrl = resolveCanonicalUrl(article)
+  const canonicalUrl = resolveCanonicalUrl(article) ?? `https://accountingbody.com/articles/${article.slug.current}`
   return {
     title:       `${article.title} | Accounting Body`,
     description: article.excerpt,
-    ...(canonicalUrl ? { alternates: { canonical: canonicalUrl } } : {}),
+    alternates: { canonical: canonicalUrl },
     openGraph: { title: article.title, description: article.excerpt, type: 'article' },
   }
 }
