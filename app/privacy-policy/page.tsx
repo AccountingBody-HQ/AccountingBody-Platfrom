@@ -5,7 +5,7 @@ import { headers } from 'next/headers'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'How we collect, use, and protect your personal data. Last updated March 2026.',
+  description: 'How we collect, use, and protect your personal data. Last updated June 2026.',
 }
 
 export default async function PrivacyPolicyPage() {
@@ -27,11 +27,11 @@ export default async function PrivacyPolicyPage() {
     },
     {
       id: 'how-we-use', title: '3. How we use your data',
-      body: 'We use your data to: provide and improve the platform; respond to contact enquiries; send the weekly newsletter to subscribers who opted in; manage Pro subscriptions; and monitor performance. We do not sell your data.',
+      body: 'We use your data to: provide and improve the platform; respond to contact enquiries; send the weekly newsletter to subscribers who opted in; manage Pro subscriptions; monitor performance; and serve relevant display advertising via Google AdSense. We do not sell your data.',
     },
     {
       id: 'third-parties', title: '4. Third parties',
-      body: 'We use: Supabase (database); Vercel (hosting); Clerk (authentication); Lemon Squeezy (payments — we never store card details ourselves); and Cloudflare (DNS and security). All processors handle your data in compliance with applicable data protection law.',
+      body: 'We use: Supabase (database); Vercel (hosting); Clerk (authentication); Lemon Squeezy (payments — we never store card details ourselves); Cloudflare (DNS and security); and Google AdSense (display advertising — Google may use cookies to serve ads based on your visits to this and other websites; you may opt out via Google ad settings at google.com/settings/ads). All processors handle your data in compliance with applicable data protection law.',
     },
     {
       id: 'cookies', title: '5. Cookies',
@@ -47,7 +47,7 @@ export default async function PrivacyPolicyPage() {
     },
     {
       id: 'contact', title: '8. Contact us',
-      body: `Email: ${privacyEmail}. Contact form: ${platformUrl}/contact. This policy was last updated March 2026.`,
+      body: `Email: ${privacyEmail}. Contact form: ${platformUrl}/contact. This policy was last updated June 2026.`,
     },
   ]
 
@@ -61,7 +61,7 @@ export default async function PrivacyPolicyPage() {
         <div className="container-site relative z-10">
           <span className="eyebrow text-gold-400 mb-4 block">Legal</span>
           <h1 className="font-display text-white mb-3 leading-tight">Privacy Policy</h1>
-          <p className="text-white/50 text-sm">Last updated: March 2026</p>
+          <p className="text-white/50 text-sm">Last updated: June 2026</p>
         </div>
       </section>
 
