@@ -42,6 +42,8 @@ export default function RouteProgressBar() {
       if (!target) return
       const href = target.getAttribute('href')
       if (!href || href.startsWith('http') || href.startsWith('mailto') || href.startsWith('#')) return
+      // Skip if already on the destination page
+      if (href === window.location.pathname) return
       startBar()
     }
     document.addEventListener('mousedown', handler)
