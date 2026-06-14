@@ -263,10 +263,10 @@ export default async function StudyPage() {
                   <div className={`h-1.5 ${body.accent}`} />
                   <div className="p-6 flex flex-col flex-1">
                     <div className="flex items-start justify-between mb-4">
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${body.badgeBg} ${body.badgeText}`}>{body.code}</span>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${body.badgeBg} ${body.badgeText}`} translate="no">{body.code}</span>
                       {articleCount && <span className="text-xs text-slate-400 font-medium">{articleCount.toLocaleString()} articles</span>}
                     </div>
-                    <h3 className="font-display text-base text-navy-950 leading-snug mb-2 group-hover:text-navy-700 transition-colors">{body.code}</h3>
+                    <h3 className="font-display text-base text-navy-950 leading-snug mb-2 group-hover:text-navy-700 transition-colors" translate="no">{body.code}</h3>
                     <p className="text-xs text-slate-500 mb-4 leading-relaxed flex-1">{body.description}</p>
                     <ul className="space-y-1.5 mb-5">
                       {body.highlights.map(h => (
@@ -277,7 +277,7 @@ export default async function StudyPage() {
                       ))}
                     </ul>
                     <span className={`flex items-center gap-1.5 text-xs font-semibold ${body.badgeText} group-hover:gap-2.5 transition-all`}>
-                      Browse {body.code} notes
+                      <span translate="no">Browse {body.code} notes</span>
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                     </span>
                   </div>
