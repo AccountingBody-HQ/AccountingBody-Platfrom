@@ -230,7 +230,7 @@ export default function ContactForm() {
             ) : (
               <form onSubmit={handleSubscribeSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md">
                 <input name="sub-email" type="email" required placeholder="your@email.com"
-                  className="flex-1 h-12 px-4 rounded-lg text-sm bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" />
+                  className="flex-1 w-full h-12 px-4 rounded-lg text-sm bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" />
                 {/* Turnstile invisible widget for subscribe */}
                 <div
                   ref={(el) => {
