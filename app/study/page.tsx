@@ -266,7 +266,6 @@ export default async function StudyPage() {
                       <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${body.badgeBg} ${body.badgeText}`} translate="no">{body.code}</span>
                       {articleCount && <span className="text-xs text-slate-400 font-medium">{articleCount.toLocaleString()} articles</span>}
                     </div>
-                    <h3 className="font-display text-base text-navy-950 leading-snug mb-2 group-hover:text-navy-700 transition-colors" translate="no">{body.code}</h3>
                     <p className="text-xs text-slate-500 mb-4 leading-relaxed flex-1">{body.description}</p>
                     <ul className="space-y-1.5 mb-5">
                       {body.highlights.map(h => (
