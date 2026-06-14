@@ -205,7 +205,7 @@ function SearchInner() {
               Find what you need
             </h1>
             <p className="text-white/55 text-lg">
-              Search across 3,000+ articles, 50,000+ practice questions, courses, and glossary terms.
+              Search across 3,000+ articles, 20,000+ practice questions, courses, and glossary terms.
             </p>
           </div>
           <div className="max-w-2xl mx-auto">
