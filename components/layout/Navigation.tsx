@@ -433,7 +433,7 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
                             onClick={onClose}
                             className="flex items-center gap-2 px-5 py-2 text-sm text-slate-700 hover:text-navy-950 hover:bg-slate-100 transition-colors"
                           >
-                            {link.label}
+                            <span {...(link.noTranslate ? { translate: "no" } : {})}>{link.label}</span>
                             {link.badge && (
                               <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-teal-50 text-teal-700">
                                 {link.badge}
