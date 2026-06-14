@@ -12,6 +12,7 @@ import { NavigationWrapper } from '@/components/layout/NavigationWrapper'
 import { Footer } from '@/components/layout/Footer'
 import CookieConsent from '@/components/CookieConsent'
 import ScrollToTop from '@/components/ScrollToTop'
+import RouteProgressBar from '@/components/RouteProgressBar'
 import './globals.css'
 
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID
@@ -117,6 +118,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               />
             </noscript>
           )}
+          <RouteProgressBar />
           <NavigationWrapper />
           <main
             className="flex-1"
