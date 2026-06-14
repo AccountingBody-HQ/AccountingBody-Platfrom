@@ -18,6 +18,7 @@ interface NavLink {
   badge?:       string
   description?: string
   external?:    boolean
+  noTranslate?: boolean
 }
 
 interface NavSection {
@@ -102,10 +103,10 @@ const navSections: NavSection[] = [
       {
         title: 'By Qualification',
         links: [
-          { label: 'ACCA',        href: '/study/acca',     badge: 'Popular', description: 'All 13 ACCA papers covered' },
-          { label: 'CIMA',        href: '/study/cima',                        description: 'Certificate to Strategic level' },
-          { label: 'AAT',         href: '/study/aat',                         description: 'Level 2, 3 and 4 coverage' },
-          { label: 'ICAEW / ACA', href: '/study/icaew',                         description: 'ACA qualification pathway' },
+          { label: 'ACCA',        href: '/study/acca',     badge: 'Popular', description: 'All 13 ACCA papers covered', noTranslate: true },
+          { label: 'CIMA',        href: '/study/cima',                        description: 'Certificate to Strategic level', noTranslate: true },
+          { label: 'AAT',         href: '/study/aat',                         description: 'Level 2, 3 and 4 coverage', noTranslate: true },
+          { label: 'ICAEW / ACA', href: '/study/icaew',                         description: 'ACA qualification pathway', noTranslate: true },
         ],
       },
       {
@@ -295,7 +296,7 @@ function MegaMenu({ section, onClose }: { section: NavSection; onClose: () => vo
                         >
                           <span className="flex-1 min-w-0">
                             <span className="flex items-center gap-1.5">
-                              <span className="text-sm font-medium text-navy-950 group-hover/link:text-navy-700">
+                              <span className="text-sm font-medium text-navy-950 group-hover/link:text-navy-700" {...(link.noTranslate ? { translate: "no" } : {})}>
                                 {link.label}
                               </span>
                               {link.badge && (
