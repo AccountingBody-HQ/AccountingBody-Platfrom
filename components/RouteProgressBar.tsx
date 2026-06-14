@@ -9,6 +9,7 @@ export default function RouteProgressBar() {
   const [width, setWidth] = useState(0)
   const timers = useRef<ReturnType<typeof setTimeout>[]>([])
   const started = useRef(false)
+  const touchStart = useRef<{x: number, y: number} | null>(null)
 
   const clearAll = () => {
     timers.current.forEach(clearTimeout)
@@ -35,26 +36,45 @@ export default function RouteProgressBar() {
     timers.current = [hide]
   }
 
-  // Trigger on any link click — fires before navigation
   useEffect(() => {
-    const handler = (e: MouseEvent | TouchEvent) => {
+    const onMouseDown = (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest('a')
       if (!target) return
       const href = target.getAttribute('href')
       if (!href || href.startsWith('http') || href.startsWith('mailto') || href.startsWith('#')) return
-      // Skip if already on the destination page
       if (href === window.location.pathname) return
       startBar()
     }
-    document.addEventListener('mousedown', handler)
-    document.addEventListener('touchstart', handler)
+
+    const onTouchStart = (e: TouchEvent) => {
+      touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+    }
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!touchStart.current) return
+      const dx = Math.abs(e.changedTouches[0].clientX - touchStart.current.x)
+      const dy = Math.abs(e.changedTouches[0].clientY - touchStart.current.y)
+      touchStart.current = null
+      // Only treat as a tap if finger barely moved
+      if (dx > 10 || dy > 10) return
+      const target = (e.target as HTMLElement).closest('a')
+      if (!target) return
+      const href = target.getAttribute('href')
+      if (!href || href.startsWith('http') || href.startsWith('mailto') || href.startsWith('#')) return
+      if (href === window.location.pathname) return
+      startBar()
+    }
+
+    document.addEventListener('mousedown', onMouseDown)
+    document.addEventListener('touchstart', onTouchStart, { passive: true })
+    document.addEventListener('touchend', onTouchEnd)
     return () => {
-      document.removeEventListener('mousedown', handler)
-      document.removeEventListener('touchstart', handler)
+      document.removeEventListener('mousedown', onMouseDown)
+      document.removeEventListener('touchstart', onTouchStart)
+      document.removeEventListener('touchend', onTouchEnd)
     }
   }, [])
 
-  // Complete when new route settles
   useEffect(() => {
     completeBar()
   }, [pathname, searchParams])
