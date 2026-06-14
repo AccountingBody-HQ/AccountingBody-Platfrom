@@ -7,6 +7,7 @@ export interface NavLink {
   badge?:       string
   description?: string
   external?:    boolean
+  noTranslate?: boolean
 }
 
 export interface NavSection {
@@ -20,10 +21,10 @@ export interface NavSection {
 }
 
 export const ETICPA_STUDY_LINKS: NavLink[] = [
-  { label: 'ETICPA / CPA', href: '/study/eticpa', badge: 'Popular', description: "Ethiopia's national CPA qualification" },
-  { label: 'ACCA',         href: '/study/acca',   description: 'All 13 ACCA papers covered' },
-  { label: 'CIMA',         href: '/study/cima',   description: 'Certificate to Strategic level' },
-  { label: 'AAT',          href: '/study/aat',    description: 'Level 2, 3 and 4 coverage' },
+  { label: 'ETICPA / CPA', href: '/study/eticpa', badge: 'Popular', description: "Ethiopia's national CPA qualification", noTranslate: true },
+  { label: 'ACCA',         href: '/study/acca',   description: 'All 13 ACCA papers covered', noTranslate: true },
+  { label: 'CIMA',         href: '/study/cima',   description: 'Certificate to Strategic level', noTranslate: true },
+  { label: 'AAT',          href: '/study/aat',    description: 'Level 2, 3 and 4 coverage', noTranslate: true },
 ]
 
 export const ET_GET_HELP_LINKS = {
