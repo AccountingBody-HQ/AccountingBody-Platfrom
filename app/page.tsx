@@ -1451,13 +1451,13 @@ export default async function HomePage() {
               <div className="flex items-center gap-3 shrink-0">
                 <Link
                   href="/get-help"
-                  className="h-10 px-5 flex items-center text-sm font-medium rounded-lg border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors"
+                  className="h-10 px-5 flex items-center text-sm font-medium rounded-lg border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors whitespace-nowrap"
                 >
                   Explore our services
                 </Link>
                 <Link
                   href="/study"
-                  className="h-10 px-5 flex items-center text-sm font-semibold rounded-lg bg-navy-950 text-white hover:bg-navy-900 transition-colors shadow-sm"
+                  className="h-10 px-5 flex items-center text-sm font-semibold rounded-lg bg-navy-950 text-white hover:bg-navy-900 transition-colors shadow-sm whitespace-nowrap"
                 >
                   Start studying free
                 </Link>
