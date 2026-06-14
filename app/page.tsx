@@ -1258,7 +1258,7 @@ export default async function HomePage() {
                   <div className={`h-1.5 ${q.accent}`} />
                   <div className="p-6 flex flex-col flex-1">
                     <div className="flex items-start justify-between mb-4">
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${q.badgeBg} ${q.badgeText}`}>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${q.badgeBg} ${q.badgeText}`} translate="no">
                         {q.code}
                       </span>
                     </div>
@@ -1271,7 +1271,7 @@ export default async function HomePage() {
                         </li>
                       ))}
                     </ul>
-                    <span className={`flex items-center gap-1.5 text-xs font-semibold ${q.badgeText} group-hover:gap-2.5 transition-all`}>
+                    <span className={`flex items-center gap-1.5 text-xs font-semibold ${q.badgeText} group-hover:gap-2.5 transition-all`} translate="no">
                       Browse {q.code} notes
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
