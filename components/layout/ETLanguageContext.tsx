@@ -39,8 +39,13 @@ function setGoogTransCookie(langCode: string) {
     document.cookie = 'googtrans=' + value + '; path=/;'
     document.cookie = 'googtrans=' + value + '; path=/; domain=' + window.location.hostname + ';'
   }
-  // Reload to apply translation
-  window.location.reload()
+  // Show gold progress bar before reload (ET only — destroyed by reload)
+  const bar = document.createElement('div')
+  bar.style.cssText = 'position:fixed;top:0;left:0;width:0%;height:3px;background:#D4A017;z-index:9999;pointer-events:none;transition:width 0.4s ease;'
+  document.body.appendChild(bar)
+  void bar.offsetWidth
+  bar.style.width = '80%'
+  setTimeout(() => window.location.reload(), 50)
 }
 
 function detectCurrentLanguage(): Language {
