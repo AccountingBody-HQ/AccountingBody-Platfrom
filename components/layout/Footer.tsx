@@ -128,6 +128,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
   const [honeypot, setHoneypot] = useState('')
   const turnstileWidgetId = React.useRef<string | null>(null)
   const turnstileContainerRef = React.useRef<HTMLDivElement | null>(null)
+  const turnstileToken = React.useRef<string>('')
   const siteKey = isEthioTax
     ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '')
     : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? '')
@@ -139,7 +140,9 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
         turnstileWidgetId.current = window.turnstile.render(turnstileContainerRef.current, {
           sitekey: siteKey,
           size: 'invisible',
-          callback: () => {},
+          callback: (token: string) => { turnstileToken.current = token },
+          'expired-callback': () => { turnstileToken.current = '' },
+          'error-callback': () => { turnstileToken.current = '' },
         })
       }
     }
@@ -163,16 +166,18 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
       await fetch('/api/subscribe', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, _h: honeypot, 'cf-turnstile-response': (turnstileWidgetId.current ? (window.turnstile as unknown as { getResponse: (id: string) => string })?.getResponse?.(turnstileWidgetId.current) ?? '' : '') }),
+        body:    JSON.stringify({ email, _h: honeypot, 'cf-turnstile-response': turnstileToken.current }),
       })
       setStatus('success')
       setEmail('')
+      turnstileToken.current = ''
       if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
     } catch {
       setStatus('error')
     }
   }
 
+  
   return (
     <div>
       <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">
