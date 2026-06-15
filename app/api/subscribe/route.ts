@@ -38,12 +38,11 @@ export async function POST(req: NextRequest) {
     // Honeypot
     if (_h) return NextResponse.json({ success: true })
 
-    // Turnstile verification
+    // Turnstile verification — mandatory, bots without valid token are silently rejected
     const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
-    if (turnstileToken) {
-      const turnstileValid = await verifyTurnstile(turnstileToken, ip)
-      if (!turnstileValid) return NextResponse.json({ success: true })
-    }
+    if (!turnstileToken) return NextResponse.json({ success: true })
+    const turnstileValid = await verifyTurnstile(turnstileToken, ip)
+    if (!turnstileValid) return NextResponse.json({ success: true })
 
     // Block disposable email domains
     const BLOCKED_DOMAINS = ['hardfer.com', 'mailinator.com', 'guerrillamail.com', 'trashmail.com', 'tempmail.com', 'yopmail.com', 'sharklasers.com', 'dispostable.com', 'maildrop.cc']
