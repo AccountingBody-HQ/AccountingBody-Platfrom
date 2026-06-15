@@ -127,6 +127,33 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [honeypot, setHoneypot] = useState('')
   const turnstileWidgetId = React.useRef<string | null>(null)
+  const turnstileContainerRef = React.useRef<HTMLDivElement | null>(null)
+  const siteKey = isEthioTax
+    ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '')
+    : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? '')
+
+  React.useEffect(() => {
+    if (!siteKey || !turnstileContainerRef.current) return
+    const render = () => {
+      if (window.turnstile && turnstileContainerRef.current && !turnstileWidgetId.current) {
+        turnstileWidgetId.current = window.turnstile.render(turnstileContainerRef.current, {
+          sitekey: siteKey,
+          size: 'invisible',
+          callback: () => {},
+        })
+      }
+    }
+    if (window.turnstile) { render() } else {
+      const script = document.getElementById('cf-turnstile-script')
+      if (script) script.addEventListener('load', render)
+    }
+    return () => {
+      if (turnstileWidgetId.current && window.turnstile) {
+        if ('remove' in window.turnstile) (window.turnstile as unknown as { remove: (id: string) => void }).remove(turnstileWidgetId.current!)
+        turnstileWidgetId.current = null
+      }
+    }
+  }, [siteKey])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -196,6 +223,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
               ) : 'Subscribe'}
             </button>
           </div>
+          <div ref={turnstileContainerRef} />
           {status === 'error' && (
             <p className="text-xs text-red-400">Something went wrong. Please try again.</p>
           )}

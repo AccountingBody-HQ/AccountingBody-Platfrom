@@ -13,6 +13,7 @@ import { Footer } from '@/components/layout/Footer'
 import CookieConsent from '@/components/CookieConsent'
 import ScrollToTop from '@/components/ScrollToTop'
 import RouteProgressBar from '@/components/RouteProgressBar'
+import Script from 'next/script'
 import './globals.css'
 
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID
@@ -119,6 +120,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </noscript>
           )}
           <RouteProgressBar />
+          <Script
+            id="cf-turnstile-script"
+            src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+            strategy="afterInteractive"
+          />
           <NavigationWrapper />
           <main
             className="flex-1"
