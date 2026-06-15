@@ -2,13 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
 
-async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
+async function verifyTurnstile(token: string, ip: string, isEthioTax: boolean): Promise<boolean> {
   if (!token) return false
+  const secret = isEthioTax
+    ? process.env.TURNSTILE_SECRET_KEY
+    : process.env.TURNSTILE_SECRET_KEY_AB
+  if (!secret) return false
   const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      secret: process.env.TURNSTILE_SECRET_KEY,
+      secret,
       response: token,
       remoteip: ip,
     }),
@@ -38,12 +42,11 @@ export async function POST(req: NextRequest) {
     // Honeypot
     if (_h) return NextResponse.json({ success: true })
 
-    // Turnstile verification
+    // Turnstile verification — mandatory, bots without valid token are silently rejected
     const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
-    if (turnstileToken) {
-      const turnstileValid = await verifyTurnstile(turnstileToken, ip)
-      if (!turnstileValid) return NextResponse.json({ success: true })
-    }
+    if (!turnstileToken) return NextResponse.json({ success: true })
+    const turnstileValid = await verifyTurnstile(turnstileToken, ip, isEthioTax)
+    if (!turnstileValid) return NextResponse.json({ success: true })
 
     // Block disposable email domains
     const BLOCKED_DOMAINS = ['hardfer.com', 'mailinator.com', 'guerrillamail.com', 'trashmail.com', 'tempmail.com', 'yopmail.com', 'sharklasers.com', 'dispostable.com', 'maildrop.cc']
