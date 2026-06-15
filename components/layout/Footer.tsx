@@ -163,7 +163,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
       await fetch('/api/subscribe', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, _h: honeypot, 'cf-turnstile-response': (document.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement)?.value ?? '' }),
+        body:    JSON.stringify({ email, _h: honeypot, 'cf-turnstile-response': (turnstileWidgetId.current ? (window.turnstile as unknown as { getResponse: (id: string) => string })?.getResponse?.(turnstileWidgetId.current) ?? '' : '') }),
       })
       setStatus('success')
       setEmail('')
