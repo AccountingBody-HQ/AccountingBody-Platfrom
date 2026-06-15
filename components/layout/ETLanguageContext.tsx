@@ -39,13 +39,10 @@ function setGoogTransCookie(langCode: string) {
     document.cookie = 'googtrans=' + value + '; path=/;'
     document.cookie = 'googtrans=' + value + '; path=/; domain=' + window.location.hostname + ';'
   }
-  // Show gold progress bar before reload (ET only — destroyed by reload)
-  const bar = document.createElement('div')
-  bar.style.cssText = 'position:fixed;top:0;left:0;width:0%;height:3px;background:#D4A017;z-index:9999;pointer-events:none;transition:width 0.4s ease;'
-  document.body.appendChild(bar)
-  void bar.offsetWidth
-  bar.style.width = '80%'
-  setTimeout(() => window.location.reload(), 50)
+  // Flag for RouteProgressBar to continue bar after reload (ET only)
+  sessionStorage.setItem('et-lang-reload', '1')
+  // Reload to apply translation
+  window.location.reload()
 }
 
 function detectCurrentLanguage(): Language {

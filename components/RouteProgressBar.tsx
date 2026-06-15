@@ -79,6 +79,34 @@ export default function RouteProgressBar() {
     completeBar()
   }, [pathname, searchParams])
 
+  // ET language switch: resume bar after reload, hold until Google Translate finishes
+  useEffect(() => {
+    if (typeof sessionStorage === "undefined") return
+    const flag = sessionStorage.getItem("et-lang-reload")
+    if (!flag) return
+    sessionStorage.removeItem("et-lang-reload")
+    started.current = false
+    startBar()
+    const interval = setInterval(() => {
+      const translated =
+        document.body.classList.contains("translated-ltr") ||
+        document.body.classList.contains("translated-rtl") ||
+        Boolean(document.querySelector(".goog-te-banner-frame"))
+      if (translated) {
+        clearInterval(interval)
+        completeBar()
+      }
+    }, 200)
+    const safety = setTimeout(() => {
+      clearInterval(interval)
+      completeBar()
+    }, 5000)
+    return () => {
+      clearInterval(interval)
+      clearTimeout(safety)
+    }
+  }, [])
+
   if (!visible) return null
 
   return (
