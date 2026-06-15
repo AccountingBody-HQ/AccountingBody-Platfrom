@@ -25,8 +25,9 @@ async function sanityFetch<T>(query: string, params: Record<string, string> = {}
     if (!PROJECT_ID) return null
     const encodedQuery  = encodeURIComponent(query)
     const encodedParams = Object.entries(params).map(([k, v]) => `$${k}=${encodeURIComponent(JSON.stringify(v))}`).join("&")
-    const url = `https://${PROJECT_ID}.api.sanity.io/v${API_VER}/data/query/${DATASET}?query=${encodedQuery}${encodedParams ? `&${encodedParams}` : ""}`
-    const res = await fetch(url, { next: { revalidate: 300 } })
+    const url = `https://${PROJECT_ID}.apicdn.sanity.io/v${API_VER}/data/query/${DATASET}?query=${encodedQuery}${encodedParams ? `&${encodedParams}` : ""}`
+    const token = process.env.SANITY_API_TOKEN
+    const res = await fetch(url, { next: { revalidate: 300 }, headers: token ? { Authorization: `Bearer ${token}` } : {} })
     if (!res.ok) return null
     const data = await res.json()
     return (data.result ?? null) as T
@@ -42,8 +43,9 @@ export async function getPracticePostCount(): Promise<number> {
   try {
     const projectId = PROJECT_ID ?? '4rllejq1'
     const query = encodeURIComponent(`count(*[_type == "practicePost" && "accountingbody" in showOnSites])`)
-    const url = `https://${projectId}.api.sanity.io/v${API_VER}/data/query/${DATASET}?query=${query}`
-    const res = await fetch(url, { next: { revalidate: 3600 } })
+    const url = `https://${projectId}.apicdn.sanity.io/v${API_VER}/data/query/${DATASET}?query=${query}`
+    const token = process.env.SANITY_API_TOKEN
+    const res = await fetch(url, { next: { revalidate: 3600 }, headers: token ? { Authorization: `Bearer ${token}` } : {} })
     if (!res.ok) return 0
     const data = await res.json()
     return (data.result ?? 0) as number

@@ -40,8 +40,8 @@ async function getCourses(): Promise<SanityCourse[]> {
       }`
     )
     const res = await fetch(
-      `https://${PROJECT_ID}.api.sanity.io/v2023-05-03/data/query/${DATASET}?query=${query}`,
-      { next: { revalidate: 60 } }
+      `https://${PROJECT_ID}.apicdn.sanity.io/v2023-05-03/data/query/${DATASET}?query=${query}`,
+      { next: { revalidate: 60 }, headers: process.env.SANITY_API_TOKEN ? { Authorization: `Bearer ${process.env.SANITY_API_TOKEN}` } : {} }
     )
     if (!res.ok) return []
     const data = await res.json()
