@@ -3,7 +3,8 @@
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
 const DATASET    = process.env.NEXT_PUBLIC_SANITY_DATASET    ?? 'production'
-const BASE_URL   = `https://${PROJECT_ID}.api.sanity.io/v2023-05-03/data/query/${DATASET}`
+const BASE_URL   = `https://${PROJECT_ID}.apicdn.sanity.io/v2023-05-03/data/query/${DATASET}`
+const AUTH_HEADER: Record<string, string> = process.env.SANITY_API_TOKEN ? { Authorization: `Bearer ${process.env.SANITY_API_TOKEN}` } : {}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -74,6 +75,7 @@ export async function getPublishedCourses(): Promise<CourseListItem[]> {
     `)
     const res = await fetch(`${BASE_URL}?query=${query}`, {
       next: { revalidate: 3600 },
+      headers: AUTH_HEADER,
     })
     if (!res.ok) return []
     const data = await res.json()
@@ -109,6 +111,7 @@ export async function getCourseBySlug(slug: string): Promise<CourseFull | null> 
     `)
     const res = await fetch(`${BASE_URL}?query=${query}`, {
       cache: 'no-store',
+      headers: AUTH_HEADER,
     })
     if (!res.ok) return null
     const data = await res.json()
