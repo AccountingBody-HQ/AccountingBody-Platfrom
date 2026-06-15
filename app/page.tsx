@@ -41,9 +41,11 @@ async function getFeaturedArticles(platform: string): Promise<SanityArticle[]> {
         "coverImage": featuredImage { asset -> { url } }
       }`
     )
+    const token = process.env.SANITY_API_TOKEN
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
     const res = await fetch(
-      `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
-      { next: { revalidate: 300 } }
+      `https://${projectId}.apicdn.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
+      { next: { revalidate: 300 }, headers }
     )
     if (!res.ok) return []
     const data = await res.json()
@@ -58,8 +60,8 @@ async function getFeaturedArticles(platform: string): Promise<SanityArticle[]> {
         }`
       )
       const fallbackRes = await fetch(
-        `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${fallbackQuery}`,
-        { next: { revalidate: 300 } }
+        `https://${projectId}.apicdn.sanity.io/v2023-05-03/data/query/${dataset}?query=${fallbackQuery}`,
+        { next: { revalidate: 300 }, headers }
       )
       if (!fallbackRes.ok) return []
       const fallbackData = await fallbackRes.json()
@@ -71,54 +73,6 @@ async function getFeaturedArticles(platform: string): Promise<SanityArticle[]> {
   }
 }
 
-// ── Placeholder articles ──────────────────────────────────────────────────────
-
-const placeholderArticles = [
-  {
-    _id: '1',
-    title: 'ACCA F3 Financial Accounting: Complete Study Guide 2025',
-    slug: { current: 'acca-f3-financial-accounting-study-guide' },
-    excerpt: 'Everything you need to pass ACCA F3 first time — from double entry to financial statements.',
-    category: 'Financial Reporting',
-    examBody: 'acca',
-    readTime: 12,
-    publishedAt: '2025-03-01',
-    author: { name: 'Accounting Body' },
-  },
-  {
-    _id: '2',
-    title: 'How to Calculate Deferred Tax: Step-by-Step with Examples',
-    slug: { current: 'how-to-calculate-deferred-tax' },
-    excerpt: 'Deferred tax trips up thousands of students every year. This guide makes it simple.',
-    category: 'Taxation',
-    examBody: 'acca',
-    readTime: 8,
-    publishedAt: '2025-02-28',
-    author: { name: 'Accounting Body' },
-  },
-  {
-    _id: '3',
-    title: 'CIMA Operational Case Study: How to Structure Your Answer',
-    slug: { current: 'cima-ocs-answer-structure' },
-    excerpt: 'The OCS rewards structure above all else. Here is the exact framework top scorers use.',
-    category: 'Management Accounting',
-    examBody: 'cima',
-    readTime: 10,
-    publishedAt: '2025-02-25',
-    author: { name: 'Accounting Body' },
-  },
-  {
-    _id: '4',
-    title: 'AAT Level 3 Synoptic Assessment: Everything You Need to Know',
-    slug: { current: 'aat-level-3-synoptic-assessment-guide' },
-    excerpt: 'The synoptic is unlike any other AAT exam. This complete guide tells you exactly what to expect.',
-    category: 'Bookkeeping',
-    examBody: 'aat',
-    readTime: 9,
-    publishedAt: '2025-02-20',
-    author: { name: 'Accounting Body' },
-  },
-]
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -560,7 +514,7 @@ export default async function HomePage() {
     ? [eticpaCard, ...qualificationPaths.filter(q => q.slug !== 'icaew')]
     : qualificationPaths
   const sanityArticles = await getFeaturedArticles(isEthioTax ? 'ethiotax' : 'accountingbody')
-  const articles = sanityArticles.length > 0 ? sanityArticles : placeholderArticles
+  const articles = sanityArticles
 
   return (
     <>
@@ -706,7 +660,7 @@ export default async function HomePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {articles.slice(0, 4).map(article => (
-              <ArticleCard key={article._id} article={article as typeof placeholderArticles[0]} />
+              <ArticleCard key={article._id} article={article as SanityArticle} />
             ))}
           </div>
 
