@@ -375,7 +375,9 @@ function EmailSignupSection() {
 
 // ── PAGE ──────────────────────────────────────────────────────────────────────
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: { searchParams: Promise<{ confirmed?: string }> }) {
+  const sp = await searchParams
+  const confirmedStatus = sp.confirmed
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -518,6 +520,21 @@ export default async function HomePage() {
 
   return (
     <>
+      {confirmedStatus === 'true' && (
+        <div className={`w-full text-center text-sm font-medium py-3 px-4 ${isEthioTax ? 'bg-[#1A4731]' : 'bg-navy-950'} text-white`}>
+          You are subscribed. Thank you for confirming your email.
+        </div>
+      )}
+      {confirmedStatus === 'already' && (
+        <div className={`w-full text-center text-sm font-medium py-3 px-4 ${isEthioTax ? 'bg-[#1A4731]' : 'bg-navy-950'} text-white`}>
+          You were already subscribed — no further action needed.
+        </div>
+      )}
+      {(confirmedStatus === 'invalid' || confirmedStatus === 'error') && (
+        <div className="w-full text-center text-sm font-medium py-3 px-4 bg-red-50 text-red-700">
+          That confirmation link is invalid or has expired. Please subscribe again from the footer.
+        </div>
+      )}
 
       {/* ════════════════════════════════════════════════════════════════
           1. HERO
