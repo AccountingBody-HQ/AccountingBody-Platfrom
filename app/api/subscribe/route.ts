@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
 
     const { error: dbError } = await supabase
       .from('email_subscribers')
-      .upsert({ email, platform: isEthioTax ? 'et' : 'ab', status: 'pending', source: 'footer', confirmation_token: confirmationToken }, { onConflict: 'email' })
+      .upsert({ email, platform: isEthioTax ? 'et' : 'ab', status: 'pending', source: 'footer', confirmation_token: confirmationToken }, { onConflict: 'email,platform' })
 
     if (dbError) {
       console.error('Supabase error:', dbError)
