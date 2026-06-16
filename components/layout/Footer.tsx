@@ -163,11 +163,14 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
     if (!email || !email.includes('@')) return
     setStatus('loading')
     try {
-      await fetch('/api/subscribe', {
+      const res = await fetch('/api/subscribe', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ email, _h: honeypot, 'cf-turnstile-response': turnstileToken.current }),
       })
+      if (!res.ok) throw new Error('subscribe failed')
+      const data = await res.json()
+      if (!data.success) throw new Error('subscribe failed')
       setStatus('success')
       setEmail('')
       turnstileToken.current = ''
