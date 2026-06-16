@@ -14,7 +14,7 @@ async function getSubscribers(filters: { status?: string; source?: string; platf
     process.env.SUPABASE_SECRET_KEY!
   )
   const platformFilter = filters.platform || 'ab'
-  let query = supabase.from('email_subscribers').select('*', { count: 'exact' }).eq('platform', platformFilter).order('subscribed_at', { ascending: false })
+  let query = supabase.from('email_subscribers').select('*', { count: 'exact' }).eq('platform', platformFilter).neq('status', 'pending').order('subscribed_at', { ascending: false })
   if (filters.status) query = query.eq('status', filters.status)
   if (filters.source) query = query.eq('source', filters.source)
   const { data, count } = await query
