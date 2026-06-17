@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const res = await fetch(
-      `https://${PROJECT_ID}.api.sanity.io/v2023-05-03/data/query/${DATASET}?query=${query}`,
+      `https://${PROJECT_ID}.apicdn.sanity.io/v2023-05-03/data/query/${DATASET}?query=${query}`,
       {
         headers: TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {},
         cache: 'no-store',

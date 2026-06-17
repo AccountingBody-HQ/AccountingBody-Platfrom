@@ -18,7 +18,7 @@ async function getPracticePostStats() {
     )
     const token = process.env.SANITY_API_TOKEN ?? ''
     const res = await fetch(
-      `https://${PROJECT_ID}.api.sanity.io/v${API_VER}/data/query/${DATASET}?query=${query}`,
+      `https://${PROJECT_ID}.apicdn.sanity.io/v${API_VER}/data/query/${DATASET}?query=${query}`,
       { cache: 'no-store', headers: token ? { Authorization: `Bearer ${token}` } : {} }
     )
     if (!res.ok) return []

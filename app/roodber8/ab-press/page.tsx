@@ -32,7 +32,7 @@ export default function AbPressPage() {
     setPreview(null)
     setDownloadUrl('')
     fetch(
-      'https://4rllejq1.api.sanity.io/v2023-05-03/data/query/production?query=' +
+      'https://4rllejq1.apicdn.sanity.io/v2023-05-03/data/query/production?query=' +
       encodeURIComponent('*[_type=="course" && "' + platform + '" in showOnSites && (status == "published" || !defined(status))]{_id, title, slug}')
     )
       .then(r => r.json())

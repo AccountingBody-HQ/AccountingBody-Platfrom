@@ -26,7 +26,7 @@ async function getArticles(site: string): Promise<ArticleSummary[]> {
     )
     const token = process.env.SANITY_API_TOKEN
     const res = await fetch(
-      `https://${PROJECT_ID}.api.sanity.io/v2023-05-03/data/query/${DATASET}?query=${query}`,
+      `https://${PROJECT_ID}.apicdn.sanity.io/v2023-05-03/data/query/${DATASET}?query=${query}`,
       { headers: token ? { Authorization: `Bearer ${token}` } : {}, cache: 'no-store' }
     )
     if (!res.ok) return []

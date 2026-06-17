@@ -12,8 +12,8 @@ async function querySanity<T>(groq: string): Promise<T[]> {
     if (!projectId) return []
 
     const res = await fetch(
-      `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${encodeURIComponent(groq)}`,
-      { next: { revalidate: 3600 } }
+      `https://${projectId}.apicdn.sanity.io/v2023-05-03/data/query/${dataset}?query=${encodeURIComponent(groq)}`,
+      { next: { revalidate: 3600 }, headers: process.env.SANITY_API_TOKEN ? { Authorization: `Bearer ${process.env.SANITY_API_TOKEN}` } : {} }
     )
     if (!res.ok) return []
     const data = await res.json()

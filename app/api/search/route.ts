@@ -72,8 +72,9 @@ function makeGroq(groups: string[][], mode: 'AND' | 'OR', site: string): string 
 }
 
 async function querySanity(groq: string) {
-  const url = `https://${PROJECT_ID}.api.sanity.io/v2023-05-03/data/query/${DATASET}?query=${encodeURIComponent(groq)}`
-  const res  = await fetch(url, { cache: 'no-store' })
+  const url = `https://${PROJECT_ID}.apicdn.sanity.io/v2023-05-03/data/query/${DATASET}?query=${encodeURIComponent(groq)}`
+  const token = process.env.SANITY_API_TOKEN
+  const res  = await fetch(url, { cache: 'no-store', headers: token ? { Authorization: `Bearer ${token}` } : {} })
   if (!res.ok) return []
   const data = await res.json()
   return data.result ?? []

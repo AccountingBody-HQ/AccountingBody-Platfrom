@@ -61,8 +61,8 @@ async function getArticlesByLetter(letter: string): Promise<SanityArticle[]> {
       `*[_type == "article" && "accountingbody" in showOnSites && (${matchConditions})] | order(title asc) { _id, title, slug, excerpt, "categoryTitle": categories[0]->title, readTime, publishedAt }`
     )
     const res = await fetch(
-      `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
-      { next: { revalidate: 3600 } }
+      `https://${projectId}.apicdn.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
+      { next: { revalidate: 3600 }, headers: process.env.SANITY_API_TOKEN ? { Authorization: `Bearer ${process.env.SANITY_API_TOKEN}` } : {} }
     )
     if (!res.ok) return []
     const data = await res.json()
@@ -80,8 +80,8 @@ async function getArticlesByCategorySlug(categorySlug: string): Promise<SanityAr
       `*[_type == "article" && "accountingbody" in showOnSites && "${categorySlug}" in categories[]->slug.current] | order(title asc) { _id, title, slug, excerpt, "categoryTitle": categories[0]->title, readTime, publishedAt }`
     )
     const res = await fetch(
-      `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
-      { next: { revalidate: 3600 } }
+      `https://${projectId}.apicdn.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
+      { next: { revalidate: 3600 }, headers: process.env.SANITY_API_TOKEN ? { Authorization: `Bearer ${process.env.SANITY_API_TOKEN}` } : {} }
     )
     if (!res.ok) return []
     const data = await res.json()
