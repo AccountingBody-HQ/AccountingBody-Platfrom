@@ -44,7 +44,7 @@ export default function EmailSignupForm() {
           <svg className="w-5 h-5 text-gold-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" />
           </svg>
-          <p className="text-white text-sm font-medium">You are subscribed — welcome!</p>
+          <p className="text-white text-sm font-medium">Check your inbox to confirm</p>
         </div>
         <button onClick={() => setStatus('idle')} className="text-xs text-white/50 hover:text-white/80 transition-colors">
           Subscribe another email
