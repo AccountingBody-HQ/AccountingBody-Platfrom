@@ -77,8 +77,8 @@ export async function getCourses(): Promise<Course[]> {
     `)
 
     const res = await fetch(
-      `https://${projectId}.api.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
-      { next: { revalidate: 3600 } }
+      `https://${projectId}.apicdn.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
+      { next: { revalidate: 3600 }, headers: process.env.SANITY_API_TOKEN ? { Authorization: `Bearer ${process.env.SANITY_API_TOKEN}` } : {} }
     )
 
     if (!res.ok) return placeholderCourses
