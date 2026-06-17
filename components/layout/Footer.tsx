@@ -454,7 +454,7 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-xs transition-colors ${isEthioTax ? "text-[#C9982A] hover:text-[#e0b84e]" : "text-white/35 hover:text-white/70"}`}
+                  className={`text-xs transition-colors ${isEthioTax ? "text-green-100/70 hover:text-green-100" : "text-white/35 hover:text-white/70"}`}
                 >
                   {link.label}
                 </Link>
