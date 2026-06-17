@@ -200,7 +200,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
           <svg className="w-4 h-4 text-teal-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
           </svg>
-          <span className="text-sm text-teal-300 font-medium">You&apos;re subscribed!</span>
+          <span className="text-sm text-teal-300 font-medium">Check your inbox to confirm</span>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-2" noValidate>
