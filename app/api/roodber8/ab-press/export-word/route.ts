@@ -10,10 +10,10 @@ import {
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? "4rllejq1"
 const DATASET    = process.env.NEXT_PUBLIC_SANITY_DATASET    ?? "production"
-const BASE_URL   = `https://${PROJECT_ID}.api.sanity.io/v2023-05-03/data/query/${DATASET}`
+const BASE_URL   = `https://${PROJECT_ID}.apicdn.sanity.io/v2023-05-03/data/query/${DATASET}`
 
 async function sanityFetch(query: string) {
-  const res = await fetch(`${BASE_URL}?query=${encodeURIComponent(query)}`, { cache: "no-store" })
+  const res = await fetch(`${BASE_URL}?query=${encodeURIComponent(query)}`, { cache: "no-store", headers: process.env.SANITY_API_TOKEN ? { Authorization: `Bearer ${process.env.SANITY_API_TOKEN}` } : {} })
   if (!res.ok) throw new Error(`Sanity fetch failed: ${res.status}`)
   const data = await res.json()
   return data.result
