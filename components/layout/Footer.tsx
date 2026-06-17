@@ -237,7 +237,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
           )}
           <p className="text-xs text-white/35">
             By subscribing you agree to our{' '}
-            <Link href="/privacy-policy" className="underline hover:text-white/60">Privacy Policy</Link>.
+            <Link href="/privacy-policy" className="text-[#C9982A] underline hover:text-[#e0b84e]">Privacy Policy</Link>.
           </p>
         </form>
       )}
@@ -454,7 +454,7 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-xs text-white/35 hover:text-white/70 transition-colors"
+                  className={`text-xs transition-colors ${isEthioTax ? "text-[#C9982A] hover:text-[#e0b84e]" : "text-white/35 hover:text-white/70"}`}
                 >
                   {link.label}
                 </Link>
