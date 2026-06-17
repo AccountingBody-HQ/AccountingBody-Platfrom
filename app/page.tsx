@@ -522,7 +522,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     <>
       {confirmedStatus === 'true' && (
         <div className={`w-full text-center text-sm font-medium py-3 px-4 ${isEthioTax ? 'bg-[#1A4731]' : 'bg-navy-950'} text-white`}>
-          Check your inbox to confirm your subscription.
+          You're subscribed — welcome! Great to have you on board.
         </div>
       )}
       {confirmedStatus === 'already' && (
