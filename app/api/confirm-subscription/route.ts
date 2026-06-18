@@ -1,48 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
-
 export async function GET(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SECRET_KEY!
   )
-
   const token = req.nextUrl.searchParams.get('token')
-  const isEthioTax = req.headers.get('x-et-platform') === 'ethiotax'
+  const emailParam = req.nextUrl.searchParams.get('email')
+  const platformParam = req.nextUrl.searchParams.get('platform') ?? 'ab'
+  const isEthioTax = platformParam === 'et'
   const brand = isEthioTax
     ? { name: 'EthioTax', domain: 'ethiotax.com', email: 'hello@accountingbody.com', color: '#1A4731' }
     : { name: 'Accounting Body', domain: 'accountingbody.com', email: 'hello@accountingbody.com', color: '#0C1A3D' }
-
-  if (!token) {
+  if (!token || !emailParam) {
     return NextResponse.redirect(`https://${brand.domain}/?confirmed=invalid`)
   }
-
-  const { data: subscriber, error: findError } = await supabase
+  // Check if already subscribed
+  const { data: existing } = await supabase
     .from('email_subscribers')
     .select('email, status')
-    .eq('confirmation_token', token)
+    .eq('email', emailParam)
+    .eq('platform', platformParam)
     .single()
-
-  if (findError || !subscriber) {
-    return NextResponse.redirect(`https://${brand.domain}/?confirmed=invalid`)
-  }
-
-  if (subscriber.status === 'subscribed') {
+  if (existing?.status === 'subscribed') {
     return NextResponse.redirect(`https://${brand.domain}/?confirmed=already`)
   }
-
-  const { error: updateError } = await supabase
+  // Save to DB only now — after confirmation click — prevents spam entries
+  const { error: upsertError } = await supabase
     .from('email_subscribers')
-    .update({ status: 'subscribed', subscribed_at: new Date().toISOString(), confirmation_token: null })
-    .eq('confirmation_token', token)
-
-  if (updateError) {
-    console.error('Confirm subscription error:', updateError)
+    .upsert(
+      { email: emailParam, platform: platformParam, status: 'subscribed', source: 'footer', subscribed_at: new Date().toISOString(), confirmation_token: null },
+      { onConflict: 'email,platform' }
+    )
+  if (upsertError) {
+    console.error('Confirm subscription error:', upsertError)
     return NextResponse.redirect(`https://${brand.domain}/?confirmed=error`)
   }
-
+  const subscriber = { email: emailParam }
   try {
     await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,

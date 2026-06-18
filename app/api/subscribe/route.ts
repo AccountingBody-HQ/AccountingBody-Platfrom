@@ -61,16 +61,8 @@ export async function POST(req: NextRequest) {
 
     const confirmationToken = randomUUID()
 
-    const { error: dbError } = await supabase
-      .from('email_subscribers')
-      .upsert({ email, platform: isEthioTax ? 'et' : 'ab', status: 'pending', source: 'footer', confirmation_token: confirmationToken }, { onConflict: 'email,platform' })
-
-    if (dbError) {
-      console.error('Supabase error:', dbError)
-      return NextResponse.json({ error: 'Could not save subscription. Please try again.' }, { status: 500 })
-    }
-
-    const confirmUrl = `https://${brand.domain}/api/confirm-subscription?token=${confirmationToken}`
+    // Do NOT save to DB yet — only save after email confirmation to prevent spam
+    const confirmUrl = `https://${brand.domain}/api/confirm-subscription?token=${confirmationToken}&email=${encodeURIComponent(email)}&platform=${isEthioTax ? 'et' : 'ab'}`
 
     await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
