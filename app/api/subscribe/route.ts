@@ -32,8 +32,8 @@ export async function POST(req: NextRequest) {
     // Detect platform from Referer header
     const isEthioTax = req.headers.get('x-et-platform') === 'ethiotax'
     const brand = isEthioTax
-      ? { name: 'EthioTax', domain: 'ethiotax.com', email: 'hello@accountingbody.com', color: '#1A4731' }
-      : { name: 'Accounting Body', domain: 'accountingbody.com', email: 'hello@accountingbody.com', color: '#0C1A3D' }
+      ? { name: 'EthioTax', domain: 'ethiotax.com', email: 'noreply@accountingbody.com', color: '#1A4731' }
+      : { name: 'Accounting Body', domain: 'accountingbody.com', email: 'noreply@accountingbody.com', color: '#0C1A3D' }
 
     // Honeypot
     if (_h) return NextResponse.json({ success: true })

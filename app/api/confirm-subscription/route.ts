@@ -12,8 +12,8 @@ export async function GET(req: NextRequest) {
   const platformParam = req.nextUrl.searchParams.get('platform') ?? 'ab'
   const isEthioTax = platformParam === 'et'
   const brand = isEthioTax
-    ? { name: 'EthioTax', domain: 'ethiotax.com', email: 'hello@accountingbody.com', color: '#1A4731' }
-    : { name: 'Accounting Body', domain: 'accountingbody.com', email: 'hello@accountingbody.com', color: '#0C1A3D' }
+    ? { name: 'EthioTax', domain: 'ethiotax.com', email: 'noreply@accountingbody.com', color: '#1A4731' }
+    : { name: 'Accounting Body', domain: 'accountingbody.com', email: 'noreply@accountingbody.com', color: '#0C1A3D' }
   if (!token || !emailParam) {
     return NextResponse.redirect(`https://${brand.domain}/?confirmed=invalid`)
   }

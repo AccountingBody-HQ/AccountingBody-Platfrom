@@ -69,7 +69,7 @@ const sections = [
     title: '8. Termination',
     body: [
       'We reserve the right to suspend or terminate your access to the Site at any time, with or without notice, if we reasonably believe you have breached these Terms.',
-      'You may close your account at any time by contacting us at hello@accountingbody.com. Upon closure, your data will be handled in accordance with our Privacy Policy.',
+      'You may close your account at any time by contacting us at noreply@accountingbody.com. Upon closure, your data will be handled in accordance with our Privacy Policy.',
     ],
   },
   {
@@ -83,7 +83,7 @@ const sections = [
     id: 'contact',
     title: '10. Contact',
     body: [
-      'If you have any questions about these Terms, please contact us at hello@accountingbody.com or via our contact form at accountingbody.com/contact.',
+      'If you have any questions about these Terms, please contact us at noreply@accountingbody.com or via our contact form at accountingbody.com/contact.',
       'These Terms were last updated in March 2026.',
     ],
   },
