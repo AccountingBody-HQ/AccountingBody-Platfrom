@@ -30,24 +30,29 @@ export default function JoinNetworkPage() {
   })
   const [qualifications, setQualifications] = useState<string[]>([])
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
-  const [fieldErrors, setFieldErrors] = useState<{ open_to_employment?: boolean; currently_hiring?: boolean }>({})
+  const [fieldErrors, setFieldErrors] = useState<{ open_to_employment?: boolean; currently_hiring?: boolean; about?: boolean }>({})
   const empRef = useRef<HTMLDivElement>(null)
   const hiringRef = useRef<HTMLDivElement>(null)
+  const aboutRef = useRef<HTMLDivElement>(null)
   const turnstileWidgetId = useRef<string | null>(null)
   const isEthioTax = typeof window !== 'undefined' && window.location.hostname.includes('ethiotax.com')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Validate deselectable questions
-    const errors: { open_to_employment?: boolean; currently_hiring?: boolean } = {}
+    // Validate deselectable questions and about field (in form order)
+    const errors: { open_to_employment?: boolean; currently_hiring?: boolean; about?: boolean } = {}
     if (applicantType === 'independent' && !form.open_to_employment) errors.open_to_employment = true
     if (!form.currently_hiring) errors.currently_hiring = true
+    if (!form.about.trim()) errors.about = true
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
+      // Scroll to first error in form order
       if (errors.open_to_employment && empRef.current) {
         empRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
       } else if (errors.currently_hiring && hiringRef.current) {
         hiringRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      } else if (errors.about && aboutRef.current) {
+        aboutRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }
       return
     }
@@ -375,16 +380,21 @@ export default function JoinNetworkPage() {
                   </div>
 
                   {/* ABOUT */}
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-4">
-                    <h2 className="font-display text-xl text-navy-950">
-                      {applicantType === 'firm' ? 'About Your Firm' : 'About You'}
+                  <div ref={aboutRef} className="bg-white rounded-xl border shadow-sm p-8 space-y-4 transition-all"
+                    style={{ borderColor: fieldErrors.about ? '#C9982A' : '#e2e8f0', outline: fieldErrors.about ? '2px solid #C9982A' : 'none', outlineOffset: '2px' }}>
+                    <h2 className="font-display text-xl"
+                      style={{ color: fieldErrors.about ? '#C9982A' : '#0C1A3D' }}>
+                      {applicantType === 'firm' ? 'About Your Firm *' : 'About You *'}
                     </h2>
                     <p className="text-sm text-slate-500">
                       {applicantType === 'firm'
                         ? 'Provide a brief overview of your firm — size, history, key services, and the types of clients you typically serve.'
                         : 'Provide a brief professional biography — your background, experience, areas of expertise, and the types of engagements you are looking to take on.'}
                     </p>
-                    <textarea required rows={5} value={form.about} onChange={(e) => setForm({ ...form, about: e.target.value })}
+                    {fieldErrors.about && (
+                      <p className="text-xs font-semibold" style={{ color: '#C9982A' }}>Please complete this field to continue.</p>
+                    )}
+                    <textarea required rows={5} value={form.about} onChange={(e) => { setForm({ ...form, about: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, about: false })) }}
                       className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                       placeholder={applicantType === 'firm'
                         ? 'e.g. We are a mid-sized accounting firm based in Johannesburg with 12 qualified professionals specialising in audit, tax, and advisory services for SMEs...'
