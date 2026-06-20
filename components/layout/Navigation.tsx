@@ -249,8 +249,8 @@ function MegaMenu({ section, onClose, rightAlign }: { section: NavSection; onClo
 
   return (
     <div
-      className="animate-slide-down"
-      style={{ width: hasFeatured ? 'min(680px,90vw)' : colCount >= 2 ? 'min(560px,90vw)' : 'min(280px,90vw)' }}
+      className="absolute top-full left-1/2 -translate-x-1/2 mt-1 animate-slide-down"
+      style={{ minWidth: hasFeatured ? '680px' : colCount >= 2 ? '560px' : '280px' }}
     >
       {/* Pointer arrow */}
       <div className="w-full flex justify-center -mb-1">
@@ -637,8 +637,6 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
             {sections.map(section => {
               const isActive      = activeDropdown === section.id
               const hasDropdown   = Boolean(section.groups?.length)
-              const sectionIndex  = sections.indexOf(section)
-              const isRightSide   = sectionIndex >= sections.length - 2
               const isCurrentPage = section.href
                 ? (section.href === '/' ? pathname === '/' : pathname.startsWith(section.href))
                 : false
@@ -723,16 +721,14 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                       transition: 'opacity 120ms ease, visibility 120ms ease',
                       position: 'absolute',
                       top: '100%',
-                      ...(isRightSide
-                        ? { right: 0 }
-                        : { left: '50%', transform: 'translateX(-50%)' }),
+                      left: '50%',
+                      transform: 'translateX(-50%)',
                       zIndex: 50,
                     }}
                   >
                     <MegaMenu
                       section={section}
                       onClose={() => setActiveDropdown(null)}
-                      rightAlign={isRightSide}
                     />
                   </div>
                 </div>
