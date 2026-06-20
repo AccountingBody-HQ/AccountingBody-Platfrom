@@ -30,20 +30,28 @@ export default function JoinNetworkPage() {
   })
   const [qualifications, setQualifications] = useState<string[]>([])
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [fieldErrors, setFieldErrors] = useState<{ open_to_employment?: boolean; currently_hiring?: boolean }>({})
+  const empRef = useRef<HTMLDivElement>(null)
+  const hiringRef = useRef<HTMLDivElement>(null)
   const turnstileWidgetId = useRef<string | null>(null)
   const isEthioTax = typeof window !== 'undefined' && window.location.hostname.includes('ethiotax.com')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     // Validate deselectable questions
-    if (applicantType === 'independent' && !form.open_to_employment) {
-      alert('Please indicate whether you are open to employment opportunities.')
+    const errors: { open_to_employment?: boolean; currently_hiring?: boolean } = {}
+    if (applicantType === 'independent' && !form.open_to_employment) errors.open_to_employment = true
+    if (!form.currently_hiring) errors.currently_hiring = true
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      if (errors.open_to_employment && empRef.current) {
+        empRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      } else if (errors.currently_hiring && hiringRef.current) {
+        hiringRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
       return
     }
-    if (!form.currently_hiring) {
-      alert('Please indicate whether you are currently hiring.')
-      return
-    }
+    setFieldErrors({})
     setStatus('loading')
     const token = (document.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement)?.value ?? ''
     const payload = {
@@ -287,10 +295,15 @@ export default function JoinNetworkPage() {
 
                     {/* Q1 — open to employment — independent only */}
                     {applicantType === 'independent' && (
-                      <div>
-                        <label className="block text-sm font-semibold text-navy-950 mb-3">
+                      <div ref={empRef} className="rounded-lg p-3 -m-3 transition-all"
+                        style={fieldErrors.open_to_employment ? { outline: '2px solid #ef4444', outlineOffset: '2px', borderRadius: '8px' } : {}}>
+                        <label className="block text-sm font-semibold mb-3"
+                          style={{ color: fieldErrors.open_to_employment ? '#ef4444' : '#0C1A3D' }}>
                           Are you currently open to permanent or contract employment opportunities? *
                         </label>
+                        {fieldErrors.open_to_employment && (
+                          <p className="text-xs font-semibold mb-2" style={{ color: '#ef4444' }}>Please select an option to continue.</p>
+                        )}
                         <div className="space-y-2">
                           {[
                             { value: 'Yes — actively looking', label: 'Yes — actively looking' },
@@ -300,7 +313,7 @@ export default function JoinNetworkPage() {
                             <button
                               type="button"
                               key={opt.value}
-                              onClick={() => setForm({ ...form, open_to_employment: form.open_to_employment === opt.value ? '' : opt.value })}
+                              onClick={() => { setForm({ ...form, open_to_employment: form.open_to_employment === opt.value ? '' : opt.value }); setFieldErrors(prev => ({ ...prev, open_to_employment: false })) }}
                               className="flex items-center gap-3 text-sm text-left w-full px-4 py-3 rounded-lg border transition-all"
                               style={{
                                 borderColor: form.open_to_employment === opt.value ? '#0C1A3D' : '#e2e8f0',
@@ -318,14 +331,20 @@ export default function JoinNetworkPage() {
                             </button>
                           ))}
                         </div>
+                        </div>
                       </div>
                     )}
 
                     {/* Q2 — currently hiring — both */}
-                    <div>
-                      <label className="block text-sm font-semibold text-navy-950 mb-3">
+                    <div ref={hiringRef} className="rounded-lg p-3 -m-3 transition-all"
+                      style={fieldErrors.currently_hiring ? { outline: '2px solid #ef4444', outlineOffset: '2px', borderRadius: '8px' } : {}}>
+                      <label className="block text-sm font-semibold mb-3"
+                        style={{ color: fieldErrors.currently_hiring ? '#ef4444' : '#0C1A3D' }}>
                         {applicantType === 'firm' ? 'Is your firm currently hiring?' : 'Are you or your contacts currently hiring?'} *
                       </label>
+                      {fieldErrors.currently_hiring && (
+                        <p className="text-xs font-semibold mb-2" style={{ color: '#ef4444' }}>Please select an option to continue.</p>
+                      )}
                       <div className="space-y-2">
                         {[
                           { value: 'Yes — actively hiring now', label: 'Yes — actively hiring now' },
@@ -335,7 +354,7 @@ export default function JoinNetworkPage() {
                           <button
                             type="button"
                             key={opt.value}
-                            onClick={() => setForm({ ...form, currently_hiring: form.currently_hiring === opt.value ? '' : opt.value })}
+                            onClick={() => { setForm({ ...form, currently_hiring: form.currently_hiring === opt.value ? '' : opt.value }); setFieldErrors(prev => ({ ...prev, currently_hiring: false })) }}
                             className="flex items-center gap-3 text-sm text-left w-full px-4 py-3 rounded-lg border transition-all"
                             style={{
                               borderColor: form.currently_hiring === opt.value ? '#0C1A3D' : '#e2e8f0',
