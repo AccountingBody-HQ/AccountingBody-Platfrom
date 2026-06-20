@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     await resend.emails.send({
       from:    'noreply@accountingbody.com',
       to:      data.email,
-      subject: `Registration confirmed — ${platformName}`,
+      subject: `Candidate registration confirmed — ${platformName}`,
       html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 24px"><h2 style="color:${isET ? '#1A4731' : '#0C1A3D'};margin-bottom:16px">Email confirmed</h2><p style="color:#475569;line-height:1.6">Thank you, ${data.full_name.split(' ')[0]}. Your email address has been verified.</p><p style="color:#475569;line-height:1.6">Your profile is now with our team for review. We aim to complete all reviews within 5 working days. We will contact you only when a role that matches your profile becomes available.</p><p style="color:#475569;line-height:1.6">Your details will never be shared with any employer without your prior knowledge.</p><hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0"/><p style="color:#94a3b8;font-size:12px">${platformName} | info@accountingbody.com</p></div>`,
     })
 

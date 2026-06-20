@@ -132,7 +132,7 @@ export default function FindWorkPage() {
             </nav>
             <span className="eyebrow text-gold-400 mb-4 block">{platformName} Recruitment</span>
             <h1 className="font-display text-white text-4xl md:text-5xl mb-4 leading-tight" style={{ letterSpacing: '-0.02em' }}>
-              Register as a Job Seeker
+              Register as a Candidate
             </h1>
             <p className="text-white/60 text-xl leading-relaxed max-w-2xl">
               {isEthioTax
@@ -150,9 +150,9 @@ export default function FindWorkPage() {
                 <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-6">
                   <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
                 </div>
-                <h2 className="font-display text-2xl text-navy-950 mb-3">Registration Received</h2>
+                <h2 className="font-display text-2xl text-navy-950 mb-3">Candidate Registration Received</h2>
                 <p className="text-slate-500 leading-relaxed max-w-md mx-auto mb-4">
-                  Thank you for registering. Please check your inbox — we have sent you a verification link. Click it to confirm your email address. Once verified, your profile will be reviewed by our team within 5 working days.
+                  Thank you for registering as a candidate. Please check your inbox — we have sent you a verification link. Click it to confirm your email address. Once verified, your profile will be reviewed by our team within 5 working days.
                 </p>
                 <p className="text-xs text-slate-400">Did not receive the email? Check your spam folder or contact us at info@accountingbody.com</p>
               </div>
