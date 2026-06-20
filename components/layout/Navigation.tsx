@@ -242,7 +242,7 @@ function ChevronDown({ open }: { open: boolean }) {
 }
 
 // ── Mega-menu dropdown ────────────────────────────────────────────────────────
-function MegaMenu({ section, onClose, rightAlign }: { section: NavSection; onClose: () => void; rightAlign?: boolean }) {
+function MegaMenu({ section, onClose, rightAlign = false }: { section: NavSection; onClose: () => void; rightAlign?: boolean }) {
   const hasFeatured = Boolean(section.featured)
   const colCount    = section.groups?.length ?? 0
 
