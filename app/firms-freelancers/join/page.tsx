@@ -316,15 +316,15 @@ export default function JoinNetworkPage() {
                               onClick={() => { setForm({ ...form, open_to_employment: form.open_to_employment === opt.value ? '' : opt.value }); setFieldErrors(prev => ({ ...prev, open_to_employment: false })) }}
                               className="flex items-center gap-3 text-sm text-left w-full px-4 py-3 rounded-lg border transition-all"
                               style={{
-                                borderColor: form.open_to_employment === opt.value ? '#0C1A3D' : '#e2e8f0',
-                                background: form.open_to_employment === opt.value ? '#f0f2f8' : '#fff',
+                                borderColor: form.open_to_employment === opt.value ? '#C9982A' : '#e2e8f0',
+                                background: form.open_to_employment === opt.value ? '#fdf8ee' : '#fff',
                                 color: form.open_to_employment === opt.value ? '#0C1A3D' : '#475569',
                                 fontWeight: form.open_to_employment === opt.value ? 600 : 400,
                               }}>
                               <span className="w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center"
-                                style={{ borderColor: form.open_to_employment === opt.value ? '#0C1A3D' : '#cbd5e1' }}>
+                                style={{ borderColor: form.open_to_employment === opt.value ? '#C9982A' : '#cbd5e1' }}>
                                 {form.open_to_employment === opt.value && (
-                                  <span className="w-2 h-2 rounded-full" style={{ background: '#0C1A3D' }} />
+                                  <span className="w-2 h-2 rounded-full" style={{ background: '#C9982A' }} />
                                 )}
                               </span>
                               {opt.label}
@@ -356,15 +356,15 @@ export default function JoinNetworkPage() {
                             onClick={() => { setForm({ ...form, currently_hiring: form.currently_hiring === opt.value ? '' : opt.value }); setFieldErrors(prev => ({ ...prev, currently_hiring: false })) }}
                             className="flex items-center gap-3 text-sm text-left w-full px-4 py-3 rounded-lg border transition-all"
                             style={{
-                              borderColor: form.currently_hiring === opt.value ? '#0C1A3D' : '#e2e8f0',
-                              background: form.currently_hiring === opt.value ? '#f0f2f8' : '#fff',
+                              borderColor: form.currently_hiring === opt.value ? '#C9982A' : '#e2e8f0',
+                              background: form.currently_hiring === opt.value ? '#fdf8ee' : '#fff',
                               color: form.currently_hiring === opt.value ? '#0C1A3D' : '#475569',
                               fontWeight: form.currently_hiring === opt.value ? 600 : 400,
                             }}>
                             <span className="w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center"
-                              style={{ borderColor: form.currently_hiring === opt.value ? '#0C1A3D' : '#cbd5e1' }}>
+                              style={{ borderColor: form.currently_hiring === opt.value ? '#C9982A' : '#cbd5e1' }}>
                               {form.currently_hiring === opt.value && (
-                                <span className="w-2 h-2 rounded-full" style={{ background: '#0C1A3D' }} />
+                                <span className="w-2 h-2 rounded-full" style={{ background: '#C9982A' }} />
                               )}
                             </span>
                             {opt.label}
