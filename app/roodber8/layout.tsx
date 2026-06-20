@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  LayoutDashboard, Inbox, Users, Briefcase,
+  LayoutDashboard, Inbox, Users, Briefcase, Building2,
   Factory, Settings, LogOut, ExternalLink,
   ChevronRight, Palette, BookOpen
 } from 'lucide-react'
@@ -14,6 +14,7 @@ const NAV = [
   { href: '/roodber8/subscribers',     exact: false, icon: Users,           label: 'Subscribers',     sub: 'Email list & export'       },
   { href: '/roodber8/jobs-firms',      exact: false, icon: Briefcase,       label: 'Jobs & Firms',    sub: 'Listings & applications'   },
   { href: '/roodber8/candidates',      exact: false, icon: Users,           label: 'Candidates',      sub: 'Candidate registrations'   },
+  { href: '/roodber8/employers',        exact: false, icon: Building2,        label: 'Employers',       sub: 'Employer briefs'           },
   { href: '/roodber8/questions',        exact: false, icon: BookOpen,        label: 'Questions',       sub: 'Generate and manage MCQs'  },
   { href: '/roodber8/content-factory', exact: false, icon: Factory,         label: 'Content Factory', sub: 'AI content generation'     },
   { href: '/roodber8/course-factory',   exact: false, icon: BookOpen,        label: 'Course Factory',  sub: 'Assemble structured courses' },
@@ -34,6 +35,7 @@ function getBreadcrumb(pathname: string) {
     '/roodber8/subscribers':     'Subscribers',
     '/roodber8/jobs-firms':      'Jobs & Firms',
     '/roodber8/candidates':      'Candidates',
+    '/roodber8/employers':        'Employers',
     '/roodber8/content-factory': 'Content Factory',
     '/roodber8/course-factory':   'Course Factory',
     '/roodber8/ab-press':         'AB Press',
