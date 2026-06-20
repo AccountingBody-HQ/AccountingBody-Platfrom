@@ -107,7 +107,7 @@ export const JOBS_NAV = {
     },
   ],
   cta: {
-    label:       'Register as a Job Seeker →',
+    label:       'Register as a Candidate →',
     href:        '/jobs/find-work',
     description: 'Accounting and finance professionals only — every profile reviewed',
   },
