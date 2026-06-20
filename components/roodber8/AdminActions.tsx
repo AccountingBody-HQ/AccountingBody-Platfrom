@@ -52,6 +52,13 @@ export function StatusBadge({ id, table, currentStatus }: StatusBadgeProps) {
         setTimeout(() => setError(false), 3000)
       } else {
         setStatus(newStatus)
+        if (table === 'firms_applications' && (newStatus === 'approved' || newStatus === 'rejected')) {
+          fetch('/api/roodber8/notify-firm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, status: newStatus }),
+          }).catch(err => console.error('notify-firm error:', err))
+        }
       }
     } catch {
       setError(true)
