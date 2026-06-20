@@ -2,18 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 function generateToken() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+    const resend = new Resend(process.env.RESEND_API_KEY)
     const body = await req.json()
     if (body._h) return NextResponse.json({ error: 'Invalid submission' }, { status: 400 })
     const required = ['full_name', 'email', 'location_city', 'professional_role', 'qualification', 'years_experience', 'employment_status', 'biography']
