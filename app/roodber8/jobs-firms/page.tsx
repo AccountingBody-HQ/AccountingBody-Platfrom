@@ -7,7 +7,7 @@ import { Briefcase, Building2, Search } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-async function getJobsAndFirms(filters: { search?: string; status?: string }) {
+async function getJobsAndFirms(filters: { search?: string; status?: string; platform?: string }) {
   noStore()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,6 +16,7 @@ async function getJobsAndFirms(filters: { search?: string; status?: string }) {
   let firmsQuery = supabase.from('firms_applications').select('*').order('created_at', { ascending: false })
   if (filters.status) firmsQuery = firmsQuery.eq('status', filters.status)
   if (filters.search) firmsQuery = firmsQuery.or('firm_name.ilike.%' + filters.search + '%,contact_name.ilike.%' + filters.search + '%,contact_email.ilike.%' + filters.search + '%')
+  if (filters.platform) firmsQuery = firmsQuery.eq('platform', filters.platform)
   const [{ data: jobListings }, { data: firmsApplications }] = await Promise.all([
     supabase.from('job_listings').select('*').order('created_at', { ascending: false }),
     firmsQuery,
@@ -31,10 +32,11 @@ export default async function JobsFirmsPage({
 }: {
   searchParams: Promise<{ search?: string; status?: string }>
 }) {
-  const sp     = await searchParams
-  const search = sp.search ?? ''
-  const status = sp.status ?? ''
-  const { jobListings, firmsApplications } = await getJobsAndFirms({ search, status })
+  const sp       = await searchParams
+  const search   = sp.search ?? ''
+  const status   = sp.status ?? ''
+  const platform = (sp as any).platform ?? ''
+  const { jobListings, firmsApplications } = await getJobsAndFirms({ search, status, platform })
 
   const pendingCount  = firmsApplications.filter((f: any) => f.status === 'pending' || !f.status).length
   const approvedCount = firmsApplications.filter((f: any) => f.status === 'approved').length
@@ -99,12 +101,19 @@ export default async function JobsFirmsPage({
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
           </select>
+          <select name="platform" defaultValue={platform}
+            className="rounded-xl px-3 py-2 text-sm focus:outline-none"
+            style={{ background: '#111827', border: '1px solid #1f2937', color: platform ? '#ffffff' : '#475569' }}>
+            <option value="">All platforms</option>
+            <option value="ab">Accounting Body</option>
+            <option value="et">EthioTax</option>
+          </select>
           <button type="submit"
             className="px-4 py-2 rounded-xl text-sm font-semibold"
             style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
             Filter
           </button>
-          {(search || status) && (
+          {(search || status || platform) && (
             <a href="/roodber8/jobs-firms" className="text-xs font-semibold" style={{ color: '#475569' }}>Clear</a>
           )}
         </form>

@@ -363,6 +363,7 @@ interface FirmApplicationCardProps {
     contact_phone?: string
     website?: string
     firm_type?: string
+    platform?: string
     status?: string
     message?: string
     years_of_experience?: string
@@ -409,6 +410,10 @@ export function FirmApplicationCard({ item }: FirmApplicationCardProps) {
                 {item.firm_type}
               </span>
             )}
+            {item.platform === 'et'
+              ? <span className="text-xs font-bold px-2 py-0.5 rounded-lg" style={{ background: 'rgba(26,71,49,0.3)', color: '#34d399', border: '1px solid rgba(26,71,49,0.6)' }}>ET</span>
+              : <span className="text-xs font-bold px-2 py-0.5 rounded-lg" style={{ background: 'rgba(12,26,61,0.4)', color: '#60a5fa', border: '1px solid rgba(12,26,61,0.8)' }}>AB</span>
+            }
             <StatusBadge id={item.id} table="firms_applications" currentStatus={item.status ?? 'pending'} />
           </div>
           <div className="flex items-center gap-3 mt-0.5 text-xs flex-wrap" style={{ color: '#475569' }}>
