@@ -250,7 +250,7 @@ function MegaMenu({ section, onClose, rightAlign = false }: { section: NavSectio
   return (
     <div
       className="absolute top-full left-1/2 -translate-x-1/2 mt-1 animate-slide-down"
-      style={{ minWidth: hasFeatured ? '680px' : colCount >= 2 ? '560px' : '280px', maxWidth: '95vw' }}
+      style={{ width: hasFeatured ? 'min(680px, 90vw)' : colCount >= 2 ? 'min(560px, 90vw)' : 'min(280px, 90vw)' }}
     >
       {/* Pointer arrow */}
       <div className="w-full flex justify-center -mb-1">
