@@ -250,7 +250,7 @@ function MegaMenu({ section, onClose, rightAlign = false }: { section: NavSectio
   return (
     <div
       className="absolute top-full left-1/2 -translate-x-1/2 mt-1 animate-slide-down"
-      style={{ minWidth: hasFeatured ? '680px' : colCount >= 2 ? '560px' : '280px' }}
+      style={{ minWidth: hasFeatured ? '680px' : colCount >= 2 ? '560px' : '280px', maxWidth: '95vw' }}
     >
       {/* Pointer arrow */}
       <div className="w-full flex justify-center -mb-1">
@@ -635,7 +635,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
               const isActive      = activeDropdown === section.id
               const hasDropdown   = Boolean(section.groups?.length)
               const sectionIndex  = sections.indexOf(section)
-              const isRightSide   = sectionIndex >= sections.length - 2
+              const isRightSide   = sectionIndex >= sections.length - 1
               const isCurrentPage = section.href
                 ? (section.href === '/' ? pathname === '/' : pathname.startsWith(section.href))
                 : false
@@ -698,7 +698,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                           </span>
                         )}
                       </span>
-                      {isCurrentPage && (
+                      {isCurrentPage && !section.goldPill && (
                         <span className="absolute bottom-0 left-3 right-1 h-0.5 bg-gold-500 rounded-full" />
                       )}
                     </Link>
