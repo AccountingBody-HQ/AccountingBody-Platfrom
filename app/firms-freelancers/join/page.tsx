@@ -30,30 +30,44 @@ export default function JoinNetworkPage() {
   })
   const [qualifications, setQualifications] = useState<string[]>([])
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
-  const [fieldErrors, setFieldErrors] = useState<{ open_to_employment?: boolean; currently_hiring?: boolean; about?: boolean }>({})
+  const [fieldErrors, setFieldErrors] = useState<{ practice_name?: boolean; practice_type?: boolean; contact_name?: boolean; email?: boolean; location?: boolean; open_to_employment?: boolean; currently_hiring?: boolean; about?: boolean }>({})
   const empRef = useRef<HTMLDivElement>(null)
   const hiringRef = useRef<HTMLDivElement>(null)
   const aboutRef = useRef<HTMLDivElement>(null)
+  const practiceNameRef = useRef<HTMLDivElement>(null)
+  const practiceTypeRef = useRef<HTMLDivElement>(null)
+  const contactNameRef = useRef<HTMLDivElement>(null)
+  const emailRef = useRef<HTMLDivElement>(null)
+  const locationRef = useRef<HTMLDivElement>(null)
   const turnstileWidgetId = useRef<string | null>(null)
   const isEthioTax = typeof window !== 'undefined' && window.location.hostname.includes('ethiotax.com')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Validate deselectable questions and about field (in form order)
-    const errors: { open_to_employment?: boolean; currently_hiring?: boolean; about?: boolean } = {}
+    // Unified validation — all fields in strict visual form order
+    const errors: { practice_name?: boolean; practice_type?: boolean; contact_name?: boolean; email?: boolean; location?: boolean; open_to_employment?: boolean; currently_hiring?: boolean; about?: boolean } = {}
+    if (applicantType === 'firm' && !form.practice_name.trim()) errors.practice_name = true
+    if (!form.practice_type) errors.practice_type = true
+    if (!form.contact_name.trim()) errors.contact_name = true
+    if (!form.email.trim()) errors.email = true
+    if (!form.location.trim()) errors.location = true
     if (applicantType === 'independent' && !form.open_to_employment) errors.open_to_employment = true
     if (!form.currently_hiring) errors.currently_hiring = true
     if (!form.about.trim()) errors.about = true
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
-      // Scroll to first error in form order
-      if (errors.open_to_employment && empRef.current) {
-        empRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      } else if (errors.currently_hiring && hiringRef.current) {
-        hiringRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      } else if (errors.about && aboutRef.current) {
-        aboutRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }
+      // Scroll to first error in strict visual order
+      const firstError = [
+        errors.practice_name && practiceNameRef,
+        errors.practice_type && practiceTypeRef,
+        errors.contact_name && contactNameRef,
+        errors.email && emailRef,
+        errors.location && locationRef,
+        errors.open_to_employment && empRef,
+        errors.currently_hiring && hiringRef,
+        errors.about && aboutRef,
+      ].find(Boolean) as React.RefObject<HTMLDivElement> | undefined
+      if (firstError?.current) firstError.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
     setFieldErrors({})
@@ -196,31 +210,39 @@ export default function JoinNetworkPage() {
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       {applicantType === 'firm' && (
-                        <div>
-                          <label className="block text-sm font-semibold text-navy-950 mb-2">Firm Name *</label>
-                          <input required type="text" value={form.practice_name} onChange={(e) => setForm({ ...form, practice_name: e.target.value })}
-                            className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" placeholder="Your firm name" />
+                        <div ref={practiceNameRef}>
+                          <label className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.practice_name ? '#C9982A' : '#0C1A3D' }}>Firm Name *</label>
+                          {fieldErrors.practice_name && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter your firm name.</p>}
+                          <input type="text" value={form.practice_name} onChange={(e) => { setForm({ ...form, practice_name: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, practice_name: false })) }}
+                            className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" placeholder="Your firm name"
+                            style={{ borderColor: fieldErrors.practice_name ? '#C9982A' : '' }} />
                         </div>
                       )}
-                      <div>
-                        <label className="block text-sm font-semibold text-navy-950 mb-2">{applicantType === 'firm' ? 'Practice Type *' : 'Professional Role *'}</label>
-                        <select required value={form.practice_type} onChange={(e) => setForm({ ...form, practice_type: e.target.value })}
-                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent bg-white">
+                      <div ref={practiceTypeRef}>
+                        <label className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.practice_type ? '#C9982A' : '#0C1A3D' }}>{applicantType === 'firm' ? 'Practice Type *' : 'Professional Role *'}</label>
+                        {fieldErrors.practice_type && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please select an option.</p>}
+                        <select value={form.practice_type} onChange={(e) => { setForm({ ...form, practice_type: e.target.value }); if (e.target.value) setFieldErrors(prev => ({ ...prev, practice_type: false })) }}
+                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent bg-white"
+                          style={{ borderColor: fieldErrors.practice_type ? '#C9982A' : '' }}>
                           <option value="">Select</option>
                           {(applicantType === 'firm' ? firmTypes : independentTypes).map((t) => <option key={t} value={t}>{t}</option>)}
                         </select>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-semibold text-navy-950 mb-2">{applicantType === 'firm' ? 'Primary Contact Name *' : 'Full Name *'}</label>
-                        <input required type="text" value={form.contact_name} onChange={(e) => setForm({ ...form, contact_name: e.target.value })}
-                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" placeholder="Full name" />
+                      <div ref={contactNameRef}>
+                        <label className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.contact_name ? '#C9982A' : '#0C1A3D' }}>{applicantType === 'firm' ? 'Primary Contact Name *' : 'Full Name *'}</label>
+                        {fieldErrors.contact_name && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter a name.</p>}
+                        <input type="text" value={form.contact_name} onChange={(e) => { setForm({ ...form, contact_name: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, contact_name: false })) }}
+                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" placeholder="Full name"
+                          style={{ borderColor: fieldErrors.contact_name ? '#C9982A' : '' }} />
                       </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-navy-950 mb-2">Email Address *</label>
-                        <input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" placeholder="you@example.com" />
+                      <div ref={emailRef}>
+                        <label className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.email ? '#C9982A' : '#0C1A3D' }}>Email Address *</label>
+                        {fieldErrors.email && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter a valid email address.</p>}
+                        <input type="email" value={form.email} onChange={(e) => { setForm({ ...form, email: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, email: false })) }}
+                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" placeholder="you@example.com"
+                          style={{ borderColor: fieldErrors.email ? '#C9982A' : '' }} />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -235,10 +257,12 @@ export default function JoinNetworkPage() {
                           className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" placeholder="https://" />
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-navy-950 mb-2">Location / Country *</label>
-                      <input required type="text" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })}
-                        className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" placeholder="e.g. London, UK / Johannesburg, South Africa / New York, USA" />
+                    <div ref={locationRef}>
+                      <label className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.location ? '#C9982A' : '#0C1A3D' }}>Location / Country *</label>
+                      {fieldErrors.location && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter your location.</p>}
+                      <input type="text" value={form.location} onChange={(e) => { setForm({ ...form, location: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, location: false })) }}
+                        className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" placeholder="e.g. London, UK / Johannesburg, South Africa / New York, USA"
+                        style={{ borderColor: fieldErrors.location ? '#C9982A' : '' }} />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
@@ -394,7 +418,7 @@ export default function JoinNetworkPage() {
                     {fieldErrors.about && (
                       <p className="text-xs font-semibold" style={{ color: '#C9982A' }}>Please complete this field to continue.</p>
                     )}
-                    <textarea required rows={5} value={form.about} onChange={(e) => { setForm({ ...form, about: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, about: false })) }}
+                    <textarea rows={5} value={form.about} onChange={(e) => { setForm({ ...form, about: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, about: false })) }}
                       className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                       placeholder={applicantType === 'firm'
                         ? 'e.g. We are a mid-sized accounting firm based in Johannesburg with 12 qualified professionals specialising in audit, tax, and advisory services for SMEs...'
