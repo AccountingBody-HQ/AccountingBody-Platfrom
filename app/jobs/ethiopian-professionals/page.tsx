@@ -164,12 +164,12 @@ export default function EthiopianProfessionalsPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/jobs/find-work"
-              className="inline-flex items-center justify-center font-semibold px-8 py-4 rounded-lg text-white transition-colors text-lg sm:min-w-[220px]"
+              className="inline-flex items-center justify-center font-semibold px-8 py-4 rounded-lg text-white transition-colors text-lg flex-1"
               style={{ background: '#C9982A' }}>
               Register as a candidate
             </Link>
             <Link href="/jobs/how-it-works"
-              className="inline-flex items-center justify-center font-semibold px-8 py-4 rounded-lg transition-colors text-lg sm:min-w-[220px]"
+              className="inline-flex items-center justify-center font-semibold px-8 py-4 rounded-lg transition-colors text-lg flex-1"
               style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>
               How it works
             </Link>
