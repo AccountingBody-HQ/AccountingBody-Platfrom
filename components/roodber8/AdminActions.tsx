@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { Trash2, Loader2, ChevronDown, Globe } from 'lucide-react'
 
 // ── Status Update Dropdown ────────────────────────────────────────────────────
