@@ -242,6 +242,7 @@ function ChevronDown({ open }: { open: boolean }) {
 }
 
 // ── Mega-menu dropdown ────────────────────────────────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function MegaMenu({ section, onClose, rightAlign = false }: { section: NavSection; onClose: () => void; rightAlign?: boolean }) {
   const hasFeatured = Boolean(section.featured)
   const colCount    = section.groups?.length ?? 0
