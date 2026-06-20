@@ -35,6 +35,15 @@ export default function JoinNetworkPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    // Validate deselectable questions
+    if (applicantType === 'independent' && !form.open_to_employment) {
+      alert('Please indicate whether you are open to employment opportunities.')
+      return
+    }
+    if (!form.currently_hiring) {
+      alert('Please indicate whether you are currently hiring.')
+      return
+    }
     setStatus('loading')
     const token = (document.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement)?.value ?? ''
     const payload = {
@@ -288,18 +297,25 @@ export default function JoinNetworkPage() {
                             { value: 'Yes — open but not actively searching', label: 'Yes — open but not actively searching' },
                             { value: 'No — not currently open to employment', label: 'No — not currently open to employment' },
                           ].map(opt => (
-                            <label key={opt.value} className="flex items-center gap-3 text-sm text-slate-700 cursor-pointer">
-                              <input
-                                type="radio"
-                                name="open_to_employment"
-                                value={opt.value}
-                                required
-                                checked={form.open_to_employment === opt.value}
-                                onChange={() => setForm({ ...form, open_to_employment: opt.value })}
-                                className="accent-gold-500"
-                              />
+                            <button
+                              type="button"
+                              key={opt.value}
+                              onClick={() => setForm({ ...form, open_to_employment: form.open_to_employment === opt.value ? '' : opt.value })}
+                              className="flex items-center gap-3 text-sm text-left w-full px-4 py-3 rounded-lg border transition-all"
+                              style={{
+                                borderColor: form.open_to_employment === opt.value ? '#0C1A3D' : '#e2e8f0',
+                                background: form.open_to_employment === opt.value ? '#f0f2f8' : '#fff',
+                                color: form.open_to_employment === opt.value ? '#0C1A3D' : '#475569',
+                                fontWeight: form.open_to_employment === opt.value ? 600 : 400,
+                              }}>
+                              <span className="w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center"
+                                style={{ borderColor: form.open_to_employment === opt.value ? '#0C1A3D' : '#cbd5e1' }}>
+                                {form.open_to_employment === opt.value && (
+                                  <span className="w-2 h-2 rounded-full" style={{ background: '#0C1A3D' }} />
+                                )}
+                              </span>
                               {opt.label}
-                            </label>
+                            </button>
                           ))}
                         </div>
                       </div>
@@ -316,18 +332,25 @@ export default function JoinNetworkPage() {
                           { value: 'Possibly — within the next 6 months', label: 'Possibly — within the next 6 months' },
                           { value: 'No — not hiring at this time', label: 'No — not hiring at this time' },
                         ].map(opt => (
-                          <label key={opt.value} className="flex items-center gap-3 text-sm text-slate-700 cursor-pointer">
-                            <input
-                              type="radio"
-                              name="currently_hiring"
-                              value={opt.value}
-                              required
-                              checked={form.currently_hiring === opt.value}
-                              onChange={() => setForm({ ...form, currently_hiring: opt.value })}
-                              className="accent-gold-500"
-                            />
+                          <button
+                            type="button"
+                            key={opt.value}
+                            onClick={() => setForm({ ...form, currently_hiring: form.currently_hiring === opt.value ? '' : opt.value })}
+                            className="flex items-center gap-3 text-sm text-left w-full px-4 py-3 rounded-lg border transition-all"
+                            style={{
+                              borderColor: form.currently_hiring === opt.value ? '#0C1A3D' : '#e2e8f0',
+                              background: form.currently_hiring === opt.value ? '#f0f2f8' : '#fff',
+                              color: form.currently_hiring === opt.value ? '#0C1A3D' : '#475569',
+                              fontWeight: form.currently_hiring === opt.value ? 600 : 400,
+                            }}>
+                            <span className="w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center"
+                              style={{ borderColor: form.currently_hiring === opt.value ? '#0C1A3D' : '#cbd5e1' }}>
+                              {form.currently_hiring === opt.value && (
+                                <span className="w-2 h-2 rounded-full" style={{ background: '#0C1A3D' }} />
+                              )}
+                            </span>
                             {opt.label}
-                          </label>
+                          </button>
                         ))}
                       </div>
                     </div>
