@@ -243,14 +243,14 @@ function ChevronDown({ open }: { open: boolean }) {
 
 // ── Mega-menu dropdown ────────────────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function MegaMenu({ section, onClose, rightAlign = false }: { section: NavSection; onClose: () => void; rightAlign?: boolean }) {
+function MegaMenu({ section, onClose, rightAlign }: { section: NavSection; onClose: () => void; rightAlign?: boolean }) {
   const hasFeatured = Boolean(section.featured)
   const colCount    = section.groups?.length ?? 0
 
   return (
     <div
       className="animate-slide-down"
-      style={{ width: hasFeatured ? 'min(680px, 90vw)' : colCount >= 2 ? 'min(560px, 90vw)' : 'min(280px, 90vw)' }}
+      style={{ width: hasFeatured ? 'min(680px,90vw)' : colCount >= 2 ? 'min(560px,90vw)' : 'min(280px,90vw)' }}
     >
       {/* Pointer arrow */}
       <div className="w-full flex justify-center -mb-1">
@@ -540,6 +540,9 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           cta:    section.etCta    ?? section.cta,
         }
       }
+      if (section.id === 'jobs' && etGetHelpLinks) {
+        return { ...section, groups: section.etGroups ?? section.groups, cta: section.etCta ?? section.cta }
+      }
       return section
     }),
     ...(etCompanySection ? [etCompanySection] : []),
@@ -678,21 +681,28 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                       href={section.href ?? '#'}
                       className={[
                         'relative flex items-center pl-3 pr-1 py-2 text-sm font-medium transition-colors duration-150',
-                        isCurrentPage
-                          ? 'text-gold-600 font-semibold'
-                          : 'text-navy-950 hover:text-navy-700',
+                        section.goldPill
+                          ? 'text-gold-500 font-bold hover:text-gold-400'
+                          : isCurrentPage
+                            ? 'text-gold-600 font-semibold'
+                            : 'text-navy-950 hover:text-navy-700',
                       ].join(' ')}
                     >
                       <span className="flex items-center gap-1.5">
                         {section.goldPill ? (
-                          <span className="font-bold" style={{ color: '#C9982A' }}>
+                          <span className="font-semibold" style={{ color: '#C9982A' }}>
                             {section.label}
                           </span>
                         ) : (
                           section.label
                         )}
+                        {section.badge && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gold-500 text-navy-950 leading-none">
+                            {section.badge}
+                          </span>
+                        )}
                       </span>
-                      {isCurrentPage && !section.goldPill && (
+                      {isCurrentPage && (
                         <span className="absolute bottom-0 left-3 right-1 h-0.5 bg-gold-500 rounded-full" />
                       )}
                     </Link>
