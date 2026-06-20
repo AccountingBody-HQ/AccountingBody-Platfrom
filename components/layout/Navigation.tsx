@@ -9,6 +9,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { LanguageSwitcher, MobileLangSwitcher } from './LanguageSwitcher'
+import { JOBS_NAV } from './nav-data'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -26,6 +27,7 @@ interface NavSection {
   label:     string
   href?:     string
   external?: boolean
+  badge?:    string
   featured?: NavLink
   groups?:   { title: string; links: NavLink[] }[]
   cta?:      { label: string; href: string; description: string }
@@ -214,6 +216,15 @@ const navSections: NavSection[] = [
       href:        '/firms-freelancers/join',
       description: 'Verified professionals only — we review every application',
     },
+  },
+
+  {
+    id:    'jobs',
+    label: 'Jobs',
+    href:  '/jobs',
+    badge: 'New',
+    groups: JOBS_NAV.groups,
+    cta:   JOBS_NAV.cta,
   },
 ]
 
@@ -670,7 +681,14 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                           : 'text-navy-950 hover:text-navy-700',
                       ].join(' ')}
                     >
-                      {section.label}
+                      <span className="flex items-center gap-1.5">
+                        {section.label}
+                        {section.badge && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gold-500 text-navy-950 leading-none">
+                            {section.badge}
+                          </span>
+                        )}
+                      </span>
                       {isCurrentPage && (
                         <span className="absolute bottom-0 left-3 right-1 h-0.5 bg-gold-500 rounded-full" />
                       )}

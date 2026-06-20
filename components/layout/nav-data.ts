@@ -87,3 +87,28 @@ export const ET_COMPANY_LINKS = {
     description: 'Managed professional services for the Ethiopian community',
   },
 }
+
+// Jobs Navigation — universal to both AB and ET
+export const JOBS_NAV = {
+  groups: [
+    {
+      title: 'For Professionals',
+      links: [
+        { label: 'Find Work',          href: '/jobs/find-work',   description: 'Register with us and get matched to accounting and finance roles' },
+        { label: 'How Placement Works', href: '/jobs/how-it-works', description: 'We manage every placement — you never deal with employers directly' },
+      ],
+    },
+    {
+      title: 'For Employers',
+      links: [
+        { label: 'Hire Talent',        href: '/jobs/hire-talent',  description: 'Tell us your hiring need and we will find the right candidate' },
+        { label: 'Our Guarantee',      href: '/jobs/hire-talent',  description: '90-day replacement guarantee on every permanent placement' },
+      ],
+    },
+  ],
+  cta: {
+    label:       'Register as a Job Seeker →',
+    href:        '/jobs/find-work',
+    description: 'Accounting and finance professionals only — every profile reviewed',
+  },
+}
