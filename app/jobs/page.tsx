@@ -1,0 +1,232 @@
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { headers } from 'next/headers'
+
+export const metadata: Metadata = {
+  title:       'Jobs | Accounting & Finance Recruitment',
+  description: 'Find your next accounting or finance role, or hire vetted professionals. A fully managed recruitment service.',
+}
+
+export default async function JobsHubPage() {
+  const headersList  = await headers()
+  const isEthioTax   = headersList.get('x-et-platform') === 'ethiotax'
+  const brand        = isEthioTax ? '#1A4731' : '#0C1A3D'
+  const gold         = '#C9982A'
+  const platformName = isEthioTax ? 'EthioTax' : 'Accounting Body'
+
+  const seekerPoints = [
+    'Permanent and contract roles',
+    'We represent you to employers',
+    'Your profile is never made public',
+    '90-day placement guarantee',
+  ]
+
+  const employerPoints = [
+    'Permanent and contract placements',
+    'Pre-vetted candidates only',
+    '90-day replacement guarantee',
+    'Fee agreed before search begins',
+  ]
+
+  const steps = [
+    { step: '01', title: 'Register or brief us', body: 'Job seekers submit a detailed profile. Employers tell us the role they need to fill. We review every submission personally.' },
+    { step: '02', title: 'We find the match', body: 'We search our vetted candidate pool and identify the right fit. Candidates are never visible to employers -- we make the introduction.' },
+    { step: '03', title: 'Placement and guarantee', body: 'We manage the offer process and confirm the placement. Every permanent role carries our 90-day replacement guarantee at no extra cost.' },
+  ]
+
+  const stats = [
+    { value: '15%',      label: 'Placement fee',         sub: 'Of first year salary -- permanent roles' },
+    { value: '90 days',   label: 'Replacement guarantee', sub: 'On every permanent placement' },
+    { value: '100%',      label: 'Vetted candidates',     sub: 'Every profile reviewed before activation' },
+    { value: 'Finance',   label: 'Specialists only',      sub: 'Accounting, tax, audit and payroll' },
+  ]
+
+  return (
+    <main className="min-h-screen bg-white">
+
+      {/* HERO */}
+      <section className="relative overflow-hidden py-20 md:py-28" style={{ background: brand }}>
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w]-[140%] h-[80%] opacity-20"
+            style={{ background: `radial-gradient(ellipse at center top, ${gold} 0%, transparent 65%)` }} />
+          <div className="absolute inset-0 opacity-[0.03]"
+            style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg,rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+        </div>
+        <div className="container-site relative z-10 text-center">
+          <span className="inline-block text-xs font-bold uppercase tracking-widest mb-6 px-3 py-1.5 rounded-full"
+            style={{ background: 'rgba(201,152,42,0.15)', color: gold, border: `1px solid ${gold}40` }}>
+            {platformName} Recruitment
+          </span>
+          <h1 className="font-display text-white text-4x md:text-5xl lg:text-6xl mb-6 leading-tight max-w-3xl mx-auto"
+            style={{ letterSpacing: '-0.02em' }}>
+            {isEthioTax
+              ? 'Accounting and finance careers -- built for the Ethiopian community'
+              : 'Specialist accounting and finance recruitment'}
+          </h1>
+          <p className="text-white/60 text-xl leading-relaxed mb-4 max-w-2xl mx-auto">
+            {isEthioTax
+              ? 'EthioTax connects Ethiopian finance professionals with employers across the UK, USA, Canada and beyond.'
+              : 'We place accounting and finance professionals in permanent and contract roles. Fully managed -- we find the right match and guarantee every placement.'}
+          </p>
+          <p className="text-white/35 text-sm mb-12">
+            Not a job board. Not a directory. A managed recruitment service.
+          </p>
+
+          {/* TWO PATH CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto text-left">
+
+            {/* Job Seeker Card */}
+            <Link href="/jobs/find-work"
+              className="group relative flex flex-col rounded-2xl p-8 border transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl"
+              style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}>
+              <div className="absolute top-0 left-8 right-8 h-[2px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{ background: gold }} />
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
+                style={{ background: `${gold}20` }}>
+                <svg className="w-6 h-6" fill="none" stroke={gold} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: gold }}>For Professionals</p>
+              <h2 className="font-display text-white text-2xl mb-3 leading-snug">
+                {isEthioTax ? 'Find your next role' : 'Find work'}
+              </h2>
+              <p className="text-white/50 text-sm leading-relaxed mb-6 flex-1">
+                {isEthioTax
+                  ? 'Register with EthioTax and get matched to permanent and contract roles with employers who value Ethiopian-origin finance professionals.'
+                  : 'Register with us and we will match you to suitable permanent or contract roles. We advocate for you -- you never deal with employers directly.'}
+              </p>
+              <ul className="space-y-2 mb-7">
+                {seekerPoints.map(item => (
+                  <li key={item} className="flex items-center gap-2.5 text-sm text-white/60">
+                    <svg className="w-i'+ine-stroke" fill="none" stroke={gold} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <span className="inline-flex items-center gap-2 text-sm font-semibold group-hover:gap-3 transition-all" style={{ color: gold }}>
+                Register as a job seeker
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </span>
+            </Link>
+
+            {/* Employer Card */}
+            <Link href="/jobs/hire-talent"
+              className="group relative flex flex-col rounded-2xl p-8 border transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl"
+              style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}>
+              <div className="absolute top-0 left-8 right-8 h-[2px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{ background: gold }} />
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
+                style={{ background: `${gold}20` }}>
+                <svg className="w-6 h-6" fill="none" stroke={gold} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="1.75" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: gold }}>For Employers</p>
+              <h2 className="font-display text-white text-2xl mb-3 leading-snug">Hire talent</h2>
+              <p className="text-white/50 text-sm leading-relaxed mb-6 flex-1">
+                {isEthioTax
+                  ? 'Tell us the role you need to fill. We search our vetted pool of Ethiopian-origin finance professionals and present you with the right candidates.'
+                  : 'Tell us the role you need to fill. We search our vetted candidate pool and present you with shortlisted professionals. You only meet candidates we recommend.'}
+              </p>
+              <ul className="space-y-2 mb-7">
+                {employerPoints.map(item => (
+                  <li key={item} className="flex items-center gap-2.5 text-sm text-white/60">
+                    <svg className="w-4 h-4 shrink-0" fill="none" stroke={gold} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <span className="inline-flex items-center gap-2 text-sm font-semibold group-hover:gap-3 transition-all" style={{ color: gold }}>
+                Tell us your hiring need
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="section bg-slate-50">
+        <div className="container-site">
+          <div className="max-w-2xl mx-auto text-center mb-14">
+            <span className="eyebrow mb-3 block">How It Works</span>
+            <h2 className="section-title mb-4">A managed service, not a job board</h2>
+            <p className="text-slate-500 text-lg leading-relaxed">
+              {platformName} sits in the middle of every placement. Neither side deals with the other directly -- we manage every introduction, negotiation, and guarantee.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
+            {steps.map((s, i) => (
+              <div key={s.step} className="relative flex flex-col items-center text-center px-8">
+                {i < 2 && (
+                  <div className="hidden md:block absolute top-9 left-[calc(50%+2.5rem)] right-0 h-px bg-slate-200" />
+                )}
+                <div className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full bg-white border-2 mb-6 shadow-sm"
+                  style={{ borderColor: gold }}>
+                  <span className="font-display text-xl font-bold" style={{ color: gold }}>{s.step}</span>
+                </div>
+                <h3 className="font-display text-lg text-navy-950 mb-3">{s.title}</h3>
+                <p className="text-slate-500 text-sm leading-relaxed max-w-xs">{s.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* TRUST BAR */}
+      <section className="border-y border-slate-200 bg-white">
+        <div className="container-site py-10">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            {stats.map((stat, i) => (
+              <div key={stat.label} className={i < 3 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}>
+                <span className="font-display text-3xl block mb-1" style={{ color: brand }}>{stat.value}</span>
+                <span className="text-sm font-semibold text-navy-950 block">{stat.label}</span>
+                <span className="text-xs text-slate-400 mt-0.5 block">{stat.sub}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* BOTTOM CTA */}
+      <section className="section bg-white">
+        <div className="container-site">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="section-title mb-4">Ready to get started?</h2>
+            <p className="text-slate-500 text-lg mb-8">
+              Choose your path below. Every registration and every hiring brief is reviewed personally by our team.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/jobs/find-work"
+                className="h-12 px-8 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white transition-colors shadow-sm"
+                style={{ background: brand }}>
+                I am looking for work
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+              <Link href="/jobs/hire-talent"
+                className="h-12 px-8 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold border-2 transition-colors"
+                style={{ borderColor: brand, color: brand }}>
+                I am looking to hire
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  )
+}
