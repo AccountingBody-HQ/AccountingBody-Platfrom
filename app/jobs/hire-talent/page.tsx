@@ -15,7 +15,6 @@ declare global {
   }
 }
 
-const roleOptions = ['Accountant','Tax Advisor','Bookkeeper','Finance Manager','CFO / Finance Director','Payroll Specialist','Auditor','Financial Planner','Management Accountant','IT Professional','Other']
 const contractTypeOptions = ['Permanent','Contract / Freelance','Temporary','Part-time','Open to both permanent and contract']
 const jurisdictionOptions = ['United Kingdom','Ethiopia','United States','Canada','UAE','European Union','Australia','Other']
 
