@@ -1,9 +1,14 @@
+'use client'
+
 import Link from 'next/link'
 
 export default function HowItWorksPage() {
+  const isEthioTax = typeof window !== 'undefined' && window.location.hostname.includes('ethiotax.com')
+  const brand = isEthioTax ? '#1A4731' : '#0C1A3D'
+
   return (
     <main className="min-h-screen bg-surface">
-      <section className="relative overflow-hidden bg-navy-950 py-16 md:py-20">
+      <section className="relative overflow-hidden py-16 md:py-20" style={{ background: brand }}>
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-20"
             style={{ background: 'radial-gradient(ellipse at center top, rgba(212,160,23,0.3) 0%, transparent 70%)' }} />
@@ -73,7 +78,7 @@ export default function HowItWorksPage() {
               <div key={item.step} className="flex gap-8 relative">
                 <div className="flex flex-col items-center">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 font-black text-sm"
-                    style={{ background: '#0C1A3D', color: '#C9982A', border: '2px solid #C9982A' }}>
+                    style={{ background: brand, color: '#C9982A', border: '2px solid #C9982A' }}>
                     {item.step}
                   </div>
                   {i < arr.length - 1 && (
@@ -100,12 +105,12 @@ export default function HowItWorksPage() {
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/jobs/find-work"
                 className="flex-1 text-center font-semibold py-3 px-6 rounded-lg text-white transition-colors"
-                style={{ background: '#0C1A3D' }}>
+                style={{ background: brand }}>
                 Register as a candidate
               </Link>
               <Link href="/jobs/hire-talent"
                 className="flex-1 text-center font-semibold py-3 px-6 rounded-lg transition-colors"
-                style={{ background: '#fff', color: '#0C1A3D', border: '2px solid #0C1A3D' }}>
+                style={{ background: '#fff', color: brand, border: `2px solid ${brand}` }}>
                 Submit a hiring brief
               </Link>
             </div>
