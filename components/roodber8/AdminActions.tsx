@@ -412,7 +412,7 @@ export function FirmApplicationCard({ item }: FirmApplicationCardProps) {
             )}
             {item.platform === 'et'
               ? <span className="text-xs font-bold px-2 py-0.5 rounded-lg" style={{ background: 'rgba(26,71,49,0.3)', color: '#34d399', border: '1px solid rgba(26,71,49,0.6)' }}>ET</span>
-              : <span className="text-xs font-bold px-2 py-0.5 rounded-lg" style={{ background: 'rgba(12,26,61,0.4)', color: '#60a5fa', border: '1px solid rgba(12,26,61,0.8)' }}>AB</span>
+              : <span className="text-xs font-bold px-2 py-0.5 rounded-lg" style={{ background: 'rgba(37,99,235,0.15)', color: '#93c5fd', border: '1px solid rgba(37,99,235,0.5)' }}>AB</span>
             }
             <StatusBadge id={item.id} table="firms_applications" currentStatus={item.status ?? 'pending'} />
           </div>
