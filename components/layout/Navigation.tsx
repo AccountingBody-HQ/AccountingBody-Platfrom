@@ -242,7 +242,7 @@ function ChevronDown({ open }: { open: boolean }) {
 }
 
 // ── Mega-menu dropdown ────────────────────────────────────────────────────────
-function MegaMenu({ section, onClose }: { section: NavSection; onClose: () => void }) {
+function MegaMenu({ section, onClose, rightAlign }: { section: NavSection; onClose: () => void; rightAlign?: boolean }) {
   const hasFeatured = Boolean(section.featured)
   const colCount    = section.groups?.length ?? 0
 
@@ -633,6 +633,8 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
             {sections.map(section => {
               const isActive      = activeDropdown === section.id
               const hasDropdown   = Boolean(section.groups?.length)
+              const sectionIndex  = sections.indexOf(section)
+              const isRightSide   = sectionIndex >= Math.floor(sections.length / 2)
               const isCurrentPage = section.href
                 ? (section.href === '/' ? pathname === '/' : pathname.startsWith(section.href))
                 : false
@@ -682,8 +684,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                     >
                       <span className="flex items-center gap-1.5">
                         {section.goldPill ? (
-                          <span className="px-2.5 py-0.5 rounded-md text-sm font-semibold text-white"
-                            style={{ background: '#C9982A' }}>
+                          <span className="font-semibold" style={{ color: '#C9982A' }}>
                             {section.label}
                           </span>
                         ) : (
@@ -716,14 +717,16 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                       transition: 'opacity 120ms ease, visibility 120ms ease',
                       position: 'absolute',
                       top: '100%',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
+                      ...(isRightSide
+                        ? { right: 0 }
+                        : { left: '50%', transform: 'translateX(-50%)' }),
                       zIndex: 50,
                     }}
                   >
                     <MegaMenu
                       section={section}
                       onClose={() => setActiveDropdown(null)}
+                      rightAlign={isRightSide}
                     />
                   </div>
                 </div>
