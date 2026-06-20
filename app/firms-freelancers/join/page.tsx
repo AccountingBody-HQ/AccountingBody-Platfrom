@@ -405,7 +405,7 @@ export default function JoinNetworkPage() {
 
                   {/* ABOUT */}
                   <div ref={aboutRef} className="bg-white rounded-xl border shadow-sm p-8 space-y-4 transition-all"
-                    style={{ borderColor: fieldErrors.about ? '#C9982A' : '#e2e8f0', outline: fieldErrors.about ? '2px solid #C9982A' : 'none', outlineOffset: '2px' }}>
+                    style={{ borderColor: fieldErrors.about ? '#C9982A' : '#e2e8f0' }}>
                     <h2 className="font-display text-xl"
                       style={{ color: fieldErrors.about ? '#C9982A' : '#0C1A3D' }}>
                       {applicantType === 'firm' ? 'About Your Firm *' : 'About You *'}
