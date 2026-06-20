@@ -88,21 +88,21 @@ export const ET_COMPANY_LINKS = {
   },
 }
 
-// Jobs Navigation — universal to both AB and ET
+// Jobs Navigation — universal base (AB)
 export const JOBS_NAV = {
   groups: [
     {
       title: 'For Professionals',
       links: [
-        { label: 'Find Work',          href: '/jobs/find-work',   description: 'Register with us and get matched to accounting and finance roles' },
+        { label: 'Find Work',           href: '/jobs/find-work',    description: 'Register with us and get matched to accounting and finance roles' },
         { label: 'How Placement Works', href: '/jobs/how-it-works', description: 'We manage every placement — you never deal with employers directly' },
       ],
     },
     {
       title: 'For Employers',
       links: [
-        { label: 'Hire Talent',        href: '/jobs/hire-talent',  description: 'Tell us your hiring need and we will find the right candidate' },
-        { label: 'Our Guarantee',      href: '/jobs/hire-talent',  description: '90-day replacement guarantee on every permanent placement' },
+        { label: 'Hire Talent',   href: '/jobs/hire-talent', description: 'Tell us your hiring need and we will find the right candidate' },
+        { label: 'Our Guarantee', href: '/jobs/hire-talent', description: '90-day replacement guarantee on every permanent placement' },
       ],
     },
   ],
@@ -110,5 +110,37 @@ export const JOBS_NAV = {
     label:       'Register as a Job Seeker →',
     href:        '/jobs/find-work',
     description: 'Accounting and finance professionals only — every profile reviewed',
+  },
+}
+
+// Jobs Navigation — EthioTax variant (adds diaspora path)
+export const ET_JOBS_NAV = {
+  groups: [
+    {
+      title: 'For Professionals',
+      links: [
+        { label: 'Find Work',           href: '/jobs/find-work',    description: 'Register with us and get matched to accounting and finance roles' },
+        { label: 'How Placement Works', href: '/jobs/how-it-works', description: 'We manage every placement — you never deal with employers directly' },
+      ],
+    },
+    {
+      title: 'Ethiopian Professionals Abroad',
+      links: [
+        { label: 'Qualified but not working in finance?', href: '/jobs/ethiopian-professionals', description: 'ACCA, CIMA, ETICPA or CPA qualified and working outside your field — we place you' },
+        { label: 'Get your qualifications recognised',    href: '/jobs/ethiopian-professionals', description: 'We know your credentials and we advocate for you with UK and international employers' },
+      ],
+    },
+    {
+      title: 'For Employers',
+      links: [
+        { label: 'Hire Talent',   href: '/jobs/hire-talent', description: 'Access our vetted pool of Ethiopian-origin finance professionals' },
+        { label: 'Our Guarantee', href: '/jobs/hire-talent', description: '90-day replacement guarantee on every permanent placement' },
+      ],
+    },
+  ],
+  cta: {
+    label:       'Are you a diaspora finance professional? →',
+    href:        '/jobs/ethiopian-professionals',
+    description: 'Qualified and underemployed — we can change that',
   },
 }

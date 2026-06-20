@@ -9,7 +9,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { LanguageSwitcher, MobileLangSwitcher } from './LanguageSwitcher'
-import { JOBS_NAV } from './nav-data'
+import { JOBS_NAV, ET_JOBS_NAV } from './nav-data'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -28,9 +28,12 @@ interface NavSection {
   href?:     string
   external?: boolean
   badge?:    string
-  featured?: NavLink
-  groups?:   { title: string; links: NavLink[] }[]
-  cta?:      { label: string; href: string; description: string }
+  goldPill?:  boolean
+  featured?:  NavLink
+  groups?:    { title: string; links: NavLink[] }[]
+  etGroups?:  { title: string; links: NavLink[] }[]
+  cta?:       { label: string; href: string; description: string }
+  etCta?:     { label: string; href: string; description: string }
 }
 
 // ── Nav data ──────────────────────────────────────────────────────────────────
@@ -126,6 +129,16 @@ const navSections: NavSection[] = [
         ],
       },
       {
+        title: 'Free Courses',
+        links: [
+          { label: 'All Courses',             href: '/free-courses',               badge: 'New', description: 'All structured learning paths' },
+          { label: 'Beginner Courses',         href: '/free-courses?level=beginner',          description: 'Start from the foundations' },
+          { label: 'Intermediate Courses',     href: '/free-courses?level=intermediate',      description: 'Build on your knowledge' },
+          { label: 'Advanced Courses',         href: '/free-courses?level=advanced',          description: 'Master complex topics' },
+          { label: 'Professional Courses',     href: '/free-courses?level=professional',      description: 'Expert-level content' },
+        ],
+      },
+      {
         title: 'Free Tools',
         links: [
           { label: 'Accounting Calculators', href: '/calculators', badge: 'New', description: '22 free calculators for students' },
@@ -136,29 +149,6 @@ const navSections: NavSection[] = [
       label:       'ACCA Study Hub',
       href:        '/study/acca',
       description: 'Complete ACCA study notes, question banks, and past papers for all 13 exams.',
-    },
-  },
-
-  {
-    id:    'courses',
-    label: 'Courses',
-    href:  '/courses',
-    groups: [
-      {
-        title: 'Free Courses',
-        links: [
-          { label: 'All Courses',             href: '/free-courses',               badge: 'New', description: 'All structured learning paths' },
-          { label: 'Beginner Courses',         href: '/free-courses?level=beginner',          description: 'Start from the foundations' },
-          { label: 'Intermediate Courses',     href: '/free-courses?level=intermediate',      description: 'Build on your knowledge' },
-          { label: 'Advanced Courses',         href: '/free-courses?level=advanced',          description: 'Master complex topics' },
-          { label: 'Professional Courses',     href: '/free-courses?level=professional',      description: 'Expert-level content' },
-        ],
-      },
-    ],
-    featured: {
-      label:       'Free Accounting Courses',
-      href:        '/courses',
-      description: 'Structured learning paths assembled from expert study notes — developed by the Accounting Body Editorial Team. Always free.',
     },
   },
   {
@@ -219,12 +209,14 @@ const navSections: NavSection[] = [
   },
 
   {
-    id:    'jobs',
-    label: 'Jobs',
-    href:  '/jobs',
-    badge: 'New',
-    groups: JOBS_NAV.groups,
-    cta:   JOBS_NAV.cta,
+    id:        'jobs',
+    label:     'Jobs',
+    href:      '/jobs',
+    goldPill:  true,
+    groups:    JOBS_NAV.groups,
+    cta:       JOBS_NAV.cta,
+    etGroups:  ET_JOBS_NAV.groups,
+    etCta:     ET_JOBS_NAV.cta,
   },
 ]
 
@@ -540,6 +532,13 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           }),
         }
       }
+        if (section.id === 'jobs' && etGetHelpLinks) {
+        return {
+          ...section,
+          groups: section.etGroups ?? section.groups,
+          cta:    section.etCta    ?? section.cta,
+        }
+      }
       return section
     }),
     ...(etCompanySection ? [etCompanySection] : []),
@@ -682,7 +681,14 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                       ].join(' ')}
                     >
                       <span className="flex items-center gap-1.5">
-                        {section.label}
+                        {section.goldPill ? (
+                          <span className="px-2.5 py-0.5 rounded-md text-sm font-semibold text-white"
+                            style={{ background: '#C9982A' }}>
+                            {section.label}
+                          </span>
+                        ) : (
+                          section.label
+                        )}
                         {section.badge && (
                           <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gold-500 text-navy-950 leading-none">
                             {section.badge}
