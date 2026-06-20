@@ -43,11 +43,13 @@ export async function POST(req: NextRequest) {
 
     // Whitelist allowed tables and actions for security
     const ALLOWED: Record<string, string[]> = {
-      help_requests:       ['update_status', 'update_notes', 'delete'],
-      contact_submissions: ['update_status', 'update_notes', 'delete'],
-      firms_applications:  ['update_status', 'update_notes', 'delete'],
-      email_subscribers:   ['update_status', 'delete'],
-      job_listings:        ['delete'],
+      help_requests:            ['update_status', 'update_notes', 'delete'],
+      contact_submissions:      ['update_status', 'update_notes', 'delete'],
+      firms_applications:       ['update_status', 'update_notes', 'delete'],
+      email_subscribers:        ['update_status', 'delete'],
+      job_listings:             ['delete'],
+      job_seeker_registrations: ['update_status', 'update_notes', 'delete'],
+      employer_briefs:          ['update_status', 'update_notes', 'delete'],
     }
 
     if (!ALLOWED[table] || !ALLOWED[table].includes(action)) {
@@ -71,6 +73,9 @@ export async function POST(req: NextRequest) {
 
       if (table === 'firms_applications' && (payload.status === 'approved' || payload.status === 'rejected')) {
         update.reviewed_at = new Date().toISOString()
+      }
+      if (table === 'job_seeker_registrations' && (payload.status === 'active' || payload.status === 'rejected')) {
+        update.reviewed_at = payload.reviewed_at ?? new Date().toISOString()
       }
 
       if (table === 'email_subscribers' && payload.status === 'unsubscribed') {
