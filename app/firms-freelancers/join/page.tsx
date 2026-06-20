@@ -331,7 +331,6 @@ export default function JoinNetworkPage() {
                             </button>
                           ))}
                         </div>
-                        </div>
                       </div>
                     )}
 
