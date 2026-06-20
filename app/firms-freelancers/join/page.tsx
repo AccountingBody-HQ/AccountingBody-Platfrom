@@ -26,6 +26,7 @@ export default function JoinNetworkPage() {
   const [form, setForm] = useState({
     practice_name: '', contact_name: '', email: '', phone: '', website: '',
     practice_type: '', location: '', years_of_experience: '', languages: '', specialisms: '', about: '', _h: '',
+    open_to_employment: '', currently_hiring: '',
   })
   const [qualifications, setQualifications] = useState<string[]>([])
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
@@ -38,7 +39,7 @@ export default function JoinNetworkPage() {
     const token = (document.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement)?.value ?? ''
     const payload = {
       ...form,
-      about: `[${applicantType === 'firm' ? 'FIRM' : 'INDEPENDENT'}] Qualifications: ${qualifications.join(', ')}. ${form.about}`,
+      about: `[${applicantType === 'firm' ? 'FIRM' : 'INDEPENDENT'}] Qualifications: ${qualifications.join(', ')}. ${form.about}${form.open_to_employment ? ` | Open to employment: ${form.open_to_employment}` : ''}${form.currently_hiring ? ` | Currently hiring: ${form.currently_hiring}` : ''}`,
       'cf-turnstile-response': token,
     }
     try {
@@ -104,7 +105,7 @@ export default function JoinNetworkPage() {
               </div>
               <h2 className="font-display text-2xl text-navy-950 mb-3">Application Received</h2>
               <p className="text-slate-500 leading-relaxed max-w-md mx-auto">Thank you for your application. Our team will review your credentials and professional standing. We aim to review all applications within 5 working days. You will hear from us once your application has been assessed.</p>
-              <button onClick={() => { setStatus('idle'); setApplicantType(null); setQualifications([]); setForm({ practice_name: '', contact_name: '', email: '', phone: '', website: '', practice_type: '', location: '', years_of_experience: '', languages: '', specialisms: '', about: '', _h: '' }) }}
+              <button onClick={() => { setStatus('idle'); setApplicantType(null); setQualifications([]); setForm({ practice_name: '', contact_name: '', email: '', phone: '', website: '', practice_type: '', location: '', years_of_experience: '', languages: '', specialisms: '', about: '', _h: '', open_to_employment: '', currently_hiring: '' }) }}
                 className="mt-6 text-sm font-medium text-navy-700 hover:text-gold-600 transition-colors">
                 Submit another application
               </button>
@@ -267,6 +268,68 @@ export default function JoinNetworkPage() {
                           {s}
                         </label>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* EMPLOYMENT QUESTIONS */}
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6">
+                    <h2 className="font-display text-xl text-navy-950">Employment &amp; Hiring</h2>
+                    <p className="text-sm text-slate-500">These questions help us match you with the right opportunities. Both are required.</p>
+
+                    {/* Q1 — open to employment — independent only */}
+                    {applicantType === 'independent' && (
+                      <div>
+                        <label className="block text-sm font-semibold text-navy-950 mb-3">
+                          Are you currently open to permanent or contract employment opportunities? *
+                        </label>
+                        <div className="space-y-2">
+                          {[
+                            { value: 'Yes — actively looking', label: 'Yes — actively looking' },
+                            { value: 'Yes — open but not actively searching', label: 'Yes — open but not actively searching' },
+                            { value: 'No — not currently open to employment', label: 'No — not currently open to employment' },
+                          ].map(opt => (
+                            <label key={opt.value} className="flex items-center gap-3 text-sm text-slate-700 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="open_to_employment"
+                                value={opt.value}
+                                required
+                                checked={form.open_to_employment === opt.value}
+                                onChange={() => setForm({ ...form, open_to_employment: opt.value })}
+                                className="accent-gold-500"
+                              />
+                              {opt.label}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Q2 — currently hiring — both */}
+                    <div>
+                      <label className="block text-sm font-semibold text-navy-950 mb-3">
+                        {applicantType === 'firm' ? 'Is your firm currently hiring?' : 'Are you or your contacts currently hiring?'} *
+                      </label>
+                      <div className="space-y-2">
+                        {[
+                          { value: 'Yes — actively hiring now', label: 'Yes — actively hiring now' },
+                          { value: 'Possibly — within the next 6 months', label: 'Possibly — within the next 6 months' },
+                          { value: 'No — not hiring at this time', label: 'No — not hiring at this time' },
+                        ].map(opt => (
+                          <label key={opt.value} className="flex items-center gap-3 text-sm text-slate-700 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="currently_hiring"
+                              value={opt.value}
+                              required
+                              checked={form.currently_hiring === opt.value}
+                              onChange={() => setForm({ ...form, currently_hiring: opt.value })}
+                              className="accent-gold-500"
+                            />
+                            {opt.label}
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
