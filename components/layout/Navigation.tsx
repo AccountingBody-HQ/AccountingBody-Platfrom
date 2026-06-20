@@ -249,7 +249,7 @@ function MegaMenu({ section, onClose, rightAlign = false }: { section: NavSectio
 
   return (
     <div
-      className="absolute top-full left-1/2 -translate-x-1/2 mt-1 animate-slide-down"
+      className={["absolute top-full mt-1 animate-slide-down", rightAlign ? "right-0" : "left-1/2 -translate-x-1/2"].join(" ")}
       style={{ width: hasFeatured ? 'min(680px, 90vw)' : colCount >= 2 ? 'min(560px, 90vw)' : 'min(280px, 90vw)' }}
     >
       {/* Pointer arrow */}
