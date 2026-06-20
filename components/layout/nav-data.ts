@@ -102,7 +102,7 @@ export const JOBS_NAV = {
       title: 'For Employers',
       links: [
         { label: 'Hire Talent',   href: '/jobs/hire-talent', description: 'Tell us your hiring need and we will find the right candidate' },
-        { label: 'Our Guarantee', href: '/jobs/hire-talent', description: '90-day replacement guarantee on every permanent placement' },
+        { label: 'Our Guarantee', href: '/jobs/guarantee', description: '90-day replacement guarantee on every permanent placement' },
       ],
     },
   ],
@@ -134,7 +134,7 @@ export const ET_JOBS_NAV = {
       title: 'For Employers',
       links: [
         { label: 'Hire Talent',   href: '/jobs/hire-talent', description: 'Access our vetted pool of Ethiopian-origin finance professionals' },
-        { label: 'Our Guarantee', href: '/jobs/hire-talent', description: '90-day replacement guarantee on every permanent placement' },
+        { label: 'Our Guarantee', href: '/jobs/guarantee', description: '90-day replacement guarantee on every permanent placement' },
       ],
     },
   ],
