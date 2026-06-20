@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Trash2, Loader2, ChevronDown, Globe } from 'lucide-react'
 
 // ── Status Update Dropdown ────────────────────────────────────────────────────
@@ -35,8 +35,19 @@ export function StatusBadge({ id, table, currentStatus }: StatusBadgeProps) {
   const [saving, setSaving]   = useState(false)
   const [error, setError]     = useState(false)
   const [open, setOpen]       = useState(false)
+  const [toast, setToast]     = useState<{ msg: string; ok: boolean } | null>(null)
+  const [dropPos, setDropPos] = useState({ top: 0, left: 0 })
+  const btnRef = useRef<HTMLButtonElement>(null)
   const options = STATUS_OPTIONS[table] ?? []
   const style   = error ? STATUS_STYLE.error : (STATUS_STYLE[status] ?? STATUS_STYLE.open)
+
+  function openDropdown() {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect()
+      setDropPos({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX })
+    }
+    setOpen(o => !o)
+  }
 
   async function handleSelect(newStatus: string) {
     if (newStatus === status) { setOpen(false); return }
@@ -53,11 +64,21 @@ export function StatusBadge({ id, table, currentStatus }: StatusBadgeProps) {
       } else {
         setStatus(newStatus)
         if (table === 'firms_applications' && (newStatus === 'approved' || newStatus === 'rejected')) {
-          fetch('/api/roodber8/notify-firm', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, status: newStatus }),
-          }).catch(err => console.error('notify-firm error:', err))
+          try {
+            const notifyRes = await fetch('/api/roodber8/notify-firm', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id, status: newStatus }),
+            })
+            if (notifyRes.ok) {
+              setToast({ msg: newStatus === 'approved' ? '✓ Approval email sent to applicant' : '✓ Rejection email sent to applicant', ok: true })
+            } else {
+              setToast({ msg: '⚠ Status updated but email failed to send', ok: false })
+            }
+          } catch {
+            setToast({ msg: '⚠ Status updated but email failed to send', ok: false })
+          }
+          setTimeout(() => setToast(null), 4000)
         }
       }
     } catch {
@@ -67,36 +88,50 @@ export function StatusBadge({ id, table, currentStatus }: StatusBadgeProps) {
   }
 
   return (
-    <div className="relative inline-block">
-      <button
-        onClick={() => setOpen(o => !o)}
-        disabled={saving}
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all"
-        style={{ background: style.bg, color: style.color, border: '1px solid ' + style.color + '30' }}>
-        {saving ? <Loader2 size={10} className="animate-spin" /> : null}
-        {error ? 'failed — retry' : status.replace('_', ' ')}
-        {!saving && <span style={{ opacity: 0.6 }}>▾</span>}
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-full mt-1 z-20 rounded-xl overflow-hidden shadow-2xl"
-            style={{ background: '#0d1424', border: '1px solid #1a2238', minWidth: 140 }}>
-            {options.map(opt => {
-              const s = STATUS_STYLE[opt] ?? STATUS_STYLE.open
-              return (
-                <button key={opt} onClick={() => handleSelect(opt)}
-                  className="w-full text-left px-3 py-2 text-xs font-semibold flex items-center gap-2 transition-colors hover:bg-white/5"
-                  style={{ color: s.color }}>
-                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: s.color }} />
-                  {opt.replace('_', ' ')}
-                </button>
-              )
-            })}
-          </div>
-        </>
+    <>
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 z-50 px-5 py-3 rounded-xl text-sm font-semibold shadow-2xl"
+          style={{
+            transform: 'translateX(-50%)',
+            background: toast.ok ? 'rgba(16,185,129,0.95)' : 'rgba(245,158,11,0.95)',
+            color: '#fff',
+            border: toast.ok ? '1px solid #059669' : '1px solid #d97706',
+          }}>
+          {toast.msg}
+        </div>
       )}
-    </div>
+      <div className="relative inline-block">
+        <button
+          ref={btnRef}
+          onClick={openDropdown}
+          disabled={saving}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all"
+          style={{ background: style.bg, color: style.color, border: '1px solid ' + style.color + '30' }}>
+          {saving ? <Loader2 size={10} className="animate-spin" /> : null}
+          {error ? 'failed — retry' : status.replace('_', ' ')}
+          {!saving && <span style={{ opacity: 0.6 }}>▾</span>}
+        </button>
+        {open && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+            <div className="fixed z-50 rounded-xl overflow-hidden shadow-2xl"
+              style={{ top: dropPos.top, left: dropPos.left, background: '#0d1424', border: '1px solid #1a2238', minWidth: 140 }}>
+              {options.map(opt => {
+                const s = STATUS_STYLE[opt] ?? STATUS_STYLE.open
+                return (
+                  <button key={opt} onClick={() => handleSelect(opt)}
+                    className="w-full text-left px-3 py-2 text-xs font-semibold flex items-center gap-2 transition-colors hover:bg-white/5"
+                    style={{ color: s.color }}>
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: s.color }} />
+                    {opt.replace('_', ' ')}
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        )}
+      </div>
+    </>
   )
 }
 
