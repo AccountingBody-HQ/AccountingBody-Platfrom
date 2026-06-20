@@ -296,13 +296,13 @@ export default function JoinNetworkPage() {
                     {/* Q1 — open to employment — independent only */}
                     {applicantType === 'independent' && (
                       <div ref={empRef} className="rounded-lg p-3 -m-3 transition-all"
-                        style={fieldErrors.open_to_employment ? { outline: '2px solid #ef4444', outlineOffset: '2px', borderRadius: '8px' } : {}}>
+                        style={fieldErrors.open_to_employment ? { outline: '2px solid #C9982A', outlineOffset: '2px', borderRadius: '8px' } : {}}>
                         <label className="block text-sm font-semibold mb-3"
-                          style={{ color: fieldErrors.open_to_employment ? '#ef4444' : '#0C1A3D' }}>
+                          style={{ color: fieldErrors.open_to_employment ? '#C9982A' : '#0C1A3D' }}>
                           Are you currently open to permanent or contract employment opportunities? *
                         </label>
                         {fieldErrors.open_to_employment && (
-                          <p className="text-xs font-semibold mb-2" style={{ color: '#ef4444' }}>Please select an option to continue.</p>
+                          <p className="text-xs font-semibold mb-2" style={{ color: '#C9982A' }}>Please select an option to continue.</p>
                         )}
                         <div className="space-y-2">
                           {[
@@ -336,13 +336,13 @@ export default function JoinNetworkPage() {
 
                     {/* Q2 — currently hiring — both */}
                     <div ref={hiringRef} className="rounded-lg p-3 -m-3 transition-all"
-                      style={fieldErrors.currently_hiring ? { outline: '2px solid #ef4444', outlineOffset: '2px', borderRadius: '8px' } : {}}>
+                      style={fieldErrors.currently_hiring ? { outline: '2px solid #C9982A', outlineOffset: '2px', borderRadius: '8px' } : {}}>
                       <label className="block text-sm font-semibold mb-3"
-                        style={{ color: fieldErrors.currently_hiring ? '#ef4444' : '#0C1A3D' }}>
+                        style={{ color: fieldErrors.currently_hiring ? '#C9982A' : '#0C1A3D' }}>
                         {applicantType === 'firm' ? 'Is your firm currently hiring?' : 'Are you or your contacts currently hiring?'} *
                       </label>
                       {fieldErrors.currently_hiring && (
-                        <p className="text-xs font-semibold mb-2" style={{ color: '#ef4444' }}>Please select an option to continue.</p>
+                        <p className="text-xs font-semibold mb-2" style={{ color: '#C9982A' }}>Please select an option to continue.</p>
                       )}
                       <div className="space-y-2">
                         {[
