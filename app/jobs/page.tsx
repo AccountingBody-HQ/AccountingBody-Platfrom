@@ -43,7 +43,7 @@ export default async function JobsHubPage() {
   ]
 
   const stats = [
-    { value: '15%',      label: 'Placement fee',         sub: 'Of first year salary -- permanent roles' },
+    { value: 'Managed',  label: 'End-to-end service',    sub: 'We handle every step of the placement' },
     { value: '90 days',   label: 'Replacement guarantee', sub: 'On every permanent placement' },
     { value: '100%',      label: 'Vetted candidates',     sub: 'Every profile reviewed before activation' },
     { value: 'Finance',   label: 'Specialists only',      sub: 'Accounting, tax, audit and payroll' },
