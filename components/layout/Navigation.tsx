@@ -635,7 +635,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
               const isActive      = activeDropdown === section.id
               const hasDropdown   = Boolean(section.groups?.length)
               const sectionIndex  = sections.indexOf(section)
-              const isRightSide   = sectionIndex >= sections.length - 1
+              const isRightSide   = sectionIndex >= sections.length - 2
               const isCurrentPage = section.href
                 ? (section.href === '/' ? pathname === '/' : pathname.startsWith(section.href))
                 : false
@@ -685,17 +685,11 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                     >
                       <span className="flex items-center gap-1.5">
                         {section.goldPill ? (
-                          <span className="relative font-semibold text-navy-950">
+                          <span className="font-bold" style={{ color: '#C9982A' }}>
                             {section.label}
-                            <span className="absolute -bottom-0.5 left-0 right-0 h-0.5 rounded-full" style={{ background: '#C9982A' }} />
                           </span>
                         ) : (
                           section.label
-                        )}
-                        {section.badge && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gold-500 text-navy-950 leading-none">
-                            {section.badge}
-                          </span>
                         )}
                       </span>
                       {isCurrentPage && !section.goldPill && (
