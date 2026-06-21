@@ -185,7 +185,7 @@ export default function FindWorkPage() {
                 {status === 'invalid' && <>
                   <h2 className="font-display text-2xl mb-3" style={{ color: '#dc2626' }}>Invalid Link</h2>
                   <p className="text-slate-500 leading-relaxed max-w-md mx-auto">
-                    This verification link is invalid or has already been used. If you believe this is an error, please register again.
+                    This verification link is invalid or has already been used. If you believe this is an error, please <a href="/jobs/find-work" style={{ color: brand, textDecoration: 'underline' }}>register again</a>.
                   </p>
                 </>}
               </div>
