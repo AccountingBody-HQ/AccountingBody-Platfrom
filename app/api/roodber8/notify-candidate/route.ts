@@ -6,7 +6,7 @@ import { generateReferenceNumber, generateProfileToken } from "@/lib/profileUtil
 export async function POST(req: NextRequest) {
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const { status, email, name, platform } = await req.json()
+    const { id, status, email, name, platform } = await req.json()
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!)
     const isET = platform === "et"
     const platformName = isET ? "EthioTax" : "Accounting Body"
