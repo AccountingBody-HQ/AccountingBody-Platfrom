@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await supabase
       .from("employer_briefs")
       .select("*")
-      .eq("admin_notes", token)
+      .eq("confirmation_token", token)
       .eq("status", "pending_confirmation")
       .single()
 
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
     if (action === "confirm") {
       await supabase
         .from("employer_briefs")
-        .update({ status: "pending", admin_notes: null, reviewed_at: new Date().toISOString() })
+        .update({ status: "pending", confirmation_token: null, reviewed_at: new Date().toISOString() })
         .eq("id", data.id)
 
       const firstName = data.contact_name.split(" ")[0]

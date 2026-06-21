@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       await supabase
         .from("employer_briefs")
         .delete()
-        .eq("admin_notes", body.edit_token)
+        .eq("confirmation_token", body.edit_token)
         .eq("status", "pending_confirmation")
     }
 
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         must_haves:       body.must_haves?.trim() || null,
         nice_to_haves:    body.nice_to_haves?.trim() || null,
         status:           "pending_confirmation",
-        admin_notes:      confirmToken,
+        confirmation_token: confirmToken,
       })
 
     if (dbError) {

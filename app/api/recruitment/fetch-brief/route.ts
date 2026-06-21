@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await supabase
       .from("employer_briefs")
       .select("*")
-      .eq("admin_notes", token)
+      .eq("confirmation_token", token)
       .eq("status", "pending_confirmation")
       .single()
 
