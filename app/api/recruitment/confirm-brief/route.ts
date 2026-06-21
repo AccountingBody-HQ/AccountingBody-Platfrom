@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { Resend } from "resend"
+import { generateReferenceNumber, generateProfileToken } from "@/lib/profileUtils"
 
 export async function GET(req: NextRequest) {
   try {
@@ -38,18 +39,28 @@ export async function GET(req: NextRequest) {
     }
 
     if (action === "confirm") {
+      const referenceNumber = generateReferenceNumber(data.platform, "E")
+      const profileToken = generateProfileToken()
+
       await supabase
         .from("employer_briefs")
-        .update({ status: "pending", confirmation_token: null, reviewed_at: new Date().toISOString() })
+        .update({
+          status: "pending",
+          confirmation_token: null,
+          reference_number: referenceNumber,
+          update_token: profileToken,
+          reviewed_at: new Date().toISOString()
+        })
         .eq("id", data.id)
 
       const firstName = data.contact_name.split(" ")[0]
+      const manageUrl = baseUrl + "/jobs/hire-talent/manage?token=" + profileToken
 
       await resend.emails.send({
         from: platformName + " <noreply@accountingbody.com>",
         to:   data.contact_email,
         subject: "Brief confirmed - we are on it - " + platformName,
-        html: "<!DOCTYPE html><html><body style=\"margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;\"><div style=\"max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;\"><div style=\"background:" + brandColor + ";padding:32px 40px;\"><p style=\"color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;\">" + platformName + " - Recruitment</p><h1 style=\"color:#fff;font-size:24px;margin:0;line-height:1.3;\">Brief confirmed. We are on it.</h1></div><div style=\"padding:32px 40px;\"><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 16px;\">Dear " + firstName + ",</p><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 16px;\">Your hiring brief for <strong>" + data.role_title + "</strong> at " + data.company_name + " has been confirmed and is now with our team.</p><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 16px;\">We will be in touch within 2 working days with a Fee Agreement Letter. No search begins until you have approved the fee.</p><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 0;\">You will only be introduced to candidates we have personally selected and vetted for your requirement.</p></div>" + footer + "</div></body></html>",
+        html: "<!DOCTYPE html><html><body style=\"margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;\"><div style=\"max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;\"><div style=\"background:" + brandColor + ";padding:32px 40px;\"><p style=\"color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;\">" + platformName + " - Recruitment</p><h1 style=\"color:#fff;font-size:24px;margin:0;line-height:1.3;\">Brief confirmed. We are on it.</h1></div><div style=\"padding:32px 40px;\"><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 16px;\">Dear " + firstName + ",</p><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 16px;\">Your hiring brief for <strong>" + data.role_title + "</strong> at " + data.company_name + " has been confirmed and is now with our team.</p><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 16px;\">We will be in touch within 2 working days with a Fee Agreement Letter. No search begins until you have approved the fee.</p><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 24px;\">You will only be introduced to candidates we have personally selected and vetted for your requirement.</p><div style=\"background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin-bottom:24px;\"><p style=\"color:#64748b;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 4px;\">Your Reference Number</p><p style=\"color:#1e293b;font-size:18px;font-weight:700;margin:0 0 4px;\">" + referenceNumber + "</p><p style=\"color:#94a3b8;font-size:12px;margin:0;\">Quote this reference in all correspondence with us.</p></div><a href=\"" + manageUrl + "\" style=\"display:block;background:" + brandColor + ";color:#fff;font-weight:700;font-size:14px;padding:14px 24px;border-radius:8px;text-decoration:none;text-align:center;margin-bottom:12px;\">Manage my brief &#8594;</a><p style=\"color:#94a3b8;font-size:12px;text-align:center;margin:0;\">Use this link anytime to update your brief details. Keep this email safe.</p></div>" + footer + "</div></body></html>",
       })
 
       await resend.emails.send({
