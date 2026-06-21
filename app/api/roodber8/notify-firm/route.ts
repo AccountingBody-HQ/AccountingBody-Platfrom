@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
 
     if (status === 'approved') {
       await resend.emails.send({
-        from: `${brand.name} <info@accountingbody.com>`,
+        from: `${brand.name} <noreply@accountingbody.com>`,
         to: contact_email,
         subject: `Your application has been approved — ${brand.name}`,
         html: `<!DOCTYPE html>
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
 
     if (status === 'rejected') {
       await resend.emails.send({
-        from: `${brand.name} <info@accountingbody.com>`,
+        from: `${brand.name} <noreply@accountingbody.com>`,
         to: contact_email,
         subject: `Update on your application — ${brand.name}`,
         html: `<!DOCTYPE html>
