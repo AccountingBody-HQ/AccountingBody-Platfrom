@@ -167,14 +167,14 @@ export default function FindWorkPage() {
                   <p className="text-slate-500 leading-relaxed max-w-md mx-auto mb-4">
                     Thank you for registering. We have sent a verification link to your email address. Please click it to confirm your email — your application will not be reviewed until you do.
                   </p>
-                  <p className="text-xs text-slate-400">Did not receive the email? Check your spam folder.</p>
+                  <p className="text-xs text-slate-400 text-center">Did not receive the email? Check your spam folder.</p>
                 </>}
                 {status === 'verified' && <>
                   <h2 className="font-display text-2xl mb-3" style={{ color: brand }}>Email Verified</h2>
-                  <p className="text-slate-500 leading-relaxed max-w-md mx-auto mb-4">
+                  <p className="text-slate-500 leading-relaxed max-w-md mx-auto mb-4 text-center">
                     Your email address has been confirmed. Your profile is now with our team for review. We will be in touch only when a suitable role becomes available.
                   </p>
-                  <p className="text-xs text-slate-400">You do not need to do anything else.</p>
+                  <p className="text-xs text-slate-400 text-center">You do not need to do anything else.</p>
                 </>}
                 {status === 'already' && <>
                   <h2 className="font-display text-2xl mb-3" style={{ color: brand }}>Already Verified</h2>
