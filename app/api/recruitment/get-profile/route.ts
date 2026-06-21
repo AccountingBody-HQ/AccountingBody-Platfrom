@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
         .from("employer_briefs")
         .select("reference_number, company_name, contact_name, contact_email, contact_phone, role_title, contract_type, location, salary_budget, start_date, jurisdiction, role_description, must_haves, nice_to_haves, platform, status")
         .eq("update_token", token)
-        .eq("status", "pending")
+        .in("status", ["pending", "reviewing"])
         .single()
 
       if (error || !data) {
