@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { unstable_noStore as noStore } from 'next/cache'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
 import { DeleteButton, ReplyButton } from '@/components/roodber8/AdminActions'
+import { EmployerStatusButtons } from '@/components/roodber8/EmployerActions'
 import { Building2, Search } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -181,6 +182,7 @@ export default async function EmployersPage({
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
+                      <EmployerStatusButtons id={b.id} currentStatus={b.status} />
                       <ReplyButton email={b.contact_email} subject={'Re: Hiring Brief — ' + b.role_title + ' at ' + b.company_name} />
                       <DeleteButton id={b.id} table="employer_briefs" />
                     </div>
