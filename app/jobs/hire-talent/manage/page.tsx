@@ -82,7 +82,7 @@ export default function ManageEmployerPage() {
           <svg className="w-8 h-8" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
         </div>
         <h2 className="font-display text-2xl mb-3" style={{ color: '#dc2626' }}>Invalid Link</h2>
-        <p className="text-slate-500">This link is invalid. Please contact us if you need help updating your brief.</p>
+        <p className="text-slate-500">This link is invalid or your brief is no longer open for updates. Please contact us if you need help.</p>
       </div>
     </div>
   )

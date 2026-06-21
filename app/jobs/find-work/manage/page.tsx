@@ -5,7 +5,8 @@ import Script from 'next/script'
 const employmentStatusOptions = ['Employed','Self-employed','Between roles','Student']
 const roleTypeOptions = ['Permanent','Contract / Freelance','Remote only','Open to relocation']
 const jurisdictionOptions = ['United Kingdom','Ethiopia','United States','Canada','UAE','European Union','Australia','Other']
-const languageOptions = ['English','Amharic','Afaan Oromoo','Tigrinya','Arabic','French','Spanish','Other']
+const languageOptionsET = ['English','Amharic','Afaan Oromoo','Tigrinya','Arabic','French','Spanish','Other']
+const languageOptionsAB = ['English','Arabic','French','Spanish','Portuguese','Mandarin','Hindi','Other']
 
 export default function ManageCandidatePage() {
   const isEthioTax = typeof window !== 'undefined' && window.location.hostname.includes('ethiotax.com')
@@ -201,7 +202,7 @@ export default function ManageCandidatePage() {
               <div>
                 <label className="block text-sm font-semibold mb-3" style={{ color: brand }}>Languages</label>
                 <div className="flex flex-wrap gap-2">
-                  {languageOptions.map(o => (
+                  {(isEthioTax ? languageOptionsET : languageOptionsAB).map(o => (
                     <button key={o} type="button" onClick={() => toggle(o, languages, setLanguages)}
                       style={btnStyle(languages.includes(o))}>{o}</button>
                   ))}

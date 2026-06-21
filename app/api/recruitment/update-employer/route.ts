@@ -54,7 +54,20 @@ export async function POST(req: NextRequest) {
 
     const footer = "<div style=\"background:#f8fafc;padding:20px 40px;border-top:1px solid #e2e8f0;\"><p style=\"color:#94a3b8;font-size:12px;margin:0;\">" + platformName + " - Expert accounting and finance recruitment. <a href=\"" + baseUrl + "\" style=\"color:#94a3b8;\">" + baseDomain + "</a></p></div>"
 
-    const changedFields = Object.keys(allowedFields).join(", ")
+    // Only report fields that actually changed
+    const { data: current2 } = await supabase
+      .from("employer_briefs")
+      .select("contact_phone, salary_budget, start_date, jurisdiction, role_description, must_haves, nice_to_haves")
+      .eq("id", existing.id)
+      .single()
+
+    const changedFields = Object.keys(allowedFields).filter(key => {
+      const newVal = JSON.stringify(allowedFields[key] ?? null)
+      const oldVal = JSON.stringify((current2 as Record<string, unknown>)?.[key] ?? null)
+      return newVal !== oldVal
+    }).join(", ")
+
+    if (!changedFields) return NextResponse.json({ success: true })
 
     await resend.emails.send({
       from: platformName + " <noreply@accountingbody.com>",
