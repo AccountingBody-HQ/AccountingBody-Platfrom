@@ -17,6 +17,7 @@ async function getCandidates(filters: { search?: string; status?: string; platfo
   let query = supabase
     .from('job_seeker_registrations')
     .select('*')
+    .neq('status', 'pending_verification')
     .order('created_at', { ascending: false })
   if (filters.status)   query = query.eq('status', filters.status)
   if (filters.platform) query = query.eq('platform', filters.platform)
