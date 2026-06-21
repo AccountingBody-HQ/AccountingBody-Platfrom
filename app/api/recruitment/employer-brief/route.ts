@@ -27,6 +27,15 @@ export async function POST(req: NextRequest) {
     const firstName = body.contact_name.trim().split(" ")[0]
     const confirmToken = randomUUID()
 
+    // If editing, delete the old record first before inserting new one
+    if (body.edit_token) {
+      await supabase
+        .from("employer_briefs")
+        .delete()
+        .eq("admin_notes", body.edit_token)
+        .eq("status", "pending_confirmation")
+    }
+
     const { error: dbError } = await supabase
       .from("employer_briefs")
       .insert({
@@ -47,15 +56,6 @@ export async function POST(req: NextRequest) {
         status:           "pending_confirmation",
         admin_notes:      confirmToken,
       })
-
-    // If editing, delete the old record first
-    if (body.edit_token) {
-      await supabase
-        .from("employer_briefs")
-        .delete()
-        .eq("admin_notes", body.edit_token)
-        .eq("status", "pending_confirmation")
-    }
 
     if (dbError) {
       console.error("Supabase error:", dbError)
