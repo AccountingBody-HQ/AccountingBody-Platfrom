@@ -38,7 +38,15 @@ export default function FindWorkPage() {
   const [languages, setLanguages] = useState<string[]>([])
   const [termsAgreed, setTermsAgreed] = useState(false)
   const [dataConsent, setDataConsent] = useState(false)
-  const [status, setStatus] = useState<'idle'|'loading'|'success'|'error'>('idle')
+  const [status, setStatus] = useState<'idle'|'loading'|'success'|'error'|'verified'|'already'|'invalid'>(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search).get('verified')
+      if (p === 'true') return 'verified'
+      if (p === 'already') return 'already'
+      if (p === 'invalid') return 'invalid'
+    }
+    return 'idle'
+  })
   const [fieldErrors, setFieldErrors] = useState<Record<string,boolean>>({})
 
   const refs = {
@@ -145,16 +153,41 @@ export default function FindWorkPage() {
         <section className="py-16 px-6">
           <div className="max-w-3xl mx-auto">
 
-            {status === 'success' ? (
+            {(status === 'success' || status === 'verified' || status === 'already' || status === 'invalid') ? (
               <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm">
-                <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
+                  style={{ background: status === 'invalid' ? '#fee2e2' : '#f0fdf4' }}>
+                  {status === 'invalid'
+                    ? <svg className="w-8 h-8" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    : <svg className="w-8 h-8" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                  }
                 </div>
-                <h2 className="font-display text-2xl text-navy-950 mb-3">Candidate Registration Received</h2>
-                <p className="text-slate-500 leading-relaxed max-w-md mx-auto mb-4">
-                  Thank you for registering as a candidate. Please check your inbox — we have sent you a verification link. Click it to confirm your email address. Once verified, your profile will be reviewed by our team within 5 working days.
-                </p>
-                <p className="text-xs text-slate-400">Did not receive the email? Check your spam folder or contact us at info@accountingbody.com</p>
+                {status === 'success' && <>
+                  <h2 className="font-display text-2xl mb-3" style={{ color: brand }}>Registration Received</h2>
+                  <p className="text-slate-500 leading-relaxed max-w-md mx-auto mb-4">
+                    Thank you for registering. We have sent a verification link to your email address. Please click it to confirm your email — your application will not be reviewed until you do.
+                  </p>
+                  <p className="text-xs text-slate-400">Did not receive the email? Check your spam folder.</p>
+                </>}
+                {status === 'verified' && <>
+                  <h2 className="font-display text-2xl mb-3" style={{ color: brand }}>Email Verified</h2>
+                  <p className="text-slate-500 leading-relaxed max-w-md mx-auto mb-4">
+                    Your email address has been confirmed. Your profile is now with our team for review. We will be in touch only when a suitable role becomes available.
+                  </p>
+                  <p className="text-xs text-slate-400">You do not need to do anything else.</p>
+                </>}
+                {status === 'already' && <>
+                  <h2 className="font-display text-2xl mb-3" style={{ color: brand }}>Already Verified</h2>
+                  <p className="text-slate-500 leading-relaxed max-w-md mx-auto">
+                    Your email address has already been verified. Your profile is with our team for review.
+                  </p>
+                </>}
+                {status === 'invalid' && <>
+                  <h2 className="font-display text-2xl mb-3" style={{ color: '#dc2626' }}>Invalid Link</h2>
+                  <p className="text-slate-500 leading-relaxed max-w-md mx-auto">
+                    This verification link is invalid or has already been used. If you believe this is an error, please register again.
+                  </p>
+                </>}
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
