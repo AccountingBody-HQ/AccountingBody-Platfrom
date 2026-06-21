@@ -15,20 +15,20 @@ export async function POST(req: NextRequest) {
     const baseDomain = isET ? "ethiotax.com" : "accountingbody.com"
     const firstName = (name ?? "").split(" ")[0]
 
-    // Generate reference number and profile token on approval
-    const referenceNumber = generateReferenceNumber(platform, "C")
-    const profileToken = generateProfileToken()
-
-    await supabase
-      .from("job_seeker_registrations")
-      .update({ reference_number: referenceNumber, update_token: profileToken })
-      .eq("id", id)
-
-    const manageUrl = baseUrl + "/jobs/find-work/manage?token=" + profileToken
-
     const footer = `<div style="background:#f8fafc;padding:20px 40px;border-top:1px solid #e2e8f0;"><p style="color:#94a3b8;font-size:12px;margin:0;">${platformName} &mdash; Expert accounting &amp; finance recruitment. <a href="${baseUrl}" style="color:#94a3b8;">${baseDomain}</a></p></div>`
 
     if (status === "active") {
+      // Generate reference number and profile token only on approval
+      const referenceNumber = generateReferenceNumber(platform, "C")
+      const profileToken = generateProfileToken()
+
+      await supabase
+        .from("job_seeker_registrations")
+        .update({ reference_number: referenceNumber, update_token: profileToken })
+        .eq("id", id)
+
+      const manageUrl = baseUrl + "/jobs/find-work/manage?token=" + profileToken
+
       await resend.emails.send({
         from: `${platformName} <noreply@accountingbody.com>`,
         to:   email,
