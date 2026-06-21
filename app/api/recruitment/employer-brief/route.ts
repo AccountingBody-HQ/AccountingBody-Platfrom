@@ -48,6 +48,15 @@ export async function POST(req: NextRequest) {
         admin_notes:      confirmToken,
       })
 
+    // If editing, delete the old record first
+    if (body.edit_token) {
+      await supabase
+        .from("employer_briefs")
+        .delete()
+        .eq("admin_notes", body.edit_token)
+        .eq("status", "pending_confirmation")
+    }
+
     if (dbError) {
       console.error("Supabase error:", dbError)
       return NextResponse.json({ error: "Database error" }, { status: 500 })
