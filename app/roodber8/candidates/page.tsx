@@ -163,19 +163,27 @@ export default async function CandidatesPage({
                       </div>
                       <div className="flex items-center gap-4 text-xs flex-wrap mb-2" style={{ color: '#475569' }}>
                         <a href={'mailto:' + c.email} style={{ color: '#60a5fa' }}>{c.email}</a>
+                        {c.phone && <a href={'tel:' + c.phone} style={{ color: '#94a3b8' }}>{c.phone}</a>}
                         <span>{c.professional_role}</span>
                         <span>{c.qualification}</span>
                         <span>{c.years_experience}</span>
+                        <span>{c.employment_status}</span>
                         <span>{c.location_city}{c.location_country ? ', ' + c.location_country : ''}</span>
                       </div>
-                      <div className="flex items-center gap-4 text-xs flex-wrap" style={{ color: '#334155' }}>
-                        {c.languages && <span>Languages: {c.languages}</span>}
-                        {c.role_types && <span>Seeking: {c.role_types}</span>}
+                      <div className="flex items-center gap-4 text-xs flex-wrap mb-2" style={{ color: '#334155' }}>
+                        {c.languages && <span>Languages: {Array.isArray(c.languages) ? c.languages.join(', ') : c.languages}</span>}
+                        {c.jurisdictions && <span>Jurisdictions: {Array.isArray(c.jurisdictions) ? c.jurisdictions.join(', ') : c.jurisdictions}</span>}
+                        {c.role_types && <span>Seeking: {Array.isArray(c.role_types) ? c.role_types.join(', ') : c.role_types}</span>}
                         {c.salary_expectation && <span style={{ color: '#34d399' }}>{c.salary_expectation}</span>}
                         <span>{c.created_at ? new Date(c.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</span>
                       </div>
+                      {c.linkedin_url && (
+                        <div className="text-xs mb-2">
+                          <a href={c.linkedin_url} target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa' }}>LinkedIn: {c.linkedin_url}</a>
+                        </div>
+                      )}
                       {c.biography && (
-                        <p className="text-xs mt-2 line-clamp-2" style={{ color: '#475569' }}>{c.biography}</p>
+                        <p className="text-xs mt-2" style={{ color: '#475569' }}>{c.biography}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
