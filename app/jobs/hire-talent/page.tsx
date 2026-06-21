@@ -29,7 +29,15 @@ export default function HireTalentPage() {
     start_date: '', must_haves: '', nice_to_haves: '', role_description: '',
     jurisdiction: '', _h: '',
   })
-  const [status, setStatus] = useState<'idle'|'loading'|'success'|'error'>('idle')
+  const [status, setStatus] = useState<'idle'|'loading'|'success'|'error'|'confirmed'|'cancelled'|'invalid'>(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search).get('brief')
+      if (p === 'confirmed') return 'confirmed'
+      if (p === 'cancelled') return 'cancelled'
+      if (p === 'invalid') return 'invalid'
+    }
+    return 'idle'
+  })
   const [fieldErrors, setFieldErrors] = useState<Record<string,boolean>>({})
 
   const refs = {
@@ -123,16 +131,42 @@ export default function HireTalentPage() {
         <section className="py-16 px-6">
           <div className="max-w-3xl mx-auto">
 
-            {status === 'success' ? (
+            {(status === 'success' || status === 'confirmed' || status === 'cancelled' || status === 'invalid') ? (
               <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm">
-                <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
+                  style={{ background: status === 'cancelled' || status === 'invalid' ? '#fee2e2' : '#f0fdf4' }}>
+                  {status === 'cancelled' || status === 'invalid'
+                    ? <svg className="w-8 h-8" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    : <svg className="w-8 h-8" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                  }
                 </div>
-                <h2 className="font-display text-2xl text-navy-950 mb-3">Brief Received</h2>
-                <p className="text-slate-500 leading-relaxed max-w-md mx-auto mb-4">
-                  Thank you. Our team will review your hiring brief and be in touch within 2 working days. We will send you a Fee Agreement Letter before any search begins — no surprises.
-                </p>
-                <p className="text-xs text-slate-400">Questions? Contact us at info@accountingbody.com</p>
+                {status === 'success' && <>
+                  <h2 className="font-display text-2xl mb-3" style={{ color: brand }}>Brief Received</h2>
+                  <p className="text-slate-500 leading-relaxed mb-4">
+                    Thank you. Please check your inbox — we have sent you a confirmation email with your full brief details. Please review and confirm before we begin our search.
+                  </p>
+                  <p className="text-xs text-slate-400 text-center">Did not receive the email? Check your spam folder.</p>
+                </>}
+                {status === 'confirmed' && <>
+                  <h2 className="font-display text-2xl mb-3" style={{ color: brand }}>Brief Confirmed</h2>
+                  <p className="text-slate-500 leading-relaxed mb-4">
+                    Your hiring brief has been confirmed. Our team will review it and be in touch within 2 working days. We will send you a Fee Agreement Letter before any search begins.
+                  </p>
+                  <p className="text-xs text-slate-400 text-center">You do not need to do anything else.</p>
+                </>}
+                {status === 'cancelled' && <>
+                  <h2 className="font-display text-2xl mb-3" style={{ color: '#dc2626' }}>Brief Cancelled</h2>
+                  <p className="text-slate-500 leading-relaxed mb-4">
+                    Your hiring brief has been cancelled and removed. If you would like to submit a new brief, please use the form below.
+                  </p>
+                  <a href="/jobs/hire-talent" className="text-sm font-semibold underline" style={{ color: brand }}>Submit a new brief</a>
+                </>}
+                {status === 'invalid' && <>
+                  <h2 className="font-display text-2xl mb-3" style={{ color: '#dc2626' }}>Invalid Link</h2>
+                  <p className="text-slate-500 leading-relaxed mb-4">
+                    This link is invalid or has already been used. If you need help, please <a href="/jobs/hire-talent" className="underline" style={{ color: brand }}>submit a new brief</a>.
+                  </p>
+                </>}
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">

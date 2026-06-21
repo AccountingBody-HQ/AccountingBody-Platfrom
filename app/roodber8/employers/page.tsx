@@ -16,6 +16,7 @@ async function getEmployerBriefs(filters: { search?: string; status?: string; pl
   let query = supabase
     .from('employer_briefs')
     .select('*')
+    .neq('status', 'pending_confirmation')
     .order('created_at', { ascending: false })
   if (filters.status)   query = query.eq('status', filters.status)
   if (filters.platform) query = query.eq('platform', filters.platform)
