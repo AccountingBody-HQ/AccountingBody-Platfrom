@@ -20,8 +20,10 @@ const qualificationOptions = ['ACA / ICAEW','ACCA','CIMA','AAT','ETICPA / CPA','
 const experienceOptions = ['Under 1 year','1-3 years','3-5 years','5-10 years','10+ years']
 const employmentStatusOptions = ['Employed','Self-employed','Between roles','Student']
 const roleTypeOptions = ['Permanent','Contract / Freelance','Remote only','Open to relocation']
-const jurisdictionOptions = ['United Kingdom','Ethiopia','United States','Canada','UAE','European Union','Australia','Other']
-const languageOptions = ['English','Amharic','Afaan Oromoo','Tigrinya','Arabic','French','Spanish','Other']
+const jurisdictionOptionsET = ['United Kingdom','Ethiopia','United States','Canada','UAE','European Union','Australia','Other']
+const jurisdictionOptionsAB = ['United Kingdom','United States','Canada','Australia','European Union','UAE','Singapore','Other']
+const languageOptionsET = ['English','Amharic','Afaan Oromoo','Tigrinya','Arabic','French','Spanish','Other']
+const languageOptionsAB = ['English','Arabic','French','Spanish','Portuguese','Mandarin','Hindi','Other']
 
 export default function FindWorkPage() {
   const isEthioTax = typeof window !== 'undefined' && window.location.hostname.includes('ethiotax.com')
@@ -329,7 +331,7 @@ export default function FindWorkPage() {
                   <div>
                     <label className="block text-sm font-semibold text-navy-950 mb-3">Jurisdictions You Can Work In</label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {jurisdictionOptions.map(opt => (
+                      {(isEthioTax ? jurisdictionOptionsET : jurisdictionOptionsAB).map(opt => (
                         <button key={opt} type="button" onClick={() => toggleMulti(opt, jurisdictions, setJurisdictions)}
                           className="px-3 py-2.5 rounded-lg border text-sm font-medium transition-all text-left"
                           style={{
@@ -346,7 +348,7 @@ export default function FindWorkPage() {
                   <div>
                     <label className="block text-sm font-semibold text-navy-950 mb-3">Languages Spoken</label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {languageOptions.map(opt => (
+                      {(isEthioTax ? languageOptionsET : languageOptionsAB).map(opt => (
                         <button key={opt} type="button" onClick={() => toggleMulti(opt, languages, setLanguages)}
                           className="px-3 py-2.5 rounded-lg border text-sm font-medium transition-all text-left"
                           style={{
