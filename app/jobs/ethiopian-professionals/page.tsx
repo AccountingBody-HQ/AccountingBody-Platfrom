@@ -1,6 +1,10 @@
-'use client'
-
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Ethiopian Finance Professionals | EthioTax Recruitment',
+  description: 'EthioTax places qualified Ethiopian-origin finance professionals in permanent and contract roles across the UK, US, Canada and beyond.',
+}
 
 export default function EthiopianProfessionalsPage() {
   return (
@@ -31,14 +35,14 @@ export default function EthiopianProfessionalsPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link href="/jobs/find-work"
-              className="inline-flex items-center justify-center font-semibold px-6 py-3 rounded-lg text-white transition-colors sm:flex-1"
+              className="inline-flex items-center justify-center font-semibold h-11 px-6 rounded-lg text-white transition-colors hover:opacity-90 sm:flex-1"
               style={{ background: '#C9982A' }}>
-              Register as a candidate
+              Register as a Candidate
             </Link>
             <Link href="/jobs/how-it-works"
-              className="inline-flex items-center justify-center font-semibold px-6 py-3 rounded-lg transition-colors sm:flex-1"
-              style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>
-              How it works
+              className="inline-flex items-center justify-center font-semibold h-11 px-6 rounded-lg transition-colors hover:opacity-80 sm:flex-1"
+              style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)' }}>
+              How It Works
             </Link>
           </div>
         </div>
@@ -97,7 +101,7 @@ export default function EthiopianProfessionalsPage() {
           <div className="text-center mb-14">
             <span className="eyebrow text-gold-600 mb-3 block">Why EthioTax</span>
             <h2 className="font-display text-3xl md:text-4xl text-navy-950 mb-4">We know your credentials. Employers trust our word.</h2>
-            <p className="text-slate-500 text-lg max-w-2xl mx-auto">Most recruitment agencies do not understand Ethiopian qualifications. We do and we advocate for you directly with employers who are ready to hire.</p>
+            <p className="text-slate-500 text-lg max-w-2xl mx-auto">Most recruitment agencies do not understand Ethiopian qualifications. We do — and we advocate for you directly with employers who are ready to hire.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
@@ -164,17 +168,20 @@ export default function EthiopianProfessionalsPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/jobs/find-work"
-              className="inline-flex items-center justify-center font-semibold px-8 py-4 rounded-lg text-white transition-colors text-lg flex-1"
+              className="inline-flex items-center justify-center font-semibold h-11 px-6 rounded-lg text-white transition-colors hover:opacity-90 flex-1"
               style={{ background: '#C9982A' }}>
-              Register as a candidate
+              Register as a Candidate
             </Link>
             <Link href="/jobs/how-it-works"
-              className="inline-flex items-center justify-center font-semibold px-8 py-4 rounded-lg transition-colors text-lg flex-1"
-              style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>
-              How it works
+              className="inline-flex items-center justify-center font-semibold h-11 px-6 rounded-lg transition-colors hover:opacity-80 flex-1"
+              style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)' }}>
+              How It Works
             </Link>
           </div>
-          <p className="text-white/30 text-sm mt-6">Questions? Email us at <a href="mailto:info@accountingbody.com" className="text-white/50 hover:text-white/70 underline">info@accountingbody.com</a></p>
+          <p className="text-white/30 text-sm mt-6">
+            Questions? Email us at{' '}
+            <a href="mailto:info@ethiotax.com" className="text-white/50 hover:text-white/70 underline">info@ethiotax.com</a>
+          </p>
         </div>
       </section>
 
