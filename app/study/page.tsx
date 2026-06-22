@@ -329,6 +329,56 @@ export default async function StudyPage() {
         </div>
       </section>
 
+      {/* JOBS BRIDGE */}
+      <section className="section bg-slate-50 border-t border-slate-100">
+        <div className="container-site">
+          <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] items-center gap-0">
+              <div className="p-8 md:p-10">
+                <span className="eyebrow mb-3 block">Career Placement</span>
+                <h2 className="font-display text-2xl md:text-3xl text-navy-950 mb-3 leading-tight">
+                  The qualification you are studying for today leads to roles we place people in.
+                </h2>
+                <p className="text-slate-500 leading-relaxed mb-6 max-w-xl">
+                  {isEthioTax
+                    ? 'EthioTax works with employers who actively seek qualified Ethiopian-origin finance professionals. Register as a candidate now — your profile will be ready when your qualification is.'
+                    : 'Accounting Body places qualified accountants and finance professionals in permanent and contract roles. Register as a candidate now — your profile will be ready when you are.'}
+                </p>
+                <div className="flex flex-wrap items-center gap-4">
+                  <Link href="/jobs/find-work"
+                    className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold text-white transition-colors"
+                    style={{ background: isEthioTax ? '#1A4731' : '#0C1A3D' }}>
+                    Register as a Candidate
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                  </Link>
+                  <Link href="/jobs"
+                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-navy-950 transition-colors">
+                    Learn how it works
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                  </Link>
+                </div>
+              </div>
+              <div className="hidden lg:flex flex-col gap-3 p-10 border-l border-slate-100 bg-slate-50 min-w-[260px]">
+                {[
+                  { label: 'You apply', sub: 'Register your profile once.' },
+                  { label: 'We match', sub: 'We find roles that suit you.' },
+                  { label: 'You get placed', sub: 'No job boards. No cold applying.' },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 text-white"
+                      style={{ background: isEthioTax ? '#1A4731' : '#0C1A3D' }}>{i + 1}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-navy-950">{item.label}</p>
+                      <p className="text-xs text-slate-500">{item.sub}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="section-navy section relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
