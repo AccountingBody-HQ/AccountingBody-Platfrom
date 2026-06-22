@@ -257,6 +257,22 @@ function ExtIcon() {
 // ── Main Footer ───────────────────────────────────────────────────────────────
 export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
 
+  const jobsColumn: FooterColumn = {
+    title: 'Jobs',
+    links: isEthioTax ? [
+      { label: 'Find Work',                 href: '/jobs/find-work' },
+      { label: 'Hire Talent',               href: '/jobs/hire-talent' },
+      { label: 'Ethiopian Professionals',   href: '/jobs/ethiopian-professionals' },
+      { label: 'How It Works',              href: '/jobs/how-it-works' },
+      { label: '90-Day Guarantee',          href: '/jobs/guarantee' },
+    ] : [
+      { label: 'Find Work',                 href: '/jobs/find-work' },
+      { label: 'Hire Talent',               href: '/jobs/hire-talent' },
+      { label: 'How It Works',              href: '/jobs/how-it-works' },
+      { label: '90-Day Guarantee',          href: '/jobs/guarantee' },
+    ],
+  }
+
   const studyColumn: FooterColumn = {
     title: 'Study',
     links: isEthioTax ? [
@@ -378,7 +394,7 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
 
           {/* ── Link columns ────────────────────────────────────────────── */}
           <div className="lg:col-span-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
-            {[studyColumn, ...(isEthioTax ? [
+            {[studyColumn, jobsColumn, ...(isEthioTax ? [
               {
                 title: 'Practice',
                 links: [
