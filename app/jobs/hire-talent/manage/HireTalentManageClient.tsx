@@ -2,7 +2,8 @@
 import { useState, useEffect, useRef } from 'react'
 import Script from 'next/script'
 
-const jurisdictionOptions = ['United Kingdom','Ethiopia','United States','Canada','UAE','European Union','Australia','Other']
+const jurisdictionOptionsAB = ['United Kingdom','United States','Canada','Australia','European Union','UAE','Singapore','Other']
+const jurisdictionOptionsET = ['United Kingdom','Ethiopia','United States','Canada','UAE','European Union','Australia','Other']
 
 export default function HireTalentManageClient({ isEthioTax: isEthioTaxProp }: { isEthioTax: boolean }) {
   const isEthioTax = isEthioTaxProp
@@ -152,7 +153,7 @@ export default function HireTalentManageClient({ isEthioTax: isEthioTaxProp }: {
                   <select value={form.jurisdiction} onChange={e => setForm({...form, jurisdiction: e.target.value})}
                     className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none" style={{ borderColor: '#e2e8f0' }}>
                     <option value="">Select jurisdiction</option>
-                    {jurisdictionOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                    {(isEthioTax ? jurisdictionOptionsET : jurisdictionOptionsAB).map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
                 </div>
               </div>
