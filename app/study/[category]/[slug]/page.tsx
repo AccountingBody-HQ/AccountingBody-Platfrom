@@ -409,9 +409,9 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                   <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(12,26,61,0.6)' }}>
                     {platformName} Recruitment
                   </p>
-                  <h2 className="font-display text-2xl md:text-3xl font-bold mb-3 leading-tight" style={{ color: brand, letterSpacing: '-0.02em' }}>
-                    {article.examBody?.[0]
-                      ? `Studying ${article.examBody[0].toUpperCase()} today? We place qualified ${article.examBody[0].toUpperCase()} professionals.`
+                  <h2 className="font-display text-2xl md:text-3xl font-bold mb-3 leading-tight" style={{ color: '#0C1A3D', letterSpacing: '-0.02em' }}>
+                    {category
+                      ? `Studying ${category.toUpperCase()} today? We place qualified ${category.toUpperCase()} professionals.`
                       : isEthioTax
                         ? 'Ready to take the next step? We place Ethiopian-origin finance professionals globally.'
                         : 'Ready to take the next step? We place qualified accountants and finance professionals.'}
