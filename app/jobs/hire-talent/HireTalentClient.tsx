@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Script from 'next/script'
 
@@ -126,6 +126,36 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
   })
   const [fieldErrors, setFieldErrors] = useState<Record<string,boolean>>({})
   const [editToken, setEditToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get('edit')
+    if (!token) return
+    setEditToken(token)
+    fetch('/api/recruitment/fetch-brief?token=' + token)
+      .then(r => r.json())
+      .then(({ data }) => {
+        if (!data) return
+        setForm({
+          company_name:     data.company_name ?? '',
+          contact_name:     data.contact_name ?? '',
+          contact_email:    data.contact_email ?? '',
+          contact_phone:    data.contact_phone ?? '',
+          role_title:       data.role_title ?? '',
+          contract_type:    data.contract_type ?? '',
+          location:         data.location ?? '',
+          salary_budget:    data.salary_budget ?? '',
+          start_date:       data.start_date ?? '',
+          must_haves:       data.must_haves ?? '',
+          nice_to_haves:    data.nice_to_haves ?? '',
+          role_description: data.role_description ?? '',
+          jurisdiction:     data.jurisdiction ?? '',
+          _h: '',
+        })
+      })
+      .catch(console.error)
+  }, [])
+
   const topRef = useRef<HTMLDivElement>(null)
   const turnstileWidgetId = useRef<string | null>(null)
 
