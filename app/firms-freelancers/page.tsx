@@ -210,50 +210,124 @@ export default async function FirmsFreelancersPage() {
         </div>
       </section>
 
-      {/* JOBS CROSS-LINK */}
-      <section className="section bg-white border-t border-slate-200">
-        <div className="container-site">
-          <div className="rounded-2xl border border-slate-200 overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] items-center">
-              <div className="p-8 md:p-10">
-                <span className="eyebrow mb-3 block">Also Looking for Work?</span>
-                <h2 className="font-display text-2xl md:text-3xl text-navy-950 mb-3 leading-tight">
-                  Network partners can also register as candidates.
-                </h2>
-                <p className="text-slate-500 leading-relaxed mb-6 max-w-xl">
-                  {isEthioTax
-                    ? 'Many EthioTax network professionals are also open to permanent or contract employment. If you are qualified and open to new roles, register as a candidate — we will match you to opportunities separately from your network membership.'
-                    : 'Many Accounting Body network professionals are also open to permanent or contract employment. If you are qualified and open to new roles, register as a candidate — we will match you to opportunities separately from your network membership.'}
-                </p>
-                <div className="flex flex-wrap items-center gap-4">
-                  <Link href="/jobs/find-work"
-                    className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold text-white transition-colors"
-                    style={{ background: brand }}>
-                    Register as a Candidate
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                  </Link>
-                  <Link href="/jobs"
-                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-navy-950 transition-colors">
-                    How placement works
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                  </Link>
-                </div>
+      {/* JOBS CROSS-LINK — gold homepage design */}
+      <section className="relative overflow-hidden" style={{ background: '#C9982A' }}>
+        <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
+          style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+        <div className="absolute top-0 left-0 right-0 h-0.5"
+          style={{ background: isEthioTax ? 'rgba(15,45,30,0.3)' : 'rgba(12,26,61,0.3)' }} />
+        <div className="container-site relative z-10 py-16 md:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+
+            {/* LEFT */}
+            <div className="lg:col-span-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-7"
+                style={{ background: 'rgba(0,0,0,0.12)', border: '1px solid rgba(0,0,0,0.15)' }}>
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D' }} />
+                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
+                  {isEthioTax ? 'EthioTax Recruitment' : 'Accounting Body Recruitment'}
+                </span>
               </div>
-              <div className="hidden lg:flex flex-col justify-center gap-4 p-10 border-l border-slate-100 bg-slate-50 min-w-[240px]">
-                <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5 shrink-0" fill="none" stroke="#C9982A" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  <span className="text-sm text-slate-600">One registration — we do the matching.</span>
+              <h2 className="font-display leading-[1.06] mb-6"
+                style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.03em', color: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
+                {isEthioTax ? (
+                  <>Network partners<br /><span style={{ opacity: 0.7 }}>can also register</span><br />as candidates.</>
+                ) : (
+                  <>Network partners<br /><span style={{ opacity: 0.7 }}>can also register</span><br />as candidates.</>
+                )}
+              </h2>
+              <p className="text-base leading-relaxed mb-8 max-w-lg"
+                style={{ color: isEthioTax ? 'rgba(15,45,30,0.75)' : 'rgba(12,26,61,0.75)' }}>
+                {isEthioTax
+                  ? 'Many EthioTax network professionals are also open to permanent or contract employment. Register as a candidate — we will match you to opportunities separately from your network membership.'
+                  : 'Many Accounting Body network professionals are also open to permanent or contract employment. Register as a candidate — we will match you to opportunities separately from your network membership.'}
+              </p>
+              <div className="flex flex-col gap-3 mb-10">
+                {(isEthioTax ? [
+                  'Ethiopian-origin finance professionals actively placed',
+                  'ETICPA, ACCA, CIMA and CPA credentials recognised',
+                  '90-day replacement guarantee on every placement',
+                ] : [
+                  'Accounting and finance professionals only',
+                  'Every candidate personally reviewed before activation',
+                  '90-day replacement guarantee on every permanent placement',
+                ]).map(point => (
+                  <div key={point} className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+                      style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
+                      <svg className="w-2.5 h-2.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium" style={{ color: isEthioTax ? 'rgba(15,45,30,0.85)' : 'rgba(12,26,61,0.85)' }}>
+                      {point}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link href="/jobs/find-work"
+                  className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-sm"
+                  style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
+                  Register as a Candidate
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                </Link>
+                <Link href="/jobs/how-it-works"
+                  className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold transition-all hover:opacity-80 border-2"
+                  style={{ borderColor: isEthioTax ? '#0f2d1e' : '#0C1A3D', color: isEthioTax ? '#0f2d1e' : '#0C1A3D', background: 'transparent' }}>
+                  How it works
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                </Link>
+              </div>
+            </div>
+
+            {/* RIGHT — dark stats card */}
+            <div className="lg:col-span-6">
+              <div className="rounded-2xl overflow-hidden"
+                style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
+                <div className="px-8 pt-7 pb-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>
+                      Why {isEthioTax ? 'EthioTax' : 'Accounting Body'}
+                    </p>
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                      style={{ background: 'rgba(201,152,42,0.15)', color: '#C9982A', border: '1px solid rgba(201,152,42,0.3)' }}>
+                      Not a job board
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5 shrink-0" fill="none" stroke="#C9982A" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                  <span className="text-sm text-slate-600">Your profile is never made public.</span>
+                <div className="grid grid-cols-2">
+                  {[
+                    { value: 'Managed',  label: 'End-to-end placement',  sub: 'We handle every step' },
+                    { value: '90 Days',  label: 'Replacement guarantee', sub: 'On every permanent role' },
+                    { value: '100%',     label: 'Vetted candidates',     sub: 'Every profile reviewed' },
+                    { value: 'Separate', label: 'From network membership', sub: 'One profile — two opportunities' },
+                  ].map((stat, i) => (
+                    <div key={stat.label} className="p-6"
+                      style={{
+                        borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                        borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                      }}>
+                      <span className="font-display text-2xl font-bold text-white block mb-1">{stat.value}</span>
+                      <span className="text-xs font-semibold block mb-0.5" style={{ color: '#C9982A' }}>{stat.label}</span>
+                      <span className="text-xs text-white/35">{stat.sub}</span>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5 shrink-0" fill="none" stroke="#C9982A" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2h5m6 0a3 3 0 100-6 3 3 0 000 6z" /></svg>
-                  <span className="text-sm text-slate-600">Separate from your network membership.</span>
+                <div className="px-8 py-5 flex items-center justify-between"
+                  style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(201,152,42,0.06)' }}>
+                  <p className="text-xs text-white/40 leading-relaxed">
+                    Your profile is never made public.{' '}
+                    <span className="text-white/60 font-medium">We contact you only when a role matches.</span>
+                  </p>
+                  <Link href="/jobs" className="text-xs font-semibold whitespace-nowrap ml-4 hover:opacity-80 transition-opacity"
+                    style={{ color: '#C9982A' }}>
+                    Learn more →
+                  </Link>
                 </div>
               </div>
             </div>
+
           </div>
         </div>
       </section>
