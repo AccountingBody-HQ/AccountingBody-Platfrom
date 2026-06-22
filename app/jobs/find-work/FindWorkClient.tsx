@@ -23,6 +23,17 @@ const roleTypeOptions = ['Permanent','Contract / Freelance','Remote only','Open 
 const jurisdictionOptionsET = ['United Kingdom','Ethiopia','United States','Canada','UAE','European Union','Australia','Other']
 const jurisdictionOptionsAB = ['United Kingdom','United States','Canada','Australia','European Union','UAE','Singapore','Other']
 const languageOptionsET = ['English','Amharic','Afaan Oromoo','Tigrinya','Arabic','French','Spanish','Other']
+
+const countryOptionsAB = [
+  'United Kingdom','United States','Canada','Australia','New Zealand',
+  'Ireland','Singapore','UAE','Saudi Arabia','Qatar','South Africa',
+  'Germany','France','Netherlands','Sweden','Switzerland','Other',
+]
+const countryOptionsET = [
+  'United Kingdom','Ethiopia','United States','Canada','UAE','Saudi Arabia',
+  'Australia','Sweden','Germany','Netherlands','France','South Africa',
+  'Qatar','Kenya','Other',
+]
 const languageOptionsAB = ['English','Arabic','French','Spanish','Portuguese','Mandarin','Hindi','Other']
 
 export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthioTax: boolean }) {
@@ -246,9 +257,13 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-navy-950 mb-2">Country</label>
-                      <input type="text" value={form.location_country} onChange={e => setForm({...form, location_country: e.target.value})}
-                        className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
-                        placeholder="e.g. United Kingdom" />
+                      <select value={form.location_country} onChange={e => setForm({...form, location_country: e.target.value})}
+                        className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white">
+                        <option value="">Select country</option>
+                        {(isEthioTax ? countryOptionsET : countryOptionsAB).map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>
