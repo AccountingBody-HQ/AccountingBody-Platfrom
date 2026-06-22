@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import { getArticleBySlug, resolveCanonicalUrl } from '@/lib/sanity-queries'
 import PortableTextRenderer from '@/components/PortableTextRenderer'
 
@@ -38,6 +39,10 @@ const EXAM_BODY_BADGE: Record<string, string> = {
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  const brand = isEthioTax ? '#1A4731' : '#0C1A3D'
+  const platformName = isEthioTax ? 'EthioTax' : 'Accounting Body'
   const article = await getArticleBySlug(slug)
   if (!article) notFound()
   if (!article) return null
@@ -342,6 +347,49 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           </div>
         </div>
       </section>
+
+      {/* Jobs placement banner */}
+      <section className="border-t border-slate-200 bg-white py-12">
+        <div className="container-site">
+          <div className="rounded-2xl overflow-hidden" style={{ background: '#C9982A' }}>
+            <div className="relative px-8 py-10 md:px-12 md:py-12">
+              <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
+                style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+              <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div className="max-w-xl">
+                  <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(12,26,61,0.6)' }}>
+                    {platformName} Recruitment
+                  </p>
+                  <h2 className="font-display text-2xl md:text-3xl font-bold mb-3 leading-tight" style={{ color: '#0C1A3D', letterSpacing: '-0.02em' }}>
+                    {isEthioTax
+                      ? 'Ready to take the next step? We place Ethiopian-origin finance professionals globally.'
+                      : 'Ready to take the next step? We place qualified accountants and finance professionals.'}
+                  </h2>
+                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(12,26,61,0.7)' }}>
+                    {isEthioTax
+                      ? 'Register once. We match you to roles and manage the introduction — you never approach employers directly.'
+                      : 'Register once. We search our employer network on your behalf and manage every introduction.'}
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                  <Link href="/jobs/find-work"
+                    className="h-11 px-6 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+                    style={{ background: brand, color: '#fff' }}>
+                    Register as a Candidate
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                  </Link>
+                  <Link href="/jobs/how-it-works"
+                    className="h-11 px-6 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-80 border-2"
+                    style={{ borderColor: brand, color: brand, background: 'transparent' }}>
+                    How it works
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>
   )
 }
