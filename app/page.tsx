@@ -646,110 +646,109 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       {/* JOBS BANNER — platform-aware
           AB: Specialist recruitment banner → Find Work / Hire Talent
 
-      {/* JOBS SECTION v4 — platform-aware
-          Light background — distinct from dark hero above
-          AB: white + navy accent | ET: light green tint + green accent
-          Identity through typography and layout weight, not darkness */}
-      <section
-        className="relative overflow-hidden"
-        style={{ background: isEthioTax ? '#f0f7f4' : '#ffffff' }}
-      >
-        {/* Strong top accent bar */}
-        <div className="h-1.5 w-full"
-          style={{ background: isEthioTax ? '#1A4731' : '#0C1A3D' }} />
+      {/* JOBS SECTION v6 — platform-aware
+          Gold background — unmistakably distinct from dark hero and white insights
+          AB: #C9982A gold + navy text | ET: #C9982A gold + deep forest text
+          Gold is owned by no other section — this is the platform's statement section */}
+      <section className="relative overflow-hidden" style={{ background: '#C9982A' }}>
 
-        <div className="container-site py-16 md:py-24">
+        {/* Subtle texture */}
+        <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(0,0,0,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.5) 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+          }} />
 
-          {/* Section label row */}
-          <div className="flex items-center gap-4 mb-12">
-            <div className="h-10 w-1.5 rounded-full"
-              style={{ background: '#C9982A' }} />
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em]"
-                style={{ color: isEthioTax ? '#1A4731' : '#0C1A3D' }}>
-                {isEthioTax ? 'EthioTax Recruitment' : 'Accounting Body Recruitment'}
-              </p>
-              <p className="text-xs text-slate-400 mt-0.5">
-                A managed service — not a job board
-              </p>
-            </div>
-          </div>
+        {/* Dark top border */}
+        <div className="absolute top-0 left-0 right-0 h-0.5"
+          style={{ background: isEthioTax ? 'rgba(15,45,30,0.3)' : 'rgba(12,26,61,0.3)' }} />
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+        <div className="container-site relative z-10 py-16 md:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
 
-            {/* LEFT — 7 cols — Headline + messaging + CTAs */}
-            <div className="lg:col-span-7">
-              <h2 className="font-display leading-[1.05] mb-6"
+            {/* LEFT — 6 cols */}
+            <div className="lg:col-span-6">
+
+              {/* Eyebrow */}
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-7"
+                style={{ background: 'rgba(0,0,0,0.12)', border: '1px solid rgba(0,0,0,0.15)' }}>
+                <div className="w-1.5 h-1.5 rounded-full"
+                  style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D' }} />
+                <span className="text-xs font-bold uppercase tracking-widest"
+                  style={{ color: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
+                  {isEthioTax ? 'EthioTax Recruitment' : 'Accounting Body Recruitment'}
+                </span>
+              </div>
+
+              {/* Headline */}
+              <h2 className="font-display leading-[1.06] mb-6"
                 style={{
-                  fontSize: 'clamp(2.4rem, 5vw, 3.75rem)',
+                  fontSize: 'clamp(2.2rem, 4.5vw, 3.5rem)',
                   letterSpacing: '-0.03em',
                   color: isEthioTax ? '#0f2d1e' : '#0C1A3D',
                 }}>
                 {isEthioTax ? (
-                  <>
-                    Finance careers<br />
-                    <span style={{ color: '#C9982A' }}>built for Ethiopia</span><br />
-                    and its diaspora.
-                  </>
+                  <>Finance careers<br />
+                  <span style={{ opacity: 0.75 }}>built for Ethiopia</span><br />
+                  and its diaspora.</>
                 ) : (
-                  <>
-                    Specialist<br />
-                    <span style={{ color: '#C9982A' }}>accounting & finance</span><br />
-                    recruitment.
-                  </>
+                  <>Specialist<br />
+                  <span style={{ opacity: 0.75 }}>accounting & finance</span><br />
+                  recruitment.</>
                 )}
               </h2>
 
-              <p className="text-slate-500 text-lg leading-relaxed mb-8 max-w-xl">
+              {/* Body */}
+              <p className="text-base leading-relaxed mb-8 max-w-lg"
+                style={{ color: isEthioTax ? 'rgba(15,45,30,0.75)' : 'rgba(12,26,61,0.75)' }}>
                 {isEthioTax
                   ? 'ACCA, CIMA, ETICPA or CPA qualified? We place Ethiopian finance professionals in permanent and contract roles across the UK, USA, Canada and beyond. You never deal with employers directly — we manage every step.'
-                  : 'We place accounting and finance professionals in permanent and contract roles. Fully managed — we find the right match, negotiate on your behalf, and guarantee every placement for 90 days.'}
+                  : 'We place accounting and finance professionals in permanent and contract roles across the UK and internationally. Fully managed — we find the right match, negotiate on your behalf, and guarantee every placement for 90 days.'}
               </p>
 
               {/* Trust points */}
-              <div className="flex flex-col gap-3.5 mb-10">
+              <div className="flex flex-col gap-3 mb-10">
                 {(isEthioTax ? [
                   'Ethiopian-origin finance professionals actively placed',
                   'ETICPA, ACCA, CIMA and CPA credentials recognised',
                   '90-day replacement guarantee on every placement',
                 ] : [
-                  'Accounting and finance professionals only — no generalist roles',
+                  'Accounting and finance professionals only',
                   'Every candidate personally reviewed before activation',
                   '90-day replacement guarantee on every permanent placement',
                 ]).map(point => (
                   <div key={point} className="flex items-center gap-3">
                     <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                      style={{ background: isEthioTax ? '#1A4731' : '#0C1A3D' }}>
+                      style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
                       <svg className="w-2.5 h-2.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <span className="text-sm font-medium text-slate-600">{point}</span>
+                    <span className="text-sm font-medium"
+                      style={{ color: isEthioTax ? 'rgba(15,45,30,0.85)' : 'rgba(12,26,61,0.85)' }}>
+                      {point}
+                    </span>
                   </div>
                 ))}
               </div>
 
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-3">
-                <Link
-                  href="/jobs/find-work"
-                  className="inline-flex items-center justify-center gap-2 h-13 px-8 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-sm"
-                  style={{ background: isEthioTax ? '#1A4731' : '#0C1A3D' }}
-                >
+                <Link href="/jobs/find-work"
+                  className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-sm"
+                  style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
                   {isEthioTax ? 'Register as a candidate' : 'Find work'}
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
                 </Link>
-                <Link
-                  href={isEthioTax ? '/jobs/ethiopian-professionals' : '/jobs/hire-talent'}
-                  className="inline-flex items-center justify-center gap-2 h-13 px-8 rounded-xl text-sm font-semibold border-2 transition-all hover:opacity-80"
+                <Link href={isEthioTax ? '/jobs/ethiopian-professionals' : '/jobs/hire-talent'}
+                  className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold transition-all hover:opacity-80 border-2"
                   style={{
-                    borderColor: isEthioTax ? '#1A4731' : '#0C1A3D',
-                    color: isEthioTax ? '#1A4731' : '#0C1A3D',
+                    borderColor: isEthioTax ? '#0f2d1e' : '#0C1A3D',
+                    color: isEthioTax ? '#0f2d1e' : '#0C1A3D',
                     background: 'transparent',
-                  }}
-                >
+                  }}>
                   {isEthioTax ? 'Ethiopian professionals' : 'Hire talent'}
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -758,80 +757,78 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               </div>
             </div>
 
-            {/* RIGHT — 5 cols — Stats + managed service statement */}
-            <div className="lg:col-span-5">
-              {/* Stats grid — oversized numbers */}
-              <div className="grid grid-cols-2 gap-0 rounded-2xl overflow-hidden border"
-                style={{ borderColor: isEthioTax ? '#c8e0d4' : '#e2e8f0' }}>
-                {(isEthioTax ? [
-                  { value: 'Managed',  label: 'End-to-end placement' },
-                  { value: '90 Days',  label: 'Replacement guarantee' },
-                  { value: '100%',     label: 'Vetted candidates' },
-                  { value: 'Global',   label: 'Diaspora coverage' },
-                ] : [
-                  { value: 'Managed',  label: 'End-to-end service' },
-                  { value: '90 Days',  label: 'Replacement guarantee' },
-                  { value: '100%',     label: 'Vetted candidates' },
-                  { value: 'Finance',  label: 'Specialists only' },
-                ]).map((stat, i) => (
-                  <div key={stat.label}
-                    className="p-6 flex flex-col"
-                    style={{
-                      background: i % 2 === 0
-                        ? (isEthioTax ? '#ffffff' : '#ffffff')
-                        : (isEthioTax ? '#f0f7f4' : '#f8fafc'),
-                      borderRight: i % 2 === 0 ? `1px solid ${isEthioTax ? '#c8e0d4' : '#e2e8f0'}` : 'none',
-                      borderBottom: i < 2 ? `1px solid ${isEthioTax ? '#c8e0d4' : '#e2e8f0'}` : 'none',
-                    }}>
-                    <span className="font-display text-2xl font-bold mb-1"
-                      style={{ color: isEthioTax ? '#1A4731' : '#0C1A3D' }}>
-                      {stat.value}
-                    </span>
-                    <span className="text-xs font-semibold text-slate-500">{stat.label}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Managed service statement */}
-              <div className="mt-5 p-5 rounded-xl flex items-start gap-4"
+            {/* RIGHT — 6 cols — Stats card */}
+            <div className="lg:col-span-6">
+              <div className="rounded-2xl overflow-hidden"
                 style={{
-                  background: isEthioTax ? '#1A4731' : '#0C1A3D',
+                  background: isEthioTax ? '#0f2d1e' : '#0C1A3D',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
                 }}>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ background: 'rgba(201,152,42,0.2)' }}>
-                  <svg className="w-4 h-4" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-white mb-1">Not a job board. A managed service.</p>
-                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                    Candidates and employers never deal with each other directly.{' '}
-                    {isEthioTax ? 'EthioTax' : 'Accounting Body'} sits in the middle of every placement.
-                  </p>
-                </div>
-              </div>
 
-              {/* Learn more */}
-              <div className="mt-4 text-right">
-                <Link href="/jobs/how-it-works"
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold transition-colors hover:opacity-70"
-                  style={{ color: isEthioTax ? '#1A4731' : '#0C1A3D' }}>
-                  How our recruitment works
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </Link>
+                {/* Card header */}
+                <div className="px-8 pt-7 pb-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>
+                      Why {isEthioTax ? 'EthioTax' : 'Accounting Body'}
+                    </p>
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                      style={{ background: 'rgba(201,152,42,0.15)', color: '#C9982A', border: '1px solid rgba(201,152,42,0.3)' }}>
+                      Not a job board
+                    </span>
+                  </div>
+                </div>
+
+                {/* Stats grid */}
+                <div className="grid grid-cols-2">
+                  {(isEthioTax ? [
+                    { value: 'Managed',  label: 'End-to-end placement',  sub: 'You never deal with employers' },
+                    { value: '90 Days',  label: 'Replacement guarantee', sub: 'On every permanent role' },
+                    { value: '100%',     label: 'Vetted candidates',     sub: 'Every profile reviewed' },
+                    { value: 'Global',   label: 'Diaspora coverage',     sub: 'UK · USA · Canada · UAE' },
+                  ] : [
+                    { value: 'Managed',  label: 'End-to-end service',    sub: 'We handle every step' },
+                    { value: '90 Days',  label: 'Replacement guarantee', sub: 'On every permanent role' },
+                    { value: '100%',     label: 'Vetted candidates',     sub: 'Every profile reviewed' },
+                    { value: 'Finance',  label: 'Specialists only',      sub: 'Accounting, tax, audit, payroll' },
+                  ]).map((stat, i) => (
+                    <div key={stat.label} className="p-6"
+                      style={{
+                        borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                        borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                      }}>
+                      <span className="font-display text-2xl font-bold text-white block mb-1">{stat.value}</span>
+                      <span className="text-xs font-semibold block mb-0.5" style={{ color: '#C9982A' }}>{stat.label}</span>
+                      <span className="text-xs text-white/35">{stat.sub}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Card footer */}
+                <div className="px-8 py-5 flex items-center justify-between"
+                  style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(201,152,42,0.06)' }}>
+                  <p className="text-xs text-white/40 leading-relaxed">
+                    Candidates and employers never interact directly.{' '}
+                    <span className="text-white/60 font-medium">
+                      {isEthioTax ? 'EthioTax' : 'Accounting Body'} manages every placement.
+                    </span>
+                  </p>
+                  <Link href="/jobs/how-it-works"
+                    className="text-xs font-semibold whitespace-nowrap ml-4 hover:opacity-80 transition-opacity"
+                    style={{ color: '#C9982A' }}>
+                    How it works →
+                  </Link>
+                </div>
               </div>
             </div>
 
           </div>
         </div>
 
-        {/* Bottom border */}
-        <div className="h-px w-full"
-          style={{ background: isEthioTax ? '#c8e0d4' : '#e2e8f0' }} />
+        {/* Dark bottom border */}
+        <div className="absolute bottom-0 left-0 right-0 h-0.5"
+          style={{ background: isEthioTax ? 'rgba(15,45,30,0.3)' : 'rgba(12,26,61,0.3)' }} />
       </section>
+
 
 
 
