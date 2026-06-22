@@ -239,14 +239,14 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
     <div className="flex items-center justify-between pt-4">
       {currentStep > 1
         ? <button type="button" onClick={handleBack}
-            className="flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors">
+            className="flex items-center gap-2 text-sm font-semibold h-11 px-6 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" /></svg>
             Back
           </button>
         : <div />
       }
       <button type="button" onClick={handleNext}
-        className="flex items-center gap-2 text-sm font-semibold px-6 py-2.5 rounded-lg text-white transition-colors"
+        className="flex items-center gap-2 text-sm font-semibold h-11 px-6 rounded-lg text-white transition-colors"
         style={{ background: brand }}>
         Continue
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
@@ -558,12 +558,12 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                           }} />
                           <div className="flex items-center justify-between">
                             <button type="button" onClick={handleBack}
-                              className="flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors">
+                              className="flex items-center gap-2 text-sm font-semibold h-11 px-6 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" /></svg>
                               Back
                             </button>
                             <button type="submit" disabled={status === 'loading'}
-                              className="text-white font-semibold h-12 px-8 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                              className="text-white font-semibold h-11 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                               style={{ background: brand }}>
                               {status === 'loading' ? 'Submitting...' : 'Submit Registration'}
                               {status !== 'loading' && (
