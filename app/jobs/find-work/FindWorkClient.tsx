@@ -43,10 +43,7 @@ function ProgressBar({ currentStep, brand }: { currentStep: number; brand: strin
           <div key={step.number} className="flex flex-col items-center" style={{ width: '20%' }}>
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mb-1 transition-all"
-              style={{
-                background: currentStep >= step.number ? brand : '#e2e8f0',
-                color: currentStep >= step.number ? '#fff' : '#94a3b8',
-              }}
+              style={{ background: currentStep >= step.number ? brand : '#e2e8f0', color: currentStep >= step.number ? '#fff' : '#94a3b8' }}
             >
               {currentStep > step.number
                 ? <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
@@ -59,14 +56,73 @@ function ProgressBar({ currentStep, brand }: { currentStep: number; brand: strin
         ))}
       </div>
       <div className="relative h-1.5 rounded-full bg-slate-200 overflow-hidden">
-        <div
-          className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
-          style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%`, background: brand }}
-        />
+        <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
+          style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%`, background: brand }} />
       </div>
       <div className="flex sm:hidden justify-between items-center mt-2">
         <span className="text-xs text-slate-400">Step {currentStep} of {STEPS.length}</span>
         <span className="text-xs font-semibold" style={{ color: brand }}>{STEPS[currentStep - 1].label}</span>
+      </div>
+    </div>
+  )
+}
+
+function TrustPanel({ brand, isEthioTax }: { brand: string; isEthioTax: boolean }) {
+  const whyItems = [
+    {
+      icon: <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="#C9982A" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2h5m6 0a3 3 0 100-6 3 3 0 000 6z" /></svg>,
+      text: 'We match you to roles — you never approach employers directly.',
+    },
+    {
+      icon: <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="#C9982A" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>,
+      text: 'Your profile is private. It is never posted publicly.',
+    },
+    {
+      icon: <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="#C9982A" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+      text: 'Every registration is reviewed personally by our team.',
+    },
+    {
+      icon: <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="#C9982A" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" /></svg>,
+      text: isEthioTax ? 'Specialists in placing Ethiopian-origin finance professionals globally.' : 'Specialists in accounting and finance — nothing else.',
+    },
+  ]
+  const nextSteps = [
+    'Submit your registration.',
+    'Verify your email address.',
+    'Our team reviews your profile personally.',
+    'We contact you only when a suitable role becomes available.',
+  ]
+  return (
+    <div className="hidden lg:block">
+      <div className="sticky top-8 space-y-4">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <h3 className="font-display text-base text-navy-950 mb-4">Why register with us?</h3>
+          <ul className="space-y-3">
+            {whyItems.map((item, i) => (
+              <li key={i} className="flex items-start gap-2.5">
+                {item.icon}
+                <span className="text-sm text-slate-600 leading-snug">{item.text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <h3 className="font-display text-base text-navy-950 mb-4">What happens next?</h3>
+          <ol className="space-y-3">
+            {nextSteps.map((step, i) => (
+              <li key={i} className="flex items-start gap-3">
+                <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
+                  style={{ background: brand, color: '#fff' }}>{i + 1}</span>
+                <span className="text-sm text-slate-600 leading-snug">{step}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <div className="rounded-xl border border-slate-200 p-5" style={{ background: '#f8f9ff' }}>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            <span className="font-semibold text-navy-950">Your data is safe.</span> We will never share your details with any employer without your prior knowledge. Your profile is never made public. You can request deletion at any time.
+          </p>
+        </div>
       </div>
     </div>
   )
@@ -78,7 +134,6 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
   const platformName = isEthioTax ? 'EthioTax' : 'Accounting Body'
 
   const [currentStep, setCurrentStep] = useState(1)
-
   const [form, setForm] = useState({
     full_name: '', email: '', phone: '', location_city: '', location_country: '',
     linkedin_url: '', professional_role: '', qualification: '', years_experience: '',
@@ -99,7 +154,6 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
     return 'idle'
   })
   const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({})
-
   const turnstileWidgetId = useRef<string | null>(null)
   const topRef = useRef<HTMLDivElement>(null)
 
@@ -107,9 +161,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
     setter(current.includes(value) ? current.filter(x => x !== value) : [...current, value])
   }
 
-  const scrollTop = () => {
-    topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
+  const scrollTop = () => topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
   const validateStep = (step: number): Record<string, boolean> => {
     const errors: Record<string, boolean> = {}
@@ -135,11 +187,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
 
   const handleNext = () => {
     const errors = validateStep(currentStep)
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors)
-      scrollTop()
-      return
-    }
+    if (Object.keys(errors).length > 0) { setFieldErrors(errors); scrollTop(); return }
     setFieldErrors({})
     setCurrentStep(s => s + 1)
     scrollTop()
@@ -154,10 +202,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const errors = validateStep(5)
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors)
-      return
-    }
+    if (Object.keys(errors).length > 0) { setFieldErrors(errors); return }
     setFieldErrors({})
     setStatus('loading')
     const token = (document.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement)?.value ?? ''
@@ -190,7 +235,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
   const errStyle = (field: string) => fieldErrors[field] ? { borderColor: '#C9982A' } : {}
   const errLabel = (field: string) => ({ color: fieldErrors[field] ? '#C9982A' : brand })
 
-  const NavButtons = ({ isLast = false }: { isLast?: boolean }) => (
+  const NavButtons = () => (
     <div className="flex items-center justify-between pt-4">
       {currentStep > 1
         ? <button type="button" onClick={handleBack}
@@ -200,14 +245,12 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
           </button>
         : <div />
       }
-      {!isLast && (
-        <button type="button" onClick={handleNext}
-          className="flex items-center gap-2 text-sm font-semibold px-6 py-2.5 rounded-lg text-white transition-colors"
-          style={{ background: brand }}>
-          Continue
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-        </button>
-      )}
+      <button type="button" onClick={handleNext}
+        className="flex items-center gap-2 text-sm font-semibold px-6 py-2.5 rounded-lg text-white transition-colors"
+        style={{ background: brand }}>
+        Continue
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+      </button>
     </div>
   )
 
@@ -216,6 +259,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
       <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
       <main className="min-h-screen bg-surface">
 
+        {/* HERO */}
         <section className="relative overflow-hidden py-16 md:py-20" style={{ background: brand }}>
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-20"
@@ -243,305 +287,306 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
           </div>
         </section>
 
+        {/* MAIN CONTENT */}
         <section className="py-16 px-6">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-10 items-start">
 
-            {(status === 'success' || status === 'verified' || status === 'already' || status === 'invalid') ? (
-              <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
-                  style={{ background: status === 'invalid' ? '#fee2e2' : '#f0fdf4' }}>
-                  {status === 'invalid'
-                    ? <svg className="w-8 h-8" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                    : <svg className="w-8 h-8" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-                  }
-                </div>
-                {status === 'success' && <>
-                  <h2 className="font-display text-2xl mb-3" style={{ color: brand }}>Registration Received</h2>
-                  <p className="text-slate-500 leading-relaxed mb-4">Thank you for registering. We have sent a verification link to your email address. Please click it to confirm your email — your application will not be reviewed until you do.</p>
-                  <p className="text-xs text-slate-400 text-center">Did not receive the email? Check your spam folder.</p>
-                </>}
-                {status === 'verified' && <>
-                  <h2 className="font-display text-2xl mb-3" style={{ color: brand }}>Email Verified</h2>
-                  <p className="text-slate-500 leading-relaxed mb-4">Your email address has been confirmed. Your profile is now with our team for review. We will be in touch only when a suitable role becomes available.</p>
-                  <p className="text-xs text-slate-400 text-center">You do not need to do anything else.</p>
-                </>}
-                {status === 'already' && <>
-                  <h2 className="font-display text-2xl mb-3" style={{ color: brand }}>Already Verified</h2>
-                  <p className="text-slate-500 leading-relaxed max-w-md mx-auto">Your email address has already been verified. Your profile is with our team for review.</p>
-                </>}
-                {status === 'invalid' && <>
-                  <h2 className="font-display text-2xl mb-3" style={{ color: '#dc2626' }}>Invalid Link</h2>
-                  <p className="text-slate-500 leading-relaxed max-w-md mx-auto">This verification link is invalid or has already been used. If you believe this is an error, please <a href="/jobs/find-work" style={{ color: brand, textDecoration: 'underline' }}>register again</a>.</p>
-                </>}
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
-
-                <div ref={topRef} />
-
-                <ProgressBar currentStep={currentStep} brand={brand} />
-
-                {currentStep === 1 && (
-                  <div className="rounded-xl border p-5" style={{ background: '#f8f9ff', borderColor: '#e0e4f0' }}>
-                    <p className="text-sm font-semibold text-navy-950 mb-1">How this works</p>
-                    <p className="text-sm text-slate-500 leading-relaxed">
-                      Complete this form carefully — we review every registration personally. Once approved, we will contact you only when a role matches your profile. Your details are never shared with any employer without your prior knowledge.
-                    </p>
+              {/* FORM COLUMN */}
+              <div>
+                {(status === 'success' || status === 'verified' || status === 'already' || status === 'invalid') ? (
+                  <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm">
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
+                      style={{ background: status === 'invalid' ? '#fee2e2' : '#f0fdf4' }}>
+                      {status === 'invalid'
+                        ? <svg className="w-8 h-8" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        : <svg className="w-8 h-8" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                      }
+                    </div>
+                    {status === 'success' && <>
+                      <h2 className="font-display text-2xl mb-3" style={{ color: brand }}>Registration Received</h2>
+                      <p className="text-slate-500 leading-relaxed mb-4">Thank you for registering. We have sent a verification link to your email address. Please click it to confirm your email — your application will not be reviewed until you do.</p>
+                      <p className="text-xs text-slate-400 text-center">Did not receive the email? Check your spam folder.</p>
+                    </>}
+                    {status === 'verified' && <>
+                      <h2 className="font-display text-2xl mb-3" style={{ color: brand }}>Email Verified</h2>
+                      <p className="text-slate-500 leading-relaxed mb-4">Your email address has been confirmed. Your profile is now with our team for review. We will be in touch only when a suitable role becomes available.</p>
+                      <p className="text-xs text-slate-400 text-center">You do not need to do anything else.</p>
+                    </>}
+                    {status === 'already' && <>
+                      <h2 className="font-display text-2xl mb-3" style={{ color: brand }}>Already Verified</h2>
+                      <p className="text-slate-500 leading-relaxed max-w-md mx-auto">Your email address has already been verified. Your profile is with our team for review.</p>
+                    </>}
+                    {status === 'invalid' && <>
+                      <h2 className="font-display text-2xl mb-3" style={{ color: '#dc2626' }}>Invalid Link</h2>
+                      <p className="text-slate-500 leading-relaxed max-w-md mx-auto">This verification link is invalid or has already been used. If you believe this is an error, please <a href="/jobs/find-work" style={{ color: brand, textDecoration: 'underline' }}>register again</a>.</p>
+                    </>}
                   </div>
-                )}
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-6">
 
-                {currentStep === 1 && (
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6">
-                    <h2 className="font-display text-xl text-navy-950">Personal Details</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-semibold mb-2" style={errLabel('full_name')}>Full Name *</label>
-                        {fieldErrors.full_name && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter your full name.</p>}
-                        <input type="text" value={form.full_name} onChange={e => { setForm({...form, full_name: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, full_name: false})) }}
-                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
-                          placeholder="Your full name" style={errStyle('full_name')} />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold mb-2" style={errLabel('email')}>Email Address *</label>
-                        {fieldErrors.email && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter a valid email address.</p>}
-                        <input type="email" value={form.email} onChange={e => { setForm({...form, email: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, email: false})) }}
-                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
-                          placeholder="you@example.com" style={errStyle('email')} />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-semibold text-navy-950 mb-2">Phone Number</label>
-                        <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
-                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
-                          placeholder="Optional" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-navy-950 mb-2">LinkedIn Profile URL</label>
-                        <input type="url" value={form.linkedin_url} onChange={e => setForm({...form, linkedin_url: e.target.value})}
-                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
-                          placeholder="https://linkedin.com/in/yourprofile" />
-                        <p className="text-xs text-slate-400 mt-1">Strongly recommended — helps us match you faster</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-semibold mb-2" style={errLabel('location_city')}>City *</label>
-                        {fieldErrors.location_city && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter your city.</p>}
-                        <input type="text" value={form.location_city} onChange={e => { setForm({...form, location_city: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, location_city: false})) }}
-                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
-                          placeholder="e.g. London" style={errStyle('location_city')} />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-navy-950 mb-2">Country</label>
-                        <select value={form.location_country} onChange={e => setForm({...form, location_country: e.target.value})}
-                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white">
-                          <option value="">Select country</option>
-                          {(isEthioTax ? countryOptionsET : countryOptionsAB).map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </div>
-                    </div>
-                    <NavButtons />
-                  </div>
-                )}
+                    <div ref={topRef} />
+                    <ProgressBar currentStep={currentStep} brand={brand} />
 
-                {currentStep === 2 && (
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6">
-                    <h2 className="font-display text-xl text-navy-950">Professional Profile</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-semibold mb-2" style={errLabel('professional_role')}>Professional Role *</label>
-                        {fieldErrors.professional_role && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please select your role.</p>}
-                        <select value={form.professional_role} onChange={e => { setForm({...form, professional_role: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, professional_role: false})) }}
-                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
-                          style={errStyle('professional_role')}>
-                          <option value="">Select your role</option>
-                          {roleOptions.map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold mb-2" style={errLabel('qualification')}>Highest Qualification *</label>
-                        {fieldErrors.qualification && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please select your qualification.</p>}
-                        <select value={form.qualification} onChange={e => { setForm({...form, qualification: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, qualification: false})) }}
-                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
-                          style={errStyle('qualification')}>
-                          <option value="">Select qualification</option>
-                          {qualificationOptions.map(q => <option key={q} value={q}>{q}</option>)}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-semibold mb-2" style={errLabel('years_experience')}>Years of Experience *</label>
-                        {fieldErrors.years_experience && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please select your experience level.</p>}
-                        <select value={form.years_experience} onChange={e => { setForm({...form, years_experience: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, years_experience: false})) }}
-                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
-                          style={errStyle('years_experience')}>
-                          <option value="">Select</option>
-                          {experienceOptions.map(o => <option key={o} value={o}>{o}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold mb-2" style={errLabel('employment_status')}>Current Employment Status *</label>
-                        {fieldErrors.employment_status && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please select your status.</p>}
-                        <select value={form.employment_status} onChange={e => { setForm({...form, employment_status: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, employment_status: false})) }}
-                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
-                          style={errStyle('employment_status')}>
-                          <option value="">Select</option>
-                          {employmentStatusOptions.map(o => <option key={o} value={o}>{o}</option>)}
-                        </select>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-navy-950 mb-2">Salary / Day Rate Expectation</label>
-                      <input type="text" value={form.salary_expectation} onChange={e => setForm({...form, salary_expectation: e.target.value})}
-                        className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
-                        placeholder="e.g. £45,000 per year or £350 per day" />
-                    </div>
-                    <NavButtons />
-                  </div>
-                )}
-
-                {currentStep === 3 && (
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6">
-                    <h2 className="font-display text-xl text-navy-950">What You Are Looking For</h2>
-                    <div>
-                      <label className="block text-sm font-semibold text-navy-950 mb-3">Type of Role Sought</label>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {roleTypeOptions.map(opt => (
-                          <button key={opt} type="button" onClick={() => toggleMulti(opt, roleTypes, setRoleTypes)}
-                            className="px-3 py-2.5 rounded-lg border text-sm font-medium transition-all text-left"
-                            style={{
-                              borderColor: roleTypes.includes(opt) ? '#C9982A' : '#e2e8f0',
-                              background: roleTypes.includes(opt) ? '#fdf8ee' : '#fff',
-                              color: roleTypes.includes(opt) ? '#0C1A3D' : '#475569',
-                              fontWeight: roleTypes.includes(opt) ? 600 : 400,
-                            }}>
-                            {opt}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-navy-950 mb-3">Jurisdictions You Can Work In</label>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {(isEthioTax ? jurisdictionOptionsET : jurisdictionOptionsAB).map(opt => (
-                          <button key={opt} type="button" onClick={() => toggleMulti(opt, jurisdictions, setJurisdictions)}
-                            className="px-3 py-2.5 rounded-lg border text-sm font-medium transition-all text-left"
-                            style={{
-                              borderColor: jurisdictions.includes(opt) ? '#C9982A' : '#e2e8f0',
-                              background: jurisdictions.includes(opt) ? '#fdf8ee' : '#fff',
-                              color: jurisdictions.includes(opt) ? '#0C1A3D' : '#475569',
-                              fontWeight: jurisdictions.includes(opt) ? 600 : 400,
-                            }}>
-                            {opt}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-navy-950 mb-3">Languages Spoken</label>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {(isEthioTax ? languageOptionsET : languageOptionsAB).map(opt => (
-                          <button key={opt} type="button" onClick={() => toggleMulti(opt, languages, setLanguages)}
-                            className="px-3 py-2.5 rounded-lg border text-sm font-medium transition-all text-left"
-                            style={{
-                              borderColor: languages.includes(opt) ? '#C9982A' : '#e2e8f0',
-                              background: languages.includes(opt) ? '#fdf8ee' : '#fff',
-                              color: languages.includes(opt) ? '#0C1A3D' : '#475569',
-                              fontWeight: languages.includes(opt) ? 600 : 400,
-                            }}>
-                            {opt}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <NavButtons />
-                  </div>
-                )}
-
-                {currentStep === 4 && (
-                  <div className="bg-white rounded-xl border shadow-sm p-8 space-y-4 transition-all"
-                    style={{ borderColor: fieldErrors.biography ? '#C9982A' : '#e2e8f0' }}>
-                    <h2 className="font-display text-xl" style={{ color: fieldErrors.biography ? '#C9982A' : '#0C1A3D' }}>
-                      Professional Biography *
-                    </h2>
-                    <p className="text-sm text-slate-500">
-                      Tell us about your experience, specialisms, and what makes you a strong candidate. Minimum 50 words. This is what our team reads when matching you to roles.
-                    </p>
-                    {fieldErrors.biography && <p className="text-xs font-semibold" style={{ color: '#C9982A' }}>Please write at least 50 words about your professional background.</p>}
-                    <textarea rows={8} value={form.biography}
-                      onChange={e => { setForm({...form, biography: e.target.value}); if (e.target.value.trim().split(/\s+/).length >= 50) setFieldErrors(p => ({...p, biography: false})) }}
-                      className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
-                      placeholder="e.g. I am an ACCA-qualified accountant with 8 years of experience in financial reporting and tax compliance, having worked with clients across the UK and Ethiopia. I specialise in..." />
-                    <p className="text-xs text-slate-400">{form.biography.trim() ? form.biography.trim().split(/\s+/).length : 0} words</p>
-                    <NavButtons />
-                  </div>
-                )}
-
-                {currentStep === 5 && (
-                  <div className="space-y-6">
-                    <div className="bg-white rounded-xl border shadow-sm p-8 space-y-4"
-                      style={{ borderColor: fieldErrors.terms ? '#C9982A' : '#e2e8f0' }}>
-                      <h2 className="font-display text-xl text-navy-950">Confirmation</h2>
-                      {fieldErrors.terms && <p className="text-xs font-semibold" style={{ color: '#C9982A' }}>Please accept both confirmations to continue.</p>}
-                      <label className="flex items-start gap-3 cursor-pointer">
-                        <input type="checkbox" checked={termsAgreed} onChange={e => { setTermsAgreed(e.target.checked); if (e.target.checked) setFieldErrors(p => ({...p, terms: false})) }}
-                          className="mt-0.5 accent-gold-500 shrink-0" />
-                        <span className="text-sm text-slate-600">
-                          I confirm that I have read and agree to the{' '}
-                          <Link href="/terms" className="underline text-navy-700 hover:text-gold-600">Job Seeker Registration Terms</Link>.
-                        </span>
-                      </label>
-                      <label className="flex items-start gap-3 cursor-pointer">
-                        <input type="checkbox" checked={dataConsent} onChange={e => { setDataConsent(e.target.checked); if (e.target.checked) setFieldErrors(p => ({...p, terms: false})) }}
-                          className="mt-0.5 accent-gold-500 shrink-0" />
-                        <span className="text-sm text-slate-600">
-                          I consent to {platformName} holding and processing my personal data for the purpose of matching me with suitable roles, in accordance with the{' '}
-                          <Link href="/privacy-policy" className="underline text-navy-700 hover:text-gold-600">Privacy Policy</Link>.
-                        </span>
-                      </label>
-                      <div className="bg-slate-50 rounded-lg border border-slate-200 p-4 mt-2">
-                        <p className="text-xs text-slate-500 leading-relaxed">
-                          Your profile will never be made public. We will not share your details with any employer without your prior knowledge. Submission does not guarantee placement.
+                    {/* HOW IT WORKS — step 1 only */}
+                    {currentStep === 1 && (
+                      <div className="rounded-xl border p-5" style={{ background: '#f8f9ff', borderColor: '#e0e4f0' }}>
+                        <p className="text-sm font-semibold text-navy-950 mb-1">How this works</p>
+                        <p className="text-sm text-slate-500 leading-relaxed">
+                          Complete this form carefully — we review every registration personally. Once approved, we will contact you only when a role matches your profile. Your details are never shared with any employer without your prior knowledge.
                         </p>
                       </div>
-                    </div>
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
-                      {status === 'error' && <p className="text-red-500 text-sm mb-4">Something went wrong. Please try again or contact us directly.</p>}
-                      <input type="text" value={form._h} onChange={e => setForm({...form, _h: e.target.value})} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
-                      <div ref={el => {
-                        if (el && window.turnstile && !turnstileWidgetId.current) {
-                          const sitekey = isEthioTax
-                            ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '')
-                            : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? '')
-                          turnstileWidgetId.current = window.turnstile.render(el, { sitekey, size: 'invisible' })
-                        }
-                      }} />
-                      <div className="flex items-center justify-between">
-                        <button type="button" onClick={handleBack}
-                          className="flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" /></svg>
-                          Back
-                        </button>
-                        <button type="submit" disabled={status === 'loading'}
-                          className="text-white font-semibold h-12 px-8 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
-                          style={{ background: brand }}>
-                          {status === 'loading' ? 'Submitting...' : 'Submit Registration'}
-                          {status !== 'loading' && (
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                          )}
-                        </button>
-                      </div>
-                      <p className="text-xs text-slate-400 text-center mt-4">We review every registration personally. You will hear from us within 5 working days of email verification.</p>
-                    </div>
-                  </div>
-                )}
+                    )}
 
-              </form>
-            )}
+                    {/* STEP 1 — PERSONAL DETAILS */}
+                    {currentStep === 1 && (
+                      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6">
+                        <h2 className="font-display text-xl text-navy-950">Personal Details</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-semibold mb-2" style={errLabel('full_name')}>Full Name *</label>
+                            {fieldErrors.full_name && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter your full name.</p>}
+                            <input type="text" value={form.full_name} onChange={e => { setForm({...form, full_name: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, full_name: false})) }}
+                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                              placeholder="Your full name" style={errStyle('full_name')} />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold mb-2" style={errLabel('email')}>Email Address *</label>
+                            {fieldErrors.email && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter a valid email address.</p>}
+                            <input type="email" value={form.email} onChange={e => { setForm({...form, email: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, email: false})) }}
+                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                              placeholder="you@example.com" style={errStyle('email')} />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-semibold text-navy-950 mb-2">Phone Number</label>
+                            <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
+                              className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                              placeholder="Optional" />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-navy-950 mb-2">LinkedIn Profile URL</label>
+                            <input type="url" value={form.linkedin_url} onChange={e => setForm({...form, linkedin_url: e.target.value})}
+                              className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                              placeholder="https://linkedin.com/in/yourprofile" />
+                            <p className="text-xs text-slate-400 mt-1">Strongly recommended — helps us match you faster</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-semibold mb-2" style={errLabel('location_city')}>City *</label>
+                            {fieldErrors.location_city && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter your city.</p>}
+                            <input type="text" value={form.location_city} onChange={e => { setForm({...form, location_city: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, location_city: false})) }}
+                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                              placeholder="e.g. London" style={errStyle('location_city')} />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-navy-950 mb-2">Country</label>
+                            <select value={form.location_country} onChange={e => setForm({...form, location_country: e.target.value})}
+                              className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white">
+                              <option value="">Select country</option>
+                              {(isEthioTax ? countryOptionsET : countryOptionsAB).map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                        <NavButtons />
+                      </div>
+                    )}
+
+                    {/* STEP 2 — PROFESSIONAL PROFILE */}
+                    {currentStep === 2 && (
+                      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6">
+                        <h2 className="font-display text-xl text-navy-950">Professional Profile</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-semibold mb-2" style={errLabel('professional_role')}>Professional Role *</label>
+                            {fieldErrors.professional_role && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please select your role.</p>}
+                            <select value={form.professional_role} onChange={e => { setForm({...form, professional_role: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, professional_role: false})) }}
+                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
+                              style={errStyle('professional_role')}>
+                              <option value="">Select your role</option>
+                              {roleOptions.map(r => <option key={r} value={r}>{r}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold mb-2" style={errLabel('qualification')}>Highest Qualification *</label>
+                            {fieldErrors.qualification && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please select your qualification.</p>}
+                            <select value={form.qualification} onChange={e => { setForm({...form, qualification: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, qualification: false})) }}
+                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
+                              style={errStyle('qualification')}>
+                              <option value="">Select qualification</option>
+                              {qualificationOptions.map(q => <option key={q} value={q}>{q}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-semibold mb-2" style={errLabel('years_experience')}>Years of Experience *</label>
+                            {fieldErrors.years_experience && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please select your experience level.</p>}
+                            <select value={form.years_experience} onChange={e => { setForm({...form, years_experience: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, years_experience: false})) }}
+                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
+                              style={errStyle('years_experience')}>
+                              <option value="">Select</option>
+                              {experienceOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold mb-2" style={errLabel('employment_status')}>Current Employment Status *</label>
+                            {fieldErrors.employment_status && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please select your status.</p>}
+                            <select value={form.employment_status} onChange={e => { setForm({...form, employment_status: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, employment_status: false})) }}
+                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
+                              style={errStyle('employment_status')}>
+                              <option value="">Select</option>
+                              {employmentStatusOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-navy-950 mb-2">Salary / Day Rate Expectation</label>
+                          <input type="text" value={form.salary_expectation} onChange={e => setForm({...form, salary_expectation: e.target.value})}
+                            className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                            placeholder="e.g. £45,000 per year or £350 per day" />
+                        </div>
+                        <NavButtons />
+                      </div>
+                    )}
+
+                    {/* STEP 3 — WHAT YOU ARE LOOKING FOR */}
+                    {currentStep === 3 && (
+                      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6">
+                        <h2 className="font-display text-xl text-navy-950">What You Are Looking For</h2>
+                        <div>
+                          <label className="block text-sm font-semibold text-navy-950 mb-3">Type of Role Sought</label>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            {roleTypeOptions.map(opt => (
+                              <button key={opt} type="button" onClick={() => toggleMulti(opt, roleTypes, setRoleTypes)}
+                                className="px-3 py-2.5 rounded-lg border text-sm font-medium transition-all text-left"
+                                style={{ borderColor: roleTypes.includes(opt) ? '#C9982A' : '#e2e8f0', background: roleTypes.includes(opt) ? '#fdf8ee' : '#fff', color: roleTypes.includes(opt) ? '#0C1A3D' : '#475569', fontWeight: roleTypes.includes(opt) ? 600 : 400 }}>
+                                {opt}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-navy-950 mb-3">Jurisdictions You Can Work In</label>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            {(isEthioTax ? jurisdictionOptionsET : jurisdictionOptionsAB).map(opt => (
+                              <button key={opt} type="button" onClick={() => toggleMulti(opt, jurisdictions, setJurisdictions)}
+                                className="px-3 py-2.5 rounded-lg border text-sm font-medium transition-all text-left"
+                                style={{ borderColor: jurisdictions.includes(opt) ? '#C9982A' : '#e2e8f0', background: jurisdictions.includes(opt) ? '#fdf8ee' : '#fff', color: jurisdictions.includes(opt) ? '#0C1A3D' : '#475569', fontWeight: jurisdictions.includes(opt) ? 600 : 400 }}>
+                                {opt}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-navy-950 mb-3">Languages Spoken</label>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            {(isEthioTax ? languageOptionsET : languageOptionsAB).map(opt => (
+                              <button key={opt} type="button" onClick={() => toggleMulti(opt, languages, setLanguages)}
+                                className="px-3 py-2.5 rounded-lg border text-sm font-medium transition-all text-left"
+                                style={{ borderColor: languages.includes(opt) ? '#C9982A' : '#e2e8f0', background: languages.includes(opt) ? '#fdf8ee' : '#fff', color: languages.includes(opt) ? '#0C1A3D' : '#475569', fontWeight: languages.includes(opt) ? 600 : 400 }}>
+                                {opt}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <NavButtons />
+                      </div>
+                    )}
+
+                    {/* STEP 4 — BIOGRAPHY */}
+                    {currentStep === 4 && (
+                      <div className="bg-white rounded-xl border shadow-sm p-8 space-y-4"
+                        style={{ borderColor: fieldErrors.biography ? '#C9982A' : '#e2e8f0' }}>
+                        <h2 className="font-display text-xl" style={{ color: fieldErrors.biography ? '#C9982A' : '#0C1A3D' }}>
+                          Professional Biography *
+                        </h2>
+                        <p className="text-sm text-slate-500">
+                          Tell us about your experience, specialisms, and what makes you a strong candidate. Minimum 50 words. This is what our team reads when matching you to roles.
+                        </p>
+                        {fieldErrors.biography && <p className="text-xs font-semibold" style={{ color: '#C9982A' }}>Please write at least 50 words about your professional background.</p>}
+                        <textarea rows={8} value={form.biography}
+                          onChange={e => { setForm({...form, biography: e.target.value}); if (e.target.value.trim().split(/\s+/).length >= 50) setFieldErrors(p => ({...p, biography: false})) }}
+                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                          placeholder="e.g. I am an ACCA-qualified accountant with 8 years of experience in financial reporting and tax compliance, having worked with clients across the UK and Ethiopia. I specialise in..." />
+                        <p className="text-xs text-slate-400">{form.biography.trim() ? form.biography.trim().split(/\s+/).length : 0} words</p>
+                        <NavButtons />
+                      </div>
+                    )}
+
+                    {/* STEP 5 — CONFIRMATION + SUBMIT */}
+                    {currentStep === 5 && (
+                      <div className="space-y-6">
+                        <div className="bg-white rounded-xl border shadow-sm p-8 space-y-4"
+                          style={{ borderColor: fieldErrors.terms ? '#C9982A' : '#e2e8f0' }}>
+                          <h2 className="font-display text-xl text-navy-950">Confirmation</h2>
+                          {fieldErrors.terms && <p className="text-xs font-semibold" style={{ color: '#C9982A' }}>Please accept both confirmations to continue.</p>}
+                          <label className="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" checked={termsAgreed} onChange={e => { setTermsAgreed(e.target.checked); if (e.target.checked) setFieldErrors(p => ({...p, terms: false})) }}
+                              className="mt-0.5 accent-gold-500 shrink-0" />
+                            <span className="text-sm text-slate-600">
+                              I confirm that I have read and agree to the{' '}
+                              <Link href="/terms" className="underline text-navy-700 hover:text-gold-600">Job Seeker Registration Terms</Link>.
+                            </span>
+                          </label>
+                          <label className="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" checked={dataConsent} onChange={e => { setDataConsent(e.target.checked); if (e.target.checked) setFieldErrors(p => ({...p, terms: false})) }}
+                              className="mt-0.5 accent-gold-500 shrink-0" />
+                            <span className="text-sm text-slate-600">
+                              I consent to {platformName} holding and processing my personal data for the purpose of matching me with suitable roles, in accordance with the{' '}
+                              <Link href="/privacy-policy" className="underline text-navy-700 hover:text-gold-600">Privacy Policy</Link>.
+                            </span>
+                          </label>
+                          <div className="bg-slate-50 rounded-lg border border-slate-200 p-4 mt-2">
+                            <p className="text-xs text-slate-500 leading-relaxed">
+                              Your profile will never be made public. We will not share your details with any employer without your prior knowledge. Submission does not guarantee placement.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
+                          {status === 'error' && <p className="text-red-500 text-sm mb-4">Something went wrong. Please try again or contact us directly.</p>}
+                          <input type="text" value={form._h} onChange={e => setForm({...form, _h: e.target.value})} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
+                          <div ref={el => {
+                            if (el && window.turnstile && !turnstileWidgetId.current) {
+                              const sitekey = isEthioTax
+                                ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '')
+                                : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? '')
+                              turnstileWidgetId.current = window.turnstile.render(el, { sitekey, size: 'invisible' })
+                            }
+                          }} />
+                          <div className="flex items-center justify-between">
+                            <button type="button" onClick={handleBack}
+                              className="flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" /></svg>
+                              Back
+                            </button>
+                            <button type="submit" disabled={status === 'loading'}
+                              className="text-white font-semibold h-12 px-8 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                              style={{ background: brand }}>
+                              {status === 'loading' ? 'Submitting...' : 'Submit Registration'}
+                              {status !== 'loading' && (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                              )}
+                            </button>
+                          </div>
+                          <p className="text-xs text-slate-400 text-center mt-4">We review every registration personally. You will hear from us within 5 working days of email verification.</p>
+                        </div>
+                      </div>
+                    )}
+
+                  </form>
+                )}
+              </div>{/* end form column */}
+
+              {/* TRUST PANEL */}
+              <TrustPanel brand={brand} isEthioTax={isEthioTax} />
+
+            </div>{/* end grid */}
           </div>
         </section>
+
       </main>
     </>
   )
