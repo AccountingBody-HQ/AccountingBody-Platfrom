@@ -16,7 +16,15 @@ declare global {
 }
 
 const contractTypeOptions = ['Permanent','Contract / Freelance','Temporary','Part-time','Open to both permanent and contract']
-const jurisdictionOptions = ['United Kingdom','Ethiopia','United States','Canada','UAE','European Union','Australia','Other']
+const jurisdictionOptionsAB = [
+  'United Kingdom','United States','Canada','Australia','New Zealand',
+  'Ireland','Singapore','UAE','Saudi Arabia','Germany','France',
+  'Netherlands','Sweden','Switzerland','Other',
+]
+const jurisdictionOptionsET = [
+  'United Kingdom','Ethiopia','United States','Canada','UAE','Saudi Arabia',
+  'Australia','Sweden','Germany','Netherlands','Kenya','South Africa','Other',
+]
 
 export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEthioTax: boolean }) {
   const isEthioTax = isEthioTaxProp
@@ -295,7 +303,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                       <select value={form.jurisdiction} onChange={e => setForm({...form, jurisdiction: e.target.value})}
                         className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white">
                         <option value="">Select</option>
-                        {jurisdictionOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                        {(isEthioTax ? jurisdictionOptionsET : jurisdictionOptionsAB).map(o => <option key={o} value={o}>{o}</option>)}
                       </select>
                     </div>
                   </div>
@@ -342,8 +350,11 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                   <input type="text" value={form._h} onChange={e => setForm({...form, _h: e.target.value})} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
                   <div ref={el => {
                     if (el && window.turnstile && !turnstileWidgetId.current) {
+                      const sitekey = isEthioTax
+                        ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '')
+                        : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? '')
                       turnstileWidgetId.current = window.turnstile.render(el, {
-                        sitekey: '0x4AAAAADeWpXpm7NrIBZp_',
+                        sitekey,
                         size: 'invisible',
                       })
                     }

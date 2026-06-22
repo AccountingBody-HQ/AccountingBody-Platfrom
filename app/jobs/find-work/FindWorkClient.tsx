@@ -430,8 +430,11 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                   <input type="text" value={form._h} onChange={e => setForm({...form, _h: e.target.value})} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
                   <div ref={el => {
                     if (el && window.turnstile && !turnstileWidgetId.current) {
+                      const sitekey = isEthioTax
+                        ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '')
+                        : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? '')
                       turnstileWidgetId.current = window.turnstile.render(el, {
-                        sitekey: '0x4AAAAADeWpXpm7NrIBZp_',
+                        sitekey,
                         size: 'invisible',
                       })
                     }
