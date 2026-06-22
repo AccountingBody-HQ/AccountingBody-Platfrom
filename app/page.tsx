@@ -643,6 +643,78 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </div>
       </section>
 
+      {/* JOBS BANNER — platform-aware
+          AB: Specialist recruitment banner → Find Work / Hire Talent
+          ET: Finance careers for Ethiopian community → Find Work / Ethiopian Professionals */}
+      <section
+        className="relative overflow-hidden border-y"
+        style={{
+          background: isEthioTax
+            ? 'linear-gradient(135deg, #0f2d1e 0%, #1A4731 60%, #1f5438 100%)'
+            : 'linear-gradient(135deg, #080f26 0%, #0C1A3D 60%, #0e2050 100%)',
+          borderColor: 'rgba(201,152,42,0.25)',
+        }}
+      >
+        <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at top right, #C9982A 0%, transparent 70%)' }} />
+        <div className="container-site relative z-10 py-10 md:py-12">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+            <div className="max-w-xl">
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#C9982A' }}>
+                {isEthioTax ? 'EthioTax Recruitment' : 'Accounting Body Recruitment'}
+              </p>
+              <h2 className="font-display text-white text-2xl md:text-3xl leading-snug mb-3"
+                style={{ letterSpacing: '-0.02em' }}>
+                {isEthioTax
+                  ? 'Finance careers built for the Ethiopian community'
+                  : 'Specialist accounting and finance recruitment'}
+              </h2>
+              <p className="text-white/55 text-sm leading-relaxed max-w-lg">
+                {isEthioTax
+                  ? 'ACCA, CIMA, ETICPA or CPA qualified? We place Ethiopian finance professionals in permanent and contract roles across the UK, USA, Canada and beyond. Managed end to end — you never deal with employers directly.'
+                  : 'We place accounting and finance professionals in permanent and contract roles. Fully managed — we find the right match, negotiate on your behalf, and guarantee every placement for 90 days.'}
+              </p>
+              <div className="flex flex-wrap gap-4 mt-4">
+                {[
+                  isEthioTax ? 'Ethiopian professionals welcome' : 'Permanent and contract roles',
+                  'Every profile personally reviewed',
+                  '90-day placement guarantee',
+                ].map(point => (
+                  <span key={point} className="flex items-center gap-1.5 text-xs text-white/60">
+                    <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {point}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-3 shrink-0">
+              <Link
+                href="/jobs/find-work"
+                className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90 whitespace-nowrap"
+                style={{ background: '#C9982A', color: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}
+              >
+                {isEthioTax ? 'Register as a candidate' : 'Find work'}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+              <Link
+                href={isEthioTax ? '/jobs/ethiopian-professionals' : '/jobs/hire-talent'}
+                className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl text-sm font-medium text-white border border-white/25 hover:bg-white/10 transition-colors whitespace-nowrap"
+              >
+                {isEthioTax ? 'Ethiopian professionals' : 'Hire talent'}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
 
       {/* ════════════════════════════════════════════════════════════════
           2. LATEST INSIGHTS
