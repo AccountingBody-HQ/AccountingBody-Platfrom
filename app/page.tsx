@@ -646,73 +646,159 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       {/* JOBS BANNER — platform-aware
           AB: Specialist recruitment banner → Find Work / Hire Talent
           ET: Finance careers for Ethiopian community → Find Work / Ethiopian Professionals */}
-      <section
-        className="relative overflow-hidden border-y"
-        style={{
-          background: isEthioTax
-            ? 'linear-gradient(135deg, #0f2d1e 0%, #1A4731 60%, #1f5438 100%)'
-            : 'linear-gradient(135deg, #080f26 0%, #0C1A3D 60%, #0e2050 100%)',
-          borderColor: 'rgba(201,152,42,0.25)',
-        }}
-      >
-        <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at top right, #C9982A 0%, transparent 70%)' }} />
-        <div className="container-site relative z-10 py-10 md:py-12">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
-            <div className="max-w-xl">
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#C9982A' }}>
-                {isEthioTax ? 'EthioTax Recruitment' : 'Accounting Body Recruitment'}
-              </p>
-              <h2 className="font-display text-white text-2xl md:text-3xl leading-snug mb-3"
-                style={{ letterSpacing: '-0.02em' }}>
-                {isEthioTax
-                  ? 'Finance careers built for the Ethiopian community'
-                  : 'Specialist accounting and finance recruitment'}
+      {/* JOBS SECTION — platform-aware, redesigned
+          AB: White background, navy/gold, premium recruitment identity
+          ET: Off-white background, green accent panel, Ethiopian community */}
+      <section className="relative overflow-hidden bg-white border-b border-slate-100">
+
+        {/* Top gold rule — full width accent line */}
+        <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, #C9982A 0%, #e8c050 50%, #C9982A 100%)' }} />
+
+        <div className="container-site py-16 md:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+
+            {/* LEFT — Identity and messaging */}
+            <div>
+              {/* Platform label */}
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-8 w-1 rounded-full" style={{ background: isEthioTax ? '#1A4731' : '#0C1A3D' }} />
+                <span className="text-xs font-bold uppercase tracking-widest"
+                  style={{ color: isEthioTax ? '#1A4731' : '#0C1A3D' }}>
+                  {isEthioTax ? 'EthioTax Recruitment' : 'Accounting Body Recruitment'}
+                </span>
+              </div>
+
+              {/* Heading */}
+              <h2 className="font-display text-3xl md:text-4xl lg:text-5xl leading-[1.08] mb-5"
+                style={{ color: isEthioTax ? '#0f2d1e' : '#0C1A3D', letterSpacing: '-0.025em' }}>
+                {isEthioTax ? (
+                  <>Finance careers<br />
+                  <span style={{ color: '#C9982A' }}>built for Ethiopia</span><br />
+                  and its diaspora.</>
+                ) : (
+                  <>Specialist<br />
+                  <span style={{ color: '#C9982A' }}>accounting and finance</span><br />
+                  recruitment.</>
+                )}
               </h2>
-              <p className="text-white/55 text-sm leading-relaxed max-w-lg">
+
+              {/* Body */}
+              <p className="text-slate-500 text-base leading-relaxed mb-6 max-w-lg">
                 {isEthioTax
-                  ? 'ACCA, CIMA, ETICPA or CPA qualified? We place Ethiopian finance professionals in permanent and contract roles across the UK, USA, Canada and beyond. Managed end to end — you never deal with employers directly.'
-                  : 'We place accounting and finance professionals in permanent and contract roles. Fully managed — we find the right match, negotiate on your behalf, and guarantee every placement for 90 days.'}
+                  ? 'ACCA, CIMA, ETICPA or CPA qualified? We place Ethiopian finance professionals in permanent and contract roles across the UK, USA, Canada and beyond. You never deal with employers directly — we manage every introduction.'
+                  : 'We place accounting and finance professionals in permanent and contract roles across the UK and internationally. Fully managed — we find the right match, negotiate on your behalf, and guarantee every placement.'}
               </p>
-              <div className="flex flex-wrap gap-4 mt-4">
-                {[
-                  isEthioTax ? 'Ethiopian professionals welcome' : 'Permanent and contract roles',
-                  'Every profile personally reviewed',
-                  '90-day placement guarantee',
-                ].map(point => (
-                  <span key={point} className="flex items-center gap-1.5 text-xs text-white/60">
-                    <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                    </svg>
-                    {point}
-                  </span>
+
+              {/* Trust points */}
+              <div className="flex flex-col gap-2.5 mb-8">
+                {(isEthioTax ? [
+                  'Ethiopian-origin finance professionals welcome',
+                  'ETICPA, ACCA, CIMA and CPA credentials recognised',
+                  '90-day replacement guarantee on every placement',
+                ] : [
+                  'Accounting and finance professionals only',
+                  'Every candidate personally reviewed before activation',
+                  '90-day replacement guarantee on every permanent placement',
+                ]).map(point => (
+                  <div key={point} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                      style={{ background: isEthioTax ? '#1A4731' : '#0C1A3D' }}>
+                      <svg className="w-3 h-3" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-sm text-slate-600 leading-snug">{point}</span>
+                  </div>
                 ))}
               </div>
+
+              {/* CTAs */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  href="/jobs/find-work"
+                  className="inline-flex items-center justify-center gap-2 h-13 px-7 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-sm"
+                  style={{ background: isEthioTax ? '#1A4731' : '#0C1A3D' }}
+                >
+                  {isEthioTax ? 'Register as a candidate' : 'Find work'}
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
+                <Link
+                  href={isEthioTax ? '/jobs/ethiopian-professionals' : '/jobs/hire-talent'}
+                  className="inline-flex items-center justify-center gap-2 h-13 px-7 rounded-xl text-sm font-semibold border-2 transition-all hover:bg-slate-50"
+                  style={{ borderColor: isEthioTax ? '#1A4731' : '#0C1A3D', color: isEthioTax ? '#1A4731' : '#0C1A3D' }}
+                >
+                  {isEthioTax ? 'Ethiopian professionals' : 'Hire talent'}
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
+              </div>
             </div>
-            <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-3 shrink-0">
-              <Link
-                href="/jobs/find-work"
-                className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90 whitespace-nowrap"
-                style={{ background: '#C9982A', color: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}
-              >
-                {isEthioTax ? 'Register as a candidate' : 'Find work'}
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-              <Link
-                href={isEthioTax ? '/jobs/ethiopian-professionals' : '/jobs/hire-talent'}
-                className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl text-sm font-medium text-white border border-white/25 hover:bg-white/10 transition-colors whitespace-nowrap"
-              >
-                {isEthioTax ? 'Ethiopian professionals' : 'Hire talent'}
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
+
+            {/* RIGHT — Stats panel */}
+            <div className="relative">
+              {/* Background card */}
+              <div className="rounded-2xl p-8 md:p-10"
+                style={{ background: isEthioTax ? '#f0f7f4' : '#f0f2f8' }}>
+
+                {/* NOT A JOB BOARD label */}
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-8"
+                  style={{ background: isEthioTax ? '#1A4731' : '#0C1A3D' }}>
+                  <div className="w-1.5 h-1.5 rounded-full bg-gold-400" style={{ background: '#C9982A' }} />
+                  <span className="text-xs font-bold uppercase tracking-widest text-white">
+                    Not a job board. A managed service.
+                  </span>
+                </div>
+
+                {/* Stats grid */}
+                <div className="grid grid-cols-2 gap-6 mb-8">
+                  {(isEthioTax ? [
+                    { value: 'Managed',  label: 'End-to-end placement', sub: 'You never deal with employers' },
+                    { value: '90 days',  label: 'Replacement guarantee', sub: 'On every permanent role' },
+                    { value: '100%',     label: 'Vetted candidates', sub: 'Every profile reviewed' },
+                    { value: 'Global',   label: 'Diaspora coverage', sub: 'UK · USA · Canada · UAE' },
+                  ] : [
+                    { value: 'Managed',  label: 'End-to-end service', sub: 'We handle every step' },
+                    { value: '90 days',  label: 'Replacement guarantee', sub: 'On every permanent role' },
+                    { value: '100%',     label: 'Vetted candidates', sub: 'Every profile reviewed' },
+                    { value: 'Finance',  label: 'Specialists only', sub: 'Accounting, tax, audit, payroll' },
+                  ]).map(stat => (
+                    <div key={stat.label} className="flex flex-col">
+                      <span className="font-display text-3xl font-bold mb-1"
+                        style={{ color: isEthioTax ? '#1A4731' : '#0C1A3D' }}>
+                        {stat.value}
+                      </span>
+                      <span className="text-sm font-semibold text-slate-700 mb-0.5">{stat.label}</span>
+                      <span className="text-xs text-slate-400">{stat.sub}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Divider */}
+                <div className="h-px bg-slate-200 mb-6" />
+
+                {/* Bottom CTA link */}
+                <Link href="/jobs"
+                  className="inline-flex items-center gap-2 text-sm font-semibold transition-colors"
+                  style={{ color: isEthioTax ? '#1A4731' : '#0C1A3D' }}>
+                  Learn how our recruitment works
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
+              </div>
+
+              {/* Gold accent corner */}
+              <div className="absolute -bottom-3 -right-3 w-24 h-24 rounded-2xl -z-10"
+                style={{ background: '#C9982A', opacity: 0.15 }} />
             </div>
+
           </div>
         </div>
       </section>
+
 
 
 
