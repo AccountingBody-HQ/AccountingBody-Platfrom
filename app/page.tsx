@@ -593,7 +593,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-4">
               <Link
                 href="/jobs"
-                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all shadow-gold [background-color:#D4A017] hover:[background-color:#b87d10] [color:#0C1A3D]"
+                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all shadow-gold bg-[#D4A017] text-[#0C1A3D] hover:bg-[#b87d10]"
               >
                 Find work or hire talent
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -614,22 +614,20 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   href="/wa"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-90"
-                  style={{ border: '2px solid rgba(255,255,255,0.4)', color: 'rgba(255,255,255,0.85)', background: 'transparent' }}
+                  className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-80 border-2 border-white/40 text-white/85"
                 >
                   Talk to us on WhatsApp
-                  <svg className="w-4 h-4" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
                 </Link>
               ) : (
                 <Link
                   href="/study"
-                  className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-90"
-                  style={{ border: '2px solid rgba(255,255,255,0.4)', color: 'rgba(255,255,255,0.85)', background: 'transparent' }}
+                  className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-80 border-2 border-white/40 text-white/85"
                 >
                   Start studying free
-                  <svg className="w-4 h-4" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
                 </Link>
