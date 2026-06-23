@@ -587,7 +587,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               {isEthioTax ? 'Study. Get expert accounting support. Specialist talent placement. One platform — for the Ethiopian community, worldwide.' : 'Study. Get expert accounting support. Specialist talent placement. One platform.'}
             </p>
             <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
-              {isEthioTax ? 'UK · USA · Canada · UAE · Ethiopia · Sweden · Australia' : 'One platform. Two pillars. Education and professional services, managed to the same standard.'}
+              {isEthioTax ? 'UK · USA · Canada · UAE · Ethiopia · Sweden · Australia' : 'Accounting Body — the only platform combining study, professional services and specialist talent placement in one place.'}
             </p>
 
             <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-16">
