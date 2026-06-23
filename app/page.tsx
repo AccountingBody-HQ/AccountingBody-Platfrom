@@ -607,13 +607,13 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 Explore our services
               </Link>
             </div>
-            <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-16">
+            <div className="flex mb-16">
               {isEthioTax ? (
                 <Link
                   href="/wa"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-90"
+                  className="inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-90"
                   style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}
                 >
                   Talk to us on WhatsApp
@@ -624,7 +624,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               ) : (
                 <Link
                   href="/study"
-                  className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-90"
+                  className="inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-90"
                   style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}
                 >
                   Start studying free
