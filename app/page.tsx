@@ -593,7 +593,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-4">
               <Link
                 href="/jobs"
-                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-600 transition-colors shadow-gold"
+                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:opacity-90 transition-opacity shadow-gold"
               >
                 Find work or hire talent
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -602,7 +602,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               </Link>
               <Link
                 href="/get-help"
-                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-medium text-white border border-white/25 hover:bg-white/10 hover:border-white/40 transition-all"
+                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-90"
+                  style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}
               >
                 Explore our services
               </Link>
@@ -614,7 +615,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-90"
-                  style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}
+                  style={{ border: '2px solid rgba(255,255,255,0.4)', color: 'rgba(255,255,255,0.85)', background: 'transparent' }}
                 >
                   Talk to us on WhatsApp
                   <svg className="w-4 h-4" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
@@ -625,7 +626,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 <Link
                   href="/study"
                   className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-90"
-                  style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}
+                  style={{ border: '2px solid rgba(255,255,255,0.4)', color: 'rgba(255,255,255,0.85)', background: 'transparent' }}
                 >
                   Start studying free
                   <svg className="w-4 h-4" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
