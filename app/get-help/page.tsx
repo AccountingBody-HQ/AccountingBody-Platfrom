@@ -186,32 +186,34 @@ export default async function GetHelpPage() {
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Gold Talent Placement card — first, always */}
+              {/* Talent Placement card — first, matches service card style */}
               <a href="/jobs"
-                className="group flex flex-col rounded-2xl p-6 md:p-8 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 no-underline"
-                style={{ backgroundColor: '#C9982A', border: '1px solid #b87d10', borderLeft: '4px solid #0f2d1e' }}>
+                className="group flex flex-col bg-white rounded-2xl p-6 md:p-8 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 no-underline"
+                style={{ border: '1px solid #e2e8f0', borderLeft: '4px solid #1A4731' }}>
                 <div className="flex items-start gap-5 mb-5">
-                  <div className="w-[52px] h-[52px] rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: '#0f2d1e' }}>
+                  <div className="w-[52px] h-[52px] rounded-xl bg-[#1A4731] flex items-center justify-center shrink-0">
                     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                      <path d="M5 14h18M14 5l9 9-9 9" stroke="#C9982A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M14 4a5 5 0 1 1 0 10A5 5 0 0 1 14 4z" stroke="#C9982A" strokeWidth="1.8"/>
+                      <path d="M4 24c0-5.523 4.477-10 10-10s10 4.477 10 10" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
+                      <path d="M19 14l3 3-3 3" stroke="#C9982A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-display text-[17px] font-bold mb-1.5" style={{ color: '#0f2d1e' }}>Talent Placement</h3>
-                    <p className="text-sm leading-relaxed" style={{ color: 'rgba(15,45,30,0.75)' }}>We place Ethiopian finance professionals in permanent and contract roles globally. ACCA, CIMA, ETICPA and CPA credentials recognised.</p>
+                    <h3 className="font-display text-[17px] font-bold text-gray-900 mb-1.5">Talent Placement</h3>
+                    <p className="text-gray-500 text-sm leading-relaxed">We place Ethiopian finance professionals in permanent and contract roles globally. ACCA, CIMA, ETICPA and CPA credentials recognised.</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-6 pl-[72px]">
                   {['Fully managed placement', 'No direct employer contact', '90-day replacement guarantee', 'Global diaspora coverage'].map(b => (
                     <div key={b} className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-[7px]" style={{ backgroundColor: '#0f2d1e' }} />
-                      <span className="text-[13px] leading-snug" style={{ color: 'rgba(15,45,30,0.85)' }}>{b}</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#C9982A] shrink-0 mt-[7px]" />
+                      <span className="text-gray-600 text-[13px] leading-snug">{b}</span>
                     </div>
                   ))}
                 </div>
-                <div className="pl-[72px] flex items-center justify-between pt-4 border-t" style={{ borderColor: 'rgba(15,45,30,0.2)' }}>
-                  <span className="text-[13px] font-bold" style={{ color: '#0f2d1e' }}>Find out more →</span>
-                  <span className="text-[12px]" style={{ color: 'rgba(15,45,30,0.5)' }}>Not a job board</span>
+                <div className="pl-[72px] flex items-center justify-between pt-4 border-t border-gray-100">
+                  <span className="text-[#C9982A] text-[13px] font-bold">Find out more →</span>
+                  <span className="text-gray-400 text-[12px]">Not a job board</span>
                 </div>
               </a>
               {etServices.map((s) => (
