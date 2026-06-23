@@ -567,7 +567,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             </p>
 
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.025em' }}>
-              {isEthioTax ? 'The accounting and finance experts' : 'Your accounting'}
+              {isEthioTax ? 'The accounting, finance' : 'Your accounting'}
               <br />
               <span
                 style={{
@@ -577,10 +577,10 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   backgroundClip: 'text',
                 }}
               >
-                {isEthioTax ? 'built for Ethiopia' : 'education & services'}
+                {isEthioTax ? 'and talent platform' : 'education, services & talent'}
               </span>
               <br />
-              {isEthioTax ? 'and its diaspora.' : 'platform.'}
+              {isEthioTax ? 'built for Ethiopia and its diaspora.' : 'platform.'}
             </h1>
 
             <p className="text-white/65 text-xl leading-relaxed mb-6 max-w-2xl">
