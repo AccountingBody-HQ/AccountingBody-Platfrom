@@ -590,24 +590,47 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               {isEthioTax ? 'UK · USA · Canada · UAE · Ethiopia · Sweden · Australia' : 'Accounting Body — the only platform combining study, professional services and specialist talent placement in one place.'}
             </p>
 
-            <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-16">
+            <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-4">
               <Link
-                href={isEthioTax ? "/wa" : "/study"}
-                target={isEthioTax ? "_blank" : undefined}
-                rel={isEthioTax ? "noopener noreferrer" : undefined}
+                href="/jobs"
                 className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold"
               >
-                {isEthioTax ? 'Talk to us on WhatsApp' : 'Start studying free'}
+                Find work or hire talent
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </Link>
               <Link
-                href={isEthioTax ? "/get-help" : "/get-help"}
+                href="/get-help"
                 className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-medium text-white border border-white/25 hover:bg-white/10 hover:border-white/40 transition-all"
               >
-                {isEthioTax ? 'Explore our services' : 'Explore our services'}
+                Explore our services
               </Link>
+            </div>
+            <div className="flex items-center gap-2 mb-16">
+              {isEthioTax ? (
+                <Link
+                  href="/wa"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium text-white/50 hover:text-white/80 transition-colors flex items-center gap-1.5"
+                >
+                  Talk to us on WhatsApp
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
+              ) : (
+                <Link
+                  href="/study"
+                  className="text-sm font-medium text-white/50 hover:text-white/80 transition-colors flex items-center gap-1.5"
+                >
+                  Start studying free
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
+              )}
             </div>
 
             {/* Search box */}
