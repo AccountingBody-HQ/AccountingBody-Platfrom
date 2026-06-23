@@ -593,7 +593,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-4">
               <Link
                 href="/jobs"
-                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all shadow-gold bg-[#D4A017] text-[#0C1A3D] hover:bg-[#b87d10]"
+                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all shadow-gold"
+                style={{ backgroundColor: '#D4A017', color: '#0C1A3D' }}
               >
                 Find work or hire talent
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -614,7 +615,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   href="/wa"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-80 border-2 border-white/40 text-white/85"
+                  className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-80 border-2 border-white/40 text-white"
                 >
                   Talk to us on WhatsApp
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -624,7 +625,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               ) : (
                 <Link
                   href="/study"
-                  className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-80 border-2 border-white/40 text-white/85"
+                  className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-80 border-2 border-white/40 text-white"
                 >
                   Start studying free
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
