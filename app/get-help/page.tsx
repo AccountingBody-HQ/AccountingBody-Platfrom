@@ -186,6 +186,34 @@ export default async function GetHelpPage() {
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Gold Talent Placement card — first, always */}
+              <a href="/jobs"
+                className="group flex flex-col rounded-2xl p-6 md:p-8 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 no-underline"
+                style={{ backgroundColor: '#C9982A', border: '1px solid #b87d10', borderLeft: '4px solid #0f2d1e' }}>
+                <div className="flex items-start gap-5 mb-5">
+                  <div className="w-[52px] h-[52px] rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: '#0f2d1e' }}>
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                      <path d="M5 14h18M14 5l9 9-9 9" stroke="#C9982A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-display text-[17px] font-bold mb-1.5" style={{ color: '#0f2d1e' }}>Talent Placement</h3>
+                    <p className="text-sm leading-relaxed" style={{ color: 'rgba(15,45,30,0.75)' }}>We place Ethiopian finance professionals in permanent and contract roles globally. ACCA, CIMA, ETICPA and CPA credentials recognised.</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-6 pl-[72px]">
+                  {['Fully managed placement', 'No direct employer contact', '90-day replacement guarantee', 'Global diaspora coverage'].map(b => (
+                    <div key={b} className="flex items-start gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-[7px]" style={{ backgroundColor: '#0f2d1e' }} />
+                      <span className="text-[13px] leading-snug" style={{ color: 'rgba(15,45,30,0.85)' }}>{b}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="pl-[72px] flex items-center justify-between pt-4 border-t" style={{ borderColor: 'rgba(15,45,30,0.2)' }}>
+                  <span className="text-[13px] font-bold" style={{ color: '#0f2d1e' }}>Find out more →</span>
+                  <span className="text-[12px]" style={{ color: 'rgba(15,45,30,0.5)' }}>Not a job board</span>
+                </div>
+              </a>
               {etServices.map((s) => (
                 <a key={s.category} href={s.href}
                   className="group flex flex-col bg-white rounded-2xl p-6 md:p-8 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 no-underline" style={{border: "1px solid #e2e8f0", borderLeft: "4px solid #1A4731"}}>
@@ -323,6 +351,90 @@ export default async function GetHelpPage() {
             ))}
           </div>
         </div>
+      </section>
+      {/* JOBS BANNER */}
+      <section className="relative overflow-hidden" style={{ background: '#C9982A' }}>
+        <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
+          style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+        <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: 'rgba(12,26,61,0.3)' }} />
+        <div className="container-site relative z-10 py-16 md:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+            <div className="lg:col-span-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-7"
+                style={{ background: 'rgba(0,0,0,0.12)', border: '1px solid rgba(0,0,0,0.15)' }}>
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#0C1A3D' }} />
+                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#0C1A3D' }}>
+                  Accounting Body Recruitment
+                </span>
+              </div>
+              <h2 className="font-display leading-[1.06] mb-6"
+                style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.03em', color: '#0C1A3D' }}>
+                The qualification you are<br />
+                <span style={{ opacity: 0.7 }}>looking for</span><br />
+                is in our candidate pool.
+              </h2>
+              <p className="text-base leading-relaxed mb-8 max-w-lg" style={{ color: 'rgba(12,26,61,0.75)' }}>
+                Accounting Body places qualified accountants and finance professionals in permanent and contract roles. Fully managed — we find the right match and guarantee every placement for 90 days.
+              </p>
+              <div className="flex flex-col gap-3 mb-10">
+                {['Accounting and finance professionals only', 'Every candidate personally reviewed before activation', '90-day replacement guarantee on every permanent placement'].map(point => (
+                  <div key={point} className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: '#0C1A3D' }}>
+                      <svg className="w-2.5 h-2.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium" style={{ color: 'rgba(12,26,61,0.85)' }}>{point}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <a href="/jobs/hire-talent"
+                  className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-sm"
+                  style={{ background: '#0C1A3D' }}>
+                  Submit a hiring brief
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                </a>
+                <a href="/jobs/how-it-works"
+                  className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold transition-all hover:opacity-80 border-2"
+                  style={{ borderColor: '#0C1A3D', color: '#0C1A3D', background: 'transparent' }}>
+                  How it works
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                </a>
+              </div>
+            </div>
+            <div className="lg:col-span-6">
+              <div className="rounded-2xl overflow-hidden" style={{ background: '#0C1A3D', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
+                <div className="px-8 pt-7 pb-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>Why Accounting Body</p>
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: 'rgba(201,152,42,0.15)', color: '#C9982A', border: '1px solid rgba(201,152,42,0.3)' }}>Not a job board</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2">
+                  {[
+                    { value: 'Managed', label: 'End-to-end service', sub: 'We handle every step' },
+                    { value: '90 Days', label: 'Replacement guarantee', sub: 'On every permanent role' },
+                    { value: '100%', label: 'Vetted candidates', sub: 'Every profile reviewed' },
+                    { value: 'Finance', label: 'Specialists only', sub: 'Accounting, tax, audit, payroll' },
+                  ].map((stat, i) => (
+                    <div key={stat.label} className="p-6"
+                      style={{ borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none' }}>
+                      <span className="font-display text-2xl font-bold text-white block mb-1">{stat.value}</span>
+                      <span className="text-xs font-semibold block mb-0.5" style={{ color: '#C9982A' }}>{stat.label}</span>
+                      <span className="text-xs text-white/35">{stat.sub}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="px-8 py-5 flex items-center justify-between" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(201,152,42,0.06)' }}>
+                  <p className="text-xs text-white/40 leading-relaxed">Candidates and employers never interact directly. <span className="text-white/60 font-medium">Accounting Body manages every placement.</span></p>
+                  <a href="/jobs/how-it-works" className="text-xs font-semibold whitespace-nowrap ml-4 hover:opacity-80 transition-opacity" style={{ color: '#C9982A' }}>How it works →</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: 'rgba(12,26,61,0.3)' }} />
       </section>
     </main>
   )
