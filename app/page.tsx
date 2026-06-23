@@ -607,7 +607,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 Explore our services
               </Link>
             </div>
-            <div className="flex mb-16">
+            <div className="w-fit mb-16">
               {isEthioTax ? (
                 <Link
                   href="/wa"
