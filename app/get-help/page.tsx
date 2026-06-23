@@ -139,14 +139,23 @@ export default async function GetHelpPage() {
               <p className="text-green-100 text-xl max-w-3xl mb-10">
                 Our team of specialists delivers accounting, tax, audit, payroll and business consulting — fully managed, to the highest professional standards. UK · USA · Canada · UAE · Ethiopia.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <a href="/wa" target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center h-[52px] w-full sm:w-[220px] bg-[#C9982A] text-[#1A4731] text-sm font-bold rounded-xl hover:opacity-90 transition-opacity">
-                  Talk to us on WhatsApp →
+              <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                <a href="/jobs"
+                  className="sm:flex-1 inline-flex items-center justify-center gap-2 h-[52px] px-7 bg-[#C9982A] text-[#1A4731] text-sm font-bold rounded-xl hover:opacity-90 transition-opacity">
+                  Find work or hire talent
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                 </a>
                 <a href="#services"
-                  className="inline-flex items-center justify-center h-[52px] w-full sm:w-[220px] border-2 border-white/30 text-white text-sm font-semibold rounded-xl hover:bg-white/10 transition-colors">
+                  className="sm:flex-1 inline-flex items-center justify-center h-[52px] px-7 border-2 border-white/30 text-white text-sm font-semibold rounded-xl hover:bg-white/10 transition-colors">
                   View all services
+                </a>
+              </div>
+              <div className="w-full sm:w-[calc(50%-6px)]">
+                <a href="/wa" target="_blank" rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 h-[52px] px-7 text-sm font-semibold rounded-xl transition-all hover:opacity-90"
+                  style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}>
+                  Talk to us on WhatsApp
+                  <svg className="w-4 h-4" fill="none" stroke="#C9982A" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                 </a>
               </div>
             </div>
@@ -321,9 +330,26 @@ export default async function GetHelpPage() {
             <p className="text-white/60 text-xl leading-relaxed mb-10 max-w-2xl">
               Accounting Body delivers professional accounting, tax, audit, and advisory services through our managed network of verified specialists.
             </p>
-            <a href="#services" className="inline-flex items-center gap-2 h-12 px-7 text-sm font-semibold rounded-lg bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors">
-              View Our Services
-            </a>
+            <div className="flex flex-col sm:flex-row gap-3 mb-4">
+              <a href="/jobs/hire-talent"
+                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-12 px-7 text-sm font-semibold rounded-lg transition-all"
+                style={{ backgroundColor: '#D4A017', color: '#0C1A3D' }}>
+                Submit a hiring brief
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+              </a>
+              <a href="#services"
+                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-12 px-7 text-sm font-semibold rounded-lg text-white border border-white/25 hover:bg-white/10 hover:border-white/40 transition-all">
+                View all services
+              </a>
+            </div>
+            <div className="w-full sm:w-[calc(50%-6px)]">
+              <a href="/jobs/find-work"
+                className="w-full inline-flex items-center justify-center gap-2 h-12 px-7 text-sm font-semibold rounded-lg transition-all hover:opacity-90"
+                style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}>
+                Find work
+                <svg className="w-4 h-4" fill="none" stroke="#C9982A" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+              </a>
+            </div>
           </div>
         </div>
       </section>
