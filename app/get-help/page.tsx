@@ -369,12 +369,12 @@ export default async function GetHelpPage() {
               </div>
               <h2 className="font-display leading-[1.06] mb-6"
                 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.03em', color: '#0C1A3D' }}>
-                The qualification you are<br />
-                <span style={{ opacity: 0.7 }}>looking for</span><br />
-                is in our candidate pool.
+                Looking to hire<br />
+                <span style={{ opacity: 0.7 }}>accounting & finance</span><br />
+                talent?
               </h2>
               <p className="text-base leading-relaxed mb-8 max-w-lg" style={{ color: 'rgba(12,26,61,0.75)' }}>
-                Accounting Body places qualified accountants and finance professionals in permanent and contract roles. Fully managed — we find the right match and guarantee every placement for 90 days.
+                Accounting Body places vetted accounting and finance professionals in permanent and contract roles. Submit a hiring brief — we search our candidate pool, manage every introduction, and guarantee every placement for 90 days.
               </p>
               <div className="flex flex-col gap-3 mb-10">
                 {['Accounting and finance professionals only', 'Every candidate personally reviewed before activation', '90-day replacement guarantee on every permanent placement'].map(point => (
