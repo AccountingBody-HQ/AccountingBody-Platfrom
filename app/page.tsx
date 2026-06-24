@@ -738,7 +738,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   'ETICPA, ACCA, CIMA and CPA credentials recognised',
                   '90-day replacement guarantee on every placement',
                 ] : [
-                  'Accounting and finance professionals only',
+                  'Accounting and finance professionals',
                   'Every candidate personally reviewed before activation',
                   '90-day replacement guarantee on every permanent placement',
                 ]).map(point => (
@@ -760,7 +760,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link href="/jobs/find-work"
-                  className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-sm"
+                  className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-sm"
                   style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
                   {isEthioTax ? 'Register as a candidate' : 'Find work'}
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -768,7 +768,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   </svg>
                 </Link>
                 <Link href={isEthioTax ? '/jobs/ethiopian-professionals' : '/jobs/hire-talent'}
-                  className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold transition-all hover:opacity-80 border-2"
+                  className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold transition-all hover:opacity-80 border-2"
                   style={{
                     borderColor: isEthioTax ? '#0f2d1e' : '#0C1A3D',
                     color: isEthioTax ? '#0f2d1e' : '#0C1A3D',
