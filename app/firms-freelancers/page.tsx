@@ -229,25 +229,25 @@ export default async function FirmsFreelancersPage() {
               <h2 className="font-display leading-[1.06] mb-6"
                 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.03em', color: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
                 {isEthioTax ? (
-                  <>Network partners<br /><span style={{ opacity: 0.7 }}>can also register</span><br />as candidates.</>
+                  <>Two ways to work with us.<br /><span style={{ opacity: 0.7 }}>Hire talent or</span><br />find your next role.</>
                 ) : (
-                  <>Network partners<br /><span style={{ opacity: 0.7 }}>can also register</span><br />as candidates.</>
+                  <>Two ways to work with us.<br /><span style={{ opacity: 0.7 }}>Hire talent or</span><br />find your next role.</>
                 )}
               </h2>
               <p className="text-base leading-relaxed mb-8 max-w-lg"
                 style={{ color: isEthioTax ? 'rgba(15,45,30,0.75)' : 'rgba(12,26,61,0.75)' }}>
                 {isEthioTax
-                  ? 'Many EthioTax network professionals are also open to permanent or contract employment. Register as a candidate — we will match you to opportunities separately from your network membership.'
-                  : 'Many Accounting Body network professionals are also open to permanent or contract employment. Register as a candidate — we will match you to opportunities separately from your network membership.'}
+                  ? 'Firms and consultancies — submit a hiring brief and we will find the right Ethiopian finance professional for your team. Independent professionals and freelancers — register as a candidate and we will match you to suitable contract or permanent opportunities. We manage both sides.'
+                  : 'Firms and consultancies — submit a hiring brief and we will find the right accounting or finance professional for your team. Independent professionals and freelancers — register as a candidate and we will match you to suitable contract or permanent opportunities. We manage both sides.'}
               </p>
               <div className="flex flex-col gap-3 mb-10">
                 {(isEthioTax ? [
-                  'Ethiopian-origin finance professionals actively placed',
-                  'ETICPA, ACCA, CIMA and CPA credentials recognised',
-                  '90-day replacement guarantee on every placement',
+                  'Firms: submit a brief, we find the right Ethiopian finance professional',
+                  'Freelancers: register once, we match you to opportunities',
+                  '90-day replacement guarantee on every permanent placement',
                 ] : [
-                  'Accounting and finance professionals only',
-                  'Every candidate personally reviewed before activation',
+                  'Firms: submit a brief, we find the right candidate for your team',
+                  'Freelancers: register once, we match you to suitable opportunities',
                   '90-day replacement guarantee on every permanent placement',
                 ]).map(point => (
                   <div key={point} className="flex items-center gap-3">
