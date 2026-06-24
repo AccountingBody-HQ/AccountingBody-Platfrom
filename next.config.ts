@@ -3,6 +3,9 @@ import { withSentryConfig } from '@sentry/nextjs'
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  experimental: {
+    scrollRestoration: true,
+  },
 }
 
 export default withSentryConfig(nextConfig, {
