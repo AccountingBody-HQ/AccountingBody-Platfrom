@@ -397,6 +397,75 @@ export default function BusinessConsultingPage() {
           </div>
         </div>
       </section>
+      {/* JOBS BANNER */}
+      <section className="relative overflow-hidden" style={{ background: '#C9982A' }}>
+        <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
+          style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+        <div className="container-site relative z-10 py-16">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-10">
+            <div className="max-w-xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6"
+                style={{ background: 'rgba(0,0,0,0.12)', border: '1px solid rgba(0,0,0,0.15)' }}>
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#0f2d1e' }} />
+                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#0f2d1e' }}>
+                  EthioTax Recruitment
+                </span>
+              </div>
+              <h2 className="font-display leading-[1.06] mb-4"
+                style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', letterSpacing: '-0.03em', color: '#0f2d1e' }}>
+                Also need to hire Ethiopian<br />
+                <span style={{ opacity: 0.7 }}>finance talent?</span>
+              </h2>
+              <p className="text-base leading-relaxed mb-6" style={{ color: 'rgba(15,45,30,0.75)' }}>
+                Submit a hiring brief — we search our vetted pool of Ethiopian finance professionals, manage every introduction, and guarantee every placement for 90 days.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <a href="/jobs/hire-talent"
+                  className="flex-1 inline-flex items-center justify-center gap-2 min-h-[56px] px-7 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-sm"
+                  style={{ background: '#0f2d1e' }}>
+                  Submit a hiring brief
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                </a>
+                <a href="/jobs/find-work"
+                  className="flex-1 inline-flex items-center justify-center gap-2 min-h-[56px] px-7 rounded-xl text-sm font-semibold transition-all hover:opacity-80 border-2"
+                  style={{ borderColor: '#0f2d1e', color: '#0f2d1e', background: 'transparent' }}>
+                  Find work
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                </a>
+              </div>
+            </div>
+            <div className="rounded-2xl overflow-hidden shrink-0 w-full lg:w-[380px]"
+              style={{ background: '#0f2d1e', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
+              <div className="px-7 pt-6 pb-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>Why EthioTax</p>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: 'rgba(201,152,42,0.15)', color: '#C9982A', border: '1px solid rgba(201,152,42,0.3)' }}>Not a job board</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2">
+                {[
+                  { value: 'Managed', label: 'End-to-end placement', sub: 'We handle every step' },
+                  { value: '90 Days', label: 'Replacement guarantee', sub: 'On every permanent role' },
+                  { value: '100%', label: 'Vetted candidates', sub: 'Every profile reviewed' },
+                  { value: 'Global', label: 'Diaspora coverage', sub: 'UK · USA · Canada · UAE' },
+                ].map((stat, i) => (
+                  <div key={stat.label} className="p-5"
+                    style={{ borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none' }}>
+                    <span className="font-display text-xl font-bold text-white block mb-1">{stat.value}</span>
+                    <span className="text-xs font-semibold block mb-0.5" style={{ color: '#C9982A' }}>{stat.label}</span>
+                    <span className="text-xs text-white/35">{stat.sub}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="px-7 py-4 flex items-center justify-between"
+                style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(201,152,42,0.06)' }}>
+                <p className="text-xs text-white/40">EthioTax manages every placement.</p>
+                <a href="/jobs/how-it-works" className="text-xs font-semibold ml-4 hover:opacity-80 transition-opacity" style={{ color: '#C9982A' }}>How it works →</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
       </main>
     </>
   )
