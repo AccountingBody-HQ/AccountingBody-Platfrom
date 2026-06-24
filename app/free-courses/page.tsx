@@ -5,6 +5,7 @@
 
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 
 export const metadata: Metadata = {
   title: 'Free Accounting Courses | Accounting Body',
@@ -79,6 +80,10 @@ const WHY_FREE = [
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default async function FreeCoursesPage({ searchParams }: { searchParams: { level?: string } }) {
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  const brand = isEthioTax ? '#1A4731' : '#0C1A3D'
+  const platformName = isEthioTax ? 'EthioTax' : 'Accounting Body'
   const sanityCourses = await getCourses()
   const allCourses = sanityCourses.length > 0 ? sanityCourses : PLACEHOLDER_COURSES
 
@@ -229,6 +234,121 @@ export default async function FreeCoursesPage({ searchParams }: { searchParams: 
           </div>
         </section>
       ))}
+
+      {/* ── JOBS BANNER ──────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden" style={{ background: '#C9982A' }}>
+        <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
+          style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+        <div className="container-site relative z-10 py-16 md:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+            <div className="lg:col-span-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-7"
+                style={{ background: 'rgba(0,0,0,0.12)', border: '1px solid rgba(0,0,0,0.15)' }}>
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: brand }} />
+                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: brand }}>
+                  {platformName} Recruitment
+                </span>
+              </div>
+              <h2 className="font-display leading-[1.06] mb-6"
+                style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.03em', color: brand }}>
+                {isEthioTax ? (
+                  <>Studying, at university,<br /><span style={{ opacity: 0.7 }}>or already qualified?</span><br />We place finance professionals.</>
+                ) : (
+                  <>Studying, at university,<br /><span style={{ opacity: 0.7 }}>or already qualified?</span><br />We place accounting & finance professionals.</>
+                )}
+              </h2>
+              <p className="text-base leading-relaxed mb-8 max-w-lg"
+                style={{ color: isEthioTax ? 'rgba(15,45,30,0.75)' : 'rgba(12,26,61,0.75)' }}>
+                {isEthioTax
+                  ? 'Register as a candidate at any stage — university student, mid-qualification or fully certified. We place Ethiopian finance professionals globally.'
+                  : 'Register as a candidate at any stage of your journey — university student, mid-qualification or fully certified. We match you to the right role when the time is right.'}
+              </p>
+              <div className="flex flex-col gap-3 mb-10">
+                {(isEthioTax ? [
+                  'Ethiopian-origin finance professionals actively placed',
+                  'ETICPA, ACCA, CIMA and CPA credentials recognised',
+                  '90-day replacement guarantee on every placement',
+                ] : [
+                  'Accounting and finance professionals only',
+                  'Every candidate personally reviewed before activation',
+                  '90-day replacement guarantee on every permanent placement',
+                ]).map(point => (
+                  <div key={point} className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+                      style={{ background: brand }}>
+                      <svg className="w-2.5 h-2.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium" style={{ color: isEthioTax ? 'rgba(15,45,30,0.85)' : 'rgba(12,26,61,0.85)' }}>
+                      {point}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link href="/jobs/find-work"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-7 rounded-xl min-h-[56px] text-sm font-semibold text-white transition-all hover:opacity-90 shadow-sm"
+                  style={{ background: brand }}>
+                  Register as a Candidate
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                </Link>
+                <Link href="/jobs/how-it-works"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-7 rounded-xl min-h-[56px] text-sm font-semibold transition-all hover:opacity-80 border-2"
+                  style={{ borderColor: brand, color: brand, background: 'transparent' }}>
+                  How it works
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                </Link>
+              </div>
+            </div>
+            <div className="lg:col-span-6">
+              <div className="rounded-2xl overflow-hidden"
+                style={{ background: brand, boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
+                <div className="px-8 pt-7 pb-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>
+                      Your course-to-career path
+                    </p>
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                      style={{ background: 'rgba(201,152,42,0.15)', color: '#C9982A', border: '1px solid rgba(201,152,42,0.3)' }}>
+                      Not a job board
+                    </span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2">
+                  {[
+                    { value: 'Learn', label: 'Build your skills', sub: 'ACCA · CIMA · AAT · ETICPA' },
+                    { value: 'Register', label: 'One profile — we match', sub: 'No cold applying ever' },
+                    { value: 'Managed', label: 'End-to-end placement', sub: 'We handle every step' },
+                    { value: '90 Days', label: 'Replacement guarantee', sub: 'On every permanent role' },
+                  ].map((stat, i) => (
+                    <div key={stat.label} className="p-6"
+                      style={{
+                        borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                        borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                      }}>
+                      <span className="font-display text-2xl font-bold text-white block mb-1">{stat.value}</span>
+                      <span className="text-xs font-semibold block mb-0.5" style={{ color: '#C9982A' }}>{stat.label}</span>
+                      <span className="text-xs text-white/35">{stat.sub}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="px-8 py-5 flex items-center justify-between"
+                  style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(201,152,42,0.06)' }}>
+                  <p className="text-xs text-white/40 leading-relaxed">
+                    Your profile is never made public.{' '}
+                    <span className="text-white/60 font-medium">We contact you only when a role matches.</span>
+                  </p>
+                  <Link href="/jobs" className="text-xs font-semibold whitespace-nowrap ml-4 hover:opacity-80 transition-opacity"
+                    style={{ color: '#C9982A' }}>
+                    Learn more →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ── CTA ──────────────────────────────────────────────────────── */}
       <section className="section-navy section relative overflow-hidden">
