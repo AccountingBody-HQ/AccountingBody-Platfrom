@@ -344,13 +344,13 @@ export default async function PracticeQuestionsPage({
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link href="/jobs/find-work"
-                  className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-sm"
+                  className="flex-1 inline-flex items-center justify-center gap-2 h-14 px-7 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-sm"
                   style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
                   Register as a Candidate
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                 </Link>
                 <Link href="/jobs/how-it-works"
-                  className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold transition-all hover:opacity-80 border-2"
+                  className="flex-1 inline-flex items-center justify-center gap-2 h-14 px-7 rounded-xl text-sm font-semibold transition-all hover:opacity-80 border-2"
                   style={{ borderColor: 'rgba(255,255,255,0.6)', color: isEthioTax ? '#0f2d1e' : '#0C1A3D', background: 'rgba(255,255,255,0.9)' }}>
                   How it works
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
