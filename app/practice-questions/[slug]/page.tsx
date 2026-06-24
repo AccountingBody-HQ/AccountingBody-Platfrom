@@ -167,13 +167,13 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 shrink-0">
                   <Link href="/jobs/find-work"
-                    className="h-11 px-6 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+                    className="flex-1 h-11 px-6 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
                     style={{ background: brand, color: '#fff' }}>
                     Register as a Candidate
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                   </Link>
                   <Link href="/jobs/how-it-works"
-                    className="h-11 px-6 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-80 border-2"
+                    className="flex-1 h-11 px-6 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-80 border-2"
                     style={{ borderColor: brand, color: brand, background: 'transparent' }}>
                     How it works
                   </Link>
