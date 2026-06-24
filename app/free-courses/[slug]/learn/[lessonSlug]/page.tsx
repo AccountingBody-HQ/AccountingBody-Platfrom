@@ -434,7 +434,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
           </div>
 
           {/* Jobs placement banner */}
-          <div style={{ maxWidth: 900, margin: '0 auto' }} className="mt-12">
+          <div style={{ maxWidth: 900, margin: '0 auto' }} className="mt-20">
             <div className="relative overflow-hidden rounded-2xl px-8 py-10 md:px-12 md:py-12" style={{ background: '#C9982A' }}>
               <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
                 style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
