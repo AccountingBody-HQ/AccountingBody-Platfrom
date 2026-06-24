@@ -291,13 +291,13 @@ export default function GlobalPayrollPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <a href="/jobs/hire-talent"
-                  className="flex-1 inline-flex items-center justify-center gap-2 h-14 px-7 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-sm"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-7 rounded-xl min-h-[56px] text-sm font-semibold text-white transition-all hover:opacity-90 shadow-sm"
                   style={{ background: '#0C1A3D' }}>
                   Submit a hiring brief
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                 </a>
                 <a href="/jobs/how-it-works"
-                  className="flex-1 inline-flex items-center justify-center gap-2 h-14 px-7 rounded-xl text-sm font-semibold transition-all hover:opacity-80 border-2"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-7 rounded-xl min-h-[56px] text-sm font-semibold transition-all hover:opacity-80 border-2"
                   style={{ borderColor: '#0C1A3D', color: '#0C1A3D', background: 'transparent' }}>
                   How it works
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
