@@ -405,7 +405,7 @@ export default async function GetHelpPage() {
                 Accounting Body places vetted accounting and finance professionals in permanent and contract roles. Submit a hiring brief — we search our candidate pool, manage every introduction, and guarantee every placement for 90 days.
               </p>
               <div className="flex flex-col gap-3 mb-10">
-                {['Accounting and finance professionals only', 'Every candidate personally reviewed before activation', '90-day replacement guarantee on every permanent placement'].map(point => (
+                {['Accounting and finance professionals', 'Every candidate personally reviewed before activation', '90-day replacement guarantee on every permanent placement'].map(point => (
                   <div key={point} className="flex items-center gap-3">
                     <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: '#0C1A3D' }}>
                       <svg className="w-2.5 h-2.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
