@@ -270,7 +270,6 @@ export default function GlobalPayrollPage() {
       <section className="relative overflow-hidden" style={{ background: '#C9982A' }}>
         <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
           style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-        <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: 'rgba(12,26,61,0.3)' }} />
         <div className="container-site relative z-10 py-16">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-10">
             <div className="max-w-xl">
@@ -335,7 +334,6 @@ export default function GlobalPayrollPage() {
             </div>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: 'rgba(12,26,61,0.3)' }} />
       </section>
 
     </main>

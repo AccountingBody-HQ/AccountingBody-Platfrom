@@ -214,8 +214,6 @@ export default async function FirmsFreelancersPage() {
       <section className="relative overflow-hidden" style={{ background: '#C9982A' }}>
         <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
           style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-        <div className="absolute top-0 left-0 right-0 h-0.5"
-          style={{ background: isEthioTax ? 'rgba(15,45,30,0.3)' : 'rgba(12,26,61,0.3)' }} />
         <div className="container-site relative z-10 py-16 md:py-20">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
 
