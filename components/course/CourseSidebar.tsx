@@ -68,7 +68,7 @@ export default function CourseSidebar({
 
   return (
     <aside
-      className="hidden lg:flex flex-col shrink-0"
+      className="hidden lg:flex flex-col shrink-0 self-stretch"
       style={{
         width: 'clamp(240px, 24vw, 340px)',
         background: brandBg,
