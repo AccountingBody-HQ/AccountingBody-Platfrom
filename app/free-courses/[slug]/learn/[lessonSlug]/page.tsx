@@ -437,11 +437,10 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
 
 
       {/* Jobs placement banner */}
-      <div className="container-site py-8">
-        <div className="relative overflow-hidden rounded-2xl" style={{ background: '#C9982A' }}>
-          <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
-            style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-          <div className="relative z-10 px-8 py-10">
+      <section className="relative overflow-hidden" style={{ background: '#C9982A' }}>
+        <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
+          style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+        <div className="container-site relative z-10 py-12">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                 <div className="max-w-xl">
                   <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(12,26,61,0.6)' }}>
@@ -474,9 +473,8 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                   </Link>
                 </div>
               </div>
-          </div>
         </div>
-      </div>
+      </section>
 
       {/* MOBILE BOTTOM NAVIGATION */}
       <MobileNavDrawer
