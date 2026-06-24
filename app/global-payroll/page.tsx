@@ -298,7 +298,7 @@ export default function GlobalPayrollPage() {
                 </a>
                 <a href="/jobs/how-it-works"
                   className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold transition-all hover:opacity-80 border-2"
-                  style={{ borderColor: 'rgba(255,255,255,0.6)', color: '#0C1A3D', background: 'rgba(255,255,255,0.9)' }}>
+                  style={{ borderColor: '#0C1A3D', color: '#0C1A3D', background: 'transparent' }}>
                   How it works
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                 </a>

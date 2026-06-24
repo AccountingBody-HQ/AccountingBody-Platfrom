@@ -770,9 +770,9 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 <Link href={isEthioTax ? '/jobs/ethiopian-professionals' : '/jobs/hire-talent'}
                   className="flex-1 inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold transition-all hover:opacity-80 border-2"
                   style={{
-                    borderColor: 'rgba(255,255,255,0.6)',
+                    borderColor: isEthioTax ? '#0f2d1e' : '#0C1A3D',
                     color: isEthioTax ? '#0f2d1e' : '#0C1A3D',
-                    background: 'rgba(255,255,255,0.9)',
+                    background: 'transparent',
                   }}>
                   {isEthioTax ? 'Ethiopian professionals' : 'Hire talent'}
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
