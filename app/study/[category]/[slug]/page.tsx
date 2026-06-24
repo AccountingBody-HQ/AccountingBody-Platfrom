@@ -410,27 +410,27 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                     {platformName} Recruitment
                   </p>
                   <h2 className="font-display text-2xl md:text-3xl font-bold mb-3 leading-tight" style={{ color: '#0C1A3D', letterSpacing: '-0.02em' }}>
-                    {category
-                      ? `Studying ${category.toUpperCase()} today? We place qualified ${category.toUpperCase()} professionals.`
-                      : isEthioTax
-                        ? 'Ready to take the next step? We place Ethiopian-origin finance professionals globally.'
-                        : 'Ready to take the next step? We place qualified accountants and finance professionals.'}
+                    {isEthioTax
+                      ? 'Studying, at university, or already qualified? We place Ethiopian-origin finance professionals globally.'
+                      : 'Studying, at university, or already qualified? We place accounting & finance professionals.'}
                   </h2>
                   <p className="text-sm leading-relaxed" style={{ color: 'rgba(12,26,61,0.7)' }}>
                     {isEthioTax
-                      ? 'Register once. We match you to roles and manage the introduction — you never approach employers directly.'
-                      : 'Register once. We search our employer network on your behalf and manage every introduction.'}
+                      ? 'Register as a candidate at any stage — university student, mid-qualification or fully certified. We place Ethiopian finance professionals globally.'
+                      : 'Register as a candidate at any stage of your journey — university student, mid-qualification or fully certified. We match you to the right role when the time is right.'}
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                <div className="flex flex-col gap-3 shrink-0 min-w-[220px]">
                   <Link href="/jobs/find-work"
-                    className="h-11 px-6 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+                    target="_blank" rel="noopener noreferrer"
+                    className="min-h-[52px] px-6 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
                     style={{ background: brand, color: '#fff' }}>
                     Register as a Candidate
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                   </Link>
                   <Link href="/jobs/how-it-works"
-                    className="h-11 px-6 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-80 border-2"
+                    target="_blank" rel="noopener noreferrer"
+                    className="min-h-[52px] px-6 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-80 border-2"
                     style={{ borderColor: brand, color: brand, background: 'transparent' }}>
                     How it works
                   </Link>
