@@ -165,7 +165,7 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
                       : 'Register as a candidate at any stage of your journey — university student, mid-qualification or fully certified. We match you to the right role when the time is right.'}
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                <div className="flex flex-col gap-3 shrink-0 min-w-[220px]">
                   <Link href="/jobs/find-work"
                     className="flex-1 h-11 px-6 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
                     style={{ background: brand, color: '#fff' }}>
