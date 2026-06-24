@@ -156,13 +156,13 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
                   </p>
                   <h2 className="font-display text-2xl md:text-3xl font-bold mb-3 leading-tight" style={{ color: '#0C1A3D', letterSpacing: '-0.02em' }}>
                     {isEthioTax
-                      ? 'Ready to take the next step? We place Ethiopian-origin finance professionals globally.'
-                      : 'Ready to take the next step? We place qualified accountants and finance professionals.'}
+                      ? 'Studying, at university, or already qualified? We place Ethiopian-origin finance professionals globally.'
+                      : 'Studying, at university, or already qualified? We place accounting & finance professionals.'}
                   </h2>
                   <p className="text-sm leading-relaxed" style={{ color: 'rgba(12,26,61,0.7)' }}>
                     {isEthioTax
-                      ? 'Register once. We match you to roles and manage the introduction — you never approach employers directly.'
-                      : 'Register once. We search our employer network on your behalf and manage every introduction.'}
+                      ? 'Register as a candidate at any stage — university student, mid-qualification or fully certified. We place Ethiopian finance professionals globally.'
+                      : 'Register as a candidate at any stage of your journey — university student, mid-qualification or fully certified. We match you to the right role when the time is right.'}
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 shrink-0">
