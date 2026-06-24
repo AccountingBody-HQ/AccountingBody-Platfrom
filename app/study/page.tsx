@@ -348,16 +348,16 @@ export default async function StudyPage() {
               <h2 className="font-display leading-[1.06] mb-6"
                 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.03em', color: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
                 {isEthioTax ? (
-                  <>The qualification you are<br /><span style={{ opacity: 0.7 }}>studying for today</span><br />leads to roles we place people in.</>
+                  <>Studying, at university,<br /><span style={{ opacity: 0.7 }}>or already qualified?</span><br />We place finance professionals.</>
                 ) : (
-                  <>The qualification you are<br /><span style={{ opacity: 0.7 }}>studying for today</span><br />leads to roles we place people in.</>
+                  <>Studying, at university,<br /><span style={{ opacity: 0.7 }}>or already qualified?</span><br />We place accounting & finance professionals.</>
                 )}
               </h2>
               <p className="text-base leading-relaxed mb-8 max-w-lg"
                 style={{ color: isEthioTax ? 'rgba(15,45,30,0.75)' : 'rgba(12,26,61,0.75)' }}>
                 {isEthioTax
-                  ? 'EthioTax works with employers who actively seek qualified Ethiopian-origin finance professionals. Register as a candidate now — your profile will be ready when your qualification is.'
-                  : 'Accounting Body places qualified accountants and finance professionals in permanent and contract roles. Register as a candidate now — your profile will be ready when you are.'}
+                  ? 'Register as a candidate at any stage — university student, mid-qualification or fully certified. We place Ethiopian finance professionals globally.'
+                  : 'Register as a candidate at any stage of your journey — whether you are at university, mid-qualification or fully certified. We match you to the right role when the time is right.'}
               </p>
               <div className="flex flex-col gap-3 mb-10">
                 {(isEthioTax ? [
