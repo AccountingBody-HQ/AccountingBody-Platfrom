@@ -368,7 +368,7 @@ export default function FinancialPlanningPage() {
       </section>
 
       {/* DISCLAIMER */}
-      <section className="py-12 bg-white border-t" style={{ borderColor: '#e8f0eb' }}>
+      <section className="py-12 bg-white">
         <div className="max-w-5xl mx-auto px-6">
           <p className="text-gray-400 text-xs leading-relaxed max-w-3xl">
             All professional work, filings and regulatory submissions are prepared and carried out by qualified specialists. EthioTax manages your engagement and maintains service standards throughout.
@@ -376,7 +376,7 @@ export default function FinancialPlanningPage() {
         </div>
       </section>
       {/* OTHER SERVICES */}
-      <section className="py-16 bg-[#F7F8F4] border-t border-[#e8f0eb]">
+      <section className="py-16 bg-white">
         <div className="container-site">
           <div className="text-center mb-10">
             <p className="text-[#1A4731] text-[11px] font-bold uppercase tracking-[0.12em] mb-3">Explore Further</p>
