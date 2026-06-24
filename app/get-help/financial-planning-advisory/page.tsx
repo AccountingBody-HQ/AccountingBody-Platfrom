@@ -370,7 +370,7 @@ export default function FinancialPlanningPage() {
       {/* DISCLAIMER */}
       <section className="py-12 bg-white">
         <div className="max-w-5xl mx-auto px-6">
-          <p className="text-gray-400 text-xs leading-relaxed max-w-3xl">
+          <p className="text-gray-400 text-xs leading-relaxed max-w-3xl mx-auto text-center">
             All professional work, filings and regulatory submissions are prepared and carried out by qualified specialists. EthioTax manages your engagement and maintains service standards throughout.
           </p>
         </div>
