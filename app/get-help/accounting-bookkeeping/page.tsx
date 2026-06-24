@@ -379,7 +379,6 @@ export default function AccountingBookkeepingPage() {
       <section className="py-16 bg-white">
         <div className="container-site">
           <div className="text-center mb-10">
-            <p className="text-[#1A4731] text-[11px] font-bold uppercase tracking-[0.12em] mb-3">Explore Further</p>
             <h2 className="font-display text-2xl md:text-3xl font-bold text-gray-900">Other services EthioTax delivers</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
