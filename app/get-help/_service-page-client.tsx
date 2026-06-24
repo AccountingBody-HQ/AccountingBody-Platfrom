@@ -182,7 +182,7 @@ export default function ServicePageClient({ params }: { params: { slug: string }
   }
 
   return (
-    <main className="min-h-screen bg-surface">
+    <main className="bg-surface">
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-navy-950 py-16 md:py-24">
