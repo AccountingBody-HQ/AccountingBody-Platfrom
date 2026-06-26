@@ -17,11 +17,12 @@ interface Props {
   module: string
   moduleName: string
   backHref: string
+  apiPath?: string
 }
 
 type Phase = 'intro' | 'exam' | 'results'
 
-export default function MockExamClient({ level, module, moduleName, backHref }: Props) {
+export default function MockExamClient({ level, module, moduleName, backHref, apiPath = '/api/eticpa/mock-exam' }: Props) {
   const [phase, setPhase] = useState<Phase>('intro')
   const [questions, setQuestions] = useState<Question[]>([])
   const [answers, setAnswers] = useState<Record<number, number>>({})
@@ -35,7 +36,7 @@ export default function MockExamClient({ level, module, moduleName, backHref }: 
   const loadExam = useCallback(async () => {
     setLoading(true); setError('')
     try {
-      const res = await fetch(`/api/eticpa/mock-exam?level=${level}&module=${module}&count=50`, { cache: 'no-store' })
+      const res = await fetch(`${apiPath}?level=${level}&module=${module}&count=50`, { cache: 'no-store' })
       const data = await res.json()
       if (data.error || !data.questions?.length) { setError(data.error || 'No questions available yet.'); setLoading(false); return }
       setQuestions(data.questions)
