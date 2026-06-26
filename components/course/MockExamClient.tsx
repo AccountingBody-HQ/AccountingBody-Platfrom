@@ -221,7 +221,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
         )}
       </div>
       {/* Always-available submit */}
-      <div className="mt-4 text-center">
+      <div className="mt-4 flex flex-col items-center">
         <button onClick={handleSubmit}
           className="h-11 px-6 rounded-lg text-sm font-semibold border-2 transition-colors"
           style={{ borderColor: GOLD, color: GREEN }}>Finish &amp; submit exam</button>
