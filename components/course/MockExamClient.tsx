@@ -225,7 +225,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
         <button onClick={handleSubmit}
           className="h-11 px-6 rounded-lg text-sm font-semibold border-2 transition-colors"
           style={{ borderColor: GOLD, color: GREEN }}>Finish &amp; submit exam</button>
-        <p className="text-xs text-slate-400 mt-2">{answered} of {questions.length} answered — you can submit at any time.</p>
+        <p className="text-xs text-slate-400 mt-2 text-center">{answered} of {questions.length} answered — you can submit at any time.</p>
       </div>
 
       {/* Question grid */}
