@@ -136,7 +136,7 @@ export async function getPracticePostBySlug(slug: string): Promise<PracticePost 
           question:     q.questionText ?? "",
           options,
           correct:      correctLabel,
-          correctIndex: typeof q.correctIndex === "number" ? q.correctIndex : null,
+          ...(typeof q.correctIndex === "number" ? { correctIndex: q.correctIndex } : {}),
           explanation:  q.explanation ?? "",
           // FIX 13: caseId mapped to case_id so scenario questions link to their exhibits
           case_id:      q.caseId ?? null,
