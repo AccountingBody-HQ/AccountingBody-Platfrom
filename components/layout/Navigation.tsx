@@ -500,7 +500,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                 ...group,
                 links: group.links.map(link =>
                   link.label === 'Mock Exams'
-                    ? { ...link, href: isET ? '/study/mock-exams' : '/practice-questions' }
+                    ? { ...link, href: isET ? '/study/mock-exams' : '/mock-exams' }
                     : link
                 ),
               }
@@ -526,7 +526,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
               ...group,
               links: group.links.map(link =>
                 link.label === 'Mock Examinations'
-                  ? { ...link, href: isET ? '/study/mock-exams' : '/practice-questions', label: isET ? 'Mock Examinations' : 'All Practice Questions', description: isET ? 'Full timed mock exams' : 'Browse all practice question sets' }
+                  ? { ...link, href: isET ? '/study/mock-exams' : '/mock-exams', label: isET ? 'Mock Examinations' : 'Mock Examinations', description: isET ? 'Full timed mock exams' : 'Full timed mock exams by subject' }
                   : link
               ),
             }
