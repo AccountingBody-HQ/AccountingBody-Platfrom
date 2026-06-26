@@ -63,7 +63,7 @@ function normaliseOptions(q: QuizQuestion): QuizOption[] {
 }
 
 function getCorrectLabel(q: QuizQuestion, opts: QuizOption[]): string {
-  if (q.correctIndex !== undefined) return opts[q.correctIndex]?.label ?? ''
+  if (typeof q.correctIndex === 'number') return opts[q.correctIndex]?.label ?? ''
   if (q.correct !== undefined) {
     const c = String(q.correct)
     // Try label/value match FIRST — prevents numeric labels like "3" being
