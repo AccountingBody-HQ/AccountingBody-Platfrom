@@ -82,7 +82,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
     return (
       <div className="max-w-2xl mx-auto">
         <div className="rounded-2xl border border-slate-200 bg-white p-8 md:p-10 text-center">
-          <div className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center" style={{ backgroundColor: GREEN }}>
+          <div className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center" style={{ backgroundColor: backHref === "/mock-exams" ? "#0C1A3D" : GREEN }}>
             <svg className="w-8 h-8" fill="none" stroke={GOLD} viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
           </div>
           <h1 className="font-display text-2xl md:text-3xl text-navy-950 mb-3">{moduleName} Mock Exam</h1>
@@ -101,7 +101,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
             style={{ backgroundColor: GOLD, color: GREEN }}>
             {loading ? 'Preparing your exam…' : 'Start Mock Exam'}
           </button>
-          <Link href={backHref} className="inline-block mt-4 text-sm text-slate-400 hover:text-slate-600 transition-colors">← Back to module</Link>
+          <Link href={backHref} className="inline-block mt-4 text-sm text-slate-400 hover:text-slate-600 transition-colors">← {backHref === "/mock-exams" ? "Back to Mock Exams" : "Back to module"}</Link>
         </div>
       </div>
     )

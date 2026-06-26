@@ -81,7 +81,7 @@ export default async function MockExamsPage() {
               { value: '50',        label: 'Questions per exam' },
               { value: '75 mins',   label: 'Time allowed' },
               { value: '60%',       label: 'Pass mark' },
-              { value: '\u221e',    label: 'Unlimited attempts' },
+              { value: '∞',    label: 'Unlimited attempts' },
             ].map(stat => (
               <div key={stat.label} className="text-center">
                 <p className="font-display text-3xl font-bold text-navy-950 mb-1">{stat.value}</p>
