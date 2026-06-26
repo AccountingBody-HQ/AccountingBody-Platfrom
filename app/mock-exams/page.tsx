@@ -148,7 +148,7 @@ export default async function MockExamsPage() {
                         </div>
                         <div className="w-px h-8 bg-slate-100" />
                         <div>
-                          <p className="font-display text-xl font-bold text-navy-950">\u221e</p>
+                          <p className="font-display text-xl font-bold text-navy-950">∞</p>
                           <p className="text-xs text-slate-400">attempts</p>
                         </div>
                       </div>
