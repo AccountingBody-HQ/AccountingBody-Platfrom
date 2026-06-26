@@ -5,7 +5,6 @@ import type { NextRequest } from "next/server"
 const STATIC_REDIRECTS: Record<string, string> = {
   "/course": "/free-courses",
   "/courses": "/free-courses",
-  "/mock-exams": "/practice-questions",
   "/accountants-freelancers": "/firms-freelancers",
   "/about-us": "/about",
   "/cookie-policy-uk": "/cookie-policy",
