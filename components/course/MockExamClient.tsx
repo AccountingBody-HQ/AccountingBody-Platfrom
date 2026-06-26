@@ -77,7 +77,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
   const mins = Math.floor(secondsLeft / 60)
   const secs = secondsLeft % 60
 
-  const GREEN = '#1A4731'
+  const GREEN = apiPath === '/api/mock-exam' ? '#0C1A3D' : '#1A4731'
   const GOLD = '#C9982A'
 
   // ── INTRO ──
