@@ -36,7 +36,10 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
   const loadExam = useCallback(async () => {
     setLoading(true); setError('')
     try {
-      const res = await fetch(`${apiPath}?level=${level}&module=${module}&count=50`, { cache: 'no-store' })
+      const apiUrl = apiPath === '/api/mock-exam'
+        ? `${apiPath}?category=${module}&count=50`
+        : `${apiPath}?level=${level}&module=${module}&count=50`
+      const res = await fetch(apiUrl, { cache: 'no-store' })
       const data = await res.json()
       if (data.error || !data.questions?.length) { setError(data.error || 'No questions available yet.'); setLoading(false); return }
       setQuestions(data.questions)
