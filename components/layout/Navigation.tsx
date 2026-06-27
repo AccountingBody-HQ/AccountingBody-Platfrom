@@ -423,6 +423,16 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
 
                 {isExpanded && (
                   <div className="bg-slate-50 border-t border-slate-100 py-2 animate-slide-down">
+                    {section.href && (
+                      <Link
+                        href={section.href}
+                        onClick={onClose}
+                        className="flex items-center justify-between px-5 py-3 text-sm font-semibold text-navy-950 hover:bg-slate-100 transition-colors border-b border-slate-200 mb-2"
+                      >
+                        <span>View all {section.label}</span>
+                        <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                      </Link>
+                    )}
                     {section.groups?.map(group => (
                       <div key={group.title} className="mb-3">
                         <p className="px-5 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-widest">
