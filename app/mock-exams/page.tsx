@@ -62,13 +62,7 @@ export default async function MockExamsPage() {
             <p className="text-white/70 text-xl leading-relaxed max-w-2xl mb-10">
               Free timed mock exams organised by subject. Every attempt draws 50 fresh questions from the live question bank. Unlimited attempts.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/practice-questions"
-                className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold border-2 border-white/30 text-white hover:border-white/60 transition-colors"
-                style={{ height: '48px', minWidth: '220px', boxSizing: 'border-box' }}>
-                Browse Practice Questions
-              </Link>
-            </div>
+
           </div>
         </div>
       </section>
