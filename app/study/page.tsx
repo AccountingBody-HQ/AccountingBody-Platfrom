@@ -329,6 +329,26 @@ export default async function StudyPage() {
         </div>
       </section>
 
+      {/* CTA */}
+      <section className="section-navy section relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-white/5 blur-3xl" />
+          <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-gold-500/10 blur-3xl" />
+        </div>
+        <div className="container-site relative z-10 text-center">
+          <span className="eyebrow text-gold-400 mb-4 block">Practice Questions</span>
+          <h2 className="font-display text-4xl text-white mb-4 leading-tight">Ready to test your knowledge?</h2>
+          <p className="text-white/65 text-lg mb-8 max-w-xl mx-auto leading-relaxed">
+            {isEthioTax ? 'Thousands of exam-standard practice questions for ACCA, CIMA, ETICPA and AAT.' : 'Thousands of exam-standard practice questions for ACCA, CIMA, ICAEW and AAT.'}
+          </p>
+          <Link href="/practice-questions"
+            className="inline-flex items-center gap-2 h-13 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
+            Browse practice questions
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+          </Link>
+        </div>
+      </section>
+
       {/* JOBS BRIDGE — matches homepage Jobs section design */}
       <section className="relative overflow-hidden" style={{ background: '#C9982A' }}>
         <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
@@ -446,26 +466,6 @@ export default async function StudyPage() {
             </div>
 
           </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="section-navy section relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-white/5 blur-3xl" />
-          <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-gold-500/10 blur-3xl" />
-        </div>
-        <div className="container-site relative z-10 text-center">
-          <span className="eyebrow text-gold-400 mb-4 block">Practice Questions</span>
-          <h2 className="font-display text-4xl text-white mb-4 leading-tight">Ready to test your knowledge?</h2>
-          <p className="text-white/65 text-lg mb-8 max-w-xl mx-auto leading-relaxed">
-            {isEthioTax ? 'Thousands of exam-standard practice questions for ACCA, CIMA, ETICPA and AAT.' : 'Thousands of exam-standard practice questions for ACCA, CIMA, ICAEW and AAT.'}
-          </p>
-          <Link href="/practice-questions"
-            className="inline-flex items-center gap-2 h-13 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
-            Browse practice questions
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-          </Link>
         </div>
       </section>
     </div>
