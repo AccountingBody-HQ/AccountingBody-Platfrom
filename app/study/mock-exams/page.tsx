@@ -53,7 +53,7 @@ export default async function MockExamsPage() {
           <div className="max-w-3xl">
             <span className="inline-block text-xs font-bold px-3 py-1.5 rounded-md mb-6"
               style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>
-              ETICPA ATQ — Practice Exams
+              <span translate="no">ETICPA ATQ</span> — Practice Exams
             </span>
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.025em' }}>
               Test your knowledge.
@@ -63,13 +63,13 @@ export default async function MockExamsPage() {
               </span>
             </h1>
             <p className="text-white/70 text-xl leading-relaxed max-w-2xl mb-10">
-              Free timed mock exams for every ETICPA ATQ module — 50 questions per attempt, drawn from a 3,000+ question bank. Balanced across all topics. Unlimited attempts.
+              Free timed mock exams for every <span translate="no">ETICPA ATQ</span> module — 50 questions per attempt, drawn from a 3,000+ question bank. Balanced across all topics. Unlimited attempts.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/study/eticpa"
                 className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold border-2 border-white/30 text-white hover:border-white/60 transition-colors"
                 style={{ height: '48px', minWidth: '220px', boxSizing: 'border-box' }}>
-                Back to ETICPA Hub
+                Back to <span translate="no">ETICPA</span> Hub
               </Link>
             </div>
           </div>
@@ -113,7 +113,7 @@ export default async function MockExamsPage() {
                 <div className="p-6 flex flex-col flex-1">
                   <div className="flex items-center justify-between mb-5">
                     <span className="text-xs font-bold px-2.5 py-1 rounded-md"
-                      style={{ backgroundColor: '#f0f7f4', color: '#1A4731' }}>{exam.level}</span>
+                      style={{ backgroundColor: '#f0f7f4', color: '#1A4731' }}><span translate="no">{exam.level}</span></span>
                     <span className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md"
                       style={{ backgroundColor: '#1A4731', color: '#C9982A' }}>
                       <span className="w-1.5 h-1.5 rounded-full bg-[#C9982A] animate-pulse" />
@@ -194,7 +194,7 @@ export default async function MockExamsPage() {
                         <path strokeLinecap="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <span className="text-sm font-medium" style={{ color: 'rgba(15,45,30,0.85)' }}>
+                    <span translate="no" className="text-sm font-medium" style={{ color: 'rgba(15,45,30,0.85)' }}>
                       {point}
                     </span>
                   </div>
