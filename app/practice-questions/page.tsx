@@ -91,11 +91,27 @@ export default async function PracticeQuestionsPage({
           <p className="text-white/60 text-lg max-w-2xl">
             Scenario-based and multiple choice questions for accounting qualifications. Every session picks a fresh random set.
           </p>
+          <div className="flex flex-col sm:flex-row gap-3 mt-8">
+            <a
+              href="#practice-content"
+              className="inline-flex items-center justify-center text-sm font-semibold text-navy-950 bg-gold-400 hover:bg-gold-300 transition-colors rounded-lg"
+              style={{ width: '220px', height: '48px', boxSizing: 'border-box' }}
+            >
+              Practice Questions
+            </a>
+            <Link
+              href={isEthioTax ? '/study/mock-exams' : '/mock-exams'}
+              className="inline-flex items-center justify-center text-sm font-semibold text-white border border-white/30 hover:border-white/60 hover:bg-white/10 transition-colors rounded-lg"
+              style={{ width: '220px', height: '48px', boxSizing: 'border-box' }}
+            >
+              Take Mock Exams
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* CONTENT */}
-      <section className="section bg-slate-50">
+      <section id="practice-content" className="section bg-slate-50">
         <div className="container-site">
           <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8 items-start">
 
