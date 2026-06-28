@@ -266,6 +266,7 @@ export default async function PracticeQuestionsPage({
                             <Link
                               key={p}
                               href={buildUrl({ page: p as number })}
+                              translate="no"
                               className={`w-9 h-9 rounded-lg text-sm font-medium flex items-center justify-center transition-colors ${page === p ? 'bg-navy-950 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-navy-300'}`}
                             >
                               {p}
