@@ -104,7 +104,7 @@ export default async function GlossaryPage() {
               { value:'Free',   label:'Always' },
             ].map(stat => (
               <div key={stat.label} className="flex items-center gap-2">
-                <span className="font-display text-xl text-navy-950">{stat.value}</span>
+                <span className="font-display text-xl text-navy-950"><span translate="no">{stat.value}</span></span>
                 <span className="text-sm text-slate-400">{stat.label}</span>
               </div>
             ))}

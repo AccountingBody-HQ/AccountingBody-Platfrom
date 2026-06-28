@@ -192,7 +192,7 @@ export default async function ManagementAccountingPage() {
                 { value: '∞', label: 'Unlimited attempts' },
               ].map(stat => (
                 <div key={stat.label} className="text-center">
-                  <p className="font-display text-3xl font-bold mb-1" style={{ color: '#C9982A' }}>{stat.value}</p>
+                  <p className="font-display text-3xl font-bold mb-1" style={{ color: '#C9982A' }}><span translate="no"><span translate="no">{stat.value}</span></span></p>
                   <p className="text-white/50 text-xs">{stat.label}</p>
                 </div>
               ))}

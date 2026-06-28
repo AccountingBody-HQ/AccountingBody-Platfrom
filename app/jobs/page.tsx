@@ -189,7 +189,7 @@ export default async function JobsHubPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, i) => (
               <div key={stat.label} className={i < 3 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}>
-                <span className="font-display text-3xl block mb-1" style={{ color: brand }}>{stat.value}</span>
+                <span className="font-display text-3xl block mb-1" style={{ color: brand }}><span translate="no">{stat.value}</span></span>
                 <span className="text-sm font-semibold text-navy-950 block">{stat.label}</span>
                 <span className="text-xs text-slate-400 mt-0.5 block">{stat.sub}</span>
               </div>

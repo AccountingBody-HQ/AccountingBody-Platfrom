@@ -327,7 +327,7 @@ export default async function FreeCoursesPage({ searchParams }: { searchParams: 
                         borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none',
                         borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none',
                       }}>
-                      <span className="font-display text-2xl font-bold text-white block mb-1">{stat.value}</span>
+                      <span className="font-display text-2xl font-bold text-white block mb-1"><span translate="no">{stat.value}</span></span>
                       <span className="text-xs font-semibold block mb-0.5" style={{ color: '#C9982A' }}>{stat.label}</span>
                       <span className="text-xs text-white/35">{stat.sub}</span>
                     </div>

@@ -196,7 +196,7 @@ export default async function CostAccountingPage() {
                 { value: '∞', label: 'Unique attempts' },
               ].map(stat => (
                 <div key={stat.label} className="rounded-xl p-6 text-center" style={{ backgroundColor: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}>
-                  <p className="font-display text-4xl mb-2" style={{ color: '#C9982A' }}>{stat.value}</p>
+                  <p className="font-display text-4xl mb-2" style={{ color: '#C9982A' }}><span translate="no"><span translate="no">{stat.value}</span></span></p>
                   <p className="text-white/60 text-sm">{stat.label}</p>
                 </div>
               ))}

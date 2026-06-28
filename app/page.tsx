@@ -819,7 +819,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                         borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none',
                         borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none',
                       }}>
-                      <span className="font-display text-2xl font-bold text-white block mb-1">{stat.value}</span>
+                      <span className="font-display text-2xl font-bold text-white block mb-1"><span translate="no">{stat.value}</span></span>
                       <span className="text-xs font-semibold block mb-0.5" style={{ color: '#C9982A' }}>{stat.label}</span>
                       <span className="text-xs text-white/35">{stat.sub}</span>
                     </div>
@@ -928,7 +928,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-3" style={{backgroundColor: '#f0f7f4'}}>
                     <span className="text-lg font-bold" style={{color: '#1A4731'}}>✓</span>
                   </div>
-                  <span className="stat-number mb-1" style={{color: '#1A4731'}}>{stat.value}</span>
+                  <span className="stat-number mb-1" style={{color: '#1A4731'}}><span translate="no">{stat.value}</span></span>
                   <span className="text-sm font-semibold text-navy-950">{stat.label}</span>
                   <span className="text-xs text-slate-400 mt-0.5">{stat.sublabel}</span>
                 </div>
@@ -948,7 +948,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   <div className="w-9 h-9 rounded-lg bg-navy-50 flex items-center justify-center text-navy-600 mb-3">
                     {stat.icon}
                   </div>
-                  <span className="stat-number mb-1">{stat.value}</span>
+                  <span className="stat-number mb-1"><span translate="no">{stat.value}</span></span>
                   <span className="text-sm font-semibold text-navy-950">{stat.label}</span>
                   <span className="text-xs text-slate-400 mt-0.5">{stat.sublabel}</span>
                 </div>

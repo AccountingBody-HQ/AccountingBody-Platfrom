@@ -173,7 +173,7 @@ export default async function GetHelpPage() {
                 { value: 'Global', label: 'Diaspora Coverage', sub: 'UK, USA, Canada, UAE & Ethiopia' },
               ].map(stat => (
                 <div key={stat.value} className="text-center py-4 px-2">
-                  <p className="font-display text-[28px] font-extrabold text-[#1A4731] mb-1">{stat.value}</p>
+                  <p className="font-display text-[28px] font-extrabold text-[#1A4731] mb-1"><span translate="no"><span translate="no">{stat.value}</span></span></p>
                   <p className="text-[#1A4731] text-[13px] font-semibold mb-0.5">{stat.label}</p>
                   <p className="text-gray-400 text-[12px]">{stat.sub}</p>
                 </div>
@@ -447,7 +447,7 @@ export default async function GetHelpPage() {
                   ].map((stat, i) => (
                     <div key={stat.label} className="p-6"
                       style={{ borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none' }}>
-                      <span className="font-display text-2xl font-bold text-white block mb-1">{stat.value}</span>
+                      <span className="font-display text-2xl font-bold text-white block mb-1"><span translate="no">{stat.value}</span></span>
                       <span className="text-xs font-semibold block mb-0.5" style={{ color: '#C9982A' }}>{stat.label}</span>
                       <span className="text-xs text-white/35">{stat.sub}</span>
                     </div>

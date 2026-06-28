@@ -87,7 +87,7 @@ export default async function MockExamsPage() {
               { value: '5',      label: 'Live exams now' },
             ].map(stat => (
               <div key={stat.label} className="text-center">
-                <p className="font-display text-3xl font-bold mb-1" style={{ color: '#1A4731' }}>{stat.value}</p>
+                <p className="font-display text-3xl font-bold mb-1" style={{ color: '#1A4731' }}><span translate="no"><span translate="no">{stat.value}</span></span></p>
                 <p className="text-xs text-slate-400">{stat.label}</p>
               </div>
             ))}
@@ -241,7 +241,7 @@ export default async function MockExamsPage() {
                         borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none',
                         borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none',
                       }}>
-                      <span className="font-display text-2xl font-bold text-white block mb-1">{stat.value}</span>
+                      <span className="font-display text-2xl font-bold text-white block mb-1"><span translate="no">{stat.value}</span></span>
                       <span className="text-xs font-semibold block mb-0.5" style={{ color: '#C9982A' }}>{stat.label}</span>
                       <span className="text-xs text-white/35">{stat.sub}</span>
                     </div>

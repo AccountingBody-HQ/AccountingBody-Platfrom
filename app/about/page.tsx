@@ -128,7 +128,7 @@ export default function AboutPage() {
                 { value: 'Free',     label: 'To Start',                 sub: 'No credit card required' },
               ].map(stat => (
                 <div key={stat.label} className="bg-slate-50 rounded-xl border border-slate-200 p-6">
-                  <span className="stat-number block mb-1">{stat.value}</span>
+                  <span className="stat-number block mb-1"><span translate="no">{stat.value}</span></span>
                   <span className="text-sm font-semibold text-navy-950 block">{stat.label}</span>
                   <span className="text-xs text-slate-400">{stat.sub}</span>
                 </div>
