@@ -725,7 +725,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               <p className="text-base leading-relaxed mb-8 max-w-lg"
                 style={{ color: isEthioTax ? 'rgba(15,45,30,0.75)' : 'rgba(12,26,61,0.75)' }}>
                 {isEthioTax
-                  ? 'ACCA, CIMA, ETICPA or CPA qualified? We place Ethiopian finance professionals in permanent and contract roles across the UK, USA, Canada and beyond. You never deal with employers directly — we manage every step.'
+                  ? <><span translate="no">ACCA</span>, <span translate="no">CIMA</span>, <span translate="no">ETICPA</span> or <span translate="no">CPA</span> qualified? We place Ethiopian finance professionals in permanent and contract roles across the UK, USA, Canada and beyond. You never deal with employers directly — we manage every step.</>
                   : 'We place accounting and finance professionals in permanent and contract roles across the UK and internationally. Fully managed — we find the right match, negotiate on your behalf, and guarantee every placement for 90 days.'}
               </p>
 
@@ -1428,7 +1428,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               <span className="eyebrow mb-3 block">Qualification Pathways</span>
               <h2 className="section-title mb-4">Study with EthioTax — free to start</h2>
               <p className="text-slate-500 text-lg leading-relaxed">
-                EthioTax supports the next generation of Ethiopian finance professionals. Full coverage for ETICPA, ACCA, CIMA and AAT — study notes, practice questions and mock exams.
+                EthioTax supports the next generation of Ethiopian finance professionals. Full coverage for <span translate="no">ETICPA</span>, <span translate="no">ACCA</span>, <span translate="no">CIMA</span> and <span translate="no">AAT</span> — study notes, practice questions and mock exams.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
@@ -1490,7 +1490,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   </div>
                   <h3 className="font-display text-lg mb-2" style={{color: '#1A4731'}}>Study Notes & Resources</h3>
                   <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
-                    Comprehensive study notes for ETICPA, ACCA, CIMA and AAT — written by qualified accountants and updated every exam sitting.
+                    Comprehensive study notes for <span translate="no">ETICPA</span>, <span translate="no">ACCA</span>, <span translate="no">CIMA</span> and <span translate="no">AAT</span> — written by qualified accountants and updated every exam sitting.
                   </p>
                   <ul className="space-y-1.5 mb-5">
                     {['All qualifications covered', 'Worked examples', 'Examiner insights', 'Always free to start'].map(h => (
@@ -1581,7 +1581,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 EthioTax updates, straight to your inbox
               </h2>
               <p className="text-white/65 text-lg mb-8 leading-relaxed">
-                Tax deadlines, ERCA updates, ETICPA news and Ethiopian business insights — delivered to your inbox. No spam, ever.
+                Tax deadlines, <span translate="no">ERCA</span> updates, <span translate="no">ETICPA</span> news and Ethiopian business insights — delivered to your inbox. No spam, ever.
               </p>
               <EmailSignupForm />
               <div className="w-full flex justify-center mt-4">
