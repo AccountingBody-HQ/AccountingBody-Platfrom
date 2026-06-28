@@ -108,13 +108,13 @@ function Separator() {
 function TickerItemEl({ item }: { item: TickerItem }) {
   const tag = item.tag && item.tagColor
     ? (
-      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold border mr-2 leading-none ${tagStyles[item.tagColor]}`}>
+      <span translate="no" className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold border mr-2 leading-none ${tagStyles[item.tagColor]}`}>
         {item.tag}
       </span>
     )
     : item.tag
     ? (
-      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold border mr-2 leading-none bg-white/15 text-white border-white/20">
+      <span translate="no" className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold border mr-2 leading-none bg-white/15 text-white border-white/20">
         {item.tag}
       </span>
     )
@@ -123,7 +123,7 @@ function TickerItemEl({ item }: { item: TickerItem }) {
   const content = (
     <span className="inline-flex items-center">
       {tag}
-      <span className="text-xs text-white/85 leading-none">{item.text}</span>
+      <span translate="no" className="text-xs text-white/85 leading-none">{item.text}</span>
     </span>
   )
 
