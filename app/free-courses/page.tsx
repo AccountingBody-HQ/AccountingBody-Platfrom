@@ -280,7 +280,7 @@ export default async function FreeCoursesPage({ searchParams }: { searchParams: 
                         <path strokeLinecap="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <span className="text-sm font-medium" style={{ color: isEthioTax ? 'rgba(15,45,30,0.85)' : 'rgba(12,26,61,0.85)' }}>
+                    <span translate="no" className="text-sm font-medium" style={{ color: isEthioTax ? 'rgba(15,45,30,0.85)' : 'rgba(12,26,61,0.85)' }}>
                       {point}
                     </span>
                   </div>
@@ -317,7 +317,7 @@ export default async function FreeCoursesPage({ searchParams }: { searchParams: 
                 </div>
                 <div className="grid grid-cols-2">
                   {[
-                    { value: 'Learn', label: 'Build your skills', sub: 'ACCA · CIMA · AAT · ETICPA' },
+                    { value: 'Learn', label: 'Build your skills', sub: 'ACCA · CIMA · AAT · ETICPA', noTranslate: true },
                     { value: 'Register', label: 'One profile — we match', sub: 'No cold applying ever' },
                     { value: 'Managed', label: 'End-to-end placement', sub: 'We handle every step' },
                     { value: '90 Days', label: 'Replacement guarantee', sub: 'On every permanent role' },
