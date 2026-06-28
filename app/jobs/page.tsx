@@ -173,7 +173,7 @@ export default async function JobsHubPage() {
                 )}
                 <div className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full bg-white border-2 mb-6 shadow-sm"
                   style={{ borderColor: gold }}>
-                  <span className="font-display text-xl font-bold" style={{ color: gold }}>{s.step}</span>
+                  <span translate="no" className="font-display text-xl font-bold" style={{ color: gold }}>{s.step}</span>
                 </div>
                 <h3 className="font-display text-lg text-navy-950 mb-3">{s.title}</h3>
                 <p className="text-slate-500 text-sm leading-relaxed max-w-xs">{s.body}</p>

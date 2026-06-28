@@ -115,7 +115,7 @@ export default async function CPAPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {CPA_PATHWAY.map((step) => (
               <div key={step.step} className="rounded-xl p-6 border" style={{ borderColor: '#d1e8db', backgroundColor: '#f0f7f4' }}>
-                <p className="font-display text-3xl font-bold mb-3" style={{ color: '#C9982A' }}>{step.step}</p>
+                <p className="font-display text-3xl font-bold mb-3" style={{ color: '#C9982A' }}><span translate="no">{step.step}</span></p>
                 <p className="text-sm font-semibold text-navy-950 mb-2">{step.title}</p>
                 <p className="text-xs text-slate-500 leading-relaxed">{step.desc}</p>
               </div>
