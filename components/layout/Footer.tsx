@@ -15,6 +15,7 @@ interface FooterLink {
   badge?:   string
   external?: boolean
   new?:     boolean
+  noTranslate?: boolean
 }
 
 interface FooterColumn {
@@ -28,10 +29,10 @@ const footerColumns: FooterColumn[] = [
   {
     title: 'Study',
     links: [
-      { label: 'ACCA Study Hub',           href: '/study/acca',    badge: 'Popular' },
-      { label: 'CIMA Study Hub',            href: '/study/cima' },
-      { label: 'AAT Study Hub',             href: '/study/aat' },
-      { label: 'ICAEW / ACA',               href: '/study/icaew' },
+      { label: 'ACCA Study Hub',           href: '/study/acca',    badge: 'Popular', noTranslate: true },
+      { label: 'CIMA Study Hub',            href: '/study/cima', noTranslate: true },
+      { label: 'AAT Study Hub',             href: '/study/aat', noTranslate: true },
+      { label: 'ICAEW / ACA',               href: '/study/icaew', noTranslate: true },
       { label: 'All Qualifications',        href: '/study' },
       { label: 'Study Planner',             href: '/study', new: true },
       { label: 'Free Courses',              href: '/courses', new: true },
@@ -40,7 +41,7 @@ const footerColumns: FooterColumn[] = [
   {
     title: 'Practice',
     links: [
-      { label: 'MCQ Question Banks',        href: '/practice-questions' },
+      { label: 'MCQ Question Banks',        href: '/practice-questions', noTranslate: true },
       { label: 'Mock Exams',                href: '/mock-exams' },
       { label: 'All Practice',              href: '/practice-questions' },
     ],
@@ -278,14 +279,14 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
     links: isEthioTax ? [
       { label: 'ETICPA / CPA',              href: '/study/eticpa',  badge: 'Popular' },
       { label: 'ACCA Study Hub',            href: '/study/acca' },
-      { label: 'CIMA Study Hub',            href: '/study/cima' },
-      { label: 'AAT Study Hub',             href: '/study/aat' },
+      { label: 'CIMA Study Hub',            href: '/study/cima', noTranslate: true },
+      { label: 'AAT Study Hub',             href: '/study/aat', noTranslate: true },
       { label: 'All Qualifications',        href: '/study' },
       { label: 'Free Courses',              href: '/free-courses', new: true },
     ] : [
       { label: 'ACCA Study Hub',            href: '/study/acca',    badge: 'Popular' },
-      { label: 'CIMA Study Hub',            href: '/study/cima' },
-      { label: 'AAT Study Hub',             href: '/study/aat' },
+      { label: 'CIMA Study Hub',            href: '/study/cima', noTranslate: true },
+      { label: 'AAT Study Hub',             href: '/study/aat', noTranslate: true },
       { label: 'ICAEW / ACA',              href: '/study/icaew' },
       { label: 'All Qualifications',        href: '/study' },
       { label: 'Study Planner',             href: '/study', new: true },
@@ -427,7 +428,7 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
                         rel={link.external ? 'noopener noreferrer' : undefined}
                         className="flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors duration-150"
                       >
-                        {link.label}
+                        <span translate={link.noTranslate ? "no" : undefined}>{link.label}</span>
                         {link.external && <ExtIcon />}
                         {link.badge && (
                           <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-teal-500/20 text-teal-400 border border-teal-500/30">
