@@ -15,6 +15,7 @@ export type QuestionType = 'mcq' | 'learn' | 'writing' | 'scenario'
 interface QuestionTypeConfig {
   id:          QuestionType
   label:       string
+  noTranslate?: boolean
   sublabel:    string
   description: string
   icon:        React.ReactNode
@@ -73,6 +74,7 @@ const questionTypeConfig: QuestionTypeConfig[] = [
   {
     id:          'mcq',
     label:       'MCQ',
+    noTranslate: true,
     sublabel:    'Multiple Choice',
     description: 'Test your knowledge with exam-style multiple choice questions',
     icon:        <MCQIcon />,
@@ -192,7 +194,7 @@ export function QuestionTypeButtons({
                 isCompact ? 'text-xs' : 'text-sm',
                 isActive ? config.text : 'text-navy-950',
               ].join(' ')}>
-                {config.label}
+                <span translate={config.noTranslate ? "no" : undefined}>{config.label}</span>
               </span>
               {!isCompact && (
                 <span className="text-2xs text-slate-400 mt-0.5 leading-none">
@@ -233,7 +235,7 @@ export function QuestionTypeButtons({
                   isCompact ? 'text-xs' : 'text-sm',
                   isActive ? config.text : 'text-navy-950',
                 ].join(' ')}>
-                  {config.label}
+                  <span translate={config.noTranslate ? "no" : undefined}>{config.label}</span>
                 </span>
                 {!isCompact && (
                   <span className="text-2xs text-slate-400 mt-0.5 leading-none">
@@ -297,7 +299,7 @@ export function QuestionTypeGrid({
               'font-semibold text-sm mb-1 transition-colors duration-150',
               isActive ? config.text : 'text-navy-950',
             ].join(' ')}>
-              {config.label}
+              <span translate={config.noTranslate ? "no" : undefined}>{config.label}</span>
             </h4>
             <p className="text-xs text-slate-500 leading-relaxed mb-3">
               {config.sublabel}
@@ -400,7 +402,7 @@ export function QuestionTypeTabs({
             ].join(' ')}
           >
             <span className={isActive ? config.text : ''}>{config.icon}</span>
-            <span>{config.label}</span>
+            <span translate={config.noTranslate ? "no" : undefined}>{config.label}</span>
             {count !== undefined && (
               <span className={`text-2xs rounded-full px-1.5 py-0.5 font-mono ${
                 isActive ? 'bg-navy-100 text-navy-700' : 'bg-slate-200 text-slate-500'
