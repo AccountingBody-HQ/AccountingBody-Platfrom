@@ -59,9 +59,9 @@ export default async function ATQLevel1Page() {
           <nav className="flex items-center gap-2 text-white/40 text-sm mb-8 flex-wrap">
             <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-            <Link href="/study/eticpa" className="hover:text-white/70 transition-colors">ETICPA</Link>
+            <Link href="/study/eticpa" className="hover:text-white/70 transition-colors"><span translate="no">ETICPA</span></Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-            <span className="text-white/70">ATQ Level 1</span>
+            <span className="text-white/70"><span translate="no">ATQ Level 1</span></span>
           </nav>
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-6">
@@ -104,10 +104,10 @@ export default async function ATQLevel1Page() {
               <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>Level Overview</span>
               <h2 className="section-title mb-6">What Level 1 covers</h2>
               <p className="text-slate-600 text-lg leading-relaxed mb-6">
-                ATQ Level 1 — Foundation Technician is the starting point for the ETICPA Accounting Technician Qualification. It establishes the essential knowledge base that every accounting professional in Ethiopia must have.
+                <span translate="no">ATQ Level 1</span> — Foundation Technician is the starting point for the <span translate="no">ETICPA</span> Accounting Technician Qualification. It establishes the essential knowledge base that every accounting professional in Ethiopia must have.
               </p>
               <p className="text-slate-600 text-lg leading-relaxed">
-                On completion of Level 1, candidates progress to ATQ Level 2 — Advanced Technician, where they develop deeper technical expertise across financial reporting, taxation and assurance.
+                On completion of Level 1, candidates progress to <span translate="no">ATQ Level 2</span> — Advanced Technician, where they develop deeper technical expertise across financial reporting, taxation and assurance.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -115,7 +115,7 @@ export default async function ATQLevel1Page() {
                 { stat: '4', label: 'Modules' },
                 { stat: '20', label: 'Core topics' },
                 { stat: 'Level 1', label: 'Foundation Technician' },
-                { stat: 'ATQ', label: 'Accounting Technician Qualification' },
+                { stat: 'ATQ', label: 'Accounting Technician Qualification', noTranslate: true },
               ].map(item => (
                 <div key={item.label} className="rounded-xl p-6 border text-center" style={{ borderColor: '#d1e8db', backgroundColor: '#f0f7f4' }}>
                   <p className="font-display text-2xl font-bold mb-1" style={{ color: '#1A4731' }}>{item.stat}</p>
