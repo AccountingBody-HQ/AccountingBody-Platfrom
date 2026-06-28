@@ -277,17 +277,17 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
   const studyColumn: FooterColumn = {
     title: 'Study',
     links: isEthioTax ? [
-      { label: 'ETICPA / CPA',              href: '/study/eticpa',  badge: 'Popular' },
-      { label: 'ACCA Study Hub',            href: '/study/acca' },
+      { label: 'ETICPA / CPA',              href: '/study/eticpa',  badge: 'Popular', noTranslate: true },
+      { label: 'ACCA Study Hub',            href: '/study/acca', noTranslate: true },
       { label: 'CIMA Study Hub',            href: '/study/cima', noTranslate: true },
       { label: 'AAT Study Hub',             href: '/study/aat', noTranslate: true },
       { label: 'All Qualifications',        href: '/study' },
       { label: 'Free Courses',              href: '/free-courses', new: true },
     ] : [
-      { label: 'ACCA Study Hub',            href: '/study/acca',    badge: 'Popular' },
+      { label: 'ACCA Study Hub',            href: '/study/acca',    badge: 'Popular', noTranslate: true },
       { label: 'CIMA Study Hub',            href: '/study/cima', noTranslate: true },
       { label: 'AAT Study Hub',             href: '/study/aat', noTranslate: true },
-      { label: 'ICAEW / ACA',              href: '/study/icaew' },
+      { label: 'ICAEW / ACA',              href: '/study/icaew', noTranslate: true },
       { label: 'All Qualifications',        href: '/study' },
       { label: 'Study Planner',             href: '/study', new: true },
       { label: 'Free Courses',              href: '/courses', new: true },
@@ -309,14 +309,14 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
     links: [
       { label: 'Get Professional Help',     href: '/get-help' },
       { label: 'Join as a Provider',        href: '/firms-freelancers' },
-      { label: 'CPD Resources',             href: '/study' },
+      { label: 'CPD Resources',             href: '/study', noTranslate: true },
     ],
   } : {
     title: 'Professionals',
     links: [
       { label: 'Find an Accountant',        href: '/firms-freelancers' },
       { label: 'List Your Firm',            href: '/firms-freelancers/join' },
-      { label: 'CPD Resources',             href: '/study' },
+      { label: 'CPD Resources',             href: '/study', noTranslate: true },
     ],
   }
 
