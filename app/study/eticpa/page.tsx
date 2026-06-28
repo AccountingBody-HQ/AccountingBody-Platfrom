@@ -300,7 +300,7 @@ export default async function ETICPAStudyPage() {
 
           {/* ATQ Header */}
           <div className="max-w-2xl mb-12">
-            <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>ATQ — Accounting Technician Qualification</span>
+            <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}><span translate="no">ATQ</span> — Accounting Technician Qualification</span>
             <h2 className="section-title mb-4">Two levels. Real-world ready.</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
               The ATQ is ETICPA&apos;s employer-oriented qualification — designed to close Ethiopia&apos;s middle-level finance skills gap and produce work-ready accounting professionals for both public and private sectors.
@@ -316,7 +316,7 @@ export default async function ETICPAStudyPage() {
                 {level.badge && (
                   <div className="absolute top-4 right-4">
                     <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>
-                      {level.badge}
+                      <span translate="no">{level.badge}</span>
                     </span>
                   </div>
                 )}
@@ -329,8 +329,8 @@ export default async function ETICPAStudyPage() {
                       {index + 1}
                     </span>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#1A4731' }}>{level.level}</p>
-                      <h3 className="font-display text-xl text-navy-950">{level.code}</h3>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#1A4731' }}><span translate="no">{level.level}</span></p>
+                      <h3 className="font-display text-xl text-navy-950"><span translate="no">{level.code}</span></h3>
                     </div>
                   </div>
                   <p className="text-sm text-slate-500 leading-relaxed mb-6">{level.description}</p>
@@ -369,7 +369,7 @@ export default async function ETICPAStudyPage() {
             <div className="px-8 py-6 border-b" style={{ backgroundColor: '#1A4731', borderColor: '#0d2b1f' }}>
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-wide mb-2 block" style={{ color: '#C9982A' }}>CPA — Certified Public Accountant</span>
+                  <span className="text-xs font-bold uppercase tracking-wide mb-2 block" style={{ color: '#C9982A' }}><span translate="no">CPA</span> — Certified Public Accountant</span>
                   <h3 className="font-display text-2xl text-white">The professional summit</h3>
                 </div>
                 <span className="text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 text-white/70">Syllabus under development</span>
@@ -413,7 +413,7 @@ export default async function ETICPAStudyPage() {
       <section id="modules" className="section bg-white border-t border-slate-100">
         <div className="container-site">
           <div className="max-w-2xl mb-12">
-            <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>ATQ Modules</span>
+            <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}><span translate="no">ATQ</span> Modules</span>
             <h2 className="section-title mb-4">Browse by subject</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
               All 9 ETICPA ATQ modules — select your subject to access study notes, worked examples and exam guides.
