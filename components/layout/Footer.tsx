@@ -429,7 +429,7 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
                         className="flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors duration-150"
                       >
                         {link.abbr
-                          ? (<>{<span translate="no">{link.abbr}</span>}{link.label.slice(link.abbr.length)}</>)
+                          ? (<span className="whitespace-nowrap"><span translate="no">{link.abbr}</span>{link.label.slice(link.abbr.length)}</span>)
                           : link.label}
                         {link.external && <ExtIcon />}
                         {link.badge && (
