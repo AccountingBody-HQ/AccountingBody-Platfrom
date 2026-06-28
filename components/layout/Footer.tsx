@@ -399,7 +399,7 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
               {
                 title: 'Practice',
                 links: [
-                  { label: 'MCQ Question Banks',  href: '/practice-questions' },
+                  { label: 'MCQ Question Banks',  href: '/practice-questions', abbr: 'MCQ' },
                   { label: 'Mock Exams',          href: '/study/mock-exams' },
                   { label: 'All Practice',        href: '/practice-questions' },
                 ],
