@@ -57,16 +57,16 @@ export default async function FinancialAccountingPage() {
           <nav className="flex items-center gap-2 text-white/40 text-sm mb-8 flex-wrap">
             <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-            <Link href="/study/eticpa" className="hover:text-white/70 transition-colors">ETICPA</Link>
+            <Link href="/study/eticpa" className="hover:text-white/70 transition-colors"><span translate="no">ETICPA</span></Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-            <Link href="/study/eticpa/atq/level-2" className="hover:text-white/70 transition-colors">ATQ Level 2</Link>
+            <Link href="/study/eticpa/atq/level-2" className="hover:text-white/70 transition-colors"><span translate="no">ATQ Level 2</span></Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">Financial Accounting</span>
           </nav>
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-6">
               <span className="text-xs font-bold px-3 py-1.5 rounded-md" style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>
-                ATQ Level 2
+                <span translate="no">ATQ Level 2</span>
               </span>
               <span className="text-xs font-semibold text-white/50">Advanced Technician</span>
             </div>
@@ -105,7 +105,7 @@ export default async function FinancialAccountingPage() {
               <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>Module Overview</span>
               <h2 className="section-title mb-6">What this module covers</h2>
               <p className="text-slate-600 text-lg leading-relaxed mb-8">
-                Financial Accounting is the first module of ATQ Level 2. It advances your technical reporting skills beyond the foundations of Level 1 — covering the full preparation of financial statements, accounting standards and consolidated group accounts under IFRS.
+                Financial Accounting is the first module of <span translate="no">ATQ Level 2</span>. It advances your technical reporting skills beyond the foundations of Level 1 — covering the full preparation of financial statements, accounting standards and consolidated group accounts under IFRS.
               </p>
               <div className="space-y-3">
                 <p className="text-xs font-bold uppercase tracking-wide text-slate-400 mb-4">Learning Outcomes</p>
@@ -123,7 +123,7 @@ export default async function FinancialAccountingPage() {
               <p className="font-display text-xl text-navy-950 mb-6">Module at a glance</p>
               <div className="space-y-4">
                 {[
-                  { label: 'Qualification', value: 'ATQ — Accounting Technician Qualification' },
+                  { label: 'Qualification', value: 'ATQ — Accounting Technician Qualification', noTranslate: true },
                   { label: 'Level', value: 'Level 2 — Advanced Technician' },
                   { label: 'Module', value: 'Financial Accounting' },
                   { label: 'Study Notes', value: `${articles.length} published` },
