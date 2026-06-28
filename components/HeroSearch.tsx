@@ -73,6 +73,7 @@ export default function HeroSearch({ placeholder = 'Search study notes, practice
               setQuery(term)
               router.push('/search?q=' + encodeURIComponent(term))
             }}
+            translate="no"
             className="text-xs text-white/50 hover:text-white/90 border border-white/15 hover:border-white/35 rounded-full px-3 py-1 transition-all"
           >
             {term}
