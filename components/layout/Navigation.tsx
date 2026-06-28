@@ -159,7 +159,7 @@ const navSections: NavSection[] = [
       {
         title: 'Question Types',
         links: [
-          { label: 'MCQ Questions',     href: '/practice-questions?type=mcq',      badge: 'New', description: 'Multiple choice — 4 options, one correct answer' },
+          { label: 'MCQ Questions',     href: '/practice-questions?type=mcq',      badge: 'New', description: 'Multiple choice — 4 options, one correct answer', noTranslate: true },
           { label: 'Scenario',          href: '/practice-questions?type=scenario',              description: 'Case-based questions with linked exhibit' },
           { label: 'Writing',           href: '/practice-questions?type=writing',               description: 'Constructed response with model answer' },
           { label: 'Mock Examinations', href: '/study/mock-exams',                              description: 'Full timed mock exams' },
