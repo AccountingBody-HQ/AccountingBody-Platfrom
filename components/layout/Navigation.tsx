@@ -362,8 +362,8 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
       {/* Drawer */}
       <div
         className={`fixed top-0 right-0 h-full w-[88vw] max-w-sm bg-white z-50 flex flex-col
-          shadow-2xl transition-transform duration-300 ease-decelerate lg:hidden
-          ${open ? 'translate-x-0' : 'translate-x-full'}
+          shadow-2xl transition-all duration-300 ease-decelerate lg:hidden
+          ${open ? 'translate-x-0 opacity-100 visible' : 'translate-x-full opacity-0 invisible'}
         `}
         role="dialog"
         aria-modal="true"
@@ -590,20 +590,6 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
     return () => { document.body.style.overflow = '' }
   }, [mobileOpen])
 
-  // Re-trigger Google Translate scan when mobile drawer opens (ET only)
-  // GT translates on page load but skips off-screen elements — toggling
-  // document.documentElement.lang signals GT's MutationObserver to re-scan
-  useEffect(() => {
-    if (!mobileOpen) return
-    if (typeof document === 'undefined') return
-    const isTranslated = document.cookie.includes('googtrans=/en/')
-    if (!isTranslated) return
-    const html = document.documentElement
-    const current = html.lang
-    html.lang = current === 'en' ? 'en-x-gt' : current
-    const timer = setTimeout(() => { html.lang = current }, 50)
-    return () => clearTimeout(timer)
-  }, [mobileOpen])
 
   const [searchQuery, setSearchQuery] = useState('')
   const router = useRouter()
