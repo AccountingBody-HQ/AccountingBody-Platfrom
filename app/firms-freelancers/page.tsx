@@ -233,7 +233,7 @@ export default async function FirmsFreelancersPage() {
                   </p>
                   <a href="/freelancing-pathways"
                     className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold transition-colors w-full border"
-                    style={{ background: 'transparent', color: 'rgba(255,255,255,0.7)', borderColor: 'rgba(255,255,255,0.3)' }}>
+                    style={{ background: 'transparent', color: '#ffffff', borderColor: '#ffffff' }}>
                     Explore Freelancing Pathways
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                   </a>
