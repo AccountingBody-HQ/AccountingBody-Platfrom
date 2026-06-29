@@ -149,26 +149,29 @@ export default async function FirmsFreelancersPage() {
 
 
 
-      {/* FIRMS / INDEPENDENTS */}
-      <section className="section border-t border-slate-200" style={{ background: brand }}>
+      {/* FIRMS / INDEPENDENTS + FREELANCING */}
+      <section className="section bg-white border-t border-slate-200">
         <div className="container-site">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="eyebrow mb-3 block" style={{ color: '#C9982A' }}>Who Can Apply</span>
-            <h2 className="font-display text-3xl md:text-4xl text-white mb-4">Open to firms and independent professionals</h2>
-            <p className="text-lg leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>We welcome applications from established accounting firms and qualified independent professionals across all jurisdictions.</p>
+            <span className="eyebrow mb-3 block">Who Can Apply</span>
+            <h2 className="section-title mb-4">Open to firms and independent professionals</h2>
+            <p className="text-slate-500 text-lg leading-relaxed">We welcome applications from established accounting firms and qualified independent professionals across all jurisdictions.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-2xl p-8 flex flex-col" style={{ background: brand }}>
+
+            {/* Accounting Firms */}
+            <div className="flex flex-col rounded-2xl p-8 border" style={{ background: brand, borderColor: 'rgba(255,255,255,0.12)' }}>
               <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-5">
-                <svg className="w-6 h-6 text-gold-400" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="1.75" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <h3 className="font-display text-2xl text-white mb-2">Accounting Firms</h3>
-              <p className="text-white/55 text-sm mb-6 leading-relaxed">Established practices looking to extend their reach through a managed engagement channel. We represent your firm professionally and manage all client interaction on your behalf.</p>
-              <ul className="space-y-3 mb-8 flex-1">
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#C9982A' }}>For Firms</p>
+              <h3 className="font-display text-2xl text-white mb-3 leading-snug">Accounting Firms</h3>
+              <p className="text-white/55 text-sm leading-relaxed mb-6 flex-1">Established practices looking to extend their reach through a managed engagement channel. We represent your firm professionally and manage all client interaction on your behalf.</p>
+              <ul className="space-y-3 mb-8">
                 {firmBenefits.map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-white/65">
+                  <li key={item} className="flex items-start gap-3 text-sm text-white/70">
                     <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                     </svg>
@@ -177,24 +180,27 @@ export default async function FirmsFreelancersPage() {
                 ))}
               </ul>
               <Link href="/firms-freelancers/join"
-                className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold transition-colors hover:bg-gold-400"
+                className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold transition-colors"
                 style={{ background: '#C9982A', color: '#0C1A3D' }}>
                 Apply as a Firm
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </Link>
             </div>
-            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-8 flex flex-col">
-              <div className="w-12 h-12 rounded-xl bg-navy-50 flex items-center justify-center mb-5">
-                <svg className="w-6 h-6 text-navy-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+            {/* Independent Professionals */}
+            <div className="flex flex-col rounded-2xl p-8 border" style={{ background: brand, borderColor: 'rgba(255,255,255,0.12)' }}>
+              <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-5">
+                <svg className="w-6 h-6" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
-              <h3 className="font-display text-2xl text-navy-950 mb-2">Independent Professionals</h3>
-              <p className="text-slate-500 text-sm mb-6 leading-relaxed">Qualified independent accountants, bookkeepers, tax advisors, and finance professionals who wish to receive managed client engagements through the Accounting Body network.</p>
-              <ul className="space-y-3 mb-8 flex-1">
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#C9982A' }}>For Independents</p>
+              <h3 className="font-display text-2xl text-white mb-3 leading-snug">Independent Professionals</h3>
+              <p className="text-white/55 text-sm leading-relaxed mb-6 flex-1">Qualified independent accountants, bookkeepers, tax advisors, and finance professionals who wish to receive managed client engagements through the {platformName} network.</p>
+              <ul className="space-y-3 mb-8">
                 {independentBenefits.map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-slate-600">
-                    <svg className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <li key={item} className="flex items-start gap-3 text-sm text-white/70">
+                    <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                     </svg>
                     {item}
@@ -202,68 +208,61 @@ export default async function FirmsFreelancersPage() {
                 ))}
               </ul>
               <Link href="/firms-freelancers/join"
-                className={`inline-flex items-center gap-2 h-11 px-6 rounded-lg text-white text-sm font-semibold transition-colors shadow-sm ${applyBg} ${applyHover}`}>
+                className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold transition-colors"
+                style={{ background: '#C9982A', color: '#0C1A3D' }}>
                 Apply as an Independent
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </Link>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* FREELANCING PATHWAYS CARD */}
-      <section className="bg-white pb-16">
-        <div className="container-site">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-2xl p-8 flex flex-col border-2" style={{ background: brand, borderColor: '#C9982A' }}>
-              <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-5">
-                <svg className="w-6 h-6" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeWidth="1.75" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+            {/* Freelancing Pathways — full width */}
+            <div className="flex flex-col rounded-2xl p-8 border md:col-span-2" style={{ background: brand, borderColor: 'rgba(201,152,42,0.4)' }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
+                <div className="flex flex-col">
+                  <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#C9982A' }}>New to Freelancing</p>
+                  <h3 className="font-display text-2xl text-white mb-3 leading-snug">
+                    {isEthioTax ? 'Not yet freelancing? Explore how it works.' : 'Thinking about freelancing? Start here.'}
+                  </h3>
+                  <p className="text-white/55 text-sm leading-relaxed mb-8 flex-1">
+                    {isEthioTax
+                      ? 'Whether you are looking for work, recently graduated, or employed full-time — if you have accounting or finance skills, freelancing could be your next step. EthioTax will guide you through the process and match you to opportunities.'
+                      : 'If you are qualified but not yet freelancing — or employed and curious about building your own practice on the side — our Freelancing Pathways programme is designed for you. Register your interest and we will take it from there.'}
+                  </p>
+                  <a href="/freelancing-pathways"
+                    className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold transition-colors self-start"
+                    style={{ background: '#C9982A', color: '#0C1A3D' }}>
+                    Explore Freelancing Pathways
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                  </a>
+                </div>
+                <ul className="space-y-3 flex flex-col justify-end">
+                  {[
+                    'Open to graduates, job-seekers and employed professionals',
+                    'No need to wait for a permanent role to start earning',
+                    'We match you to clients suited to your specialism',
+                    'Start part-time and grow into full independence',
+                    'We handle client matching, billing and administration',
+                  ].map(item => (
+                    <li key={item} className="flex items-center gap-3 text-sm text-white/70">
+                      <svg className="w-4 h-4 shrink-0" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                      </svg>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#C9982A' }}>New to Freelancing</p>
-              <h3 className="font-display text-2xl text-white mb-2">
-                {isEthioTax ? 'Not yet freelancing? Explore how it works.' : 'Thinking about freelancing? Start here.'}
-              </h3>
-              <p className="text-white/55 text-sm mb-6 leading-relaxed flex-1">
-                {isEthioTax
-                  ? 'Whether you are looking for work, recently graduated, or employed full-time — if you have accounting or finance skills, freelancing could be your next step. EthioTax will guide you through the process and match you to opportunities.'
-                  : 'If you are qualified but not yet freelancing — or employed and curious about building your own practice on the side — our Freelancing Pathways programme is designed for you. Register your interest and we will take it from there.'}
-              </p>
-              <ul className="space-y-3 mb-8">
-                {[
-                  'Open to graduates, job-seekers and employed professionals',
-                  'No need to wait for a permanent role to start earning',
-                  'We match you to clients suited to your specialism',
-                  'Start part-time and grow into full independence',
-                  'We handle client matching, billing and administration',
-                ].map(item => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-white/65">
-                    <svg className="w-4 h-4 text-gold-400 shrink-0 mt-0.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                    </svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <a href="/freelancing-pathways"
-                className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold transition-colors hover:bg-gold-400"
-                style={{ background: '#C9982A', color: '#0C1A3D' }}>
-                Explore Freelancing Pathways
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </a>
             </div>
-            <div className="hidden md:block" />
-          </div>
-        </div>
-      </section>
 
-      {/* DISCLAIMER */}
-      <section style={{ background: brand }}>
-        <div className="container-site py-10 border-t" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
-          <p className="text-xs leading-relaxed max-w-3xl" style={{ color: 'rgba(255,255,255,0.35)' }}>
-            Professionals within the {platformName} network operate under our managed engagement framework. {platformName} acts as the principal point of contact for all client engagements. Acceptance into the network is subject to satisfactory completion of our vetting process.
-          </p>
+          </div>
+
+          {/* DISCLAIMER */}
+          <div className="mt-10 pt-8 border-t border-slate-200">
+            <p className="text-xs text-slate-400 leading-relaxed max-w-3xl">
+              Professionals within the {platformName} network operate under our managed engagement framework. {platformName} acts as the principal point of contact for all client engagements. Acceptance into the network is subject to satisfactory completion of our vetting process.
+            </p>
+          </div>
+
         </div>
       </section>
 
