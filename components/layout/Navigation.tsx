@@ -590,6 +590,21 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
     return () => { document.body.style.overflow = '' }
   }, [mobileOpen])
 
+  // Re-trigger Google Translate scan when mobile drawer opens (ET only)
+  // GT translates on page load but skips off-screen elements — toggling
+  // document.documentElement.lang signals GT's MutationObserver to re-scan
+  useEffect(() => {
+    if (!mobileOpen) return
+    if (typeof document === 'undefined') return
+    const isTranslated = document.cookie.includes('googtrans=/en/')
+    if (!isTranslated) return
+    const html = document.documentElement
+    const current = html.lang
+    html.lang = current === 'en' ? 'en-x-gt' : current
+    const timer = setTimeout(() => { html.lang = current }, 50)
+    return () => clearTimeout(timer)
+  }, [mobileOpen])
+
   const [searchQuery, setSearchQuery] = useState('')
   const router = useRouter()
 
