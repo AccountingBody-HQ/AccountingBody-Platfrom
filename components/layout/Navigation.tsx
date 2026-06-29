@@ -190,8 +190,9 @@ const navSections: NavSection[] = [
       {
         title: 'Join Our Network',
         links: [
-          { label: 'Apply to Join',      href: '/firms-freelancers/join', description: 'Register your interest to join our verified professional network' },
-          { label: 'How It Works',       href: '/firms-freelancers',      description: 'How we match professionals with clients' },
+          { label: 'Apply to Join',      href: '/firms-freelancers/join',  description: 'Register your interest to join our verified professional network' },
+          { label: 'How It Works',       href: '/firms-freelancers',       description: 'How we match professionals with clients' },
+          { label: 'Explore Freelancing', href: '/freelancing-pathways',    description: 'New to freelancing? Discover how to build your own practice' },
         ],
       },
       {
