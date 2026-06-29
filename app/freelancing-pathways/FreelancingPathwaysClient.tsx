@@ -46,7 +46,7 @@ const faqs = [
   },
 ]
 
-function FaqAccordion({ brand }: { brand: string }) {
+function FaqAccordion() {
   const [open, setOpen] = useState<number | null>(null)
   const gold = '#C9982A'
   return (
@@ -554,7 +554,7 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
             </p>
           </div>
           <div className="max-w-3xl mx-auto">
-            <FaqAccordion brand={brand} />
+            <FaqAccordion />
           </div>
         </div>
       </section>
