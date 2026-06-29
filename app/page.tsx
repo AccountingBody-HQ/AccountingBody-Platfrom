@@ -1261,18 +1261,18 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             {/* Bottom CTA */}
             <div className="mt-14 flex flex-col sm:flex-row items-start gap-4">
               <a href="/get-help"
-                className="inline-flex items-center gap-2 px-7 rounded-xl min-h-[56px] text-sm font-bold transition-opacity hover:opacity-90"
-                style={{backgroundColor: '#C9982A', color: '#1A4731'}}>
+                className="inline-flex items-center justify-center gap-2 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+                style={{backgroundColor: '#C9982A', color: '#1A4731', width: '220px', height: '56px', boxSizing: 'border-box', whiteSpace: 'nowrap', overflow: 'hidden'}}>
                 Get a free quote
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </a>
               <a href="/how-it-works"
-                className="inline-flex items-center gap-2 px-7 rounded-xl min-h-[56px] text-sm font-semibold border transition-colors hover:bg-white/10"
-                style={{borderColor: 'rgba(255,255,255,0.25)', color: 'white'}}>
+                className="inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold border transition-colors hover:bg-white/10"
+                style={{borderColor: 'rgba(255,255,255,0.25)', color: 'white', width: '220px', height: '56px', boxSizing: 'border-box', whiteSpace: 'nowrap', overflow: 'hidden'}}>
                 See how it works
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </a>
