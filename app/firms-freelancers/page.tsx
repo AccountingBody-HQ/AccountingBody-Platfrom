@@ -158,16 +158,41 @@ export default async function FirmsFreelancersPage() {
             <p className="text-slate-500 text-lg leading-relaxed">We welcome applications from established accounting firms and qualified independent professionals across all jurisdictions.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-8 flex flex-col">
-              <div className="w-12 h-12 rounded-xl bg-navy-50 flex items-center justify-center mb-5">
-                <svg className="w-6 h-6 text-navy-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="rounded-2xl p-8 flex flex-col" style={{ background: brand }}>
+              <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-5">
+                <svg className="w-6 h-6 text-gold-400" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="1.75" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <h3 className="font-display text-2xl text-navy-950 mb-2">Accounting Firms</h3>
-              <p className="text-slate-500 text-sm mb-6 leading-relaxed">Established practices looking to extend their reach through a managed engagement channel. We represent your firm professionally and manage all client interaction on your behalf.</p>
-              <ul className="space-y-3 mb-8">
+              <h3 className="font-display text-2xl text-white mb-2">Accounting Firms</h3>
+              <p className="text-white/55 text-sm mb-6 leading-relaxed">Established practices looking to extend their reach through a managed engagement channel. We represent your firm professionally and manage all client interaction on your behalf.</p>
+              <ul className="space-y-3 mb-8 flex-1">
                 {firmBenefits.map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-sm text-white/65">
+                    <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/firms-freelancers/join"
+                className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold transition-colors hover:bg-gold-400"
+                style={{ background: '#C9982A', color: '#0C1A3D' }}>
+                Apply as a Firm
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+              </Link>
+            </div>
+            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-8 flex flex-col">
+              <div className="w-12 h-12 rounded-xl bg-navy-50 flex items-center justify-center mb-5">
+                <svg className="w-6 h-6 text-navy-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <h3 className="font-display text-2xl text-navy-950 mb-2">Independent Professionals</h3>
+              <p className="text-slate-500 text-sm mb-6 leading-relaxed">Qualified independent accountants, bookkeepers, tax advisors, and finance professionals who wish to receive managed client engagements through the Accounting Body network.</p>
+              <ul className="space-y-3 mb-8 flex-1">
+                {independentBenefits.map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-slate-600">
                     <svg className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
@@ -178,30 +203,6 @@ export default async function FirmsFreelancersPage() {
               </ul>
               <Link href="/firms-freelancers/join"
                 className={`inline-flex items-center gap-2 h-11 px-6 rounded-lg text-white text-sm font-semibold transition-colors shadow-sm ${applyBg} ${applyHover}`}>
-                Apply as a Firm
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </Link>
-            </div>
-            <div className="rounded-2xl p-8 flex flex-col" style={{ background: brand }}>
-              <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-5">
-                <svg className="w-6 h-6 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <h3 className="font-display text-2xl text-white mb-2">Independent Professionals</h3>
-              <p className="text-white/55 text-sm mb-6 leading-relaxed">Qualified independent accountants, bookkeepers, tax advisors, and finance professionals who wish to receive managed client engagements through the Accounting Body network.</p>
-              <ul className="space-y-3 mb-8">
-                {independentBenefits.map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-white/65">
-                    <svg className="w-4 h-4 text-gold-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                    </svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/firms-freelancers/join"
-                className="inline-flex items-center gap-2 h-11 px-6 rounded-lg bg-gold-500 text-navy-950 text-sm font-semibold hover:bg-gold-400 transition-colors shadow-gold">
                 Apply as an Independent
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </Link>
@@ -246,7 +247,8 @@ export default async function FirmsFreelancersPage() {
                 ))}
               </ul>
               <a href="/freelancing-pathways"
-                className={`inline-flex items-center gap-2 h-11 px-6 rounded-lg text-white text-sm font-semibold transition-colors shadow-sm ${applyBg} ${applyHover}`}>
+                className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold transition-colors hover:bg-gold-400"
+                style={{ background: '#C9982A', color: '#0C1A3D' }}>
                 Explore Freelancing Pathways
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </a>
