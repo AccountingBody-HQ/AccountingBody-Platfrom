@@ -150,12 +150,12 @@ export default async function FirmsFreelancersPage() {
 
 
       {/* FIRMS / INDEPENDENTS + FREELANCING */}
-      <section className="section bg-white border-t border-slate-200">
+      <section className="section border-t border-slate-200" style={{ background: brand }}>
         <div className="container-site">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="eyebrow mb-3 block">Who Can Apply</span>
-            <h2 className="section-title mb-4">Open to firms and independent professionals</h2>
-            <p className="text-slate-500 text-lg leading-relaxed">We welcome applications from established accounting firms and qualified independent professionals across all jurisdictions.</p>
+            <span className="text-xs font-bold uppercase tracking-widest mb-3 block" style={{ color: '#C9982A' }}>Who Can Apply</span>
+            <h2 className="font-display text-3xl md:text-4xl text-white mb-4">Open to firms and independent professionals</h2>
+            <p className="text-lg leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>We welcome applications from established accounting firms and qualified independent professionals across all jurisdictions.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -257,8 +257,8 @@ export default async function FirmsFreelancersPage() {
           </div>
 
           {/* DISCLAIMER */}
-          <div className="mt-10 pt-8 border-t border-slate-200">
-            <p className="text-xs text-slate-400 leading-relaxed max-w-3xl">
+          <div className="mt-10 pt-8 border-t" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+            <p className="text-xs leading-relaxed max-w-3xl" style={{ color: 'rgba(255,255,255,0.35)' }}>
               Professionals within the {platformName} network operate under our managed engagement framework. {platformName} acts as the principal point of contact for all client engagements. Acceptance into the network is subject to satisfactory completion of our vetting process.
             </p>
           </div>
