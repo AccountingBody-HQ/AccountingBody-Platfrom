@@ -94,8 +94,9 @@ export const JOBS_NAV = {
     {
       title: 'For Professionals',
       links: [
-        { label: 'Find Work',           href: '/jobs/find-work',    description: 'Register with us and get matched to accounting and finance roles' },
-        { label: 'How Placement Works', href: '/jobs/how-it-works', description: 'We manage every placement — you never deal with employers directly' },
+        { label: 'Find Work',           href: '/jobs/find-work',          description: 'Register with us and get matched to accounting and finance roles' },
+        { label: 'How Placement Works', href: '/jobs/how-it-works',        description: 'We manage every placement — you never deal with employers directly' },
+        { label: 'Explore Freelancing',  href: '/freelancing-pathways',     description: 'New to freelancing? Discover how to build your own practice' },
       ],
     },
     {
@@ -119,8 +120,9 @@ export const ET_JOBS_NAV = {
     {
       title: 'For Professionals',
       links: [
-        { label: 'Find Work',           href: '/jobs/find-work',    description: 'Register with us and get matched to accounting and finance roles' },
-        { label: 'How Placement Works', href: '/jobs/how-it-works', description: 'We manage every placement — you never deal with employers directly' },
+        { label: 'Find Work',           href: '/jobs/find-work',          description: 'Register with us and get matched to accounting and finance roles' },
+        { label: 'How Placement Works', href: '/jobs/how-it-works',        description: 'We manage every placement — you never deal with employers directly' },
+        { label: 'Explore Freelancing',  href: '/freelancing-pathways',     description: 'Qualified but not yet freelancing? Discover your pathway' },
       ],
     },
     {
