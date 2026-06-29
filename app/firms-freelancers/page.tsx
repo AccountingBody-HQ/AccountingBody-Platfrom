@@ -79,8 +79,6 @@ export default async function FirmsFreelancersPage() {
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
   const brand = isEthioTax ? '#1A4731' : '#0C1A3D'
   const platformName = isEthioTax ? 'EthioTax' : 'Accounting Body'
-  const applyBg = isEthioTax ? 'bg-[#1A4731]' : 'bg-navy-950'
-  const applyHover = isEthioTax ? 'hover:bg-[#163d28]' : 'hover:bg-navy-900'
 
   return (
     <main className="min-h-screen bg-surface">
