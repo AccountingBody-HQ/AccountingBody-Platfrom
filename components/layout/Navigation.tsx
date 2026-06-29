@@ -363,7 +363,7 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
       <div
         className={`fixed top-0 right-0 h-full w-[88vw] max-w-sm bg-white z-50 flex flex-col
           shadow-2xl transition-all duration-300 ease-decelerate lg:hidden
-          ${open ? 'translate-x-0 opacity-100 visible' : 'translate-x-full opacity-0 invisible'}
+          ${open ? 'opacity-100 visible pointer-events-auto' : 'opacity-0 invisible pointer-events-none'}
         `}
         role="dialog"
         aria-modal="true"
