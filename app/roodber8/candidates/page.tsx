@@ -161,6 +161,12 @@ export default async function CandidatesPage({
                           style={{ background: c.platform === 'et' ? 'rgba(26,71,49,0.3)' : 'rgba(12,26,61,0.3)', color: c.platform === 'et' ? '#4ade80' : '#60a5fa' }}>
                           {c.platform === 'et' ? 'ET' : 'AB'}
                         </span>
+                        {c.pathway && c.pathway !== 'direct' && (
+                          <span className="text-xs px-2 py-0.5 rounded-lg font-semibold"
+                            style={{ background: 'rgba(201,152,42,0.15)', color: '#C9982A' }}>
+                            Freelancing Pathway
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-4 text-xs flex-wrap mb-2" style={{ color: '#475569' }}>
                         <a href={'mailto:' + c.email} style={{ color: '#60a5fa' }}>{c.email}</a>
