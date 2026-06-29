@@ -166,7 +166,7 @@ export default async function JobsHubPage() {
                       : 'Not ready for a permanent role — or want to build your own practice? Whether you are newly qualified, between roles, or employed and curious about independence, we can help you explore freelancing as a genuine career path.'}
                   </p>
                   <Link href="/freelancing-pathways"
-                    className="inline-flex items-center gap-2 h-11 px-6 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
+                    className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90 w-full"
                     style={{ background: gold, color: brand }}>
                     Explore Freelancing
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>

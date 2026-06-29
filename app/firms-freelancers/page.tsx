@@ -124,7 +124,7 @@ export default async function FirmsFreelancersPage() {
       </section>
 
       {/* NETWORK STANDARDS */}
-      <section className="section bg-slate-50">
+      <section className="section bg-white">
         <div className="container-site">
           <div className="max-w-2xl mb-12">
             <span className="eyebrow mb-3 block">Our Standards</span>
@@ -148,7 +148,7 @@ export default async function FirmsFreelancersPage() {
 
 
       {/* FIRMS / INDEPENDENTS + FREELANCING */}
-      <section className="section bg-slate-50">
+      <section className="section bg-white">
         <div className="container-site">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="eyebrow mb-3 block">Who Can Apply</span>
