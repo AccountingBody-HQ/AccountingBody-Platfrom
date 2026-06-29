@@ -426,12 +426,17 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
 
   const audienceCards = [
     {
-      eyebrow: 'Qualified but not freelancing yet',
+      eyebrow: 'Qualified but not yet freelancing',
       title: isEthioTax ? 'Looking for work or recently graduated?' : 'Qualified and looking for opportunities?',
       body: isEthioTax
         ? 'Many Ethiopian finance professionals are qualified but not yet working in their field. Freelancing is a powerful way to build your practice, serve your community, and grow your income on your own terms.'
         : 'If you are qualified or recently graduated and open to freelancing as an alternative to traditional employment, we can help you find your first clients and build a sustainable independent practice.',
-      points: ['No need to wait for a permanent role','Build experience while earning income','We match you to clients suited to your level','Grow at your own pace'],
+      points: [
+        'No need to wait for a permanent role',
+        'Build experience while earning income',
+        'We match you to clients suited to your level',
+        'Grow at your own pace',
+      ],
       dark: false,
     },
     {
@@ -440,7 +445,12 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
       body: isEthioTax
         ? 'Thousands of Ethiopian professionals across the diaspora work in accounting and finance but have never explored freelancing. The Ethiopian community needs qualified professionals. Your skills are in demand.'
         : 'Many of the strongest freelancers started while still employed. If you are a finance or accounting professional looking to build a side practice — or eventually transition to full independence — this is the right starting point.',
-      points: ['Start part-time alongside your current role','Build a client base before going independent','We handle client matching and administration','Transition to full independence when ready'],
+      points: [
+        'Start part-time alongside your current role',
+        'Build a client base before going independent',
+        'We handle client matching and administration',
+        'Transition to full independence when ready',
+      ],
       dark: true,
     },
   ]
@@ -477,12 +487,19 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
               ? 'Whether you are looking for work, recently graduated, or already employed — if you have accounting or finance skills, there is a freelancing opportunity waiting for you. EthioTax will help you find it.'
               : 'Whether you are between roles, newly qualified, or employed and ready to build something of your own — we can help you take the first steps into freelancing and grow from there.'}
           </p>
-          <a href="#register"
-            className="inline-flex items-center gap-2 px-7 rounded-xl min-h-[52px] text-sm font-semibold transition-opacity hover:opacity-90"
-            style={{ background: gold, color: brand }}>
-            Register Your Interest
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-          </a>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <a href="#register"
+              className="flex-1 inline-flex items-center justify-center gap-2 px-7 rounded-xl min-h-[56px] text-sm font-semibold transition-opacity hover:opacity-90"
+              style={{ background: gold, color: brand }}>
+              Register Your Interest
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </a>
+            <a href="#faq"
+              className="flex-1 inline-flex items-center justify-center gap-2 px-7 rounded-xl min-h-[56px] text-sm font-medium text-white border border-white/25 hover:bg-white/10 transition-colors">
+              How freelancing works
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </a>
+          </div>
         </div>
       </section>
 
@@ -504,9 +521,9 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
                   style={{ color: card.dark ? gold : brand }}>{card.eyebrow}</p>
                 <h3 className="font-display text-2xl mb-3 leading-snug"
                   style={{ color: card.dark ? 'white' : '#0C1A3D' }}>{card.title}</h3>
-                <p className="text-sm leading-relaxed mb-6"
+                <p className="text-sm leading-relaxed mb-6 flex-1"
                   style={{ color: card.dark ? 'rgba(255,255,255,0.6)' : '#64748b' }}>{card.body}</p>
-                <ul className="space-y-3 flex-1">
+                <ul className="space-y-3">
                   {card.points.map(pt => (
                     <li key={pt} className="flex items-center gap-3 text-sm"
                       style={{ color: card.dark ? 'rgba(255,255,255,0.75)' : '#475569' }}>
@@ -540,7 +557,7 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
       </section>
 
       {/* FAQ */}
-      <section className="section" style={{ background: brand }}>
+      <section id="faq" className="section" style={{ background: brand }}>
         <div className="container-site">
           <div className="max-w-2xl mx-auto text-center mb-12">
             <span className="text-xs font-bold uppercase tracking-widest mb-3 block" style={{ color: gold }}>
@@ -567,13 +584,13 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
             <p className="text-slate-500 text-lg mb-8">Register your interest above and our team will be in touch. No commitment required.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a href="#register"
-                className="h-12 px-8 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white transition-colors shadow-sm"
+                className="flex-1 h-12 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white transition-colors shadow-sm"
                 style={{ background: brand }}>
                 Register Your Interest
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </a>
               <Link href="/jobs/find-work"
-                className="h-12 px-8 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold border-2 transition-colors"
+                className="flex-1 h-12 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold border-2 transition-colors"
                 style={{ borderColor: brand, color: brand }}>
                 Looking for employment instead?
               </Link>
