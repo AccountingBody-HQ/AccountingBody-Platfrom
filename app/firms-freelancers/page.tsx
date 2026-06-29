@@ -213,26 +213,23 @@ export default async function FirmsFreelancersPage() {
       {/* FREELANCING PATHWAYS CARD */}
       <section className="bg-white pb-16">
         <div className="container-site">
-          <div className="rounded-2xl border-2 p-8" style={{ borderColor: 'rgba(201,152,42,0.3)', background: 'linear-gradient(135deg, #fdf8ee 0%, #fffdf5 100%)' }}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-              <div className="flex flex-col h-full">
-                <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#C9982A' }}>New to Freelancing</p>
-                <h2 className="font-display text-2xl mb-3 leading-snug" style={{ color: '#0C1A3D' }}>
-                  {isEthioTax ? 'Not yet freelancing? Explore how it works.' : 'Thinking about freelancing? Start here.'}
-                </h2>
-                <p className="text-sm text-slate-500 leading-relaxed mb-6 flex-1">
-                  {isEthioTax
-                    ? 'Whether you are looking for work, recently graduated, or employed full-time — if you have accounting or finance skills, freelancing could be your next step. EthioTax will guide you through the process and match you to opportunities.'
-                    : 'If you are qualified but not yet freelancing — or employed and curious about building your own practice on the side — our Freelancing Pathways programme is designed for you. Register your interest and we will take it from there.'}
-                </p>
-                <a href="/freelancing-pathways"
-                  className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold text-white self-start transition-opacity hover:opacity-90 shadow-sm"
-                  style={{ background: '#C9982A' }}>
-                  Explore Freelancing Pathways
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                </a>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="rounded-2xl p-8 flex flex-col border-2" style={{ background: brand, borderColor: '#C9982A' }}>
+              <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-5">
+                <svg className="w-6 h-6" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="1.75" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
               </div>
-              <ul className="space-y-3">
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#C9982A' }}>New to Freelancing</p>
+              <h3 className="font-display text-2xl text-white mb-2">
+                {isEthioTax ? 'Not yet freelancing? Explore how it works.' : 'Thinking about freelancing? Start here.'}
+              </h3>
+              <p className="text-white/55 text-sm mb-6 leading-relaxed flex-1">
+                {isEthioTax
+                  ? 'Whether you are looking for work, recently graduated, or employed full-time — if you have accounting or finance skills, freelancing could be your next step. EthioTax will guide you through the process and match you to opportunities.'
+                  : 'If you are qualified but not yet freelancing — or employed and curious about building your own practice on the side — our Freelancing Pathways programme is designed for you. Register your interest and we will take it from there.'}
+              </p>
+              <ul className="space-y-3 mb-8">
                 {[
                   'Open to graduates, job-seekers and employed professionals',
                   'No need to wait for a permanent role to start earning',
@@ -240,15 +237,21 @@ export default async function FirmsFreelancersPage() {
                   'Start part-time and grow into full independence',
                   'We handle client matching, billing and administration',
                 ].map(item => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-slate-600">
-                    <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
+                  <li key={item} className="flex items-start gap-3 text-sm text-white/65">
+                    <svg className="w-4 h-4 text-gold-400 shrink-0 mt-0.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                     </svg>
                     {item}
                   </li>
                 ))}
               </ul>
+              <a href="/freelancing-pathways"
+                className={`inline-flex items-center gap-2 h-11 px-6 rounded-lg text-white text-sm font-semibold transition-colors shadow-sm ${applyBg} ${applyHover}`}>
+                Explore Freelancing Pathways
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+              </a>
             </div>
+            <div className="hidden md:block" />
           </div>
         </div>
       </section>

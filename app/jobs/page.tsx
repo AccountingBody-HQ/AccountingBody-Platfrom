@@ -154,28 +154,28 @@ export default async function JobsHubPage() {
 
             {/* Freelancing Pathways */}
             <div className="flex flex-col rounded-2xl p-8 border md:col-span-2" style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-full">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
                 <div className="flex flex-col">
                   <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: gold }}>New Pathway</p>
                   <h2 className="font-display text-white text-2xl mb-3 leading-snug">
                     {isEthioTax ? 'Explore freelancing as a career path' : 'Explore freelancing'}
                   </h2>
-                  <p className="text-white/50 text-sm leading-relaxed mb-6 flex-1">
+                  <p className="text-white/50 text-sm leading-relaxed mb-8 flex-1">
                     {isEthioTax
                       ? 'Qualified or recently graduated and not yet working in your field? Already employed and want to build something on the side? Freelancing could be your pathway. EthioTax will help you get started.'
                       : 'Not ready for a permanent role — or want to build your own practice? Whether you are newly qualified, between roles, or employed and curious about independence, we can help you explore freelancing as a genuine career path.'}
                   </p>
                   <Link href="/freelancing-pathways"
-                    className="inline-flex items-center gap-2 h-11 px-6 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90 self-start"
+                    className="inline-flex items-center gap-2 h-11 px-6 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
                     style={{ background: gold, color: brand }}>
                     Explore Freelancing
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                   </Link>
                 </div>
-                <ul className="space-y-3 flex flex-col justify-center">
+                <ul className="space-y-3 flex flex-col justify-end pb-0">
                   {[
-                    isEthioTax ? 'Open to graduates, job-seekers and employed professionals' : 'Open to graduates, job-seekers and employed professionals',
-                    isEthioTax ? 'We match you to clients suited to your specialism' : 'We match you to clients suited to your specialism',
+                    'Open to graduates, job-seekers and employed professionals',
+                    'We match you to clients suited to your specialism',
                     'Start part-time and grow at your own pace',
                     'We handle client matching and administration',
                   ].map(item => (
