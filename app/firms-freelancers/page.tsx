@@ -217,6 +217,11 @@ export default async function FirmsFreelancersPage() {
             <div className="flex flex-col rounded-2xl p-8 border md:col-span-2" style={{ background: brand, borderColor: 'rgba(201,152,42,0.4)' }}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
                 <div className="flex flex-col">
+                  <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-5">
+                    <svg className="w-6 h-6" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="1.75" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
                   <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#C9982A' }}>New to Freelancing</p>
                   <h3 className="font-display text-2xl text-white mb-3 leading-snug">
                     {isEthioTax ? 'Not yet freelancing? Explore how it works.' : 'Thinking about freelancing? Start here.'}
