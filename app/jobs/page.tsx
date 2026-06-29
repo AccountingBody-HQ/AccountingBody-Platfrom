@@ -151,6 +151,30 @@ export default async function JobsHubPage() {
               </Link>
             </div>
 
+
+            {/* Freelancing Pathways */}
+            <div className="flex flex-col rounded-2xl p-8 border md:col-span-2" style={{ background: 'rgba(201,152,42,0.08)', borderColor: 'rgba(201,152,42,0.25)' }}>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div className="flex-1">
+                  <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: gold }}>New Pathway</p>
+                  <h2 className="font-display text-white text-2xl mb-3 leading-snug">
+                    {isEthioTax ? 'Explore freelancing as a career path' : 'Explore freelancing'}
+                  </h2>
+                  <p className="text-white/50 text-sm leading-relaxed max-w-2xl">
+                    {isEthioTax
+                      ? 'Qualified or recently graduated and not yet working in your field? Already employed and want to build something on the side? Freelancing could be your pathway. EthioTax will help you get started.'
+                      : 'Not ready for a permanent role — or want to build your own practice? Whether you are newly qualified, between roles, or employed and curious about independence, we can help you explore freelancing as a genuine career path.'}
+                  </p>
+                </div>
+                <Link href="/freelancing-pathways"
+                  className="inline-flex items-center gap-2 h-11 px-6 rounded-xl text-sm font-semibold shrink-0 transition-opacity hover:opacity-90"
+                  style={{ background: gold, color: '#0C1A3D' }}>
+                  Explore Freelancing
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                </Link>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
