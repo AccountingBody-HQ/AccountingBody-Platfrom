@@ -210,6 +210,31 @@ export default async function FirmsFreelancersPage() {
         </div>
       </section>
 
+      {/* FREELANCING PATHWAYS BANNER */}
+      <section className="bg-white border-t border-slate-200">
+        <div className="container-site py-12">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-8 py-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="flex-1">
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: brand }}>New to Freelancing</p>
+              <h2 className="font-display text-2xl text-navy-950 mb-3 leading-snug">
+                {isEthioTax ? 'Not yet freelancing? Explore how it works.' : 'Thinking about freelancing? Start here.'}
+              </h2>
+              <p className="text-sm text-slate-500 leading-relaxed max-w-2xl">
+                {isEthioTax
+                  ? 'Whether you are looking for work, recently graduated, or employed full-time — if you have accounting or finance skills, freelancing could be your next step. EthioTax will guide you through the process and match you to opportunities.'
+                  : 'If you are qualified but not yet freelancing — or employed and curious about building your own practice on the side — our Freelancing Pathways programme is designed for you. Register your interest and we will take it from there.'}
+              </p>
+            </div>
+            <a href="/freelancing-pathways"
+              className="inline-flex items-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold text-white shrink-0 transition-opacity hover:opacity-90 shadow-sm"
+              style={{ background: brand }}>
+              Explore Freelancing Pathways
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* JOBS CROSS-LINK — gold homepage design */}
       <section className="relative overflow-hidden" style={{ background: '#C9982A' }}>
         <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
