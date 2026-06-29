@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
         languages:          body.languages || null,
         biography:          body.biography.trim(),
         terms_agreed:       body.terms_agreed ?? false,
+        pathway:            body.pathway ?? 'direct',
         data_consent:       body.data_consent ?? false,
         status:             "pending_verification",
         verification_token: token,
