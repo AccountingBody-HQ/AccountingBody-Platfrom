@@ -148,17 +148,17 @@ export default async function FirmsFreelancersPage() {
 
 
       {/* FIRMS / INDEPENDENTS + FREELANCING */}
-      <section className="section border-t border-slate-200" style={{ background: brand }}>
+      <section className="section bg-slate-50 border-t border-slate-200">
         <div className="container-site">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs font-bold uppercase tracking-widest mb-3 block" style={{ color: '#C9982A' }}>Who Can Apply</span>
-            <h2 className="font-display text-3xl md:text-4xl text-white mb-4">Open to firms and independent professionals</h2>
-            <p className="text-lg leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>We welcome applications from established accounting firms and qualified independent professionals across all jurisdictions.</p>
+            <span className="eyebrow mb-3 block">Who Can Apply</span>
+            <h2 className="section-title mb-4">Open to firms and independent professionals</h2>
+            <p className="text-slate-500 text-lg leading-relaxed">We welcome applications from established accounting firms and qualified independent professionals across all jurisdictions.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
             {/* Accounting Firms */}
-            <div className="flex flex-col rounded-2xl p-8 border" style={{ background: 'rgba(255,255,255,0.09)', borderColor: 'rgba(255,255,255,0.12)' }}>
+            <div className="flex flex-col rounded-2xl p-8 border" style={{ background: brand, borderColor: 'rgba(255,255,255,0.12)' }}>
               <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-5">
                 <svg className="w-6 h-6" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="1.75" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -178,7 +178,7 @@ export default async function FirmsFreelancersPage() {
                 ))}
               </ul>
               <Link href="/firms-freelancers/join"
-                className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold transition-colors"
+                className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold transition-colors w-full"
                 style={{ background: '#C9982A', color: '#0C1A3D' }}>
                 Apply as a Firm
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
@@ -186,7 +186,7 @@ export default async function FirmsFreelancersPage() {
             </div>
 
             {/* Independent Professionals */}
-            <div className="flex flex-col rounded-2xl p-8 border" style={{ background: 'rgba(255,255,255,0.09)', borderColor: 'rgba(255,255,255,0.12)' }}>
+            <div className="flex flex-col rounded-2xl p-8 border" style={{ background: brand, borderColor: 'rgba(255,255,255,0.12)' }}>
               <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-5">
                 <svg className="w-6 h-6" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -206,7 +206,7 @@ export default async function FirmsFreelancersPage() {
                 ))}
               </ul>
               <Link href="/firms-freelancers/join"
-                className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold transition-colors"
+                className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold transition-colors w-full"
                 style={{ background: '#C9982A', color: '#0C1A3D' }}>
                 Apply as an Independent
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
@@ -214,7 +214,7 @@ export default async function FirmsFreelancersPage() {
             </div>
 
             {/* Freelancing Pathways — full width */}
-            <div className="flex flex-col rounded-2xl p-8 border md:col-span-2" style={{ background: 'rgba(255,255,255,0.09)', borderColor: 'rgba(201,152,42,0.4)' }}>
+            <div className="flex flex-col rounded-2xl p-8 border md:col-span-2" style={{ background: brand, borderColor: 'rgba(201,152,42,0.4)' }}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1">
                 <div className="flex flex-col">
                   <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#C9982A' }}>New to Freelancing</p>
@@ -255,8 +255,8 @@ export default async function FirmsFreelancersPage() {
           </div>
 
           {/* DISCLAIMER */}
-          <div className="mt-10 pt-8 border-t" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
-            <p className="text-xs leading-relaxed max-w-3xl" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          <div className="mt-10 pt-8 border-t border-slate-200">
+            <p className="text-xs text-slate-400 leading-relaxed max-w-3xl">
               Professionals within the {platformName} network operate under our managed engagement framework. {platformName} acts as the principal point of contact for all client engagements. Acceptance into the network is subject to satisfactory completion of our vetting process.
             </p>
           </div>
