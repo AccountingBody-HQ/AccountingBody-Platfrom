@@ -148,7 +148,7 @@ export default async function FirmsFreelancersPage() {
 
 
       {/* FIRMS / INDEPENDENTS + FREELANCING */}
-      <section className="section bg-slate-50 border-t border-slate-200">
+      <section className="section bg-slate-50">
         <div className="container-site">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="eyebrow mb-3 block">Who Can Apply</span>
