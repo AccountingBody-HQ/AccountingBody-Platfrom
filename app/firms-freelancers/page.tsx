@@ -108,24 +108,26 @@ export default async function FirmsFreelancersPage() {
             <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
               Professionals within our network do not operate independently on this platform. All client relationships, communications, pricing, and quality oversight are managed directly by {platformName}.
             </p>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-4">
               <Link href="/firms-freelancers/join"
-                className="sm:flex-1 h-13 px-7 flex items-center justify-center gap-2 text-sm font-semibold rounded-lg bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
+                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all shadow-gold"
+                style={{ backgroundColor: '#C9982A', color: '#0C1A3D' }}>
                 Apply to Join Our Network
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </Link>
               <Link href="/get-help"
-                className="sm:flex-1 h-13 px-7 flex items-center justify-center text-sm font-medium rounded-lg border border-white/25 text-white hover:bg-white/10 hover:border-white/40 transition-all">
+                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-90"
+                style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}>
                 I Need Accounting Services
               </Link>
             </div>
-          </div>
-          <div className="w-full sm:w-[calc(50%-6px)] mt-3">
-            <Link href="/freelancing-pathways"
-              className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-80 border-2 border-white/40 text-white">
-              Explore Freelancing
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-            </Link>
+            <div className="w-full sm:w-[calc(50%-6px)] mb-16">
+              <Link href="/freelancing-pathways"
+                className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-80 border-2 border-white/40 text-white">
+                Explore Freelancing
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
