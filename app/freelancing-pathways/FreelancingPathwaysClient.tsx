@@ -139,9 +139,7 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
   const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({})
 
   const scrollToForm = () => {
-    setTimeout(() => {
-      formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 50)
+    // No-op: form stays in place between steps to avoid jarring page jumps
   }
 
   const validateStep = (step: number): Record<string, boolean> => {
