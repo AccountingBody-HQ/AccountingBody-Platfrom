@@ -119,6 +119,12 @@ export default async function FirmsFreelancersPage() {
                 I Need Accounting Services
               </Link>
             </div>
+            <Link href="/freelancing-pathways"
+              className="inline-flex items-center gap-2 mt-5 px-5 py-2 rounded-full border text-sm font-medium transition-colors hover:bg-white/5"
+              style={{ borderColor: '#C9982A', color: '#C9982A' }}>
+              Explore Freelancing
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </Link>
           </div>
         </div>
       </section>
