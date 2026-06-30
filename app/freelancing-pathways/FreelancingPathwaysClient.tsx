@@ -601,7 +601,7 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
               <a href="#register"
                 className="flex-1 h-13 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white transition-colors shadow-sm min-h-[52px]"
                 style={{ background: brand }}>
-                Register Your Interest
+                Register as Freelancer
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </a>
               <Link href="/jobs/find-work"
