@@ -83,26 +83,36 @@ export default async function JobsHubPage() {
             <p className="text-white/35 text-sm mb-10">
               Not a job board. Not a directory. A managed recruitment service.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link href="/jobs/find-work"
-                className="flex-1 inline-flex items-center justify-center gap-2 px-7 rounded-xl min-h-[56px] text-sm font-semibold transition-opacity hover:opacity-90"
-                style={{ background: gold, color: brand }}>
+            <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-4">
+              <Link
+                href="/jobs/find-work"
+                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all shadow-gold"
+                style={{ backgroundColor: gold, color: brand }}
+              >
                 I am looking for work
-                <svg className="w4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
               </Link>
-              <Link href="/jobs/hire-talent"
-                className="flex-1 inline-flex items-center justify-center gap-2 px-7 rounded-xl min-h-[56px] text-sm font-medium text-white border border-white/25 hover:bg-white/10 transition-colors">
+              <Link
+                href="/jobs/hire-talent"
+                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-90"
+                style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}
+              >
                 I am looking to hire
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </Link>
             </div>
-          </div>
-          <div className="w-full sm:w-[calc(50%-6px)] mb-16">
-            <Link href="/freelancing-pathways"
-              className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-80 border-2 border-white/40 text-white">
-              Explore Freelancing
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-            </Link>
+            <div className="w-full sm:w-[calc(50%-6px)] mb-16">
+              <Link
+                href="/freelancing-pathways"
+                className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-80 border-2 border-white/40 text-white"
+              >
+                Explore Freelancing
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            </div>
           </div>
 
           {/* TWO CARDS */}
