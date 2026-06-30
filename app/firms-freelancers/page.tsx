@@ -150,7 +150,7 @@ export default async function FirmsFreelancersPage() {
       {/* FIRMS / INDEPENDENTS + FREELANCING */}
       <section className="section bg-white">
         <div className="container-site">
-          <div className="text-center max-w-2xl mx-auto mb-12">
+          <div className="max-w-2xl mb-12">
             <span className="eyebrow mb-3 block">Who Can Apply</span>
             <h2 className="section-title mb-4">Open to firms and independent professionals</h2>
             <p className="text-slate-500 text-lg leading-relaxed">We welcome applications from established accounting firms and qualified independent professionals across all jurisdictions.</p>
