@@ -83,7 +83,7 @@ export default async function JobsHubPage() {
             <p className="text-white/35 text-sm mb-10">
               Not a job board. Not a directory. A managed recruitment service.
             </p>
-            <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-4">
+            <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-16">
               <Link
                 href="/jobs/find-work"
                 className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all shadow-gold"
@@ -101,11 +101,9 @@ export default async function JobsHubPage() {
               >
                 I am looking to hire
               </Link>
-            </div>
-            <div className="w-full sm:w-[calc(50%-6px)] mb-16">
               <Link
                 href="/freelancing-pathways"
-                className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-80 border-2 border-white/40 text-white"
+                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-80 border-2 border-white/40 text-white"
               >
                 Explore Freelancing
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
