@@ -495,18 +495,23 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
               ? 'Whether you are looking for work, recently graduated, or already employed — if you have accounting or finance skills, there is a freelancing opportunity waiting for you. EthioTax will help you find it.'
               : 'Whether you are between roles, newly qualified, or employed and ready to build something of your own — we can help you take the first steps into freelancing and grow from there.'}
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 max-w-xl">
+          <div className="flex flex-col sm:flex-row items-stretch gap-3">
             <a href="#register"
-              className="flex-1 inline-flex items-center justify-center gap-2 px-7 rounded-xl min-h-[56px] text-sm font-semibold transition-opacity hover:opacity-90"
-              style={{ background: gold, color: brand }}>
-              Register Your Interest
+              className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all shadow-gold"
+              style={{ backgroundColor: gold, color: brand }}>
+              Register as Freelancer
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
             </a>
             <a href="#faq"
-              className="flex-1 inline-flex items-center justify-center gap-2 px-7 rounded-xl min-h-[56px] text-sm font-medium text-white border border-white/25 hover:bg-white/10 transition-colors">
-              How freelancing works
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+              className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-90"
+              style={{ border: `2px solid ${gold}`, color: gold, background: 'transparent' }}>
+              How Freelancing Works
             </a>
+            <Link href="/jobs/hire-talent"
+              className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-80 border-2 border-white/40 text-white">
+              Hire a Freelancer
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </Link>
           </div>
         </div>
       </section>
