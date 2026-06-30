@@ -105,11 +105,11 @@ export default async function FirmsFreelancersPage() {
             <p className="text-white/60 text-xl leading-relaxed mb-4 max-w-3xl">
               {platformName} operates a carefully managed global network of accounting firms and independent professionals. We oversee every client engagement — from initial brief through to final delivery — ensuring a consistent, high-quality service experience.
             </p>
-            <p className="text-white/40 text-base leading-relaxed mb-0 max-w-2xl">
+            <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
               Professionals within our network do not operate independently on this platform. All client relationships, communications, pricing, and quality oversight are managed directly by {platformName}.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-16">
+          <div className="flex flex-col sm:flex-row items-stretch gap-3">
               <Link href="/firms-freelancers/join"
                 className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all shadow-gold"
                 style={{ backgroundColor: '#C9982A', color: '#0C1A3D' }}>
