@@ -232,8 +232,7 @@ export default async function FirmsFreelancersPage() {
                       : 'If you are qualified but not yet freelancing — or employed and curious about building your own practice on the side — our Freelancing Pathways programme is designed for you. Register your interest and we will take it from there.'}
                   </p>
                   <a href="/freelancing-pathways"
-                    className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold transition-colors w-full border"
-                    style={{ background: 'transparent', color: '#ffffff', borderColor: '#ffffff' }}>
+                    className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-lg text-sm font-medium text-white border border-white/25 hover:bg-white/10 transition-colors w-full">
                     Explore Freelancing Pathways
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                   </a>
