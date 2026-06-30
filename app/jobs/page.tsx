@@ -67,7 +67,7 @@ export default async function JobsHubPage() {
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">Jobs</span>
           </nav>
-          <div className="max-w-3xl mb-12">
+          <div className="max-w-3xl mb-8">
             <span className="eyebrow text-gold-400 mb-5 block">{platformName} Recruitment</span>
             <h1 className="font-display text-white text-4xl md:text-5xl lg:text-6xl mb-6 leading-tight"
               style={{ letterSpacing: '-0.02em' }}>
@@ -80,10 +80,11 @@ export default async function JobsHubPage() {
                 ? 'EthioTax connects Ethiopian finance professionals with employers across the UK, USA, Canada and beyond.'
                 : 'We place accounting and finance professionals in permanent and contract roles. Fully managed -- we find the right match and guarantee every placement.'}
             </p>
-            <p className="text-white/35 text-sm mb-10">
+            <p className="text-white/35 text-sm mb-0">
               Not a job board. Not a directory. A managed recruitment service.
             </p>
-            <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-16">
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-16">
               <Link
                 href="/jobs/find-work"
                 className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all shadow-gold"
@@ -111,7 +112,6 @@ export default async function JobsHubPage() {
                 </svg>
               </Link>
             </div>
-          </div>
 
           {/* TWO CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-16">
