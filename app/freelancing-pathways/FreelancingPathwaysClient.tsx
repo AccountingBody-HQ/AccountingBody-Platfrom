@@ -568,14 +568,8 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="section relative overflow-hidden" style={{ background: brand }}>
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[140%] h-[60%] opacity-15"
-            style={{ background: `radial-gradient(ellipse at center top, ${gold} 0%, transparent 65%)` }} />
-          <div className="absolute inset-0 opacity-[0.03]"
-            style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-        </div>
-        <div className="container-site relative z-10">
+      <section id="faq" className="section" style={{ background: brand }}>
+        <div className="container-site">
           <div className="max-w-2xl mx-auto text-center mb-12">
             <span className="text-xs font-bold uppercase tracking-widest mb-3 block" style={{ color: gold }}>Freelancing Explained</span>
             <h2 className="font-display text-3xl md:text-4xl text-white mb-4">

@@ -68,6 +68,7 @@ export default async function JobsHubPage() {
             <span className="text-white/70">Jobs</span>
           </nav>
           <div className="max-w-3xl mb-12">
+            <span className="eyebrow text-gold-400 mb-5 block">{platformName} Recruitment</span>
             <h1 className="font-display text-white text-4xl md:text-5xl lg:text-6xl mb-6 leading-tight"
               style={{ letterSpacing: '-0.02em' }}>
               {isEthioTax
