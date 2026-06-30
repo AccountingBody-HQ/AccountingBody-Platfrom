@@ -485,10 +485,6 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">Freelancing Pathways</span>
           </nav>
-          <span className="inline-block text-xs font-bold uppercase tracking-widest mb-6 px-3 py-1.5 rounded-full"
-            style={{ background: 'rgba(201,152,42,0.15)', color: gold, border: `1px solid ${gold}40` }}>
-            {platformName} — Freelancing Pathways
-          </span>
           <h1 className="font-display text-white text-4xl md:text-5xl lg:text-6xl mb-6 leading-tight"
             style={{ letterSpacing: '-0.02em' }}>
             {isEthioTax
@@ -581,13 +577,7 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
         </div>
         <div className="container-site relative z-10">
           <div className="max-w-2xl mx-auto text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-              style={{ background: 'rgba(201,152,42,0.15)', border: `1px solid ${gold}40` }}>
-              <svg className="w-3.5 h-3.5" fill="none" stroke={gold} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: gold }}>Freelancing Explained</span>
-            </div>
+            <span className="text-xs font-bold uppercase tracking-widest mb-3 block" style={{ color: gold }}>Freelancing Explained</span>
             <h2 className="font-display text-3xl md:text-4xl text-white mb-4">
               Everything you need to know
             </h2>

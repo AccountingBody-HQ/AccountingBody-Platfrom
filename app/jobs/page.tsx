@@ -62,11 +62,12 @@ export default async function JobsHubPage() {
         </div>
 
         <div className="container-site relative z-10">
+          <nav className="flex items-center gap-2 text-white/40 text-sm mb-10">
+            <a href="/" className="hover:text-white/70 transition-colors">Home</a>
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+            <span className="text-white/70">Jobs</span>
+          </nav>
           <div className="max-w-3xl mb-12">
-            <span className="inline-block text-xs font-bold uppercase tracking-widest mb-6 px-3 py-1.5 rounded-full"
-              style={{ background: 'rgba(201,152,42,0.15)', color: gold, border: `1px solid ${gold}40` }}>
-              {platformName} Recruitment
-            </span>
             <h1 className="font-display text-white text-4xl md:text-5xl lg:text-6xl mb-6 leading-tight"
               style={{ letterSpacing: '-0.02em' }}>
               {isEthioTax
