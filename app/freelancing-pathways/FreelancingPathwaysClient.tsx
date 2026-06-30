@@ -485,6 +485,7 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">Freelancing Pathways</span>
           </nav>
+          <span className="eyebrow text-gold-400 mb-5 block">{platformName} — Freelancing Pathways</span>
           <h1 className="font-display text-white text-4xl md:text-5xl lg:text-6xl mb-6 leading-tight"
             style={{ letterSpacing: '-0.02em' }}>
             {isEthioTax
@@ -568,8 +569,10 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="section" style={{ background: brand }}>
-        <div className="container-site">
+      <section id="faq" className="section relative overflow-hidden" style={{ background: brand }}>
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
+          style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+        <div className="container-site relative z-10">
           <div className="max-w-2xl mx-auto text-center mb-12">
             <span className="text-xs font-bold uppercase tracking-widest mb-3 block" style={{ color: gold }}>Freelancing Explained</span>
             <h2 className="font-display text-3xl md:text-4xl text-white mb-4">
