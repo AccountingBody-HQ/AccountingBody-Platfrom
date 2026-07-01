@@ -607,6 +607,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}
               >
                 Explore our services
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </Link>
             </div>
             <div className="w-full sm:w-[calc(50%-6px)] mb-16">
