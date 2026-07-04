@@ -3,6 +3,11 @@
 import { useState, useRef } from 'react'
 import Link from 'next/link'
 
+function scrollToRegister(e: React.MouseEvent) {
+  e.preventDefault()
+  document.getElementById('register')?.scrollIntoView({ behavior: 'smooth' })
+}
+
 const faqs = [
   {
     q: 'What exactly is freelancing?',
@@ -496,7 +501,7 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
               : 'Whether you are between roles, newly qualified, or employed and ready to build something of your own — we can help you take the first steps into freelancing and grow from there.'}
           </p>
           <div className="flex flex-col sm:flex-row items-stretch gap-3">
-            <a href="#register"
+            <a href="#register" onClick={scrollToRegister}
               className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all shadow-gold"
               style={{ backgroundColor: gold, color: brand }}>
               Register as Freelancer
@@ -599,7 +604,7 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
             <h2 className="font-display text-3xl md:text-4xl mb-4" style={{ color: brand }}>Ready to take the first step?</h2>
             <p className="text-slate-500 text-lg mb-10 leading-relaxed">Register your interest and our team will be in touch. No commitment required.</p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <a href="#register"
+              <a href="#register" onClick={scrollToRegister}
                 className="flex-1 h-13 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white transition-colors shadow-sm min-h-[52px]"
                 style={{ background: brand }}>
                 Register as Freelancer
