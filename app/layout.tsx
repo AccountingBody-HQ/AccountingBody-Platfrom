@@ -5,7 +5,6 @@
 
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
-import { ClerkProvider } from '@clerk/nextjs'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { NavigationWrapper } from '@/components/layout/NavigationWrapper'
@@ -89,7 +88,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
 
   return (
-    <ClerkProvider>
       <html lang="en-GB" className="scroll-smooth">
         <head>
           {process.env.NEXT_PUBLIC_ADSENSE_ID && (
@@ -139,6 +137,5 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <SpeedInsights />
         </body>
       </html>
-    </ClerkProvider>
   )
 }

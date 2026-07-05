@@ -35,6 +35,15 @@ async function isAdminAuthenticated(req: NextRequest): Promise<boolean> {
 export default clerkMiddleware(async (auth, req: NextRequest) => {
   const { pathname } = req.nextUrl
 
+  // Block account/login system — not in use, kept for future use only
+  if (
+    pathname.startsWith('/sign-in') ||
+    pathname.startsWith('/sign-up') ||
+    pathname.startsWith('/dashboard')
+  ) {
+    return NextResponse.redirect(new URL('/', req.url))
+  }
+
   const clean = pathname.replace(/\/$/, "")
   if (STATIC_REDIRECTS[clean]) {
     const url = req.nextUrl.clone()
