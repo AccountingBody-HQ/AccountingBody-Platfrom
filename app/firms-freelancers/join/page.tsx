@@ -439,7 +439,7 @@ export default function JoinNetworkPage() {
                     <div ref={(el) => {
                       if (el && window.turnstile && !turnstileWidgetId.current) {
                         turnstileWidgetId.current = window.turnstile.render(el, {
-                          sitekey: '0x4AAAAADeWpXpm7NrIBZp_',
+                          sitekey: (typeof document !== 'undefined' && document.cookie.includes('x-et-platform=ethiotax')) ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? ''),
                           size: 'invisible',
                         })
                       }

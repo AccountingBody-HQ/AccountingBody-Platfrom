@@ -29,7 +29,7 @@ const whyEthioTax = [
   { title: 'End-to-End Management', desc: 'From initial strategy through to implementation support — EthioTax manages every element and oversees the specialists involved, so you have one point of contact throughout.' },
 ]
 
-const process = [
+const processSteps = [
   { step: '01', title: 'Submit Your Brief', desc: 'Complete the enquiry form below. Tell us your business situation and what you are trying to achieve.' },
   { step: '02', title: 'We Review & Qualify', desc: 'EthioTax reviews your brief within 24 hours and confirms the right approach.' },
   { step: '03', title: 'Fixed-Fee Proposal', desc: 'We send a clear, fixed-fee proposal within 72 hours. No surprises.' },
@@ -242,7 +242,7 @@ export default function BusinessConsultingPage() {
             <p className="text-white/55 text-lg max-w-md mx-auto">EthioTax manages every stage. You deal with us — we handle the rest.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 max-w-5xl mx-auto">
-            {process.map(item => (
+            {processSteps.map(item => (
               <div key={item.step} className="flex flex-col items-center text-center">
                 <div className="w-[52px] h-[52px] rounded-full bg-[#C9982A] flex items-center justify-center text-[#1A4731] font-extrabold text-base mb-4 shrink-0">
                   {item.step}
@@ -351,7 +351,7 @@ export default function BusinessConsultingPage() {
                   ref={(el) => {
                     if (el && window.turnstile && !turnstileWidgetId.current) {
                       turnstileWidgetId.current = window.turnstile.render(el, {
-                        sitekey: '0x4AAAAADeWpXpm7NrIBZp_',
+                        sitekey: (typeof document !== 'undefined' && document.cookie.includes('x-et-platform=ethiotax')) ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? ''),
                         size: 'invisible',
                       })
                     }
