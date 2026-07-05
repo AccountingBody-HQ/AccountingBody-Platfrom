@@ -1,5 +1,11 @@
+import { withSentryConfig } from '@sentry/nextjs'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
+  experimental: {
+    scrollRestoration: true,
+  },
   images: {
     remotePatterns: [
       {
@@ -52,4 +58,11 @@ const nextConfig = {
     ]
   },
 }
-export default nextConfig
+export default withSentryConfig(nextConfig, {
+  org: 'accounting-body',
+  project: 'javascript-accountingbody-website',
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  disableLogger: true,
+  automaticVercelMonitors: true,
+})
