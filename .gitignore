@@ -39,3 +39,4 @@ dist/
 .sanity/
 *.xml
 scripts/__pycache__/
+.env*
