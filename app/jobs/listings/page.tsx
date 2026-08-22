@@ -35,9 +35,9 @@ const ROLE_CHIPS = [
 ]
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: 'relevance', label: 'Most Relevant' },
-  { value: 'date', label: 'Newest First' },
-  { value: 'salary', label: 'Highest Salary' },
+  { value: 'relevance', label: 'Relevant' },
+  { value: 'date', label: 'Newest' },
+  { value: 'salary', label: 'Salary' },
 ]
 
 const CONTRACT_OPTIONS: { value: ContractFilter; label: string }[] = [
@@ -186,6 +186,7 @@ export default function JobListingsPage() {
   const [activeLocation, setActiveLocation] = useState(DEFAULT_LOCATION)
   const [activeSort, setActiveSort] = useState<SortOption>(DEFAULT_SORT)
   const [activeContract, setActiveContract] = useState<ContractFilter>(DEFAULT_CONTRACT)
+  const [activeChip, setActiveChip] = useState<string | null>('All')
   const [page, setPage] = useState(1)
 
   const [jobs, setJobs] = useState<CareerjetJob[]>([])
@@ -266,10 +267,16 @@ export default function JobListingsPage() {
     scrollToResults()
   }
 
+  function handleRoleInputChange(value: string) {
+    setRoleInput(value)
+    setActiveChip(null)
+  }
+
   function handleChipClick(chip: string) {
     const value = chip === 'All' ? '' : chip
     setRoleInput(value)
     setActiveRole(value)
+    setActiveChip(chip)
     setPage(1)
     scrollToResults()
   }
@@ -291,6 +298,7 @@ export default function JobListingsPage() {
     setActiveLocation(DEFAULT_LOCATION)
     setActiveSort(DEFAULT_SORT)
     setActiveContract(DEFAULT_CONTRACT)
+    setActiveChip('All')
     setPage(1)
   }
 
@@ -316,30 +324,30 @@ export default function JobListingsPage() {
           </p>
 
           <form onSubmit={handleSearch} className="w-full max-w-3xl">
-            <div className="flex flex-col sm:flex-row items-stretch bg-white rounded-xl shadow-2xl shadow-black/20 overflow-hidden border-2 border-transparent focus-within:border-gold-500 transition-all duration-200">
-              <div className="flex items-center flex-1 px-4 py-2 sm:py-0 border-b sm:border-b-0 sm:border-r border-slate-200">
+            <div className="flex flex-col gap-3 sm:gap-0 sm:flex-row sm:items-stretch sm:bg-white sm:rounded-xl sm:shadow-2xl sm:shadow-black/20 sm:overflow-hidden sm:border-2 sm:border-transparent sm:focus-within:border-gold-500 transition-all duration-200">
+              <div className="flex items-center flex-1 bg-white rounded-lg sm:rounded-none px-4 py-2.5 sm:py-0 border border-slate-200 sm:border-0 sm:border-b-0 sm:border-r sm:border-slate-200">
                 <SearchIcon />
                 <input
                   type="text"
                   value={roleInput}
-                  onChange={e => setRoleInput(e.target.value)}
+                  onChange={e => handleRoleInputChange(e.target.value)}
                   placeholder="e.g. Auditor, Payroll Manager, CFO..."
-                  className="flex-1 py-2.5 px-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
+                  className="flex-1 py-1 px-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
                   autoComplete="off"
                 />
               </div>
-              <div className="flex items-center flex-1 px-4 py-2 sm:py-0">
+              <div className="flex items-center flex-1 bg-white rounded-lg sm:rounded-none px-4 py-2.5 sm:py-0 border border-slate-200 sm:border-0">
                 <LocationIcon />
                 <input
                   type="text"
                   value={locationInput}
                   onChange={e => setLocationInput(e.target.value)}
                   placeholder="Leave blank for local jobs, or enter a city/country"
-                  className="flex-1 py-2.5 px-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
+                  className="flex-1 py-1 px-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
                   autoComplete="off"
                 />
               </div>
-              <div className="p-2 shrink-0">
+              <div className="sm:p-2 sm:shrink-0">
                 <button
                   type="submit"
                   className="flex items-center justify-center gap-2 w-full h-11 px-6 bg-gold-500 hover:bg-gold-400 active:bg-gold-600 text-navy-950 font-bold rounded-lg transition-all text-sm"
@@ -359,7 +367,7 @@ export default function JobListingsPage() {
             style={{ scrollbarWidth: 'none' }}
           >
             {ROLE_CHIPS.map(chip => {
-              const isActive = chip === 'All' ? activeRole === '' : activeRole === chip
+              const isActive = activeChip === chip
               return (
                 <button
                   key={chip}
@@ -420,19 +428,27 @@ export default function JobListingsPage() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              <label htmlFor="job-sort" className="text-xs font-medium text-slate-500 whitespace-nowrap">
-                Sort:
-              </label>
-              <select
-                id="job-sort"
-                value={activeSort}
-                onChange={e => handleSortChange(e.target.value as SortOption)}
-                className="h-9 pl-3 pr-8 rounded-lg border border-slate-200 bg-white text-sm font-medium text-navy-950 outline-none focus:border-gold-500 cursor-pointer"
-              >
-                {SORT_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+              <span className="text-xs font-medium text-slate-500 whitespace-nowrap">Sort:</span>
+              <div className="flex gap-2">
+                {SORT_OPTIONS.map(opt => {
+                  const isActive = activeSort === opt.value
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleSortChange(opt.value)}
+                      className={[
+                        'shrink-0 h-8 px-3.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border',
+                        isActive
+                          ? 'bg-gold-500 text-navy-950 border-gold-500'
+                          : 'bg-white text-slate-600 border-slate-200 hover:border-gold-300 hover:text-navy-700',
+                      ].join(' ')}
+                    >
+                      {opt.label}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           </div>
 
