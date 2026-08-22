@@ -4,6 +4,16 @@ export const dynamic = "force-dynamic"
 
 const CAREERJET_ENDPOINT = "https://www.careerjet.co.uk/partners/api"
 
+function getClientIp(req: NextRequest): string {
+  const forwardedFor = req.headers.get("x-forwarded-for")
+  if (forwardedFor) return forwardedFor.split(",")[0].trim()
+
+  const realIp = req.headers.get("x-real-ip")
+  if (realIp) return realIp.trim()
+
+  return "1.0.0.1"
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const keywords = searchParams.get("keywords") ?? ""
@@ -16,20 +26,42 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Careerjet API key not configured" }, { status: 500 })
   }
 
-  const params = new URLSearchParams({ keywords, location, affid, pagesize, page })
+  const userIp = getClientIp(req)
+  const userAgent = req.headers.get("user-agent") ?? ""
+
+  const params = new URLSearchParams({
+    keywords,
+    location,
+    affid,
+    pagesize,
+    page,
+    user_ip: userIp,
+    user_agent: userAgent,
+  })
 
   try {
     const res = await fetch(`${CAREERJET_ENDPOINT}?${params.toString()}`, {
       headers: { Accept: "application/json" },
     })
 
+    const rawBody = await res.text()
+
     if (!res.ok) {
+      console.error("Careerjet API error", res.status, rawBody)
       return NextResponse.json({ error: "Careerjet request failed" }, { status: res.status })
     }
 
-    const data = await res.json()
+    let data
+    try {
+      data = JSON.parse(rawBody)
+    } catch {
+      console.error("Careerjet API returned a non-JSON response", rawBody)
+      return NextResponse.json({ error: "Careerjet request failed" }, { status: 502 })
+    }
+
     return NextResponse.json(data)
-  } catch {
+  } catch (err) {
+    console.error("Careerjet API request failed", err)
     return NextResponse.json({ error: "Careerjet request failed" }, { status: 502 })
   }
 }
