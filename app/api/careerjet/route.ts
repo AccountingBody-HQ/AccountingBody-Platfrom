@@ -31,6 +31,9 @@ export async function GET(req: NextRequest) {
   const location = searchParams.get("location")?.trim() ?? ""
   const page = searchParams.get("page") ?? "1"
   const pageSize = searchParams.get("pagesize") ?? "20"
+  const sort = searchParams.get("sort")?.trim() ?? ""
+  const contractType = searchParams.get("contract_type")?.trim() ?? ""
+  const workHours = searchParams.get("work_hours")?.trim() ?? ""
 
   console.log("FIXIE_URL set:", Boolean(process.env.FIXIE_URL))
 
@@ -55,6 +58,15 @@ export async function GET(req: NextRequest) {
   })
   if (location) {
     params.set("location", location)
+  }
+  if (sort) {
+    params.set("sort", sort)
+  }
+  if (contractType) {
+    params.set("contract_type", contractType)
+  }
+  if (workHours) {
+    params.set("work_hours", workHours)
   }
 
   const authHeader = `Basic ${Buffer.from(`${apiKey}:`).toString("base64")}`

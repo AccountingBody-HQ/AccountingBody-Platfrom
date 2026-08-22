@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Badge } from '@/components/ui/Badge'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 interface CareerjetJob {
   title: string
@@ -20,9 +19,53 @@ interface CareerjetResponse {
   error?: string
 }
 
+type SortOption = 'relevance' | 'date' | 'salary'
+type ContractFilter = 'all' | 'permanent' | 'contract' | 'temporary' | 'parttime'
+
 const DEFAULT_ROLE = ''
 const DEFAULT_LOCATION = ''
+const DEFAULT_SORT: SortOption = 'date'
+const DEFAULT_CONTRACT: ContractFilter = 'all'
 const PAGE_SIZE = 12
+const DEBOUNCE_MS = 300
+
+const ROLE_CHIPS = [
+  'All', 'Accountant', 'Auditor', 'Finance Manager', 'Financial Analyst', 'Payroll',
+  'Tax', 'CFO', 'Bookkeeper', 'Credit Control', 'Management Accountant', 'Treasury',
+]
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: 'relevance', label: 'Most Relevant' },
+  { value: 'date', label: 'Newest First' },
+  { value: 'salary', label: 'Highest Salary' },
+]
+
+const CONTRACT_OPTIONS: { value: ContractFilter; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'permanent', label: 'Permanent' },
+  { value: 'contract', label: 'Contract' },
+  { value: 'temporary', label: 'Temporary' },
+  { value: 'parttime', label: 'Part-time' },
+]
+
+function contractQueryParams(filter: ContractFilter): Record<string, string> {
+  switch (filter) {
+    case 'permanent': return { contract_type: 'p' }
+    case 'contract': return { contract_type: 'c' }
+    case 'temporary': return { contract_type: 't' }
+    case 'parttime': return { work_hours: 'p' }
+    default: return {}
+  }
+}
+
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delayMs)
+    return () => clearTimeout(timer)
+  }, [value, delayMs])
+  return debounced
+}
 
 function formatDate(dateStr?: string): string {
   if (!dateStr) return ''
@@ -30,6 +73,13 @@ function formatDate(dateStr?: string): string {
   const d = new Date(datePart)
   if (isNaN(d.getTime())) return dateStr
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+function formatResultsSummary(count: number, role: string, location: string): string {
+  const countStr = count.toLocaleString()
+  const noun = role ? `${role} job${count === 1 ? '' : 's'}` : `accounting & finance job${count === 1 ? '' : 's'}`
+  const locationSuffix = location ? ` in ${location}` : ''
+  return `${countStr} ${noun}${locationSuffix}`
 }
 
 function SearchIcon() {
@@ -57,7 +107,18 @@ function CalendarIcon() {
   )
 }
 
+function Spinner({ className = 'w-6 h-6' }: { className?: string }) {
+  return (
+    <svg className={`${className} animate-spin text-gold-500`} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+    </svg>
+  )
+}
+
 function JobCard({ job, fallbackLocation }: { job: CareerjetJob; fallbackLocation: string }) {
+  const location = job.locations || fallbackLocation
+
   return (
     <article className="group card-base bg-white flex flex-col p-5">
       <h3 className="font-display text-lg text-navy-950 leading-snug group-hover:text-navy-700 transition-colors mb-1">
@@ -68,10 +129,12 @@ function JobCard({ job, fallbackLocation }: { job: CareerjetJob; fallbackLocatio
       </p>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mb-4 text-xs text-slate-500">
-        <span className="flex items-center gap-1">
-          <LocationIcon />
-          {job.locations || fallbackLocation}
-        </span>
+        {location && (
+          <span className="flex items-center gap-1">
+            <LocationIcon />
+            {location}
+          </span>
+        )}
         {job.date && (
           <span className="flex items-center gap-1">
             <CalendarIcon />
@@ -82,7 +145,9 @@ function JobCard({ job, fallbackLocation }: { job: CareerjetJob; fallbackLocatio
 
       {job.salary && (
         <div className="mb-4">
-          <Badge variant="count">{job.salary}</Badge>
+          <span className="inline-flex items-center rounded-full bg-gold-50 text-gold-700 border border-gold-300 px-2.5 py-1 text-xs font-bold whitespace-nowrap">
+            {job.salary}
+          </span>
         </div>
       )}
 
@@ -119,6 +184,8 @@ export default function JobListingsPage() {
   const [locationInput, setLocationInput] = useState(DEFAULT_LOCATION)
   const [activeRole, setActiveRole] = useState(DEFAULT_ROLE)
   const [activeLocation, setActiveLocation] = useState(DEFAULT_LOCATION)
+  const [activeSort, setActiveSort] = useState<SortOption>(DEFAULT_SORT)
+  const [activeContract, setActiveContract] = useState<ContractFilter>(DEFAULT_CONTRACT)
   const [page, setPage] = useState(1)
 
   const [jobs, setJobs] = useState<CareerjetJob[]>([])
@@ -127,53 +194,108 @@ export default function JobListingsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const resultsRef = useRef<HTMLDivElement>(null)
+  const abortRef = useRef<AbortController | null>(null)
+
+  const debouncedRoleInput = useDebouncedValue(roleInput, DEBOUNCE_MS)
+  const debouncedLocationInput = useDebouncedValue(locationInput, DEBOUNCE_MS)
+
   useEffect(() => {
-    let cancelled = false
+    setActiveRole(debouncedRoleInput.trim())
+    setPage(1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedRoleInput])
 
-    async function fetchJobs() {
-      setLoading(true)
-      setError(null)
-      try {
-        const params = new URLSearchParams({
-          role: activeRole,
-          location: activeLocation,
-          page: String(page),
-          pagesize: String(PAGE_SIZE),
-        })
-        const res = await fetch(`/api/careerjet?${params.toString()}`)
-        const data: CareerjetResponse = await res.json()
+  useEffect(() => {
+    setActiveLocation(debouncedLocationInput.trim())
+    setPage(1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedLocationInput])
 
-        if (cancelled) return
+  const fetchJobs = useCallback(async () => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
 
-        if (!res.ok || data.error) {
-          setError(data.error || 'Could not load jobs right now. Please try again.')
-          setJobs([])
-          return
-        }
+    setLoading(true)
+    setError(null)
+    try {
+      const params = new URLSearchParams({
+        role: activeRole,
+        location: activeLocation,
+        page: String(page),
+        pagesize: String(PAGE_SIZE),
+        sort: activeSort,
+        ...contractQueryParams(activeContract),
+      })
+      const res = await fetch(`/api/careerjet?${params.toString()}`, { signal: controller.signal })
+      const data: CareerjetResponse = await res.json()
 
-        setJobs(Array.isArray(data.jobs) ? data.jobs : [])
-        setTotalPages(typeof data.pages === 'number' && data.pages > 0 ? data.pages : 1)
-        setHits(typeof data.hits === 'number' ? data.hits : null)
-      } catch {
-        if (!cancelled) {
-          setError('Could not load jobs right now. Please try again.')
-          setJobs([])
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
+      if (!res.ok || data.error) {
+        setError(data.error || 'Could not load jobs right now. Please try again.')
+        setJobs([])
+        return
       }
-    }
 
+      setJobs(Array.isArray(data.jobs) ? data.jobs : [])
+      setTotalPages(typeof data.pages === 'number' && data.pages > 0 ? data.pages : 1)
+      setHits(typeof data.hits === 'number' ? data.hits : null)
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return
+      setError('Could not load jobs right now. Please try again.')
+      setJobs([])
+    } finally {
+      if (abortRef.current === controller) setLoading(false)
+    }
+  }, [activeRole, activeLocation, page, activeSort, activeContract])
+
+  useEffect(() => {
     fetchJobs()
-    return () => { cancelled = true }
-  }, [activeRole, activeLocation, page])
+    return () => abortRef.current?.abort()
+  }, [fetchJobs])
+
+  function scrollToResults() {
+    resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     setPage(1)
     setActiveRole(roleInput.trim())
     setActiveLocation(locationInput.trim())
+    scrollToResults()
   }
+
+  function handleChipClick(chip: string) {
+    const value = chip === 'All' ? '' : chip
+    setRoleInput(value)
+    setActiveRole(value)
+    setPage(1)
+    scrollToResults()
+  }
+
+  function handleSortChange(value: SortOption) {
+    setActiveSort(value)
+    setPage(1)
+  }
+
+  function handleContractChange(value: ContractFilter) {
+    setActiveContract(value)
+    setPage(1)
+  }
+
+  function handleReset() {
+    setRoleInput(DEFAULT_ROLE)
+    setLocationInput(DEFAULT_LOCATION)
+    setActiveRole(DEFAULT_ROLE)
+    setActiveLocation(DEFAULT_LOCATION)
+    setActiveSort(DEFAULT_SORT)
+    setActiveContract(DEFAULT_CONTRACT)
+    setPage(1)
+  }
+
+  const count = hits ?? jobs.length
+  const isFirstLoad = loading && jobs.length === 0
 
   return (
     <main className="min-h-screen bg-white">
@@ -230,74 +352,163 @@ export default function JobListingsPage() {
               Showing jobs near you — enter a location to search elsewhere
             </p>
           </form>
+
+          {/* QUICK FILTER CHIPS */}
+          <div
+            className="mt-6 flex gap-2 overflow-x-auto flex-nowrap sm:flex-wrap pb-2 max-w-3xl [&::-webkit-scrollbar]:hidden"
+            style={{ scrollbarWidth: 'none' }}
+          >
+            {ROLE_CHIPS.map(chip => {
+              const isActive = chip === 'All' ? activeRole === '' : activeRole === chip
+              return (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => handleChipClick(chip)}
+                  className={[
+                    'shrink-0 h-8 px-3.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border',
+                    isActive
+                      ? 'bg-gold-500 text-navy-950 border-gold-500'
+                      : 'bg-white/10 text-white/80 border-white/15 hover:bg-white/20 hover:text-white',
+                  ].join(' ')}
+                >
+                  {chip}
+                </button>
+              )
+            })}
+          </div>
         </div>
       </section>
 
       {/* RESULTS */}
       <section className="section bg-slate-50">
-        <div className="container-site">
-          <div className="flex items-center justify-between mb-8">
+        <div className="container-site" ref={resultsRef} style={{ scrollMarginTop: '5rem' }}>
+          <div className="mb-4">
             <p className="text-sm text-slate-500">
-              {loading
+              {isFirstLoad
                 ? 'Searching…'
                 : error
                   ? ' '
-                  : `${hits ?? jobs.length} job${hits === 1 ? '' : 's'}${activeRole ? ` for "${activeRole}"` : ''}${activeLocation ? ` in ${activeLocation}` : ''}`}
+                  : formatResultsSummary(count, activeRole, activeLocation)}
             </p>
+          </div>
+
+          {/* CONTRACT FILTER PILLS + SORT */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
+            <div
+              className="flex gap-2 overflow-x-auto flex-nowrap sm:flex-wrap pb-1 [&::-webkit-scrollbar]:hidden"
+              style={{ scrollbarWidth: 'none' }}
+            >
+              {CONTRACT_OPTIONS.map(opt => {
+                const isActive = activeContract === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => handleContractChange(opt.value)}
+                    className={[
+                      'shrink-0 h-8 px-3.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border',
+                      isActive
+                        ? 'bg-navy-950 text-white border-navy-950'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-navy-300 hover:text-navy-700',
+                    ].join(' ')}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <label htmlFor="job-sort" className="text-xs font-medium text-slate-500 whitespace-nowrap">
+                Sort:
+              </label>
+              <select
+                id="job-sort"
+                value={activeSort}
+                onChange={e => handleSortChange(e.target.value as SortOption)}
+                className="h-9 pl-3 pr-8 rounded-lg border border-slate-200 bg-white text-sm font-medium text-navy-950 outline-none focus:border-gold-500 cursor-pointer"
+              >
+                {SORT_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {error && (
             <div className="text-center py-16 border border-slate-200 rounded-xl bg-white">
               <p className="text-navy-950 font-semibold mb-1">Something went wrong</p>
-              <p className="text-sm text-slate-500">{error}</p>
+              <p className="text-sm text-slate-500 mb-4">{error}</p>
+              <button
+                type="button"
+                onClick={() => fetchJobs()}
+                className="h-10 px-6 rounded-lg bg-navy-950 text-white text-sm font-semibold hover:bg-navy-900 transition-colors"
+              >
+                Retry
+              </button>
             </div>
           )}
 
-          {!error && loading && (
+          {!error && isFirstLoad && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {Array.from({ length: 6 }).map((_, i) => <JobCardSkeleton key={i} />)}
+              {Array.from({ length: PAGE_SIZE }).map((_, i) => <JobCardSkeleton key={i} />)}
             </div>
           )}
 
-          {!error && !loading && jobs.length === 0 && (
+          {!error && !isFirstLoad && jobs.length === 0 && (
             <div className="text-center py-16 border border-slate-200 rounded-xl bg-white">
               <p className="text-navy-950 font-semibold mb-1">No jobs found</p>
-              <p className="text-sm text-slate-500">Try different keywords or a broader location.</p>
+              <p className="text-sm text-slate-500 mb-4">Try broadening your search or clearing filters.</p>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="h-10 px-6 rounded-lg border border-navy-950 text-navy-950 text-sm font-semibold hover:bg-navy-950 hover:text-white transition-colors"
+              >
+                Reset filters
+              </button>
             </div>
           )}
 
-          {!error && !loading && jobs.length > 0 && (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {jobs.map((job, i) => (
-                  <JobCard key={`${job.url}-${i}`} job={job} fallbackLocation={activeLocation} />
-                ))}
-              </div>
-
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-3 mt-10">
-                  <button
-                    type="button"
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page <= 1}
-                    className="h-10 px-5 rounded-lg text-sm font-medium border border-navy-950 text-navy-950 disabled:opacity-40 disabled:pointer-events-none hover:bg-navy-950 hover:text-white transition-colors"
-                  >
-                    Previous
-                  </button>
-                  <span className="text-sm text-slate-500 tabular-nums">
-                    Page {page} of {totalPages}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                    disabled={page >= totalPages}
-                    className="h-10 px-5 rounded-lg text-sm font-medium border border-navy-950 text-navy-950 disabled:opacity-40 disabled:pointer-events-none hover:bg-navy-950 hover:text-white transition-colors"
-                  >
-                    Next
-                  </button>
+          {!error && jobs.length > 0 && (
+            <div className="relative">
+              {loading && (
+                <div className="absolute inset-0 flex items-start justify-center pt-12 z-10">
+                  <Spinner />
                 </div>
               )}
-            </>
+              <div className={`transition-opacity duration-200 ${loading ? 'opacity-40 pointer-events-none' : ''}`}>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {jobs.map((job, i) => (
+                    <JobCard key={`${job.url}-${i}`} job={job} fallbackLocation={activeLocation} />
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-3 mt-10">
+                    <button
+                      type="button"
+                      onClick={() => { setPage(p => Math.max(1, p - 1)); scrollToResults() }}
+                      disabled={page <= 1}
+                      className="h-10 px-5 rounded-lg text-sm font-medium border border-navy-950 text-navy-950 disabled:opacity-40 disabled:pointer-events-none hover:bg-navy-950 hover:text-white transition-colors"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-slate-500 tabular-nums">
+                      Page {page} of {totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => { setPage(p => Math.min(totalPages, p + 1)); scrollToResults() }}
+                      disabled={page >= totalPages}
+                      className="h-10 px-5 rounded-lg text-sm font-medium border border-navy-950 text-navy-950 disabled:opacity-40 disabled:pointer-events-none hover:bg-navy-950 hover:text-white transition-colors"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </section>
