@@ -362,30 +362,25 @@ export default function JobListingsPage() {
           </form>
 
           {/* QUICK FILTER CHIPS */}
-          <div
-            className="mt-6 max-w-3xl overflow-x-auto sm:overflow-visible [&::-webkit-scrollbar]:hidden"
-            style={{ scrollbarWidth: 'none' }}
-          >
-            <div className="flex flex-nowrap sm:flex-wrap gap-2 px-4 sm:px-0 pb-2">
-              {ROLE_CHIPS.map(chip => {
-                const isActive = activeChip === chip
-                return (
-                  <button
-                    key={chip}
-                    type="button"
-                    onClick={() => handleChipClick(chip)}
-                    className={[
-                      'shrink-0 h-8 px-3.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border',
-                      isActive
-                        ? 'bg-gold-500 text-navy-950 border-gold-500'
-                        : 'bg-white/10 text-white/80 border-white/15 hover:bg-white/20 hover:text-white',
-                    ].join(' ')}
-                  >
-                    {chip}
-                  </button>
-                )
-              })}
-            </div>
+          <div className="mt-6 max-w-3xl flex flex-wrap sm:flex-nowrap sm:overflow-x-auto gap-2 px-4 pb-2">
+            {ROLE_CHIPS.map(chip => {
+              const isActive = activeChip === chip
+              return (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => handleChipClick(chip)}
+                  className={[
+                    'shrink-0 h-8 px-3.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border',
+                    isActive
+                      ? 'bg-gold-500 text-navy-950 border-gold-500'
+                      : 'bg-white/10 text-white/80 border-white/15 hover:bg-white/20 hover:text-white',
+                  ].join(' ')}
+                >
+                  {chip}
+                </button>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -405,35 +400,30 @@ export default function JobListingsPage() {
 
           {/* CONTRACT FILTER PILLS + SORT */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
-            <div
-              className="overflow-x-auto sm:overflow-visible [&::-webkit-scrollbar]:hidden"
-              style={{ scrollbarWidth: 'none' }}
-            >
-              <div className="flex flex-nowrap sm:flex-wrap gap-2 px-4 sm:px-0 pb-1">
-                {CONTRACT_OPTIONS.map(opt => {
-                  const isActive = activeContract === opt.value
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => handleContractChange(opt.value)}
-                      className={[
-                        'shrink-0 h-8 px-3.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border',
-                        isActive
-                          ? 'bg-navy-950 text-white border-navy-950'
-                          : 'bg-white text-slate-600 border-slate-200 hover:border-navy-300 hover:text-navy-700',
-                      ].join(' ')}
-                    >
-                      {opt.label}
-                    </button>
-                  )
-                })}
-              </div>
+            <div className="flex flex-wrap sm:flex-nowrap sm:overflow-x-auto gap-2 px-4 pb-1">
+              {CONTRACT_OPTIONS.map(opt => {
+                const isActive = activeContract === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => handleContractChange(opt.value)}
+                    className={[
+                      'shrink-0 h-8 px-3.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border',
+                      isActive
+                        ? 'bg-navy-950 text-white border-navy-950'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-navy-300 hover:text-navy-700',
+                    ].join(' ')}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
               <span className="text-xs font-medium text-slate-500 whitespace-nowrap">Sort:</span>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {SORT_OPTIONS.map(opt => {
                   const isActive = activeSort === opt.value
                   return (
