@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const role = searchParams.get("role")?.trim() ?? ""
   const keywords = role ? `${BASE_KEYWORDS} ${role}` : BASE_KEYWORDS
-  const location = searchParams.get("location") ?? ""
+  const location = searchParams.get("location")?.trim() ?? ""
   const page = searchParams.get("page") ?? "1"
   const pageSize = searchParams.get("pagesize") ?? "20"
 
@@ -48,12 +48,14 @@ export async function GET(req: NextRequest) {
   const params = new URLSearchParams({
     locale_code: "en_GB",
     keywords,
-    location,
     page,
     page_size: pageSize,
     user_ip: userIp,
     user_agent: userAgent,
   })
+  if (location) {
+    params.set("location", location)
+  }
 
   const authHeader = `Basic ${Buffer.from(`${apiKey}:`).toString("base64")}`
 
