@@ -48,13 +48,19 @@ export async function GET(req: NextRequest) {
 
   const authHeader = `Basic ${Buffer.from(`${apiKey}:`).toString("base64")}`
 
+  const requestUrl = `${CAREERJET_ENDPOINT}?${params.toString()}`
+
   try {
-    const res = await fetch(`${CAREERJET_ENDPOINT}?${params.toString()}`, {
+    console.log("Careerjet request URL:", requestUrl)
+
+    const res = await fetch(requestUrl, {
       headers: {
         Accept: "application/json",
         Authorization: authHeader,
       },
     })
+
+    console.log("Careerjet response status:", res.status)
 
     const rawBody = await res.text()
 
