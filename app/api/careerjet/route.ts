@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
+import { ProxyAgent } from "undici"
 
 export const dynamic = "force-dynamic"
 
 const CAREERJET_ENDPOINT = "https://www.careerjet.co.uk/partners/api"
+
+const proxyDispatcher = process.env.FIXIE_URL ? new ProxyAgent(process.env.FIXIE_URL) : undefined
 
 function getClientIp(req: NextRequest): string {
   const forwardedFor = req.headers.get("x-forwarded-for")
@@ -42,6 +45,8 @@ export async function GET(req: NextRequest) {
   try {
     const res = await fetch(`${CAREERJET_ENDPOINT}?${params.toString()}`, {
       headers: { Accept: "application/json" },
+      // @ts-expect-error - `dispatcher` is a Node/undici fetch extension not in the DOM fetch types
+      dispatcher: proxyDispatcher,
     })
 
     const rawBody = await res.text()
