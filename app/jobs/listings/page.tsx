@@ -21,7 +21,7 @@ interface CareerjetResponse {
 }
 
 const DEFAULT_ROLE = ''
-const DEFAULT_LOCATION = 'United Kingdom'
+const DEFAULT_LOCATION = ''
 const PAGE_SIZE = 12
 
 function formatDate(dateStr?: string): string {
@@ -212,7 +212,7 @@ export default function JobListingsPage() {
                   type="text"
                   value={locationInput}
                   onChange={e => setLocationInput(e.target.value)}
-                  placeholder="City, country or region"
+                  placeholder="Worldwide — or enter a city/country"
                   className="flex-1 py-2.5 px-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
                   autoComplete="off"
                 />
