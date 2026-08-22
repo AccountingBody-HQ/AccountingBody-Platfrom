@@ -30,8 +30,7 @@ const PAGE_SIZE = 12
 const DEBOUNCE_MS = 300
 
 const ROLE_CHIPS = [
-  'All', 'Accountant', 'Auditor', 'Finance Manager', 'Financial Analyst', 'Payroll',
-  'Tax', 'CFO', 'Bookkeeper', 'Credit Control', 'Management Accountant', 'Treasury',
+  'All', 'Accountant', 'Auditor', 'Finance Manager', 'Payroll', 'Tax', 'CFO', 'Bookkeeper',
 ]
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
@@ -360,9 +359,14 @@ export default function JobListingsPage() {
               Showing jobs near you — enter a location to search elsewhere
             </p>
           </form>
+        </div>
+      </section>
 
+      {/* RESULTS */}
+      <section className="section bg-slate-50">
+        <div className="container-site" ref={resultsRef} style={{ scrollMarginTop: '5rem' }}>
           {/* QUICK FILTER CHIPS */}
-          <div className="mt-6 max-w-3xl flex flex-wrap sm:flex-nowrap sm:overflow-x-auto gap-2 px-4 pb-2">
+          <div className="flex flex-wrap gap-2 mb-4">
             {ROLE_CHIPS.map(chip => {
               const isActive = activeChip === chip
               return (
@@ -374,7 +378,7 @@ export default function JobListingsPage() {
                     'shrink-0 h-8 px-3.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border',
                     isActive
                       ? 'bg-gold-500 text-navy-950 border-gold-500'
-                      : 'bg-white/10 text-white/80 border-white/15 hover:bg-white/20 hover:text-white',
+                      : 'bg-white text-navy-700 border-navy-200 hover:border-gold-400 hover:text-navy-900',
                   ].join(' ')}
                 >
                   {chip}
@@ -382,24 +386,9 @@ export default function JobListingsPage() {
               )
             })}
           </div>
-        </div>
-      </section>
-
-      {/* RESULTS */}
-      <section className="section bg-slate-50">
-        <div className="container-site" ref={resultsRef} style={{ scrollMarginTop: '5rem' }}>
-          <div className="mb-4">
-            <p className="text-sm text-slate-500">
-              {isFirstLoad
-                ? 'Searching…'
-                : error
-                  ? ' '
-                  : formatResultsSummary(count, activeRole, activeLocation)}
-            </p>
-          </div>
 
           {/* CONTRACT FILTER PILLS + SORT */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <div className="flex flex-wrap sm:flex-nowrap sm:overflow-x-auto gap-2 px-4 pb-1">
               {CONTRACT_OPTIONS.map(opt => {
                 const isActive = activeContract === opt.value
@@ -444,6 +433,16 @@ export default function JobListingsPage() {
                 })}
               </div>
             </div>
+          </div>
+
+          <div className="mb-8">
+            <p className="text-sm text-slate-500">
+              {isFirstLoad
+                ? 'Searching…'
+                : error
+                  ? ' '
+                  : formatResultsSummary(count, activeRole, activeLocation)}
+            </p>
           </div>
 
           {error && (
