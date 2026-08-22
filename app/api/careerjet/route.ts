@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { ProxyAgent } from "undici"
 
 export const dynamic = "force-dynamic"
 
-const CAREERJET_ENDPOINT = "https://www.careerjet.co.uk/partners/api"
-
-const proxyDispatcher = process.env.FIXIE_URL ? new ProxyAgent(process.env.FIXIE_URL) : undefined
+const CAREERJET_ENDPOINT = "https://search.api.careerjet.net/v4/query"
 
 const NO_CACHE_HEADERS = {
   "Cache-Control": "no-store, no-cache, must-revalidate",
@@ -26,12 +23,10 @@ export async function GET(req: NextRequest) {
   const keywords = searchParams.get("keywords") ?? ""
   const location = searchParams.get("location") ?? ""
   const page = searchParams.get("page") ?? "1"
-  const pagesize = searchParams.get("pagesize") ?? "20"
+  const pageSize = searchParams.get("pagesize") ?? "20"
 
-  console.log("FIXIE_URL set:", Boolean(process.env.FIXIE_URL))
-
-  const affid = process.env.NEXT_PUBLIC_CAREERJET_API_KEY
-  if (!affid) {
+  const apiKey = process.env.NEXT_PUBLIC_CAREERJET_API_KEY
+  if (!apiKey) {
     return NextResponse.json(
       { error: "Careerjet API key not configured" },
       { status: 500, headers: NO_CACHE_HEADERS }
@@ -42,20 +37,23 @@ export async function GET(req: NextRequest) {
   const userAgent = req.headers.get("user-agent") ?? ""
 
   const params = new URLSearchParams({
+    locale_code: "en_GB",
     keywords,
     location,
-    affid,
-    pagesize,
     page,
+    page_size: pageSize,
     user_ip: userIp,
     user_agent: userAgent,
   })
 
+  const authHeader = `Basic ${Buffer.from(`${apiKey}:`).toString("base64")}`
+
   try {
     const res = await fetch(`${CAREERJET_ENDPOINT}?${params.toString()}`, {
-      headers: { Accept: "application/json" },
-      // @ts-expect-error - `dispatcher` is a Node/undici fetch extension not in the DOM fetch types
-      dispatcher: proxyDispatcher,
+      headers: {
+        Accept: "application/json",
+        Authorization: authHeader,
+      },
     })
 
     const rawBody = await res.text()
@@ -79,10 +77,17 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    return NextResponse.json(data, { headers: NO_CACHE_HEADERS })
+    return NextResponse.json(
+      {
+        jobs: Array.isArray(data.jobs) ? data.jobs : [],
+        total: typeof data.hits === "number" ? data.hits : 0,
+        pages: typeof data.pages === "number" ? data.pages : 1,
+        hits: typeof data.hits === "number" ? data.hits : 0,
+      },
+      { headers: NO_CACHE_HEADERS }
+    )
   } catch (err) {
     console.error("Careerjet API request failed", err)
-    console.log("Careerjet fetch error (full object):", err)
     return NextResponse.json(
       { error: "Careerjet request failed" },
       { status: 502, headers: NO_CACHE_HEADERS }

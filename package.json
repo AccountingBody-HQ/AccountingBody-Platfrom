@@ -34,8 +34,7 @@
     "resend": "^6.9.4",
     "sanity": "^3.99.0",
     "styled-components": "^6.3.12",
-    "tailwind-merge": "^3.5.0",
-    "undici": "^6.28.0"
+    "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
     "@types/node": "^20",
