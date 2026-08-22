@@ -7,6 +7,10 @@ const CAREERJET_ENDPOINT = "https://www.careerjet.co.uk/partners/api"
 
 const proxyDispatcher = process.env.FIXIE_URL ? new ProxyAgent(process.env.FIXIE_URL) : undefined
 
+const NO_CACHE_HEADERS = {
+  "Cache-Control": "no-store, no-cache, must-revalidate",
+}
+
 function getClientIp(req: NextRequest): string {
   const forwardedFor = req.headers.get("x-forwarded-for")
   if (forwardedFor) return forwardedFor.split(",")[0].trim()
@@ -24,9 +28,14 @@ export async function GET(req: NextRequest) {
   const page = searchParams.get("page") ?? "1"
   const pagesize = searchParams.get("pagesize") ?? "20"
 
+  console.log("FIXIE_URL set:", Boolean(process.env.FIXIE_URL))
+
   const affid = process.env.NEXT_PUBLIC_CAREERJET_API_KEY
   if (!affid) {
-    return NextResponse.json({ error: "Careerjet API key not configured" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Careerjet API key not configured" },
+      { status: 500, headers: NO_CACHE_HEADERS }
+    )
   }
 
   const userIp = getClientIp(req)
@@ -53,7 +62,10 @@ export async function GET(req: NextRequest) {
 
     if (!res.ok) {
       console.error("Careerjet API error", res.status, rawBody)
-      return NextResponse.json({ error: "Careerjet request failed" }, { status: res.status })
+      return NextResponse.json(
+        { error: "Careerjet request failed" },
+        { status: res.status, headers: NO_CACHE_HEADERS }
+      )
     }
 
     let data
@@ -61,12 +73,19 @@ export async function GET(req: NextRequest) {
       data = JSON.parse(rawBody)
     } catch {
       console.error("Careerjet API returned a non-JSON response", rawBody)
-      return NextResponse.json({ error: "Careerjet request failed" }, { status: 502 })
+      return NextResponse.json(
+        { error: "Careerjet request failed" },
+        { status: 502, headers: NO_CACHE_HEADERS }
+      )
     }
 
-    return NextResponse.json(data)
+    return NextResponse.json(data, { headers: NO_CACHE_HEADERS })
   } catch (err) {
     console.error("Careerjet API request failed", err)
-    return NextResponse.json({ error: "Careerjet request failed" }, { status: 502 })
+    console.log("Careerjet fetch error (full object):", err)
+    return NextResponse.json(
+      { error: "Careerjet request failed" },
+      { status: 502, headers: NO_CACHE_HEADERS }
+    )
   }
 }
