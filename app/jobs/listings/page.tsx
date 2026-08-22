@@ -363,7 +363,7 @@ export default function JobListingsPage() {
 
           {/* QUICK FILTER CHIPS */}
           <div
-            className="mt-6 flex gap-2 overflow-x-auto flex-nowrap sm:flex-wrap pb-2 max-w-3xl [&::-webkit-scrollbar]:hidden"
+            className="mt-6 flex gap-2 overflow-x-auto flex-nowrap sm:flex-wrap px-4 -mx-4 sm:px-0 sm:mx-0 pb-2 max-w-3xl [&::-webkit-scrollbar]:hidden"
             style={{ scrollbarWidth: 'none' }}
           >
             {ROLE_CHIPS.map(chip => {
@@ -404,7 +404,7 @@ export default function JobListingsPage() {
           {/* CONTRACT FILTER PILLS + SORT */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
             <div
-              className="flex gap-2 overflow-x-auto flex-nowrap sm:flex-wrap pb-1 [&::-webkit-scrollbar]:hidden"
+              className="flex gap-2 overflow-x-auto flex-nowrap sm:flex-wrap px-4 -mx-4 sm:px-0 sm:mx-0 pb-1 [&::-webkit-scrollbar]:hidden"
               style={{ scrollbarWidth: 'none' }}
             >
               {CONTRACT_OPTIONS.map(opt => {
