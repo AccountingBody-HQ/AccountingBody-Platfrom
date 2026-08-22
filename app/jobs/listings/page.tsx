@@ -20,7 +20,7 @@ interface CareerjetResponse {
   error?: string
 }
 
-const DEFAULT_KEYWORDS = 'accounting finance'
+const DEFAULT_ROLE = ''
 const DEFAULT_LOCATION = 'United Kingdom'
 const PAGE_SIZE = 12
 
@@ -115,9 +115,9 @@ function JobCardSkeleton() {
 }
 
 export default function JobListingsPage() {
-  const [keywordsInput, setKeywordsInput] = useState(DEFAULT_KEYWORDS)
+  const [roleInput, setRoleInput] = useState(DEFAULT_ROLE)
   const [locationInput, setLocationInput] = useState(DEFAULT_LOCATION)
-  const [activeKeywords, setActiveKeywords] = useState(DEFAULT_KEYWORDS)
+  const [activeRole, setActiveRole] = useState(DEFAULT_ROLE)
   const [activeLocation, setActiveLocation] = useState(DEFAULT_LOCATION)
   const [page, setPage] = useState(1)
 
@@ -135,7 +135,7 @@ export default function JobListingsPage() {
       setError(null)
       try {
         const params = new URLSearchParams({
-          keywords: activeKeywords,
+          role: activeRole,
           location: activeLocation,
           page: String(page),
           pagesize: String(PAGE_SIZE),
@@ -166,12 +166,12 @@ export default function JobListingsPage() {
 
     fetchJobs()
     return () => { cancelled = true }
-  }, [activeKeywords, activeLocation, page])
+  }, [activeRole, activeLocation, page])
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     setPage(1)
-    setActiveKeywords(keywordsInput.trim() || DEFAULT_KEYWORDS)
+    setActiveRole(roleInput.trim())
     setActiveLocation(locationInput.trim())
   }
 
@@ -199,9 +199,9 @@ export default function JobListingsPage() {
                 <SearchIcon />
                 <input
                   type="text"
-                  value={keywordsInput}
-                  onChange={e => setKeywordsInput(e.target.value)}
-                  placeholder="Job title or keywords"
+                  value={roleInput}
+                  onChange={e => setRoleInput(e.target.value)}
+                  placeholder="e.g. Auditor, Payroll Manager, CFO..."
                   className="flex-1 py-2.5 px-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
                   autoComplete="off"
                 />
@@ -212,7 +212,7 @@ export default function JobListingsPage() {
                   type="text"
                   value={locationInput}
                   onChange={e => setLocationInput(e.target.value)}
-                  placeholder="Location"
+                  placeholder="City, country or region"
                   className="flex-1 py-2.5 px-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
                   autoComplete="off"
                 />
@@ -239,7 +239,7 @@ export default function JobListingsPage() {
                 ? 'Searching…'
                 : error
                   ? ' '
-                  : `${hits ?? jobs.length} job${hits === 1 ? '' : 's'} for "${activeKeywords}"${activeLocation ? ` in ${activeLocation}` : ''}`}
+                  : `${hits ?? jobs.length} job${hits === 1 ? '' : 's'}${activeRole ? ` for "${activeRole}"` : ''}${activeLocation ? ` in ${activeLocation}` : ''}`}
             </p>
           </div>
 

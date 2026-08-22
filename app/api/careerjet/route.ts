@@ -5,6 +5,9 @@ export const dynamic = "force-dynamic"
 
 const CAREERJET_ENDPOINT = "https://search.api.careerjet.net/v4/query"
 
+const BASE_KEYWORDS =
+  'accountant OR auditor OR bookkeeper OR "finance manager" OR "financial analyst" OR "financial controller" OR "management accountant" OR payroll OR "tax manager" OR "tax accountant" OR treasury OR comptroller OR "accounts payable" OR "accounts receivable" OR CFO OR "chief financial officer" OR "credit analyst" OR "credit controller" OR "finance director" OR "investment analyst" OR "fund accountant" OR "cost accountant" OR ACCA OR CIMA OR ACA OR CPA OR actuary OR insolvency OR "revenue accountant" OR "finance business partner"'
+
 const proxyDispatcher = process.env.FIXIE_URL ? new ProxyAgent(process.env.FIXIE_URL) : undefined
 
 const NO_CACHE_HEADERS = {
@@ -23,7 +26,8 @@ function getClientIp(req: NextRequest): string {
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const keywords = searchParams.get("keywords") ?? ""
+  const role = searchParams.get("role")?.trim() ?? ""
+  const keywords = role ? `${BASE_KEYWORDS} ${role}` : BASE_KEYWORDS
   const location = searchParams.get("location") ?? ""
   const page = searchParams.get("page") ?? "1"
   const pageSize = searchParams.get("pagesize") ?? "20"
