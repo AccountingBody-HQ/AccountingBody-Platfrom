@@ -62,6 +62,7 @@ export async function GET(req: NextRequest) {
       headers: {
         Accept: "application/json",
         Authorization: authHeader,
+        Referer: "https://accountingbody.com/jobs/listings",
       },
       // @ts-expect-error - `dispatcher` is a Node/undici fetch extension not in the DOM fetch types
       dispatcher: proxyDispatcher,
