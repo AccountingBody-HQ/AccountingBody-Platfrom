@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
+import { ProxyAgent } from "undici"
 
 export const dynamic = "force-dynamic"
 
 const CAREERJET_ENDPOINT = "https://search.api.careerjet.net/v4/query"
+
+const proxyDispatcher = process.env.FIXIE_URL ? new ProxyAgent(process.env.FIXIE_URL) : undefined
 
 const NO_CACHE_HEADERS = {
   "Cache-Control": "no-store, no-cache, must-revalidate",
@@ -24,6 +27,8 @@ export async function GET(req: NextRequest) {
   const location = searchParams.get("location") ?? ""
   const page = searchParams.get("page") ?? "1"
   const pageSize = searchParams.get("pagesize") ?? "20"
+
+  console.log("FIXIE_URL set:", Boolean(process.env.FIXIE_URL))
 
   const apiKey = process.env.NEXT_PUBLIC_CAREERJET_API_KEY
   if (!apiKey) {
@@ -58,6 +63,8 @@ export async function GET(req: NextRequest) {
         Accept: "application/json",
         Authorization: authHeader,
       },
+      // @ts-expect-error - `dispatcher` is a Node/undici fetch extension not in the DOM fetch types
+      dispatcher: proxyDispatcher,
     })
 
     console.log("Careerjet response status:", res.status)
