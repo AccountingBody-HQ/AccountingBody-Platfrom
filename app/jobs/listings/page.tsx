@@ -34,8 +34,8 @@ const ROLE_CHIPS = [
 ]
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: 'relevance', label: 'Relevant' },
   { value: 'date', label: 'Newest' },
+  { value: 'relevance', label: 'Relevant' },
   { value: 'salary', label: 'Salary' },
 ]
 
@@ -103,6 +103,35 @@ function CalendarIcon() {
     <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
     </svg>
+  )
+}
+
+function PillButton({
+  label,
+  active,
+  variant,
+  onClick,
+}: {
+  label: string
+  active: boolean
+  variant: 'chip' | 'filter'
+  onClick: () => void
+}) {
+  const activeClasses = variant === 'chip'
+    ? 'bg-gold-500 border-gold-500 text-white'
+    : 'bg-navy-950 border-navy-950 text-white'
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'shrink-0 rounded-full border px-3 py-1 text-sm font-semibold whitespace-nowrap transition-colors',
+        active ? activeClasses : 'bg-white border-navy-200 text-navy-700 hover:border-navy-400',
+      ].join(' ')}
+    >
+      {label}
+    </button>
   )
 }
 
@@ -365,72 +394,88 @@ export default function JobListingsPage() {
       {/* RESULTS */}
       <section className="section bg-slate-50">
         <div className="container-site" ref={resultsRef} style={{ scrollMarginTop: '5rem' }}>
-          {/* QUICK FILTER CHIPS */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {ROLE_CHIPS.map(chip => {
-              const isActive = activeChip === chip
-              return (
-                <button
-                  key={chip}
-                  type="button"
-                  onClick={() => handleChipClick(chip)}
-                  className={[
-                    'shrink-0 h-8 px-3.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border',
-                    isActive
-                      ? 'bg-gold-500 text-navy-950 border-gold-500'
-                      : 'bg-white text-navy-700 border-navy-200 hover:border-gold-400 hover:text-navy-900',
-                  ].join(' ')}
-                >
-                  {chip}
-                </button>
-              )
-            })}
-          </div>
+          {/* FILTERS TOOLBAR */}
+          <div className="mb-4">
+            {/* Desktop: single row — role chips | contract pills | sort pills */}
+            <div className="hidden md:flex md:items-center md:justify-between md:gap-6">
+              <div
+                className="flex items-center gap-2 min-w-0 md:max-w-[520px] overflow-x-auto [&::-webkit-scrollbar]:hidden"
+                style={{ scrollbarWidth: 'none' }}
+              >
+                {ROLE_CHIPS.map(chip => (
+                  <PillButton
+                    key={chip}
+                    label={chip}
+                    variant="chip"
+                    active={activeChip === chip}
+                    onClick={() => handleChipClick(chip)}
+                  />
+                ))}
+              </div>
 
-          {/* CONTRACT FILTER PILLS + SORT */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <div className="flex flex-wrap sm:flex-nowrap sm:overflow-x-auto gap-2 px-4 pb-1">
-              {CONTRACT_OPTIONS.map(opt => {
-                const isActive = activeContract === opt.value
-                return (
-                  <button
+              <div className="flex shrink-0 items-center gap-2">
+                {CONTRACT_OPTIONS.map(opt => (
+                  <PillButton
                     key={opt.value}
-                    type="button"
+                    label={opt.label}
+                    variant="filter"
+                    active={activeContract === opt.value}
                     onClick={() => handleContractChange(opt.value)}
-                    className={[
-                      'shrink-0 h-8 px-3.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border',
-                      isActive
-                        ? 'bg-navy-950 text-white border-navy-950'
-                        : 'bg-white text-slate-600 border-slate-200 hover:border-navy-300 hover:text-navy-700',
-                    ].join(' ')}
-                  >
-                    {opt.label}
-                  </button>
-                )
-              })}
+                  />
+                ))}
+              </div>
+
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="text-xs font-medium text-slate-500 whitespace-nowrap">Sort:</span>
+                {SORT_OPTIONS.map(opt => (
+                  <PillButton
+                    key={opt.value}
+                    label={opt.label}
+                    variant="filter"
+                    active={activeSort === opt.value}
+                    onClick={() => handleSortChange(opt.value)}
+                  />
+                ))}
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs font-medium text-slate-500 whitespace-nowrap">Sort:</span>
+            {/* Mobile: stacked rows — role chips / contract pills / sort pills */}
+            <div className="flex flex-col gap-3 md:hidden">
               <div className="flex flex-wrap gap-2">
-                {SORT_OPTIONS.map(opt => {
-                  const isActive = activeSort === opt.value
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => handleSortChange(opt.value)}
-                      className={[
-                        'shrink-0 h-8 px-3.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors border',
-                        isActive
-                          ? 'bg-gold-500 text-navy-950 border-gold-500'
-                          : 'bg-white text-slate-600 border-slate-200 hover:border-gold-300 hover:text-navy-700',
-                      ].join(' ')}
-                    >
-                      {opt.label}
-                    </button>
-                  )
-                })}
+                {ROLE_CHIPS.map(chip => (
+                  <PillButton
+                    key={chip}
+                    label={chip}
+                    variant="chip"
+                    active={activeChip === chip}
+                    onClick={() => handleChipClick(chip)}
+                  />
+                ))}
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {CONTRACT_OPTIONS.map(opt => (
+                  <PillButton
+                    key={opt.value}
+                    label={opt.label}
+                    variant="filter"
+                    active={activeContract === opt.value}
+                    onClick={() => handleContractChange(opt.value)}
+                  />
+                ))}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-medium text-slate-500 whitespace-nowrap">Sort:</span>
+                {SORT_OPTIONS.map(opt => (
+                  <PillButton
+                    key={opt.value}
+                    label={opt.label}
+                    variant="filter"
+                    active={activeSort === opt.value}
+                    onClick={() => handleSortChange(opt.value)}
+                  />
+                ))}
               </div>
             </div>
           </div>
