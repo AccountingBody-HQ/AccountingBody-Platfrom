@@ -212,7 +212,7 @@ export default function JobListingsPage() {
                   type="text"
                   value={locationInput}
                   onChange={e => setLocationInput(e.target.value)}
-                  placeholder="Worldwide — or enter a city/country"
+                  placeholder="Leave blank for local jobs, or enter a city/country"
                   className="flex-1 py-2.5 px-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
                   autoComplete="off"
                 />
@@ -226,6 +226,9 @@ export default function JobListingsPage() {
                 </button>
               </div>
             </div>
+            <p className="text-white/50 text-xs mt-3">
+              Showing jobs near you — enter a location to search elsewhere
+            </p>
           </form>
         </div>
       </section>
