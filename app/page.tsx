@@ -543,24 +543,20 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 {/* ══════════════════════════════════════════════════════
     1. HERO — two-column, services-led
     ══════════════════════════════════════════════════════ */}
-<section className="relative overflow-hidden" style={{ background: '#1A4731' }}>
+<section className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1A4731 0%, #0d2b1f 100%)' }}>
 
   {/* Background layers */}
   <div className="absolute inset-0 pointer-events-none">
     <div
-      className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-20"
-      style={{ background: 'radial-gradient(ellipse at center top, #C9982A 0%, transparent 70%)' }}
-    />
-    <div
-      className="absolute inset-0 opacity-[0.04]"
+      className="absolute inset-0 opacity-[0.035]"
       style={{
-        backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+        backgroundImage: 'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)',
         backgroundSize: '60px 60px',
       }}
     />
     <div
-      className="absolute bottom-0 right-0 w-1/2 h-1/2 opacity-10"
-      style={{ background: 'radial-gradient(ellipse at bottom right, #C9982A 0%, transparent 60%)' }}
+      className="absolute bottom-0 left-0 w-full h-1/2 opacity-[0.08]"
+      style={{ background: 'linear-gradient(to top, #0d2b1f 0%, transparent 100%)' }}
     />
   </div>
 
@@ -584,24 +580,28 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         className="font-display text-white mb-6 leading-[1.06]"
         style={{ fontSize: 'clamp(2.6rem, 5vw, 4rem)', letterSpacing: '-0.025em' }}
       >
-        Expert services.
-        <br />
-        <span
-          style={{
-            background: 'linear-gradient(135deg, #C9982A 0%, #e8c050 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}
-        >
-          Exam practice. Finance jobs.
-        </span>
-        <br />
-        Built for Ethiopia.
+        <>
+          <span
+            style={{
+              background: 'linear-gradient(135deg, #C9982A 0%, #e8c050 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              display: 'block',
+            }}
+          >
+            Accounting &amp; finance jobs.
+          </span>
+          Expert services.
+          <br />
+          Exam practice.
+          <br />
+          <span className="text-white">Built for Ethiopia.</span>
+        </>
       </h1>
 
       <p className="text-white/60 text-lg leading-relaxed mb-10 max-w-xl">
-        The dedicated platform for Ethiopian and diaspora accounting professionals. Expert services, ETICPA and ACCA exam practice, and 50,000+ finance and accounting jobs — all in one place.
+        1,000+ accounting and finance jobs for the Ethiopian diaspora. Expert professional services across tax, accounting and consulting. ETICPA, ACCA, CIMA and AAT exam practice — all in one place.
       </p>
 
       <div className="flex flex-col gap-3 mb-8 w-full max-w-2xl">
@@ -643,7 +643,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-2xl">
         {[
-          '50,000+ finance & accounting jobs',
+          '1,000+ diaspora accounting jobs',
           'ETICPA · ACCA · CIMA · AAT',
           'UK · USA · Canada · UAE · Ethiopia',
         ].map(label => (
@@ -1211,7 +1211,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
       <div>
         <p className="font-display text-xl text-navy-950">Ready to get started?</p>
-        <p className="text-sm text-slate-500 mt-1 max-w-sm">Get expert accounting help, study for your exams, or browse finance careers.</p>
+        <p className="text-sm text-slate-500 mt-1 max-w-sm">Get expert accounting help, practise for your ETICPA or ACCA exams, or find your next accounting role.</p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full sm:w-auto sm:min-w-[520px]">
         <Link
