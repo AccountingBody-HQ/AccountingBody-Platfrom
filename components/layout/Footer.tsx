@@ -116,6 +116,7 @@ const legalLinks = [
 ]
 
 const stats = [
+  { value: '250,000+', label: 'Jobs', sub: 'Live accounting & finance roles' },
   { value: '3,000+',   label: 'Articles' },
   { value: '20,000+',  label: 'Practice Questions' },
   { value: 'Since 2018', label: 'Trusted Platform' },
@@ -326,7 +327,7 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
       {/* ── Stats bar ──────────────────────────────────────────────────────── */}
       <div className="border-b border-white/10">
         <div className="container-wide py-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
             {stats.map(stat => (
               <div key={stat.label} className="flex flex-col items-start">
                 <span className="font-display text-2xl text-white leading-none mb-1">

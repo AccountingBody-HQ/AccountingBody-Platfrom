@@ -40,7 +40,6 @@ export default function JobsHubPage() {
   ]
 
   const stats = [
-    { value: '250,000+', label: 'Live jobs', sub: 'Accounting and finance roles updated daily' },
     { value: 'Managed',  label: 'End-to-end service',    sub: 'We handle every step of the placement' },
     { value: '90 days',   label: 'Replacement guarantee', sub: 'On every permanent placement' },
     { value: '100%',      label: 'Vetted candidates',     sub: 'Every profile reviewed before activation' },
@@ -257,9 +256,9 @@ export default function JobsHubPage() {
       {/* TRUST BAR */}
       <section className="border-y border-slate-200 bg-white">
         <div className="container-site py-10">
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, i) => (
-              <div key={stat.label} className={i < 4 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}>
+              <div key={stat.label} className={i < 3 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}>
                 <span className="font-display text-3xl block mb-1" style={{ color: brand }}><span translate="no">{stat.value}</span></span>
                 <span className="text-sm font-semibold text-navy-950 block">{stat.label}</span>
                 <span className="text-xs text-slate-400 mt-0.5 block">{stat.sub}</span>
@@ -277,26 +276,34 @@ export default function JobsHubPage() {
             <p className="text-slate-500 text-lg mb-8">
               Every registration and every hiring brief is reviewed personally by our team.
             </p>
-            <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center">
-              <Link href="/jobs/listings"
-                className="h-12 px-6 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white transition-colors shadow-sm whitespace-nowrap"
-                style={{ background: brand }}>
-                Find a job →
+            <div className="grid grid-cols-4 gap-3 w-full max-w-3xl mx-auto">
+              <Link
+                href="/jobs/listings"
+                className="flex items-center justify-center rounded-xl text-sm font-semibold text-white transition-colors py-3 px-2 text-center whitespace-nowrap"
+                style={{ background: brand }}
+              >
+                Find a job
               </Link>
-              <Link href="/jobs/find-work"
-                className="h-12 px-6 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap"
-                style={{ border: '2px solid #0C1A3D', color: '#0C1A3D', background: 'transparent' }}>
-                Register as a candidate →
+              <Link
+                href="/jobs/find-work"
+                className="flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-2 text-center whitespace-nowrap"
+                style={{ border: '2px solid #0C1A3D', color: '#0C1A3D', background: 'transparent' }}
+              >
+                Register as candidate
               </Link>
-              <Link href="/jobs/hire-talent"
-                className="h-12 px-6 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap"
-                style={{ border: '2px solid #0C1A3D', color: '#0C1A3D', background: 'transparent' }}>
-                I am looking to hire →
+              <Link
+                href="/jobs/hire-talent"
+                className="flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-2 text-center whitespace-nowrap"
+                style={{ border: '2px solid #0C1A3D', color: '#0C1A3D', background: 'transparent' }}
+              >
+                I am looking to hire
               </Link>
-              <Link href="/freelancing-pathways"
-                className="h-12 px-6 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap"
-                style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}>
-                Explore freelancing →
+              <Link
+                href="/freelancing-pathways"
+                className="flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-2 text-center whitespace-nowrap"
+                style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}
+              >
+                Explore freelancing
               </Link>
             </div>
           </div>
