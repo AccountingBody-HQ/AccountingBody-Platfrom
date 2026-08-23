@@ -1735,59 +1735,91 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           {/* RIGHT COLUMN */}
           <div className="relative hidden lg:block">
 
-            <div
-              className="rounded-2xl overflow-hidden border"
-              style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
-            >
-              <div className="px-6 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                <p className="text-xs font-bold uppercase tracking-widest text-gold-400">Practice Questions</p>
-                <h3 className="font-display text-white text-xl mt-1">Test your exam knowledge</h3>
-                <p className="text-white/50 text-sm mt-2">Exam-standard MCQs with instant marking.</p>
-              </div>
+            <div className="flex flex-col gap-4 h-full">
 
-              <div className="grid grid-cols-2 gap-3 p-6">
-                {[
-                  { badge: 'ACCA', badgeBg: 'bg-blue-50', badgeText: 'text-[#004B8D]', body: 'All 13 papers' },
-                  { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0081C6]', body: 'All levels' },
-                  { badge: 'AAT', badgeBg: 'bg-teal-50', badgeText: 'text-teal-700', body: 'L2 to L4' },
-                  { badge: 'ICAEW', badgeBg: 'bg-red-50', badgeText: 'text-red-800', body: 'ACA' },
-                ].map(item => (
-                  <a
-                    key={item.badge}
+              {/* CARD 1 — Practice Questions */}
+              <div
+                className="flex-1 rounded-2xl overflow-hidden border flex flex-col"
+                style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
+              >
+                <div className="px-6 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#D4A017' }}>Practice Questions</p>
+                  <h3 className="font-display text-white text-lg mt-1 leading-snug">20,000+ exam-standard questions</h3>
+                </div>
+
+                <div className="flex flex-col gap-2 p-5 flex-1">
+                  {[
+                    { badge: 'ACCA', badgeBg: 'bg-blue-50', badgeText: 'text-[#004B8D]', body: 'All 13 papers — Applied Knowledge to Strategic Professional' },
+                    { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0081C6]', body: 'Certificate to Strategic level, including Case Study prep' },
+                    { badge: 'AAT', badgeBg: 'bg-teal-50', badgeText: 'text-teal-700', body: 'Level 2 Foundation through Level 4 Professional Diploma' },
+                    { badge: 'ICAEW', badgeBg: 'bg-red-50', badgeText: 'text-red-800', body: 'ACA — Certificate, Professional and Advanced levels' },
+                  ].map(item => (
+                    <div
+                      key={item.badge}
+                      className="flex items-center gap-3 rounded-xl px-4 py-2.5"
+                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+                    >
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded shrink-0 ${item.badgeBg} ${item.badgeText}`} translate="no">
+                        {item.badge}
+                      </span>
+                      <p className="text-white/55 text-xs leading-snug">{item.body}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="px-5 pb-5">
+                  <Link
                     href="/practice-questions"
-                    className="rounded-xl p-4 cursor-pointer border"
-                    style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }}
+                    className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
+                    style={{ background: '#D4A017', color: '#0C1A3D' }}
                   >
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${item.badgeBg} ${item.badgeText}`} translate="no">
-                      {item.badge}
-                    </span>
-                    <p className="text-white/60 text-xs mt-2">{item.body}</p>
-                  </a>
-                ))}
+                    Start practising free →
+                  </Link>
+                </div>
               </div>
 
-              <div className="px-6 pb-6 pt-2">
-                <Link
-                  href="/practice-questions"
-                  className="w-full inline-flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
-                  style={{ background: '#D4A017', color: '#0C1A3D' }}
-                >
-                  Start practising free →
-                </Link>
-              </div>
-            </div>
+              {/* CARD 2 — Managed Recruitment */}
+              <div
+                className="flex-1 rounded-2xl overflow-hidden border flex flex-col"
+                style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
+              >
+                <div className="px-6 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#D4A017' }}>Managed Recruitment</p>
+                  <h3 className="font-display text-white text-lg mt-1 leading-snug">Get personally matched to roles</h3>
+                </div>
 
-            <div
-              className="rounded-xl p-5 border flex items-center justify-between mt-4"
-              style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)' }}
-            >
-              <div>
-                <p className="text-xs text-white/40">Managed recruitment</p>
-                <p className="font-display text-white text-base mt-0.5">Get personally matched to roles</p>
+                <div className="flex flex-col gap-3 p-5 flex-1">
+                  {[
+                    'Permanent and contract accounting and finance roles',
+                    'We represent you — you never deal with employers directly',
+                    '90-day replacement guarantee on every permanent placement',
+                    'Every candidate personally reviewed before activation',
+                  ].map(point => (
+                    <div key={point} className="flex items-start gap-3">
+                      <div
+                        className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                        style={{ background: 'rgba(212,160,23,0.2)', border: '1px solid rgba(212,160,23,0.3)' }}
+                      >
+                        <svg className="w-2.5 h-2.5" fill="none" stroke="#D4A017" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <p className="text-white/55 text-xs leading-snug">{point}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="px-5 pb-5">
+                  <Link
+                    href="/jobs/find-work"
+                    className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
+                    style={{ border: '1.5px solid rgba(212,160,23,0.5)', color: '#D4A017', background: 'transparent' }}
+                  >
+                    Register as a candidate →
+                  </Link>
+                </div>
               </div>
-              <Link href="/jobs" className="text-xs font-semibold whitespace-nowrap" style={{ color: '#D4A017' }}>
-                Learn more →
-              </Link>
+
             </div>
 
           </div>
@@ -1969,7 +2001,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 <Link href="/jobs/find-work"
                   className="flex-1 inline-flex items-center justify-center gap-2 px-7 rounded-xl min-h-[56px] text-sm font-semibold text-white transition-all hover:opacity-90 shadow-sm"
                   style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
-                  {isEthioTax ? 'Register as a candidate' : 'Find work'}
+                  {isEthioTax ? 'Register as a candidate' : 'Register as a candidate'}
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
@@ -2137,15 +2169,15 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 <div className="bg-navy-950 px-7 pt-7 pb-6">
                   <p className="text-xs font-bold uppercase tracking-widest text-gold-400 mb-2">Question bank</p>
                   <p className="font-display text-white text-2xl">20,000+ questions</p>
-                  <p className="text-white/50 text-sm mt-1">Across all major accounting qualifications</p>
+                  <p className="text-white/50 text-sm mt-1">ACCA · CIMA · AAT · ICAEW — all in one place</p>
                 </div>
 
                 <div className="divide-y divide-slate-100">
                   {[
-                    { badge: 'ACCA', badgeBg: 'bg-blue-50', badgeText: 'text-[#004B8D]', stats: '13 papers · 8,000+ questions' },
-                    { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0081C6]', stats: 'All levels · 5,000+ questions' },
-                    { badge: 'AAT', badgeBg: 'bg-teal-50', badgeText: 'text-teal-700', stats: 'L2–L4 · 4,000+ questions' },
-                    { badge: 'ICAEW', badgeBg: 'bg-red-50', badgeText: 'text-red-800', stats: 'ACA · 3,000+ questions' },
+                    { badge: 'ACCA', badgeBg: 'bg-blue-50', badgeText: 'text-[#004B8D]', stats: 'The global standard for accounting professionals' },
+                    { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0081C6]', stats: "The world's largest management accounting body" },
+                    { badge: 'AAT', badgeBg: 'bg-teal-50', badgeText: 'text-teal-700', stats: 'The practical accounting foundation qualification' },
+                    { badge: 'ICAEW', badgeBg: 'bg-red-50', badgeText: 'text-red-800', stats: 'The ACA — one of the most respected finance qualifications' },
                   ].map(row => (
                     <div key={row.badge} className="flex items-center justify-between px-7 py-4">
                       <span className={`text-xs font-bold px-2.5 py-1 rounded ${row.badgeBg} ${row.badgeText}`} translate="no">

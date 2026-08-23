@@ -189,12 +189,12 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
         Stay Updated
       </p>
       <h3 className="font-display text-white text-lg mb-1.5">
-        {isEthioTax ? 'EthioTax community updates' : 'Free exam tips & study notes'}
+        {isEthioTax ? 'EthioTax community updates' : 'Jobs, placements & exam tips'}
       </h3>
       <p className="text-sm text-white/60 mb-4 leading-relaxed">
         {isEthioTax
           ? 'Tax deadlines, ERCA updates and Ethiopian business insights. No spam, ever.'
-          : 'Weekly study tips, exam technique guides, and new question releases. No spam, unsubscribe any time.'}
+          : 'New accounting and finance job alerts, managed placement updates, and weekly exam tips. No spam, unsubscribe any time.'}
       </p>
 
       {status === 'success' ? (
