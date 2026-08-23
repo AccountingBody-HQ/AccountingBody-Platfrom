@@ -125,7 +125,7 @@ const howItWorks = [
   {
     step:  '02',
     title: 'Test and build your skills',
-    body:  '20,000+ practice questions across ACCA, CIMA, AAT and ETICPA. Exam-standard MCQs with instant marking and detailed explanations.',
+    body:  '20,000+ practice questions across ACCA, CIMA, AAT and ICAEW. Exam-standard MCQs with instant marking and detailed explanations.',
   },
   {
     step:  '03',
@@ -1685,12 +1685,12 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           <div className="lg:col-span-1">
 
             <div
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-8"
+              className="inline-flex flex-wrap items-center gap-2 px-3 py-1.5 rounded-full mb-8"
               style={{ background: 'rgba(212,160,23,0.12)', border: '1px solid rgba(212,160,23,0.2)' }}
             >
               <div className="w-1.5 h-1.5 rounded-full bg-gold-400" />
               <span className="text-xs font-semibold text-gold-400 uppercase tracking-widest">
-                Accounting &amp; Finance — Jobs · Practice Questions · Services
+                Jobs · Practice Questions · Services
               </span>
             </div>
 
@@ -1720,9 +1720,9 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
             <HomepageJobSearch />
 
-            <div className="flex flex-wrap gap-3 mt-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-6 w-full max-w-2xl">
               {['250,000+ live jobs', '20,000+ practice questions', 'Free to start'].map(label => (
-                <span key={label} className="inline-flex items-center gap-1.5 text-xs font-medium text-white/50">
+                <span key={label} className="flex items-center gap-1.5 text-xs font-medium text-white/50">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="#D4A017" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
@@ -1751,7 +1751,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   { badge: 'ACCA', badgeBg: 'bg-blue-50', badgeText: 'text-[#004B8D]', body: 'All 13 papers' },
                   { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0081C6]', body: 'All levels' },
                   { badge: 'AAT', badgeBg: 'bg-teal-50', badgeText: 'text-teal-700', body: 'L2 to L4' },
-                  { badge: 'ETICPA', badgeBg: 'bg-[#f0f7f4]', badgeText: 'text-[#1A4731]', body: 'CPA & ATQ' },
+                  { badge: 'ICAEW', badgeBg: 'bg-red-50', badgeText: 'text-red-800', body: 'ACA' },
                 ].map(item => (
                   <a
                     key={item.badge}
@@ -1802,7 +1802,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <section className="bg-white border-b border-slate-100">
         <div className="container-site py-14 md:py-20">
 
-          <div className="flex items-end justify-between mb-10">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
             <div>
               <span className="eyebrow mb-2 block">Live Accounting &amp; Finance Jobs</span>
               <h2 className="section-title">250,000+ roles updated daily</h2>
@@ -1818,7 +1818,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {[
               { title: 'Financial Controller', salary: '£65,000–£80,000', company: 'Barclays', location: 'London, UK', type: 'Permanent' },
               { title: 'Management Accountant', salary: '£45,000–£55,000', company: 'KPMG', location: 'Manchester, UK', type: 'Permanent' },
@@ -1862,17 +1862,17 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             ))}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 items-center justify-center mt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto mt-6">
             <Link
               href="/jobs/listings"
-              className="h-12 px-8 inline-flex items-center gap-2 rounded-xl text-sm font-semibold text-white transition-colors"
+              className="h-12 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white transition-colors w-full"
               style={{ background: '#0C1A3D' }}
             >
               Browse 250,000+ live jobs →
             </Link>
             <Link
               href="/jobs"
-              className="h-12 px-8 inline-flex items-center gap-2 rounded-xl text-sm font-semibold transition-colors"
+              className="h-12 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-colors w-full"
               style={{ border: '2px solid #0C1A3D', color: '#0C1A3D', background: 'transparent' }}
             >
               Managed recruitment
@@ -1894,7 +1894,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               <span className="eyebrow mb-3 block">Practice Questions</span>
               <h2 className="section-title mb-4">20,000+ exam-standard questions</h2>
               <p className="text-slate-500 text-lg leading-relaxed mb-8">
-                MCQs, written tasks and full mock exams for ACCA, CIMA, AAT and ETICPA. Instant marking with detailed explanations. Track your progress and walk into the exam room ready.
+                MCQs, written tasks and full mock exams for ACCA, CIMA, AAT and ICAEW. Instant marking with detailed explanations. Track your progress and walk into the exam room ready.
               </p>
 
               <div className="space-y-4">
@@ -1967,7 +1967,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                     { badge: 'ACCA', badgeBg: 'bg-blue-50', badgeText: 'text-[#004B8D]', stats: '13 papers · 8,000+ questions' },
                     { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0081C6]', stats: 'All levels · 5,000+ questions' },
                     { badge: 'AAT', badgeBg: 'bg-teal-50', badgeText: 'text-teal-700', stats: 'L2–L4 · 4,000+ questions' },
-                    { badge: 'ETICPA', badgeBg: 'bg-[#f0f7f4]', badgeText: 'text-[#1A4731]', stats: 'CPA & ATQ · 3,000+ questions' },
+                    { badge: 'ICAEW', badgeBg: 'bg-red-50', badgeText: 'text-red-800', stats: 'ACA · 3,000+ questions' },
                   ].map(row => (
                     <div key={row.badge} className="flex items-center justify-between px-7 py-4">
                       <span className={`text-xs font-bold px-2.5 py-1 rounded ${row.badgeBg} ${row.badgeText}`} translate="no">
@@ -2044,7 +2044,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               <p className="text-base leading-relaxed mb-8 max-w-lg"
                 style={{ color: isEthioTax ? 'rgba(15,45,30,0.75)' : 'rgba(12,26,61,0.75)' }}>
                 {isEthioTax
-                  ? <><span translate="no">ACCA</span>, <span translate="no">CIMA</span>, <span translate="no">ETICPA</span> or <span translate="no">CPA</span> qualified? We place Ethiopian finance professionals in permanent and contract roles across the UK, USA, Canada and beyond. You never deal with employers directly — we manage every step.</>
+                  ? <><span translate="no">ACCA</span>, <span translate="no">CIMA</span>, <span translate="no">ICAEW</span> or <span translate="no">CPA</span> qualified? We place Ethiopian finance professionals in permanent and contract roles across the UK, USA, Canada and beyond. You never deal with employers directly — we manage every step.</>
                   : 'We place accounting and finance professionals in permanent and contract roles across the UK and internationally. Fully managed — we find the right match, negotiate on your behalf, and guarantee every placement for 90 days.'}
               </p>
 
@@ -2052,7 +2052,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               <div className="flex flex-col gap-3 mb-10">
                 {(isEthioTax ? [
                   'Ethiopian-origin finance professionals actively placed',
-                  'ETICPA, ACCA, CIMA and CPA credentials recognised',
+                  'ICAEW, ACCA, CIMA and CPA credentials recognised',
                   '90-day replacement guarantee on every placement',
                 ] : [
                   'Accounting and finance professionals',
@@ -2178,10 +2178,10 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           <div className="flex items-end justify-between mb-10 gap-4">
             <div>
               <span className={`eyebrow mb-3 block`}>
-                {isEthioTax ? 'News & Insights' : 'Latest Content'}
+                {isEthioTax ? 'News & Insights' : 'Insights & Analysis'}
               </span>
               <h2 className="section-title">
-                {isEthioTax ? 'Latest from EthioTax' : 'Latest Insights'}
+                {isEthioTax ? 'Latest from EthioTax' : 'Latest from Accounting Body'}
               </h2>
               <p className="text-slate-500 text-base leading-relaxed mt-2 max-w-xl">
                 {isEthioTax
@@ -2250,7 +2250,6 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           ════════════════════════════════════════════════════════════════ */}
       <section className="section bg-white">
         <div className="container-site">
-            <>
               <div className="max-w-2xl mb-12">
                 <span className="eyebrow mb-3 block">The Full Platform</span>
                 <h2 className="section-title mb-4">Education and professional services, in one place</h2>
@@ -2292,7 +2291,6 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   </Link>
                 ))}
               </div>
-            </>
 
         </div>
       </section>
@@ -2305,15 +2303,15 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
           <div className="max-w-2xl mx-auto text-center mb-16">
             <span className="eyebrow mb-3 block">How It Works</span>
-            <h2 className="section-title mb-4">Three steps to exam success</h2>
+            <h2 className="section-title mb-4">Three ways Accounting Body works for you</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              From choosing your qualification to walking into the exam room with confidence.
+              Find your next role, sharpen your exam skills, or get matched to a permanent position — all on one platform.
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-0 md:grid-cols-3">
             {howItWorks.map((step, i) => (
-              <div key={step.step} className="relative flex flex-col items-start md:items-center text-left md:text-center px-0 md:px-8">
+              <div key={step.step} className="relative flex flex-col items-start md:items-center text-left md:text-center px-0 md:px-8 mb-10 md:mb-0">
 
                 {i < howItWorks.length - 1 && (
                   <div className="hidden md:block absolute top-9 left-[calc(50%+2.5rem)] right-0 h-px bg-slate-200" />
@@ -2492,27 +2490,27 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           ════════════════════════════════════════════════════════════════ */}
       <section className="bg-white border-t border-slate-200 py-8">
         <div className="container-site">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div>
               <p className="font-display text-xl text-navy-950">Ready to get started?</p>
-              <p className="text-sm text-slate-500 mt-0.5">Find your next role, practise your exams, or engage our professional services team.</p>
+              <p className="text-sm text-slate-500 mt-1 max-w-sm">Find your next role, practise your exams, or engage our professional services team.</p>
             </div>
-            <div className="flex items-center gap-3 shrink-0 flex-wrap justify-center sm:justify-end">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full sm:w-auto sm:min-w-[520px]">
               <Link
                 href="/jobs/listings"
-                className="h-10 px-5 flex items-center text-sm font-semibold rounded-lg bg-navy-950 text-white hover:bg-navy-900 whitespace-nowrap"
+                className="h-11 flex items-center justify-center text-sm font-semibold rounded-xl bg-navy-950 text-white hover:bg-navy-900 transition-colors w-full whitespace-nowrap"
               >
                 Browse jobs
               </Link>
               <Link
                 href="/practice-questions"
-                className="h-10 px-5 flex items-center text-sm font-medium rounded-lg border border-slate-300 text-navy-950 hover:border-navy-950 whitespace-nowrap"
+                className="h-11 flex items-center justify-center text-sm font-medium rounded-xl border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors w-full whitespace-nowrap"
               >
                 Practice questions
               </Link>
               <Link
                 href="/get-help"
-                className="h-10 px-5 flex items-center text-sm font-medium rounded-lg border border-slate-300 text-navy-950 hover:border-navy-950 whitespace-nowrap"
+                className="h-11 flex items-center justify-center text-sm font-medium rounded-xl border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors w-full whitespace-nowrap"
               >
                 Get help
               </Link>
