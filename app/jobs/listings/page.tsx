@@ -116,8 +116,8 @@ function PillButton({
       type="button"
       onClick={onClick}
       className={[
-        'shrink-0 rounded-full px-3 py-1 text-sm whitespace-nowrap transition-colors',
-        active ? 'bg-[#0B1F3A] text-white font-medium' : 'bg-transparent text-gray-600 hover:bg-gray-100',
+        'shrink-0 rounded-full px-2.5 py-1 text-xs whitespace-nowrap transition-colors cursor-pointer',
+        active ? 'bg-[#0B1F3A] text-white' : 'text-gray-500 hover:bg-gray-200',
       ].join(' ')}
     >
       {label}
@@ -329,124 +329,117 @@ export default function JobListingsPage() {
             Search live accounting and finance vacancies from across the web.
           </p>
 
-          <form onSubmit={handleSearch} className="w-full max-w-3xl">
-            <div className="flex flex-col gap-3 sm:gap-0 sm:flex-row sm:items-stretch sm:bg-white sm:rounded-xl sm:shadow-2xl sm:shadow-black/20 sm:overflow-hidden sm:border-2 sm:border-transparent sm:focus-within:border-gold-500 transition-all duration-200">
-              <div className="flex items-center flex-1 bg-white rounded-lg sm:rounded-none px-4 py-2.5 sm:py-0 border border-slate-200 sm:border-0 sm:border-b-0 sm:border-r sm:border-slate-200">
-                <SearchIcon />
-                <input
-                  type="text"
-                  value={roleInput}
-                  onChange={e => handleRoleInputChange(e.target.value)}
-                  placeholder="e.g. Auditor, Payroll Manager, CFO..."
-                  className="flex-1 py-1 px-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
-                  autoComplete="off"
-                />
+          <div className="w-full max-w-3xl bg-white rounded-2xl shadow-lg overflow-hidden">
+            <form onSubmit={handleSearch}>
+              <div className="p-2 flex flex-col gap-3 sm:gap-0 sm:flex-row sm:items-stretch">
+                <div className="flex items-center flex-1 bg-white rounded-lg sm:rounded-none px-4 py-2.5 sm:py-0 border border-slate-200 sm:border-0 sm:border-b-0 sm:border-r sm:border-slate-200">
+                  <SearchIcon />
+                  <input
+                    type="text"
+                    value={roleInput}
+                    onChange={e => handleRoleInputChange(e.target.value)}
+                    placeholder="e.g. Auditor, Payroll Manager, CFO..."
+                    className="flex-1 py-1 px-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="flex items-center flex-1 bg-white rounded-lg sm:rounded-none px-4 py-2.5 sm:py-0 border border-slate-200 sm:border-0">
+                  <LocationIcon />
+                  <input
+                    type="text"
+                    value={locationInput}
+                    onChange={e => setLocationInput(e.target.value)}
+                    placeholder="Leave blank for local jobs, or enter a city/country"
+                    className="flex-1 py-1 px-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="sm:p-2 sm:shrink-0">
+                  <button
+                    type="submit"
+                    className="flex items-center justify-center gap-2 w-full h-11 px-6 bg-gold-500 hover:bg-gold-400 active:bg-gold-600 text-navy-950 font-bold rounded-lg transition-all text-sm"
+                  >
+                    Search Jobs
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center flex-1 bg-white rounded-lg sm:rounded-none px-4 py-2.5 sm:py-0 border border-slate-200 sm:border-0">
-                <LocationIcon />
-                <input
-                  type="text"
-                  value={locationInput}
-                  onChange={e => setLocationInput(e.target.value)}
-                  placeholder="Leave blank for local jobs, or enter a city/country"
-                  className="flex-1 py-1 px-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
-                  autoComplete="off"
-                />
+            </form>
+
+            <div className="border-t border-gray-100 bg-gray-50 px-4 py-2">
+              {/* Desktop: single row, contract left, sort right */}
+              <div className="hidden sm:flex sm:items-center sm:justify-between sm:gap-4">
+                <div className="flex items-center flex-wrap gap-1.5">
+                  <span className="text-xs text-gray-400 mr-1">Contract:</span>
+                  {CONTRACT_OPTIONS.map(opt => (
+                    <PillButton
+                      key={opt.value}
+                      label={opt.label}
+                      active={activeContract === opt.value}
+                      onClick={() => handleContractChange(opt.value)}
+                    />
+                  ))}
+                </div>
+
+                <div className="flex items-center flex-wrap gap-1.5">
+                  <span className="text-xs text-gray-400 mr-1">Sort by:</span>
+                  {SORT_OPTIONS.map(opt => (
+                    <PillButton
+                      key={opt.value}
+                      label={opt.label}
+                      active={activeSort === opt.value}
+                      onClick={() => handleSortChange(opt.value)}
+                    />
+                  ))}
+                </div>
               </div>
-              <div className="sm:p-2 sm:shrink-0">
-                <button
-                  type="submit"
-                  className="flex items-center justify-center gap-2 w-full h-11 px-6 bg-gold-500 hover:bg-gold-400 active:bg-gold-600 text-navy-950 font-bold rounded-lg transition-all text-sm"
-                >
-                  Search Jobs
-                </button>
+
+              {/* Mobile: contract line, then sort line */}
+              <div className="flex flex-col gap-2 sm:hidden">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-gray-400 mr-1">Contract:</span>
+                  {CONTRACT_OPTIONS.map(opt => (
+                    <PillButton
+                      key={opt.value}
+                      label={opt.label}
+                      active={activeContract === opt.value}
+                      onClick={() => handleContractChange(opt.value)}
+                    />
+                  ))}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-gray-400 mr-1">Sort by:</span>
+                  {SORT_OPTIONS.map(opt => (
+                    <PillButton
+                      key={opt.value}
+                      label={opt.label}
+                      active={activeSort === opt.value}
+                      onClick={() => handleSortChange(opt.value)}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
-            <p className="text-white/50 text-xs mt-3">
-              Showing jobs near you — enter a location to search elsewhere
-            </p>
-          </form>
+          </div>
+          <p className="text-white/50 text-xs mt-3 max-w-3xl">
+            Showing jobs near you — enter a location to search elsewhere
+          </p>
         </div>
       </section>
-
-      {/* FILTERS TOOLBAR */}
-      <div className="bg-white border-b border-gray-100 py-3 px-4">
-        {/* Desktop: single row, contract left, sort right */}
-        <div className="hidden md:flex md:items-center md:justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-400 uppercase tracking-wide">Contract:</span>
-            <div className="flex items-center gap-1">
-              {CONTRACT_OPTIONS.map(opt => (
-                <PillButton
-                  key={opt.value}
-                  label={opt.label}
-                  active={activeContract === opt.value}
-                  onClick={() => handleContractChange(opt.value)}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-400 uppercase tracking-wide">Sort by:</span>
-            <div className="flex items-center gap-1">
-              {SORT_OPTIONS.map(opt => (
-                <PillButton
-                  key={opt.value}
-                  label={opt.label}
-                  active={activeSort === opt.value}
-                  onClick={() => handleSortChange(opt.value)}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile: contract row, then sort row */}
-        <div className="flex flex-col gap-3 md:hidden">
-          <div>
-            <span className="block text-xs text-gray-400 uppercase tracking-wide mb-1">Contract:</span>
-            <div className="flex flex-wrap items-center gap-1">
-              {CONTRACT_OPTIONS.map(opt => (
-                <PillButton
-                  key={opt.value}
-                  label={opt.label}
-                  active={activeContract === opt.value}
-                  onClick={() => handleContractChange(opt.value)}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <span className="block text-xs text-gray-400 uppercase tracking-wide mb-1">Sort by:</span>
-            <div className="flex flex-wrap items-center gap-1">
-              {SORT_OPTIONS.map(opt => (
-                <PillButton
-                  key={opt.value}
-                  label={opt.label}
-                  active={activeSort === opt.value}
-                  onClick={() => handleSortChange(opt.value)}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="px-4 py-2">
-        <p className="text-sm text-gray-500">
-          {isFirstLoad
-            ? 'Searching…'
-            : error
-              ? ' '
-              : formatResultsSummary(count, activeRole, activeLocation)}
-        </p>
-      </div>
 
       {/* RESULTS */}
       <section className="section bg-slate-50">
         <div className="container-site" ref={resultsRef} style={{ scrollMarginTop: '5rem' }}>
+          <div className="mb-8">
+            <p className="text-sm text-slate-500">
+              {isFirstLoad
+                ? 'Searching…'
+                : error
+                  ? ' '
+                  : formatResultsSummary(count, activeRole, activeLocation)}
+            </p>
+          </div>
+
           {error && (
             <div className="text-center py-16 border border-slate-200 rounded-xl bg-white">
               <p className="text-navy-950 font-semibold mb-1">Something went wrong</p>
