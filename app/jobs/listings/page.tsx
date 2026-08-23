@@ -31,7 +31,7 @@ const DEBOUNCE_MS = 300
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'date', label: 'Newest' },
-  { value: 'relevance', label: 'Relevant' },
+  { value: 'relevance', label: 'Relevance' },
   { value: 'salary', label: 'Salary' },
 ]
 
@@ -105,19 +105,23 @@ function CalendarIcon() {
 function PillButton({
   label,
   active,
+  variant,
   onClick,
 }: {
   label: string
   active: boolean
+  variant: 'contract' | 'sort'
   onClick: () => void
 }) {
+  const activeClasses = variant === 'contract' ? 'bg-[#0B1F3A] text-white' : 'bg-[#B8862E] text-white'
+
   return (
     <button
       type="button"
       onClick={onClick}
       className={[
-        'shrink-0 rounded-full px-2.5 py-1 text-xs whitespace-nowrap transition-colors cursor-pointer',
-        active ? 'bg-[#0B1F3A] text-white' : 'text-gray-500 hover:bg-gray-200',
+        'w-full rounded-[20px] p-[7px] text-[13px] text-center transition-colors cursor-pointer',
+        active ? activeClasses : 'bg-white text-[#444] border border-[#E0E0E0] hover:bg-gray-50',
       ].join(' ')}
     >
       {label}
@@ -329,90 +333,135 @@ export default function JobListingsPage() {
             Search live accounting and finance vacancies from across the web.
           </p>
 
-          <div className="w-full max-w-3xl bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="w-full bg-white rounded-2xl shadow-lg overflow-hidden">
             <form onSubmit={handleSearch}>
-              <div className="p-2 flex flex-col gap-3 sm:gap-0 sm:flex-row sm:items-stretch">
-                <div className="flex items-center flex-1 bg-white rounded-lg sm:rounded-none px-4 py-2.5 sm:py-0 border border-slate-200 sm:border-0 sm:border-b-0 sm:border-r sm:border-slate-200">
+              {/* Row 1 — desktop: role | divider | location | button */}
+              <div className="hidden md:grid md:grid-cols-[1fr_1px_1fr_auto] md:items-stretch border-b border-[#ECECEC]">
+                <div className="flex items-center gap-2 py-[14px] px-[18px]">
                   <SearchIcon />
                   <input
                     type="text"
                     value={roleInput}
                     onChange={e => handleRoleInputChange(e.target.value)}
                     placeholder="e.g. Auditor, Payroll Manager, CFO..."
-                    className="flex-1 py-1 px-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
+                    className="flex-1 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
                     autoComplete="off"
                   />
                 </div>
-                <div className="flex items-center flex-1 bg-white rounded-lg sm:rounded-none px-4 py-2.5 sm:py-0 border border-slate-200 sm:border-0">
+                <div className="bg-[#ECECEC] w-px" />
+                <div className="flex items-center gap-2 py-[14px] px-[18px]">
                   <LocationIcon />
                   <input
                     type="text"
                     value={locationInput}
                     onChange={e => setLocationInput(e.target.value)}
                     placeholder="Leave blank for local jobs, or enter a city/country"
-                    className="flex-1 py-1 px-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
+                    className="flex-1 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
                     autoComplete="off"
                   />
                 </div>
-                <div className="sm:p-2 sm:shrink-0">
+                <div className="flex items-center p-[10px]">
                   <button
                     type="submit"
-                    className="flex items-center justify-center gap-2 w-full h-11 px-6 bg-gold-500 hover:bg-gold-400 active:bg-gold-600 text-navy-950 font-bold rounded-lg transition-all text-sm"
+                    className="bg-[#B8862E] hover:brightness-110 text-white rounded-[10px] py-[12px] px-[28px] text-sm font-semibold whitespace-nowrap transition-all"
                   >
                     Search Jobs
                   </button>
                 </div>
               </div>
+
+              {/* Row 1 — mobile: stacked */}
+              <div className="flex flex-col gap-3 p-4 md:hidden border-b border-[#ECECEC]">
+                <div className="flex items-center gap-2 border border-slate-200 rounded-lg px-4 py-2.5">
+                  <SearchIcon />
+                  <input
+                    type="text"
+                    value={roleInput}
+                    onChange={e => handleRoleInputChange(e.target.value)}
+                    placeholder="e.g. Auditor, Payroll Manager, CFO..."
+                    className="flex-1 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="flex items-center gap-2 border border-slate-200 rounded-lg px-4 py-2.5">
+                  <LocationIcon />
+                  <input
+                    type="text"
+                    value={locationInput}
+                    onChange={e => setLocationInput(e.target.value)}
+                    placeholder="Leave blank for local jobs, or enter a city/country"
+                    className="flex-1 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
+                    autoComplete="off"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-[#B8862E] hover:brightness-110 text-white rounded-[10px] py-[12px] px-[28px] text-sm font-semibold transition-all"
+                >
+                  Search Jobs
+                </button>
+              </div>
             </form>
 
-            <div className="border-t border-gray-100 bg-gray-50 px-4 py-2">
-              {/* Desktop: single row, contract left, sort right */}
-              <div className="hidden sm:flex sm:items-center sm:justify-between sm:gap-4">
-                <div className="flex items-center flex-wrap gap-1.5">
-                  <span className="text-xs text-gray-400 mr-1">Contract:</span>
-                  {CONTRACT_OPTIONS.map(opt => (
-                    <PillButton
-                      key={opt.value}
-                      label={opt.label}
-                      active={activeContract === opt.value}
-                      onClick={() => handleContractChange(opt.value)}
-                    />
+            {/* Row 2 — desktop: contract | divider | sort */}
+            <div className="hidden md:grid md:grid-cols-[1fr_1px_1fr] bg-[#FAFAFA]">
+              <div className="py-[14px] px-[18px]">
+                <span className="block text-[10px] uppercase text-[#bbb] mb-2">Contract Type</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {CONTRACT_OPTIONS.map((opt, i) => (
+                    <div key={opt.value} className={i === CONTRACT_OPTIONS.length - 1 ? 'col-span-2' : undefined}>
+                      <PillButton
+                        label={opt.label}
+                        variant="contract"
+                        active={activeContract === opt.value}
+                        onClick={() => handleContractChange(opt.value)}
+                      />
+                    </div>
                   ))}
                 </div>
-
-                <div className="flex items-center flex-wrap gap-1.5">
-                  <span className="text-xs text-gray-400 mr-1">Sort by:</span>
+              </div>
+              <div className="bg-[#ECECEC] w-px" />
+              <div className="py-[14px] px-[18px]">
+                <span className="block text-[10px] uppercase text-[#bbb] mb-2">Sort By</span>
+                <div className="grid grid-cols-3 gap-2">
                   {SORT_OPTIONS.map(opt => (
                     <PillButton
                       key={opt.value}
                       label={opt.label}
+                      variant="sort"
                       active={activeSort === opt.value}
                       onClick={() => handleSortChange(opt.value)}
                     />
                   ))}
                 </div>
               </div>
+            </div>
 
-              {/* Mobile: contract line, then sort line */}
-              <div className="flex flex-col gap-2 sm:hidden">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-xs text-gray-400 mr-1">Contract:</span>
-                  {CONTRACT_OPTIONS.map(opt => (
-                    <PillButton
-                      key={opt.value}
-                      label={opt.label}
-                      active={activeContract === opt.value}
-                      onClick={() => handleContractChange(opt.value)}
-                    />
+            {/* Row 2 — mobile: contract, then sort */}
+            <div className="flex flex-col gap-4 p-4 md:hidden bg-[#FAFAFA]">
+              <div>
+                <span className="block text-[10px] uppercase text-[#bbb] mb-2">Contract Type</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {CONTRACT_OPTIONS.map((opt, i) => (
+                    <div key={opt.value} className={i === CONTRACT_OPTIONS.length - 1 ? 'col-span-2' : undefined}>
+                      <PillButton
+                        label={opt.label}
+                        variant="contract"
+                        active={activeContract === opt.value}
+                        onClick={() => handleContractChange(opt.value)}
+                      />
+                    </div>
                   ))}
                 </div>
-
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-xs text-gray-400 mr-1">Sort by:</span>
+              </div>
+              <div>
+                <span className="block text-[10px] uppercase text-[#bbb] mb-2">Sort By</span>
+                <div className="grid grid-cols-3 gap-2">
                   {SORT_OPTIONS.map(opt => (
                     <PillButton
                       key={opt.value}
                       label={opt.label}
+                      variant="sort"
                       active={activeSort === opt.value}
                       onClick={() => handleSortChange(opt.value)}
                     />
@@ -421,7 +470,7 @@ export default function JobListingsPage() {
               </div>
             </div>
           </div>
-          <p className="text-white/50 text-xs mt-3 max-w-3xl">
+          <p className="text-white/50 text-xs mt-3">
             Showing jobs near you — enter a location to search elsewhere
           </p>
         </div>
