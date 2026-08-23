@@ -189,11 +189,11 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
         Stay Updated
       </p>
       <h3 className="font-display text-white text-lg mb-1.5">
-        {isEthioTax ? 'EthioTax community updates' : 'Jobs, placements & exam tips'}
+        {isEthioTax ? 'Tax updates, exam tips & job alerts' : 'Jobs, placements & exam tips'}
       </h3>
       <p className="text-sm text-white/60 mb-4 leading-relaxed">
         {isEthioTax
-          ? 'Tax deadlines, ERCA updates and Ethiopian business insights. No spam, ever.'
+          ? 'ERCA deadlines, ETICPA news, new practice question releases and finance job alerts. No spam, unsubscribe any time.'
           : 'New accounting and finance job alerts, managed placement updates, and weekly exam tips. No spam, unsubscribe any time.'}
       </p>
 
@@ -262,11 +262,10 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
   const jobsColumn: FooterColumn = {
     title: 'Jobs',
     links: isEthioTax ? [
+      { label: 'Browse Jobs',               href: '/jobs/listings' },
       { label: 'Find Work',                 href: '/jobs/find-work' },
       { label: 'Hire Talent',               href: '/jobs/hire-talent' },
       { label: 'Ethiopian Professionals',   href: '/jobs/ethiopian-professionals' },
-      { label: 'How It Works',              href: '/jobs/how-it-works' },
-      { label: '90-Day Guarantee',          href: '/jobs/guarantee' },
     ] : [
       { label: 'Browse Jobs',               href: '/jobs/listings' },
       { label: 'Managed Recruitment',       href: '/jobs' },
@@ -276,14 +275,12 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
   }
 
   const studyColumn: FooterColumn = {
-    title: 'Study',
+    title: isEthioTax ? 'Study & Practice' : 'Study',
     links: isEthioTax ? [
+      { label: 'All Qualifications',        href: '/study' },
       { label: 'ETICPA / CPA',              href: '/study/eticpa',  badge: 'Popular', abbr: 'ETICPA / CPA' },
       { label: 'ACCA Study Hub',            href: '/study/acca', abbr: 'ACCA' },
-      { label: 'CIMA Study Hub',            href: '/study/cima', abbr: 'CIMA' },
-      { label: 'AAT Study Hub',             href: '/study/aat', abbr: 'AAT' },
-      { label: 'All Qualifications',        href: '/study' },
-      { label: 'Free Courses',              href: '/free-courses', new: true },
+      { label: 'Practice Questions',        href: '/practice-questions' },
     ] : [
       { label: 'All Qualifications',        href: '/study' },
       { label: 'ACCA Study Hub',            href: '/study/acca', abbr: 'ACCA' },
@@ -294,7 +291,7 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
   }
 
   const companyColumn: FooterColumn = isEthioTax ? {
-    title: 'Company',
+    title: 'About EthioTax',
     links: [
       { label: 'About EthioTax', href: '/about-ethiotax' },
       { label: 'How It Works',   href: '/how-it-works' },
@@ -304,11 +301,12 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
   } : footerColumns[footerColumns.length - 1]
 
     const professionalsColumn: FooterColumn = isEthioTax ? {
-    title: 'Professionals',
+    title: 'Professional Services',
     links: [
-      { label: 'Get Professional Help',     href: '/get-help' },
-      { label: 'Join as a Provider',        href: '/firms-freelancers' },
-      { label: 'CPD Resources',             href: '/study', abbr: 'CPD' },
+      { label: 'Get a Free Quote',          href: '/get-help' },
+      { label: 'Tax & Compliance',          href: '/get-help#tax' },
+      { label: 'Accounting & Bookkeeping',  href: '/get-help#accounting' },
+      { label: 'Business Consulting',       href: '/get-help#consulting' },
     ],
   } : {
     title: 'Professionals',
@@ -385,7 +383,7 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
 
             <p className="text-sm text-white/55 leading-relaxed max-w-xs">
               {isEthioTax
-                ? 'EthioTax delivers professional accounting, tax, audit, payroll and business consulting to the Ethiopian community worldwide. Qualified professionals. Amharic and Afaan Oromoo service available.'
+                ? 'Expert accounting and tax services, ETICPA and ACCA exam practice, and 50,000+ accounting and finance jobs — built for the Ethiopian community worldwide.'
                 : 'The dedicated platform for accounting and finance professionals. 250,000+ live jobs, managed placement service, and 20,000+ practice questions — all in one place.'}
             </p>
 
@@ -414,26 +412,7 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
 
           {/* ── Link columns ────────────────────────────────────────────── */}
           <div className="lg:col-span-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
-            {(isEthioTax ? [studyColumn, jobsColumn,
-              {
-                title: 'Practice',
-                links: [
-                  { label: 'MCQ Question Banks',  href: '/practice-questions', abbr: 'MCQ' },
-                  { label: 'Mock Exams',          href: '/study/mock-exams' },
-                  { label: 'All Practice',        href: '/practice-questions' },
-                ],
-              },
-              {
-                title: 'Resources',
-                links: [
-                  { label: 'Accounting Glossary',    href: '/glossary' },
-                  { label: 'Accounting Dictionary',  href: '/dictionary' },
-                  { label: 'Get Help',               href: '/get-help' },
-                  { label: 'Blog & Articles',        href: '/articles' },
-                  { label: 'Free Calculators',       href: '/calculators' },
-                ],
-              },
-            professionalsColumn, companyColumn] : [jobsColumn, practiceQuestionsColumn, studyColumn, servicesColumn]).map(column => (
+            {(isEthioTax ? [jobsColumn, professionalsColumn, studyColumn, companyColumn] : [jobsColumn, practiceQuestionsColumn, studyColumn, servicesColumn]).map(column => (
               <div key={column.title}>
                 <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">
                   {column.title}

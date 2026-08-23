@@ -564,18 +564,19 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     />
   </div>
 
-  <div className="container-site relative z-10 py-20 md:py-32 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+  <div className="container-site relative z-10 py-16 md:py-32 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start lg:items-center">
 
     {/* LEFT COLUMN */}
     <div className="lg:col-span-1">
 
       <div
-        className="inline-flex flex-wrap items-center gap-2 px-3 py-1.5 rounded-full mb-8"
+        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-8"
         style={{ background: 'rgba(201,152,42,0.15)', border: '1px solid rgba(201,152,42,0.3)' }}
       >
-        <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#C9982A' }} />
-        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#C9982A' }}>
-          Professional Services · Study · Careers · አማርኛ · Afaan Oromoo
+        <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#C9982A' }} />
+        <span className="text-xs font-semibold uppercase tracking-widest leading-tight" style={{ color: '#C9982A' }}>
+          <span className="sm:hidden">Services · Study · Jobs</span>
+          <span className="hidden sm:inline">Professional Services · Study · Jobs · አማርኛ · Afaan Oromoo</span>
         </span>
       </div>
 
@@ -583,7 +584,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         className="font-display text-white mb-6 leading-[1.06]"
         style={{ fontSize: 'clamp(2.6rem, 5vw, 4rem)', letterSpacing: '-0.025em' }}
       >
-        Expert accounting.
+        Expert services.
         <br />
         <span
           style={{
@@ -593,46 +594,58 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             backgroundClip: 'text',
           }}
         >
-          ETICPA exam practice.
+          Exam practice. Finance jobs.
         </span>
         <br />
         Built for Ethiopia.
       </h1>
 
       <p className="text-white/60 text-lg leading-relaxed mb-10 max-w-xl">
-        The dedicated platform for Ethiopian and diaspora accounting and finance professionals. Expert professional services, ETICPA and ACCA exam practice, and finance careers — all in one place.
+        The dedicated platform for Ethiopian and diaspora accounting professionals. Expert services, ETICPA and ACCA exam practice, and 50,000+ finance and accounting jobs — all in one place.
       </p>
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-8">
+      <div className="flex flex-col gap-3 mb-8 w-full max-w-2xl">
         <Link
-          href="/get-help"
-          className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-xl text-base font-semibold transition-all hover:opacity-90"
+          href="/jobs/listings"
+          className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-xl text-base font-semibold transition-all hover:opacity-90"
           style={{ backgroundColor: '#C9982A', color: '#0f2d1e' }}
         >
-          Get expert help
+          Find a job
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
           </svg>
         </Link>
-        <Link
-          href="/wa"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-xl text-base font-semibold transition-all hover:opacity-80 border-2 text-white"
-          style={{ borderColor: 'rgba(201,152,42,0.5)' }}
-        >
-          WhatsApp us
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </Link>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Link
+            href="/get-help"
+            className="inline-flex items-center justify-center gap-2 h-13 px-7 rounded-xl text-base font-semibold transition-all hover:opacity-90 text-white border-2"
+            style={{ borderColor: 'rgba(201,152,42,0.5)', background: 'rgba(255,255,255,0.08)' }}
+          >
+            Get expert help
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </Link>
+          <Link
+            href="/wa"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 h-13 px-7 rounded-xl text-base font-semibold transition-all hover:opacity-80 border-2 text-white"
+            style={{ borderColor: 'rgba(255,255,255,0.25)', background: 'transparent' }}
+          >
+            WhatsApp us
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-2xl">
         {[
-          'UK · USA · Canada · UAE · Ethiopia',
+          '50,000+ finance & accounting jobs',
           'ETICPA · ACCA · CIMA · AAT',
-          'Free to start studying',
+          'UK · USA · Canada · UAE · Ethiopia',
         ].map(label => (
           <span key={label} className="flex items-center gap-1.5 text-xs font-medium text-white/50">
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
@@ -646,7 +659,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     </div>
 
     {/* RIGHT COLUMN — two equal cards */}
-    <div className="relative hidden lg:block">
+    <div className="relative">
       <div className="flex flex-col gap-4">
 
         {/* CARD 1 — Professional Services */}
