@@ -106,7 +106,7 @@ export default function JobsHubPage() {
           </Link>
 
           {/* STAT PILLS */}
-          <div className="grid grid-cols-1 gap-2 w-full max-w-2xl mt-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-2xl mt-8">
             {[
               '250,000+ live jobs',
               'Updated daily',
