@@ -40,6 +40,7 @@ export default function JobsHubPage() {
   ]
 
   const stats = [
+    { value: '250,000+', label: 'Live jobs', sub: 'Accounting and finance roles updated daily' },
     { value: 'Managed',  label: 'End-to-end service',    sub: 'We handle every step of the placement' },
     { value: '90 days',   label: 'Replacement guarantee', sub: 'On every permanent placement' },
     { value: '100%',      label: 'Vetted candidates',     sub: 'Every profile reviewed before activation' },
@@ -229,7 +230,7 @@ export default function JobsHubPage() {
       <section className="section bg-slate-50">
         <div className="container-site">
           <div className="max-w-2xl mx-auto text-center mb-14">
-            <span className="eyebrow mb-3 block">How It Works</span>
+            <span className="eyebrow mb-3 block">How Our Managed Service Works</span>
             <h2 className="section-title mb-4">A managed service, not a job board</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
               {platformName} sits in the middle of every placement. Neither side deals with the other directly -- we manage every introduction, negotiation, and guarantee.
@@ -256,9 +257,9 @@ export default function JobsHubPage() {
       {/* TRUST BAR */}
       <section className="border-y border-slate-200 bg-white">
         <div className="container-site py-10">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-8">
             {stats.map((stat, i) => (
-              <div key={stat.label} className={i < 3 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}>
+              <div key={stat.label} className={i < 4 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}>
                 <span className="font-display text-3xl block mb-1" style={{ color: brand }}><span translate="no">{stat.value}</span></span>
                 <span className="text-sm font-semibold text-navy-950 block">{stat.label}</span>
                 <span className="text-xs text-slate-400 mt-0.5 block">{stat.sub}</span>
@@ -276,24 +277,26 @@ export default function JobsHubPage() {
             <p className="text-slate-500 text-lg mb-8">
               Every registration and every hiring brief is reviewed personally by our team.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/jobs/find-work"
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center">
+              <Link href="/jobs/listings"
                 className="h-12 px-6 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white transition-colors shadow-sm whitespace-nowrap"
                 style={{ background: brand }}>
-                I am looking for work
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                Find a job →
+              </Link>
+              <Link href="/jobs/find-work"
+                className="h-12 px-6 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap"
+                style={{ border: '2px solid #0C1A3D', color: '#0C1A3D', background: 'transparent' }}>
+                Register as a candidate →
               </Link>
               <Link href="/jobs/hire-talent"
-                className="h-12 px-6 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold border-2 transition-colors whitespace-nowrap"
-                style={{ borderColor: brand, color: brand }}>
-                I am looking to hire
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                className="h-12 px-6 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap"
+                style={{ border: '2px solid #0C1A3D', color: '#0C1A3D', background: 'transparent' }}>
+                I am looking to hire →
               </Link>
               <Link href="/freelancing-pathways"
-                className="h-12 px-6 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold border-2 transition-colors whitespace-nowrap"
-                style={{ borderColor: gold, color: gold }}>
-                Explore Freelancing
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                className="h-12 px-6 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap"
+                style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}>
+                Explore freelancing →
               </Link>
             </div>
           </div>
