@@ -232,7 +232,7 @@ export default function JobsHubPage() {
             <span className="eyebrow mb-3 block">How Our Managed Service Works</span>
             <h2 className="section-title mb-4">A managed service, not a job board</h2>
             <p className="text-slate-500 text-lg leading-relaxed">
-              {platformName} sits in the middle of every placement. Neither side deals with the other directly -- we manage every introduction, negotiation, and guarantee.
+              {platformName} sits in the middle of every placement. Neither side deals with the other directly — we manage every introduction, negotiation, and guarantee.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
@@ -276,31 +276,31 @@ export default function JobsHubPage() {
             <p className="text-slate-500 text-lg mb-8">
               Every registration and every hiring brief is reviewed personally by our team.
             </p>
-            <div className="grid grid-cols-4 gap-3 w-full max-w-3xl mx-auto">
+            <div className="grid grid-cols-4 gap-3 w-full max-w-4xl mx-auto">
               <Link
                 href="/jobs/listings"
-                className="flex items-center justify-center rounded-xl text-sm font-semibold text-white transition-colors py-3 px-2 text-center whitespace-nowrap"
+                className="flex items-center justify-center rounded-xl text-sm font-semibold text-white transition-colors py-3 px-4 text-center whitespace-nowrap"
                 style={{ background: brand }}
               >
                 Find a job
               </Link>
               <Link
                 href="/jobs/find-work"
-                className="flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-2 text-center whitespace-nowrap"
+                className="flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-4 text-center whitespace-nowrap"
                 style={{ border: '2px solid #0C1A3D', color: '#0C1A3D', background: 'transparent' }}
               >
                 Register as candidate
               </Link>
               <Link
                 href="/jobs/hire-talent"
-                className="flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-2 text-center whitespace-nowrap"
+                className="flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-4 text-center whitespace-nowrap"
                 style={{ border: '2px solid #0C1A3D', color: '#0C1A3D', background: 'transparent' }}
               >
                 I am looking to hire
               </Link>
               <Link
                 href="/freelancing-pathways"
-                className="flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-2 text-center whitespace-nowrap"
+                className="flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-4 text-center whitespace-nowrap"
                 style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}
               >
                 Explore freelancing
