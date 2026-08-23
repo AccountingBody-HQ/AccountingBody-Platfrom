@@ -10,6 +10,8 @@ interface CareerjetJob {
   date?: string
   url: string
   site?: string
+  description?: string
+  contractType?: string
 }
 
 interface CareerjetResponse {
@@ -148,11 +150,30 @@ function Spinner({ className = 'w-6 h-6' }: { className?: string }) {
   )
 }
 
-function JobCard({ job, fallbackLocation }: { job: CareerjetJob; fallbackLocation: string }) {
+function JobCard({
+  job,
+  fallbackLocation,
+  onSelect,
+}: {
+  job: CareerjetJob
+  fallbackLocation: string
+  onSelect: (job: CareerjetJob) => void
+}) {
   const location = job.locations || fallbackLocation
 
   return (
-    <article className="group card-base bg-white flex flex-col p-5">
+    <article
+      role="button"
+      tabIndex={0}
+      onClick={() => onSelect(job)}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onSelect(job)
+        }
+      }}
+      className="group card-base bg-white flex flex-col p-5 cursor-pointer"
+    >
       <h3 className="font-display text-lg text-navy-950 leading-snug group-hover:text-navy-700 transition-colors mb-1">
         {job.title}
       </h3>
@@ -184,19 +205,126 @@ function JobCard({ job, fallbackLocation }: { job: CareerjetJob; fallbackLocatio
       )}
 
       <div className="mt-auto pt-3 border-t border-slate-100">
-        <a
-          href={job.url}
-          target="_blank"
-          rel="sponsored noopener noreferrer"
-          className="inline-flex items-center justify-center gap-2 w-full h-10 rounded-lg bg-navy-950 text-white text-sm font-semibold transition-colors hover:bg-navy-900"
-        >
-          View Job
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <span className="inline-flex items-center gap-1 text-sm font-semibold text-gold-700 group-hover:text-gold-600 transition-colors">
+          View details
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
           </svg>
-        </a>
+        </span>
       </div>
     </article>
+  )
+}
+
+function JobDetailPanel({
+  job,
+  fallbackLocation,
+  onClose,
+}: {
+  job: CareerjetJob | null
+  fallbackLocation: string
+  onClose: () => void
+}) {
+  const isOpen = job !== null
+
+  useEffect(() => {
+    if (!isOpen) return
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = ''
+    }
+  }, [isOpen, onClose])
+
+  const location = job?.locations || fallbackLocation
+
+  return (
+    <>
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 lg:bg-transparent"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Job details"
+        className={[
+          'fixed inset-0 lg:inset-y-0 lg:left-auto lg:right-0 lg:w-[480px] z-50 bg-white shadow-2xl overflow-y-auto transition-transform duration-300 ease-in-out',
+          isOpen ? 'translate-x-0' : 'translate-x-full',
+        ].join(' ')}
+      >
+        {job && (
+          <div className="relative p-6 sm:p-8">
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close job details"
+              className="absolute top-4 right-4 text-navy-950 text-2xl leading-none hover:text-navy-700 transition-colors"
+            >
+              ×
+            </button>
+
+            <h2 className="font-display text-2xl text-navy-950 leading-snug mb-1 pr-8">
+              {job.title}
+            </h2>
+            <p className="text-gold-600 font-medium mb-4">
+              {job.company || 'Company not specified'}
+            </p>
+
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mb-4 text-sm text-slate-500">
+              {location && <span>📍 {location}</span>}
+              {job.date && <span>📅 {formatDate(job.date)}</span>}
+            </div>
+
+            {(job.salary || job.contractType) && (
+              <div className="flex flex-wrap gap-2 mb-6">
+                {job.salary && (
+                  <span className="inline-flex items-center rounded-full bg-gold-50 text-gold-700 border border-gold-300 px-3 py-1 text-xs font-bold">
+                    {job.salary}
+                  </span>
+                )}
+                {job.contractType && (
+                  <span className="inline-flex items-center rounded-full bg-navy-950 text-white px-3 py-1 text-xs font-bold">
+                    {job.contractType}
+                  </span>
+                )}
+              </div>
+            )}
+
+            <hr className="border-slate-100 mb-6" />
+
+            <h3 className="font-display text-lg text-navy-950 mb-2">Job description</h3>
+            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line mb-2">
+              {job.description || 'No description provided for this role.'}
+            </p>
+            <p className="text-xs text-slate-400 mb-6">
+              Full job details available on the employer&apos;s site
+            </p>
+
+            <hr className="border-slate-100 mb-6" />
+
+            <a
+              href={job.url}
+              target="_blank"
+              rel="sponsored noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full h-12 rounded-lg bg-gold-500 hover:bg-gold-400 active:bg-gold-600 text-white text-base font-semibold transition-colors"
+            >
+              Apply for this role →
+            </a>
+            <p className="text-xs text-slate-400 text-center mt-3">
+              You&apos;ll be taken to the employer&apos;s application page
+            </p>
+          </div>
+        )}
+      </div>
+    </>
   )
 }
 
@@ -219,6 +347,7 @@ export default function JobListingsPage() {
   const [activeSort, setActiveSort] = useState<SortOption>(DEFAULT_SORT)
   const [activeContract, setActiveContract] = useState<ContractFilter>(DEFAULT_CONTRACT)
   const [page, setPage] = useState(1)
+  const [selectedJob, setSelectedJob] = useState<CareerjetJob | null>(null)
 
   const [jobs, setJobs] = useState<CareerjetJob[]>([])
   const [totalPages, setTotalPages] = useState(1)
@@ -544,7 +673,7 @@ export default function JobListingsPage() {
               <div className={`transition-opacity duration-200 ${loading ? 'opacity-40 pointer-events-none' : ''}`}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {jobs.map((job, i) => (
-                    <JobCard key={`${job.url}-${i}`} job={job} fallbackLocation={activeLocation} />
+                    <JobCard key={`${job.url}-${i}`} job={job} fallbackLocation={activeLocation} onSelect={setSelectedJob} />
                   ))}
                 </div>
 
@@ -576,6 +705,12 @@ export default function JobListingsPage() {
           )}
         </div>
       </section>
+
+      <JobDetailPanel
+        job={selectedJob}
+        fallbackLocation={activeLocation}
+        onClose={() => setSelectedJob(null)}
+      />
     </main>
   )
 }
