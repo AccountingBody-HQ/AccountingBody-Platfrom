@@ -1707,14 +1707,14 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   backgroundClip: 'text',
                 }}
               >
-                Test your knowledge.
+                Exam practice questions.
               </span>
               <br />
-              Get placed.
+              Expert placement.
             </h1>
 
             <p className="text-white/55 text-lg leading-relaxed mb-10 max-w-xl">
-              The dedicated platform for accounting and finance professionals. Live job listings, 20,000+ practice questions, and expert professional services — all in one place.
+              The dedicated platform for accounting and finance professionals. Live job listings, exam practice questions, and expert managed placement — all in one place.
             </p>
 
             <HomepageJobSearch />
