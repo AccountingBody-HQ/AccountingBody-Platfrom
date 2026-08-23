@@ -29,10 +29,6 @@ const DEFAULT_CONTRACT: ContractFilter = 'all'
 const PAGE_SIZE = 12
 const DEBOUNCE_MS = 300
 
-const ROLE_CHIPS = [
-  'All', 'Accountant', 'Auditor', 'Finance Manager', 'Payroll', 'Tax', 'CFO', 'Bookkeeper',
-]
-
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'date', label: 'Newest' },
   { value: 'relevance', label: 'Relevant' },
@@ -109,25 +105,19 @@ function CalendarIcon() {
 function PillButton({
   label,
   active,
-  variant,
   onClick,
 }: {
   label: string
   active: boolean
-  variant: 'chip' | 'filter'
   onClick: () => void
 }) {
-  const activeClasses = variant === 'chip'
-    ? 'bg-gold-500 border-gold-500 text-white'
-    : 'bg-navy-950 border-navy-950 text-white'
-
   return (
     <button
       type="button"
       onClick={onClick}
       className={[
-        'shrink-0 rounded-full border px-3 py-1 text-sm font-semibold whitespace-nowrap transition-colors',
-        active ? activeClasses : 'bg-white border-navy-200 text-navy-700 hover:border-navy-400',
+        'shrink-0 rounded-full px-3 py-1 text-sm whitespace-nowrap transition-colors',
+        active ? 'bg-[#0B1F3A] text-white font-medium' : 'bg-transparent text-gray-600 hover:bg-gray-100',
       ].join(' ')}
     >
       {label}
@@ -214,7 +204,6 @@ export default function JobListingsPage() {
   const [activeLocation, setActiveLocation] = useState(DEFAULT_LOCATION)
   const [activeSort, setActiveSort] = useState<SortOption>(DEFAULT_SORT)
   const [activeContract, setActiveContract] = useState<ContractFilter>(DEFAULT_CONTRACT)
-  const [activeChip, setActiveChip] = useState<string | null>('All')
   const [page, setPage] = useState(1)
 
   const [jobs, setJobs] = useState<CareerjetJob[]>([])
@@ -297,16 +286,6 @@ export default function JobListingsPage() {
 
   function handleRoleInputChange(value: string) {
     setRoleInput(value)
-    setActiveChip(null)
-  }
-
-  function handleChipClick(chip: string) {
-    const value = chip === 'All' ? '' : chip
-    setRoleInput(value)
-    setActiveRole(value)
-    setActiveChip(chip)
-    setPage(1)
-    scrollToResults()
   }
 
   function handleSortChange(value: SortOption) {
@@ -326,7 +305,6 @@ export default function JobListingsPage() {
     setActiveLocation(DEFAULT_LOCATION)
     setActiveSort(DEFAULT_SORT)
     setActiveContract(DEFAULT_CONTRACT)
-    setActiveChip('All')
     setPage(1)
   }
 
@@ -392,112 +370,83 @@ export default function JobListingsPage() {
       </section>
 
       {/* FILTERS TOOLBAR */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="container-site">
-          {/* Desktop: single row — role chips left, dropdowns right */}
-          <div className="hidden md:flex md:items-center md:justify-between md:gap-6 py-3">
-            <div
-              className="flex items-center gap-2 min-w-0 flex-1 overflow-x-auto [&::-webkit-scrollbar]:hidden"
-              style={{ scrollbarWidth: 'none' }}
-            >
-              {ROLE_CHIPS.map(chip => (
+      <div className="bg-white border-b border-gray-100 py-3 px-4">
+        {/* Desktop: single row, contract left, sort right */}
+        <div className="hidden md:flex md:items-center md:justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400 uppercase tracking-wide">Contract:</span>
+            <div className="flex items-center gap-1">
+              {CONTRACT_OPTIONS.map(opt => (
                 <PillButton
-                  key={chip}
-                  label={chip}
-                  variant="chip"
-                  active={activeChip === chip}
-                  onClick={() => handleChipClick(chip)}
+                  key={opt.value}
+                  label={opt.label}
+                  active={activeContract === opt.value}
+                  onClick={() => handleContractChange(opt.value)}
                 />
               ))}
-            </div>
-
-            <div className="flex shrink-0 items-center gap-4">
-              <label className="flex items-center">
-                <span className="text-sm text-gray-500 mr-1">Contract:</span>
-                <select
-                  value={activeContract}
-                  onChange={e => handleContractChange(e.target.value as ContractFilter)}
-                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white text-navy-950 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold-500"
-                >
-                  {CONTRACT_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="flex items-center">
-                <span className="text-sm text-gray-500 mr-1">Sort:</span>
-                <select
-                  value={activeSort}
-                  onChange={e => handleSortChange(e.target.value as SortOption)}
-                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white text-navy-950 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold-500"
-                >
-                  {SORT_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </label>
             </div>
           </div>
 
-          {/* Mobile: chips wrap, dropdowns below in a 50/50 row */}
-          <div className="flex flex-col md:hidden">
-            <div className="flex flex-wrap gap-2 px-4 py-3">
-              {ROLE_CHIPS.map(chip => (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400 uppercase tracking-wide">Sort by:</span>
+            <div className="flex items-center gap-1">
+              {SORT_OPTIONS.map(opt => (
                 <PillButton
-                  key={chip}
-                  label={chip}
-                  variant="chip"
-                  active={activeChip === chip}
-                  onClick={() => handleChipClick(chip)}
+                  key={opt.value}
+                  label={opt.label}
+                  active={activeSort === opt.value}
+                  onClick={() => handleSortChange(opt.value)}
                 />
               ))}
             </div>
+          </div>
+        </div>
 
-            <div className="flex items-center gap-2 px-4 pb-3">
-              <label className="flex items-center w-1/2 min-w-0">
-                <span className="text-sm text-gray-500 mr-1 shrink-0">Contract</span>
-                <select
-                  value={activeContract}
-                  onChange={e => handleContractChange(e.target.value as ContractFilter)}
-                  className="w-full min-w-0 border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white text-navy-950 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold-500"
-                >
-                  {CONTRACT_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </label>
+        {/* Mobile: contract row, then sort row */}
+        <div className="flex flex-col gap-3 md:hidden">
+          <div>
+            <span className="block text-xs text-gray-400 uppercase tracking-wide mb-1">Contract:</span>
+            <div className="flex flex-wrap items-center gap-1">
+              {CONTRACT_OPTIONS.map(opt => (
+                <PillButton
+                  key={opt.value}
+                  label={opt.label}
+                  active={activeContract === opt.value}
+                  onClick={() => handleContractChange(opt.value)}
+                />
+              ))}
+            </div>
+          </div>
 
-              <label className="flex items-center w-1/2 min-w-0">
-                <span className="text-sm text-gray-500 mr-1 shrink-0">Sort</span>
-                <select
-                  value={activeSort}
-                  onChange={e => handleSortChange(e.target.value as SortOption)}
-                  className="w-full min-w-0 border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white text-navy-950 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold-500"
-                >
-                  {SORT_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </label>
+          <div>
+            <span className="block text-xs text-gray-400 uppercase tracking-wide mb-1">Sort by:</span>
+            <div className="flex flex-wrap items-center gap-1">
+              {SORT_OPTIONS.map(opt => (
+                <PillButton
+                  key={opt.value}
+                  label={opt.label}
+                  active={activeSort === opt.value}
+                  onClick={() => handleSortChange(opt.value)}
+                />
+              ))}
             </div>
           </div>
         </div>
       </div>
 
+      <div className="px-4 py-2">
+        <p className="text-sm text-gray-500">
+          {isFirstLoad
+            ? 'Searching…'
+            : error
+              ? ' '
+              : formatResultsSummary(count, activeRole, activeLocation)}
+        </p>
+      </div>
+
       {/* RESULTS */}
       <section className="section bg-slate-50">
         <div className="container-site" ref={resultsRef} style={{ scrollMarginTop: '5rem' }}>
-          <div className="mb-8">
-            <p className="text-sm text-slate-500">
-              {isFirstLoad
-                ? 'Searching…'
-                : error
-                  ? ' '
-                  : formatResultsSummary(count, activeRole, activeLocation)}
-            </p>
-          </div>
-
           {error && (
             <div className="text-center py-16 border border-slate-200 rounded-xl bg-white">
               <p className="text-navy-950 font-semibold mb-1">Something went wrong</p>
