@@ -241,6 +241,7 @@ const stats = [
   },
 ]
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const trustPoints = [
   {
     title: 'Written by Qualified Professionals',
@@ -408,6 +409,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       body:  'EthioTax tracks your deadlines, sends annual reminders and proactively advises as your needs grow. One relationship. Complete financial support.',
     },
   ]
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const etPillars = [
     {
       id:          'tax',
@@ -538,1120 +540,692 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
       {isEthioTax ? (
         <>
-      {/* ════════════════════════════════════════════════════════════════
-          1. HERO
-          ════════════════════════════════════════════════════════════════ */}
-      <section className={`relative overflow-hidden bg-navy-950 flex items-center ${isEthioTax ? '' : 'pb-20 md:pb-28'}`}>
 
-        <div className="absolute inset-0 pointer-events-none">
-          <div
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-30"
-            style={{ background: 'radial-gradient(ellipse at center top, #3a4f9a 0%, transparent 70%)' }}
-          />
-          <div
-            className="absolute inset-0 opacity-[0.04]"
-            style={{
-              backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
-              backgroundSize: '60px 60px',
-            }}
-          />
-          <div
-            className="absolute bottom-0 right-0 w-1/2 h-1/2 opacity-10"
-            style={{ background: 'radial-gradient(ellipse at bottom right, #D4A017 0%, transparent 60%)' }}
-          />
-        </div>
+{/* ══════════════════════════════════════════════════════
+    1. HERO — two-column, services-led
+    ══════════════════════════════════════════════════════ */}
+<section className="relative overflow-hidden" style={{ background: '#1A4731' }}>
 
-        <div className="container-site relative z-10 py-20 md:py-32">
-          <div className="max-w-4xl">
+  {/* Background layers */}
+  <div className="absolute inset-0 pointer-events-none">
+    <div
+      className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-20"
+      style={{ background: 'radial-gradient(ellipse at center top, #C9982A 0%, transparent 70%)' }}
+    />
+    <div
+      className="absolute inset-0 opacity-[0.04]"
+      style={{
+        backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+        backgroundSize: '60px 60px',
+      }}
+    />
+    <div
+      className="absolute bottom-0 right-0 w-1/2 h-1/2 opacity-10"
+      style={{ background: 'radial-gradient(ellipse at bottom right, #C9982A 0%, transparent 60%)' }}
+    />
+  </div>
 
-            <p className="text-gold-400 text-xs font-semibold uppercase tracking-widest mb-7">
-              {isEthioTax ? "For the Ethiopian Community — Worldwide · አማርኛ · Afaan Oromoo" : "Professional Accounting Services · Study Platform · Trusted Since 2018"}
-            </p>
+  <div className="container-site relative z-10 py-20 md:py-32 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
-            <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.025em' }}>
-              {isEthioTax ? 'The accounting, finance' : 'Your accounting'}
-              <br />
-              <span
-                style={{
-                  background: 'linear-gradient(135deg, #D4A017 0%, #e8c050 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                {isEthioTax ? 'and talent platform' : 'education, services & talent'}
-              </span>
-              <br />
-              {isEthioTax ? 'built for Ethiopia and its diaspora.' : 'platform.'}
-            </h1>
+    {/* LEFT COLUMN */}
+    <div className="lg:col-span-1">
 
-            <p className="text-white/65 text-xl leading-relaxed mb-6 max-w-2xl">
-              {isEthioTax ? 'Study. Get expert accounting support. Specialist talent placement. One platform — for the Ethiopian community, worldwide.' : 'Study. Get expert accounting support. Specialist talent placement. One platform.'}
-            </p>
-            <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
-              {isEthioTax ? 'UK · USA · Canada · UAE · Ethiopia · Sweden · Australia' : 'Accounting Body — the only platform combining study, professional services and specialist talent placement in one place.'}
-            </p>
+      <div
+        className="inline-flex flex-wrap items-center gap-2 px-3 py-1.5 rounded-full mb-8"
+        style={{ background: 'rgba(201,152,42,0.15)', border: '1px solid rgba(201,152,42,0.3)' }}
+      >
+        <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#C9982A' }} />
+        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#C9982A' }}>
+          Professional Services · Study · Careers · አማርኛ · Afaan Oromoo
+        </span>
+      </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch gap-3 mb-4">
-              <Link
-                href="/jobs"
-                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all shadow-gold"
-                style={{ backgroundColor: '#D4A017', color: '#0C1A3D' }}
-              >
-                Find work or hire talent
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-              <Link
-                href="/get-help"
-                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-90"
-                  style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}
-              >
-                Explore our services
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </Link>
-            </div>
-            <div className="w-full sm:w-[calc(50%-6px)] mb-16">
-              {isEthioTax ? (
-                <Link
-                  href="/wa"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-80 border-2 border-white/40 text-white"
-                >
-                  Talk to us on WhatsApp
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </Link>
-              ) : (
-                <Link
-                  href="/study"
-                  className="w-full inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold transition-all hover:opacity-80 border-2 border-white/40 text-white"
-                >
-                  Start studying free
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </Link>
-              )}
-            </div>
-
-            {/* Search box */}
-            <div className="w-full mb-10">
-              <HeroSearch
-                placeholder={isEthioTax ? "Search tax guides, accounting articles, ETICPA resources…" : "Search study notes, practice questions, glossary…"}
-                popularTerms={isEthioTax
-                  ? ['ETICPA ATQ', 'VAT Ethiopia', 'Income tax', 'Trial balance', 'Cash flow']
-                  : ['Double entry', 'Financial statements', 'Cash flow', 'Depreciation', 'Trial balance']}
-              />
-            </div>
-
-            <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
-              {(isEthioTax ? [
-                { value: 'Tax & Accounting', label: 'for individuals & businesses' },
-                { value: 'Cross-Border', label: 'expertise' },
-                { value: 'Amharic & Afaan Oromoo', label: 'service available' },
-                { value: 'Global', label: 'diaspora coverage' },
-              ] : [
-                { value: '3,000+',   label: 'articles' },
-                { value: '20,000+',  label: 'practice questions' },
-                { value: 'Top Global Qualifications', label: '' },
-                { value: 'Free',     label: 'to start' },
-              ]).map(item => (
-                <div key={item.label} className="flex items-baseline gap-2">
-                  <span className="text-white font-display text-xl">{item.value}</span>
-                  <span className="text-white/40 text-sm">{item.label}</span>
-                </div>
-              ))}
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* JOBS BANNER — platform-aware
-          AB: Specialist recruitment banner → Find Work / Hire Talent
-
-      {/* JOBS SECTION v6 — platform-aware
-          Gold background — unmistakably distinct from dark hero and white insights
-          AB: #C9982A gold + navy text | ET: #C9982A gold + deep forest text
-          Gold is owned by no other section — this is the platform's statement section */}
-      <section className="relative overflow-hidden" style={{ background: '#C9982A' }}>
-
-        {/* Subtle texture */}
-        <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
+      <h1
+        className="font-display text-white mb-6 leading-[1.06]"
+        style={{ fontSize: 'clamp(2.6rem, 5vw, 4rem)', letterSpacing: '-0.025em' }}
+      >
+        Expert accounting.
+        <br />
+        <span
           style={{
-            backgroundImage: 'linear-gradient(rgba(0,0,0,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.5) 1px, transparent 1px)',
-            backgroundSize: '40px 40px',
-          }} />
+            background: 'linear-gradient(135deg, #C9982A 0%, #e8c050 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}
+        >
+          ETICPA exam practice.
+        </span>
+        <br />
+        Built for Ethiopia.
+      </h1>
 
-        {/* Dark top border */}
+      <p className="text-white/60 text-lg leading-relaxed mb-10 max-w-xl">
+        The dedicated platform for Ethiopian and diaspora accounting and finance professionals. Expert professional services, ETICPA and ACCA exam practice, and finance careers — all in one place.
+      </p>
 
-        <div className="container-site relative z-10 py-16 md:py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+      <div className="flex flex-col sm:flex-row gap-3 mb-8">
+        <Link
+          href="/get-help"
+          className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-xl text-base font-semibold transition-all hover:opacity-90"
+          style={{ backgroundColor: '#C9982A', color: '#0f2d1e' }}
+        >
+          Get expert help
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </Link>
+        <Link
+          href="/wa"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-xl text-base font-semibold transition-all hover:opacity-80 border-2 text-white"
+          style={{ borderColor: 'rgba(201,152,42,0.5)' }}
+        >
+          WhatsApp us
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </Link>
+      </div>
 
-            {/* LEFT — 6 cols */}
-            <div className="lg:col-span-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-2xl">
+        {[
+          'UK · USA · Canada · UAE · Ethiopia',
+          'ETICPA · ACCA · CIMA · AAT',
+          'Free to start studying',
+        ].map(label => (
+          <span key={label} className="flex items-center gap-1.5 text-xs font-medium text-white/50">
+            <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+            </svg>
+            {label}
+          </span>
+        ))}
+      </div>
 
-              {/* Eyebrow */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-7"
-                style={{ background: 'rgba(0,0,0,0.12)', border: '1px solid rgba(0,0,0,0.15)' }}>
-                <div className="w-1.5 h-1.5 rounded-full"
-                  style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D' }} />
-                <span className="text-xs font-bold uppercase tracking-widest"
-                  style={{ color: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
-                  {isEthioTax ? 'EthioTax Recruitment' : 'Accounting Body Recruitment'}
+    </div>
+
+    {/* RIGHT COLUMN — two equal cards */}
+    <div className="relative hidden lg:block">
+      <div className="flex flex-col gap-4">
+
+        {/* CARD 1 — Professional Services */}
+        <div
+          className="flex-1 rounded-2xl overflow-hidden border flex flex-col"
+          style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
+        >
+          <div className="px-6 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>Professional Services</p>
+            <h3 className="font-display text-white text-lg mt-1 leading-snug">Fully managed — fixed-fee proposals in 72 hours</h3>
+          </div>
+
+          <div className="flex flex-col gap-2 p-5 flex-1">
+            {[
+              { label: 'Tax & Self Assessment', desc: 'UK, US, Ethiopian ERCA and cross-border filings' },
+              { label: 'Accounting & Bookkeeping', desc: 'Monthly accounts, management reports, Xero setup' },
+              { label: 'Business Consulting', desc: 'Company formation, diaspora investment, financial modelling' },
+              { label: 'Payroll & Audit', desc: 'UK PAYE, Ethiopian payroll, ETICPA-standard audit' },
+            ].map(item => (
+              <div
+                key={item.label}
+                className="flex flex-col rounded-xl px-4 py-2.5"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+              >
+                <p className="text-white/80 text-xs font-semibold">{item.label}</p>
+                <p className="text-white/40 text-xs leading-snug mt-0.5">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="px-5 pb-5">
+            <Link
+              href="/get-help"
+              className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
+              style={{ background: '#C9982A', color: '#0f2d1e' }}
+            >
+              Get a free quote →
+            </Link>
+          </div>
+        </div>
+
+        {/* CARD 2 — Study Platform */}
+        <div
+          className="flex-1 rounded-2xl overflow-hidden border flex flex-col"
+          style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
+        >
+          <div className="px-6 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>Exam Practice</p>
+            <h3 className="font-display text-white text-lg mt-1 leading-snug">20,000+ exam-standard questions — free to start</h3>
+          </div>
+
+          <div className="flex flex-col gap-2 p-5 flex-1">
+            {[
+              { badge: 'ETICPA', badgeBg: 'bg-[#f0f7f4]', badgeText: 'text-[#1A4731]', body: "Ethiopia's national accountancy body — CPA and ATQ qualifications" },
+              { badge: 'ACCA', badgeBg: 'bg-blue-50', badgeText: 'text-[#004B8D]', body: 'All 13 papers — Applied Knowledge to Strategic Professional' },
+              { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0081C6]', body: 'Certificate to Strategic level, including Case Study prep' },
+              { badge: 'AAT', badgeBg: 'bg-teal-50', badgeText: 'text-teal-700', body: 'Level 2 Foundation through Level 4 Professional Diploma' },
+            ].map(item => (
+              <div
+                key={item.badge}
+                className="flex items-center gap-3 rounded-xl px-4 py-2.5"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+              >
+                <span className={`text-xs font-bold px-2 py-0.5 rounded shrink-0 ${item.badgeBg} ${item.badgeText}`} translate="no">
+                  {item.badge}
                 </span>
+                <p className="text-white/55 text-xs leading-snug">{item.body}</p>
               </div>
+            ))}
+          </div>
 
-              {/* Headline */}
-              <h2 className="font-display leading-[1.06] mb-6"
-                style={{
-                  fontSize: 'clamp(2.2rem, 4.5vw, 3.5rem)',
-                  letterSpacing: '-0.03em',
-                  color: isEthioTax ? '#0f2d1e' : '#0C1A3D',
-                }}>
-                {isEthioTax ? (
-                  <>Finance careers<br />
-                  <span style={{ opacity: 0.75 }}>built for Ethiopia</span><br />
-                  and its diaspora.</>
-                ) : (
-                  <>Specialist<br />
-                  <span style={{ opacity: 0.75 }}>accounting & finance</span><br />
-                  recruitment.</>
-                )}
-              </h2>
-
-              {/* Body */}
-              <p className="text-base leading-relaxed mb-8 max-w-lg"
-                style={{ color: isEthioTax ? 'rgba(15,45,30,0.75)' : 'rgba(12,26,61,0.75)' }}>
-                {isEthioTax
-                  ? <><span translate="no">ACCA</span>, <span translate="no">CIMA</span>, <span translate="no">ETICPA</span> or <span translate="no">CPA</span> qualified? We place Ethiopian finance professionals in permanent and contract roles across the UK, USA, Canada and beyond. You never deal with employers directly — we manage every step.</>
-                  : 'We place accounting and finance professionals in permanent and contract roles across the UK and internationally. Fully managed — we find the right match, negotiate on your behalf, and guarantee every placement for 90 days.'}
-              </p>
-
-              {/* Trust points */}
-              <div className="flex flex-col gap-3 mb-10">
-                {(isEthioTax ? [
-                  'Ethiopian-origin finance professionals actively placed',
-                  'ETICPA, ACCA, CIMA and CPA credentials recognised',
-                  '90-day replacement guarantee on every placement',
-                ] : [
-                  'Accounting and finance professionals',
-                  'Every candidate personally reviewed before activation',
-                  '90-day replacement guarantee on every permanent placement',
-                ]).map(point => (
-                  <div key={point} className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                      style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
-                      <svg className="w-2.5 h-2.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className="text-sm font-medium"
-                      style={{ color: isEthioTax ? 'rgba(15,45,30,0.85)' : 'rgba(12,26,61,0.85)' }}>
-                      {point}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              {/* CTAs */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Link href="/jobs/find-work"
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-7 rounded-xl min-h-[56px] text-sm font-semibold text-white transition-all hover:opacity-90 shadow-sm"
-                  style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
-                  {isEthioTax ? 'Register as a candidate' : 'Find work'}
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </Link>
-                <Link href={isEthioTax ? '/jobs/ethiopian-professionals' : '/jobs/hire-talent'}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-7 rounded-xl min-h-[56px] text-sm font-semibold transition-all hover:opacity-80 border-2"
-                  style={{
-                    borderColor: isEthioTax ? '#0f2d1e' : '#0C1A3D',
-                    color: isEthioTax ? '#0f2d1e' : '#0C1A3D',
-                    background: 'transparent',
-                  }}>
-                  {isEthioTax ? 'Ethiopian professionals' : 'Hire talent'}
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </Link>
-              </div>
-            </div>
-
-            {/* RIGHT — 6 cols — Stats card */}
-            <div className="lg:col-span-6">
-              <div className="rounded-2xl overflow-hidden"
-                style={{
-                  background: isEthioTax ? '#0f2d1e' : '#0C1A3D',
-                  boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
-                }}>
-
-                {/* Card header */}
-                <div className="px-8 pt-7 pb-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>
-                      Why {isEthioTax ? 'EthioTax' : 'Accounting Body'}
-                    </p>
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                      style={{ background: 'rgba(201,152,42,0.15)', color: '#C9982A', border: '1px solid rgba(201,152,42,0.3)' }}>
-                      Not a job board
-                    </span>
-                  </div>
-                </div>
-
-                {/* Stats grid */}
-                <div className="grid grid-cols-2">
-                  {(isEthioTax ? [
-                    { value: 'Managed',  label: 'End-to-end placement',  sub: 'You never deal with employers' },
-                    { value: '90 Days',  label: 'Replacement guarantee', sub: 'On every permanent role' },
-                    { value: '100%',     label: 'Vetted candidates',     sub: 'Every profile reviewed' },
-                    { value: 'Global',   label: 'Diaspora coverage',     sub: 'UK · USA · Canada · UAE' },
-                  ] : [
-                    { value: 'Managed',  label: 'End-to-end service',    sub: 'We handle every step' },
-                    { value: '90 Days',  label: 'Replacement guarantee', sub: 'On every permanent role' },
-                    { value: '100%',     label: 'Vetted candidates',     sub: 'Every profile reviewed' },
-                    { value: 'Finance',  label: 'Specialists only',      sub: 'Accounting, tax, audit, payroll' },
-                  ]).map((stat, i) => (
-                    <div key={stat.label} className="p-6"
-                      style={{
-                        borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none',
-                        borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none',
-                      }}>
-                      <span className="font-display text-2xl font-bold text-white block mb-1"><span translate="no">{stat.value}</span></span>
-                      <span className="text-xs font-semibold block mb-0.5" style={{ color: '#C9982A' }}>{stat.label}</span>
-                      <span className="text-xs text-white/35">{stat.sub}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Card footer */}
-                <div className="px-8 py-5 flex items-center justify-between"
-                  style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(201,152,42,0.06)' }}>
-                  <p className="text-xs text-white/40 leading-relaxed">
-                    Candidates and employers never interact directly.{' '}
-                    <span className="text-white/60 font-medium">
-                      {isEthioTax ? 'EthioTax' : 'Accounting Body'} manages every placement.
-                    </span>
-                  </p>
-                  <Link href="/jobs/how-it-works"
-                    className="text-xs font-semibold whitespace-nowrap ml-4 hover:opacity-80 transition-opacity"
-                    style={{ color: '#C9982A' }}>
-                    How it works →
-                  </Link>
-                </div>
-              </div>
-            </div>
-
+          <div className="px-5 pb-5">
+            <Link
+              href="/practice-questions"
+              className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
+              style={{ border: '1.5px solid rgba(201,152,42,0.5)', color: '#C9982A', background: 'transparent' }}
+            >
+              Start practising free →
+            </Link>
           </div>
         </div>
 
-        {/* Dark bottom border */}
-      </section>
+      </div>
+    </div>
 
+  </div>
+</section>
 
+{/* ══════════════════════════════════════════════════════
+    2. SERVICES STRIP — 4 service cards
+    ══════════════════════════════════════════════════════ */}
+<section className="bg-white border-b border-slate-100">
+  <div className="container-site py-14 md:py-20">
 
+    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+      <div>
+        <span className="eyebrow mb-2 block">Professional Services</span>
+        <h2 className="section-title">Fully managed accounting and finance services</h2>
+        <p className="text-slate-500 text-base mt-2 max-w-xl">
+          Fixed-fee proposals within 72 hours. Every engagement reviewed personally. UK, USA, Canada, UAE and Ethiopia covered.
+        </p>
+      </div>
+      <Link
+        href="/get-help"
+        className="hidden md:flex items-center gap-1.5 text-sm font-semibold whitespace-nowrap transition-colors"
+        style={{ color: '#1A4731' }}
+      >
+        View all services →
+      </Link>
+    </div>
 
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      {[
+        {
+          title: 'Tax & Self Assessment',
+          desc: 'UK Self Assessment, US returns, Ethiopian ERCA filings and cross-border treaty claims.',
+          icon: 'M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z',
+        },
+        {
+          title: 'Accounting & Bookkeeping',
+          desc: 'Monthly bookkeeping, annual accounts, management reporting and Xero setup.',
+          icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
+        },
+        {
+          title: 'Business Consulting',
+          desc: 'Company formation, business plans, diaspora investment structuring and financial modelling.',
+          icon: 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+        },
+        {
+          title: 'Payroll & Audit',
+          desc: 'UK PAYE, Ethiopian payroll withholding, pension auto-enrolment and ETICPA-standard audit.',
+          icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
+        },
+      ].map(service => (
+        <Link
+          key={service.title}
+          href="/get-help"
+          className="rounded-xl border border-slate-200 p-5 bg-white hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group cursor-pointer flex flex-col"
+        >
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 shrink-0"
+            style={{ backgroundColor: '#f0f7f4' }}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="#1A4731" strokeWidth="1.75" viewBox="0 0 24 24">
+              <path strokeLinecap="round" d={service.icon} />
+            </svg>
+          </div>
+          <h3 className="font-display text-navy-950 text-base font-semibold mb-2">{service.title}</h3>
+          <p className="text-xs text-slate-500 leading-relaxed flex-1">{service.desc}</p>
+          <div className="mt-4 pt-3 border-t border-slate-100">
+            <span className="text-xs font-semibold transition-colors" style={{ color: '#1A4731' }}>
+              Get a free quote →
+            </span>
+          </div>
+        </Link>
+      ))}
+    </div>
 
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto mt-6">
+      <Link
+        href="/get-help"
+        className="h-12 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white transition-colors w-full"
+        style={{ background: '#1A4731' }}
+      >
+        Get expert help →
+      </Link>
+      <Link
+        href="/wa"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="h-12 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-colors w-full"
+        style={{ border: '2px solid #1A4731', color: '#1A4731', background: 'transparent' }}
+      >
+        WhatsApp us
+      </Link>
+    </div>
 
+  </div>
+</section>
 
-      {/* ════════════════════════════════════════════════════════════════
-          2. LATEST INSIGHTS
-          ════════════════════════════════════════════════════════════════ */}
-      <section className={`section ${isEthioTax ? 'bg-[#f0f7f4]' : 'bg-white'}`}>
-        <div className="container-site">
+{/* ══════════════════════════════════════════════════════
+    3. WHY ETHIOTAX — existing green trust section, kept exactly as-is
+    ══════════════════════════════════════════════════════ */}
+<section className="relative overflow-hidden py-24" style={{ backgroundColor: '#1A4731' }}>
+  <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
+    style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+  <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none"
+    style={{ background: 'radial-gradient(ellipse at top right, #C9982A 0%, transparent 60%)' }} />
 
-          <div className="flex items-end justify-between mb-10 gap-4">
+  <div className="container-site relative z-10">
+    <div className="max-w-3xl mb-16">
+      <p className="text-[#C9982A] text-[11px] font-bold uppercase tracking-[0.15em] mb-4">Why EthioTax</p>
+      <h2 className="font-display text-white text-4xl md:text-5xl leading-tight mb-5" style={{ letterSpacing: '-0.02em' }}>
+        Not a directory.<br />Not a marketplace.<br />A managed service.
+      </h2>
+      <p className="text-white/55 text-lg leading-relaxed max-w-2xl">
+        EthioTax is built exclusively for the Ethiopian community — every professional vetted, every deliverable reviewed, every engagement managed end to end.
+      </p>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      {etTrustPoints.map((point) => (
+        <div key={point.title}
+          className="group relative flex flex-col rounded-2xl p-7 transition-all duration-300 hover:-translate-y-1"
+          style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div className="absolute top-0 left-7 right-7 h-[2px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{ backgroundColor: '#C9982A' }} />
+          <p className="font-display text-[48px] leading-none font-bold mb-5 opacity-20 text-white" translate="no">{point.number}</p>
+          <h3 className="font-display text-white text-[17px] font-bold mb-3 leading-snug">{point.title}</h3>
+          <p className="text-white/55 text-sm leading-relaxed flex-1 mb-6">{point.body}</p>
+          <div className="pt-5 border-t border-white/10 flex items-baseline gap-2">
+            <span className="font-display text-2xl font-bold" style={{ color: '#C9982A' }}>{point.stat}</span>
+            <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{point.statLabel}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <div className="mt-14 flex flex-col sm:flex-row items-start gap-4">
+      <Link href="/get-help"
+        className="inline-flex items-center justify-center gap-2 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+        style={{ backgroundColor: '#C9982A', color: '#1A4731', width: '280px', minHeight: '56px' }}>
+        Get a free quote
+        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </Link>
+      <Link href="/wa" target="_blank" rel="noopener noreferrer"
+        className="inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold border transition-colors hover:bg-white/10"
+        style={{ borderColor: 'rgba(255,255,255,0.25)', color: 'white', width: '280px', minHeight: '56px' }}>
+        WhatsApp us
+        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </Link>
+    </div>
+  </div>
+</section>
+
+{/* ══════════════════════════════════════════════════════
+    4. STUDY PLATFORM PILLAR — mirrors AB Practice Questions section
+    ══════════════════════════════════════════════════════ */}
+<section className="section bg-slate-50">
+  <div className="container-site">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+      {/* LEFT — content */}
+      <div>
+        <span className="eyebrow mb-3 block">Exam Practice Questions</span>
+        <h2 className="section-title mb-4">20,000+ exam-standard questions — free to start</h2>
+        <p className="text-slate-500 text-lg leading-relaxed mb-8">
+          ETICPA, ACCA, CIMA and AAT question banks. Exam-standard MCQs with instant marking and detailed explanations. Track your progress and walk into the exam room ready.
+        </p>
+
+        <div className="space-y-4">
+          {[
+            {
+              title: 'ETICPA and international qualifications covered',
+              body: "Ethiopia's national accountancy body alongside ACCA, CIMA and AAT — all in one platform.",
+              d: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+            },
+            {
+              title: 'Instant marking and detailed explanations',
+              body: 'Every question marked instantly with a full worked explanation written by qualified accountants.',
+              d: 'M13 10V3L4 14h7v7l9-11h-7z',
+            },
+            {
+              title: 'Track your progress by topic',
+              body: 'See which topics you have mastered and where you need more practice before exam day.',
+              d: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+            },
+            {
+              title: 'Free to start — no credit card required',
+              body: 'Core question banks permanently free. Study notes, practice questions and the full glossary at no cost.',
+              d: 'M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z',
+            },
+          ].map(row => (
+            <div key={row.title} className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: '#f0f7f4' }}>
+                <svg className="w-5 h-5" fill="none" stroke="#1A4731" strokeWidth="1.75" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d={row.d} />
+                </svg>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold text-navy-950 mb-0.5">{row.title}</h4>
+                <p className="text-sm text-slate-500">{row.body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 mt-10">
+          <Link
+            href="/practice-questions"
+            className="h-12 px-8 inline-flex items-center gap-2 rounded-xl text-sm font-semibold text-white transition-colors"
+            style={{ background: '#1A4731' }}
+          >
+            Start practising free →
+          </Link>
+          <Link
+            href="/study/eticpa"
+            className="h-12 px-8 inline-flex items-center gap-2 rounded-xl text-sm font-semibold transition-colors"
+            style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}
+          >
+            Explore ETICPA →
+          </Link>
+        </div>
+      </div>
+
+      {/* RIGHT — question bank card */}
+      <div className="relative">
+        <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
+
+          <div className="px-7 pt-7 pb-6" style={{ background: '#1A4731' }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#C9982A' }}>Question bank</p>
+            <p className="font-display text-white text-2xl">20,000+ questions</p>
+            <p className="text-white/50 text-sm mt-1">ETICPA · ACCA · CIMA · AAT — all in one place</p>
+          </div>
+
+          <div className="divide-y divide-slate-100">
+            {[
+              { badge: 'ETICPA', badgeBg: 'bg-[#f0f7f4]', badgeText: 'text-[#1A4731]', stats: "Ethiopia's national accountancy body — CPA and ATQ" },
+              { badge: 'ACCA', badgeBg: 'bg-blue-50', badgeText: 'text-[#004B8D]', stats: 'The global standard for accounting professionals' },
+              { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0081C6]', stats: "The world's largest management accounting body" },
+              { badge: 'AAT', badgeBg: 'bg-teal-50', badgeText: 'text-teal-700', stats: 'The practical accounting foundation qualification' },
+            ].map(row => (
+              <div key={row.badge} className="flex items-center justify-between px-7 py-4">
+                <span className={`text-xs font-bold px-2.5 py-1 rounded ${row.badgeBg} ${row.badgeText}`} translate="no">
+                  {row.badge}
+                </span>
+                <span className="text-sm text-slate-500 text-right max-w-[200px]">{row.stats}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="px-7 py-5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+            <p className="text-xs text-slate-500">Instant marking · Detailed solutions · Free to start</p>
+            <Link href="/practice-questions" className="text-xs font-semibold transition-colors" style={{ color: '#1A4731' }}>
+              Browse questions →
+            </Link>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{/* ══════════════════════════════════════════════════════
+    5. LATEST INSIGHTS
+    ══════════════════════════════════════════════════════ */}
+<section className="section" style={{ backgroundColor: '#f0f7f4' }}>
+  <div className="container-site">
+    <div className="flex items-end justify-between mb-10 gap-4">
+      <div>
+        <span className="eyebrow mb-3 block">News &amp; Insights</span>
+        <h2 className="section-title">Latest from EthioTax</h2>
+        <p className="text-slate-500 text-base leading-relaxed mt-2 max-w-xl">
+          Industry updates, tax briefs and insights for Ethiopian finance professionals and the diaspora.
+        </p>
+      </div>
+      <Link
+        href="/articles"
+        className="shrink-0 flex items-center gap-1.5 text-sm font-semibold transition-colors whitespace-nowrap"
+        style={{ color: '#1A4731' }}
+      >
+        View all
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </Link>
+    </div>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {articles.slice(0, 4).map(article => (
+        <ArticleCard key={article._id} article={article as SanityArticle} />
+      ))}
+    </div>
+
+    <div className="mt-8 text-center">
+      <Link
+        href="/articles"
+        className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold transition-colors shadow-sm text-white hover:opacity-90"
+        style={{ backgroundColor: '#1A4731' }}
+      >
+        Browse all insights
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </Link>
+    </div>
+  </div>
+</section>
+
+{/* ══════════════════════════════════════════════════════
+    6. STATS BAR
+    ══════════════════════════════════════════════════════ */}
+<section className="bg-slate-50 border-y border-slate-200">
+  <div className="container-site py-10">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+      {[
+        { value: '24hr', label: 'Response Guarantee', sublabel: 'Every inquiry, every channel' },
+        { value: '72hr', label: 'Fixed-Fee Proposal', sublabel: 'Clear scope, clear price' },
+        { value: '100%', label: 'Quality Checked', sublabel: 'Every deliverable reviewed' },
+        { value: 'Global', label: 'Diaspora Coverage', sublabel: 'UK, USA, Canada, UAE, Ethiopia & more' },
+      ].map((stat, i) => (
+        <div key={stat.label} className={`flex flex-col items-start ${i < 3 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}`}>
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: '#f0f7f4' }}>
+            <span className="text-lg font-bold" style={{ color: '#1A4731' }}>✓</span>
+          </div>
+          <span className="stat-number mb-1" style={{ color: '#1A4731' }}><span translate="no">{stat.value}</span></span>
+          <span className="text-sm font-semibold text-navy-950">{stat.label}</span>
+          <span className="text-xs text-slate-400 mt-0.5">{stat.sublabel}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+{/* ══════════════════════════════════════════════════════
+    7. TESTIMONIALS
+    ══════════════════════════════════════════════════════ */}
+<section className="section bg-white">
+  <div className="container-site">
+    <div className="max-w-2xl mb-12">
+      <span className="eyebrow mb-3 block">Client Stories</span>
+      <h2 className="section-title mb-4">What our clients say</h2>
+      <p className="text-slate-500 text-lg leading-relaxed">
+        EthioTax clients across the UK, USA and Canada share their experience.
+      </p>
+    </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {[
+        {
+          initials: 'TA',
+          name: 'Tigist A.',
+          role: 'Business owner — London, UK',
+          quote: 'EthioTax handled my UK Self Assessment quickly and professionally. They understood my situation straight away and the whole process was straightforward. I will not be going anywhere else.',
+        },
+        {
+          initials: 'DM',
+          name: 'Dawit M.',
+          role: 'Finance professional — Washington DC, USA',
+          quote: 'I needed advice on structuring a diaspora investment in Ethiopia. EthioTax provided a clear proposal within 72 hours and guided me through the entire process. Excellent service.',
+        },
+        {
+          initials: 'SG',
+          name: 'Selam G.',
+          role: 'Business owner — Toronto, Canada',
+          quote: 'Managing accounts across two countries was always complicated. EthioTax handled everything and I could communicate in Amharic throughout. Professional, reliable and highly recommended.',
+        },
+      ].map((t) => (
+        <div key={t.name} className="bg-white rounded-2xl p-8 shadow-sm flex flex-col h-full border border-slate-100" style={{ borderTop: '4px solid #C9982A' }}>
+          <div className="flex gap-1 mb-4">
+            {[1,2,3,4,5].map(s => (
+              <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
+            ))}
+          </div>
+          <div className="text-4xl font-display leading-none mb-3 opacity-40" style={{ color: '#1A4731' }} translate="no">&ldquo;</div>
+          <p className="text-gray-700 text-sm leading-relaxed mb-6 flex-1">{t.quote}</p>
+          <div className="flex items-center gap-3 pt-4" style={{ borderTop: '1px solid #e8f0eb' }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white" style={{ backgroundColor: '#1A4731' }} translate="no">{t.initials}</div>
             <div>
-              <span className={`eyebrow mb-3 block`}>
-                {isEthioTax ? 'News & Insights' : 'Latest Content'}
-              </span>
-              <h2 className="section-title">
-                {isEthioTax ? 'Latest from EthioTax' : 'Latest Insights'}
-              </h2>
-              <p className="text-slate-500 text-base leading-relaxed mt-2 max-w-xl">
-                {isEthioTax
-                  ? 'Industry updates, tax briefs and insights for Ethiopian finance professionals and the diaspora.'
-                  : 'The latest accounting news, finance briefs and study insights from our editorial team.'}
-              </p>
+              <p className="font-semibold text-gray-900 text-sm">{t.name}</p>
+              <p className="text-gray-400 text-xs">{t.role}</p>
             </div>
-            <Link
-              href="/articles"
-              className={`shrink-0 flex items-center gap-1.5 text-sm font-semibold transition-colors whitespace-nowrap ${isEthioTax ? 'text-[#1A4731] hover:text-[#C9982A]' : 'text-navy-700 hover:text-gold-500'}`}
-            >
-              View all
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+{/* ══════════════════════════════════════════════════════
+    8. QUALIFICATION PATHWAYS
+    ══════════════════════════════════════════════════════ */}
+<section className="section" style={{ backgroundColor: '#f0f7f4' }}>
+  <div className="container-site">
+    <div className="max-w-2xl mb-12">
+      <span className="eyebrow mb-3 block">Qualification Pathways</span>
+      <h2 className="section-title mb-4">Study with EthioTax — free to start</h2>
+      <p className="text-slate-500 text-lg leading-relaxed">
+        Full coverage for <span translate="no">ETICPA</span>, <span translate="no">ACCA</span>, <span translate="no">CIMA</span> and <span translate="no">AAT</span> — study notes, practice questions and mock exams.
+      </p>
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      {activeQualificationPaths.map(q => (
+        <Link
+          key={q.slug}
+          href={`/study/${q.slug}`}
+          className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+        >
+          <div className={`h-1.5 ${q.accent}`} />
+          <div className="p-6 flex flex-col flex-1">
+            <div className="flex items-start justify-between mb-4">
+              <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${q.badgeBg} ${q.badgeText}`} translate="no">{q.code}</span>
+            </div>
+            <p className="text-xs text-slate-500 mb-4 leading-relaxed flex-1">{q.description}</p>
+            <ul className="space-y-1.5 mb-5">
+              {q.highlights.map(h => (
+                <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${q.accent}`} />
+                  {h}
+                </li>
+              ))}
+            </ul>
+            <span className={`flex items-center gap-1.5 text-xs font-semibold ${q.badgeText} group-hover:gap-2.5 transition-all`} translate="no">
+              Browse {q.code} notes
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
-            </Link>
+            </span>
           </div>
+        </Link>
+      ))}
+    </div>
+    <p className="text-xs text-slate-400 border-t border-slate-100 pt-5">
+      EthioTax is an independent study platform and is not affiliated with, endorsed by, or connected to ACCA, CIMA, ETICPA, or AAT. These names are used solely to identify the qualifications our study materials are designed to support.
+    </p>
+  </div>
+</section>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {articles.slice(0, 4).map(article => (
-              <ArticleCard key={article._id} article={article as SanityArticle} />
-            ))}
-          </div>
+{/* ══════════════════════════════════════════════════════
+    9. EMAIL SIGNUP
+    ══════════════════════════════════════════════════════ */}
+<section className="section-navy section">
+  <div className="container-site relative z-10">
+    <div className="max-w-2xl mx-auto text-center">
+      <span className="eyebrow text-gold-400 mb-4 block">Stay Ahead</span>
+      <h2 className="font-display text-4xl text-white mb-4 leading-tight">
+        Tax updates, exam tips and job alerts — straight to your inbox
+      </h2>
+      <p className="text-white/65 text-lg mb-8 leading-relaxed">
+        ERCA deadlines, ETICPA news, new practice question releases and Ethiopian finance job alerts — delivered weekly. No spam, ever.
+      </p>
+      <EmailSignupForm />
+      <div className="w-full flex justify-center mt-4">
+        <p className="text-white/35 text-xs text-center">Join the EthioTax community. Unsubscribe any time.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-          <div className="mt-8 text-center">
-            <Link
-              href="/articles"
-              className={`inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold transition-colors shadow-sm ${isEthioTax ? 'text-white hover:opacity-90' : 'bg-navy-950 text-white hover:bg-navy-900'}`}
-              style={isEthioTax ? {backgroundColor: '#1A4731'} : {}}
-            >
-              {isEthioTax ? 'Browse all insights' : 'Browse all 3,000+ articles'}
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
-          </div>
+{/* ══════════════════════════════════════════════════════
+    10. BOTTOM CTA
+    ══════════════════════════════════════════════════════ */}
+<section className="bg-white border-t border-slate-200 py-8">
+  <div className="container-site">
+    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+      <div>
+        <p className="font-display text-xl text-navy-950">Ready to get started?</p>
+        <p className="text-sm text-slate-500 mt-1 max-w-sm">Get expert accounting help, study for your exams, or browse finance careers.</p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full sm:w-auto sm:min-w-[520px]">
+        <Link
+          href="/get-help"
+          className="h-11 flex items-center justify-center text-sm font-semibold rounded-xl text-white transition-colors w-full whitespace-nowrap"
+          style={{ background: '#1A4731' }}
+        >
+          Get expert help
+        </Link>
+        <Link
+          href="/practice-questions"
+          className="h-11 flex items-center justify-center text-sm font-medium rounded-xl border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors w-full whitespace-nowrap"
+        >
+          Practice questions
+        </Link>
+        <Link
+          href="/jobs/listings"
+          className="h-11 flex items-center justify-center text-sm font-medium rounded-xl border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors w-full whitespace-nowrap"
+        >
+          Browse jobs
+        </Link>
+      </div>
+    </div>
+  </div>
+</section>
 
-        </div>
-      </section>
-      {/* ════════════════════════════════════════════════════════════════
-          5. STATS BAR
-          ════════════════════════════════════════════════════════════════ */}
-      {isEthioTax ? (
-        <section className="bg-slate-50 border-y border-slate-200">
-          <div className="container-site py-10">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-              {[
-                { value: '24hr', label: 'Response Guarantee', sublabel: 'Every inquiry, every channel' },
-                { value: '72hr', label: 'Fixed-Fee Proposal', sublabel: 'Clear scope, clear price' },
-                { value: '100%', label: 'Quality Checked', sublabel: 'Every deliverable reviewed' },
-                { value: 'Global', label: 'Diaspora Coverage', sublabel: 'UK, USA, Canada, UAE, Ethiopia & more' },
-              ].map((stat, i) => (
-                <div
-                  key={stat.label}
-                  className={`flex flex-col items-start ${i < 3 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}`}
-                >
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-3" style={{backgroundColor: '#f0f7f4'}}>
-                    <span className="text-lg font-bold" style={{color: '#1A4731'}}>✓</span>
-                  </div>
-                  <span className="stat-number mb-1" style={{color: '#1A4731'}}><span translate="no">{stat.value}</span></span>
-                  <span className="text-sm font-semibold text-navy-950">{stat.label}</span>
-                  <span className="text-xs text-slate-400 mt-0.5">{stat.sublabel}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      ) : (
-        <section className="bg-slate-50 border-y border-slate-200">
-          <div className="container-site py-10">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-              {stats.map((stat, i) => (
-                <div
-                  key={stat.label}
-                  className={`flex flex-col items-start ${i < stats.length - 1 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}`}
-                >
-                  <div className="w-9 h-9 rounded-lg bg-navy-50 flex items-center justify-center text-navy-600 mb-3">
-                    {stat.icon}
-                  </div>
-                  <span className="stat-number mb-1"><span translate="no">{stat.value}</span></span>
-                  <span className="text-sm font-semibold text-navy-950">{stat.label}</span>
-                  <span className="text-xs text-slate-400 mt-0.5">{stat.sublabel}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-      {/* ════════════════════════════════════════════════════════════════
-          4. PLATFORM FEATURES
-          ════════════════════════════════════════════════════════════════ */}
-      <section className="section bg-white">
-        <div className="container-site">
-
-          {isEthioTax ? (
-            <>
-              {/* ── Section header ── */}
-              <div className="max-w-3xl mb-14">
-                <span className="eyebrow mb-3 block">What EthioTax Offers</span>
-                <h2 className="section-title mb-4">Professional services and study — everything in one place</h2>
-                <p className="text-slate-500 text-lg leading-relaxed">
-                  EthioTax delivers fully managed professional services for the Ethiopian community, and a world-class study platform for the next generation of Ethiopian finance professionals.
-                </p>
-              </div>
-
-              {/* ── Top half: Professional Services ── */}
-              <div className="mb-10">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="h-px flex-1 bg-slate-200" />
-                  <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-slate-200 bg-white">
-                    <span className="w-2 h-2 rounded-full" style={{backgroundColor: '#1A4731'}} />
-                    <span className="text-xs font-semibold uppercase tracking-widest" style={{color: '#1A4731'}}>Professional Services</span>
-                  </div>
-                  <div className="h-px flex-1 bg-slate-200" />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                  {etPillars.map((pillar) => (
-                    <Link
-                      key={pillar.id}
-                      href={pillar.href}
-                      className="group flex flex-col bg-white rounded-xl border-2 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
-                      style={{borderColor: '#1A4731'}}
-                    >
-                      <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{backgroundColor: '#1A4731'}}>
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeWidth="1.75" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <h3 className="font-display text-lg mb-2 group-hover:opacity-80 transition-colors" style={{color: '#1A4731'}}>
-                        {pillar.title}
-                      </h3>
-                      <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
-                        {pillar.description}
-                      </p>
-                      <ul className="space-y-1.5 mb-5">
-                        {pillar.highlights.map(h => (
-                          <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
-                            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{backgroundColor: '#C9982A'}} />
-                            {h}
-                          </li>
-                        ))}
-                      </ul>
-                      <span className="flex items-center gap-1.5 text-xs font-semibold group-hover:gap-2.5 transition-all" style={{color: '#1A4731'}}>
-                        Get a free quote
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                        </svg>
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-
-            </>
-          ) : (
-            <>
-              <div className="max-w-2xl mb-12">
-                <span className="eyebrow mb-3 block">The Full Platform</span>
-                <h2 className="section-title mb-4">Education and professional services, in one place</h2>
-                <p className="text-slate-500 text-lg leading-relaxed">
-                  Accounting Body combines a world-class accounting study platform with a managed professional services network. Whether you are studying for your exams or need expert accounting support — we have you covered.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {pillars.map((pillar) => (
-                  <Link
-                    key={pillar.id}
-                    href={pillar.href}
-                    className="group flex flex-col bg-white rounded-xl border-2 border-slate-200 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
-                  >
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${pillar.iconBg} ${pillar.iconColor}`}>
-                      {pillar.icon}
-                    </div>
-                    <h3 className="font-display text-lg text-navy-950 mb-2 group-hover:text-navy-700 transition-colors">
-                      {pillar.title}
-                    </h3>
-                    <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
-                      {pillar.description}
-                    </p>
-                    <ul className="space-y-1.5 mb-5">
-                      {pillar.highlights.map(h => (
-                        <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${pillar.iconBg}`} />
-                          {h}
-                        </li>
-                      ))}
-                    </ul>
-                    <span className={`flex items-center gap-1.5 text-xs font-semibold ${pillar.accentText} group-hover:gap-2.5 transition-all`}>
-                      Explore
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                      </svg>
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </>
-          )}
-
-        </div>
-      </section>
-
-
-      {/* ════════════════════════════════════════════════════════════════
-
-
-      {/* ════════════════════════════════════════════════════════════════
-          3. HOW IT WORKS
-          ════════════════════════════════════════════════════════════════ */}
-      <section className="section bg-slate-50">
-        <div className="container-site">
-
-          <div className={isEthioTax ? "max-w-2xl mb-16" : "max-w-2xl mx-auto text-center mb-16"}>
-            <span className="eyebrow mb-3 block">How It Works</span>
-            <h2 className="section-title mb-4">{isEthioTax ? 'Five steps to a managed service' : 'Three steps to exam success'}</h2>
-            <p className="text-slate-500 text-lg leading-relaxed">
-              {isEthioTax ? 'From your first inquiry to long-term financial partnership — EthioTax manages every step.' : 'From choosing your qualification to walking into the exam room with confidence.'}
-            </p>
-          </div>
-
-          <div className={`grid grid-cols-1 gap-0 ${isEthioTax ? 'md:grid-cols-5' : 'md:grid-cols-3'}`}>
-            {(isEthioTax ? etHowItWorks : howItWorks).map((step, i) => (
-              <div key={step.step} className="relative flex flex-col items-start md:items-center text-left md:text-center px-0 md:px-8">
-
-                {/* Connector line between steps */}
-                {i < (isEthioTax ? etHowItWorks : howItWorks).length - 1 && (
-                  <div className="hidden md:block absolute top-9 left-[calc(50%+2.5rem)] right-0 h-px bg-slate-200" />
-                )}
-
-                {/* Step number circle */}
-                <div className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full bg-white border-2 border-gold-500 mb-6 shadow-sm">
-                  <span className="font-display text-xl font-bold text-gold-500" translate="no">{step.step}</span>
-                </div>
-
-                <h3 className="font-display text-lg text-navy-950 mb-3">{step.title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed max-w-xs">{step.body}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-14 flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href={isEthioTax ? "/get-help" : "/study"}
-              className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors"
-            >
-              {isEthioTax ? 'Get a free quote' : 'Start your journey'}
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
-            {isEthioTax && (
-              <Link
-                href="/how-it-works"
-                className="inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold border-2 transition-colors"
-                style={{ borderColor: '#1A4731', color: '#1A4731' }}
-              >
-                See how it works
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-            )}
-          </div>
-
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════════════════
-          2. QUALIFICATION PATHWAYS
-          ════════════════════════════════════════════════════════════════ */}
-      {!isEthioTax && <section className="section bg-white">
-        <div className="container-site">
-
-          <div className="max-w-2xl mb-12">
-            <span className="eyebrow mb-3 block">Qualification Pathways</span>
-            <h2 className="section-title mb-4">Choose your qualification</h2>
-            <p className="text-slate-500 text-lg leading-relaxed">
-              Full coverage from foundation to strategic level. Select your qualification
-              to explore study notes, practice questions, and exam resources.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-            {activeQualificationPaths.map(q => (
-              <Link
-                key={q.slug}
-                href={`/study/${q.slug}`}
-                className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
-              >
-                <div className={`h-1.5 ${q.accent}`} />
-                <div className="p-6 flex flex-col flex-1">
-                  <div className="flex items-start justify-between mb-4">
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${q.badgeBg} ${q.badgeText}`}>
-                      {q.code}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 mb-4 leading-relaxed flex-1">{q.description}</p>
-                  <ul className="space-y-1.5 mb-5">
-                    {q.highlights.map(h => (
-                      <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
-                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${q.accent}`} />
-                        {h}
-                      </li>
-                    ))}
-                  </ul>
-                  <span className={`flex items-center gap-1.5 text-xs font-semibold ${q.badgeText} group-hover:gap-2.5 transition-all`}>
-                    Browse {q.code} notes
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          <p className="text-xs text-slate-400 border-t border-slate-100 pt-5">
-            Accounting Body is an independent study platform and is not affiliated with,
-            endorsed by, or connected to ACCA, CIMA, ICAEW, or AAT. These names are used
-            solely to identify the qualifications our study materials are designed to support.
-          </p>
-
-        </div>
-      </section>}
-
-
-      {/* ════════════════════════════════════════════════════════════════
-          7. TRUST & AUTHORITY
-          ════════════════════════════════════════════════════════════════ */}
-      {isEthioTax ? (
-        /* ── EthioTax: Why EthioTax ── */
-        <section className="relative overflow-hidden py-24" style={{backgroundColor: '#1A4731'}}>
-          {/* Background texture */}
-          <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
-            style={{backgroundImage: 'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)', backgroundSize: '60px 60px'}} />
-          <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none"
-            style={{background: 'radial-gradient(ellipse at top right, #C9982A 0%, transparent 60%)'}} />
-
-          <div className="container-site relative z-10">
-
-            {/* Header */}
-            <div className="max-w-3xl mb-16">
-              <p className="text-[#C9982A] text-[11px] font-bold uppercase tracking-[0.15em] mb-4">Why EthioTax</p>
-              <h2 className="font-display text-white text-4xl md:text-5xl leading-tight mb-5" style={{letterSpacing: '-0.02em'}}>
-                Not a directory.<br />Not a marketplace.<br />A managed service.
-              </h2>
-              <p className="text-white/55 text-lg leading-relaxed max-w-2xl">
-                EthioTax is built exclusively for the Ethiopian community — every professional vetted, every deliverable reviewed, every engagement managed end to end.
-              </p>
-            </div>
-
-            {/* 4 Premium Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-              {etTrustPoints.map((point) => (
-                <div key={point.title}
-                  className="group relative flex flex-col rounded-2xl p-7 transition-all duration-300 hover:-translate-y-1"
-                  style={{backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)'}}>
-
-                  {/* Gold top accent line */}
-                  <div className="absolute top-0 left-7 right-7 h-[2px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    style={{backgroundColor: '#C9982A'}} />
-
-                  {/* Number */}
-                  <p className="font-display text-[48px] leading-none font-bold mb-5 opacity-20 text-white" translate="no">
-                    {point.number}
-                  </p>
-
-                  {/* Title */}
-                  <h3 className="font-display text-white text-[17px] font-bold mb-3 leading-snug">
-                    {point.title}
-                  </h3>
-
-                  {/* Body */}
-                  <p className="text-white/55 text-sm leading-relaxed flex-1 mb-6">
-                    {point.body}
-                  </p>
-
-                  {/* Stat */}
-                  <div className="pt-5 border-t border-white/10 flex items-baseline gap-2">
-                    <span className="font-display text-2xl font-bold" style={{color: '#C9982A'}}>{point.stat}</span>
-                    <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{point.statLabel}</span>
-                  </div>
-
-                </div>
-              ))}
-            </div>
-
-            {/* Bottom CTA */}
-            <div className="mt-14 flex flex-col sm:flex-row items-start gap-4">
-              <a href="/get-help"
-                className="inline-flex items-center justify-center gap-2 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
-                style={{backgroundColor: '#C9982A', color: '#1A4731', width: '280px', minHeight: '56px', boxSizing: 'border-box', textAlign: 'center'}}>
-                Get a free quote
-                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </a>
-              <a href="/how-it-works"
-                className="inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold border transition-colors hover:bg-white/10"
-                style={{borderColor: 'rgba(255,255,255,0.25)', color: 'white', width: '280px', minHeight: '56px', boxSizing: 'border-box', textAlign: 'center'}}>
-                See how it works
-                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </a>
-            </div>
-
-          </div>
-        </section>
-      ) : (
-        /* ── AccountingBody: original section unchanged ── */
-        <section className="section bg-slate-50">
-          <div className="container-site">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-
-              <div>
-                <span className="eyebrow mb-3 block">Why Accounting Body</span>
-                <h2 className="section-title mb-6">Content you can actually trust</h2>
-                <p className="text-slate-500 text-lg leading-relaxed mb-8">
-                  The internet is full of accounting content written by people who have
-                  never sat an exam. Every piece of content on Accounting Body is written
-                  or reviewed by someone who has.
-                </p>
-                <div className="space-y-5">
-                  {trustPoints.map(point => (
-                    <div key={point.title} className="flex gap-4">
-                      <div className="w-9 h-9 rounded-lg bg-navy-50 flex items-center justify-center text-navy-700 shrink-0 mt-0.5">
-                        {point.icon}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-navy-950 mb-1 text-sm">{point.title}</h4>
-                        <p className="text-sm text-slate-500 leading-relaxed">{point.body}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="relative">
-                <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-lg">
-
-                  {/* Quote card */}
-                  <div className="bg-navy-950 p-8 relative overflow-hidden">
-                    <div
-                      className="absolute inset-0 opacity-20"
-                      style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 50%)' }}
-                    />
-                    <div className="relative z-10">
-                      <p className="text-gold-400 text-xs font-semibold uppercase tracking-widest mb-5">
-                        Student experience
-                      </p>
-                      <div className="text-gold-500 text-6xl font-display leading-none mb-2 opacity-60">&ldquo;</div>
-                      <p className="text-white text-base leading-relaxed mb-6">
-                        Accounting Body has been my go-to resource throughout my
-                        qualification journey. The study notes and practice questions
-                        are genuinely exam standard.
-                      </p>
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gold-500 flex items-center justify-center text-navy-950 text-sm font-bold shrink-0">
-                          S
-                        </div>
-                        <div>
-                          <span className="text-white text-sm font-semibold block">Sarah M.</span>
-                          <span className="text-white/50 text-xs">Professional accounting student, UK</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Stats row */}
-                  <div className="grid grid-cols-2 divide-x divide-slate-200 bg-white">
-                    <div className="p-6 flex flex-col items-center text-center">
-                      <span className="font-display text-3xl text-navy-950 leading-none mb-1">Since 2018</span>
-                      <span className="text-slate-500 text-xs font-medium">Trusted by educators</span>
-                    </div>
-                    <div className="p-6 flex flex-col items-center text-center">
-                      <span className="font-display text-3xl text-navy-950 leading-none mb-1">Top Global</span>
-                      <span className="text-slate-500 text-xs font-medium">Qualifications covered</span>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </section>
-      )}
-
-
-
-      {/* ════════════════════════════════════════════════════════════════
-          ET: TESTIMONIALS — shown after Why EthioTax on ET only
-          ════════════════════════════════════════════════════════════════ */}
-      {isEthioTax && (
-        <section className="section" style={{ backgroundColor: '#f0f7f4' }}>
-          <div className="container-site">
-            <div className="max-w-2xl mb-12">
-              <span className="eyebrow mb-3 block">Client Stories</span>
-              <h2 className="section-title mb-4">What our clients say</h2>
-              <p className="text-slate-500 text-lg leading-relaxed">
-                EthioTax clients across the UK, USA and Canada share their experience.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                {
-                  initials: 'TA',
-                  name: 'Tigist A.',
-                  role: 'Business owner — London, UK',
-                  quote: 'EthioTax handled my UK Self Assessment quickly and professionally. They understood my situation straight away and the whole process was straightforward. I will not be going anywhere else.',
-                },
-                {
-                  initials: 'DM',
-                  name: 'Dawit M.',
-                  role: 'Finance professional — Washington DC, USA',
-                  quote: 'I needed advice on structuring a diaspora investment in Ethiopia. EthioTax provided a clear proposal within 72 hours and guided me through the entire process. Excellent service.',
-                },
-                {
-                  initials: 'SG',
-                  name: 'Selam G.',
-                  role: 'Business owner — Toronto, Canada',
-                  quote: 'Managing accounts across two countries was always complicated. EthioTax handled everything and I could communicate in Amharic throughout. Professional, reliable and highly recommended.',
-                },
-              ].map((t) => (
-                <div key={t.name} className="bg-white rounded-2xl p-8 shadow-sm flex flex-col h-full" style={{borderTop: '4px solid #C9982A'}}>
-                  <div className="flex gap-1 mb-4">
-                    {[1,2,3,4,5].map(s => (
-                      <svg key={s} width="16" height="16" viewBox="0 0 16 16" fill="#C9982A"><path d="M8 1l1.8 3.6L14 5.6l-3 2.9.7 4.1L8 10.5l-3.7 2.1.7-4.1-3-2.9 4.2-.9z"/></svg>
-                    ))}
-                  </div>
-                  <div className="text-4xl font-display leading-none mb-3 opacity-40" style={{ color: '#1A4731' }} translate="no">&ldquo;</div>
-                  <p className="text-gray-700 text-sm leading-relaxed mb-6 flex-1">{t.quote}</p>
-                  <div className="flex items-center gap-3 pt-4" style={{borderTop: '1px solid #e8f0eb'}}>
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white" style={{ backgroundColor: '#1A4731' }} translate="no">{t.initials}</div>
-                    <div>
-                      <p className="font-semibold text-gray-900 text-sm">{t.name}</p>
-                      <p className="text-gray-400 text-xs">{t.role}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ════════════════════════════════════════════════════════════════
-          ET: QUALIFICATION PATHWAYS — shown after Why EthioTax on ET only
-          ════════════════════════════════════════════════════════════════ */}
-      {isEthioTax && (
-        <section className="section bg-white">
-          <div className="container-site">
-            <div className="max-w-2xl mb-12">
-              <span className="eyebrow mb-3 block">Qualification Pathways</span>
-              <h2 className="section-title mb-4">Study with EthioTax — free to start</h2>
-              <p className="text-slate-500 text-lg leading-relaxed">
-                EthioTax supports the next generation of Ethiopian finance professionals. Full coverage for <span translate="no">ETICPA</span>, <span translate="no">ACCA</span>, <span translate="no">CIMA</span> and <span translate="no">AAT</span> — study notes, practice questions and mock exams.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-              {activeQualificationPaths.map(q => (
-                <Link
-                  key={q.slug}
-                  href={`/study/${q.slug}`}
-                  className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
-                >
-                  <div className={`h-1.5 ${q.accent}`} />
-                  <div className="p-6 flex flex-col flex-1">
-                    <div className="flex items-start justify-between mb-4">
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${q.badgeBg} ${q.badgeText}`} translate="no">
-                        {q.code}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500 mb-4 leading-relaxed flex-1">{q.description}</p>
-                    <ul className="space-y-1.5 mb-5">
-                      {q.highlights.map(h => (
-                        <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${q.accent}`} />
-                          {h}
-                        </li>
-                      ))}
-                    </ul>
-                    <span className={`flex items-center gap-1.5 text-xs font-semibold ${q.badgeText} group-hover:gap-2.5 transition-all`} translate="no">
-                      Browse {q.code} notes
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                      </svg>
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-            <p className="text-xs text-slate-400 border-t border-slate-100 pt-5">
-              EthioTax is an independent study platform and is not affiliated with, endorsed by, or connected to ACCA, CIMA, ETICPA, or AAT. These names are used solely to identify the qualifications our study materials are designed to support.
-            </p>
-
-            {/* ── 3 Resource Cards ── */}
-            <div className="mt-12">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="h-px flex-1 bg-slate-200" />
-                <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-slate-200 bg-white">
-                  <span className="w-2 h-2 rounded-full" style={{backgroundColor: '#1A4731'}} />
-                  <span className="text-xs font-semibold uppercase tracking-widest" style={{color: '#1A4731'}}>Study Resources</span>
-                </div>
-                <div className="h-px flex-1 bg-slate-200" />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                <Link
-                  href="/study"
-                  className="group flex flex-col bg-white rounded-xl border-2 border-slate-200 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
-                >
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{backgroundColor: '#1A4731'}}>
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="1.75" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                    </svg>
-                  </div>
-                  <h3 className="font-display text-lg mb-2" style={{color: '#1A4731'}}>Study Notes & Resources</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
-                    Comprehensive study notes for <span translate="no">ETICPA</span>, <span translate="no">ACCA</span>, <span translate="no">CIMA</span> and <span translate="no">AAT</span> — written by qualified accountants and updated every exam sitting.
-                  </p>
-                  <ul className="space-y-1.5 mb-5">
-                    {['All qualifications covered', 'Worked examples', 'Examiner insights', 'Always free to start'].map(h => (
-                      <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
-                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{backgroundColor: '#C9982A'}} />
-                        {h}
-                      </li>
-                    ))}
-                  </ul>
-                  <span className="flex items-center gap-1.5 text-xs font-semibold group-hover:gap-2.5 transition-all" style={{color: '#1A4731'}}>
-                    Browse study notes
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </span>
-                </Link>
-                <Link
-                  href="/practice-questions"
-                  className="group flex flex-col bg-white rounded-xl border-2 border-slate-200 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
-                >
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{backgroundColor: '#1A4731'}}>
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="1.75" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                    </svg>
-                  </div>
-                  <h3 className="font-display text-lg mb-2" style={{color: '#1A4731'}}>Practice Questions</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
-                    MCQs, written tasks and full mock exams built to exam standard. Instant marking with detailed explanations for every question.
-                  </p>
-                  <ul className="space-y-1.5 mb-5">
-                    {['20,000+ questions', 'Full mock exams', 'Instant marking', 'Detailed solutions'].map(h => (
-                      <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
-                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{backgroundColor: '#C9982A'}} />
-                        {h}
-                      </li>
-                    ))}
-                  </ul>
-                  <span className="flex items-center gap-1.5 text-xs font-semibold group-hover:gap-2.5 transition-all" style={{color: '#1A4731'}}>
-                    Start practising
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </span>
-                </Link>
-                <Link
-                  href="/firms-freelancers"
-                  className="group flex flex-col bg-white rounded-xl border-2 border-slate-200 p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
-                >
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{backgroundColor: '#C9982A'}}>
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="1.75" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="font-display text-lg mb-2" style={{color: '#1A4731'}}>Join as a Provider</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed mb-4 flex-1">
-                    Are you a qualified Ethiopian-origin accounting professional? Join the EthioTax provider network and receive matched client engagements.
-                  </p>
-                  <ul className="space-y-1.5 mb-5">
-                    {['ACCA, CIMA, ETICPA, CPA welcome', 'Flexible engagements', 'Managed by EthioTax', 'Global network'].map(h => (
-                      <li key={h} className="flex items-center gap-2 text-xs text-slate-600">
-                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{backgroundColor: '#C9982A'}} />
-                        {h}
-                      </li>
-                    ))}
-                  </ul>
-                  <span className="flex items-center gap-1.5 text-xs font-semibold group-hover:gap-2.5 transition-all" style={{color: '#C9982A'}}>
-                    Apply to join
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </span>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ════════════════════════════════════════════════════════════════
-          8. EMAIL SIGNUP
-          ════════════════════════════════════════════════════════════════ */}
-      {isEthioTax ? (
-        <section className="section-navy section">
-          <div className="container-site relative z-10">
-            <div className="max-w-2xl mx-auto text-center">
-              <span className="eyebrow text-gold-400 mb-4 block">Stay Ahead</span>
-              <h2 className="font-display text-4xl text-white mb-4 leading-tight">
-                EthioTax updates, straight to your inbox
-              </h2>
-              <p className="text-white/65 text-lg mb-8 leading-relaxed">
-                Tax deadlines, <span translate="no">ERCA</span> updates, <span translate="no">ETICPA</span> news and Ethiopian business insights — delivered to your inbox. No spam, ever.
-              </p>
-              <EmailSignupForm />
-              <div className="w-full flex justify-center mt-4">
-                <p className="text-white/35 text-xs text-center">Join the EthioTax community. Unsubscribe any time.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-      ) : (
-        <EmailSignupSection />
-      )}
-
-      {/* ════════════════════════════════════════════════════════════════
-          9. BOTTOM CTA
-          ════════════════════════════════════════════════════════════════ */}
-      {isEthioTax ? (
-        <section className="bg-white border-t border-slate-200 py-8">
-          <div className="container-site">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-center sm:text-left">
-                <p className="font-display text-xl text-navy-950">Ready to get started?</p>
-                <p className="text-sm text-slate-500 mt-0.5">Talk to us today — or explore our services first.</p>
-              </div>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto shrink-0">
-                <Link
-                  href="/get-help"
-                  className="h-10 px-5 flex items-center justify-center text-sm font-medium rounded-lg border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors"
-                >
-                  Explore our services
-                </Link>
-                <Link
-                  href="/wa"
-                  className="h-10 px-5 flex items-center justify-center text-sm font-semibold rounded-lg text-white hover:opacity-90 transition-colors shadow-sm"
-                  style={{backgroundColor: '#1A4731'}}
-                >
-                  Talk to us on WhatsApp
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-      ) : (
-        <section className="bg-white border-t border-slate-200 py-8">
-          <div className="container-site">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div>
-                <p className="font-display text-xl text-navy-950">Ready to get started?</p>
-                <p className="text-sm text-slate-500 mt-0.5">Study for free — or engage our professional services team.</p>
-              </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <Link
-                  href="/get-help"
-                  className="h-10 px-5 flex items-center text-sm font-medium rounded-lg border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors whitespace-nowrap"
-                >
-                  Explore our services
-                </Link>
-                <Link
-                  href="/study"
-                  className="h-10 px-5 flex items-center text-sm font-semibold rounded-lg bg-navy-950 text-white hover:bg-navy-900 transition-colors shadow-sm whitespace-nowrap"
-                >
-                  Start studying free
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
         </>
       ) : (
         <>
