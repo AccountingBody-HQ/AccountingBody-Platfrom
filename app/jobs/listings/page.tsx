@@ -77,19 +77,29 @@ function formatResultsSummary(count: number, role: string, location: string): st
   return `${countStr} ${noun}${locationSuffix}`
 }
 
-function SearchIcon() {
-  return (
-    <svg className="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-    </svg>
-  )
-}
-
 function LocationIcon() {
   return (
     <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
       <path strokeLinecap="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  )
+}
+
+function HeroSearchIcon() {
+  return (
+    <svg className="w-4 h-4 shrink-0" viewBox="0 0 16 16" fill="none" stroke="#aaa" strokeWidth="1.5">
+      <circle cx="7" cy="7" r="5.5" />
+      <line x1="11" y1="11" x2="15" y2="15" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function HeroLocationIcon() {
+  return (
+    <svg className="w-4 h-4 shrink-0" viewBox="0 0 16 16" fill="none" stroke="#aaa" strokeWidth="1.5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8 15s5-4.5 5-8.5a5 5 0 10-10 0C3 10.5 8 15 8 15z" />
+      <circle cx="8" cy="6.5" r="1.8" />
     </svg>
   )
 }
@@ -120,7 +130,7 @@ function PillButton({
       type="button"
       onClick={onClick}
       className={[
-        'w-full rounded-[20px] p-[7px] text-[13px] text-center transition-colors cursor-pointer',
+        'w-full rounded-[20px] py-[8px] text-[12px] text-center transition-colors cursor-pointer',
         active ? activeClasses : 'bg-white text-[#444] border border-[#E0E0E0] hover:bg-gray-50',
       ].join(' ')}
     >
@@ -333,12 +343,12 @@ export default function JobListingsPage() {
             Search live accounting and finance vacancies from across the web.
           </p>
 
-          <div className="w-full bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="w-full bg-white rounded-[18px] shadow-lg overflow-hidden">
             <form onSubmit={handleSearch}>
               {/* Row 1 — desktop: role | divider | location | button */}
-              <div className="hidden md:grid md:grid-cols-[1fr_1px_1fr_auto] md:items-stretch border-b border-[#ECECEC]">
-                <div className="flex items-center gap-2 py-[14px] px-[18px]">
-                  <SearchIcon />
+              <div className="hidden md:flex md:items-stretch border-b border-[#ECECEC]">
+                <div className="flex items-center gap-2 flex-1 py-[16px] px-[18px]">
+                  <HeroSearchIcon />
                   <input
                     type="text"
                     value={roleInput}
@@ -348,9 +358,9 @@ export default function JobListingsPage() {
                     autoComplete="off"
                   />
                 </div>
-                <div className="bg-[#ECECEC] w-px" />
-                <div className="flex items-center gap-2 py-[14px] px-[18px]">
-                  <LocationIcon />
+                <div className="w-px shrink-0 bg-[#ECECEC]" />
+                <div className="flex items-center gap-2 flex-1 py-[16px] px-[18px]">
+                  <HeroLocationIcon />
                   <input
                     type="text"
                     value={locationInput}
@@ -360,10 +370,10 @@ export default function JobListingsPage() {
                     autoComplete="off"
                   />
                 </div>
-                <div className="flex items-center p-[10px]">
+                <div className="w-[130px] shrink-0 py-[10px] px-[12px]">
                   <button
                     type="submit"
-                    className="bg-[#B8862E] hover:brightness-110 text-white rounded-[10px] py-[12px] px-[28px] text-sm font-semibold whitespace-nowrap transition-all"
+                    className="w-full bg-[#B8862E] hover:brightness-110 text-white rounded-[10px] py-[12px] text-sm font-semibold transition-all"
                   >
                     Search Jobs
                   </button>
@@ -373,7 +383,7 @@ export default function JobListingsPage() {
               {/* Row 1 — mobile: stacked */}
               <div className="flex flex-col gap-3 p-4 md:hidden border-b border-[#ECECEC]">
                 <div className="flex items-center gap-2 border border-slate-200 rounded-lg px-4 py-2.5">
-                  <SearchIcon />
+                  <HeroSearchIcon />
                   <input
                     type="text"
                     value={roleInput}
@@ -384,7 +394,7 @@ export default function JobListingsPage() {
                   />
                 </div>
                 <div className="flex items-center gap-2 border border-slate-200 rounded-lg px-4 py-2.5">
-                  <LocationIcon />
+                  <HeroLocationIcon />
                   <input
                     type="text"
                     value={locationInput}
@@ -396,18 +406,18 @@ export default function JobListingsPage() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-[#B8862E] hover:brightness-110 text-white rounded-[10px] py-[12px] px-[28px] text-sm font-semibold transition-all"
+                  className="w-full bg-[#B8862E] hover:brightness-110 text-white rounded-[10px] py-[12px] px-[18px] text-sm font-semibold transition-all"
                 >
                   Search Jobs
                 </button>
               </div>
             </form>
 
-            {/* Row 2 — desktop: contract | divider | sort */}
-            <div className="hidden md:grid md:grid-cols-[1fr_1px_1fr] bg-[#FAFAFA]">
-              <div className="py-[14px] px-[18px]">
-                <span className="block text-[10px] uppercase text-[#bbb] mb-2">Contract Type</span>
-                <div className="grid grid-cols-2 gap-2">
+            {/* Row 2 — desktop: contract | divider | sort | spacer */}
+            <div className="hidden md:flex md:items-stretch bg-[#FAFAFA]">
+              <div className="flex-1 py-[14px] px-[18px]">
+                <span className="block text-[10px] uppercase text-[#bbb] font-semibold tracking-[0.08em] mb-[10px]">Contract Type</span>
+                <div className="grid grid-cols-2 gap-[6px]">
                   {CONTRACT_OPTIONS.map((opt, i) => (
                     <div key={opt.value} className={i === CONTRACT_OPTIONS.length - 1 ? 'col-span-2' : undefined}>
                       <PillButton
@@ -420,10 +430,10 @@ export default function JobListingsPage() {
                   ))}
                 </div>
               </div>
-              <div className="bg-[#ECECEC] w-px" />
-              <div className="py-[14px] px-[18px]">
-                <span className="block text-[10px] uppercase text-[#bbb] mb-2">Sort By</span>
-                <div className="grid grid-cols-3 gap-2">
+              <div className="w-px shrink-0 bg-[#ECECEC]" />
+              <div className="flex-1 py-[14px] px-[18px]">
+                <span className="block text-[10px] uppercase text-[#bbb] font-semibold tracking-[0.08em] mb-[10px]">Sort By</span>
+                <div className="grid grid-cols-3 gap-[6px]">
                   {SORT_OPTIONS.map(opt => (
                     <PillButton
                       key={opt.value}
@@ -435,13 +445,14 @@ export default function JobListingsPage() {
                   ))}
                 </div>
               </div>
+              <div className="w-[130px] shrink-0 bg-[#FAFAFA]" />
             </div>
 
             {/* Row 2 — mobile: contract, then sort */}
-            <div className="flex flex-col gap-4 p-4 md:hidden bg-[#FAFAFA]">
-              <div>
-                <span className="block text-[10px] uppercase text-[#bbb] mb-2">Contract Type</span>
-                <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col md:hidden bg-[#FAFAFA]">
+              <div className="py-[14px] px-[18px]">
+                <span className="block text-[10px] uppercase text-[#bbb] font-semibold tracking-[0.08em] mb-[10px]">Contract Type</span>
+                <div className="grid grid-cols-2 gap-[6px]">
                   {CONTRACT_OPTIONS.map((opt, i) => (
                     <div key={opt.value} className={i === CONTRACT_OPTIONS.length - 1 ? 'col-span-2' : undefined}>
                       <PillButton
@@ -454,9 +465,9 @@ export default function JobListingsPage() {
                   ))}
                 </div>
               </div>
-              <div>
-                <span className="block text-[10px] uppercase text-[#bbb] mb-2">Sort By</span>
-                <div className="grid grid-cols-3 gap-2">
+              <div className="border-t border-[#ECECEC] py-[14px] px-[18px]">
+                <span className="block text-[10px] uppercase text-[#bbb] font-semibold tracking-[0.08em] mb-[10px]">Sort By</span>
+                <div className="grid grid-cols-3 gap-[6px]">
                   {SORT_OPTIONS.map(opt => (
                     <PillButton
                       key={opt.value}
