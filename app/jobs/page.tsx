@@ -79,6 +79,7 @@ export default function JobsHubPage() {
               autoComplete="off"
             />
             <div className="hidden sm:block w-px bg-gray-200 my-3" />
+            <div className="block sm:hidden h-px w-full" style={{ background: '#E5E7EB' }} />
             <input
               type="text"
               value={location}
@@ -103,15 +104,19 @@ export default function JobsHubPage() {
           </Link>
 
           {/* STAT PILLS */}
-          <div className="flex flex-wrap gap-3 mt-10">
-            {['250,000+ live jobs', 'Updated daily', 'Accounting & finance only'].map(label => (
-              <span
-                key={label}
+          <div className="grid grid-cols-3 gap-2 w-full max-w-2xl mt-8">
+            {[
+              '250,000+ live jobs',
+              'Updated daily',
+              'Accounting & finance only',
+            ].map((pill) => (
+              <div
+                key={pill}
+                className="flex items-center justify-center rounded-full py-2 px-3 text-xs font-medium text-center"
                 style={{ border: '1px solid rgba(212,160,23,0.4)', color: gold }}
-                className="px-5 py-2 rounded-full text-sm font-medium"
               >
-                {label}
-              </span>
+                {pill}
+              </div>
             ))}
           </div>
 
@@ -276,31 +281,31 @@ export default function JobsHubPage() {
             <p className="text-slate-500 text-lg mb-8">
               Every registration and every hiring brief is reviewed personally by our team.
             </p>
-            <div className="grid grid-cols-4 gap-3 w-full max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full max-w-4xl mx-auto">
               <Link
                 href="/jobs/listings"
-                className="flex items-center justify-center rounded-xl text-sm font-semibold text-white transition-colors py-3 px-4 text-center whitespace-nowrap"
+                className="w-full flex items-center justify-center rounded-xl text-sm font-semibold text-white transition-colors py-3 px-4 text-center whitespace-nowrap"
                 style={{ background: brand }}
               >
                 Find a job
               </Link>
               <Link
                 href="/jobs/find-work"
-                className="flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-4 text-center whitespace-nowrap"
+                className="w-full flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-4 text-center whitespace-nowrap"
                 style={{ border: '2px solid #0C1A3D', color: '#0C1A3D', background: 'transparent' }}
               >
                 Register as candidate
               </Link>
               <Link
                 href="/jobs/hire-talent"
-                className="flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-4 text-center whitespace-nowrap"
+                className="w-full flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-4 text-center whitespace-nowrap"
                 style={{ border: '2px solid #0C1A3D', color: '#0C1A3D', background: 'transparent' }}
               >
                 I am looking to hire
               </Link>
               <Link
                 href="/freelancing-pathways"
-                className="flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-4 text-center whitespace-nowrap"
+                className="w-full flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-4 text-center whitespace-nowrap"
                 style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}
               >
                 Explore freelancing
