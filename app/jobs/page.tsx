@@ -17,18 +17,20 @@ export default function JobsHubPage() {
   const gold         = '#C9982A'
   const platformName = 'Accounting Body'
 
+  const [role, setRole] = useState('')
+  const [location, setLocation] = useState('')
   const router = useRouter()
-  const [roleValue, setRoleValue] = useState('')
-  const [locationValue, setLocationValue] = useState('')
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault()
-    router.push(`/jobs/listings?role=${encodeURIComponent(roleValue)}&location=${encodeURIComponent(locationValue)}`)
+  function handleSearch() {
+    const params = new URLSearchParams()
+    if (role.trim())     params.set('role', role.trim())
+    if (location.trim()) params.set('location', location.trim())
+    router.push('/jobs/listings' + (params.toString() ? '?' + params.toString() : ''))
   }
 
   const employerBullets = [
     'Pre-vetted candidates only',
-    '90-day replacement guarantee',
+    '90-day replacement guarantee on every permanent placement',
   ]
 
   const steps = [
@@ -56,109 +58,130 @@ export default function JobsHubPage() {
             style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         </div>
 
-        <div className="container-site relative z-10 text-center">
+        <div className="container-site relative z-10">
           <span className="eyebrow text-gold-400 mb-5 block">Accounting & Finance Jobs</span>
-          <h1 className="font-display text-white text-4xl md:text-5xl lg:text-6xl mb-6 leading-tight mx-auto max-w-3xl"
+          <h1 className="font-display text-white text-4xl md:text-5xl lg:text-6xl mb-6 leading-tight"
             style={{ letterSpacing: '-0.02em' }}>
             Find your next accounting or finance role
           </h1>
-          <p className="text-white/60 text-xl leading-relaxed mb-10 max-w-2xl mx-auto">
-            Browse thousands of live accounting, tax, audit and finance vacancies updated daily.
+          <p className="text-white/60 text-xl leading-relaxed mb-10 max-w-2xl">
+            Browse 250,000+ live accounting, tax, audit and finance vacancies. Updated daily, accounting and finance only.
           </p>
 
-          <form
-            onSubmit={handleSearch}
-            className="mx-auto w-full max-w-2xl bg-white rounded-xl p-2 flex flex-col sm:flex-row items-stretch gap-2 shadow-lg"
-          >
+          <div className="bg-white rounded-2xl max-w-2xl overflow-hidden flex flex-col sm:flex-row">
             <input
               type="text"
-              value={roleValue}
-              onChange={e => setRoleValue(e.target.value)}
+              value={role}
+              onChange={e => setRole(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleSearch() }}
               placeholder="Job title, role or keyword"
-              className="flex-1 h-12 px-4 rounded-lg text-sm text-navy-950 placeholder:text-slate-400 outline-none min-w-0"
+              className="flex-1 px-5 py-4 text-base border-none outline-none min-w-0"
               autoComplete="off"
             />
+            <div className="hidden sm:block w-px bg-gray-200 my-3" />
             <input
               type="text"
-              value={locationValue}
-              onChange={e => setLocationValue(e.target.value)}
+              value={location}
+              onChange={e => setLocation(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleSearch() }}
               placeholder="City or country"
-              className="flex-1 h-12 px-4 rounded-lg text-sm text-navy-950 placeholder:text-slate-400 outline-none min-w-0"
+              className="flex-1 px-5 py-4 text-base border-none outline-none min-w-0"
               autoComplete="off"
             />
             <button
-              type="submit"
-              className="h-12 px-6 rounded-lg text-sm font-semibold whitespace-nowrap transition-opacity hover:opacity-90"
+              type="button"
+              onClick={handleSearch}
               style={{ background: gold, color: brand }}
+              className="m-2 px-6 py-3 rounded-xl font-semibold text-sm whitespace-nowrap shrink-0 transition-opacity hover:opacity-90"
             >
               Search Jobs
             </button>
-          </form>
+          </div>
 
-          <Link href="/jobs/listings" className="inline-block mt-5 text-sm text-white/50 hover:text-white/80 transition-colors">
+          <Link href="/jobs/listings" className="text-white/40 text-sm mt-4 inline-block hover:text-white/70 transition-colors">
             or browse all live jobs →
           </Link>
-        </div>
-      </section>
 
-      {/* STAT PILLS */}
-      <section className="bg-white py-10">
-        <div className="container-site">
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            {['17,000+ live jobs', 'Updated daily', 'Accounting & finance only'].map(label => (
+          {/* STAT PILLS */}
+          <div className="flex flex-wrap gap-3 mt-10">
+            {['250,000+ live jobs', 'Updated daily', 'Accounting & finance only'].map(label => (
               <span
                 key={label}
-                className="inline-flex items-center rounded-full border px-5 py-2 text-sm font-medium"
-                style={{ borderColor: brand, color: gold }}
+                style={{ border: '1px solid rgba(212,160,23,0.4)', color: gold }}
+                className="px-5 py-2 rounded-full text-sm font-medium"
               >
                 {label}
               </span>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* TWO PATHS */}
-      <section className="section bg-white">
-        <div className="container-site">
-          <h2 className="section-title text-center mb-12">Two ways to find work</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {/* TWO WAYS TO FIND WORK */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-10">
 
-            {/* Card A — Browse live jobs */}
-            <div className="flex flex-col rounded-2xl p-8 border-2 bg-white" style={{ borderColor: brand }}>
-              <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-5">
-                <svg className="w-6 h-6" fill="none" stroke={brand} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M20 7h-3V5a2 2 0 00-2-2H9a2 2 0 00-2 2v2H4a1 1 0 00-1 1v11a2 2 0 002 2h14a2 2 0 002-2V8a1 1 0 00-1-1zM9 5h6v2H9V5z" />
+            {/* Card A — Browse Live Jobs */}
+            <div className="flex flex-col rounded-2xl p-8 border" style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}>
+              <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-5">
+                <svg className="w-6 h-6" fill="none" stroke={gold} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
                 </svg>
               </div>
-              <h3 className="font-display text-navy-950 text-2xl mb-3 leading-snug">Browse live jobs</h3>
-              <p className="text-slate-500 text-sm leading-relaxed mb-8 flex-1">
-                Search thousands of live accounting and finance vacancies from employers across the UK and beyond. New roles added daily.
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: gold }}>Live Vacancies</p>
+              <h2 className="font-display text-white text-2xl mb-3 leading-snug">Browse live jobs</h2>
+              <p className="text-white/50 text-sm leading-relaxed mb-6">
+                Search 250,000+ live accounting and finance vacancies from employers across the UK and beyond. New roles posted daily.
               </p>
+              <ul className="space-y-3 mb-8 flex-1">
+                {[
+                  'Accounting and finance roles only',
+                  'Updated daily from top employers',
+                  'Filter by role, location and contract type',
+                ].map(item => (
+                  <li key={item} className="flex items-center gap-3 text-sm text-white/70">
+                    <CheckIcon />
+                    {item}
+                  </li>
+                ))}
+              </ul>
               <Link
                 href="/jobs/listings"
-                className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
-                style={{ background: gold, color: brand }}
+                style={{ backgroundColor: gold, color: brand }}
+                className="mt-auto inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
               >
                 Browse jobs →
               </Link>
             </div>
 
-            {/* Card B — Managed placement */}
-            <div className="flex flex-col rounded-2xl p-8 border border-slate-200 bg-white">
-              <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-5">
-                <svg className="w-6 h-6" fill="none" stroke={brand} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h9m5-6l2 2 4-4" />
+            {/* Card B — Managed Placement */}
+            <div className="flex flex-col rounded-2xl p-8 border" style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}>
+              <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-5">
+                <svg className="w-6 h-6" fill="none" stroke={gold} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M12 11a4 4 0 100-8 4 4 0 000 8z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M17 11l2 2 4-4" />
                 </svg>
               </div>
-              <h3 className="font-display text-navy-950 text-2xl mb-3 leading-snug">Get matched by our team</h3>
-              <p className="text-slate-500 text-sm leading-relaxed mb-8 flex-1">
-                Register with us and we will personally match you to permanent or contract roles. You never deal with employers directly.
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: gold }}>Managed Service</p>
+              <h2 className="font-display text-white text-2xl mb-3 leading-snug">Get matched by our team</h2>
+              <p className="text-white/50 text-sm leading-relaxed mb-6">
+                Register with us and we will personally match you to permanent or contract roles. You never deal with employers directly. Every profile reviewed personally.
               </p>
+              <ul className="space-y-3 mb-8 flex-1">
+                {[
+                  'Permanent and contract roles',
+                  'We represent you to employers',
+                  '90-day placement guarantee',
+                ].map(item => (
+                  <li key={item} className="flex items-center gap-3 text-sm text-white/70">
+                    <CheckIcon />
+                    {item}
+                  </li>
+                ))}
+              </ul>
               <Link
                 href="/jobs/find-work"
-                className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl text-sm font-semibold border-2 transition-colors"
-                style={{ borderColor: brand, color: brand }}
+                style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}
+                className="mt-auto inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
               >
                 Register as a candidate →
               </Link>
@@ -171,29 +194,32 @@ export default function JobsHubPage() {
       {/* FOR EMPLOYERS */}
       <section className="section bg-slate-50">
         <div className="container-site">
-          <div className="bg-white border border-slate-200 rounded-2xl p-8 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div>
-              <h2 className="font-display text-navy-950 text-2xl md:text-3xl mb-4 leading-snug">Looking to hire?</h2>
-              <p className="text-slate-500 text-base leading-relaxed">
-                Tell us the role. We search our vetted candidate pool and present you with shortlisted accounting and finance professionals. Every placement carries a 90-day guarantee.
-              </p>
-            </div>
-            <div>
-              <ul className="space-y-3 mb-6">
-                {employerBullets.map(item => (
-                  <li key={item} className="flex items-center gap-3 text-sm text-navy-950">
-                    <CheckIcon color={gold} />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/jobs/hire-talent"
-                className="inline-flex items-center gap-2 h-12 px-6 rounded-xl text-sm font-semibold text-white transition-colors"
-                style={{ background: brand }}
-              >
-                Tell us your hiring need →
-              </Link>
+          <div className="rounded-2xl p-8 md:p-12 border border-slate-200 bg-white">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+              <div>
+                <span className="eyebrow mb-3 block">For Employers</span>
+                <h2 className="section-title mb-4">Looking to hire?</h2>
+                <p className="text-slate-500 leading-relaxed mb-6">
+                  Tell us the role. We search our vetted candidate pool and present shortlisted accounting and finance professionals. You only meet candidates we recommend.
+                </p>
+              </div>
+              <div>
+                <ul className="space-y-3">
+                  {employerBullets.map(item => (
+                    <li key={item} className="flex items-center gap-3 text-sm text-navy-950">
+                      <CheckIcon color={brand} />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/jobs/hire-talent"
+                  style={{ background: brand }}
+                  className="mt-6 inline-flex items-center gap-2 h-12 px-6 rounded-xl text-sm font-semibold text-white transition-colors"
+                >
+                  Tell us your hiring need →
+                </Link>
+              </div>
             </div>
           </div>
         </div>
