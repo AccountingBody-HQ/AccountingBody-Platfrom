@@ -6,7 +6,6 @@ import React from 'react'
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import EmailSignupForm from '@/components/EmailSignupForm'
-import HeroSearch from '@/components/HeroSearch'
 import HomepageJobSearch from '@/components/HomepageJobSearch'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
