@@ -268,10 +268,10 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
       { label: 'How It Works',              href: '/jobs/how-it-works' },
       { label: '90-Day Guarantee',          href: '/jobs/guarantee' },
     ] : [
+      { label: 'Browse Jobs',               href: '/jobs/listings' },
+      { label: 'Managed Recruitment',       href: '/jobs' },
       { label: 'Find Work',                 href: '/jobs/find-work' },
       { label: 'Hire Talent',               href: '/jobs/hire-talent' },
-      { label: 'How It Works',              href: '/jobs/how-it-works' },
-      { label: '90-Day Guarantee',          href: '/jobs/guarantee' },
     ],
   }
 
@@ -285,13 +285,11 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
       { label: 'All Qualifications',        href: '/study' },
       { label: 'Free Courses',              href: '/free-courses', new: true },
     ] : [
-      { label: 'ACCA Study Hub',            href: '/study/acca',    badge: 'Popular', abbr: 'ACCA' },
+      { label: 'All Qualifications',        href: '/study' },
+      { label: 'ACCA Study Hub',            href: '/study/acca', abbr: 'ACCA' },
       { label: 'CIMA Study Hub',            href: '/study/cima', abbr: 'CIMA' },
       { label: 'AAT Study Hub',             href: '/study/aat', abbr: 'AAT' },
-      { label: 'ICAEW / ACA',              href: '/study/icaew', abbr: 'ICAEW / ACA' },
-      { label: 'All Qualifications',        href: '/study' },
-      { label: 'Study Planner',             href: '/study', new: true },
-      { label: 'Free Courses',              href: '/courses', new: true },
+      { label: 'ICAEW / ACA',               href: '/study/icaew', abbr: 'ICAEW / ACA' },
     ],
   }
 
@@ -318,6 +316,26 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
       { label: 'Find an Accountant',        href: '/firms-freelancers' },
       { label: 'List Your Firm',            href: '/firms-freelancers/join' },
       { label: 'CPD Resources',             href: '/study', abbr: 'CPD' },
+    ],
+  }
+
+  const practiceQuestionsColumn: FooterColumn = {
+    title: 'Practice Questions',
+    links: [
+      { label: 'Practice Questions',        href: '/practice-questions' },
+      { label: 'Mock Exams',                href: '/mock-exams/acca' },
+      { label: 'Accounting Dictionary',     href: '/dictionary' },
+      { label: 'Accounting Glossary',       href: '/glossary' },
+    ],
+  }
+
+  const servicesColumn: FooterColumn = {
+    title: 'Services',
+    links: [
+      { label: 'Get Help',                  href: '/get-help' },
+      { label: 'Firms & Freelancers',       href: '/firms-freelancers' },
+      { label: 'Global Payroll',            href: '/global-payroll' },
+      { label: 'About Us',                  href: '/about' },
     ],
   }
 
@@ -368,7 +386,7 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
             <p className="text-sm text-white/55 leading-relaxed max-w-xs">
               {isEthioTax
                 ? 'EthioTax delivers professional accounting, tax, audit, payroll and business consulting to the Ethiopian community worldwide. Qualified professionals. Amharic and Afaan Oromoo service available.'
-                : 'Everything you need for accounting and finance in one place. Study notes, practice questions, and professional connections for ACCA, CIMA, ICAEW and AAT.'}
+                : 'The dedicated platform for accounting and finance professionals. 250,000+ live jobs, managed placement service, and 20,000+ practice questions — all in one place.'}
             </p>
 
             {/* Email signup */}
@@ -396,7 +414,7 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
 
           {/* ── Link columns ────────────────────────────────────────────── */}
           <div className="lg:col-span-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
-            {[studyColumn, jobsColumn, ...(isEthioTax ? [
+            {(isEthioTax ? [studyColumn, jobsColumn,
               {
                 title: 'Practice',
                 links: [
@@ -415,7 +433,7 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
                   { label: 'Free Calculators',       href: '/calculators' },
                 ],
               },
-            ] : footerColumns.slice(1,3)), professionalsColumn, companyColumn].map(column => (
+            professionalsColumn, companyColumn] : [jobsColumn, practiceQuestionsColumn, studyColumn, servicesColumn]).map(column => (
               <div key={column.title}>
                 <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">
                   {column.title}
@@ -464,9 +482,7 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
                 Registered in England &amp; Wales.
               </p>
               <p className="text-xs text-white/25">
-                AccountingBody is an independent educational resource. Not affiliated with,
-                endorsed by, or authorised by ACCA, CIMA, AAT, ICAEW, or any other
-                professional body. All qualification names are trademarks of their respective owners.
+                Accounting Body — jobs, placement and practice for accounting and finance professionals.
               </p>
             </div>
             <nav className="flex flex-wrap items-center gap-x-4 gap-y-1.5 shrink-0" aria-label="Legal navigation">

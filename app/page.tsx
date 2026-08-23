@@ -358,15 +358,14 @@ function EmailSignupSection() {
         <div className="max-w-2xl mx-auto text-center">
           <span className="eyebrow text-gold-400 mb-4 block">Stay Ahead</span>
           <h2 className="font-display text-4xl text-white mb-4 leading-tight">
-            Free exam tips, straight to your inbox
+            Jobs, placements and exam tips — straight to your inbox
           </h2>
           <p className="text-white/65 text-lg mb-8 leading-relaxed">
-            Weekly study tips, new question releases, and exam technique guides —
-            written by qualified accountants. No spam, ever.
+            New accounting and finance jobs, managed placement updates, and exam-standard practice question releases — delivered weekly. Written for accounting professionals. No spam, ever.
           </p>
           <EmailSignupForm />
           <div className="w-full flex justify-center mt-4">
-            <p className="text-white/35 text-xs text-center">Join accounting students and professionals. Unsubscribe any time.</p>
+            <p className="text-white/35 text-xs text-center">Join accounting and finance professionals. Unsubscribe any time.</p>
           </div>
         </div>
       </div>
@@ -1883,116 +1882,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       </section>
 
       {/* ════════════════════════════════════════════════════════════════
-          3. PRACTICE QUESTIONS PILLAR
-          ════════════════════════════════════════════════════════════════ */}
-      <section className="section bg-slate-50">
-        <div className="container-site">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-
-            {/* LEFT COLUMN */}
-            <div>
-              <span className="eyebrow mb-3 block">Practice Questions</span>
-              <h2 className="section-title mb-4">20,000+ exam-standard questions</h2>
-              <p className="text-slate-500 text-lg leading-relaxed mb-8">
-                MCQs, written tasks and full mock exams for ACCA, CIMA, AAT and ICAEW. Instant marking with detailed explanations. Track your progress and walk into the exam room ready.
-              </p>
-
-              <div className="space-y-4">
-                {[
-                  {
-                    title: 'Exam-standard questions',
-                    body: "Built to the exact standard and format of each qualification's real exams.",
-                    d: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
-                  },
-                  {
-                    title: 'Instant marking and feedback',
-                    body: 'Every question marked instantly with a full worked explanation.',
-                    d: 'M13 10V3L4 14h7v7l9-11h-7z',
-                  },
-                  {
-                    title: 'Track your progress',
-                    body: 'See which topics you have mastered and where you need more practice.',
-                    d: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
-                  },
-                  {
-                    title: 'Free to start',
-                    body: 'Core question banks permanently free. No credit card, no trial period.',
-                    d: 'M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z',
-                  },
-                ].map(row => (
-                  <div key={row.title} className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-navy-50 flex items-center justify-center text-navy-700 shrink-0">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d={row.d} />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-navy-950 mb-0.5">{row.title}</h4>
-                      <p className="text-sm text-slate-500">{row.body}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 mt-10">
-                <Link
-                  href="/practice-questions"
-                  className="h-12 px-8 inline-flex items-center gap-2 rounded-xl text-sm font-semibold text-white transition-colors"
-                  style={{ background: '#0C1A3D' }}
-                >
-                  Start practising free →
-                </Link>
-                <Link
-                  href="/mock-exams/acca"
-                  className="h-12 px-8 inline-flex items-center gap-2 rounded-xl text-sm font-semibold transition-colors"
-                  style={{ border: '2px solid #D4A017', color: '#B8860B', background: 'transparent' }}
-                >
-                  Try a mock exam →
-                </Link>
-              </div>
-            </div>
-
-            {/* RIGHT COLUMN */}
-            <div className="relative">
-              <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
-
-                <div className="bg-navy-950 px-7 pt-7 pb-6">
-                  <p className="text-xs font-bold uppercase tracking-widest text-gold-400 mb-2">Question bank</p>
-                  <p className="font-display text-white text-2xl">20,000+ questions</p>
-                  <p className="text-white/50 text-sm mt-1">Across all major accounting qualifications</p>
-                </div>
-
-                <div className="divide-y divide-slate-100">
-                  {[
-                    { badge: 'ACCA', badgeBg: 'bg-blue-50', badgeText: 'text-[#004B8D]', stats: '13 papers · 8,000+ questions' },
-                    { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0081C6]', stats: 'All levels · 5,000+ questions' },
-                    { badge: 'AAT', badgeBg: 'bg-teal-50', badgeText: 'text-teal-700', stats: 'L2–L4 · 4,000+ questions' },
-                    { badge: 'ICAEW', badgeBg: 'bg-red-50', badgeText: 'text-red-800', stats: 'ACA · 3,000+ questions' },
-                  ].map(row => (
-                    <div key={row.badge} className="flex items-center justify-between px-7 py-4">
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded ${row.badgeBg} ${row.badgeText}`} translate="no">
-                        {row.badge}
-                      </span>
-                      <span className="text-sm text-slate-500">{row.stats}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="px-7 py-5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                  <p className="text-xs text-slate-500">Instant marking · Detailed solutions · Free to start</p>
-                  <Link href="/practice-questions" className="text-xs font-semibold text-navy-700 hover:text-gold-500 transition-colors">
-                    Browse questions →
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════════════════
-          4. MANAGED RECRUITMENT
+          3. MANAGED RECRUITMENT
           ════════════════════════════════════════════════════════════════ */}
       <section className="relative overflow-hidden" style={{ background: '#C9982A' }}>
 
@@ -2167,6 +2057,116 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </div>
 
         {/* Dark bottom border */}
+      </section>
+
+
+      {/* ════════════════════════════════════════════════════════════════
+          4. PRACTICE QUESTIONS PILLAR
+          ════════════════════════════════════════════════════════════════ */}
+      <section className="section bg-slate-50">
+        <div className="container-site">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+            {/* LEFT COLUMN */}
+            <div>
+              <span className="eyebrow mb-3 block">Practice Questions</span>
+              <h2 className="section-title mb-4">20,000+ exam-standard questions</h2>
+              <p className="text-slate-500 text-lg leading-relaxed mb-8">
+                MCQs, written tasks and full mock exams for ACCA, CIMA, AAT and ICAEW. Instant marking with detailed explanations. Track your progress and walk into the exam room ready.
+              </p>
+
+              <div className="space-y-4">
+                {[
+                  {
+                    title: 'Exam-standard questions',
+                    body: "Built to the exact standard and format of each qualification's real exams.",
+                    d: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+                  },
+                  {
+                    title: 'Instant marking and feedback',
+                    body: 'Every question marked instantly with a full worked explanation.',
+                    d: 'M13 10V3L4 14h7v7l9-11h-7z',
+                  },
+                  {
+                    title: 'Track your progress',
+                    body: 'See which topics you have mastered and where you need more practice.',
+                    d: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+                  },
+                  {
+                    title: 'Free to start',
+                    body: 'Core question banks permanently free. No credit card, no trial period.',
+                    d: 'M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z',
+                  },
+                ].map(row => (
+                  <div key={row.title} className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-navy-50 flex items-center justify-center text-navy-700 shrink-0">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d={row.d} />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-navy-950 mb-0.5">{row.title}</h4>
+                      <p className="text-sm text-slate-500">{row.body}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 mt-10">
+                <Link
+                  href="/practice-questions"
+                  className="h-12 px-8 inline-flex items-center gap-2 rounded-xl text-sm font-semibold text-white transition-colors"
+                  style={{ background: '#0C1A3D' }}
+                >
+                  Start practising free →
+                </Link>
+                <Link
+                  href="/mock-exams/acca"
+                  className="h-12 px-8 inline-flex items-center gap-2 rounded-xl text-sm font-semibold transition-colors"
+                  style={{ border: '2px solid #D4A017', color: '#B8860B', background: 'transparent' }}
+                >
+                  Try a mock exam →
+                </Link>
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN */}
+            <div className="relative">
+              <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
+
+                <div className="bg-navy-950 px-7 pt-7 pb-6">
+                  <p className="text-xs font-bold uppercase tracking-widest text-gold-400 mb-2">Question bank</p>
+                  <p className="font-display text-white text-2xl">20,000+ questions</p>
+                  <p className="text-white/50 text-sm mt-1">Across all major accounting qualifications</p>
+                </div>
+
+                <div className="divide-y divide-slate-100">
+                  {[
+                    { badge: 'ACCA', badgeBg: 'bg-blue-50', badgeText: 'text-[#004B8D]', stats: '13 papers · 8,000+ questions' },
+                    { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0081C6]', stats: 'All levels · 5,000+ questions' },
+                    { badge: 'AAT', badgeBg: 'bg-teal-50', badgeText: 'text-teal-700', stats: 'L2–L4 · 4,000+ questions' },
+                    { badge: 'ICAEW', badgeBg: 'bg-red-50', badgeText: 'text-red-800', stats: 'ACA · 3,000+ questions' },
+                  ].map(row => (
+                    <div key={row.badge} className="flex items-center justify-between px-7 py-4">
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded ${row.badgeBg} ${row.badgeText}`} translate="no">
+                        {row.badge}
+                      </span>
+                      <span className="text-sm text-slate-500">{row.stats}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="px-7 py-5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                  <p className="text-xs text-slate-500">Instant marking · Detailed solutions · Free to start</p>
+                  <Link href="/practice-questions" className="text-xs font-semibold text-navy-700 hover:text-gold-500 transition-colors">
+                    Browse questions →
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </section>
 
       {/* ════════════════════════════════════════════════════════════════
@@ -2405,78 +2405,109 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           ════════════════════════════════════════════════════════════════ */}
         <section className="section bg-slate-50">
           <div className="container-site">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
-              <div>
-                <span className="eyebrow mb-3 block">Why Accounting Body</span>
-                <h2 className="section-title mb-6">Content you can actually trust</h2>
-                <p className="text-slate-500 text-lg leading-relaxed mb-8">
-                  The internet is full of accounting content written by people who have
-                  never sat an exam. Every piece of content on Accounting Body is written
-                  or reviewed by someone who has.
-                </p>
-                <div className="space-y-5">
-                  {trustPoints.map(point => (
-                    <div key={point.title} className="flex gap-4">
-                      <div className="w-9 h-9 rounded-lg bg-navy-50 flex items-center justify-center text-navy-700 shrink-0 mt-0.5">
-                        {point.icon}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-navy-950 mb-1 text-sm">{point.title}</h4>
-                        <p className="text-sm text-slate-500 leading-relaxed">{point.body}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="relative">
-                <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-lg">
-
-                  {/* Quote card */}
-                  <div className="bg-navy-950 p-8 relative overflow-hidden">
-                    <div
-                      className="absolute inset-0 opacity-20"
-                      style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 50%)' }}
-                    />
-                    <div className="relative z-10">
-                      <p className="text-gold-400 text-xs font-semibold uppercase tracking-widest mb-5">
-                        Student experience
-                      </p>
-                      <div className="text-gold-500 text-6xl font-display leading-none mb-2 opacity-60">&ldquo;</div>
-                      <p className="text-white text-base leading-relaxed mb-6">
-                        Accounting Body has been my go-to resource throughout my
-                        qualification journey. The study notes and practice questions
-                        are genuinely exam standard.
-                      </p>
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gold-500 flex items-center justify-center text-navy-950 text-sm font-bold shrink-0">
-                          S
-                        </div>
-                        <div>
-                          <span className="text-white text-sm font-semibold block">Sarah M.</span>
-                          <span className="text-white/50 text-xs">Professional accounting student, UK</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Stats row */}
-                  <div className="grid grid-cols-2 divide-x divide-slate-200 bg-white">
-                    <div className="p-6 flex flex-col items-center text-center">
-                      <span className="font-display text-3xl text-navy-950 leading-none mb-1">Since 2018</span>
-                      <span className="text-slate-500 text-xs font-medium">Trusted by educators</span>
-                    </div>
-                    <div className="p-6 flex flex-col items-center text-center">
-                      <span className="font-display text-3xl text-navy-950 leading-none mb-1">Top Global</span>
-                      <span className="text-slate-500 text-xs font-medium">Qualifications covered</span>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-
+    <div>
+      <span className="eyebrow mb-3 block">Why Accounting Body</span>
+      <h2 className="section-title mb-6">Jobs, placement and practice — built for accounting professionals</h2>
+      <p className="text-slate-500 text-lg leading-relaxed mb-8">
+        Accounting Body is the only platform combining a live job board, a fully managed placement service, and 20,000+ exam-standard practice questions — all built specifically for accounting and finance professionals.
+      </p>
+      <div className="space-y-5">
+        {[
+          {
+            title: '250,000+ live accounting and finance jobs',
+            body: 'Updated daily. Filtered to accounting and finance only — no irrelevant roles, no noise. Search by role, location and contract type.',
+            icon: (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeWidth="2" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
+              </svg>
+            ),
+          },
+          {
+            title: 'Managed placement — not just a job board',
+            body: 'Register and our team personally matches you to permanent and contract roles. You never deal with employers directly. Every placement carries a 90-day guarantee.',
+            icon: (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            ),
+          },
+          {
+            title: '20,000+ exam-standard practice questions',
+            body: 'ACCA, CIMA, AAT and ICAEW question banks. Instant marking with full worked explanations. Free to start — no credit card required.',
+            icon: (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            ),
+          },
+          {
+            title: 'Trusted since 2018',
+            body: 'Built for accounting and finance professionals from day one. Every job, every question, every placement — specific to the profession.',
+            icon: (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+              </svg>
+            ),
+          },
+        ].map(point => (
+          <div key={point.title} className="flex gap-4">
+            <div className="w-9 h-9 rounded-lg bg-navy-50 flex items-center justify-center text-navy-700 shrink-0 mt-0.5">
+              {point.icon}
             </div>
+            <div>
+              <h4 className="font-semibold text-navy-950 mb-1 text-sm">{point.title}</h4>
+              <p className="text-sm text-slate-500 leading-relaxed">{point.body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div className="relative">
+      <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-lg">
+
+        <div className="bg-navy-950 p-8 relative overflow-hidden">
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 50%)' }}
+          />
+          <div className="relative z-10">
+            <p className="text-gold-400 text-xs font-semibold uppercase tracking-widest mb-5">
+              Placed professional
+            </p>
+            <div className="text-gold-500 text-6xl font-display leading-none mb-2 opacity-60">&ldquo;</div>
+            <p className="text-white text-base leading-relaxed mb-6">
+              Accounting Body matched me to my Financial Controller role within three weeks. I never had to approach a single employer directly — the team handled everything and negotiated a salary above my target.
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-gold-500 flex items-center justify-center text-navy-950 text-sm font-bold shrink-0">
+                J
+              </div>
+              <div>
+                <span className="text-white text-sm font-semibold block">James T.</span>
+                <span className="text-white/50 text-xs">Financial Controller, placed via Accounting Body</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 divide-x divide-slate-200 bg-white">
+          <div className="p-6 flex flex-col items-center text-center">
+            <span className="font-display text-3xl text-navy-950 leading-none mb-1">90 days</span>
+            <span className="text-slate-500 text-xs font-medium">Replacement guarantee</span>
+          </div>
+          <div className="p-6 flex flex-col items-center text-center">
+            <span className="font-display text-3xl text-navy-950 leading-none mb-1">100%</span>
+            <span className="text-slate-500 text-xs font-medium">Vetted candidates</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
           </div>
         </section>
 
