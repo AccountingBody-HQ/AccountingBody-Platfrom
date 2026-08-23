@@ -95,7 +95,7 @@ export const JOBS_NAV = {
       title: 'For Professionals',
       links: [
         { label: 'Find Jobs',           href: '/jobs/listings',            description: 'Search live accounting and finance vacancies' },
-        { label: 'Find Work',           href: '/jobs/find-work',          description: 'Register with us and get matched to accounting and finance roles' },
+        { label: 'Register as a Candidate', href: '/jobs/find-work',          description: 'Register with us and get matched to accounting and finance roles' },
         { label: 'How Placement Works', href: '/jobs/how-it-works',        description: 'We manage every placement — you never deal with employers directly' },
         { label: 'Explore Freelancing',  href: '/freelancing-pathways',     description: 'New to freelancing? Discover how to build your own practice' },
       ],
