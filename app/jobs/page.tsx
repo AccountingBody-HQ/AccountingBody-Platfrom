@@ -78,8 +78,10 @@ export default function JobsHubPage() {
               className="flex-1 px-5 py-4 text-base border-none outline-none min-w-0"
               autoComplete="off"
             />
-            <div className="hidden sm:block w-px bg-gray-200 my-3" />
-            <div className="block sm:hidden h-px w-full" style={{ background: '#E5E7EB' }} />
+            <div
+              className="h-px w-full sm:h-auto sm:w-px sm:self-stretch"
+              style={{ background: '#E5E7EB', flexShrink: 0 }}
+            />
             <input
               type="text"
               value={location}
@@ -104,7 +106,7 @@ export default function JobsHubPage() {
           </Link>
 
           {/* STAT PILLS */}
-          <div className="grid grid-cols-3 gap-2 w-full max-w-2xl mt-8">
+          <div className="grid grid-cols-1 gap-2 w-full max-w-2xl mt-8">
             {[
               '250,000+ live jobs',
               'Updated daily',
