@@ -161,6 +161,35 @@ const navSections: NavSection[] = [
   },
 
   {
+    id:    'global-payroll',
+    label: 'Global Payroll',
+    href:  '/global-payroll',
+    groups: [
+      {
+        title: 'Entity & Setup',
+        links: [
+          { label: 'Entity Setup & Registration', href: '/global-payroll/entity-setup',            description: 'Incorporate and register in any jurisdiction' },
+          { label: 'Payroll Advisory',            href: '/global-payroll/payroll-advisory',        description: 'Strategic advice for global payroll operations' },
+        ],
+      },
+      {
+        title: 'Payroll Services',
+        links: [
+          { label: 'Global Payroll Management',       href: '/global-payroll/global-payroll-management', description: 'End-to-end payroll across multiple countries' },
+          { label: 'Multi-Country Payroll',           href: '/global-payroll/multi-country-payroll',     description: 'One engagement, multiple jurisdictions' },
+          { label: 'Payroll Compliance & Reporting',  href: '/global-payroll/payroll-compliance',        description: 'Every filing, every deadline, every country' },
+          { label: 'Employer of Record (EOR) Support',href: '/global-payroll/eor-support',               description: 'Local delivery partner for EOR providers' },
+        ],
+      },
+    ],
+    cta: {
+      label:       'Submit a Global Payroll Brief →',
+      href:        '/global-payroll',
+      description: 'We cover 150+ countries — any jurisdiction welcome',
+    },
+  },
+
+  {
     id:    'get-help',
     label: 'Get Help',
     href:  '/get-help',
@@ -189,35 +218,6 @@ const navSections: NavSection[] = [
       label:       'Find a Professional →',
       href:        '/get-help',
       description: 'Matched to a vetted expert within 24 hours',
-    },
-  },
-
-  {
-    id:    'global-payroll',
-    label: 'Global Payroll',
-    href:  '/global-payroll',
-    groups: [
-      {
-        title: 'Entity & Setup',
-        links: [
-          { label: 'Entity Setup & Registration', href: '/global-payroll/entity-setup',            description: 'Incorporate and register in any jurisdiction' },
-          { label: 'Payroll Advisory',            href: '/global-payroll/payroll-advisory',        description: 'Strategic advice for global payroll operations' },
-        ],
-      },
-      {
-        title: 'Payroll Services',
-        links: [
-          { label: 'Global Payroll Management',       href: '/global-payroll/global-payroll-management', description: 'End-to-end payroll across multiple countries' },
-          { label: 'Multi-Country Payroll',           href: '/global-payroll/multi-country-payroll',     description: 'One engagement, multiple jurisdictions' },
-          { label: 'Payroll Compliance & Reporting',  href: '/global-payroll/payroll-compliance',        description: 'Every filing, every deadline, every country' },
-          { label: 'Employer of Record (EOR) Support',href: '/global-payroll/eor-support',               description: 'Local delivery partner for EOR providers' },
-        ],
-      },
-    ],
-    cta: {
-      label:       'Submit a Global Payroll Brief →',
-      href:        '/global-payroll',
-      description: 'We cover 150+ countries — any jurisdiction welcome',
     },
   },
 ]
