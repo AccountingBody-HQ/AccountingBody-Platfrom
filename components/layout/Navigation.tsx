@@ -40,6 +40,127 @@ interface NavSection {
 
 const navSections: NavSection[] = [
   {
+    id:        'jobs',
+    label:     'Jobs',
+    href:      '/jobs',
+    goldPill:  true,
+    groups:    JOBS_NAV.groups,
+    cta:       JOBS_NAV.cta,
+    etGroups:  ET_JOBS_NAV.groups,
+    etCta:     ET_JOBS_NAV.cta,
+  },
+
+  {
+    id:    'practice',
+    label: 'Practice Questions',
+    href:  '/practice-questions',
+    groups: [
+      {
+        title: 'Question Types',
+        links: [
+          { label: 'MCQ Questions',     href: '/practice-questions?type=mcq',      badge: 'New', description: 'Multiple choice — 4 options, one correct answer', noTranslate: true },
+          { label: 'Scenario',          href: '/practice-questions?type=scenario',              description: 'Case-based questions with linked exhibit' },
+          { label: 'Writing',           href: '/practice-questions?type=writing',               description: 'Constructed response with model answer' },
+          { label: 'Mock Examinations', href: '/study/mock-exams',                              description: 'Full timed mock exams' },
+        ],
+      },
+      {
+        title: 'By Difficulty',
+        links: [
+          { label: 'All Questions',     href: '/practice-questions' },
+          { label: 'Beginner',          href: '/practice-questions?difficulty=beginner' },
+          { label: 'Intermediate',      href: '/practice-questions?difficulty=intermediate' },
+          { label: 'Advanced',          href: '/practice-questions?difficulty=advanced' },
+        ],
+      },
+    ],
+    cta: {
+      label:       'Start Practising Free →',
+      href:        '/practice-questions',
+      description: 'No account required',
+    },
+  },
+
+  {
+    id:    'study',
+    label: 'Study',
+    href:  '/study',
+    groups: [
+      {
+        title: 'By Qualification',
+        links: [
+          { label: 'ACCA',        href: '/study/acca',     badge: 'Popular', description: 'All 13 ACCA papers covered', noTranslate: true },
+          { label: 'CIMA',        href: '/study/cima',                        description: 'Certificate to Strategic level', noTranslate: true },
+          { label: 'AAT',         href: '/study/aat',                         description: 'Level 2, 3 and 4 coverage', noTranslate: true },
+          { label: 'ICAEW / ACA', href: '/study/icaew',                         description: 'ACA qualification pathway', noTranslate: true },
+        ],
+      },
+      {
+        title: 'By Subject',
+        links: [
+          { label: 'Financial Accounting',   href: '/study/financial-accounting' },
+          { label: 'Financial Management',   href: '/study/financial-management' },
+          { label: 'Management Accounting',  href: '/study/management-accounting' },
+          { label: 'Financial Market',       href: '/study/financial-market' },
+          { label: 'Business Management',    href: '/study/business-management' },
+          { label: 'Audit and Assurance',    href: '/study/audit-assurance' },
+          { label: 'Tax',                    href: '/study/taxation' },
+          { label: 'Economics',              href: '/study/economics' },
+          { label: 'Mock Exams',             href: '/study/mock-exams' },
+        ],
+      },
+      {
+        title: 'Free Courses',
+        links: [
+          { label: 'All Courses',             href: '/free-courses',               badge: 'New', description: 'All structured learning paths' },
+          { label: 'Beginner Courses',         href: '/free-courses?level=beginner',          description: 'Start from the foundations' },
+          { label: 'Intermediate Courses',     href: '/free-courses?level=intermediate',      description: 'Build on your knowledge' },
+          { label: 'Advanced Courses',         href: '/free-courses?level=advanced',          description: 'Master complex topics' },
+          { label: 'Professional Courses',     href: '/free-courses?level=professional',      description: 'Expert-level content' },
+        ],
+      },
+      {
+        title: 'Free Tools',
+        links: [
+          { label: 'Accounting Calculators', href: '/calculators', badge: 'New', description: '22 free calculators for students' },
+        ],
+      },
+    ],
+    featured: {
+      label:       'ACCA Study Hub',
+      href:        '/study/acca',
+      description: 'Complete ACCA study notes, question banks, and past papers for all 13 exams.',
+    },
+  },
+
+  {
+    id:    'firms',
+    label: 'Firms & Freelancers',
+    href:  '/firms-freelancers',
+    groups: [
+      {
+        title: 'Join Our Network',
+        links: [
+          { label: 'Apply to Join',      href: '/firms-freelancers/join',  description: 'Register your interest to join our verified professional network' },
+          { label: 'How It Works',       href: '/firms-freelancers',       description: 'How we match professionals with clients' },
+          { label: 'Explore Freelancing', href: '/freelancing-pathways',    description: 'New to freelancing? Discover how to build your own practice' },
+        ],
+      },
+      {
+        title: 'Need Accounting Help?',
+        links: [
+          { label: 'Get Matched to an Expert', href: '/get-help', description: 'Submit a request and we will find the right professional for you' },
+        ],
+      },
+    ],
+    cta: {
+      label:       'Apply to Join Our Network →',
+      href:        '/firms-freelancers/join',
+      description: 'Verified professionals only — we review every application',
+    },
+  },
+
+  {
     id:    'get-help',
     label: 'Get Help',
     href:  '/get-help',
@@ -98,126 +219,6 @@ const navSections: NavSection[] = [
       href:        '/global-payroll',
       description: 'We cover 150+ countries — any jurisdiction welcome',
     },
-  },
-
-  {
-    id:    'study',
-    label: 'Study',
-    href:  '/study',
-    groups: [
-      {
-        title: 'By Qualification',
-        links: [
-          { label: 'ACCA',        href: '/study/acca',     badge: 'Popular', description: 'All 13 ACCA papers covered', noTranslate: true },
-          { label: 'CIMA',        href: '/study/cima',                        description: 'Certificate to Strategic level', noTranslate: true },
-          { label: 'AAT',         href: '/study/aat',                         description: 'Level 2, 3 and 4 coverage', noTranslate: true },
-          { label: 'ICAEW / ACA', href: '/study/icaew',                         description: 'ACA qualification pathway', noTranslate: true },
-        ],
-      },
-      {
-        title: 'By Subject',
-        links: [
-          { label: 'Financial Accounting',   href: '/study/financial-accounting' },
-          { label: 'Financial Management',   href: '/study/financial-management' },
-          { label: 'Management Accounting',  href: '/study/management-accounting' },
-          { label: 'Financial Market',       href: '/study/financial-market' },
-          { label: 'Business Management',    href: '/study/business-management' },
-          { label: 'Audit and Assurance',    href: '/study/audit-assurance' },
-          { label: 'Tax',                    href: '/study/taxation' },
-          { label: 'Economics',              href: '/study/economics' },
-          { label: 'Mock Exams',             href: '/study/mock-exams' },
-        ],
-      },
-      {
-        title: 'Free Courses',
-        links: [
-          { label: 'All Courses',             href: '/free-courses',               badge: 'New', description: 'All structured learning paths' },
-          { label: 'Beginner Courses',         href: '/free-courses?level=beginner',          description: 'Start from the foundations' },
-          { label: 'Intermediate Courses',     href: '/free-courses?level=intermediate',      description: 'Build on your knowledge' },
-          { label: 'Advanced Courses',         href: '/free-courses?level=advanced',          description: 'Master complex topics' },
-          { label: 'Professional Courses',     href: '/free-courses?level=professional',      description: 'Expert-level content' },
-        ],
-      },
-      {
-        title: 'Free Tools',
-        links: [
-          { label: 'Accounting Calculators', href: '/calculators', badge: 'New', description: '22 free calculators for students' },
-        ],
-      },
-    ],
-    featured: {
-      label:       'ACCA Study Hub',
-      href:        '/study/acca',
-      description: 'Complete ACCA study notes, question banks, and past papers for all 13 exams.',
-    },
-  },
-  {
-    id:    'practice',
-    label: 'Practice Questions',
-    href:  '/practice-questions',
-    groups: [
-      {
-        title: 'Question Types',
-        links: [
-          { label: 'MCQ Questions',     href: '/practice-questions?type=mcq',      badge: 'New', description: 'Multiple choice — 4 options, one correct answer', noTranslate: true },
-          { label: 'Scenario',          href: '/practice-questions?type=scenario',              description: 'Case-based questions with linked exhibit' },
-          { label: 'Writing',           href: '/practice-questions?type=writing',               description: 'Constructed response with model answer' },
-          { label: 'Mock Examinations', href: '/study/mock-exams',                              description: 'Full timed mock exams' },
-        ],
-      },
-      {
-        title: 'By Difficulty',
-        links: [
-          { label: 'All Questions',     href: '/practice-questions' },
-          { label: 'Beginner',          href: '/practice-questions?difficulty=beginner' },
-          { label: 'Intermediate',      href: '/practice-questions?difficulty=intermediate' },
-          { label: 'Advanced',          href: '/practice-questions?difficulty=advanced' },
-        ],
-      },
-    ],
-    cta: {
-      label:       'Start Practising Free →',
-      href:        '/practice-questions',
-      description: 'No account required',
-    },
-  },
-
-  {
-    id:    'firms',
-    label: 'Firms & Freelancers',
-    href:  '/firms-freelancers',
-    groups: [
-      {
-        title: 'Join Our Network',
-        links: [
-          { label: 'Apply to Join',      href: '/firms-freelancers/join',  description: 'Register your interest to join our verified professional network' },
-          { label: 'How It Works',       href: '/firms-freelancers',       description: 'How we match professionals with clients' },
-          { label: 'Explore Freelancing', href: '/freelancing-pathways',    description: 'New to freelancing? Discover how to build your own practice' },
-        ],
-      },
-      {
-        title: 'Need Accounting Help?',
-        links: [
-          { label: 'Get Matched to an Expert', href: '/get-help', description: 'Submit a request and we will find the right professional for you' },
-        ],
-      },
-    ],
-    cta: {
-      label:       'Apply to Join Our Network →',
-      href:        '/firms-freelancers/join',
-      description: 'Verified professionals only — we review every application',
-    },
-  },
-
-  {
-    id:        'jobs',
-    label:     'Jobs',
-    href:      '/jobs',
-    goldPill:  true,
-    groups:    JOBS_NAV.groups,
-    cta:       JOBS_NAV.cta,
-    etGroups:  ET_JOBS_NAV.groups,
-    etCta:     ET_JOBS_NAV.cta,
   },
 ]
 
