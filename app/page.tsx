@@ -1437,42 +1437,43 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {[
-              { title: 'Financial Controller', salary: '£65,000–£80,000', company: 'Barclays', location: 'London, UK', type: 'Permanent' },
-              { title: 'Management Accountant', salary: '£45,000–£55,000', company: 'KPMG', location: 'Manchester, UK', type: 'Permanent' },
-              { title: 'Tax Manager', salary: '£60,000–£75,000', company: 'Deloitte', location: 'Birmingham, UK', type: 'Contract' },
+              {
+                title: 'Financial Accountant',
+                descriptor: 'Permanent and contract roles across industry and practice',
+                slug: 'financial+accountant',
+              },
+              {
+                title: 'Management Accountant',
+                descriptor: 'Industry and practice roles from part-qualified to senior level',
+                slug: 'management+accountant',
+              },
+              {
+                title: 'Tax Manager',
+                descriptor: 'In-house and practice tax roles across all sectors and geographies',
+                slug: 'tax+manager',
+              },
             ].map(job => (
               <Link
                 key={job.title}
-                href="/jobs/listings"
-                className="rounded-xl border border-slate-200 p-5 bg-white hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group cursor-pointer"
+                href={`/jobs/listings?role=${job.slug}`}
+                className="rounded-xl border border-slate-200 p-5 bg-white hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group cursor-pointer flex flex-col"
               >
-                <div className="flex justify-between items-start gap-3">
-                  <span className="font-display text-navy-950 text-base font-semibold">{job.title}</span>
-                  <span
-                    className="text-xs font-semibold text-white px-2.5 py-1 rounded-full shrink-0 whitespace-nowrap"
-                    style={{ background: '#D4A017' }}
-                  >
-                    {job.salary}
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <span className="font-display text-navy-950 text-base font-semibold leading-snug">{job.title}</span>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 whitespace-nowrap bg-slate-100 text-slate-600">
+                    Accounting &amp; Finance
                   </span>
                 </div>
-                <p className="text-sm text-gold-600 font-medium mt-1">{job.company}</p>
-                <div className="flex gap-3 mt-2">
-                  <span className="flex items-center gap-1 text-xs text-slate-400">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {job.location}
-                  </span>
-                  <span className="flex items-center gap-1 text-xs text-slate-400">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeWidth="2" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
-                    </svg>
-                    {job.type}
-                  </span>
+                <p className="text-sm text-slate-500 leading-relaxed flex-1">{job.descriptor}</p>
+                <div className="flex items-center gap-1.5 mt-4">
+                  <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="text-xs text-slate-400">Global</span>
                 </div>
                 <div className="mt-4 pt-3 border-t border-slate-100">
                   <span className="text-xs font-semibold text-navy-700 group-hover:text-gold-500 transition-colors">
-                    View role →
+                    Search roles →
                   </span>
                 </div>
               </Link>
