@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
+import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 
 export const metadata: Metadata = {
   title:       'Professional Network | Firms & Freelancers',
@@ -276,125 +277,7 @@ export default async function FirmsFreelancersPage() {
         </div>
       </section>
 
-      {/* JOBS CROSS-LINK — gold homepage design */}
-      <section className="relative overflow-hidden" style={{ background: '#C9982A' }}>
-        <div className="absolute inset-0 opacity-[0.06] pointer-events-none"
-          style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-        <div className="container-site relative z-10 py-16 md:py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-
-            {/* LEFT */}
-            <div className="lg:col-span-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-7"
-                style={{ background: 'rgba(0,0,0,0.12)', border: '1px solid rgba(0,0,0,0.15)' }}>
-                <div className="w-1.5 h-1.5 rounded-full" style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D' }} />
-                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
-                  {isEthioTax ? 'EthioTax Recruitment' : 'Accounting Body Recruitment'}
-                </span>
-              </div>
-              <h2 className="font-display leading-[1.06] mb-6"
-                style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', letterSpacing: '-0.03em', color: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
-                {isEthioTax ? (
-                  <>Two ways to work with us.<br /><span style={{ opacity: 0.7 }}>Hire talent or</span><br />find your next role.</>
-                ) : (
-                  <>Two ways to work with us.<br /><span style={{ opacity: 0.7 }}>Hire talent or</span><br />find your next role.</>
-                )}
-              </h2>
-              <p className="text-base leading-relaxed mb-8 max-w-lg"
-                style={{ color: isEthioTax ? 'rgba(15,45,30,0.75)' : 'rgba(12,26,61,0.75)' }}>
-                {isEthioTax
-                  ? 'Firms and consultancies — submit a hiring brief and we will find the right Ethiopian finance professional for your team. Independent professionals and freelancers — register as a candidate and we will match you to suitable contract or permanent opportunities. We manage both sides.'
-                  : 'Firms and consultancies — submit a hiring brief and we will find the right accounting or finance professional for your team. Independent professionals and freelancers — register as a candidate and we will match you to suitable contract or permanent opportunities. We manage both sides.'}
-              </p>
-              <div className="flex flex-col gap-3 mb-10">
-                {(isEthioTax ? [
-                  'Firms: submit a brief, we find the right Ethiopian finance professional',
-                  'Freelancers: register once, we match you to opportunities',
-                  '90-day replacement guarantee on every permanent placement',
-                ] : [
-                  'Firms: submit a brief, we find the right candidate for your team',
-                  'Freelancers: register once, we match you to suitable opportunities',
-                  '90-day replacement guarantee on every permanent placement',
-                ]).map(point => (
-                  <div key={point} className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                      style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
-                      <svg className="w-2.5 h-2.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className="text-sm font-medium" style={{ color: isEthioTax ? 'rgba(15,45,30,0.85)' : 'rgba(12,26,61,0.85)' }}>
-                      {point}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Link href="/jobs/find-work"
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-7 rounded-xl min-h-[56px] text-sm font-semibold text-white transition-all hover:opacity-90 shadow-sm"
-                  style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
-                  Register as a Candidate
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                </Link>
-                <Link href="/jobs/how-it-works"
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-7 rounded-xl min-h-[56px] text-sm font-semibold transition-all hover:opacity-80 border-2"
-                  style={{ borderColor: isEthioTax ? '#0f2d1e' : '#0C1A3D', color: isEthioTax ? '#0f2d1e' : '#0C1A3D', background: 'transparent' }}>
-                  How it works
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                </Link>
-              </div>
-            </div>
-
-            {/* RIGHT — dark stats card */}
-            <div className="lg:col-span-6">
-              <div className="rounded-2xl overflow-hidden"
-                style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
-                <div className="px-8 pt-7 pb-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>
-                      Why {isEthioTax ? 'EthioTax' : 'Accounting Body'}
-                    </p>
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                      style={{ background: 'rgba(201,152,42,0.15)', color: '#C9982A', border: '1px solid rgba(201,152,42,0.3)' }}>
-                      Not a job board
-                    </span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2">
-                  {[
-                    { value: 'Managed',  label: 'End-to-end placement',  sub: 'We handle every step' },
-                    { value: '90 Days',  label: 'Replacement guarantee', sub: 'On every permanent role' },
-                    { value: '100%',     label: 'Vetted candidates',     sub: 'Every profile reviewed' },
-                    { value: 'Separate', label: 'From network membership', sub: 'One profile — two opportunities' },
-                  ].map((stat, i) => (
-                    <div key={stat.label} className="p-6"
-                      style={{
-                        borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none',
-                        borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none',
-                      }}>
-                      <span className="font-display text-2xl font-bold text-white block mb-1"><span translate="no">{stat.value}</span></span>
-                      <span className="text-xs font-semibold block mb-0.5" style={{ color: '#C9982A' }}>{stat.label}</span>
-                      <span className="text-xs text-white/35">{stat.sub}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="px-8 py-5 flex items-center justify-between"
-                  style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(201,152,42,0.06)' }}>
-                  <p className="text-xs text-white/40 leading-relaxed">
-                    Your profile is never made public.{' '}
-                    <span className="text-white/60 font-medium">We contact you only when a role matches.</span>
-                  </p>
-                  <Link href="/jobs" className="text-xs font-semibold whitespace-nowrap ml-4 hover:opacity-80 transition-opacity"
-                    style={{ color: '#C9982A' }}>
-                    Learn more →
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
+      <JobsRecruitmentSection isEthioTax={isEthioTax} />
 
 
 
