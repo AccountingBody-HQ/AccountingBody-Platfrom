@@ -266,7 +266,46 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
             {/* ── Sidebar ─────────────────────────────────────────────────── */}
             <aside className="lg:sticky lg:top-24 space-y-6">
 
-              {/* Jobs CTA — top of sidebar */}
+              {/* Article details */}
+              <div className="bg-slate-50 rounded-xl border border-slate-200 p-5">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">
+                  Article details
+                </p>
+                <dl className="space-y-3">
+                  {article.examBody?.length && (
+                    <div className="flex justify-between items-start text-sm gap-2" translate="no">
+                      <dt className="text-slate-500 shrink-0">Qualification</dt>
+                      <dd className="flex flex-wrap gap-1 justify-end" translate="no">
+                        {article.examBody.map((body: string) => {
+                          const cls = EXAM_BODY_BADGE[body.toUpperCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200'
+                          return <span key={body} className={`text-xs font-bold px-2 py-0.5 rounded-md border ${cls}`} translate="no">{body.toUpperCase()}</span>
+                        })}
+                      </dd>
+                    </div>
+                  )}
+                  {article.category && (
+                    <div className="flex justify-between text-sm">
+                      <dt className="text-slate-500">Subject</dt>
+                      <dd className="text-navy-950 font-medium">{article.category.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}</dd>
+                    </div>
+                  )}
+                  {article.readTime && (
+                    <div className="flex justify-between text-sm">
+                      <dt className="text-slate-500">Read time</dt>
+                      <dd className="text-navy-950 font-medium">{article.readTime} minutes</dd>
+                    </div>
+                  )}
+
+                  {formattedReviewed && (
+                    <div className="flex justify-between text-sm">
+                      <dt className="text-slate-500">Reviewed</dt>
+                      <dd className="text-teal-700 font-medium">{formattedReviewed}</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+
+              {/* Jobs CTA */}
               {(() => {
                 const categorySlug = article.category?.toLowerCase().replace(/\s+/g, '-') ?? ''
                 const roleMap: Record<string, string> = {
@@ -311,45 +350,6 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                   </div>
                 )
               })()}
-
-              {/* Article details */}
-              <div className="bg-slate-50 rounded-xl border border-slate-200 p-5">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">
-                  Article details
-                </p>
-                <dl className="space-y-3">
-                  {article.examBody?.length && (
-                    <div className="flex justify-between items-start text-sm gap-2" translate="no">
-                      <dt className="text-slate-500 shrink-0">Qualification</dt>
-                      <dd className="flex flex-wrap gap-1 justify-end" translate="no">
-                        {article.examBody.map((body: string) => {
-                          const cls = EXAM_BODY_BADGE[body.toUpperCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200'
-                          return <span key={body} className={`text-xs font-bold px-2 py-0.5 rounded-md border ${cls}`} translate="no">{body.toUpperCase()}</span>
-                        })}
-                      </dd>
-                    </div>
-                  )}
-                  {article.category && (
-                    <div className="flex justify-between text-sm">
-                      <dt className="text-slate-500">Subject</dt>
-                      <dd className="text-navy-950 font-medium">{article.category.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}</dd>
-                    </div>
-                  )}
-                  {article.readTime && (
-                    <div className="flex justify-between text-sm">
-                      <dt className="text-slate-500">Read time</dt>
-                      <dd className="text-navy-950 font-medium">{article.readTime} minutes</dd>
-                    </div>
-                  )}
-
-                  {formattedReviewed && (
-                    <div className="flex justify-between text-sm">
-                      <dt className="text-slate-500">Reviewed</dt>
-                      <dd className="text-teal-700 font-medium">{formattedReviewed}</dd>
-                    </div>
-                  )}
-                </dl>
-              </div>
 
               {/* Practice questions CTA — dynamic */}
               <div className="bg-navy-950 rounded-xl p-5 relative overflow-hidden">
