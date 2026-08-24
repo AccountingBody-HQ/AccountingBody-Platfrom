@@ -330,21 +330,26 @@ export default async function GetHelpPage() {
             <p className="text-white/60 text-xl leading-relaxed mb-10 max-w-2xl">
               Accounting Body delivers professional accounting, tax, audit, and advisory services through our managed network of verified specialists.
             </p>
-            <div className="flex flex-col sm:flex-row items-stretch gap-3">
+            <div className="flex flex-col sm:grid sm:grid-cols-2 gap-3">
               <a href="#services"
-                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 text-sm font-semibold rounded-lg transition-all shadow-gold"
+                className="inline-flex items-center justify-center gap-2 h-13 px-7 text-sm font-semibold rounded-lg transition-all shadow-gold"
                 style={{ backgroundColor: '#D4A017', color: '#0C1A3D' }}>
                 View all services
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </a>
-              <a href="/jobs/hire-talent"
-                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 text-sm font-semibold rounded-lg transition-all hover:opacity-90 whitespace-nowrap"
+              <a href="/jobs/listings"
+                className="inline-flex items-center justify-center gap-2 h-13 px-7 text-sm font-semibold rounded-lg transition-all hover:opacity-90 whitespace-nowrap"
                 style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}>
+                Browse jobs
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+              </a>
+              <a href="/jobs/hire-talent"
+                className="inline-flex items-center justify-center gap-2 h-13 px-7 text-sm font-semibold rounded-lg transition-all hover:opacity-80 border-2 border-white/40 text-white whitespace-nowrap">
                 Submit a hiring brief
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </a>
               <a href="/jobs/find-work"
-                className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 text-sm font-semibold rounded-lg transition-all hover:opacity-80 border-2 border-white/40 text-white whitespace-nowrap">
+                className="inline-flex items-center justify-center gap-2 h-13 px-7 text-sm font-semibold rounded-lg transition-all hover:opacity-80 border-2 border-white/40 text-white whitespace-nowrap">
                 Register as a Candidate
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </a>
