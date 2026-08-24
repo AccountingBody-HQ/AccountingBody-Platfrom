@@ -345,7 +345,7 @@ export default async function GetHelpPage() {
               </a>
               <a href="/jobs/find-work"
                 className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 text-sm font-semibold rounded-lg transition-all hover:opacity-80 border-2 border-white/40 text-white whitespace-nowrap">
-                Find work
+                Register as a Candidate
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </a>
             </div>
