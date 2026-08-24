@@ -201,7 +201,7 @@ const stats = [
   {
     value:    '3,000+',
     label:    'Articles',
-    sublabel: 'Written by qualified accountants',
+    sublabel: 'Guides, briefs and technical resources',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -211,7 +211,7 @@ const stats = [
   {
     value:    '20,000+',
     label:    'Practice Questions',
-    sublabel: 'MCQ, written & scenario',
+    sublabel: 'ACCA, CIMA, AAT and ICAEW',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -221,7 +221,7 @@ const stats = [
   {
     value:    'Since 2018',
     label:    'Trusted Platform',
-    sublabel: 'Helping students pass exams',
+    sublabel: 'Built for accounting and finance professionals',
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
@@ -1871,9 +1871,9 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         <div className="container-site">
               <div className="max-w-2xl mb-12">
                 <span className="eyebrow mb-3 block">The Full Platform</span>
-                <h2 className="section-title mb-4">Education and professional services, in one place</h2>
+                <h2 className="section-title mb-4">Jobs, practice questions, and professional services — all in one place</h2>
                 <p className="text-slate-500 text-lg leading-relaxed">
-                  Accounting Body combines a world-class accounting study platform with a managed professional services network. Whether you are studying for your exams or need expert accounting support — we have you covered.
+                  Accounting Body is built exclusively for accounting and finance professionals. Browse 250,000+ live jobs, practise with 20,000+ exam-standard questions, get matched to roles via our managed placement service, or engage our professional services team — everything you need, on one platform.
                 </p>
               </div>
 
