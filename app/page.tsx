@@ -1610,66 +1610,89 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
             {/* RIGHT — 6 cols — Stats card */}
             <div className="lg:col-span-6">
-              <div className="rounded-2xl overflow-hidden"
-                style={{
-                  background: isEthioTax ? '#0f2d1e' : '#0C1A3D',
-                  boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
-                }}>
+                <div className="rounded-2xl overflow-hidden" style={{ background: isEthioTax ? '#0f2d1e' : '#0C1A3D', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
 
-                {/* Card header */}
-                <div className="px-8 pt-7 pb-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>
-                      Why {isEthioTax ? 'EthioTax' : 'Accounting Body'}
-                    </p>
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                      style={{ background: 'rgba(201,152,42,0.15)', color: '#C9982A', border: '1px solid rgba(201,152,42,0.3)' }}>
-                      Not a job board
-                    </span>
-                  </div>
-                </div>
-
-                {/* Stats grid */}
-                <div className="grid grid-cols-2">
-                  {(isEthioTax ? [
-                    { value: 'Managed',  label: 'End-to-end placement',  sub: 'You never deal with employers' },
-                    { value: '90 Days',  label: 'Replacement guarantee', sub: 'On every permanent role' },
-                    { value: '100%',     label: 'Vetted candidates',     sub: 'Every profile reviewed' },
-                    { value: 'Global',   label: 'Diaspora coverage',     sub: 'UK · USA · Canada · UAE' },
-                  ] : [
-                    { value: 'Managed',  label: 'End-to-end service',    sub: 'We handle every step' },
-                    { value: '90 Days',  label: 'Replacement guarantee', sub: 'On every permanent role' },
-                    { value: '100%',     label: 'Vetted candidates',     sub: 'Every profile reviewed' },
-                    { value: 'Finance',  label: 'Specialists only',      sub: 'Accounting, tax, audit, payroll' },
-                  ]).map((stat, i) => (
-                    <div key={stat.label} className="p-6"
-                      style={{
-                        borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none',
-                        borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none',
-                      }}>
-                      <span className="font-display text-2xl font-bold text-white block mb-1"><span translate="no">{stat.value}</span></span>
-                      <span className="text-xs font-semibold block mb-0.5" style={{ color: '#C9982A' }}>{stat.label}</span>
-                      <span className="text-xs text-white/35">{stat.sub}</span>
+                  {/* Card header */}
+                  <div className="px-7 pt-6 pb-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>
+                        Two ways to find your next role
+                      </p>
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                        style={{ background: 'rgba(201,152,42,0.15)', color: '#C9982A', border: '1px solid rgba(201,152,42,0.3)' }}>
+                        Finance specialists
+                      </span>
                     </div>
-                  ))}
-                </div>
+                  </div>
 
-                {/* Card footer */}
-                <div className="px-8 py-5 flex items-center justify-between"
-                  style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(201,152,42,0.06)' }}>
-                  <p className="text-xs text-white/40 leading-relaxed">
-                    Candidates and employers never interact directly.{' '}
-                    <span className="text-white/60 font-medium">
-                      {isEthioTax ? 'EthioTax' : 'Accounting Body'} manages every placement.
-                    </span>
-                  </p>
-                  <Link href="/jobs/how-it-works"
-                    className="text-xs font-semibold whitespace-nowrap ml-4 hover:opacity-80 transition-opacity"
-                    style={{ color: '#C9982A' }}>
-                    How it works →
-                  </Link>
+                  {/* Split path cards */}
+                  <div className="grid grid-cols-2">
+
+                    {/* Left — Job board */}
+                    <div className="p-6 flex flex-col" style={{ borderRight: '1px solid rgba(255,255,255,0.08)' }}>
+                      <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: '#C9982A' }}>
+                        Job board
+                      </p>
+                      <p className="font-display text-white text-lg mb-2 leading-snug">Browse jobs</p>
+                      <p className="text-xs leading-relaxed mb-4 flex-1" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                        Search {isEthioTax ? '1,000+' : '250,000+'} live vacancies. Filter by role, location and contract type.
+                      </p>
+                      <Link href="/jobs/listings"
+                        className="flex items-center justify-center gap-1.5 h-9 rounded-lg text-xs font-semibold transition-opacity hover:opacity-90"
+                        style={{ background: '#C9982A', color: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}>
+                        Browse jobs →
+                      </Link>
+                    </div>
+
+                    {/* Right — Managed placement */}
+                    <div className="p-6 flex flex-col">
+                      <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: '#C9982A' }}>
+                        Managed placement
+                      </p>
+                      <p className="font-display text-white text-lg mb-2 leading-snug">Get matched</p>
+                      <p className="text-xs leading-relaxed mb-4 flex-1" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                        Register once. We personally match you to roles and advocate on your behalf.
+                      </p>
+                      <Link href="/jobs/find-work"
+                        className="flex items-center justify-center gap-1.5 h-9 rounded-lg text-xs font-semibold transition-opacity hover:opacity-90"
+                        style={{ border: '1.5px solid rgba(201,152,42,0.45)', color: '#C9982A', background: 'transparent' }}>
+                        Register free →
+                      </Link>
+                    </div>
+
+                  </div>
+
+                  {/* Stats row */}
+                  <div className="grid grid-cols-2" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div className="p-5" style={{ borderRight: '1px solid rgba(255,255,255,0.08)' }}>
+                      <span className="font-display text-xl font-bold text-white block mb-0.5">
+                        {isEthioTax ? '1,000+' : '250,000+'}
+                      </span>
+                      <span className="text-[10px] font-semibold block" style={{ color: '#C9982A' }}>Live roles</span>
+                      <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>Updated daily</span>
+                    </div>
+                    <div className="p-5">
+                      <span className="font-display text-xl font-bold text-white block mb-0.5">90 Days</span>
+                      <span className="text-[10px] font-semibold block" style={{ color: '#C9982A' }}>Placement guarantee</span>
+                      <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>Every permanent role</span>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-7 py-4 flex items-center justify-between"
+                    style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(201,152,42,0.05)' }}>
+                    <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                      Your profile is never made public.{' '}
+                      <span style={{ color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>We contact you only when a role matches.</span>
+                    </p>
+                    <Link href="/jobs/how-it-works"
+                      className="text-xs font-semibold whitespace-nowrap ml-4 hover:opacity-80 transition-opacity"
+                      style={{ color: '#C9982A' }}>
+                      How it works →
+                    </Link>
+                  </div>
+
                 </div>
-              </div>
             </div>
 
           </div>

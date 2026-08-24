@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 
 function CheckIcon({ color = '#C9982A' }: { color?: string }) {
   return (
@@ -198,8 +197,6 @@ export default function JobsHubPage() {
           </div>
         </div>
       </section>
-
-      <JobsRecruitmentSection isEthioTax={false} />
 
       {/* FOR EMPLOYERS */}
       <section className="section bg-slate-50">
