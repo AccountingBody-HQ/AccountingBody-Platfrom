@@ -7,7 +7,7 @@ import { getArticleBySlug, getAllArticlePaths, resolveCanonicalUrl } from '@/lib
 import type { ArticleFull } from '@/lib/sanity-queries'
 import PortableTextRenderer from '@/components/PortableTextRenderer'
 import ArticleCard from '@/components/ArticleCard'
-import { JobsRecruitmentSection, JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
+import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 
 export async function generateStaticParams() {
   const paths = await getAllArticlePaths()
@@ -123,8 +123,6 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
   const { category, slug } = await params
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
-  const brand = isEthioTax ? '#1A4731' : '#0C1A3D'
-  const platformName = isEthioTax ? 'EthioTax' : 'Accounting Body'
   const article = await getArticleBySlug(slug)
   if (!article) notFound()
 
