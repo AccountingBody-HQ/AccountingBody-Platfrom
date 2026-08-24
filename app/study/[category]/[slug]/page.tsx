@@ -353,6 +353,54 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                 </div>
               </div>
 
+              {/* Jobs CTA */}
+              {(() => {
+                const categorySlug = article.category?.toLowerCase().replace(/\s+/g, '-') ?? ''
+                const examBodyUpper = article.examBody?.[0]?.toUpperCase() ?? ''
+                const roleMap: Record<string, string> = {
+                  'financial-accounting':  'financial+accountant',
+                  'financial-management':  'finance+manager',
+                  'management-accounting': 'management+accountant',
+                  'taxation':              'tax+manager',
+                  'audit-assurance':       'auditor',
+                  'audit-and-assurance':   'auditor',
+                  'business-management':   'finance+business+partner',
+                  'economics':             'financial+analyst',
+                  'financial-market':      'financial+analyst',
+                }
+                const roleTerm = roleMap[categorySlug] ?? 'accountant'
+                const roleLabel = roleTerm.replace(/\+/g, ' ')
+                const jobsHref = `/jobs/listings?role=${roleTerm}`
+                const cardBg = isEthioTax ? '#1A4731' : '#0C1A3D'
+                const ctaBg = '#C9982A'
+                const ctaColor = isEthioTax ? '#0f2d1e' : '#0C1A3D'
+                return (
+                  <div className="rounded-xl overflow-hidden border border-slate-200">
+                    <div className="p-5 relative overflow-hidden" style={{ background: cardBg }}>
+                      <div
+                        className="absolute inset-0 opacity-10 pointer-events-none"
+                        style={{ background: 'radial-gradient(circle at 80% 20%, #C9982A 0%, transparent 60%)' }}
+                      />
+                      <div className="relative z-10">
+                        <p className="font-display text-white text-sm mb-1 leading-snug">
+                          Find {examBodyUpper ? `${examBodyUpper} ` : ''}roles in this field
+                        </p>
+                        <p className="text-white/50 text-xs leading-relaxed mb-3">
+                          Live accounting and finance vacancies — updated daily.
+                        </p>
+                        <Link
+                          href={jobsHref}
+                          className="flex items-center justify-center gap-2 w-full h-10 rounded-lg text-xs font-semibold transition-colors"
+                          style={{ background: ctaBg, color: ctaColor }}
+                        >
+                          Browse {roleLabel} jobs →
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })()}
+
               {/* Back link */}
               <Link
                 href={`/study/${category}`}
