@@ -115,6 +115,38 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
                   </dl>
                 </div>
               )}
+              {/* Jobs CTA — sidebar */}
+              {(() => {
+                const cardBg = isEthioTax ? '#1A4731' : '#0C1A3D'
+                const ctaBg = '#C9982A'
+                const ctaColor = isEthioTax ? '#0f2d1e' : '#0C1A3D'
+                return (
+                  <div className='rounded-xl overflow-hidden border border-slate-200'>
+                    <div className='p-5 relative overflow-hidden' style={{ background: cardBg }}>
+                      <div
+                        className='absolute inset-0 opacity-10 pointer-events-none'
+                        style={{ background: 'radial-gradient(circle at 80% 20%, #C9982A 0%, transparent 60%)' }}
+                      />
+                      <div className='relative z-10'>
+                        <p className='font-display text-white text-sm mb-1 leading-snug'>
+                          Find jobs in this field
+                        </p>
+                        <p className='text-white/50 text-xs leading-relaxed mb-3'>
+                          Live accounting and finance vacancies — updated daily.
+                        </p>
+                        <Link
+                          href='/jobs/listings'
+                          className='flex items-center justify-center gap-2 w-full h-10 rounded-lg text-xs font-semibold transition-colors'
+                          style={{ background: ctaBg, color: ctaColor }}
+                        >
+                          Browse jobs →
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })()}
+
               {/* Study note link — sidebar */}
               {post.relatedArticle && (
                 <div className='bg-navy-950 rounded-xl p-5 relative overflow-hidden'>
