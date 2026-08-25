@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { getPracticePosts, getPracticeFilters } from '@/lib/practice-queries'
+import { getQuestionSets, getQuestionSetCount } from '@/lib/db'
 import { headers } from 'next/headers'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 
@@ -40,18 +40,14 @@ export default async function PracticeQuestionsPage({
   // Build search term — letter filter takes priority over text search
   const searchTerm = letter ? letter : (search || undefined)
 
-  const [{ posts, total }, filters] = await Promise.all([
-    getPracticePosts({
-      difficulty:   difficulty || undefined,
-      search:       searchTerm,
-      category:     category || undefined,
-      questionType: questionType || undefined,
-      page,
-      perPage:      PER_PAGE,
-      sortBy:       sort,
-    }),
-    getPracticeFilters(),
-  ])
+  const { sets: posts, total } = await getQuestionSets({
+    difficulty: difficulty || undefined,
+    search:     searchTerm,
+    page,
+    perPage:    PER_PAGE,
+    sortBy:     sort,
+  })
+  const filters: { difficulties: string[]; categories: { slug: string; title: string }[] } = { difficulties: ['beginner', 'intermediate', 'advanced'], categories: [] }
 
   const totalPages = Math.ceil(total / PER_PAGE)
 
@@ -231,8 +227,8 @@ export default async function PracticeQuestionsPage({
                       const diffClass = DIFFICULTY_BADGE[post.difficulty ?? ''] ?? 'bg-slate-100 text-slate-600 border-slate-200'
                       return (
                         <Link
-                          key={post._id}
-                          href={`/practice-questions/${post.slug.current}`}
+                          key={post.id}
+                          href={`/practice-questions/${post.slug}`}
                           className="group bg-white rounded-xl border border-slate-200 p-5 hover:border-navy-300 hover:shadow-md transition-all flex flex-col"
                         >
                           {post.difficulty && (
