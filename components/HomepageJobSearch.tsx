@@ -16,8 +16,8 @@ export default function HomepageJobSearch() {
 
   return (
     <div className="w-full max-w-2xl">
-      <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
-        <div className="flex flex-col sm:flex-row">
+      <div className="bg-white rounded-2xl shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:overflow-hidden sm:rounded-2xl p-2 sm:p-0">
           <div className="flex items-center gap-3 flex-1 px-5 py-4">
             <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -49,7 +49,7 @@ export default function HomepageJobSearch() {
           <div className="p-2 shrink-0">
             <button
               onClick={handleSearch}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90 whitespace-nowrap"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl sm:rounded-none sm:rounded-r-2xl text-sm font-semibold transition-opacity hover:opacity-90 whitespace-nowrap"
               style={{ background: '#D4A017', color: '#0C1A3D' }}
             >
               Find jobs
