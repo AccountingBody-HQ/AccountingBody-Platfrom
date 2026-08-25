@@ -80,14 +80,24 @@ export async function getArticleBySlug(slug: string): Promise<ArticleFull | null
   return data as ArticleFull
 }
 
+const QUALIFICATION_SLUGS = ['acca', 'cima', 'aat', 'icaew', 'eticpa', 'eticpa-atq', 'eticpa-cpa']
+
 export async function getArticlesByCategory(categorySlug: string): Promise<ArticleSummary[]> {
-  const { data, error } = await supabase
+  const isQualification = QUALIFICATION_SLUGS.includes(categorySlug.toLowerCase())
+  let query = supabase
     .from('articles')
     .select('id, title, slug, excerpt, category, category_title, exam_body, read_time, published_at, author_name')
-    .eq('category', categorySlug)
     .eq('status', 'published')
     .contains('show_on_sites', ['ab'])
     .order('title', { ascending: true })
+
+  if (isQualification) {
+    query = query.contains('exam_body', [categorySlug.toLowerCase()])
+  } else {
+    query = query.eq('category', categorySlug)
+  }
+
+  const { data, error } = await query
   if (error || !data) return []
   return data as ArticleSummary[]
 }
