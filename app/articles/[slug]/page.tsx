@@ -2,8 +2,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
-import { getArticleBySlug } from '@/lib/db'
-import HtmlRenderer from '@/components/HtmlRenderer'
+import { getArticleBySlug, resolveCanonicalUrl } from '@/lib/sanity-queries'
+import PortableTextRenderer from '@/components/PortableTextRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 
 export const revalidate = 0
@@ -12,9 +12,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const article = await getArticleBySlug(slug)
   if (!article) return {}
-  const canonicalUrl = null as string | null
-  const metaTitle = article.seo_title || article.title
-  const metaDesc  = article.seo_description || article.excerpt
+  const canonicalUrl = resolveCanonicalUrl(article)
+  const metaTitle = article.seoTitle || article.title
+  const metaDesc  = article.seoDescription || article.excerpt
   const brand     = canonicalUrl?.includes('ethiotax.com') ? 'EthioTax' : 'Accounting Body'
   return {
     title:       `${metaTitle} | ${brand}`,
@@ -46,10 +46,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   if (!article) notFound()
   if (!article) return null
 
-  const accentBar  = EXAM_BODY_ACCENT[article.exam_body?.[0] ?? ''] ?? 'bg-navy-950'
+  const accentBar  = EXAM_BODY_ACCENT[article.examBody?.[0] ?? ''] ?? 'bg-navy-950'
 
-  const formattedReviewed = article.last_reviewed
-    ? new Date(article.last_reviewed).toLocaleDateString('en-GB', {
+  const formattedReviewed = article.lastReviewed
+    ? new Date(article.lastReviewed).toLocaleDateString('en-GB', {
         day: 'numeric', month: 'long', year: 'numeric',
       })
     : null
@@ -81,7 +81,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
           {/* Badges */}
           <div className="flex flex-wrap items-center gap-2 mb-5">
-            {article.exam_body?.map((body: string) => {
+            {article.examBody?.map((body: string) => {
               const bc = EXAM_BODY_BADGE[body.toUpperCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200'
               return (
                 <span key={body} className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-md border ${bc}`}>
@@ -89,9 +89,9 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 </span>
               )
             })}
-            {article.category_title && (
+            {article.categoryTitle && (
               <span className="text-xs font-medium px-2.5 py-1 rounded-md bg-white/10 text-white/70 border border-white/15">
-                {article.category_title}
+                {article.categoryTitle}
               </span>
             )}
           </div>
@@ -106,12 +106,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
           {/* Meta row */}
           <div className="flex flex-wrap items-center gap-4 text-sm text-white/50">
-            {article.author_name && (
+            {article.author?.name && (
               <span className="flex items-center gap-1.5">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                {article.author_name}
+                {article.author.name}
               </span>
             )}
 
@@ -123,13 +123,13 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 Reviewed {formattedReviewed}
               </span>
             )}
-            {article.read_time && (
+            {article.readTime && (
               <span className="flex items-center gap-1.5">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" strokeWidth="2" />
                   <path strokeLinecap="round" strokeWidth="2" d="M12 6v6l4 2" />
                 </svg>
-                {article.read_time} min read
+                {article.readTime} min read
               </span>
             )}
           </div>
@@ -148,19 +148,34 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             <div>
 
 
-              <HtmlRenderer html={article.content ?? ''} />
+              <PortableTextRenderer value={(() => {
+                    const blocks = (article.body || []) as {_type: string; style?: string; children?: {text?: string}[]}[]
+                    const first = blocks[0]
+                    if (first?._type === 'block' && first?.children) {
+                      const firstText = first.children.map((c: {text?: string}) => c.text || '').join('').trim()
+                      // Strip if first block is H1 matching the article title
+                      if (first.style === 'h1' && article.title && firstText === article.title.trim()) {
+                        return blocks.slice(1)
+                      }
+                      // Strip if first block matches the excerpt
+                      if (article.excerpt && firstText && article.excerpt.startsWith(firstText.substring(0, 80))) {
+                        return blocks.slice(1)
+                      }
+                    }
+                    return blocks
+                  })()} />
 
               {/* Test your knowledge — bottom of article */}
               <div className="mt-10 p-6 bg-navy-950 rounded-2xl relative overflow-hidden">
                 <div className="absolute inset-0 opacity-10" style={{ background: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 60%)' }} />
                 <div className="relative z-10">
                   <p className="font-display text-white text-lg mb-1">Test your knowledge</p>
-                  {article.mcq_url ? (
+                  {article.mcqUrl ? (
                     <>
                       <p className="text-white/60 text-sm mb-4">Practice questions specifically for this topic.</p>
                       <div className="flex flex-col sm:flex-row gap-3">
                         <Link
-                          href={article.mcq_url}
+                          href={article.mcqUrl}
                           className="inline-flex items-center justify-center gap-2 bg-gold-500 text-navy-950 px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-gold-400 transition-colors"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,7 +210,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
               {/* Author + reviewed bar — always visible */}
               <div className="mt-10 pt-6 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                {article.author_name && (
+                {article.author?.name && (
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-navy-950 flex items-center justify-center shrink-0">
                       <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,7 +219,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                     </div>
                     <div>
                       <p className="text-xs text-slate-400">Written by</p>
-                      <p className="text-sm font-semibold text-navy-950">{article.author_name}</p>
+                      <p className="text-sm font-semibold text-navy-950">{article.author.name}</p>
                     </div>
                   </div>
                 )}
@@ -229,11 +244,11 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                   Article details
                 </p>
                 <dl className="space-y-3">
-                  {article.exam_body && article.exam_body.length > 0 && (
+                  {article.examBody && article.examBody.length > 0 && (
                     <div className="flex justify-between text-sm gap-2">
                       <dt className="text-slate-500 shrink-0">Qualification</dt>
                       <dd className="flex flex-wrap gap-1 justify-end">
-                        {article.exam_body.map((body: string) => {
+                        {article.examBody.map((body: string) => {
                           const bc = EXAM_BODY_BADGE[body.toUpperCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200'
                           return (
                             <span key={body} className={`text-xs font-bold px-2 py-0.5 rounded-md border ${bc}`}>
@@ -244,16 +259,16 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                       </dd>
                     </div>
                   )}
-                  {article.category_title && (
+                  {article.categoryTitle && (
                     <div className="flex justify-between text-sm">
                       <dt className="text-slate-500">Subject</dt>
-                      <dd className="text-navy-950 font-medium">{article.category_title}</dd>
+                      <dd className="text-navy-950 font-medium">{article.categoryTitle}</dd>
                     </div>
                   )}
-                  {article.read_time && (
+                  {article.readTime && (
                     <div className="flex justify-between text-sm">
                       <dt className="text-slate-500">Read time</dt>
-                      <dd className="text-navy-950 font-medium">{article.read_time} minutes</dd>
+                      <dd className="text-navy-950 font-medium">{article.readTime} minutes</dd>
                     </div>
                   )}
 
@@ -276,13 +291,13 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                   <p className="font-display text-white text-base mb-2 leading-snug">
                     Test your knowledge
                   </p>
-                  {article.mcq_url ? (
+                  {article.mcqUrl ? (
                     <>
                       <p className="text-white/55 text-xs leading-relaxed mb-3">
                         Practice questions for this exact topic.
                       </p>
                       <Link
-                        href={article.mcq_url}
+                        href={article.mcqUrl}
                         className="flex items-center justify-center gap-2 w-full h-10 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors mb-2"
                       >
                         Practice this topic
