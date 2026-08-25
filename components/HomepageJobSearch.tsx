@@ -16,44 +16,88 @@ export default function HomepageJobSearch() {
 
   return (
     <div className="w-full max-w-2xl">
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center gap-0 overflow-hidden">
-        <div className="flex items-center gap-3 flex-1 min-w-0 px-5 py-4">
-          <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            value={role}
-            onChange={e => setRole(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            placeholder="Job title or keyword"
-            className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 outline-none bg-transparent"
-          />
-        </div>
-        <div className="w-px h-10 bg-slate-200 shrink-0 hidden sm:block" />
-        <div className="hidden sm:flex items-center gap-3 flex-1 min-w-0 px-5 py-4">
-          <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          <input
-            type="text"
-            value={location}
-            onChange={e => setLocation(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            placeholder="City or country"
-            className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 outline-none bg-transparent"
-          />
-        </div>
-        <div className="p-2 shrink-0">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100">
+
+        {/* Mobile layout — stacked */}
+        <div className="flex flex-col sm:hidden p-2 gap-1">
+          <div className="flex items-center gap-3 px-4 py-3">
+            <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              value={role}
+              onChange={e => setRole(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+              placeholder="Job title or keyword"
+              className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 outline-none bg-transparent"
+            />
+          </div>
+          <div className="h-px bg-slate-100 mx-4" />
+          <div className="flex items-center gap-3 px-4 py-3">
+            <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <input
+              type="text"
+              value={location}
+              onChange={e => setLocation(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+              placeholder="City or country"
+              className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 outline-none bg-transparent"
+            />
+          </div>
           <button
             onClick={handleSearch}
-            className="px-5 py-3.5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-80 whitespace-nowrap"
+            className="w-full py-3.5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-80"
             style={{ background: '#D4A017', color: '#0C1A3D' }}
           >
             Find jobs
           </button>
         </div>
+
+        {/* Desktop layout — single row */}
+        <div className="hidden sm:flex items-center overflow-hidden rounded-2xl">
+          <div className="flex items-center gap-3 flex-1 min-w-0 px-5 py-4">
+            <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              value={role}
+              onChange={e => setRole(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+              placeholder="Job title or keyword"
+              className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 outline-none bg-transparent"
+            />
+          </div>
+          <div className="w-px h-10 bg-slate-200 shrink-0" />
+          <div className="flex items-center gap-3 flex-1 min-w-0 px-5 py-4">
+            <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <input
+              type="text"
+              value={location}
+              onChange={e => setLocation(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+              placeholder="City or country"
+              className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 outline-none bg-transparent"
+            />
+          </div>
+          <div className="p-2 shrink-0">
+            <button
+              onClick={handleSearch}
+              className="px-5 py-3.5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-80 whitespace-nowrap"
+              style={{ background: '#D4A017', color: '#0C1A3D' }}
+            >
+              Find jobs
+            </button>
+          </div>
+        </div>
+
       </div>
       <p className="text-white/40 text-xs mt-3">
         250,000+ live accounting &amp; finance roles &mdash;{' '}
