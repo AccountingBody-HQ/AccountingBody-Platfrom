@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { getQuestionSets, getQuestionSetCount } from '@/lib/db'
+import { getQuestionSets } from '@/lib/db'
 import { headers } from 'next/headers'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 
@@ -35,7 +35,6 @@ export default async function PracticeQuestionsPage({
   const letter       = sp.letter ?? ''
   const sort         = sp.sort ?? 'alpha'
   const category     = sp.category ?? ''
-  const questionType = sp.type ?? ''
 
   // Build search term — letter filter takes priority over text search
   const searchTerm = letter ? letter : (search || undefined)
