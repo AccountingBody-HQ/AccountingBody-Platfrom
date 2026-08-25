@@ -2,7 +2,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
-import { getPracticeFilters } from '@/lib/practice-queries'
 import type { Metadata } from 'next'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 
@@ -33,7 +32,18 @@ export default async function MockExamsPage() {
   // ET users stay on their own mock exams page
   if (isEthioTax) redirect('/study/mock-exams')
 
-  const filters = await getPracticeFilters()
+  const filters = {
+    categories: [
+      { slug: 'financial-accounting',  title: 'Financial Accounting' },
+      { slug: 'financial-management',  title: 'Financial Management' },
+      { slug: 'management-accounting', title: 'Management Accounting' },
+      { slug: 'financial-market',      title: 'Financial Market' },
+      { slug: 'business-management',   title: 'Business Management' },
+      { slug: 'audit-assurance',       title: 'Audit and Assurance' },
+      { slug: 'taxation',              title: 'Tax' },
+      { slug: 'economics',             title: 'Economics' },
+    ]
+  }
   const categories = filters.categories
 
   return (

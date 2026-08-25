@@ -5,7 +5,6 @@
 import React from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { getGlossaryCategories } from '@/lib/sanity-queries'
 
 export const revalidate = 3600
 
@@ -34,7 +33,18 @@ const CATEGORY_COLOURS = [
 
 // ── PAGE ──────────────────────────────────────────────────────────────────────
 export default async function GlossaryPage() {
-  const categories = await getGlossaryCategories()
+  const categories = [
+    { slug: 'financial-accounting',  title: 'Financial Accounting',  count: 714 },
+    { slug: 'financial-management',  title: 'Financial Management',  count: 742 },
+    { slug: 'management-accounting', title: 'Management Accounting', count: 446 },
+    { slug: 'financial-market',      title: 'Financial Market',      count: 211 },
+    { slug: 'business-management',   title: 'Business Management',   count: 197 },
+    { slug: 'audit-assurance',       title: 'Audit and Assurance',   count: 61  },
+    { slug: 'taxation',              title: 'Tax',                   count: 40  },
+    { slug: 'economics',             title: 'Economics',             count: 120 },
+    { slug: 'cryptocurrency',        title: 'Cryptocurrency',        count: 7   },
+    { slug: 'tools-templates',       title: 'Tools and Templates',   count: 3   },
+  ]
 
   return (
     <>

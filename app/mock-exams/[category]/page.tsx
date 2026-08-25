@@ -1,7 +1,6 @@
 // app/mock-exams/[category]/page.tsx
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
-import { getPracticeFilters } from '@/lib/practice-queries'
 import MockExamClient from '@/components/course/MockExamClient'
 import type { Metadata } from 'next'
 
@@ -9,7 +8,18 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
   const { category } = await params
-  const filters = await getPracticeFilters()
+  const filters = {
+    categories: [
+      { slug: 'financial-accounting',  title: 'Financial Accounting' },
+      { slug: 'financial-management',  title: 'Financial Management' },
+      { slug: 'management-accounting', title: 'Management Accounting' },
+      { slug: 'financial-market',      title: 'Financial Market' },
+      { slug: 'business-management',   title: 'Business Management' },
+      { slug: 'audit-assurance',       title: 'Audit and Assurance' },
+      { slug: 'taxation',              title: 'Tax' },
+      { slug: 'economics',             title: 'Economics' },
+    ]
+  }
   const cat = filters.categories.find(c => c.slug === category)
   const title = cat?.title ?? 'Mock Exam'
   return {
@@ -28,7 +38,18 @@ export default async function CategoryMockExamPage({ params }: { params: Promise
   if (isEthioTax) redirect('/study/mock-exams')
 
   // Validate the category exists and has questions
-  const filters = await getPracticeFilters()
+  const filters = {
+    categories: [
+      { slug: 'financial-accounting',  title: 'Financial Accounting' },
+      { slug: 'financial-management',  title: 'Financial Management' },
+      { slug: 'management-accounting', title: 'Management Accounting' },
+      { slug: 'financial-market',      title: 'Financial Market' },
+      { slug: 'business-management',   title: 'Business Management' },
+      { slug: 'audit-assurance',       title: 'Audit and Assurance' },
+      { slug: 'taxation',              title: 'Tax' },
+      { slug: 'economics',             title: 'Economics' },
+    ]
+  }
   const cat = filters.categories.find(c => c.slug === category)
   if (!cat) redirect('/mock-exams')
 
