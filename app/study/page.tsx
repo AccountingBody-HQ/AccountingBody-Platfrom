@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
-import { getStudyLandingData, getCategoryCounts } from '@/lib/sanity-queries'
-import { getPracticePostCount } from '@/lib/practice-queries'
+import { getStudyLandingData } from '@/lib/sanity-queries'
+import { getCategoryCounts, getQuestionSetCount } from '@/lib/db'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 
 export const revalidate = 3600
@@ -210,8 +210,8 @@ export default async function StudyPage() {
     : EXAM_BODIES
   const [liveData, categoryCounts, practicePostCount] = await Promise.all([
     getStudyLandingData(),
-    getCategoryCounts(isEthioTax ? 'ethiotax' : 'accountingbody'),
-    getPracticePostCount(),
+    getCategoryCounts(),
+    getQuestionSetCount(),
   ])
   const liveMap = Object.fromEntries(liveData.map(d => [d.examBody, d.count]))
 

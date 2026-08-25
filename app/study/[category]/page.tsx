@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import ScrollToTop from '@/components/ScrollToTop'
 import type { Metadata } from 'next'
-import { getArticlesByCategory, getAllCategorySlugs } from '@/lib/sanity-queries'
-import type { ArticleSummary } from '@/lib/sanity-queries'
+import { getArticlesByCategory } from '@/lib/db'
+import type { ArticleSummary } from '@/lib/db'
 
 const EXAM_BODY_META: Record<string, { name: string; description: string; accent: string; badgeBg: string; badgeText: string }> = {
   acca:  { name: 'ACCA',  description: 'Association of Chartered Certified Accountants — all 13 papers.', accent: 'bg-[#004B8D]', badgeBg: 'bg-blue-50',    badgeText: 'text-[#004B8D]' },
@@ -50,10 +50,8 @@ function groupAlphabetically(articles: ArticleSummary[]): { letter: string; arti
 export const dynamicParams = true
 
 export async function generateStaticParams() {
-  const sanity = await getAllCategorySlugs()
-  const known  = ['acca', 'cima', 'aat', 'icaew']
-  const all    = Array.from(new Set([...known, ...sanity]))
-  return all.map(category => ({ category }))
+  const known = ['acca', 'cima', 'aat', 'icaew']
+  return known.map(category => ({ category }))
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
@@ -140,14 +138,12 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
                   </div>
                   <div className="bg-white rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
                     {groupArticles.map(article => {
-                      const href = `/study/${category}/${article.slug.current}`
-                      const formattedDate = article.lastReviewed
-                        ? new Date(article.lastReviewed).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
-                        : article.publishedAt
-                        ? new Date(article.publishedAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
+                      const href = `/study/${category}/${article.slug}`
+                      const formattedDate = article.published_at
+                        ? new Date(article.published_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
                         : null
                       return (
-                        <div key={article._id} className="group flex items-start justify-between gap-4 px-5 py-4 hover:bg-slate-50 transition-colors">
+                        <div key={article.id} className="group flex items-start justify-between gap-4 px-5 py-4 hover:bg-slate-50 transition-colors">
                           <div className="flex items-start gap-3 min-w-0">
                             <div className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${meta.accent}`} />
                             <div className="min-w-0">
@@ -156,7 +152,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
                             </div>
                           </div>
                           <div className="flex items-center gap-4 shrink-0 text-xs text-slate-400">
-                            {article.readTime && <span className="hidden sm:block">{article.readTime} min</span>}
+                            {article.read_time && <span className="hidden sm:block">{article.read_time} min</span>}
                             {formattedDate && <span className="hidden">{formattedDate}</span>}
                             <svg className="w-4 h-4 text-slate-300 group-hover:text-navy-400 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
                           </div>
