@@ -16,7 +16,7 @@ export default function HomepageJobSearch() {
 
   return (
     <div className="w-full max-w-2xl">
-      <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100">
         <div className="flex flex-col sm:flex-row">
           <div className="flex items-center gap-3 flex-1 px-5 py-4">
             <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
