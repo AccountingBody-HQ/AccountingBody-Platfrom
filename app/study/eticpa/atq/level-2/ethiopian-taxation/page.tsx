@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
-import { getETICPAModuleArticles } from '@/lib/sanity-queries'
-import type { ArticleSummary } from '@/lib/sanity-queries'
+import { getETICPAModuleArticles } from '@/lib/db'
+import type { ArticleSummary } from '@/lib/db'
 
 export const revalidate = 3600
 
@@ -39,7 +39,7 @@ const MODULE = {
 function ArticleCard({ article }: { article: ArticleSummary }) {
   return (
     <Link
-      href={`/study/eticpa/${article.slug.current}`}
+      href={`/study/eticpa/${article.slug}`}
       className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
     >
       <div className="h-1 bg-[#1A4731]" />
@@ -48,8 +48,8 @@ function ArticleCard({ article }: { article: ArticleSummary }) {
           <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-[#f0f7f4] text-[#1A4731]">
             <span translate="no">ATQ Level 2</span>
           </span>
-          {article.readTime && (
-            <span className="text-xs text-slate-400">{article.readTime} min read</span>
+          {article.read_time && (
+            <span className="text-xs text-slate-400">{article.read_time} min read</span>
           )}
         </div>
         <h3 className="font-display text-base text-navy-950 leading-snug mb-3 group-hover:text-[#1A4731] transition-colors flex-1">
@@ -217,7 +217,7 @@ export default async function EthiopianTaxationPage() {
           {articles.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {articles.map((article) => (
-                <ArticleCard key={article._id} article={article} />
+                <ArticleCard key={article.id} article={article} />
               ))}
             </div>
           ) : (

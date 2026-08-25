@@ -205,3 +205,16 @@ export async function getQuestionSetCount(): Promise<number> {
     .contains('show_on_sites', ['ab'])
   return count ?? 0
 }
+
+export async function getETICPAModuleArticles(level: string, module: string): Promise<ArticleSummary[]> {
+  const { data, error } = await supabase
+    .from('articles')
+    .select('id, title, slug, excerpt, category, category_title, exam_body, read_time, published_at, author_name')
+    .eq('status', 'published')
+    .eq('eticpa_level', level)
+    .eq('eticpa_module', module)
+    .order('title', { ascending: true })
+    .limit(5000)
+  if (error || !data) return []
+  return data as ArticleSummary[]
+}

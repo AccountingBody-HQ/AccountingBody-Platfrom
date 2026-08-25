@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
-import { getETICPAModuleArticles } from '@/lib/sanity-queries'
+import { getETICPAModuleArticles } from '@/lib/db'
 import { getCourseBySlug } from '@/lib/coursesNew'
 
 export const revalidate = 3600
