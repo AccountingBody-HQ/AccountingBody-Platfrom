@@ -1,28 +1,24 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
-import { getArticleBySlug, getAllArticlePaths, resolveCanonicalUrl } from '@/lib/sanity-queries'
-import type { ArticleFull } from '@/lib/sanity-queries'
-import PortableTextRenderer from '@/components/PortableTextRenderer'
-import ArticleCard from '@/components/ArticleCard'
+import { getArticleBySlug, getAllArticleSlugs } from '@/lib/db'
+import type { ArticleFull } from '@/lib/db'
+import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 
 export async function generateStaticParams() {
-  const paths = await getAllArticlePaths()
-  return paths.map(({ category, slug }) => ({ category, slug }))
+  const slugs = await getAllArticleSlugs()
+  return slugs.map(slug => ({ category: 'acca', slug }))
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string; slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const article = await getArticleBySlug(slug)
   if (!article) return {}
-  const canonicalUrl = resolveCanonicalUrl(article) ?? `https://accountingbody.com/articles/${article.slug.current}`
   return {
     title:       `${article.title} | Accounting Body`,
     description: article.excerpt,
-    alternates: { canonical: canonicalUrl },
     openGraph: { title: article.title, description: article.excerpt, type: 'article' },
   }
 }
@@ -46,26 +42,19 @@ const EXAM_BODY_BADGE: Record<string, string> = {
 // ── Author bio ────────────────────────────────────────────────────────────────
 
 function AuthorBio({ article }: { article: ArticleFull }) {
-  if (!article.author?.name) return null
-  const { name, bio, qualifications, image } = article.author
+  if (!article.author_name) return null
+  const name = article.author_name
   return (
     <div className="mt-10 p-6 rounded-xl bg-navy-50 border border-navy-100">
       <div className="flex items-start gap-4">
         <div className="w-12 h-12 rounded-full shrink-0 overflow-hidden bg-navy-200 flex items-center justify-center">
-          {image?.asset?.url
-            ? <Image src={image.asset.url} alt={name} width={48} height={48} className="w-full h-full object-cover" />
-            : <span className="font-display text-lg text-navy-700 font-bold" translate="no">{name.charAt(0).toUpperCase()}</span>
-          }
+          <span className="font-display text-lg text-navy-700 font-bold" translate="no">{name.charAt(0).toUpperCase()}</span>
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold text-navy-500 uppercase tracking-widest mb-1">Written by</p>
           <p className="font-display text-base font-semibold text-navy-950">
             {name}
-            {qualifications && (
-              <span className="text-navy-500 font-normal ml-2 text-sm">{qualifications}</span>
-            )}
           </p>
-          {bio && <p className="text-sm text-slate-600 mt-2 leading-relaxed">{bio}</p>}
         </div>
       </div>
     </div>
@@ -76,10 +65,7 @@ function AuthorBio({ article }: { article: ArticleFull }) {
 
 function QuestionButtons({ article }: { article: ArticleFull }) {
   const items = [
-    { url: article.mcqUrl,            label: 'Multiple Choice Questions', sublabel: 'Test your recall',          bg: 'bg-navy-50',   color: 'text-navy-700',   border: 'border-navy-200 hover:border-navy-400'    },
-    { url: article.learningUrl,       label: 'Learn More',                sublabel: 'Deepen your understanding', bg: 'bg-gold-50',   color: 'text-gold-600',   border: 'border-gold-200 hover:border-gold-400'    },
-    { url: article.shortQuestionsUrl, label: 'Short Writing Questions',   sublabel: 'Practise written answers',  bg: 'bg-slate-100', color: 'text-slate-600',  border: 'border-slate-200 hover:border-slate-400'  },
-    { url: article.scenarioUrl,       label: 'Scenario-Based Questions',  sublabel: 'Apply to case studies',     bg: 'bg-purple-50', color: 'text-purple-700', border: 'border-purple-200 hover:border-purple-400' },
+    { url: article.mcq_url, label: 'Multiple Choice Questions', sublabel: 'Test your recall', bg: 'bg-navy-50', color: 'text-navy-700', border: 'border-navy-200 hover:border-navy-400' },
   ].filter(b => !!b.url)
 
   if (items.length === 0) return null
@@ -126,18 +112,18 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
   const article = await getArticleBySlug(slug)
   if (!article) notFound()
 
-  const accentBar = EXAM_BODY_ACCENT[article.examBody?.[0]?.toUpperCase() ?? ''] ?? 'bg-navy-950'
+  const accentBar = EXAM_BODY_ACCENT[article.exam_body?.[0]?.toUpperCase() ?? ''] ?? 'bg-navy-950'
 
-  const formattedPublished = article.publishedAt
-    ? new Date(article.publishedAt).toLocaleDateString('en-GB', {
+  const formattedPublished = article.published_at
+    ? new Date(article.published_at).toLocaleDateString('en-GB', {
         day: 'numeric', month: 'long', year: 'numeric',
       })
     : null
   // Hidden — evergreen content should not show potentially outdated dates
   void formattedPublished
 
-  const formattedReviewed = article.lastReviewed
-    ? new Date(article.lastReviewed).toLocaleDateString('en-GB', {
+  const formattedReviewed = article.last_reviewed
+    ? new Date(article.last_reviewed).toLocaleDateString('en-GB', {
         day: 'numeric', month: 'long', year: 'numeric',
       })
     : null
@@ -175,7 +161,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
 
           {/* Badges */}
           <div className="flex flex-wrap items-center gap-2 mb-5">
-            {article.examBody?.map((body: string) => {
+            {article.exam_body?.map((body: string) => {
               const cls = EXAM_BODY_BADGE[body.toUpperCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200'
               return (
                 <span key={body} className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-md border ${cls}`}>
@@ -200,12 +186,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
 
           {/* Meta row */}
           <div className="flex flex-wrap items-center gap-4 text-sm text-white/50">
-            {article.author?.name && (
+            {article.author_name && (
               <span className="flex items-center gap-1.5">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                {article.author.name}
+                {article.author_name}
               </span>
             )}
 
@@ -217,13 +203,13 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                 Reviewed {formattedReviewed}
               </span>
             )}
-            {article.readTime && (
+            {article.read_time && (
               <span className="flex items-center gap-1.5">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" strokeWidth="2" />
                   <path strokeLinecap="round" strokeWidth="2" d="M12 6v6l4 2" />
                 </svg>
-                {article.readTime} min read
+                {article.read_time} min read
               </span>
             )}
           </div>
@@ -246,7 +232,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                 </p>
               )}
 
-              <PortableTextRenderer value={article.body} />
+              <HtmlRenderer html={article.content ?? ''} />
 
               {formattedReviewed && (
                 <div className="mt-10 flex items-center gap-2 text-sm text-slate-400 pt-6 border-t border-slate-100">
@@ -271,11 +257,11 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                   Article details
                 </p>
                 <dl className="space-y-3">
-                  {article.examBody?.length && (
+                  {article.exam_body?.length && (
                     <div className="flex justify-between items-start text-sm gap-2" translate="no">
                       <dt className="text-slate-500 shrink-0">Qualification</dt>
                       <dd className="flex flex-wrap gap-1 justify-end" translate="no">
-                        {article.examBody.map((body: string) => {
+                        {article.exam_body.map((body: string) => {
                           const cls = EXAM_BODY_BADGE[body.toUpperCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200'
                           return <span key={body} className={`text-xs font-bold px-2 py-0.5 rounded-md border ${cls}`} translate="no">{body.toUpperCase()}</span>
                         })}
@@ -288,10 +274,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                       <dd className="text-navy-950 font-medium">{article.category.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}</dd>
                     </div>
                   )}
-                  {article.readTime && (
+                  {article.read_time && (
                     <div className="flex justify-between text-sm">
                       <dt className="text-slate-500">Read time</dt>
-                      <dd className="text-navy-950 font-medium">{article.readTime} minutes</dd>
+                      <dd className="text-navy-950 font-medium">{article.read_time} minutes</dd>
                     </div>
                   )}
 
@@ -358,13 +344,13 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                 />
                 <div className="relative z-10">
                   <p className="font-display text-white text-base mb-2 leading-snug">Test your knowledge</p>
-                  {article.mcqUrl ? (
+                  {article.mcq_url ? (
                     <>
                       <p className="text-white/55 text-xs leading-relaxed mb-3">
                         Practice questions for this exact topic.
                       </p>
                       <Link
-                        href={article.mcqUrl}
+                        href={article.mcq_url}
                         className="flex items-center justify-center gap-2 w-full h-10 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors mb-2"
                       >
                         Practice this topic
@@ -413,34 +399,6 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
           </div>
         </div>
       </section>
-
-      {/* ── Related articles ──────────────────────────────────────────────── */}
-      {article.relatedArticles && article.relatedArticles.length > 0 && (
-        <section className="section bg-slate-50 border-t border-slate-200">
-          <div className="container-site">
-            <div className="flex items-end justify-between mb-8 gap-4">
-              <div>
-                <span className="eyebrow mb-3 block">Keep studying</span>
-                <h2 className="section-title">Related articles</h2>
-              </div>
-              <Link
-                href={`/study/${category}`}
-                className="shrink-0 flex items-center gap-1.5 text-sm font-semibold text-navy-700 hover:text-gold-500 transition-colors whitespace-nowrap"
-              >
-                View all
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {article.relatedArticles.slice(0, 3).map(related => (
-                <ArticleCard key={related._id} article={related} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       <JobsRecruitmentBanner isEthioTax={isEthioTax} />
 
