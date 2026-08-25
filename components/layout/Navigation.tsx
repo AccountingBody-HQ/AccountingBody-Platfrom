@@ -371,7 +371,7 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
-          <Link href="/" onClick={onClose}>
+          <Link href="/" onClick={onClose} className="focus:outline-none">
             <span className="font-display text-xl text-navy-950">Accounting Body</span>
           </Link>
           <button
@@ -630,7 +630,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-2 shrink-0 mr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 rounded"
+            className="flex items-center gap-2 shrink-0 mr-2 focus:outline-none"
             aria-label={isEthioTax ? 'EthioTax home' : 'AccountingBody home'}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
