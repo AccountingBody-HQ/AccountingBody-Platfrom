@@ -97,7 +97,7 @@ export async function getArticlesByCategory(categorySlug: string): Promise<Artic
     query = query.eq('category', categorySlug)
   }
 
-  const { data, error } = await query
+  const { data, error } = await query.limit(3000)
   if (error || !data) return []
   return data as ArticleSummary[]
 }
