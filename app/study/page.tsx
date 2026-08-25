@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
-import { getStudyLandingData } from '@/lib/sanity-queries'
 import { getCategoryCounts, getQuestionSetCount } from '@/lib/db'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 
@@ -208,12 +207,10 @@ export default async function StudyPage() {
   const activeExamBodies = isEthioTax
     ? [eticpaCard, ...EXAM_BODIES.filter(b => b.slug !== 'icaew')]
     : EXAM_BODIES
-  const [liveData, categoryCounts, practicePostCount] = await Promise.all([
-    getStudyLandingData(),
+  const [categoryCounts, practicePostCount] = await Promise.all([
     getCategoryCounts(),
     getQuestionSetCount(),
   ])
-  const liveMap = Object.fromEntries(liveData.map(d => [d.examBody, d.count]))
 
   return (
     <div>
@@ -257,7 +254,6 @@ export default async function StudyPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {activeExamBodies.map((body) => {
-              const articleCount = liveMap[body.code.toLowerCase()]
               return (
                 <Link key={body.slug} href={`/study/${body.slug}`}
                   className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
@@ -265,7 +261,6 @@ export default async function StudyPage() {
                   <div className="p-6 flex flex-col flex-1">
                     <div className="flex items-start justify-between mb-4">
                       <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${body.badgeBg} ${body.badgeText}`} translate="no">{body.code}</span>
-                      {articleCount && <span className="text-xs text-slate-400 font-medium">{articleCount.toLocaleString()} articles</span>}
                     </div>
                     <p className="text-xs text-slate-500 mb-4 leading-relaxed flex-1">{body.description}</p>
                     <ul className="space-y-1.5 mb-5">
