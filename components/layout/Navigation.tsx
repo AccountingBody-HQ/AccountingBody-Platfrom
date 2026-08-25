@@ -28,7 +28,6 @@ interface NavSection {
   href?:     string
   external?: boolean
   badge?:    string
-  goldPill?:  boolean
   featured?:  NavLink
   groups?:    { title: string; links: NavLink[] }[]
   etGroups?:  { title: string; links: NavLink[] }[]
@@ -43,7 +42,6 @@ const navSections: NavSection[] = [
     id:        'jobs',
     label:     'Jobs',
     href:      '/jobs',
-    goldPill:  true,
     groups:    JOBS_NAV.groups,
     cta:       JOBS_NAV.cta,
     etGroups:  ET_JOBS_NAV.groups,
@@ -489,6 +487,7 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
 // ── Main Navigation ───────────────────────────────────────────────────────────
 
 export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyLinks }: { studyQualificationLinks?: NavLink[], etGetHelpLinks?: { groups: { title: string, links: NavLink[] }[], cta: { label: string, href: string, description: string } }, etCompanyLinks?: { groups: { title: string, links: NavLink[] }[], cta: { label: string, href: string, description: string } } }) {
+  const isEthioTax = Boolean(etGetHelpLinks)
   const etCompanySection: NavSection | null = etCompanyLinks ? {
     id: 'company',
     label: 'Company',
@@ -632,15 +631,15 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           <Link
             href="/"
             className="flex items-center gap-2 shrink-0 mr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 rounded"
-            aria-label="AccountingBody home"
+            aria-label={isEthioTax ? 'EthioTax home' : 'AccountingBody home'}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
               <rect x="0"  y="0" width="9" height="20" rx="2" fill="#1e3a7a"/>
               <rect x="11" y="0" width="9" height="9"  rx="2" fill="#1e3a7a"/>
               <rect x="11" y="11" width="9" height="9" rx="2" fill="#1e3a7a"/>
             </svg>
-            <span className="font-sans font-semibold hidden sm:block" style={{ color: '#1e3a7a', fontSize: '21px', lineHeight: '24px' }}>
-              Accounting Body<sup style={{ fontSize: '20px', verticalAlign: 'top', position: 'relative', top: '4px' }}>®</sup>
+            <span className="font-sans font-semibold block" style={{ color: isEthioTax ? '#1A4731' : '#1e3a7a', fontSize: '21px', lineHeight: '24px' }}>
+              {isEthioTax ? 'EthioTax' : 'Accounting Body'}<sup style={{ fontSize: '20px', verticalAlign: 'top', position: 'relative', top: '4px' }}>®</sup>
             </span>
           </Link>
 
@@ -691,21 +690,13 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                       href={section.href ?? '#'}
                       className={[
                         'relative flex items-center pl-3 pr-1 py-2 text-sm font-medium transition-colors duration-150',
-                        section.goldPill
-                          ? 'text-gold-500 font-bold hover:text-gold-400'
-                          : isCurrentPage
-                            ? 'text-gold-600 font-semibold'
-                            : 'text-navy-950 hover:text-navy-700',
+                        isCurrentPage
+                          ? 'text-gold-600 font-semibold'
+                          : 'text-navy-950 hover:text-navy-700',
                       ].join(' ')}
                     >
                       <span className="flex items-center gap-1.5">
-                        {section.goldPill ? (
-                          <span className="font-semibold" style={{ color: '#C9982A' }}>
-                            {section.label}
-                          </span>
-                        ) : (
-                          section.label
-                        )}
+                        {section.label}
                         {section.badge && (
                           <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gold-500 text-navy-950 leading-none">
                             {section.badge}

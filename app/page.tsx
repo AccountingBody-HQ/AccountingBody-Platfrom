@@ -1319,7 +1319,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           </div>
 
           {/* RIGHT COLUMN */}
-          <div className="relative hidden lg:block">
+          <div className="relative block">
 
             <div className="flex flex-col gap-4 h-full">
 
