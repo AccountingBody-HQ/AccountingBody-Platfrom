@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
-import { getPracticePostBySlug } from '@/lib/practice-queries'
+import { getQuestionSetBySlug, getQuestionsBySetId } from '@/lib/db'
 import QuizRenderer from '@/components/QuizRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 
@@ -10,11 +10,11 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const post = await getPracticePostBySlug(slug)
-  if (!post) return {}
+  const qset = await getQuestionSetBySlug(slug)
+  if (!qset) return {}
   return {
-    title:       `${post.title} | Accounting Body Practice Questions`,
-    description: post.excerpt,
+    title:       `${qset.title} | Accounting Body Practice Questions`,
+    description: qset.excerpt,
   }
 }
 
@@ -28,8 +28,35 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
   const { slug } = await params
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
-  const post = await getPracticePostBySlug(slug)
-  if (!post) notFound()
+  const qset = await getQuestionSetBySlug(slug)
+  if (!qset) notFound()
+  const questions = await getQuestionsBySetId(qset.id)
+  const quizJson = JSON.stringify({
+    question_type: qset.question_type ?? 'multiple-choice',
+    questions: questions.map((q, i) => ({
+      id: `q${i + 1}`,
+      type: q.type ?? 'multiple-choice',
+      question: q.question_text,
+      options: [q.option_a, q.option_b, q.option_c, q.option_d]
+        .filter(Boolean)
+        .map(o => ({ label: String(o), value: String(o) })),
+      correctIndex: q.correct_index,
+      correct: [q.option_a, q.option_b, q.option_c, q.option_d][q.correct_index ?? 0],
+      explanation: q.explanation ?? '',
+      meta: { primaryTopic: q.primary_topic ?? '' },
+    })),
+    cases: [],
+  })
+  const post = {
+    title: qset.title,
+    slug: qset.slug,
+    excerpt: qset.excerpt,
+    difficulty: qset.difficulty,
+    quizJson,
+    relatedArticle: qset.article_slug
+      ? { title: qset.article_slug.replace(/-/g, ' '), slug: qset.article_slug }
+      : null,
+  }
 
   const diffClass = DIFFICULTY_BADGE[post.difficulty ?? ''] ?? 'bg-slate-100 text-slate-600 border-slate-200'
 
