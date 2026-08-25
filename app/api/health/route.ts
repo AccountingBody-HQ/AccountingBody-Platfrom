@@ -21,7 +21,7 @@ export async function GET() {
     }
 
     return NextResponse.json({ status: 'ok' }, { status: 200 })
-  } catch (err) {
+  } catch {
     return NextResponse.json({ status: 'error' }, { status: 503 })
   }
 }
