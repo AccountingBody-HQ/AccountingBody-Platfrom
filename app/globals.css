@@ -592,3 +592,242 @@ body { top: 0 !important; position: static !important; }
 
 /* ── Prevent Google Translate font duplication ───────────────────────────── */
 font { display: inline !important; }
+
+/* ── Article HTML content styles ───────────────────────────────────────── */
+.html-content {
+  font-size: 1rem;
+  color: #374151;
+  line-height: 1.75;
+}
+
+/* Paragraphs */
+.html-content p {
+  margin-bottom: 1.25rem;
+  line-height: 1.75;
+  color: #374151;
+}
+
+/* Headings */
+.html-content h1,
+.html-content h2,
+.html-content h3,
+.html-content h4,
+.html-content h5,
+.html-content h6,
+.html-content .wp-block-heading {
+  font-family: var(--font-display);
+  color: #0C1A3D;
+  line-height: 1.25;
+  margin-top: 2rem;
+  margin-bottom: 0.6rem;
+}
+.html-content h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+.html-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.75rem; }
+.html-content h4 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; }
+.html-content h5 { font-size: 1rem; font-weight: 600; margin-top: 1.25rem; }
+.html-content h6 { font-size: 0.875rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Lists — handles nested ol > ul patterns from WordPress */
+.html-content ul,
+.html-content .wp-block-list {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 1.25rem;
+}
+.html-content ol,
+.html-content ol.wp-block-list {
+  list-style: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+.html-content li {
+  margin-bottom: 0.5rem;
+  line-height: 1.75;
+  color: #374151;
+}
+/* Bullet for ul li only — not ol li */
+.html-content ul > li,
+.html-content ul.wp-block-list > li {
+  position: relative;
+  padding-left: 1.25rem;
+}
+.html-content ul > li::before,
+.html-content ul.wp-block-list > li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.65rem;
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background-color: #C9982A;
+  flex-shrink: 0;
+}
+/* Nested ul inside ol — indent and bullet */
+.html-content ol > li > ul {
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+  padding-left: 0;
+}
+.html-content ol > li > ul > li {
+  padding-left: 1.25rem;
+  position: relative;
+}
+.html-content ol > li > ul > li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.65rem;
+  width: 0.3rem;
+  height: 0.3rem;
+  border-radius: 50%;
+  background-color: #C9982A;
+}
+/* ol li must NOT get bullet */
+.html-content ol > li::before { display: none; }
+
+/* Links */
+.html-content a {
+  color: #1e3a6e;
+  text-decoration: none;
+}
+.html-content a:hover {
+  color: #C9982A;
+  text-decoration: underline;
+}
+
+/* Bold / italic */
+.html-content strong,
+.html-content b {
+  font-weight: 600;
+  color: #0C1A3D;
+}
+.html-content em,
+.html-content i { font-style: italic; }
+
+/* Blockquotes */
+.html-content blockquote,
+.html-content .wp-block-quote {
+  margin: 1.5rem 0;
+  padding: 0.875rem 1.25rem;
+  border-left: 3px solid #C9982A;
+  background: #fafaf8;
+  border-radius: 0 0.5rem 0.5rem 0;
+  color: #475569;
+}
+.html-content blockquote p,
+.html-content .wp-block-quote p {
+  margin-bottom: 0;
+  color: #475569;
+}
+.html-content .wp-block-quote.is-style-plain {
+  border-left: none;
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+.html-content .wp-block-quote.is-style-plain p {
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 1rem;
+}
+
+/* WordPress coloured highlight boxes — strip WP colours, apply neutral style */
+.html-content .wp-block-group[class*="has-background"],
+.html-content p[class*="has-background"] {
+  background: #f0f7f4 !important;
+  color: #374151 !important;
+  border-left: 3px solid #C9982A;
+  padding: 0.875rem 1.25rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+  margin-bottom: 1.25rem;
+}
+.html-content .wp-block-group[class*="has-background"] p,
+.html-content p[class*="has-background"] {
+  margin-bottom: 0.5rem;
+  color: #374151 !important;
+}
+.html-content .wp-block-group[class*="has-background"] a,
+.html-content p[class*="has-background"] a {
+  color: #1e3a6e !important;
+}
+
+/* Tables */
+.html-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+.html-content table th {
+  background: #0C1A3D;
+  color: white;
+  padding: 0.6rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+.html-content table td {
+  padding: 0.5rem 1rem;
+  color: #374151;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+  line-height: 1.6;
+}
+.html-content table tr:last-child td { border-bottom: none; }
+.html-content table tr:nth-child(even) td { background: #f8fafc; }
+.html-content .wp-block-table { overflow-x: auto; margin-bottom: 1.5rem; }
+
+/* Code */
+.html-content code {
+  font-family: monospace;
+  font-size: 0.875rem;
+  background: #f1f5f9;
+  color: #1e3a6e;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  border: 1px solid #e2e8f0;
+}
+.html-content pre {
+  background: #0f172a;
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+.html-content pre code {
+  background: none;
+  border: none;
+  color: #e2e8f0;
+  padding: 0;
+}
+
+/* Dividers and images */
+.html-content hr,
+.html-content .wp-block-separator {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 2rem 0;
+}
+.html-content figure { margin: 1.5rem 0; }
+.html-content figure img {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+.html-content figcaption {
+  text-align: center;
+  font-size: 0.875rem;
+  color: #94a3b8;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
