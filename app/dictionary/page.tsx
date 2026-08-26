@@ -1,19 +1,20 @@
 // app/dictionary/page.tsx
 // Accounting Body.com — Accounting Dictionary
-// A-Z filtered view of all Sanity articles, browsable by first letter or category
+// A-Z filtered view of all articles, browsable by first letter or category
 
 import React from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { createClient } from '@supabase/supabase-js'
 
-interface SanityArticle {
-  _id:          string
-  title:        string
-  slug:         { current: string }
-  excerpt?:     string
-  categoryTitle?: string
-  readTime?:    number
-  publishedAt?: string
+interface ArticleSummary {
+  id:              string
+  title:           string
+  slug:            string
+  excerpt?:        string
+  category?:       string
+  category_title?: string
+  published_at?:   string
 }
 
 const LETTERS = [
@@ -45,47 +46,51 @@ export async function generateMetadata({
   }
 }
 
-async function getArticlesByLetter(letter: string): Promise<SanityArticle[]> {
+async function getArticlesByLetter(letter: string): Promise<ArticleSummary[]> {
   try {
-    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
-    const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
-    let matchConditions: string
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SECRET_KEY!
+    )
+    let query = supabase
+      .from('articles')
+      .select('id, title, slug, excerpt, category, category_title, published_at')
+      .eq('status', 'published')
+      .contains('show_on_sites', ['ab'])
+
     if (letter === '#') {
-      matchConditions = Array.from({ length: 10 }, (_, i) => `title match "${i}*"`).join(' || ')
+      const digitFilter = Array.from({ length: 10 }, (_, i) => `title.ilike.${i}%`).join(',')
+      query = query.or(digitFilter)
     } else {
       const u = letter.toUpperCase()
       const next = String.fromCharCode(u.charCodeAt(0) + 1)
-      matchConditions = `title >= "${u}" && title < "${next}"`
+      query = query.gte('title', u).lt('title', next)
     }
-    const query = encodeURIComponent(
-      `*[_type == "article" && "accountingbody" in showOnSites && (${matchConditions})] | order(title asc) { _id, title, slug, excerpt, "categoryTitle": categories[0]->title, readTime, publishedAt }`
-    )
-    const res = await fetch(
-      `https://${projectId}.apicdn.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
-      { next: { revalidate: 3600 }, headers: process.env.SANITY_API_TOKEN ? { Authorization: `Bearer ${process.env.SANITY_API_TOKEN}` } : {} }
-    )
-    if (!res.ok) return []
-    const data = await res.json()
-    return data.result ?? []
+
+    const { data, error } = await query.order('title', { ascending: true }).limit(5000)
+    if (error || !data) return []
+    return data as ArticleSummary[]
   } catch {
     return []
   }
 }
 
-async function getArticlesByCategorySlug(categorySlug: string): Promise<SanityArticle[]> {
+async function getArticlesByCategorySlug(categorySlug: string): Promise<ArticleSummary[]> {
   try {
-    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
-    const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
-    const query = encodeURIComponent(
-      `*[_type == "article" && "accountingbody" in showOnSites && "${categorySlug}" in categories[]->slug.current] | order(title asc) { _id, title, slug, excerpt, "categoryTitle": categories[0]->title, readTime, publishedAt }`
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SECRET_KEY!
     )
-    const res = await fetch(
-      `https://${projectId}.apicdn.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
-      { next: { revalidate: 3600 }, headers: process.env.SANITY_API_TOKEN ? { Authorization: `Bearer ${process.env.SANITY_API_TOKEN}` } : {} }
-    )
-    if (!res.ok) return []
-    const data = await res.json()
-    return data.result ?? []
+    const { data, error } = await supabase
+      .from('articles')
+      .select('id, title, slug, excerpt, category, category_title, published_at')
+      .eq('status', 'published')
+      .contains('show_on_sites', ['ab'])
+      .eq('category', categorySlug)
+      .order('title', { ascending: true })
+      .limit(5000)
+    if (error || !data) return []
+    return data as ArticleSummary[]
   } catch {
     return []
   }
@@ -116,7 +121,7 @@ function LetterNav({ activeLetter }: { activeLetter: string }) {
   )
 }
 
-function ArticleRow({ article }: { article: SanityArticle }) {
+function ArticleRow({ article }: { article: ArticleSummary }) {
   return (
     <article className="group flex flex-col sm:flex-row sm:items-start gap-4 py-5 border-b border-slate-100 last:border-0">
       <div className="hidden sm:flex w-10 h-10 rounded-lg bg-navy-50 border border-navy-100 items-center justify-center shrink-0 mt-0.5">
@@ -124,11 +129,11 @@ function ArticleRow({ article }: { article: SanityArticle }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2 mb-1.5">
-          {article.categoryTitle && (
-            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">{article.categoryTitle}</span>
+          {article.category_title && (
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">{article.category_title}</span>
           )}
         </div>
-        <Link href={`/articles/${article.slug.current}`} className="block mb-1.5">
+        <Link href={`/articles/${article.slug}`} className="block mb-1.5">
           <h3 className="font-display text-base text-navy-950 group-hover:text-navy-600 transition-colors leading-snug">{article.title}</h3>
         </Link>
         {article.excerpt && (
@@ -136,7 +141,7 @@ function ArticleRow({ article }: { article: SanityArticle }) {
         )}
       </div>
       <Link
-        href={`/articles/${article.slug.current}`}
+        href={`/articles/${article.slug}`}
         className="shrink-0 self-start sm:self-center inline-flex items-center gap-1 text-xs font-semibold text-navy-700 hover:text-gold-500 transition-colors"
       >
         Read
@@ -157,7 +162,7 @@ export default async function DictionaryPage({
   const activeLetter   = LETTERS.includes(rawLetter) ? rawLetter : ''
   const activeCategory = searchParams.category ?? ''
 
-  let articles: SanityArticle[] = []
+  let articles: ArticleSummary[] = []
   let categoryTitle = ''
 
   if (activeCategory) {
@@ -283,7 +288,7 @@ export default async function DictionaryPage({
               </div>
               <div className="bg-white rounded-xl border border-slate-200 px-6 divide-y divide-slate-50">
                 {articles.map(article => (
-                  <ArticleRow key={article._id} article={article} />
+                  <ArticleRow key={article.id} article={article} />
                 ))}
               </div>
               {activeLetter && (

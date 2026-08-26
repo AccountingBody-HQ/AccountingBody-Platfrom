@@ -1,23 +1,7 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
 const ET_BASE_URL = 'https://ethiotax.com'
-
-async function querySanity<T>(groq: string): Promise<T[]> {
-  try {
-    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
-    const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
-    if (!projectId) return []
-    const res = await fetch(
-      `https://${projectId}.apicdn.sanity.io/v2023-05-03/data/query/${dataset}?query=${encodeURIComponent(groq)}`,
-      { next: { revalidate: 3600 }, headers: process.env.SANITY_API_TOKEN ? { Authorization: `Bearer ${process.env.SANITY_API_TOKEN}` } : {} }
-    )
-    if (!res.ok) return []
-    const data = await res.json()
-    return data.result ?? []
-  } catch {
-    return []
-  }
-}
 
 function url(path: string, priority: number, changefreq: string): string {
   return `  <url>
@@ -93,17 +77,21 @@ export async function GET() {
     url('/disclaimer',                             0.3,  'yearly'),
   ]
 
-  const etArticles = await querySanity<{ slug: string; updatedAt: string }>(`
-    *[_type == "article" && canonicalOwner == "ethiotax" && defined(slug.current)] | order(_updatedAt desc) {
-      "slug": slug.current,
-      "updatedAt": _updatedAt
-    }
-  `)
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!
+  )
+  const { data: etArticles } = await supabase
+    .from('articles')
+    .select('slug, updated_at')
+    .eq('status', 'published')
+    .eq('canonical_owner', 'ethiotax')
+    .order('updated_at', { ascending: false })
 
-  const articleUrls = etArticles.map(a =>
+  const articleUrls = (etArticles ?? []).map(a =>
     `  <url>
     <loc>${ET_BASE_URL}/articles/${a.slug}</loc>
-    <lastmod>${new Date(a.updatedAt).toISOString()}</lastmod>
+    <lastmod>${new Date(a.updated_at).toISOString()}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>`

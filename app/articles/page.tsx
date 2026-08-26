@@ -1,37 +1,33 @@
 import Link from 'next/link'
 import { headers } from 'next/headers'
-
-const PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
-const DATASET    = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
 interface ArticleSummary {
-  _id:                   string
-  title:                 string
-  slug:                  { current: string }
-  excerpt?:              string
-  examBody?:             string
-  readTime?:             number
-  publishedAt?:          string
-  showInLatestInsights?: boolean
-  isHotTopic?:           boolean
+  id:            string
+  title:         string
+  slug:          string
+  excerpt?:      string
+  exam_body?:    string[]
+  published_at?: string
 }
 
-async function getArticles(site: string): Promise<ArticleSummary[]> {
+async function getArticles(siteCode: string): Promise<ArticleSummary[]> {
   try {
-    if (!PROJECT_ID) return []
-    const query = encodeURIComponent(
-      `*[_type == "article" && "${site}" in showOnSites && (showInLatestInsights == true || isHotTopic == true)] | order(publishedAt desc) [0...100] { _id, title, slug, excerpt, examBody, readTime, publishedAt, showInLatestInsights, isHotTopic }`
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SECRET_KEY!
     )
-    const token = process.env.SANITY_API_TOKEN
-    const res = await fetch(
-      `https://${PROJECT_ID}.apicdn.sanity.io/v2023-05-03/data/query/${DATASET}?query=${query}`,
-      { headers: token ? { Authorization: `Bearer ${token}` } : {}, cache: 'no-store' }
-    )
-    if (!res.ok) return []
-    const data = await res.json()
-    return data.result ?? []
+    const { data, error } = await supabase
+      .from('articles')
+      .select('id, title, slug, excerpt, exam_body, published_at')
+      .eq('status', 'published')
+      .contains('show_on_sites', [siteCode])
+      .order('published_at', { ascending: false })
+      .limit(100)
+    if (error || !data) return []
+    return data as ArticleSummary[]
   } catch {
     return []
   }
@@ -40,8 +36,8 @@ async function getArticles(site: string): Promise<ArticleSummary[]> {
 export default async function ArticlesPage() {
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
-  const site = isEthioTax ? 'ethiotax' : 'accountingbody'
-  const articles = await getArticles(site)
+  const siteCode = isEthioTax ? 'et' : 'ab'
+  const articles = await getArticles(siteCode)
 
   return (
     <div>
@@ -101,15 +97,15 @@ export default async function ArticlesPage() {
           ) : (
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
               {articles.map(article => {
-                const examBodyFirst = Array.isArray(article.examBody) ? article.examBody[0] : article.examBody
+                const examBodyFirst = Array.isArray(article.exam_body) ? article.exam_body[0] : article.exam_body
                 const href = examBodyFirst
-                  ? `/study/${examBodyFirst.toLowerCase()}/${article.slug.current}`
-                  : `/articles/${article.slug.current}`
-                const posted = article.publishedAt
-                  ? new Date(article.publishedAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
+                  ? `/study/${examBodyFirst.toLowerCase()}/${article.slug}`
+                  : `/articles/${article.slug}`
+                const posted = article.published_at
+                  ? new Date(article.published_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
                   : null
                 return (
-                  <div key={article._id} className="group flex items-start justify-between gap-4 px-5 py-4 hover:bg-slate-50 transition-colors">
+                  <div key={article.id} className="group flex items-start justify-between gap-4 px-5 py-4 hover:bg-slate-50 transition-colors">
                     <div className="flex items-start gap-3 min-w-0">
                       <div className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${isEthioTax ? 'bg-[#C9982A]' : 'bg-navy-950'}`} />
                       <div className="min-w-0">
@@ -120,11 +116,6 @@ export default async function ArticlesPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
-                      {article.isHotTopic && (
-                        <span className="hidden md:block text-xs font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
-                          Hot Topic
-                        </span>
-                      )}
                       {posted && <span className="hidden md:block text-xs text-slate-400">{posted}</span>}
                       <svg className="w-4 h-4 text-slate-300 group-hover:text-navy-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
