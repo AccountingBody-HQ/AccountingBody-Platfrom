@@ -165,6 +165,7 @@ export async function getPublishedCourses(site?: string): Promise<CourseSummary[
 }
 
 export async function getCourseBySlug(slug: string): Promise<Course | null> {
+  try {
   // Stage 1: fetch course
   const { data: courseData, error: courseError } = await supabase
     .from('courses')
@@ -265,6 +266,10 @@ export async function getCourseBySlug(slug: string): Promise<Course | null> {
     canonicalOwner:  course.canonical_owner,
     chapters:        courseChapters,
   }
+  } catch (err) {
+    console.error('getCourseBySlug error:', err)
+    return null
+  }
 }
 
 export async function getLessonData(courseSlug: string, lessonSlug: string): Promise<{
@@ -273,6 +278,7 @@ export async function getLessonData(courseSlug: string, lessonSlug: string): Pro
   prevLesson: { slug: string; title: string; courseSlug: string } | null
   nextLesson: { slug: string; title: string; courseSlug: string } | null
 } | null> {
+  try {
   const course = await getCourseBySlug(courseSlug)
   if (!course) return null
 
@@ -320,6 +326,10 @@ export async function getLessonData(courseSlug: string, lessonSlug: string): Pro
     : null
 
   return { course, lesson: lessonWithContent, prevLesson, nextLesson }
+  } catch (err) {
+    console.error('getLessonData error:', err)
+    return null
+  }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
