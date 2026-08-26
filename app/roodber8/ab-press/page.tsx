@@ -11,7 +11,6 @@ const EDITIONS = ['2025/26 Edition', '2026/27 Edition', '2027/28 Edition']
 
 export default function AbPressPage() {
   const [courses,     setCourses]     = useState([] as any[])
-  const [platform,    setPlatform]    = useState('accountingbody')
   const [slug,        setSlug]        = useState('')
   const [bookType,    setBookType]    = useState('study')
   const [edition,     setEdition]     = useState('2026/27 Edition')
@@ -31,17 +30,14 @@ export default function AbPressPage() {
     setSlug('')
     setPreview(null)
     setDownloadUrl('')
-    fetch(
-      'https://4rllejq1.apicdn.sanity.io/v2023-05-03/data/query/production?query=' +
-      encodeURIComponent('*[_type=="course" && "' + platform + '" in showOnSites && (status == "published" || !defined(status))]{_id, title, slug}')
-    )
+    fetch('/api/roodber8/course-factory/load-course?action=list')
       .then(r => r.json())
-      .then(d => setCourses(d.result || []))
+      .then(d => setCourses(d.courses || []))
       .catch(() => setCourses([]))
-  }, [platform])
+  }, [])
 
   const handleCourseSelect = (e: any) => {
-    const selected = courses.find((c: any) => c.slug.current === e.target.value)
+    const selected = courses.find((c: any) => c.slug === e.target.value)
     setSlug(e.target.value)
     if (selected) setSubtitle(selected.title)
     setPreview(null); setDownloadUrl(''); setError(''); setGenError('')
@@ -127,15 +123,7 @@ export default function AbPressPage() {
           {/* Step 1 - Course */}
           <div className="bg-[#081428] rounded-xl p-6 border border-slate-700">
             <h2 className="text-sm font-semibold text-[#D4A017] uppercase tracking-wide mb-4">Step 1 — Select Course</h2>
-            <label className="block text-xs text-slate-400 mb-1">Platform</label>
-            <select
-              value={platform}
-              onChange={e => setPlatform(e.target.value)}
-              className="w-full bg-[#0C1A3D] border border-slate-600 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#D4A017] mb-3"
-            >
-              <option value="accountingbody">AccountingBody</option>
-              <option value="ethiotax">EthioTax</option>
-            </select>
+
             <label className="block text-xs text-slate-400 mb-1">Published Course</label>
             <select
               value={slug}
@@ -145,7 +133,7 @@ export default function AbPressPage() {
             >
               <option value="">-- Select a course --</option>
               {courses.map((c: any) => (
-                <option key={c._id} value={c.slug.current}>{c.title} ({c.slug.current})</option>
+                <option key={c._id} value={c.slug}>{c.title} ({c.slug})</option>
               ))}
             </select>
             {error ? <p className="text-red-400 text-xs mt-2">{error}</p> : null}
@@ -230,7 +218,7 @@ export default function AbPressPage() {
             {!preview && !loading
               ? <p className="text-slate-500 text-sm">Select a course and click Load Course Preview</p>
               : null}
-            {loading ? <p className="text-slate-400 text-sm">Fetching from Sanity...</p> : null}
+            {loading ? <p className="text-slate-400 text-sm">Loading course...</p> : null}
             {course ? (
               <div className="space-y-4">
                 <div>
