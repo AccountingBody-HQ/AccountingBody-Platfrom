@@ -14,7 +14,7 @@ import { useState } from 'react'
 interface FetchedArticle {
   _id:    string
   title:  string
-  slug:   { current: string }
+  slug:   string
   excerpt?: string
   contentId?: string
   wpId?: string
@@ -66,7 +66,7 @@ async function fetchArticlesBulk(ids: string[]): Promise<{ found: FetchedArticle
   return { found, missing }
 }
 
-async function saveCourseToSanity(payload: any): Promise<{ success: boolean; id?: string; error?: string }> {
+async function saveCourse(payload: any): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
     const res = await fetch('/api/roodber8/course-factory/save', {
       method:  'POST',
@@ -112,7 +112,7 @@ export default function CourseFactoryPage() {
   const [deleteError,setDeleteError] = useState('')
 
   // Load existing course state
-  const [courseList,     setCourseList]     = useState<{_id:string;title:string;slug:{current:string};status:string;level:string;chapterCount:number}[]>([])
+  const [courseList,     setCourseList]     = useState<{_id:string;title:string;slug:string;status:string;level:string;chapterCount:number}[]>([])
   const [loadingList,    setLoadingList]    = useState(false)
   const [loadingCourse,  setLoadingCourse]  = useState(false)
   const [loadError,      setLoadError]      = useState('')
@@ -327,20 +327,20 @@ This will permanently delete the course and all its lesson documents from Sanity
       setLevel(c.level ?? 'beginner')
       setStatus(c.status ?? 'draft')
       setIsFeatured(c.isFeatured ?? false)
-      setLoadedSlug(c.slug?.current ?? '')
+      setLoadedSlug(c.slug ?? '')
       const rebuilt = (c.chapters ?? []).map((ch: any) => ({
         id:    uid(),
         title: ch.chapterTitle ?? 'Chapter',
         lessons: (ch.lessons ?? []).map((l: any) => ({
           id:       uid(),
           title:    l.title ?? 'Lesson',
-          articles: (l.linkedArticles ?? []).map((a: any) => ({
-            _id:       a._id,
+          articles: (l.articles ?? []).map((a: any) => ({
+            _id:       a.id ?? a._id,
             title:     a.title,
             slug:      a.slug,
             excerpt:   a.excerpt,
-            contentId: a.contentId,
-            wpId:      a.wpId,
+            contentId: a.content_id ?? a.contentId,
+            wpId:      a.wp_id ?? a.wpId,
           })),
         })),
       }))
@@ -384,7 +384,7 @@ This will permanently delete the course and all its lesson documents from Sanity
       })),
     }
 
-    const result = await saveCourseToSanity(payload)
+    const result = await saveCourse(payload)
     setSaving(false)
 
     if (result.success) {
@@ -404,7 +404,7 @@ This will permanently delete the course and all its lesson documents from Sanity
       <div>
         <h1 className="font-display text-2xl text-navy-950 mb-1">Course Factory</h1>
         <p className="text-sm text-slate-500">
-          Assemble structured courses from existing content IDs. Courses are saved to Sanity as draft by default.
+          Assemble structured courses from existing content IDs. Courses are saved as draft by default.
         </p>
       </div>
 
@@ -446,7 +446,7 @@ This will permanently delete the course and all its lesson documents from Sanity
             {!loadingList && courseList.map(c => (
               <button
                 key={c._id}
-                onClick={() => handleLoadCourse(c.slug.current)}
+                onClick={() => handleLoadCourse(c.slug)}
                 disabled={loadingCourse}
                 className="w-full flex items-center gap-4 px-4 py-3 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors text-left disabled:opacity-50"
               >
@@ -790,7 +790,7 @@ This will permanently delete the course and all its lesson documents from Sanity
           disabled={saving || !title.trim()}
           className="w-full h-12 rounded-xl text-base font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors disabled:opacity-40"
         >
-          {saving ? 'Saving to Sanity...' : 'Save Course to Sanity'}
+          {saving ? 'Saving...' : 'Save Course'}
         </button>
 
         {/* Delete course — only shown when a course is loaded */}
@@ -799,7 +799,7 @@ This will permanently delete the course and all its lesson documents from Sanity
             <div>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Danger Zone</p>
               <p className="text-xs text-slate-400">
-                Permanently deletes this course and all its lesson documents from Sanity. Cannot be undone.
+                Permanently deletes this course and all its lesson documents. Cannot be undone.
               </p>
             </div>
             {deleteError && (
