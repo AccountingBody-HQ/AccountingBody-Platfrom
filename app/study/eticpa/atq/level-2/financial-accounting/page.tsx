@@ -152,17 +152,17 @@ export default async function FinancialAccountingPage() {
               </p>
             </div>
             <div className="space-y-4">
-              {course.chapters.map((chapter: { _key: string; chapterTitle: string; lessons: { _id: string; slug: { current: string }; title: string }[] }) => (
-                <div key={chapter._key} className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+              {course.chapters.map(chapter => (
+                <div key={chapter.id} className="rounded-xl border border-slate-200 bg-white overflow-hidden">
                   <div className="px-6 py-4 border-b border-slate-100" style={{ backgroundColor: '#f0f7f4' }}>
-                    <h3 className="font-semibold text-sm" style={{ color: '#1A4731' }}>{chapter.chapterTitle}</h3>
+                    <h3 className="font-semibold text-sm" style={{ color: '#1A4731' }}>{chapter.title}</h3>
                   </div>
                   {chapter.lessons && chapter.lessons.length > 0 && (
                     <div className="divide-y divide-slate-100">
-                      {chapter.lessons.map((lesson: { _id: string; slug: { current: string }; title: string }, lessonIndex: number) => (
+                      {chapter.lessons.map((lesson, lessonIndex) => (
                         <Link
-                          key={lesson._id}
-                          href={`/free-courses/${COURSE_SLUG}/learn/${lesson.slug?.current}`}
+                          key={lesson.id}
+                          href={`/free-courses/${COURSE_SLUG}/learn/${lesson.slug}`}
                           className="flex items-center gap-4 px-6 py-3.5 hover:bg-slate-50 transition-colors group"
                         >
                           <span className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold shrink-0 transition-colors"

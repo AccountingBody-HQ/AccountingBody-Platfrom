@@ -1,163 +1,235 @@
-// lib/coursesNew.ts
-// Types and Sanity fetch functions for the new chapter-based course system
+import { createClient } from '@supabase/supabase-js'
 
-const PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
-const DATASET    = process.env.NEXT_PUBLIC_SANITY_DATASET    ?? 'production'
-const BASE_URL   = `https://${PROJECT_ID}.apicdn.sanity.io/v2023-05-03/data/query/${DATASET}`
-const AUTH_HEADER: Record<string, string> = process.env.SANITY_API_TOKEN ? { Authorization: `Bearer ${process.env.SANITY_API_TOKEN}` } : {}
-
-// ── Types ─────────────────────────────────────────────────────────────────────
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SECRET_KEY!
+)
 
 export interface CourseArticle {
-  _id:    string
-  title:  string
-  slug:   { current: string }
-  excerpt?: string
-  readTime?: number
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  body?: any[]
-  mcqUrl?: string
+  id:         string
+  title:      string
+  slug:       string
+  excerpt?:   string
+  readTime?:  number
+  contentId?: string
+  wpId?:      string
+  content?:   string
 }
 
 export interface CourseLesson {
-  _id:          string
-  title:        string
-  slug:         { current: string }
-  order?:       number
-  estimatedTime?: number
-  videoUrl?:    string
-  audioUrl?:    string
+  id:               string
+  title:            string
+  slug:             string
+  lessonOrder:      number
+  estimatedTime?:   number
+  videoUrl?:        string
+  audioUrl?:        string
   externalQuizUrl?: string
-  linkedArticles: CourseArticle[]
+  articles:         CourseArticle[]
 }
 
 export interface CourseChapter {
-  _key:         string
-  chapterTitle: string
-  chapterOrder?: number
+  id:           string
+  title:        string
+  chapterOrder: number
   lessons:      CourseLesson[]
 }
 
-export interface CourseListItem {
-  _id:          string
-  title:        string
-  slug:         { current: string }
-  description?: string
-  level?:       string
-  categoryTitle?: string
-  featuredImage?: { asset: { url: string }; alt?: string }
-  isFeatured?:  boolean
-  courseOrder?: number
-  chapterCount: number
-  lessonCount:  number
-}
-
-export interface CourseFull extends CourseListItem {
-  chapters:        CourseChapter[]
+export interface Course {
+  id:               string
+  title:            string
+  slug:             string
+  description?:     string
   metaDescription?: string
-  showOnSites?:    string[]
-  status?:         string
+  level?:           string
+  status:           string
+  isFeatured:       boolean
+  showOnSites:      string[]
+  canonicalOwner:   string
+  chapters:         CourseChapter[]
 }
 
-// ── Sanity fetch — catalogue ──────────────────────────────────────────────────
+export interface CourseSummary {
+  id:             string
+  title:          string
+  slug:           string
+  description?:   string
+  level?:         string
+  status:         string
+  isFeatured:     boolean
+  showOnSites:    string[]
+  canonicalOwner: string
+  chapterCount:   number
+  lessonCount:    number
+}
 
-export async function getPublishedCourses(): Promise<CourseListItem[]> {
-  try {
-    const query = encodeURIComponent(`
-      *[_type == "course" && (status == "published" || !defined(status)) && "accountingbody" in showOnSites]
-      | order(courseOrder asc) {
-        _id, title, slug, description, level, isFeatured, courseOrder,
-        "categoryTitle": category->title,
-        featuredImage { asset->{ url }, alt },
-        "chapterCount": count(chapters),
-        "lessonCount":  count(chapters[].lessons[])
-      }
+export async function getPublishedCourses(site?: string): Promise<CourseSummary[]> {
+  let query = supabase
+    .from('courses')
+    .select(`
+      id, title, slug, description, level, status, is_featured,
+      show_on_sites, canonical_owner,
+      course_chapters (
+        id,
+        course_lessons ( id )
+      )
     `)
-    const res = await fetch(`${BASE_URL}?query=${query}`, {
-      next: { revalidate: 3600 },
-      headers: AUTH_HEADER,
-    })
-    if (!res.ok) return []
-    const data = await res.json()
-    return data.result ?? []
-  } catch {
-    return []
+    .eq('status', 'published')
+    .order('title', { ascending: true })
+
+  if (site) {
+    query = query.contains('show_on_sites', [site])
+  }
+
+  const { data, error } = await query
+  if (error || !data) return []
+
+  return (data as any[]).map(c => ({
+    id:             c.id,
+    title:          c.title,
+    slug:           c.slug,
+    description:    c.description,
+    level:          c.level,
+    status:         c.status,
+    isFeatured:     c.is_featured,
+    showOnSites:    c.show_on_sites,
+    canonicalOwner: c.canonical_owner,
+    chapterCount:   (c.course_chapters ?? []).length,
+    lessonCount:    (c.course_chapters ?? []).reduce(
+      (sum: number, ch: any) => sum + (ch.course_lessons ?? []).length, 0
+    ),
+  }))
+}
+
+export async function getCourseBySlug(slug: string): Promise<Course | null> {
+  const { data, error } = await supabase
+    .from('courses')
+    .select(`
+      id, title, slug, description, level, status, is_featured,
+      show_on_sites, canonical_owner,
+      course_chapters (
+        id, chapter_title, chapter_order,
+        course_lessons (
+          id, title, slug, lesson_order,
+          estimated_time, video_url, audio_url, external_quiz_url,
+          course_lesson_articles (
+            article_order,
+            articles (
+              id, title, slug, excerpt, read_time, content_id, wp_id
+            )
+          )
+        )
+      )
+    `)
+    .eq('slug', slug)
+    .eq('status', 'published')
+    .single()
+
+  if (error || !data) return null
+
+  const chapters: CourseChapter[] = ((data as any).course_chapters ?? [])
+    .sort((a: any, b: any) => a.chapter_order - b.chapter_order)
+    .map((ch: any) => ({
+      id:           ch.id,
+      title:        ch.chapter_title,
+      chapterOrder: ch.chapter_order,
+      lessons: ((ch.course_lessons ?? [])
+        .sort((a: any, b: any) => a.lesson_order - b.lesson_order)
+        .map((l: any) => ({
+          id:             l.id,
+          title:          l.title,
+          slug:           l.slug,
+          lessonOrder:    l.lesson_order,
+          estimatedTime:  l.estimated_time,
+          videoUrl:       l.video_url,
+          audioUrl:       l.audio_url,
+          externalQuizUrl: l.external_quiz_url,
+          articles: ((l.course_lesson_articles ?? [])
+            .sort((a: any, b: any) => a.article_order - b.article_order)
+            .map((la: any) => {
+              const a = la.articles
+              if (!a) return null
+              return {
+                id:        a.id,
+                title:     a.title,
+                slug:      a.slug,
+                excerpt:   a.excerpt,
+                readTime:  a.read_time,
+                contentId: a.content_id,
+                wpId:      a.wp_id,
+              } as CourseArticle
+            })
+            .filter(Boolean)) as CourseArticle[],
+        })) as CourseLesson[]),
+    }))
+
+  return {
+    id:              (data as any).id,
+    title:           (data as any).title,
+    slug:            (data as any).slug,
+    description:     (data as any).description,
+    metaDescription: (data as any).description,
+    level:           (data as any).level,
+    status:          (data as any).status,
+    isFeatured:      (data as any).is_featured,
+    showOnSites:     (data as any).show_on_sites,
+    canonicalOwner:  (data as any).canonical_owner,
+    chapters,
   }
 }
-
-// ── Sanity fetch — single course with full chapters ───────────────────────────
-
-export async function getCourseBySlug(slug: string): Promise<CourseFull | null> {
-  try {
-    const query = encodeURIComponent(`
-      *[_type == "course" && slug.current == "${slug}" && (status == "published" || !defined(status))][0] {
-        _id, title, slug, description, level, isFeatured,
-        courseOrder, metaDescription, showOnSites, status,
-        "categoryTitle": category->title,
-        featuredImage { asset->{ url }, alt },
-        "chapterCount": count(chapters),
-        "lessonCount":  count(chapters[].lessons[]),
-        "chapters": chapters[] {
-          _key, chapterTitle, chapterOrder,
-          "lessons": lessons[defined(@->._id) && !(@->_id in path("drafts.**"))]-> {
-            _id, title, slug, order, estimatedTime,
-            videoUrl, audioUrl, externalQuizUrl,
-            "linkedArticles": linkedArticles[defined(@->._id)]-> {
-              _id, title, slug, excerpt, readTime, body, mcqUrl
-            }
-          }
-        }
-      }
-    `)
-    const res = await fetch(`${BASE_URL}?query=${query}`, {
-      cache: 'no-store',
-      headers: AUTH_HEADER,
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    return data.result ?? null
-  } catch {
-    return null
-  }
-}
-
-// ── Sanity fetch — single lesson ──────────────────────────────────────────────
 
 export async function getLessonData(courseSlug: string, lessonSlug: string): Promise<{
-  course: CourseFull
+  course: Course
   lesson: CourseLesson
-  chapterTitle: string
-  prevLesson: { slug: string; title: string } | null
-  nextLesson: { slug: string; title: string } | null
+  prevLesson: { slug: string; title: string; courseSlug: string } | null
+  nextLesson: { slug: string; title: string; courseSlug: string } | null
 } | null> {
   const course = await getCourseBySlug(courseSlug)
   if (!course) return null
 
-  // Flatten all lessons in order
-  const flat: { lesson: CourseLesson; chapterTitle: string }[] = []
-  for (const chapter of course.chapters ?? []) {
-    for (const lesson of chapter.lessons ?? []) {
-      flat.push({ lesson, chapterTitle: chapter.chapterTitle })
-    }
-  }
+  const allLessons = course.chapters.flatMap(ch => ch.lessons)
+  const lessonIndex = allLessons.findIndex(l => l.slug === lessonSlug)
+  if (lessonIndex === -1) return null
 
-  const idx = flat.findIndex(f => f.lesson.slug?.current === lessonSlug)
-  if (idx === -1) return null
+  const lesson = allLessons[lessonIndex]
 
-  return {
-    course,
-    lesson:       flat[idx].lesson,
-    chapterTitle: flat[idx].chapterTitle,
-    prevLesson:   idx > 0
-      ? { slug: flat[idx - 1].lesson.slug.current, title: flat[idx - 1].lesson.title }
-      : null,
-    nextLesson:   idx < flat.length - 1
-      ? { slug: flat[idx + 1].lesson.slug.current, title: flat[idx + 1].lesson.title }
-      : null,
-  }
+  // Fetch full article content for lesson reading
+  const articlesWithContent: CourseArticle[] = await Promise.all(
+    lesson.articles.map(async a => {
+      const { data } = await supabase
+        .from('articles')
+        .select('id, title, slug, excerpt, content, read_time, content_id, wp_id')
+        .eq('slug', a.slug)
+        .single()
+      if (!data) return a
+      return {
+        id:        data.id,
+        title:     data.title,
+        slug:      data.slug,
+        excerpt:   data.excerpt,
+        content:   data.content,
+        readTime:  data.read_time,
+        contentId: data.content_id,
+        wpId:      data.wp_id,
+      }
+    })
+  )
+
+  const lessonWithContent: CourseLesson = { ...lesson, articles: articlesWithContent }
+
+  const prevLesson = lessonIndex > 0
+    ? { slug: allLessons[lessonIndex - 1].slug, title: allLessons[lessonIndex - 1].title, courseSlug }
+    : null
+  const nextLesson = lessonIndex < allLessons.length - 1
+    ? { slug: allLessons[lessonIndex + 1].slug, title: allLessons[lessonIndex + 1].title, courseSlug }
+    : null
+
+  return { course, lesson: lessonWithContent, prevLesson, nextLesson }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+// (Pure presentation helpers, unrelated to the Sanity→Supabase data-layer swap —
+// restored here since existing pages still import them from this module.)
 
 export function levelBadge(level?: string) {
   const map: Record<string, { bg: string; text: string; border: string }> = {

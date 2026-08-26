@@ -139,7 +139,7 @@ export default async function IntroductionToAccountingPage() {
                 <span className="eyebrow mb-3 block" style={{ color: '#1A4731' }}>Course Structure</span>
                 <h2 className="section-title mb-4">Your learning path</h2>
                 <p className="text-slate-500 text-lg leading-relaxed">
-                  {course.chapterCount} units · {course.lessonCount} chapters · {totalArticles} study notes — structured as a progressive course from foundations to financial statements.
+                  {course.chapters.length} units · {course.chapters.reduce((acc, ch) => acc + ch.lessons.length, 0)} chapters · {totalArticles} study notes — structured as a progressive course from foundations to financial statements.
                 </p>
               </div>
               <Link href={`/free-courses/${COURSE_SLUG}`}
@@ -151,18 +151,18 @@ export default async function IntroductionToAccountingPage() {
             </div>
             <div className="space-y-4 max-w-4xl">
               {course.chapters?.map((chapter, ci) => (
-                <div key={chapter._key} className="rounded-xl border border-slate-200 overflow-hidden">
+                <div key={chapter.id} className="rounded-xl border border-slate-200 overflow-hidden">
                   <div className="flex items-center gap-4 px-5 py-4 border-b border-slate-100" style={{ backgroundColor: '#f0f7f4' }}>
                     <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-white text-sm font-bold" style={{ backgroundColor: '#1A4731' }}>{ci + 1}</div>
                     <div className="flex-1">
-                      <h3 className="font-display text-navy-950 text-base">{chapter.chapterTitle}</h3>
+                      <h3 className="font-display text-navy-950 text-base">{chapter.title}</h3>
                       <p className="text-xs text-slate-400 mt-0.5">{chapter.lessons?.length ?? 0} lessons</p>
                     </div>
                   </div>
                   <div className="divide-y divide-slate-50 bg-white">
                     {chapter.lessons?.map((lesson, li) => (
-                      <Link key={lesson._id}
-                        href={`/free-courses/${COURSE_SLUG}/learn/${lesson.slug.current}`}
+                      <Link key={lesson.id}
+                        href={`/free-courses/${COURSE_SLUG}/learn/${lesson.slug}`}
                         className="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50 transition-colors group">
                         <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
                           <span className="text-xs text-slate-500 font-medium">{li + 1}</span>

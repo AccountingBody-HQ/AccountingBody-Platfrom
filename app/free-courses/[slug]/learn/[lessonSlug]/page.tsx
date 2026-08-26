@@ -9,18 +9,18 @@ import { getLessonData, getCourseBySlug, getPublishedCourses } from '@/lib/cours
 import MarkCompleteButton, { CourseProgressBar, ResetLessonButton, ResetChapterInlineButton } from '@/components/course/ProgressTracker'
 import CourseSidebar from '@/components/course/CourseSidebar'
 import MobileNavDrawer from '@/components/course/MobileNavDrawer'
-import ArticleBody from '@/components/course/ArticleBody'
+import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 
 export async function generateStaticParams() {
   const courses = await getPublishedCourses()
   const params: { slug: string; lessonSlug: string }[] = []
   for (const c of courses) {
-    const full = await getCourseBySlug(c.slug.current)
+    const full = await getCourseBySlug(c.slug)
     if (!full) continue
     for (const chapter of full.chapters ?? []) {
       for (const lesson of chapter.lessons ?? []) {
-        if (lesson.slug?.current) params.push({ slug: c.slug.current, lessonSlug: lesson.slug.current })
+        if (lesson.slug) params.push({ slug: c.slug, lessonSlug: lesson.slug })
       }
     }
   }
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: { params: { slug: string; les
   if (!data) return { title: 'Lesson Not Found | Accounting Body' }
   return {
     title: `${data.lesson.title} — ${data.course.title} | Accounting Body`,
-    description: data.lesson.linkedArticles?.[0]?.excerpt ?? data.course.description ?? '',
+    description: data.lesson.articles?.[0]?.excerpt ?? data.course.description ?? '',
   }
 }
 
@@ -46,22 +46,32 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
 
   const data = await getLessonData(params.slug, params.lessonSlug)
   if (!data) notFound()
-  const { course, lesson, chapterTitle, prevLesson, nextLesson } = data
+  const { course, lesson, prevLesson, nextLesson } = data
 
   const allLessons: string[] = []
   for (const ch of course.chapters ?? []) {
     for (const l of ch.lessons ?? []) {
-      if (l.slug?.current) allLessons.push(l.slug.current)
+      if (l.slug) allLessons.push(l.slug)
     }
   }
   const currentIdx   = allLessons.indexOf(params.lessonSlug)
   const totalLessons = allLessons.length
   const isLastLesson = !nextLesson
 
-  const currentChapter = course.chapters?.find((ch: { lessons?: { slug?: { current: string } }[] }) =>
-    ch.lessons?.some((l: { slug?: { current: string } }) => l.slug?.current === params.lessonSlug)
+  const currentChapter = course.chapters?.find(ch =>
+    ch.lessons?.some(l => l.slug === params.lessonSlug)
   )
-  const currentChapterLessonSlugs = currentChapter?.lessons?.map((l: { slug?: { current: string } }) => l.slug?.current ?? '') ?? []
+  const chapterTitle = currentChapter?.title ?? ''
+  const currentChapterLessonSlugs = currentChapter?.lessons?.map(l => l.slug) ?? []
+
+  // CourseSidebar / MobileNavDrawer still expect the old Sanity-ish shape
+  // ({_key, chapterTitle, lessons: [{_id, title, slug: {current}}]}) — adapt at
+  // this boundary rather than touching those two shared components.
+  const sidebarChapters = (course.chapters ?? []).map(ch => ({
+    _key: ch.id,
+    chapterTitle: ch.title,
+    lessons: (ch.lessons ?? []).map(l => ({ _id: l.id, title: l.title, slug: { current: l.slug } })),
+  }))
 
   return (
     <div className="flex flex-col" style={{ minHeight: '100vh', background: '#EDE9E3' }}>
@@ -75,7 +85,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
 
           {/* Back to course */}
           <Link
-            href={`/free-courses/${course.slug.current}`}
+            href={`/free-courses/${course.slug}`}
             className="flex items-center gap-2 pl-4 pr-5 border-r shrink-0 transition-all hover:opacity-75"
             style={{ borderColor: 'rgba(255,255,255,0.06)' }}
           >
@@ -103,7 +113,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
           <div className="hidden md:flex items-center gap-1 px-3 border-l shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
             {prevLesson ? (
               <Link
-                href={`/free-courses/${course.slug.current}/learn/${prevLesson.slug}`}
+                href={`/free-courses/${course.slug}/learn/${prevLesson.slug}`}
                 title={`Previous: ${prevLesson.title}`}
                 className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:bg-white/10"
               >
@@ -120,7 +130,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
             )}
             {nextLesson ? (
               <Link
-                href={`/free-courses/${course.slug.current}/learn/${nextLesson.slug}`}
+                href={`/free-courses/${course.slug}/learn/${nextLesson.slug}`}
                 title={`Next: ${nextLesson.title}`}
                 className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:bg-white/10"
               >
@@ -140,7 +150,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
           {/* Single progress indicator */}
           <div className="flex items-center px-5 border-l shrink-0" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
             <div className="hidden sm:block">
-              <CourseProgressBar courseSlug={course.slug.current} allLessonSlugs={allLessons} />
+              <CourseProgressBar courseSlug={course.slug} allLessonSlugs={allLessons} />
             </div>
           </div>
         </div>
@@ -151,8 +161,8 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
 
         {/* Collapsible sidebar (desktop) */}
         <CourseSidebar
-          courseSlug={course.slug.current}
-          chapters={course.chapters ?? []}
+          courseSlug={course.slug}
+          chapters={sidebarChapters}
           totalLessons={totalLessons}
           currentLessonSlug={params.lessonSlug}
           allLessons={allLessons}
@@ -205,7 +215,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
             )}
 
             {/* Study Notes */}
-            {lesson.linkedArticles?.length > 0 && (
+            {lesson.articles?.length > 0 && (
               <div className="mb-10">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: brand }}>
@@ -216,16 +226,15 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                   <div>
                     <h2 className="font-display text-navy-950 text-xl leading-none">Study Notes</h2>
                     <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>
-                      {lesson.linkedArticles.length} {lesson.linkedArticles.length === 1 ? 'article' : 'articles'} in this lesson
+                      {lesson.articles.length} {lesson.articles.length === 1 ? 'article' : 'articles'} in this lesson
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  {lesson.linkedArticles.map((// eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    article: { _id: string; title: string; slug: { current: string }; excerpt?: string; body?: any[]; mcqUrl?: string }, ai: number) => (
+                  {lesson.articles.map((article, ai) => (
                     <div
-                      key={article._id}
+                      key={article.id}
                       className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
                       style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
                     >
@@ -249,7 +258,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                             {article.title}
                           </h3>
                           <Link
-                            href={`/articles/${article.slug.current}`}
+                            href={`/articles/${article.slug}`}
                             target="_blank"
                             className="inline-flex items-center gap-1.5 text-xs font-semibold transition-all hover:opacity-70"
                             style={{ color: '#94A3B8' }}
@@ -264,31 +273,14 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
 
                       {/* Article body — full card width for good mobile reading */}
                       <div className="px-6 pb-4">
-                        {article.body && article.body.length > 0 ? (
-                          <ArticleBody body={article.body} />
+                        {article.content ? (
+                          <HtmlRenderer html={article.content} stripLeadingH1 />
                         ) : article.excerpt ? (
                           <p className="text-sm" style={{ color: '#64748B', lineHeight: 1.75 }}>
                             {article.excerpt}
                           </p>
                         ) : null}
                       </div>
-
-                      {/* Practice questions button — only if mcqUrl exists */}
-                      {article.mcqUrl && (
-                        <div className="px-6 pb-6">
-                          <Link
-                            href={article.mcqUrl}
-                            target="_blank"
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all hover:-translate-y-0.5"
-                            style={{ background: 'rgba(212,160,23,0.1)', color: '#B8860B', border: '1.5px solid rgba(212,160,23,0.25)' }}
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                            Practice Questions
-                          </Link>
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -325,7 +317,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
             {/* Reset Lesson — above the card, only shows when lesson is complete */}
             <div className="mb-3 flex justify-end">
               <ResetLessonButton
-                courseSlug={course.slug.current}
+                courseSlug={course.slug}
                 lessonSlug={params.lessonSlug}
                 allLessonSlugs={allLessons}
               />
@@ -349,10 +341,10 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                 </div>
                 <div className="shrink-0">
                   <MarkCompleteButton
-                    courseSlug={course.slug.current}
+                    courseSlug={course.slug}
                     lessonSlug={params.lessonSlug}
                     allLessonSlugs={allLessons}
-                    nextHref={nextLesson ? `/free-courses/${course.slug.current}/learn/${nextLesson.slug}` : undefined}
+                    nextHref={nextLesson ? `/free-courses/${course.slug}/learn/${nextLesson.slug}` : undefined}
                   />
                 </div>
               </div>
@@ -361,7 +353,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
             {/* Chapter Reset — below the card */}
             <div className="mb-10 flex justify-end">
               <ResetChapterInlineButton
-                courseSlug={course.slug.current}
+                courseSlug={course.slug}
                 allLessonSlugs={allLessons}
                 chapterLessonSlugs={currentChapterLessonSlugs}
               />
@@ -371,7 +363,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-12">
               {prevLesson ? (
                 <Link
-                  href={`/free-courses/${course.slug.current}/learn/${prevLesson.slug}`}
+                  href={`/free-courses/${course.slug}/learn/${prevLesson.slug}`}
                   className="flex items-center gap-3 p-5 rounded-2xl bg-white border border-slate-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg group"
                 >
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#F0EEE9' }}>
@@ -388,7 +380,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
 
               {nextLesson ? (
                 <Link
-                  href={`/free-courses/${course.slug.current}/learn/${nextLesson.slug}`}
+                  href={`/free-courses/${course.slug}/learn/${nextLesson.slug}`}
                   className="flex items-center justify-end gap-3 p-5 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl group text-right"
                   style={{ background: `linear-gradient(135deg, ${brand} 0%, ${brandMid} 100%)`, boxShadow: '0 4px 20px rgba(0,0,0,0.25)' }}
                 >
@@ -404,7 +396,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                 </Link>
               ) : (
                 <Link
-                  href={`/free-courses/${course.slug.current}`}
+                  href={`/free-courses/${course.slug}`}
                   className="flex items-center justify-center gap-3 p-5 rounded-2xl border-2 transition-all hover:-translate-y-0.5 hover:shadow-lg"
                   style={{ borderColor: '#14b4a3', background: 'rgba(20,180,163,0.07)' }}
                 >
@@ -439,8 +431,8 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
 
       {/* MOBILE BOTTOM NAVIGATION */}
       <MobileNavDrawer
-        courseSlug={course.slug.current}
-        chapters={course.chapters ?? []}
+        courseSlug={course.slug}
+        chapters={sidebarChapters}
         totalLessons={totalLessons}
         currentLessonSlug={params.lessonSlug}
         allLessons={allLessons}

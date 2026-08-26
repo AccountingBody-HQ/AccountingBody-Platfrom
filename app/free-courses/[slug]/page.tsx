@@ -8,7 +8,7 @@ import type { Metadata } from 'next'
 
 export async function generateStaticParams() {
   const courses = await getPublishedCourses()
-  return courses.map(c => ({ slug: c.slug.current }))
+  return courses.map(c => ({ slug: c.slug }))
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -24,9 +24,10 @@ export default async function FreeCoursesSlugPage({ params }: { params: { slug: 
   const course = await getCourseBySlug(params.slug)
   if (!course) notFound()
 
-  const badge       = levelBadge(course.level)
-  const firstLesson = course.chapters?.[0]?.lessons?.[0]
+  const badge        = levelBadge(course.level)
+  const firstLesson  = course.chapters?.[0]?.lessons?.[0]
   const totalLessons = course.chapters?.reduce((acc, ch) => acc + (ch.lessons?.length ?? 0), 0) ?? 0
+  const chapterCount = course.chapters?.length ?? 0
 
   return (
     <>
@@ -56,7 +57,7 @@ export default async function FreeCoursesSlugPage({ params }: { params: { slug: 
             <div className="flex flex-wrap items-center gap-5 text-sm text-white/50 mb-8">
               <span className="flex items-center gap-1.5">
                 <svg className="w-4 h-4 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                {course.chapterCount} chapters
+                {chapterCount} chapters
               </span>
               <span className="flex items-center gap-1.5">
                 <svg className="w-4 h-4 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
@@ -65,7 +66,7 @@ export default async function FreeCoursesSlugPage({ params }: { params: { slug: 
             </div>
             <div className="flex flex-col sm:flex-row items-stretch gap-3">
               {firstLesson ? (
-                <Link href={`/free-courses/${course.slug.current}/learn/${firstLesson.slug.current}`}
+                <Link href={`/free-courses/${course.slug}/learn/${firstLesson.slug}`}
                   className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
                   Start Course
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
@@ -90,19 +91,19 @@ export default async function FreeCoursesSlugPage({ params }: { params: { slug: 
             <h2 className="section-title mb-8">What you will study</h2>
             <div className="space-y-4">
               {course.chapters?.map((chapter, ci) => (
-                <div key={chapter._key} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div key={chapter.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                   <div className="flex items-center gap-4 px-5 py-4 border-b border-slate-100 bg-slate-50">
                     <div className="w-8 h-8 rounded-lg bg-navy-950 flex items-center justify-center shrink-0">
                       <span className="text-xs font-bold text-white">{ci + 1}</span>
                     </div>
                     <div>
-                      <h3 className="font-display text-navy-950 text-base">{chapter.chapterTitle}</h3>
+                      <h3 className="font-display text-navy-950 text-base">{chapter.title}</h3>
                       <p className="text-xs text-slate-400 mt-0.5">{chapter.lessons?.length ?? 0} lessons</p>
                     </div>
                   </div>
                   <div className="divide-y divide-slate-50">
                     {chapter.lessons?.map((lesson, li) => (
-                      <Link key={lesson._id} href={`/free-courses/${course.slug.current}/learn/${lesson.slug.current}`}
+                      <Link key={lesson.id} href={`/free-courses/${course.slug}/learn/${lesson.slug}`}
                         className="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50 transition-colors">
                         <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
                           <span className="text-xs text-slate-500 font-medium">{li + 1}</span>
@@ -117,7 +118,7 @@ export default async function FreeCoursesSlugPage({ params }: { params: { slug: 
             </div>
             {firstLesson && (
               <div className="mt-8">
-                <Link href={`/free-courses/${course.slug.current}/learn/${firstLesson.slug.current}`}
+                <Link href={`/free-courses/${course.slug}/learn/${firstLesson.slug}`}
                   className="inline-flex items-center gap-2 h-12 px-8 rounded-lg text-base font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors">
                   Start Learning
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
