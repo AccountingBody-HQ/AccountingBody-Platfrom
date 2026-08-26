@@ -164,17 +164,17 @@ export async function getPublishedCourses(site?: string): Promise<CourseSummary[
   }))
 }
 
-export async function getCourseBySlug(slug: string): Promise<Course | null> {
+export async function getCourseBySlug(slug: string, adminMode = false): Promise<Course | null> {
   try {
   // Stage 1: fetch course
   const { data: courseData, error: courseError } = await supabase
     .from('courses')
     .select('id, title, slug, description, level, status, is_featured, show_on_sites, canonical_owner')
     .eq('slug', slug)
-    .eq('status', 'published')
     .single()
 
   if (courseError || !courseData) return null
+  if (!adminMode && courseData.status !== 'published') return null
 
   const course = courseData as unknown as RawCourseStageRow
 

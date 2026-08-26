@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     const slug = searchParams.get('slug')
     if (!slug) return NextResponse.json({ error: 'slug required' }, { status: 400 })
 
-    const course = await getCourseBySlug(slug)
+    const course = await getCourseBySlug(slug, true)
     if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 })
 
     return NextResponse.json({ course })
