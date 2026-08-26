@@ -372,7 +372,7 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
           <Link href="/" onClick={onClose} className="focus:outline-none">
-            <span className="font-display text-xl text-navy-950">Accounting Body</span>
+            <span className="font-display text-xl text-navy-950 whitespace-nowrap">Accounting Body</span>
           </Link>
           <button
             onClick={onClose}
@@ -638,7 +638,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
               <rect x="11" y="0" width="9" height="9"  rx="2" fill="#1e3a7a"/>
               <rect x="11" y="11" width="9" height="9" rx="2" fill="#1e3a7a"/>
             </svg>
-            <span className="font-sans font-semibold block" style={{ color: isEthioTax ? '#1A4731' : '#1e3a7a', fontSize: '21px', lineHeight: '24px' }}>
+            <span className="font-sans font-semibold block whitespace-nowrap" style={{ color: isEthioTax ? '#1A4731' : '#1e3a7a', fontSize: '21px', lineHeight: '24px' }}>
               {isEthioTax ? 'EthioTax' : 'Accounting Body'}<sup style={{ fontSize: '20px', verticalAlign: 'top', position: 'relative', top: '4px' }}>®</sup>
             </span>
           </Link>
