@@ -5,69 +5,41 @@
 import React from 'react'
 import Link from 'next/link'
 import { headers } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 import EmailSignupForm from '@/components/EmailSignupForm'
 import HomepageJobSearch from '@/components/HomepageJobSearch'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface SanityArticle {
-  _id:             string
+interface FeaturedArticle {
+  id:              string
   title:           string
-  slug:            { current: string }
+  slug:            string
   excerpt?:        string
   category?:       string
-  examBody?:       string
-  readTime?:       number
-  publishedAt?:    string
-  coverImage?:     { asset: { url: string } }
-  author?:         { name: string }
-  showInLatestInsights?: boolean
-  isHotTopic?:     boolean
-  insightTag?:     string
+  category_title?: string
+  exam_body?:      string[]
+  read_time?:      number
+  published_at?:   string
 }
 
-// ── Sanity fetch ──────────────────────────────────────────────────────────────
+// ── Supabase fetch ───────────────────────────────────────────────────────────
 
-async function getFeaturedArticles(platform: string): Promise<SanityArticle[]> {
+async function getFeaturedArticles(siteCode: string): Promise<FeaturedArticle[]> {
   try {
-    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
-    const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production'
-    const site = platform === 'ethiotax' ? 'ethiotax' : 'accountingbody'
-    const query = encodeURIComponent(
-      `*[_type == "article" && "${site}" in showOnSites && showInLatestInsights == true] | order(publishedAt desc) [0..7] {
-        _id, title, slug, excerpt, examBody, readTime, publishedAt,
-        showInLatestInsights, isHotTopic, insightTag,
-        "categoryTitle": categories[0]->title,
-        "coverImage": featuredImage { asset -> { url } }
-      }`
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SECRET_KEY!
     )
-    const token = process.env.SANITY_API_TOKEN
-    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
-    const res = await fetch(
-      `https://${projectId}.apicdn.sanity.io/v2023-05-03/data/query/${dataset}?query=${query}`,
-      { next: { revalidate: 300 }, headers }
-    )
-    if (!res.ok) return []
-    const data = await res.json()
-    const results = data.result ?? []
-    if (results.length === 0) {
-      const fallbackQuery = encodeURIComponent(
-        `*[_type == "article" && "${site}" in showOnSites] | order(publishedAt desc) [0..3] {
-          _id, title, slug, excerpt, examBody, readTime, publishedAt,
-          showInLatestInsights, isHotTopic, insightTag,
-          "categoryTitle": categories[0]->title,
-          "coverImage": featuredImage { asset -> { url } }
-        }`
-      )
-      const fallbackRes = await fetch(
-        `https://${projectId}.apicdn.sanity.io/v2023-05-03/data/query/${dataset}?query=${fallbackQuery}`,
-        { next: { revalidate: 300 }, headers }
-      )
-      if (!fallbackRes.ok) return []
-      const fallbackData = await fallbackRes.json()
-      return fallbackData.result ?? []
-    }
-    return results
+    const { data, error } = await supabase
+      .from('articles')
+      .select('id, title, slug, excerpt, category, category_title, exam_body, read_time, published_at')
+      .eq('status', 'published')
+      .contains('show_on_sites', [siteCode])
+      .order('published_at', { ascending: false })
+      .limit(4)
+    if (error || !data) return []
+    return data as FeaturedArticle[]
   } catch {
     return []
   }
@@ -282,8 +254,8 @@ const trustPoints = [
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function ArticleCard({ article }: { article: SanityArticle & { category?: string } }) {
-  const examBodyFirst = Array.isArray(article.examBody) ? article.examBody[0] : article.examBody
+function ArticleCard({ article }: { article: FeaturedArticle }) {
+  const examBodyFirst = Array.isArray(article.exam_body) ? article.exam_body[0] : article.exam_body
   const bodyColor =
     examBodyFirst === 'acca'  ? '#004B8D' :
     examBodyFirst === 'cima'  ? '#0081C6' :
@@ -298,11 +270,14 @@ function ArticleCard({ article }: { article: SanityArticle & { category?: string
     'industry-change':   'Industry Change',
     'regulatory-update': 'Regulatory Update',
   }
+  // Not tracked in Supabase yet — kept as always-off so the badges below stay dead code, not deleted markup.
+  const isHotTopic = false
+  const insightTag: string | null = null
 
   return (
     <article className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative">
       <div className="h-1" style={{ backgroundColor: bodyColor }} />
-      {article.isHotTopic && (
+      {isHotTopic && (
         <div className="absolute top-4 right-4 z-10">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-black uppercase tracking-wider"
             style={{ background: '#f43f5e', color: '#fff' }}>
@@ -312,19 +287,19 @@ function ArticleCard({ article }: { article: SanityArticle & { category?: string
       )}
       <div className="flex flex-col flex-1 p-5">
         <div className="flex flex-wrap items-center gap-2 mb-3">
-          {article.insightTag && (
+          {insightTag && (
             <span className="text-[0.6rem] font-black uppercase tracking-wider px-2 py-0.5 rounded-full"
               style={{ background: 'rgba(212,160,23,0.1)', color: '#B8860B', border: '1px solid rgba(212,160,23,0.25)' }}>
-              {tagLabels[article.insightTag] ?? article.insightTag}
+              {tagLabels[insightTag] ?? insightTag}
             </span>
           )}
-          {article.category && (
+          {article.category_title && (
             <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-              {article.category}
+              {article.category_title}
             </span>
           )}
         </div>
-        <Link href={`/articles/${article.slug.current}`} className="block mb-2 flex-1">
+        <Link href={`/articles/${article.slug}`} className="block mb-2 flex-1">
           <h3 className="font-display text-lg text-navy-950 leading-snug group-hover:text-navy-700 transition-colors">
             {article.title}
           </h3>
@@ -333,13 +308,13 @@ function ArticleCard({ article }: { article: SanityArticle & { category?: string
           <p className="text-sm text-slate-500 line-clamp-2 mb-4">{article.excerpt}</p>
         )}
         <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-auto">
-          {article.readTime && (
+          {article.read_time && (
             <div className="flex items-center gap-1 text-xs text-slate-400">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="10" strokeWidth="2"/>
                 <path strokeLinecap="round" strokeWidth="2" d="M12 6v6l4 2"/>
               </svg>
-              {article.readTime} min
+              {article.read_time} min
             </div>
           )}
         </div>
@@ -516,7 +491,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const activeQualificationPaths = isEthioTax
     ? [eticpaCard, ...qualificationPaths.filter(q => q.slug !== 'icaew')]
     : qualificationPaths
-  const sanityArticles = await getFeaturedArticles(isEthioTax ? 'ethiotax' : 'accountingbody')
+  const sanityArticles = await getFeaturedArticles(isEthioTax ? 'et' : 'ab')
   const articles = sanityArticles
 
   return (
@@ -1035,7 +1010,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
       {articles.slice(0, 4).map(article => (
-        <ArticleCard key={article._id} article={article as SanityArticle} />
+        <ArticleCard key={article.id} article={article} />
       ))}
     </div>
 
@@ -1844,7 +1819,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {articles.slice(0, 4).map(article => (
-              <ArticleCard key={article._id} article={article as SanityArticle} />
+              <ArticleCard key={article.id} article={article} />
             ))}
           </div>
 
