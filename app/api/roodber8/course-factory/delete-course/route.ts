@@ -1,73 +1,47 @@
 // app/api/roodber8/course-factory/delete-course/route.ts
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@sanity/client'
+// Replaces Sanity multi-step delete — Session 35
+// CASCADE on course_chapters → course_lessons → course_lesson_articles handles everything
 
-const client = createClient({
-  projectId:  process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1',
-  dataset:    process.env.NEXT_PUBLIC_SANITY_DATASET ?? 'production',
-  apiVersion: '2024-01-01',
-  token:      process.env.SANITY_API_TOKEN,
-  useCdn:     false,
-})
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SECRET_KEY!
+)
 
 export async function DELETE(req: NextRequest) {
   try {
     const { slug } = await req.json()
     if (!slug) return NextResponse.json({ error: 'slug required' }, { status: 400 })
 
-    const courseId = `course-${slug}`
+    // Get course id and chapter/lesson counts before deleting (for response)
+    const { data: course, error: fetchError } = await supabase
+      .from('courses')
+      .select('id, course_chapters(id, course_lessons(id))')
+      .eq('slug', slug)
+      .maybeSingle()
 
-    // Find all lesson documents for this course (by type + parentCourse ref)
-    const referencingDocs = await client.fetch(
-      `*[_type == "lesson" && parentCourse._ref == $courseId]{ _id }`,
-      { courseId }
+    if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 })
+    if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 })
+
+    const lessonCount = (course.course_chapters ?? []).reduce(
+      (acc: number, ch: { course_lessons: { id: string }[] }) =>
+        acc + (ch.course_lessons?.length ?? 0),
+      0
     )
-    const patternDocs = await client.fetch(
-      `*[_id in path($pattern)]{ _id }`,
-      { pattern: `lesson-${slug}-*` }
-    )
-    const allIds = Array.from(new Set([
-      ...referencingDocs.map((d: { _id: string }) => d._id),
-      ...patternDocs.map((d: { _id: string }) => d._id),
-    ]))
 
-    // Step 1 — clear chapters array on course (removes course→lesson refs)
-    await client.patch(courseId).set({ chapters: [] }).commit()
-    try {
-      await client.patch(`drafts.${courseId}`).set({ chapters: [] }).commit()
-    } catch {
-      // draft may not exist — safe to ignore
-    }
+    // Single delete — CASCADE removes chapters, lessons, and lesson_articles automatically
+    const { error: deleteError } = await supabase
+      .from('courses')
+      .delete()
+      .eq('slug', slug)
 
-    // Step 2 — clear parentCourse on all lessons (removes lesson→course refs)
-    if (allIds.length > 0) {
-      let tx = client.transaction()
-      for (const id of allIds) {
-        tx = tx.patch(id, p => p.unset(['parentCourse']))
-      }
-      await tx.commit({ visibility: 'sync' })
-    }
-
-    // Step 3 — delete all lesson documents
-    if (allIds.length > 0) {
-      let tx = client.transaction()
-      for (const id of allIds) {
-        tx = tx.delete(id)
-      }
-      await tx.commit({ visibility: 'sync' })
-    }
-
-    // Step 4 — delete course (and draft if it exists)
-    await client.delete(courseId)
-    try {
-      await client.delete(`drafts.${courseId}`)
-    } catch {
-      // draft may not exist — safe to ignore
-    }
+    if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 500 })
 
     return NextResponse.json({
       success: true,
-      deleted: { lessons: allIds.length, courseId },
+      deleted: { lessons: lessonCount, courseId: course.id },
     })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Delete failed'
