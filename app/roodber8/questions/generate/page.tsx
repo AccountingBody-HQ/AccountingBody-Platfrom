@@ -100,7 +100,7 @@ export default function GenerateQuestionsPage() {
   const [editingIdx, setEditingIdx]   = useState<number | null>(null)
   const [editDraft, setEditDraft]     = useState<any>(null)
 
-  const [categories, setCategories] = useState<{_id:string;title:string}[]>([])
+  const [categories, setCategories] = useState<{slug:string;title:string}[]>([])
 
   useEffect(() => {
     fetch('/api/roodber8/categories')
@@ -199,7 +199,7 @@ export default function GenerateQuestionsPage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">Question Generator</h1>
-          <p className="text-sm" style={{ color: '#475569' }}>Generate exam-standard practice questions using Claude AI and publish to Sanity</p>
+          <p className="text-sm" style={{ color: '#475569' }}>Generate exam-standard practice questions using Claude AI and publish to Supabase</p>
         </div>
       </div>
 
@@ -353,13 +353,13 @@ export default function GenerateQuestionsPage() {
           </div>
           <div className="rounded-2xl border p-6" style={C.card}>
             <h2 className="text-white font-bold text-sm mb-1">Category <span style={{ color: '#475569', fontWeight: 400 }}>(optional)</span></h2>
-            <p className="text-xs mb-4" style={{ color: '#334155' }}>Assign these questions to a category — fetched live from Sanity</p>
+            <p className="text-xs mb-4" style={{ color: '#334155' }}>Assign these questions to a category</p>
             {categories.length === 0 ? (
               <p className="text-xs" style={{ color: '#334155' }}>Loading categories…</p>
             ) : (
               <div className="grid grid-cols-3 gap-3">
                 {categories.map(cat => (
-                  <SelectCard key={cat._id} active={config.categoryId === cat._id} onClick={() => setConfig(c => ({ ...c, categoryId: c.categoryId === cat._id ? '' : cat._id }))}>
+                  <SelectCard key={cat.slug} active={config.categoryId === cat.slug} onClick={() => setConfig(c => ({ ...c, categoryId: c.categoryId === cat.slug ? '' : cat.slug }))}>
                     <p className="font-semibold text-xs leading-snug">{cat.title}</p>
                   </SelectCard>
                 ))}
@@ -667,7 +667,7 @@ export default function GenerateQuestionsPage() {
             <button onClick={handlePublish} disabled={publishing}
               className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl disabled:opacity-40"
               style={{ background: '#059669', color: '#ffffff' }}>
-              {publishing ? <><Loader2 size={14} className="animate-spin" /> Publishing…</> : <><Send size={14} /> Publish to Sanity</>}
+              {publishing ? <><Loader2 size={14} className="animate-spin" /> Publishing…</> : <><Send size={14} /> Publish to Supabase</>}
             </button>
           </div>
         </div>
@@ -680,7 +680,7 @@ export default function GenerateQuestionsPage() {
             <Check size={30} className="text-white" />
           </div>
           <h2 className="text-2xl font-black text-white mb-2">Published Successfully</h2>
-          <p className="text-sm mb-2" style={{ color: '#475569' }}>{bundle?.questions.length} questions are now live in Sanity.</p>
+          <p className="text-sm mb-2" style={{ color: '#475569' }}>{bundle?.questions.length} questions are now live in Supabase.</p>
           {docId && <p className="text-xs mb-2" style={{ color: '#334155' }}>Document ID: <span className="text-white font-mono">{docId}</span></p>}
           {docSlug && (
             <a href={'/practice-questions/' + docSlug} target="_blank" rel="noopener noreferrer"

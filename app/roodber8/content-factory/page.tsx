@@ -49,13 +49,13 @@ const QUAL_SUBJECTS: Record<string, string[]> = {
 type Config = {
   qualification: string; contentType: string; subject: string
   topic: string; tone: string; length: string; difficulty: string
-  aiSummary: string; keyTerms: string; categoryId: string
+  aiSummary: string; keyTerms: string; categoryId: string; categoryTitle: string
   eticpaLevel: string; eticpaModule: string; eticpaTopic: string
 }
 const EMPTY: Config = {
   qualification: '', contentType: '', subject: '', topic: '',
   tone: 'Educational', length: 'standard', difficulty: 'Intermediate',
-  aiSummary: '', keyTerms: '', categoryId: '',
+  aiSummary: '', keyTerms: '', categoryId: '', categoryTitle: '',
   eticpaLevel: '', eticpaModule: '', eticpaTopic: '',
 }
 
@@ -132,7 +132,7 @@ export default function ContentFactoryPage() {
   }
   const [docId, setDocId]           = useState('')
   const passTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [categories, setCategories] = useState<{_id:string;title:string}[]>([])
+  const [categories, setCategories] = useState<{slug:string;title:string}[]>([])
 
   useEffect(() => {
     fetch('/api/roodber8/categories')
@@ -242,7 +242,7 @@ export default function ContentFactoryPage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">Content Factory</h1>
-          <p className="text-sm" style={{ color: '#475569' }}>Two-pass AI pipeline — Author generates, Critic audits. Publish directly to Sanity.</p>
+          <p className="text-sm" style={{ color: '#475569' }}>Two-pass AI pipeline — Author generates, Critic audits. Publish directly to Supabase.</p>
         </div>
       </div>
 
@@ -339,13 +339,17 @@ export default function ContentFactoryPage() {
           </div>
           <div className="rounded-2xl border p-6" style={C.card}>
             <h2 className="text-white font-bold text-sm mb-1">Category <span style={{ color: '#475569', fontWeight: 400 }}>(optional)</span></h2>
-            <p className="text-xs mb-4" style={{ color: '#334155' }}>Assign this content to a category — fetched live from Sanity</p>
+            <p className="text-xs mb-4" style={{ color: '#334155' }}>Assign this content to a category</p>
             {categories.length === 0 ? (
               <p className="text-xs" style={{ color: '#334155' }}>Loading categories…</p>
             ) : (
               <div className="grid grid-cols-3 gap-3">
                 {categories.map(cat => (
-                  <SelectCard key={cat._id} active={config.categoryId === cat._id} onClick={() => setConfig(c => ({ ...c, categoryId: c.categoryId === cat._id ? '' : cat._id }))}>
+                  <SelectCard key={cat.slug} active={config.categoryId === cat.slug} onClick={() => setConfig(c => ({
+                    ...c,
+                    categoryId:    c.categoryId === cat.slug ? '' : cat.slug,
+                    categoryTitle: c.categoryId === cat.slug ? '' : cat.title,
+                  }))}>
                     <p className="font-semibold text-xs leading-snug">{cat.title}</p>
                   </SelectCard>
                 ))}
@@ -604,7 +608,7 @@ export default function ContentFactoryPage() {
               style={{ background: '#059669', color: '#ffffff' }}>
               {publishing
                 ? <><Loader2 size={14} className="animate-spin" /> Publishing...</>
-                : <><Send size={14} /> Publish to Sanity</>}
+                : <><Send size={14} /> Publish to Supabase</>}
             </button>
           </div>
         </div>
@@ -620,11 +624,11 @@ export default function ContentFactoryPage() {
           </div>
           <h2 className="text-2xl font-black text-white mb-2">Published Successfully</h2>
           <p className="text-sm mb-2" style={{ color: '#475569' }}>
-            Your content is now live in Sanity and will appear on AccountingBody within 60 seconds.
+            Your content is now live in Supabase and will appear on AccountingBody within 60 seconds.
           </p>
           {docId && (
             <p className="text-xs mb-2" style={{ color: '#334155' }}>
-              Sanity Document ID: <span className="text-white font-mono">{docId}</span>
+              Article ID: <span className="text-white font-mono">{docId}</span>
             </p>
           )}
           <p className="text-sm mb-8" style={{ color: '#334155' }}>

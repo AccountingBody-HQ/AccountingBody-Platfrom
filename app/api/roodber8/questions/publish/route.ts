@@ -1,12 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@sanity/client'
+import { createClient } from '@supabase/supabase-js'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-function makeKey() {
-  return Math.random().toString(36).slice(2, 12)
+// UI sends full site names; Supabase's show_on_sites/platform columns use short codes (only 'ab' has prior precedent)
+const SITE_CODE_MAP: Record<string, string> = {
+  accountingbody: 'ab',
+  hrlake:         'hr',
+  ethiotax:       'et',
 }
 
 function generateSlug(title: string): string {
@@ -22,35 +25,26 @@ export async function POST(req: NextRequest) {
       examBody,
       showOnSites = ['accountingbody'],
       canonicalOwner = 'accountingbody',
-      sourceWpId,
-      categoryId,
     } = body
 
     if (!bundle || !bundle.questions?.length) {
       return NextResponse.json({ error: 'bundle with questions is required' }, { status: 400 })
     }
 
-    const token     = (process.env.SANITY_API_TOKEN ?? '').trim()
-    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
-    const dataset   = process.env.NEXT_PUBLIC_SANITY_DATASET    ?? 'production'
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.SUPABASE_SECRET_KEY
 
-    if (!token) {
-      return NextResponse.json({ error: 'SANITY_API_TOKEN is not set' }, { status: 500 })
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json({ error: 'Supabase environment variables are not set' }, { status: 500 })
     }
 
-    const client = createClient({
-      projectId,
-      dataset,
-      apiVersion: '2021-06-07',
-      token,
-      useCdn: false,
-    })
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
     const title = bundle.title ?? 'Practice Question Set'
     const slug  = generateSlug(title)
     const now   = new Date().toISOString()
 
-    // Map examBody string to array for the practicePost schema
+    // Map examBody string to array for the question_sets schema
     const examBodyArr: string[] = []
     if (examBody && examBody !== 'none') examBodyArr.push(examBody.toLowerCase())
     if (qualification && qualification !== 'none') {
@@ -58,96 +52,95 @@ export async function POST(req: NextRequest) {
       if (!examBodyArr.includes(q)) examBodyArr.push(q)
     }
 
-    // Map bundle questions to Sanity quizQuestion objects
-    const quizQuestions = bundle.questions.map((q: any, i: number) => ({
-      _type:              'quizQuestion',
-      _key:               makeKey(),
-      id:                 q.id ?? `q${i + 1}`,
-      type:               q.type ?? 'multiple-choice',
-      questionText:       q.questionText ?? '',
-      options:            Array.isArray(q.options) ? q.options : [],
-      correctIndex:       typeof q.correctIndex === 'number' ? q.correctIndex : null,
-      explanation:        q.explanation ?? null,
-      writingModelAnswer: q.writingModelAnswer ?? null,
-      writingExplanation: q.writingExplanation ?? null,
-      caseId:             q.caseId ?? null,
-      primaryTopic:       q.primaryTopic ?? '',
-      difficulty:         q.difficulty ?? 'intermediate',
-      timeTargetMinutes:  q.timeTargetMinutes ?? (q.type === 'writing' ? 20 : 2),
-      points:             q.points ?? 1,
-    }))
-
-    // Map scenario cases to Sanity scenarioCase objects
-    const cases = Array.isArray(bundle.cases)
-      ? bundle.cases.map((c: any) => ({
-          _type:       'scenarioCase',
-          _key:        makeKey(),
-          caseId:      c.caseId ?? makeKey(),
-          title:       c.title ?? 'Case',
-          exhibitHtml: c.exhibitHtml ?? '',
-        }))
-      : []
-
-    const doc: any = {
-      _type:         'practicePost',
-      title,
-      slug:          { _type: 'slug', current: slug },
-      excerpt:       bundle.excerpt ?? '',
-      publishedAt:   now,
-      difficulty:    bundle.difficulty ?? 'intermediate',
-      topic:         bundle.topic ?? '',
-      examBody:      examBodyArr,
-      questionType:  bundle.questionType ?? 'multiple-choice',
-      tags:          Array.isArray(bundle.tags) ? bundle.tags : [],
-      cases,
-      quizQuestions,
-      showOnSites,
-      canonicalOwner,
-      seoTitle:       title.length <= 60 ? title : title.slice(0, 60).replace(/\s+\S*$/, '...'),
-      seoDescription: (bundle.excerpt ?? '').length <= 160 ? (bundle.excerpt ?? '') : (bundle.excerpt ?? '').slice(0, 160).replace(/\s+\S*$/, '...'),
-    }
+    const showOnSitesCodes = (showOnSites as string[]).map(s => SITE_CODE_MAP[s] ?? s)
+    const platform = SITE_CODE_MAP[canonicalOwner] ?? canonicalOwner
 
     // Content ID — query highest existing AB-QZ-XXXXX and increment
-    const lastContentId = await client.fetch<string | null>(
-      '*[_type == "practicePost" && defined(contentId) && contentId match "AB-QZ-*"] | order(contentId desc) [0].contentId'
-    )
+    const { data: lastRow } = await supabase
+      .from('question_sets')
+      .select('content_id')
+      .like('content_id', 'AB-QZ-%')
+      .order('content_id', { ascending: false })
+      .limit(1)
+      .maybeSingle()
     let nextNum = 1
-    if (lastContentId) {
-      const match = lastContentId.match(/AB-QZ-(\d+)$/)
+    if (lastRow?.content_id) {
+      const match = (lastRow.content_id as string).match(/AB-QZ-(\d+)$/)
       if (match) nextNum = parseInt(match[1], 10) + 1
     }
     const contentId = 'AB-QZ-' + String(nextNum).padStart(5, '0')
-    doc.contentId = contentId
 
-      // Add manually selected category if provided
-      if (categoryId) {
-        doc.categories = [{ _type: 'reference', _ref: categoryId, _key: Math.random().toString(36).slice(2,10) }]
-      }
-
-    // Auto-copy categories from source article if wpId provided
-    if (sourceWpId) {
-      try {
-        const sourceArticle = await client.fetch(
-          `*[_type == "article" && wpId == $wpId][0]{ categories }`,
-          { wpId: String(sourceWpId) }
-        )
-        if (sourceArticle?.categories?.length) {
-          doc.categories = sourceArticle.categories
-        }
-      } catch (catErr) {
-        console.warn('Could not fetch source article categories:', catErr)
-      }
+    const setRow: any = {
+      title,
+      slug,
+      excerpt:          bundle.excerpt ?? '',
+      difficulty:       bundle.difficulty ?? 'intermediate',
+      topic:            bundle.topic ?? '',
+      exam_body:        examBodyArr,
+      question_type:    bundle.questionType ?? 'multiple-choice',
+      show_on_sites:    showOnSitesCodes,
+      canonical_owner:  canonicalOwner,
+      seo_title:        title.length <= 60 ? title : title.slice(0, 60).replace(/\s+\S*$/, '...'),
+      seo_description:  (bundle.excerpt ?? '').length <= 160 ? (bundle.excerpt ?? '') : (bundle.excerpt ?? '').slice(0, 160).replace(/\s+\S*$/, '...'),
+      status:           'published',
+      platform,
+      content_id:       contentId,
+      published_at:     now,
     }
 
-    const result = await client.create(doc)
+    const { data: insertedSet, error: setError } = await supabase
+      .from('question_sets')
+      .insert(setRow)
+      .select('id')
+      .single()
+
+    if (setError || !insertedSet) {
+      console.error('questions/publish set insert error:', setError)
+      return NextResponse.json({ error: setError?.message ?? 'Failed to insert question set' }, { status: 500 })
+    }
+
+    const setId = insertedSet.id
+
+    // Map bundle questions to Supabase `questions` rows (options are 4 discrete columns, not an array)
+    const questionRows = bundle.questions.map((q: any, i: number) => {
+      const opts = Array.isArray(q.options) ? q.options : []
+      return {
+        set_id:               setId,
+        question_order:       i + 1,
+        type:                 q.type ?? 'multiple-choice',
+        question_text:        q.questionText ?? '',
+        option_a:             opts[0] != null ? String(opts[0]) : '',
+        option_b:             opts[1] != null ? String(opts[1]) : '',
+        option_c:             opts[2] != null ? String(opts[2]) : '',
+        option_d:             opts[3] != null ? String(opts[3]) : '',
+        correct_index:        typeof q.correctIndex === 'number' ? q.correctIndex : null,
+        explanation:          q.explanation ?? null,
+        writing_model_answer: q.writingModelAnswer ?? null,
+        writing_explanation:  q.writingExplanation ?? null,
+        case_id:              q.caseId ?? null,
+        primary_topic:        q.primaryTopic ?? '',
+        difficulty:           q.difficulty ?? 'intermediate',
+        time_target_minutes:  q.timeTargetMinutes ?? (q.type === 'writing' ? 20 : 2),
+        points:               q.points ?? 1,
+      }
+    })
+
+    const { error: qError } = await supabase.from('questions').insert(questionRows)
+
+    if (qError) {
+      console.error('questions/publish questions insert error:', qError)
+      // Roll back the orphaned question set since its questions failed to insert
+      await supabase.from('question_sets').delete().eq('id', setId)
+      return NextResponse.json({ error: qError.message }, { status: 500 })
+    }
 
     return NextResponse.json({
       success:       true,
-      documentId:    result._id,
+      documentId:    setId,
       contentId,
       title,
       slug,
-      questionCount: quizQuestions.length,
+      questionCount: questionRows.length,
     })
 
   } catch (err: any) {
