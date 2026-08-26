@@ -6,6 +6,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
+export const dynamic = 'force-dynamic'
+
 export async function generateStaticParams() {
   const courses = await getPublishedCourses()
   return courses.map(c => ({ slug: c.slug }))
