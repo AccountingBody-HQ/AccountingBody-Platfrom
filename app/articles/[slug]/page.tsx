@@ -148,7 +148,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             <div>
 
 
-              <HtmlRenderer html={article.content ?? ''} />
+              <HtmlRenderer html={article.content ?? ''} stripLeadingH1 />
 
               {/* Test your knowledge — bottom of article */}
               <div className="mt-10 p-6 bg-navy-950 rounded-2xl relative overflow-hidden">

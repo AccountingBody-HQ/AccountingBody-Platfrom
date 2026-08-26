@@ -232,7 +232,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                 </p>
               )}
 
-              <HtmlRenderer html={article.content ?? ''} />
+              <HtmlRenderer html={article.content ?? ''} stripLeadingH1 />
 
               {formattedReviewed && (
                 <div className="mt-10 flex items-center gap-2 text-sm text-slate-400 pt-6 border-t border-slate-100">
