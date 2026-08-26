@@ -1416,7 +1416,7 @@ export async function POST(req: NextRequest) {
     const authorPrompt = buildAuthorPrompt(cfg)
 
     const authorMessage = await client.messages.create({
-      model:      'claude-sonnet-4-20250514',
+      model:      'claude-sonnet-4-6',
       max_tokens: authorBudget,
       system:     `You are a Principal Examiner for a world-class professional accounting education platform. You produce examination questions that match the quality of major professional accounting bodies. You return VALID JSON only — no markdown, no fences, no preamble. You never mention any professional accounting body name in output. You never use backticks or code blocks. All invented figures are specific and non-round. All distractors represent real student errors. Your explanations are full teaching resources, not just answer confirmations.`,
       messages:   [{ role: 'user', content: authorPrompt }],
@@ -1447,7 +1447,7 @@ export async function POST(req: NextRequest) {
     try {
       const auditorPrompt = buildAuditorPrompt(bundle, cfg)
       const auditorMessage = await client.messages.create({
-        model:      'claude-sonnet-4-20250514',
+        model:      'claude-sonnet-4-6',
         max_tokens: auditorBudget,
         system:     'You are a Chief Examiner auditing practice questions. You return VALID JSON only with your audit results and specific fixes. You are meticulous, technically accurate, and uncompromising on quality standards.',
         messages:   [{ role: 'user', content: auditorPrompt }],

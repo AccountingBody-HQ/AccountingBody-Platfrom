@@ -911,7 +911,7 @@ export async function POST(req: NextRequest) {
     const authorPrompt = buildAuthorPrompt(config)
 
     const authorMsg = await client.messages.create({
-      model:      'claude-sonnet-4-20250514',
+      model:      'claude-sonnet-4-6',
       max_tokens: maxTokensAuthor,
       system:     'You are the lead content author for AccountingBody, a world-class professional accounting and finance education platform. You never produce generic content. You never mention any professional accounting body name (ACCA, CIMA, ICAEW, AAT, CPA or any other) in published output. You never use backticks or code blocks for journal entries or calculations. You never invent regulatory figures without caveats. You always follow the content structure and all rules provided exactly. Every sentence carries professional-grade insight. Your output is always publication-ready to the standard of Kaplan or BPP professional study texts.',
       messages:   [{ role: 'user', content: authorPrompt }],
@@ -926,7 +926,7 @@ export async function POST(req: NextRequest) {
     const criticPrompt = buildCriticPrompt(config, authorRaw)
 
     const criticMsg = await client.messages.create({
-      model:      'claude-sonnet-4-20250514',
+      model:      'claude-sonnet-4-6',
       max_tokens: maxTokensCritic,
       system:     'You are the Content Critic for AccountingBody. You audit articles for compliance violations (qualification body names, backtick formatting, round numbers), technical accuracy (correct standard references, balanced journals, correct formulas), insight density (professional reader test, specific errors not generic cautions), and structural completeness. You return a corrected version of the article in the same markdown format, beginning immediately with the # title. No preamble. No explanation of changes.',
       messages:   [{ role: 'user', content: criticPrompt }],
