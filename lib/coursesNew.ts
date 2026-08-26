@@ -194,10 +194,8 @@ export async function getCourseBySlug(slug: string): Promise<Course | null> {
     .order('lesson_order', { ascending: true })
 
   const lessons = (lessonsData as unknown as RawLessonStageRow[] | null) ?? []
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('DEBUG chapters:', chapters.map(c => c.id))
-    console.log('DEBUG lessons:', lessons.map(l => ({ id: l.id, chapter_id: l.chapter_id })))
-  }
+  console.log('DEBUG chapters:', chapters.map(c => c.id))
+  console.log('DEBUG lessons:', lessons.map(l => ({ id: l.id, chapter_id: l.chapter_id })))
 
   // Stage 4: fetch all lesson-article links for this course's lessons
   const lessonIds = lessons.map(l => l.id)
