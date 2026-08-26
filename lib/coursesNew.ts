@@ -63,6 +63,61 @@ export interface CourseSummary {
   lessonCount:    number
 }
 
+interface RawCourseListRow {
+  id:              string
+  title:           string
+  slug:            string
+  description:     string | null
+  level:           string | null
+  status:          string
+  is_featured:     boolean
+  show_on_sites:   string[]
+  canonical_owner: string
+  course_chapters: { id: string; course_lessons: { id: string }[] | null }[] | null
+}
+
+interface RawArticleRow {
+  id:         string
+  title:      string
+  slug:       string
+  excerpt:    string | null
+  read_time:  number | null
+  content_id: string | null
+  wp_id:      string | null
+}
+
+interface RawLessonRow {
+  id:                 string
+  title:              string
+  slug:               string
+  lesson_order:       number
+  estimated_time:     number | null
+  video_url:          string | null
+  audio_url:          string | null
+  external_quiz_url:  string | null
+  course_lesson_articles: { article_order: number; articles: RawArticleRow | null }[] | null
+}
+
+interface RawChapterRow {
+  id:              string
+  chapter_title:   string
+  chapter_order:   number
+  course_lessons:  RawLessonRow[] | null
+}
+
+interface RawCourseRow {
+  id:              string
+  title:           string
+  slug:            string
+  description:     string | null
+  level:           string | null
+  status:          string
+  is_featured:     boolean
+  show_on_sites:   string[]
+  canonical_owner: string
+  course_chapters: RawChapterRow[] | null
+}
+
 export async function getPublishedCourses(site?: string): Promise<CourseSummary[]> {
   let query = supabase
     .from('courses')
@@ -84,19 +139,19 @@ export async function getPublishedCourses(site?: string): Promise<CourseSummary[
   const { data, error } = await query
   if (error || !data) return []
 
-  return (data as any[]).map(c => ({
+  return (data as unknown as RawCourseListRow[]).map(c => ({
     id:             c.id,
     title:          c.title,
     slug:           c.slug,
-    description:    c.description,
-    level:          c.level,
+    description:    c.description ?? undefined,
+    level:          c.level ?? undefined,
     status:         c.status,
     isFeatured:     c.is_featured,
     showOnSites:    c.show_on_sites,
     canonicalOwner: c.canonical_owner,
     chapterCount:   (c.course_chapters ?? []).length,
     lessonCount:    (c.course_chapters ?? []).reduce(
-      (sum: number, ch: any) => sum + (ch.course_lessons ?? []).length, 0
+      (sum, ch) => sum + (ch.course_lessons ?? []).length, 0
     ),
   }))
 }
@@ -127,53 +182,52 @@ export async function getCourseBySlug(slug: string): Promise<Course | null> {
 
   if (error || !data) return null
 
-  const chapters: CourseChapter[] = ((data as any).course_chapters ?? [])
-    .sort((a: any, b: any) => a.chapter_order - b.chapter_order)
-    .map((ch: any) => ({
+  const courseRow = data as unknown as RawCourseRow
+
+  const chapters: CourseChapter[] = (courseRow.course_chapters ?? [])
+    .sort((a, b) => a.chapter_order - b.chapter_order)
+    .map(ch => ({
       id:           ch.id,
       title:        ch.chapter_title,
       chapterOrder: ch.chapter_order,
-      lessons: ((ch.course_lessons ?? [])
-        .sort((a: any, b: any) => a.lesson_order - b.lesson_order)
-        .map((l: any) => ({
-          id:             l.id,
-          title:          l.title,
-          slug:           l.slug,
-          lessonOrder:    l.lesson_order,
-          estimatedTime:  l.estimated_time,
-          videoUrl:       l.video_url,
-          audioUrl:       l.audio_url,
-          externalQuizUrl: l.external_quiz_url,
-          articles: ((l.course_lesson_articles ?? [])
-            .sort((a: any, b: any) => a.article_order - b.article_order)
-            .map((la: any) => {
-              const a = la.articles
-              if (!a) return null
-              return {
-                id:        a.id,
-                title:     a.title,
-                slug:      a.slug,
-                excerpt:   a.excerpt,
-                readTime:  a.read_time,
-                contentId: a.content_id,
-                wpId:      a.wp_id,
-              } as CourseArticle
-            })
-            .filter(Boolean)) as CourseArticle[],
-        })) as CourseLesson[]),
+      lessons: (ch.course_lessons ?? [])
+        .sort((a, b) => a.lesson_order - b.lesson_order)
+        .map(l => ({
+          id:              l.id,
+          title:           l.title,
+          slug:            l.slug,
+          lessonOrder:     l.lesson_order,
+          estimatedTime:   l.estimated_time ?? undefined,
+          videoUrl:        l.video_url ?? undefined,
+          audioUrl:        l.audio_url ?? undefined,
+          externalQuizUrl: l.external_quiz_url ?? undefined,
+          articles: (l.course_lesson_articles ?? [])
+            .sort((a, b) => a.article_order - b.article_order)
+            .map(la => la.articles)
+            .filter((a): a is RawArticleRow => a !== null)
+            .map(a => ({
+              id:        a.id,
+              title:     a.title,
+              slug:      a.slug,
+              excerpt:   a.excerpt ?? undefined,
+              readTime:  a.read_time ?? undefined,
+              contentId: a.content_id ?? undefined,
+              wpId:      a.wp_id ?? undefined,
+            })),
+        })),
     }))
 
   return {
-    id:              (data as any).id,
-    title:           (data as any).title,
-    slug:            (data as any).slug,
-    description:     (data as any).description,
-    metaDescription: (data as any).description,
-    level:           (data as any).level,
-    status:          (data as any).status,
-    isFeatured:      (data as any).is_featured,
-    showOnSites:     (data as any).show_on_sites,
-    canonicalOwner:  (data as any).canonical_owner,
+    id:              courseRow.id,
+    title:           courseRow.title,
+    slug:            courseRow.slug,
+    description:     courseRow.description ?? undefined,
+    metaDescription: courseRow.description ?? undefined,
+    level:           courseRow.level ?? undefined,
+    status:          courseRow.status,
+    isFeatured:      courseRow.is_featured,
+    showOnSites:     courseRow.show_on_sites,
+    canonicalOwner:  courseRow.canonical_owner,
     chapters,
   }
 }
