@@ -1,9 +1,13 @@
 // app/api/mock-exam/route.ts
+// AB mock exam — fetches questions from Supabase via article category join
+// Replaces Sanity GROQ fetch — Session 35
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
-const PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
-const DATASET    = process.env.NEXT_PUBLIC_SANITY_DATASET    ?? 'production'
-const READ_TOKEN = process.env.SANITY_API_TOKEN
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SECRET_KEY!
+)
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -38,59 +42,77 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'category parameter is required' }, { status: 400 })
   }
 
-  const query = encodeURIComponent(`
-    *[_type == "practicePost" && "accountingbody" in showOnSites && count(categories[]->.slug.current[@ == "${category}"]) > 0]{
-      title,
-      "questions": quizQuestions[]{ questionText, options, correctIndex, explanation, difficulty }
-    }
-  `)
-
   try {
-    const res = await fetch(
-      `https://${PROJECT_ID}.apicdn.sanity.io/v2023-05-03/data/query/${DATASET}?query=${query}`,
-      {
-        headers: READ_TOKEN ? { Authorization: `Bearer ${READ_TOKEN}` } : {},
-        next: { revalidate: 0 },
-      }
+    // Get all article slugs for this category
+    const { data: articles, error: artError } = await supabase
+      .from('articles')
+      .select('slug')
+      .eq('category', category)
+      .eq('status', 'published')
+
+    if (artError) return NextResponse.json({ error: artError.message }, { status: 500 })
+
+    const categorySlugs = new Set((articles ?? []).map(a => a.slug))
+
+    // Fetch all published question sets whose article_slug is in this category
+    const { data: questionSets, error: qsError } = await supabase
+      .from('question_sets')
+      .select('id, title, article_slug')
+      .eq('status', 'published')
+      .contains('show_on_sites', ['ab'])
+      .not('article_slug', 'is', null)
+
+    if (qsError) return NextResponse.json({ error: qsError.message }, { status: 500 })
+
+    const matchingSets = (questionSets ?? []).filter(qs =>
+      qs.article_slug && categorySlugs.has(qs.article_slug)
     )
 
-    if (!res.ok) return NextResponse.json({ error: 'Sanity fetch failed' }, { status: 500 })
-
-    const data  = await res.json()
-    const posts: { title: string; questions: QuizQuestion[] }[] = data.result ?? []
-
-    const groups: PoolQuestion[][] = []
-    let poolTotal = 0
-
-    for (const post of posts) {
-      const qs = (post.questions ?? [])
-        .filter(q =>
-          q.questionText &&
-          Array.isArray(q.options) &&
-          q.options.length > 1 &&
-          typeof q.correctIndex === 'number'
-        )
-        .map(q => ({
-          questionText: q.questionText,
-          options:      q.options,
-          correctIndex: q.correctIndex,
-          explanation:  q.explanation,
-          difficulty:   q.difficulty,
-          sourceTitle:  post.title,
-          topic:        post.title.replace(/ — Practice Questions$/, ''),
-        }))
-
-      if (qs.length > 0) {
-        groups.push(shuffle(qs))
-        poolTotal += qs.length
-      }
+    if (matchingSets.length === 0) {
+      return NextResponse.json({ questions: [], poolTotal: 0 })
     }
+
+    const setIds = matchingSets.map(qs => qs.id)
+    const setTitleMap = new Map(matchingSets.map(qs => [qs.id, qs.title]))
+
+    // Fetch all questions for matching sets
+    const { data: questions, error: qError } = await supabase
+      .from('questions')
+      .select('set_id, question_text, option_a, option_b, option_c, option_d, correct_index, explanation, difficulty')
+      .in('set_id', setIds)
+      .order('question_order', { ascending: true })
+
+    if (qError) return NextResponse.json({ error: qError.message }, { status: 500 })
+
+    // Group questions by set for round-robin
+    const groupMap = new Map<string, PoolQuestion[]>()
+    for (const q of (questions ?? [])) {
+      if (!q.question_text || typeof q.correct_index !== 'number') continue
+      const options = [q.option_a, q.option_b, q.option_c, q.option_d].filter(Boolean) as string[]
+      if (options.length < 2) continue
+      const title = setTitleMap.get(q.set_id) ?? ''
+      const pq: PoolQuestion = {
+        questionText: q.question_text,
+        options,
+        correctIndex: q.correct_index,
+        explanation:  q.explanation ?? undefined,
+        difficulty:   q.difficulty ?? undefined,
+        sourceTitle:  title,
+        topic:        title.replace(/ [—-] Practice Questions$/, ''),
+      }
+      const group = groupMap.get(q.set_id) ?? []
+      group.push(pq)
+      groupMap.set(q.set_id, group)
+    }
+
+    const groups = Array.from(groupMap.values()).map(g => shuffle(g))
+    const poolTotal = groups.reduce((sum, g) => sum + g.length, 0)
 
     if (poolTotal === 0) {
       return NextResponse.json({ questions: [], poolTotal: 0 })
     }
 
-    // Balanced round-robin across all practice posts in this category
+    // Balanced round-robin across all question sets
     const selected: PoolQuestion[] = []
     const target = Math.min(count, poolTotal)
     let idx = 0

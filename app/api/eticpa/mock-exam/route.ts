@@ -1,24 +1,28 @@
 // app/api/eticpa/mock-exam/route.ts
+// ETICPA mock exam — fetches questions from Supabase by eticpa_level + eticpa_module
+// Replaces Sanity GROQ fetch — Session 35
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
-const PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? '4rllejq1'
-const DATASET    = process.env.NEXT_PUBLIC_SANITY_DATASET    ?? 'production'
-const READ_TOKEN = process.env.SANITY_API_READ_TOKEN ?? process.env.SANITY_API_TOKEN
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SECRET_KEY!
+)
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 interface QuizQuestion {
   questionText: string
-  options: string[]
+  options:      string[]
   correctIndex: number
   explanation?: string
-  difficulty?: string
+  difficulty?:  string
 }
 
 interface PoolQuestion extends QuizQuestion {
   sourceTitle: string
-  topic: string
+  topic:       string
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -31,45 +35,67 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export async function GET(req: NextRequest) {
-  const level      = req.nextUrl.searchParams.get('level')      ?? 'level-1'
-  const moduleSlug = req.nextUrl.searchParams.get('module')     ?? 'introduction-to-accounting'
+  const level      = req.nextUrl.searchParams.get('level')  ?? 'level-1'
+  const moduleSlug = req.nextUrl.searchParams.get('module') ?? 'introduction-to-accounting'
   const count      = parseInt(req.nextUrl.searchParams.get('count') ?? '50', 10)
 
-  const query = encodeURIComponent(`
-    *[_type == "practicePost" && eticpaLevel == "${level}" && eticpaModule == "${moduleSlug}" && "ethiotax" in showOnSites]{
-      title,
-      "questions": quizQuestions[]{ questionText, options, correctIndex, explanation, difficulty, primaryTopic }
-    }
-  `)
-
   try {
-    const res = await fetch(
-      `https://${PROJECT_ID}.apicdn.sanity.io/v2023-05-03/data/query/${DATASET}?query=${query}`,
-      { headers: READ_TOKEN ? { Authorization: `Bearer ${READ_TOKEN}` } : {}, next: { revalidate: 0 } }
-    )
-    if (!res.ok) return NextResponse.json({ error: 'Sanity fetch failed' }, { status: 500 })
-    const data = await res.json()
-    const posts: { title: string; questions: (QuizQuestion & { primaryTopic?: string })[] }[] = data.result ?? []
+    // Fetch published ETICPA question sets for this level + module
+    const { data: questionSets, error: qsError } = await supabase
+      .from('question_sets')
+      .select('id, title')
+      .eq('status', 'published')
+      .contains('show_on_sites', ['et'])
+      .eq('eticpa_level', level)
+      .eq('eticpa_module', moduleSlug)
 
-    const groups: PoolQuestion[][] = []
-    let poolTotal = 0
-    for (const post of posts) {
-      const qs = (post.questions ?? [])
-        .filter(q => q.questionText && Array.isArray(q.options) && q.options.length > 1 && typeof q.correctIndex === 'number')
-        .map(q => ({
-          questionText: q.questionText,
-          options: q.options,
-          correctIndex: q.correctIndex,
-          explanation: q.explanation,
-          difficulty: q.difficulty,
-          sourceTitle: post.title,
-          topic: post.title.replace(/ — Practice Questions$/, ''),
-        }))
-      if (qs.length > 0) { groups.push(shuffle(qs)); poolTotal += qs.length }
+    if (qsError) return NextResponse.json({ error: qsError.message }, { status: 500 })
+
+    if (!questionSets || questionSets.length === 0) {
+      return NextResponse.json({ questions: [], poolTotal: 0 })
     }
 
-    if (poolTotal === 0) return NextResponse.json({ questions: [], poolTotal: 0 })
+    const setIds = questionSets.map(qs => qs.id)
+    const setTitleMap = new Map(questionSets.map(qs => [qs.id, qs.title]))
 
+    // Fetch all questions for matching sets
+    const { data: questions, error: qError } = await supabase
+      .from('questions')
+      .select('set_id, question_text, option_a, option_b, option_c, option_d, correct_index, explanation, difficulty')
+      .in('set_id', setIds)
+      .order('question_order', { ascending: true })
+
+    if (qError) return NextResponse.json({ error: qError.message }, { status: 500 })
+
+    // Group questions by set for round-robin
+    const groupMap = new Map<string, PoolQuestion[]>()
+    for (const q of (questions ?? [])) {
+      if (!q.question_text || typeof q.correct_index !== 'number') continue
+      const options = [q.option_a, q.option_b, q.option_c, q.option_d].filter(Boolean) as string[]
+      if (options.length < 2) continue
+      const title = setTitleMap.get(q.set_id) ?? ''
+      const pq: PoolQuestion = {
+        questionText: q.question_text,
+        options,
+        correctIndex: q.correct_index,
+        explanation:  q.explanation ?? undefined,
+        difficulty:   q.difficulty ?? undefined,
+        sourceTitle:  title,
+        topic:        title.replace(/ [—-] Practice Questions$/, ''),
+      }
+      const group = groupMap.get(q.set_id) ?? []
+      group.push(pq)
+      groupMap.set(q.set_id, group)
+    }
+
+    const groups = Array.from(groupMap.values()).map(g => shuffle(g))
+    const poolTotal = groups.reduce((sum, g) => sum + g.length, 0)
+
+    if (poolTotal === 0) {
+      return NextResponse.json({ questions: [], poolTotal: 0 })
+    }
+
+    // Balanced round-robin across all question sets
     const selected: PoolQuestion[] = []
     const target = Math.min(count, poolTotal)
     let idx = 0
@@ -84,11 +110,12 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({
-      questions: shuffle(selected),
+      questions:  shuffle(selected),
       poolTotal,
       topicCount: groups.length,
-      served: selected.length,
+      served:     selected.length,
     })
+
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Unknown error'
     return NextResponse.json({ error: msg }, { status: 500 })
