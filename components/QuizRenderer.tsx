@@ -97,7 +97,18 @@ export default function QuizRenderer({ quizJson }: Props) {
     const qtype = (data.question_type ?? 'mcq').toLowerCase()
     const qs    = data.questions ?? []
     if (qtype === 'scenario') {
-      setSelected(qs.map((q, i) => { const opts = normaliseOptions(q); return { orig: i, q, opts, correctLabel: getCorrectLabel(q, opts) } }))
+      // Group questions by caseId
+      const groups: Record<string, { orig: number; q: QuizQuestion; opts: QuizOption[]; correctLabel: string }[]> = {}
+      qs.forEach((q, i) => {
+        const cid = q.case_id != null ? String(q.case_id) : '_none'
+        if (!groups[cid]) groups[cid] = []
+        const opts = normaliseOptions(q)
+        groups[cid].push({ orig: i, q, opts, correctLabel: getCorrectLabel(q, opts) })
+      })
+      // Shuffle group order, then shuffle questions within each group
+      const groupKeys = shuffle(Object.keys(groups))
+      const shuffled = groupKeys.flatMap(cid => shuffle(groups[cid]))
+      setSelected(shuffled)
     } else {
       const indices = shuffle(qs.map((_, i) => i)).slice(0, Math.min(10, qs.length))
       const entries = shuffle(indices).map(i => {
