@@ -199,6 +199,34 @@ export default function JobsHubClient({ isEthioTax }: { isEthioTax: boolean }) {
         </div>
       </section>
 
+      {/* ETHIOPIAN PROFESSIONALS — EthioTax only */}
+      {isEthioTax && (
+        <section className="relative overflow-hidden py-16 md:py-20" style={{ background: '#1A4731' }}>
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-20"
+              style={{ background: 'radial-gradient(ellipse at center top, rgba(212,160,23,0.4) 0%, transparent 70%)' }} />
+          </div>
+          <div className="container-site relative z-10">
+            <div className="max-w-2xl mx-auto text-center">
+              <span className="eyebrow text-gold-400 mb-4 block">EthioTax Recruitment</span>
+              <h2 className="font-display text-white text-3xl md:text-4xl mb-4 leading-tight" style={{ letterSpacing: '-0.02em' }}>
+                Are you an Ethiopian finance professional?
+              </h2>
+              <p className="text-white/70 text-lg leading-relaxed mb-8">
+                Thousands of Ethiopian-origin professionals hold ACCA, CIMA, ETICPA, or CPA qualifications and are working in roles that do not reflect their training. We exist to change that.
+              </p>
+              <Link
+                href="/jobs/ethiopian-professionals"
+                style={{ background: '#C9982A', color: '#1A4731' }}
+                className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
+              >
+                See opportunities for you →
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* FOR EMPLOYERS */}
       <section className="section bg-slate-50">
         <div className="container-site">
