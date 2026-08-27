@@ -165,6 +165,25 @@ export async function getQuestionsBySetId(setId: string): Promise<Question[]> {
   return data as Question[]
 }
 
+export interface QuestionCase {
+  id:           string
+  set_id:       string
+  case_id:      string
+  title:        string
+  exhibit_html: string
+  created_at:   string
+}
+
+export async function getCasesBySetId(setId: string): Promise<QuestionCase[]> {
+  const { data, error } = await supabase
+    .from('question_cases')
+    .select('*')
+    .eq('set_id', setId)
+    .order('created_at', { ascending: true })
+  if (error || !data) return []
+  return data as QuestionCase[]
+}
+
 export async function getQuestionSets(params: {
   difficulty?: string
   search?: string

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
-import { getQuestionSetBySlug, getQuestionsBySetId } from '@/lib/db'
+import { getQuestionSetBySlug, getQuestionsBySetId, getCasesBySetId } from '@/lib/db'
 import QuizRenderer from '@/components/QuizRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 
@@ -30,7 +30,10 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
   const qset = await getQuestionSetBySlug(slug)
   if (!qset) notFound()
-  const questions = await getQuestionsBySetId(qset.id)
+  const [questions, cases] = await Promise.all([
+    getQuestionsBySetId(qset.id),
+    getCasesBySetId(qset.id),
+  ])
   const quizJson = JSON.stringify({
     question_type: qset.question_type ?? 'multiple-choice',
     questions: questions.map((q, i) => ({
@@ -47,9 +50,14 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
         model_answer_html: q.writing_model_answer ?? '',
         explanation_html:  q.writing_explanation ?? '',
       } : undefined,
+      case_id: q.case_id ?? undefined,
       meta: { primaryTopic: q.primary_topic ?? '' },
     })),
-    cases: [],
+    cases: cases.map(c => ({
+      case_id:      c.case_id,
+      title:        c.title,
+      exhibit_html: c.exhibit_html,
+    })),
   })
   const post = {
     title: qset.title,

@@ -134,6 +134,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: qError.message }, { status: 500 })
     }
 
+    // Insert case exhibits if present (scenario question sets)
+    const cases = bundle.cases ?? []
+    if (cases.length > 0) {
+      const caseRows = cases
+        .filter((c: any) => c.caseId && c.exhibitHtml)
+        .map((c: any) => ({
+          set_id:       setId,
+          case_id:      c.caseId,
+          title:        c.title ?? '',
+          exhibit_html: c.exhibitHtml,
+        }))
+      if (caseRows.length > 0) {
+        const { error: caseError } = await supabase
+          .from('question_cases')
+          .insert(caseRows)
+        if (caseError) {
+          console.error('questions/publish cases insert error:', caseError)
+          // Non-fatal — questions are published, cases failed. Log and continue.
+        }
+      }
+    }
+
     return NextResponse.json({
       success:       true,
       documentId:    setId,
