@@ -7,13 +7,7 @@ const nextConfig = {
     scrollRestoration: true,
   },
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'cdn.sanity.io',
-        pathname: '/images/**',
-      },
-    ],
+    remotePatterns: [],
   },
   async redirects() {
     return [
