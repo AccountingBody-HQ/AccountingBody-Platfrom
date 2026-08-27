@@ -63,19 +63,6 @@ export interface CourseSummary {
   lessonCount:    number
 }
 
-interface RawCourseListRow {
-  id:              string
-  title:           string
-  slug:            string
-  description:     string | null
-  level:           string | null
-  status:          string
-  is_featured:     boolean
-  show_on_sites:   string[]
-  canonical_owner: string
-  course_chapters: { id: string; course_lessons: { id: string }[] | null }[] | null
-}
-
 interface RawArticleRow {
   id:         string
   title:      string
@@ -108,6 +95,11 @@ interface RawChapterStageRow {
   chapter_order: number
 }
 
+interface RawChapterListRow {
+  id:        string
+  course_id: string
+}
+
 interface RawLessonStageRow {
   id:                string
   title:             string
@@ -120,23 +112,28 @@ interface RawLessonStageRow {
   external_quiz_url: string | null
 }
 
+interface RawLessonListRow {
+  id:         string
+  chapter_id: string
+}
+
 interface RawLessonArticleStageRow {
   lesson_id:     string
   article_order: number
   articles:      RawArticleRow | null
 }
 
+interface RawLessonArticleLinkRow {
+  lesson_id:     string
+  article_order: number
+  article_id:    string
+}
+
 export async function getPublishedCourses(site?: string): Promise<CourseSummary[]> {
+  // Stage 1: fetch courses (flat, no embed)
   let query = supabase
     .from('courses')
-    .select(`
-      id, title, slug, description, level, status, is_featured,
-      show_on_sites, canonical_owner,
-      course_chapters (
-        id,
-        course_lessons ( id )
-      )
-    `)
+    .select('id, title, slug, description, level, status, is_featured, show_on_sites, canonical_owner')
     .eq('status', 'published')
     .order('title', { ascending: true })
 
@@ -144,24 +141,63 @@ export async function getPublishedCourses(site?: string): Promise<CourseSummary[
     query = query.contains('show_on_sites', [site])
   }
 
-  const { data, error } = await query
-  if (error || !data) return []
+  const { data: coursesData, error } = await query
+  if (error || !coursesData) return []
 
-  return (data as unknown as RawCourseListRow[]).map(c => ({
-    id:             c.id,
-    title:          c.title,
-    slug:           c.slug,
-    description:    c.description ?? undefined,
-    level:          c.level ?? undefined,
-    status:         c.status,
-    isFeatured:     c.is_featured,
-    showOnSites:    c.show_on_sites,
-    canonicalOwner: c.canonical_owner,
-    chapterCount:   (c.course_chapters ?? []).length,
-    lessonCount:    (c.course_chapters ?? []).reduce(
-      (sum, ch) => sum + (ch.course_lessons ?? []).length, 0
-    ),
-  }))
+  const courses = coursesData as unknown as RawCourseStageRow[]
+  const courseIds = courses.map(c => c.id)
+
+  const chaptersByCourseId = new Map<string, RawChapterListRow[]>()
+  const lessonCountByChapterId = new Map<string, number>()
+
+  if (courseIds.length > 0) {
+    // Stage 2: fetch chapters (flat, no embed)
+    const { data: chaptersData } = await supabase
+      .from('course_chapters')
+      .select('id, course_id')
+      .in('course_id', courseIds)
+
+    const chapters = (chaptersData as unknown as RawChapterListRow[] | null) ?? []
+    for (const ch of chapters) {
+      const list = chaptersByCourseId.get(ch.course_id) ?? []
+      list.push(ch)
+      chaptersByCourseId.set(ch.course_id, list)
+    }
+
+    const chapterIds = Array.from(new Set(chapters.map(ch => ch.id)))
+
+    if (chapterIds.length > 0) {
+      // Stage 3: fetch lessons (flat, no embed)
+      const { data: lessonsData } = await supabase
+        .from('course_lessons')
+        .select('id, chapter_id')
+        .in('chapter_id', chapterIds)
+
+      const lessons = (lessonsData as unknown as RawLessonListRow[] | null) ?? []
+      for (const l of lessons) {
+        lessonCountByChapterId.set(l.chapter_id, (lessonCountByChapterId.get(l.chapter_id) ?? 0) + 1)
+      }
+    }
+  }
+
+  return courses.map(c => {
+    const courseChapters = chaptersByCourseId.get(c.id) ?? []
+    return {
+      id:             c.id,
+      title:          c.title,
+      slug:           c.slug,
+      description:    c.description ?? undefined,
+      level:          c.level ?? undefined,
+      status:         c.status,
+      isFeatured:     c.is_featured,
+      showOnSites:    c.show_on_sites,
+      canonicalOwner: c.canonical_owner,
+      chapterCount:   courseChapters.length,
+      lessonCount:    courseChapters.reduce(
+        (sum, ch) => sum + (lessonCountByChapterId.get(ch.id) ?? 0), 0
+      ),
+    }
+  })
 }
 
 export async function getCourseBySlug(slug: string, adminMode = false): Promise<Course | null> {
@@ -201,12 +237,36 @@ export async function getCourseBySlug(slug: string, adminMode = false): Promise<
   let lessonArticles: RawLessonArticleStageRow[] = []
 
   if (lessonIds.length > 0) {
-    const { data: laData } = await supabase
+    // Stage 4a — flat: fetch lesson-article links (no embed)
+    const { data: laLinkData } = await supabase
       .from('course_lesson_articles')
-      .select('lesson_id, article_order, articles(id, title, slug, excerpt, read_time, content_id, wp_id)')
+      .select('lesson_id, article_order, article_id')
       .in('lesson_id', lessonIds)
       .order('article_order', { ascending: true })
-    lessonArticles = (laData as unknown as RawLessonArticleStageRow[] | null) ?? []
+
+    const links = (laLinkData as unknown as RawLessonArticleLinkRow[] | null) ?? []
+
+    // Stage 4b — flat: fetch article rows by id array
+    const linkedArticleIds = Array.from(new Set(links.map(l => l.article_id)))
+    let articlesById = new Map<string, RawArticleRow>()
+
+    if (linkedArticleIds.length > 0) {
+      const { data: articlesData } = await supabase
+        .from('articles')
+        .select('id, title, slug, excerpt, read_time, content_id, wp_id')
+        .in('id', linkedArticleIds)
+
+      articlesById = new Map(
+        ((articlesData as unknown as RawArticleRow[] | null) ?? []).map(a => [a.id, a])
+      )
+    }
+
+    // JS join — reassemble into the same shape the assembly code below already expects
+    lessonArticles = links.map(l => ({
+      lesson_id:     l.lesson_id,
+      article_order: l.article_order,
+      articles:      articlesById.get(l.article_id) ?? null,
+    }))
   }
 
   // Assemble the structure

@@ -43,6 +43,7 @@ export interface QuestionSet {
   seo_title?:       string
   seo_description?: string
   published_at?:    string
+  created_at?:      string
   question_count?:  number
 }
 
@@ -217,4 +218,36 @@ export async function getETICPAModuleArticles(level: string, module: string): Pr
     .limit(5000)
   if (error || !data) return []
   return data as ArticleSummary[]
+}
+
+// ── Admin: Question Sets (roodber8) ─────────────────────────────────────────
+
+export async function getAllQuestionSetsForAdmin(): Promise<QuestionSet[]> {
+  const { data: setsData, error: setsError } = await supabase
+    .from('question_sets')
+    .select('id, title, slug, difficulty, topic, exam_body, question_type, created_at')
+    .order('created_at', { ascending: false })
+
+  if (setsError || !setsData) return []
+
+  const setIds = (setsData as QuestionSet[]).map(s => s.id)
+  const countsBySetId = new Map<string, number>()
+
+  if (setIds.length > 0) {
+    const { data: questionsData, error: questionsError } = await supabase
+      .from('questions')
+      .select('id, set_id')
+      .in('set_id', setIds)
+
+    if (questionsError) return []
+
+    for (const q of (questionsData as { id: string; set_id: string }[] | null) ?? []) {
+      countsBySetId.set(q.set_id, (countsBySetId.get(q.set_id) ?? 0) + 1)
+    }
+  }
+
+  return (setsData as QuestionSet[]).map(s => ({
+    ...s,
+    question_count: countsBySetId.get(s.id) ?? 0,
+  }))
 }
