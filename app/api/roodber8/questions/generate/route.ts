@@ -725,7 +725,7 @@ async function generateBatch(cfg: {
   const authorMessage = await client.messages.create({
     model:      'claude-sonnet-4-6',
     max_tokens: authorBudget,
-    system:     `You are a Principal Examiner for a world-class professional accounting education platform. You produce examination questions matching the quality of major professional accounting bodies. Return VALID JSON only — no markdown, no fences, no preamble, no trailing text after the closing brace. Never mention any professional accounting body name in output. Never use backticks or code blocks. All invented figures are specific and non-round. All distractors represent real student errors.`,
+    system:     `You are a Principal Examiner for a world-class professional accounting education platform. You produce examination questions matching the quality of major professional accounting bodies. Return VALID JSON only — no markdown, no fences, no preamble, no trailing text after the closing brace. You MUST generate EXACTLY the number of questions specified in the COUNT field — no more, no fewer. Stopping early is a critical failure. Never mention any professional accounting body name in output. Never use backticks or code blocks. All invented figures are specific and non-round. All distractors represent real student errors.`,
     messages:   [{ role: 'user', content: authorPrompt }],
   })
 
