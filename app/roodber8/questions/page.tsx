@@ -127,6 +127,11 @@ export default async function QuestionsLibraryPage() {
                       <CheckCircle2 size={13} style={{ color: '#10b981' }} />
                       <span className="text-sm font-semibold text-white">{post.question_count ?? 0}</span>
                     </div>
+                    <Link href={`/roodber8/questions/${post.id}`}
+                      className="text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1"
+                      style={{ background: 'rgba(212,160,23,0.1)', color: '#D4A017', border: '1px solid rgba(212,160,23,0.2)' }}>
+                      Manage
+                    </Link>
                     {slug && (
                       <a href={`/practice-questions/${slug}`} target="_blank" rel="noopener noreferrer"
                         className="text-xs font-medium flex items-center gap-1" style={{ color: '#2563eb' }}>
