@@ -43,6 +43,8 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
       correctIndex: q.correct_index,
       correct: [q.option_a, q.option_b, q.option_c, q.option_d][q.correct_index ?? 0],
       explanation: q.explanation ?? '',
+      writingModelAnswer: q.writing_model_answer ?? null,
+      writingExplanation: q.writing_explanation ?? null,
       meta: { primaryTopic: q.primary_topic ?? '' },
     })),
     cases: [],
