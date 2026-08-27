@@ -38,6 +38,19 @@ const nextConfig = {
         destination: '/free-courses/:path*',
         permanent: true,
       },
+      // Lesson redirect must come before the general /study/courses/:path* redirect
+      // below, so this more specific path matches first — the old lesson URL segment
+      // is "lessons", the new one is "learn".
+      {
+        source: '/study/courses/:slug/lessons/:lessonSlug',
+        destination: '/free-courses/:slug/learn/:lessonSlug',
+        permanent: true,
+      },
+      {
+        source: '/study/courses/:slug',
+        destination: '/free-courses/:slug',
+        permanent: true,
+      },
       {
         source: '/study/courses',
         destination: '/free-courses',

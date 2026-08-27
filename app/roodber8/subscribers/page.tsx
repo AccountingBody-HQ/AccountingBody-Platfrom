@@ -43,7 +43,7 @@ export default async function SubscribersPage({
     getSources(),
   ])
 
-  const subscribedCount   = subscribers.filter((s: any) => s.status === 'subscribed' || s.status === 'active' || !s.status).length
+  const subscribedCount   = subscribers.filter((s: any) => s.status === 'subscribed').length
   const unsubscribedCount = subscribers.filter((s: any) => s.status === 'unsubscribed').length
 
   const csvRows   = subscribers.map((s: any) => [s.email, s.status ?? 'subscribed', s.source ?? '', s.subscribed_at ?? ''].join(',')).join('\n')
