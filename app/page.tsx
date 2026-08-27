@@ -353,8 +353,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const activeQualificationPaths = isEthioTax
     ? [eticpaCard, ...qualificationPaths.filter(q => q.slug !== 'icaew')]
     : qualificationPaths
-  const sanityArticles = await getFeaturedArticles(isEthioTax ? 'et' : 'ab')
-  const articles = sanityArticles
+  const featuredArticles = await getFeaturedArticles(isEthioTax ? 'et' : 'ab')
+  const articles = featuredArticles
 
   return (
     <>
