@@ -551,9 +551,6 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           cta:    section.etCta    ?? section.cta,
         }
       }
-      if (section.id === 'jobs' && etGetHelpLinks) {
-        return { ...section, groups: section.etGroups ?? section.groups, cta: section.etCta ?? section.cta }
-      }
       return section
     }),
     ...(etCompanySection ? [etCompanySection] : []),
