@@ -40,3 +40,10 @@ dist/
 *.xml
 scripts/__pycache__/
 .env*
+
+# Claude Code audit and scratch files
+tmp-audit/
+tmp-*/
+temp-*/
+debug-*/
+*-report.md
