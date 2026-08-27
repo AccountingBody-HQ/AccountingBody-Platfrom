@@ -1,12 +1,18 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 
 export const metadata: Metadata = {
   title: 'Ethiopian Finance Professionals | EthioTax Recruitment',
   description: 'EthioTax places qualified Ethiopian-origin finance professionals in permanent and contract roles across the UK, US, Canada and beyond.',
 }
 
-export default function EthiopianProfessionalsPage() {
+export default async function EthiopianProfessionalsPage() {
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  if (!isEthioTax) redirect('/jobs')
+
   return (
     <main className="min-h-screen bg-surface">
 

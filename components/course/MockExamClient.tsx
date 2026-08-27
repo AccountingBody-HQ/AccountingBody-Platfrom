@@ -52,7 +52,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
       setError('Could not load the exam. Please try again.')
     }
     setLoading(false)
-  }, [level, module])
+  }, [level, module, apiPath])
 
   useEffect(() => {
     if (phase !== 'exam') return

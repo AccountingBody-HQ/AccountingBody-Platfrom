@@ -2,9 +2,6 @@ import { CheckCircle, Circle, Server } from "lucide-react"
 
 export default function SettingsPage() {
   const envVars = [
-    { name: "NEXT_PUBLIC_SANITY_PROJECT_ID", required: true, description: "Sanity project ID" },
-    { name: "NEXT_PUBLIC_SANITY_DATASET", required: true, description: "Sanity dataset" },
-    { name: "SANITY_API_TOKEN", required: true, description: "Sanity editor token — read and write" },
     { name: "NEXT_PUBLIC_SUPABASE_URL", required: true, description: "Supabase project URL" },
     { name: "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", required: true, description: "Supabase anon key" },
     { name: "SUPABASE_SECRET_KEY", required: true, description: "Supabase service role key — server only" },
@@ -22,7 +19,6 @@ export default function SettingsPage() {
     { label: "Admin panel built", done: true },
     { label: "ADMIN_SECRET set", done: !!process.env.ADMIN_SECRET },
     { label: "ANTHROPIC_API_KEY set", done: !!process.env.ANTHROPIC_API_KEY },
-    { label: "SANITY_API_TOKEN set", done: !!process.env.SANITY_API_TOKEN },
     { label: "Clerk test keys upgraded to production", done: (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "").startsWith("pk_live_") },
     { label: "GTM ID configured", done: !!process.env.NEXT_PUBLIC_GTM_ID },
     { label: "AdSense ID configured", done: !!process.env.NEXT_PUBLIC_ADSENSE_ID },
@@ -38,7 +34,6 @@ export default function SettingsPage() {
     { label: "EthioTax: Terms of Service (UK solicitor)", done: false },
     { label: "EthioTax: First real client testimonial", done: false },
     { label: "EthioTax: GSC sitemap submitted", done: false },
-    { label: "EthioTax: Sanity content tagged for ET", done: false },
   ]
 
   const completedCount = checklist.filter((i) => i.done).length
@@ -117,7 +112,7 @@ export default function SettingsPage() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
           {[
             { label: "Framework", value: "Next.js 14.2.35" },
-            { label: "CMS", value: "Sanity v3" },
+            { label: "CMS", value: "Supabase" },
             { label: "Database", value: "Supabase" },
             { label: "Auth", value: "Clerk" },
             { label: "Email", value: "Resend" },

@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 
 export default function RouteProgressBar() {
@@ -11,12 +11,12 @@ export default function RouteProgressBar() {
   const started = useRef(false)
   const touchStart = useRef<{x: number, y: number} | null>(null)
 
-  const clearAll = () => {
+  const clearAll = useCallback(() => {
     timers.current.forEach(clearTimeout)
     timers.current = []
-  }
+  }, [])
 
-  const startBar = () => {
+  const startBar = useCallback(() => {
     if (started.current) return
     started.current = true
     clearAll()
@@ -26,15 +26,15 @@ export default function RouteProgressBar() {
     const t2 = setTimeout(() => setWidth(70), 300)
     const t3 = setTimeout(() => setWidth(85), 800)
     timers.current = [t1, t2, t3]
-  }
+  }, [clearAll])
 
-  const completeBar = () => {
+  const completeBar = useCallback(() => {
     started.current = false
     clearAll()
     setWidth(100)
     const hide = setTimeout(() => setVisible(false), 400)
     timers.current = [hide]
-  }
+  }, [clearAll])
 
   useEffect(() => {
     const onMouseDown = (e: MouseEvent) => {
@@ -73,11 +73,11 @@ export default function RouteProgressBar() {
       document.removeEventListener('touchstart', onTouchStart)
       document.removeEventListener('touchend', onTouchEnd)
     }
-  }, [])
+  }, [startBar])
 
   useEffect(() => {
     completeBar()
-  }, [pathname, searchParams])
+  }, [pathname, searchParams, completeBar])
 
   // ET language switch: resume bar after reload, hold until Google Translate finishes
   useEffect(() => {
@@ -105,7 +105,7 @@ export default function RouteProgressBar() {
       clearInterval(interval)
       clearTimeout(safety)
     }
-  }, [])
+  }, [completeBar, startBar])
 
   if (!visible) return null
 

@@ -266,6 +266,34 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 </dl>
               </div>
 
+              {/* Jobs card */}
+              <div className="rounded-xl overflow-hidden border border-slate-200">
+                <div
+                  className="p-5 relative overflow-hidden"
+                  style={{ background: isEthioTax ? '#1A4731' : '#0C1A3D' }}
+                >
+                  <div
+                    className="absolute inset-0 opacity-10 pointer-events-none"
+                    style={{ background: 'radial-gradient(circle at 80% 20%, #C9982A 0%, transparent 60%)' }}
+                  />
+                  <div className="relative z-10">
+                    <p className="font-display text-white text-sm mb-1 leading-snug">
+                      Find jobs in this field
+                    </p>
+                    <p className="text-white/50 text-xs leading-relaxed mb-3">
+                      {isEthioTax ? '1,000+' : '250,000+'} live jobs — updated daily.
+                    </p>
+                    <Link
+                      href="/jobs/listings"
+                      className="flex items-center justify-center gap-2 w-full h-10 rounded-lg text-xs font-semibold transition-colors"
+                      style={{ background: '#C9982A', color: isEthioTax ? '#0f2d1e' : '#0C1A3D' }}
+                    >
+                      Browse jobs →
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
               {/* Practice questions CTA */}
               <div className="bg-navy-950 rounded-xl p-5 relative overflow-hidden">
                 <div

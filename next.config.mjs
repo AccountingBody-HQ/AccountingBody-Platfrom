@@ -68,6 +68,10 @@ const nextConfig = {
       { source: '/all-resources', destination: '/study', permanent: true },
       { source: '/study-hub', destination: '/study', permanent: true },
       { source: '/practitioner-apply', destination: '/firms-freelancers/join', permanent: true },
+
+      // /hire-talent is the legacy, orphaned route — /jobs/hire-talent is current
+      { source: '/hire-talent', destination: '/jobs/hire-talent', permanent: true },
+      { source: '/hire-talent/:path*', destination: '/jobs/hire-talent/:path*', permanent: true },
     ]
   },
 }

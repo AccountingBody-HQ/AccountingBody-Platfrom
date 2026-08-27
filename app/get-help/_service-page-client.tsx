@@ -153,7 +153,7 @@ const allServices = [
   { name: 'Self Assessment', slug: 'self-assessment' },
 ]
 
-export default function ServicePageClient({ params }: { params: { slug: string } }) {
+export default function ServicePageClient({ params, isEthioTax = false }: { params: { slug: string }, isEthioTax?: boolean }) {
   const service = services[params.slug]
   if (!service) notFound()
 
@@ -161,6 +161,8 @@ export default function ServicePageClient({ params }: { params: { slug: string }
     name: '', email: '', phone: '', service_type: service.name, message: '', _h: ''
   })
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+
+  const brandColor = isEthioTax ? '#0f2d1e' : '#0C1A3D'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -349,39 +351,44 @@ export default function ServicePageClient({ params }: { params: { slug: string }
             <div className="max-w-xl">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6"
                 style={{ background: 'rgba(0,0,0,0.12)', border: '1px solid rgba(0,0,0,0.15)' }}>
-                <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#0C1A3D' }} />
-                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#0C1A3D' }}>
-                  Accounting Body Recruitment
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: brandColor }} />
+                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: brandColor }}>
+                  {isEthioTax ? 'EthioTax Recruitment' : 'Accounting Body Recruitment'}
                 </span>
               </div>
               <h2 className="font-display leading-[1.06] mb-4"
-                style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', letterSpacing: '-0.03em', color: '#0C1A3D' }}>
-                Also need to hire accounting<br />
-                <span style={{ opacity: 0.7 }}>or finance talent?</span>
+                style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', letterSpacing: '-0.03em', color: brandColor }}>
+                {isEthioTax ? (
+                  <>Also need to hire Ethiopian<br /><span style={{ opacity: 0.7 }}>finance talent?</span></>
+                ) : (
+                  <>Also need to hire accounting<br /><span style={{ opacity: 0.7 }}>or finance talent?</span></>
+                )}
               </h2>
-              <p className="text-base leading-relaxed mb-6" style={{ color: 'rgba(12,26,61,0.75)' }}>
-                Submit a hiring brief — we search our vetted candidate pool, manage every introduction, and guarantee every placement for 90 days.
+              <p className="text-base leading-relaxed mb-6" style={{ color: isEthioTax ? 'rgba(15,45,30,0.75)' : 'rgba(12,26,61,0.75)' }}>
+                {isEthioTax
+                  ? 'Submit a hiring brief — we search our vetted pool of Ethiopian finance professionals, manage every introduction, and guarantee every placement for 90 days.'
+                  : 'Submit a hiring brief — we search our vetted candidate pool, manage every introduction, and guarantee every placement for 90 days.'}
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link href="/jobs/hire-talent"
                   className="flex-1 inline-flex items-center justify-center gap-2 min-h-[56px] px-7 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 shadow-sm"
-                  style={{ background: '#0C1A3D' }}>
+                  style={{ background: brandColor }}>
                   Submit a hiring brief
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                 </Link>
                 <Link href="/jobs/find-work"
                   className="flex-1 inline-flex items-center justify-center gap-2 min-h-[56px] px-7 rounded-xl text-sm font-semibold transition-all hover:opacity-80 border-2"
-                  style={{ borderColor: '#0C1A3D', color: '#0C1A3D', background: 'transparent' }}>
+                  style={{ borderColor: brandColor, color: brandColor, background: 'transparent' }}>
                   Find work
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                 </Link>
               </div>
             </div>
             <div className="rounded-2xl overflow-hidden shrink-0 w-full lg:w-[380px]"
-              style={{ background: '#0C1A3D', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
+              style={{ background: brandColor, boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
               <div className="px-7 pt-6 pb-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>Why Accounting Body</p>
+                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>{isEthioTax ? 'Why EthioTax' : 'Why Accounting Body'}</p>
                   <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: 'rgba(201,152,42,0.15)', color: '#C9982A', border: '1px solid rgba(201,152,42,0.3)' }}>Not a job board</span>
                 </div>
               </div>
@@ -390,7 +397,9 @@ export default function ServicePageClient({ params }: { params: { slug: string }
                   { value: 'Managed', label: 'End-to-end service', sub: 'We handle every step' },
                   { value: '90 Days', label: 'Replacement guarantee', sub: 'On every permanent role' },
                   { value: '100%', label: 'Vetted candidates', sub: 'Every profile reviewed' },
-                  { value: 'Finance', label: 'Specialists only', sub: 'Accounting, tax, audit & more' },
+                  isEthioTax
+                    ? { value: 'Global', label: 'Diaspora coverage', sub: 'UK · USA · Canada · UAE' }
+                    : { value: 'Finance', label: 'Specialists only', sub: 'Accounting, tax, audit & more' },
                 ].map((stat, i) => (
                   <div key={stat.label} className="p-5"
                     style={{ borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none' }}>
@@ -402,7 +411,7 @@ export default function ServicePageClient({ params }: { params: { slug: string }
               </div>
               <div className="px-7 py-4 flex items-center justify-between"
                 style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(201,152,42,0.06)' }}>
-                <p className="text-xs text-white/40">Accounting Body manages every placement.</p>
+                <p className="text-xs text-white/40">{isEthioTax ? 'EthioTax manages every placement.' : 'Accounting Body manages every placement.'}</p>
                 <Link href="/jobs/how-it-works" className="text-xs font-semibold ml-4 hover:opacity-80 transition-opacity" style={{ color: '#C9982A' }}>How it works →</Link>
               </div>
             </div>
