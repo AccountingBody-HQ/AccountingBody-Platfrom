@@ -313,7 +313,7 @@ export default function ImportQuestionsPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Import Questions</h1>
           <p className="text-sm" style={{ color: '#475569' }}>
-            Paste JSON from any AI model — ChatGPT, DeepSeek, Gemini, Claude, or hand-written
+            Paste JSON from any source — AI-generated or hand-written
           </p>
         </div>
       </div>
@@ -355,7 +355,7 @@ export default function ImportQuestionsPage() {
             <div className="text-sm space-y-1">
               <p className="font-bold">Accepted formats</p>
               <p style={{ color: '#93c5fd' }}>
-                Any JSON from ChatGPT, DeepSeek, Gemini, Claude, or hand-written.
+                Any JSON from any source — AI-generated or hand-written.
                 Supports MCQ, Scenario, and Writing questions. The system automatically
                 normalises field names, answer formats, and option structures.
               </p>

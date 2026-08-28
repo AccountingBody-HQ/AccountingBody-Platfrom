@@ -1,8 +1,11 @@
 import Link from 'next/link'
 import { unstable_noStore as noStore } from 'next/cache'
+import { createClient } from '@supabase/supabase-js'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
-import { BookOpen, Plus, ExternalLink, CheckCircle2, FileText, Layers, PenLine, FileJson } from 'lucide-react'
-import { getAllQuestionSetsForAdmin, type QuestionSet } from '@/lib/db'
+import {
+  BookOpen, Plus, ExternalLink, CheckCircle2, FileText,
+  Layers, PenLine, FileJson, Search
+} from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,16 +22,80 @@ const TYPE_LABEL: Record<string, string> = {
   mixed:              'Mixed',
 }
 
-export default async function QuestionsLibraryPage() {
-  noStore()
-  const posts = await getAllQuestionSetsForAdmin()
+interface QuestionSetRow {
+  id:             string
+  title:          string
+  slug?:          string
+  difficulty?:    string
+  topic?:         string
+  exam_body?:     string[]
+  question_type?: string
+  created_at?:    string
+  question_count?: number
+}
 
-  const total         = posts.length
-  const totalQs       = posts.reduce((sum: number, p: QuestionSet) => sum + (p.question_count ?? 0), 0)
-  const mcqCount      = posts.filter((p: QuestionSet) => p.question_type === 'multiple-choice').length
-  const scenarioCount = posts.filter((p: QuestionSet) => p.question_type === 'scenario').length
-  const writingCount  = posts.filter((p: QuestionSet) => p.question_type === 'writing').length
-  const recentPosts   = posts.slice(0, 5)
+const ALPHABET = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i))
+
+async function getQuestionSets(safeSearch: string, letter: string): Promise<QuestionSetRow[]> {
+  noStore()
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!
+  )
+
+  let query = supabase
+    .from('question_sets')
+    .select('id, title, slug, difficulty, topic, exam_body, question_type, created_at')
+    .order('created_at', { ascending: false })
+    .limit(2000)
+
+  if (safeSearch) query = query.ilike('title', `%${safeSearch}%`)
+  if (letter)     query = query.ilike('title', `${letter}%`)
+
+  const { data: setsData } = await query
+  const sets = (setsData ?? []) as QuestionSetRow[]
+
+  if (sets.length === 0) return []
+  const setIds = sets.map(s => s.id)
+  const { data: questionsData } = await supabase
+    .from('questions')
+    .select('id, set_id')
+    .in('set_id', setIds)
+
+  const countsBySetId = new Map<string, number>()
+  for (const q of (questionsData ?? []) as { id: string; set_id: string }[]) {
+    countsBySetId.set(q.set_id, (countsBySetId.get(q.set_id) ?? 0) + 1)
+  }
+
+  return sets.map(s => ({ ...s, question_count: countsBySetId.get(s.id) ?? 0 }))
+}
+
+export default async function QuestionsLibraryPage({
+  searchParams,
+}: {
+  searchParams?: { search?: string; letter?: string }
+}) {
+  noStore()
+  const search = searchParams?.search ?? ''
+  const letter = searchParams?.letter ?? ''
+  const safeSearch = search.replace(/[,()%]/g, '')
+  const safeLetter = letter.replace(/[,()%]/g, '').slice(0, 1).toUpperCase()
+
+  const supabaseForCount = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!
+  )
+  const [posts, { count: totalSets }] = await Promise.all([
+    getQuestionSets(safeSearch, safeLetter),
+    supabaseForCount.from('question_sets')
+      .select('*', { count: 'exact', head: true }),
+  ])
+
+  const total         = totalSets ?? 0
+  const totalQs       = posts.reduce((sum, p) => sum + (p.question_count ?? 0), 0)
+  const mcqCount      = posts.filter(p => p.question_type === 'multiple-choice').length
+  const scenarioCount = posts.filter(p => p.question_type === 'scenario').length
+  const writingCount  = posts.filter(p => p.question_type === 'writing').length
 
   return (
     <div className="p-8">
@@ -76,16 +143,60 @@ export default async function QuestionsLibraryPage() {
         ))}
       </div>
 
-      {/* Recent Activity */}
+      {/* A–Z Filter */}
+      <div className="flex flex-wrap gap-1.5 mb-4">
+        <Link href="/roodber8/questions"
+          className="text-xs font-bold px-2.5 py-1.5 rounded-lg"
+          style={!safeLetter
+            ? { background: '#D4A017', color: '#0C1A3D' }
+            : { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#475569' }}>
+          All
+        </Link>
+        {ALPHABET.map(l => (
+          <Link key={l} href={`/roodber8/questions?letter=${l}`}
+            className="text-xs font-bold px-2.5 py-1.5 rounded-lg"
+            style={safeLetter === l
+              ? { background: '#D4A017', color: '#0C1A3D' }
+              : { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#475569' }}>
+            {l}
+          </Link>
+        ))}
+      </div>
+
+      {/* Search */}
+      <div className="rounded-2xl border p-4 mb-6 flex items-center gap-3 flex-wrap"
+        style={{ background: '#0d1424', borderColor: '#1a2238' }}>
+        <form method="GET" className="flex items-center gap-3 flex-wrap flex-1">
+          <div className="flex items-center gap-2 flex-1 min-w-48 rounded-xl px-3 py-2"
+            style={{ background: '#111827', border: '1px solid #1f2937' }}>
+            <Search size={13} style={{ color: '#475569' }} />
+            <input name="search" defaultValue={safeSearch} placeholder="Search by title..."
+              className="bg-transparent text-white text-sm flex-1 focus:outline-none placeholder-slate-600"
+              style={{ minWidth: 0 }} />
+          </div>
+          <button type="submit"
+            className="px-4 py-2 rounded-xl text-sm font-semibold"
+            style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+            Search
+          </button>
+          {(safeSearch || safeLetter) && (
+            <Link href="/roodber8/questions" className="text-xs font-semibold" style={{ color: '#475569' }}>Clear</Link>
+          )}
+        </form>
+      </div>
+
+      {/* Question sets list */}
       <div className="rounded-2xl border overflow-hidden" style={{ background: '#0d1424', borderColor: '#1a2238' }}>
         <div className="px-6 py-4 border-b flex items-center justify-between" style={{ borderColor: '#1a2238' }}>
-          <h2 className="text-white font-bold text-sm">Recently Generated</h2>
+          <h2 className="text-white font-bold text-sm">
+            {safeLetter ? `Sets starting with '${safeLetter}'` : safeSearch ? `Search results for '${safeSearch}'` : 'Recently Generated'}
+          </h2>
           <span className="text-xs font-semibold" style={{ color: '#475569' }}>
-            {total} sets total
+            {posts.length} sets
           </span>
         </div>
 
-        {recentPosts.length === 0 ? (
+        {posts.length === 0 ? (
           <div className="px-6 py-20 text-center">
             <BookOpen size={32} style={{ color: '#1a2238' }} className="mx-auto mb-4" />
             <p className="text-white font-semibold mb-2">No question sets yet</p>
@@ -98,7 +209,7 @@ export default async function QuestionsLibraryPage() {
           </div>
         ) : (
           <div className="divide-y" style={{ borderColor: '#1a2238' }}>
-            {recentPosts.map((post: QuestionSet) => {
+            {posts.map((post) => {
               const diff  = DIFF_STYLE[post.difficulty ?? ''] ?? DIFF_STYLE.intermediate
               const qtype = TYPE_LABEL[post.question_type ?? ''] ?? post.question_type ?? '—'
               const slug  = post.slug ?? ''

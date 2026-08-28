@@ -252,7 +252,7 @@ export default function ImportArticlePage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Import Article</h1>
           <p className="text-sm" style={{ color: '#475569' }}>
-            Paste JSON from any AI model, or a WordPress export — ChatGPT, DeepSeek, Gemini, Claude
+            Paste JSON from any source — AI-generated, exported, or hand-written
           </p>
         </div>
       </div>
@@ -294,7 +294,7 @@ export default function ImportArticlePage() {
             <div className="text-sm space-y-1">
               <p className="font-bold">Accepted formats</p>
               <p style={{ color: '#93c5fd' }}>
-                Any JSON from ChatGPT, DeepSeek, Gemini, Claude, or a WordPress export.
+                Any JSON from any source — AI-generated, exported, or hand-written.
                 The system automatically normalises field names, content structure, and metadata.
               </p>
             </div>

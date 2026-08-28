@@ -29,6 +29,8 @@ async function getStats() {
     { count: etOpenHelpCount },
     { count: articleCount },
     { count: articleEtCount },
+    { count: questionSetsCount },
+    { count: questionsCount },
   ] = await Promise.all([
     supabase.from("contact_submissions").select("*", { count: "exact", head: true }).eq("platform", "ab"),
     supabase.from("email_subscribers").select("*", { count: "exact", head: true }).eq("platform", "ab"),
@@ -43,6 +45,8 @@ async function getStats() {
     supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("platform", "et").eq("status", "open"),
     supabase.from("articles").select("*", { count: "exact", head: true }).contains("show_on_sites", ["ab"]),
     supabase.from("articles").select("*", { count: "exact", head: true }).contains("show_on_sites", ["et"]),
+    supabase.from("question_sets").select("*", { count: "exact", head: true }),
+    supabase.from("questions").select("*", { count: "exact", head: true }),
   ])
 
   const { data: recentSubmissions } = await supabase
@@ -98,6 +102,8 @@ async function getStats() {
     etRecentHelpRequests: (etRecentHelpRequests ?? []) as Array<{id: string; name: string; email: string; service_type: string; status: string; created_at: string}>,
     articleCount:        articleCount        ?? 0,
     articleEtCount:      articleEtCount      ?? 0,
+    questionSetsCount:   questionSetsCount   ?? 0,
+    questionsCount:      questionsCount      ?? 0,
   }
 }
 
@@ -156,6 +162,16 @@ export default async function AdminCommandCentre() {
       href: "/roodber8/jobs-firms",
     },
     {
+      label: "Question Sets",
+      value: stats.questionSetsCount,
+      sub: stats.questionsCount + " total questions",
+      color: "#D4A017",
+      bg: "rgba(212,160,23,0.08)",
+      border: "rgba(212,160,23,0.2)",
+      icon: HelpCircle,
+      href: "/roodber8/questions",
+    },
+    {
       label: "Articles",
       value: stats.articleCount,
       sub: stats.articleCount + " on AB · " + stats.articleEtCount + " on ET",
@@ -191,7 +207,7 @@ export default async function AdminCommandCentre() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-6 gap-4 mb-8">
+      <div className="grid grid-cols-4 gap-4 mb-8">
         {STAT_CARDS.map(card => (
           <Link key={card.label} href={card.href}
             className="rounded-2xl p-5 border transition-all hover:scale-[1.02] group"

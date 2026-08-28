@@ -873,7 +873,7 @@ export default function ContentFactoryPage() {
                 <div className="text-sm space-y-1">
                   <p className="font-bold">Accepted formats</p>
                   <p style={{ color: '#93c5fd' }}>
-                    Any JSON from ChatGPT, DeepSeek, Gemini, Claude, or a WordPress export.
+                    Any JSON from any source — AI-generated, exported, or hand-written.
                     Field names are normalised automatically.
                   </p>
                 </div>
