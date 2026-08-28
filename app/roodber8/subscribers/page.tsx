@@ -21,10 +21,10 @@ async function getSubscribers(filters: { status?: string; source?: string; platf
   return { subscribers: (data ?? []) as any[], total: count ?? 0 }
 }
 
-async function getSources() {
+async function getSources(platform: string = 'ab') {
   noStore()
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!)
-  const { data } = await supabase.from('email_subscribers').select('source').not('source', 'is', null)
+  const { data } = await supabase.from('email_subscribers').select('source').eq('platform', platform).not('source', 'is', null)
   return Array.from(new Set((data ?? []).map((r: any) => r.source).filter(Boolean))) as string[]
 }
 
@@ -40,7 +40,7 @@ export default async function SubscribersPage({
 
   const [{ subscribers, total }, sources] = await Promise.all([
     getSubscribers({ status, source, platform }),
-    getSources(),
+    getSources(platform),
   ])
 
   const subscribedCount   = subscribers.filter((s: any) => s.status === 'subscribed').length

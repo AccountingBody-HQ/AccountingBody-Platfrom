@@ -183,7 +183,7 @@ export default async function EmployersPage({
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <EmployerStatusButtons id={b.id} currentStatus={b.status} />
-                      <ReplyButton email={b.contact_email} subject={'Re: Hiring Brief — ' + b.role_title + ' at ' + b.company_name} />
+                      <ReplyButton email={b.contact_email} subject={'Re: Hiring Brief — ' + b.role_title + ' at ' + b.company_name} platform={b.platform} />
                       <DeleteButton id={b.id} table="employer_briefs" />
                     </div>
                   </div>

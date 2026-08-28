@@ -31,10 +31,10 @@ async function getSubmissions(filters: { search?: string; serviceType?: string; 
   }
 }
 
-async function getServiceTypes() {
+async function getServiceTypes(platform: string = 'ab') {
   noStore()
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!)
-  const { data } = await supabase.from('help_requests').select('service_type').not('service_type', 'is', null)
+  const { data } = await supabase.from('help_requests').select('service_type').eq('platform', platform).not('service_type', 'is', null)
   const types = Array.from(new Set((data ?? []).map((r: any) => r.service_type).filter(Boolean)))
   return types as string[]
 }
@@ -52,7 +52,7 @@ export default async function SubmissionsPage({
 
   const [{ helpRequests, contactSubmissions }, serviceTypes] = await Promise.all([
     getSubmissions({ search, serviceType, status, platform }),
-    getServiceTypes(),
+    getServiceTypes(platform),
   ])
 
   const helpCsvRows = helpRequests.map((r: any) => [
@@ -179,7 +179,7 @@ export default async function SubmissionsPage({
                       <NotesField id={item.id} table="help_requests" initialNotes={item.notes} />
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <ReplyButton email={item.email} subject={item.service_type ? 'Re: ' + item.service_type + ' enquiry' : undefined} name={item.name} />
+                      <ReplyButton email={item.email} subject={item.service_type ? 'Re: ' + item.service_type + ' enquiry' : undefined} name={item.name} platform={item.platform} />
                       <DeleteButton id={item.id} table="help_requests" />
                     </div>
                   </div>
@@ -229,7 +229,7 @@ export default async function SubmissionsPage({
                     <NotesField id={item.id} table="contact_submissions" initialNotes={item.notes} />
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <ReplyButton email={item.email} subject={item.subject} name={item.name ?? item.full_name} />
+                    <ReplyButton email={item.email} subject={item.subject} name={item.name ?? item.full_name} platform={item.platform} />
                     <DeleteButton id={item.id} table="contact_submissions" />
                   </div>
                 </div>

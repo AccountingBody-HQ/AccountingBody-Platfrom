@@ -280,8 +280,9 @@ interface ReplyButtonProps {
   email: string
   subject?: string
   name?: string
+  platform?: string
 }
-export function ReplyButton({ email, subject, name }: ReplyButtonProps) {
+export function ReplyButton({ email, subject, name, platform }: ReplyButtonProps) {
   const [open, setOpen] = useState(false)
   const [message, setMessage] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle')
@@ -295,7 +296,7 @@ export function ReplyButton({ email, subject, name }: ReplyButtonProps) {
       const res = await fetch('/api/roodber8/reply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: email, name, subject: defaultSubject, message }),
+        body: JSON.stringify({ to: email, name, subject: defaultSubject, message, platform: platform ?? 'ab' }),
       })
       if (!res.ok) throw new Error('Failed')
       setStatus('sent')
@@ -426,7 +427,7 @@ export function FirmApplicationCard({ item }: FirmApplicationCardProps) {
 
         {/* Actions */}
         <div className="flex items-center gap-2 shrink-0">
-          <ReplyButton email={item.contact_email ?? ''} name={item.contact_name} subject={'Re: Your application — ' + (item.firm_name ?? '')} />
+          <ReplyButton email={item.contact_email ?? ''} name={item.contact_name} subject={'Re: Your application — ' + (item.firm_name ?? '')} platform={item.platform} />
           <DeleteButton id={item.id} table="firms_applications" />
           <button
             onClick={() => setExpanded(e => !e)}

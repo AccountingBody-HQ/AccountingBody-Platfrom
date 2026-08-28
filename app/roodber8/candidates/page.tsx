@@ -194,7 +194,7 @@ export default async function CandidatesPage({
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <ReplyButton email={c.email} subject={'Re: Candidate Registration — ' + c.full_name} />
+                      <ReplyButton email={c.email} subject={'Re: Candidate Registration — ' + c.full_name} platform={c.platform} />
                       <CandidateActionButtons id={c.id} currentStatus={c.status} email={c.email} name={c.full_name} platform={c.platform} />
                       <DeleteButton id={c.id} table="job_seeker_registrations" />
                     </div>

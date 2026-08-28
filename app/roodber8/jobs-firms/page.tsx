@@ -178,7 +178,7 @@ export default async function JobsFirmsPage({
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <ReplyButton email={item.contact_email} subject={'Re: ' + (item.job_title ?? 'Job listing')} />
+                    <ReplyButton email={item.contact_email} subject={'Re: ' + (item.job_title ?? 'Job listing')} platform={item.platform} />
                     <DeleteButton id={item.id} table="job_listings" />
                   </div>
                 </div>
