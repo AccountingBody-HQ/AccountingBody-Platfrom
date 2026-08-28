@@ -35,27 +35,44 @@ interface QuestionSetRow {
 }
 
 const ALPHABET = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i))
+const PAGE_SIZE = 50
 
-async function getQuestionSets(safeSearch: string, letter: string): Promise<QuestionSetRow[]> {
+async function getQuestionSets(safeSearch: string, letter: string, page: number): Promise<{ sets: QuestionSetRow[]; filteredCount: number }> {
   noStore()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SECRET_KEY!
   )
 
+  const from = (page - 1) * PAGE_SIZE
+  const to   = from + PAGE_SIZE - 1
+
   let query = supabase
     .from('question_sets')
     .select('id, title, slug, difficulty, topic, exam_body, question_type, created_at')
     .order('created_at', { ascending: false })
-    .limit(2000)
+    .range(from, to)
 
-  if (safeSearch) query = query.ilike('title', `%${safeSearch}%`)
-  if (letter)     query = query.ilike('title', `${letter}%`)
+  let countQuery = supabase
+    .from('question_sets')
+    .select('*', { count: 'exact', head: true })
 
-  const { data: setsData } = await query
+  if (safeSearch) {
+    query      = query.ilike('title', `%${safeSearch}%`)
+    countQuery = countQuery.ilike('title', `%${safeSearch}%`)
+  }
+  if (letter) {
+    query      = query.ilike('title', `${letter}%`)
+    countQuery = countQuery.ilike('title', `${letter}%`)
+  }
+
+  const [{ data: setsData }, { count: filteredCount }] = await Promise.all([
+    query,
+    countQuery,
+  ])
   const sets = (setsData ?? []) as QuestionSetRow[]
 
-  if (sets.length === 0) return []
+  if (sets.length === 0) return { sets: [], filteredCount: filteredCount ?? 0 }
   const setIds = sets.map(s => s.id)
   const { data: questionsData } = await supabase
     .from('questions')
@@ -67,13 +84,16 @@ async function getQuestionSets(safeSearch: string, letter: string): Promise<Ques
     countsBySetId.set(q.set_id, (countsBySetId.get(q.set_id) ?? 0) + 1)
   }
 
-  return sets.map(s => ({ ...s, question_count: countsBySetId.get(s.id) ?? 0 }))
+  return {
+    sets: sets.map(s => ({ ...s, question_count: countsBySetId.get(s.id) ?? 0 })),
+    filteredCount: filteredCount ?? 0,
+  }
 }
 
 export default async function QuestionsLibraryPage({
   searchParams,
 }: {
-  searchParams?: { search?: string; letter?: string }
+  searchParams?: { search?: string; letter?: string; page?: string }
 }) {
   noStore()
   const search = searchParams?.search ?? ''
@@ -81,21 +101,56 @@ export default async function QuestionsLibraryPage({
   const safeSearch = search.replace(/[,()%]/g, '')
   const safeLetter = letter.replace(/[,()%]/g, '').slice(0, 1).toUpperCase()
 
+  const pageParam = parseInt(searchParams?.page ?? '1', 10)
+  const page = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
+
   const supabaseForCount = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SECRET_KEY!
   )
-  const [posts, { count: totalSets }] = await Promise.all([
-    getQuestionSets(safeSearch, safeLetter),
+  const [{ sets: posts, filteredCount }, { count: totalSets }] = await Promise.all([
+    getQuestionSets(safeSearch, safeLetter, page),
     supabaseForCount.from('question_sets')
       .select('*', { count: 'exact', head: true }),
   ])
+
+  const totalPages = Math.ceil(filteredCount / PAGE_SIZE)
+  const isFiltered = !!(safeSearch || safeLetter)
 
   const total         = totalSets ?? 0
   const totalQs       = posts.reduce((sum, p) => sum + (p.question_count ?? 0), 0)
   const mcqCount      = posts.filter(p => p.question_type === 'multiple-choice').length
   const scenarioCount = posts.filter(p => p.question_type === 'scenario').length
   const writingCount  = posts.filter(p => p.question_type === 'writing').length
+
+  const prevPage = page > 1 ? page - 1 : null
+  const nextPage = page < totalPages ? page + 1 : null
+
+  function pageHref(p: number) {
+    const params = new URLSearchParams()
+    if (safeSearch) params.set('search', safeSearch)
+    if (safeLetter) params.set('letter', safeLetter)
+    params.set('page', String(p))
+    return `/roodber8/questions?${params.toString()}`
+  }
+
+  function pageNumbers(): (number | '…')[] {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1)
+    }
+    const pages = new Set<number>([1, totalPages, page])
+    for (let d = 1; d <= 2; d++) {
+      if (page - d >= 1) pages.add(page - d)
+      if (page + d <= totalPages) pages.add(page + d)
+    }
+    const sorted = Array.from(pages).sort((a, b) => a - b)
+    const withGaps: (number | '…')[] = []
+    for (let i = 0; i < sorted.length; i++) {
+      if (i > 0 && sorted[i] - sorted[i - 1] > 1) withGaps.push('…')
+      withGaps.push(sorted[i])
+    }
+    return withGaps
+  }
 
   return (
     <div className="p-8">
@@ -192,7 +247,7 @@ export default async function QuestionsLibraryPage({
             {safeLetter ? `Sets starting with '${safeLetter}'` : safeSearch ? `Search results for '${safeSearch}'` : 'Recently Generated'}
           </h2>
           <span className="text-xs font-semibold" style={{ color: '#475569' }}>
-            {posts.length} sets
+            {isFiltered ? `Showing ${posts.length} of ${filteredCount}` : `${filteredCount} sets`}
           </span>
         </div>
 
@@ -261,6 +316,57 @@ export default async function QuestionsLibraryPage({
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t" style={{ borderColor: '#1a2238' }}>
+            <span className="text-xs" style={{ color: '#475569' }}>
+              Page {page} of {totalPages} · {filteredCount} sets
+            </span>
+            <div className="flex items-center gap-2">
+              {prevPage ? (
+                <Link href={pageHref(prevPage)}
+                  className="text-xs font-semibold px-4 py-2 rounded-xl"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#64748b' }}>
+                  Prev
+                </Link>
+              ) : (
+                <span className="text-xs font-semibold px-4 py-2 rounded-xl opacity-40 cursor-default"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#64748b' }}>
+                  Prev
+                </span>
+              )}
+
+              <div className="flex items-center gap-1.5">
+                {pageNumbers().map((p, i) =>
+                  p === '…' ? (
+                    <span key={`gap-${i}`} className="text-xs" style={{ color: '#334155' }}>…</span>
+                  ) : (
+                    <Link key={p} href={pageHref(p)}
+                      className="text-xs font-semibold w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={p === page
+                        ? { background: '#D4A017', color: '#0C1A3D' }
+                        : { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#475569' }}>
+                      {p}
+                    </Link>
+                  )
+                )}
+              </div>
+
+              {nextPage ? (
+                <Link href={pageHref(nextPage)}
+                  className="text-xs font-bold px-4 py-2 rounded-xl"
+                  style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #D4A017' }}>
+                  Next
+                </Link>
+              ) : (
+                <span className="text-xs font-bold px-4 py-2 rounded-xl opacity-40 cursor-default"
+                  style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #D4A017' }}>
+                  Next
+                </span>
+              )}
+            </div>
           </div>
         )}
       </div>
