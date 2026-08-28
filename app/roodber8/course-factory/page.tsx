@@ -1,13 +1,28 @@
 // app/roodber8/course-factory/page.tsx
 // Accounting Body — Course Factory Admin Page
-// Build structured courses from existing Sanity content IDs
+// Build structured courses from existing articles
 
 'use client'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState } from 'react'
+import { Factory } from 'lucide-react'
+import AutoRefresh from '@/components/roodber8/AutoRefresh'
 
+// ── Style constants ───────────────────────────────────────────────────────────
+
+const C = {
+  page:    { background: '#080d1a', minHeight: '100vh' },
+  card:    { background: '#0d1424', border: '1px solid #1a2238', borderRadius: 16 },
+  input:   { background: '#111827', border: '1px solid #1f2937', borderRadius: 10, color: '#fff' },
+  select:  { background: '#111827', border: '1px solid #1f2937', borderRadius: 10, color: '#fff' },
+  active:  { background: 'rgba(212,160,23,0.12)', border: '1px solid #D4A017', color: '#fff' },
+  idle:    { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#64748b' },
+  danger:  { background: 'rgba(239,68,68,0.08)',  border: '1px solid rgba(239,68,68,0.25)',   color: '#ef4444' },
+  success: { background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)',  color: '#10b981' },
+  warning: { background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)',  color: '#f59e0b' },
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -263,7 +278,7 @@ export default function CourseFactoryPage() {
     const confirmed = window.confirm(
       `DELETE "${title}"?
 
-This will permanently delete the course and all its lesson documents from Sanity. This cannot be undone.`
+This will permanently delete the course and all its chapters and lessons. This cannot be undone.`
     )
     if (!confirmed) return
     setDeleting(true)
@@ -279,7 +294,7 @@ This will permanently delete the course and all its lesson documents from Sanity
       if (!res.ok || !data.success) {
         setDeleteError(data.error ?? 'Delete failed')
       } else {
-        setDeleteMsg(`Deleted "${title}" and ${data.deleted.lessons} lesson document${data.deleted.lessons !== 1 ? 's' : ''} from Sanity.`)
+        setDeleteMsg(`Deleted "${title}" and all its chapters and lessons.`)
         // Reset factory to blank state
         setTitle('')
         setDescription('')
@@ -331,7 +346,7 @@ This will permanently delete the course and all its lesson documents from Sanity
       setCanonical(c.canonicalOwner ?? 'accountingbody')
       const rebuilt = (c.chapters ?? []).map((ch: any) => ({
         id:    uid(),
-        title: ch.chapterTitle ?? 'Chapter',
+        title: ch.title ?? ch.chapterTitle ?? 'Chapter',
         lessons: (ch.lessons ?? []).map((l: any) => ({
           id:       uid(),
           title:    l.title ?? 'Lesson',
@@ -353,7 +368,7 @@ This will permanently delete the course and all its lesson documents from Sanity
     setLoadingCourse(false)
   }
 
-  // ── Save to Sanity ───────────────────────────────────────────────────────
+  // ── Save to Supabase ─────────────────────────────────────────────────────
   async function handleSave() {
     if (!title.trim()) { setSaveError('Course title is required.'); return }
     if (chapters.every(ch => ch.lessons.length === 0)) {
@@ -390,7 +405,7 @@ This will permanently delete the course and all its lesson documents from Sanity
     setSaving(false)
 
     if (result.success) {
-      setSaveMsg(`Course saved successfully! Sanity ID: ${result.id}`)
+      setSaveMsg(`Course saved! ID: ${result.id}`)
     } else {
       setSaveError(result.error ?? 'Unknown error')
     }
@@ -400,427 +415,458 @@ This will permanently delete the course and all its lesson documents from Sanity
   const totalLessons = chapters.reduce((acc, ch) => acc + ch.lessons.length, 0)
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 space-y-8">
+    <div className="p-8 max-w-4xl" style={C.page}>
+      <AutoRefresh />
 
       {/* Header */}
-      <div>
-        <h1 className="font-display text-2xl text-navy-950 mb-1">Course Factory</h1>
-        <p className="text-sm text-slate-500">
-          Assemble structured courses from existing content IDs. Courses are saved as draft by default.
-        </p>
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+          style={{ background: 'rgba(212,160,23,0.12)' }}>
+          <Factory size={20} style={{ color: '#D4A017' }} />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-white">Course Factory</h1>
+          <p className="text-sm" style={{ color: '#475569' }}>
+            Assemble structured courses from existing articles. Publish directly to Supabase.
+          </p>
+        </div>
       </div>
 
-      {/* ── Load Existing Course ── */}
-      <section className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="font-display text-lg text-navy-950">Load Existing Course</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Load a course to edit its structure or add more lessons.</p>
-          </div>
-          <button
-            onClick={handleOpenLoadPanel}
-            className="h-9 px-4 rounded-lg text-sm font-semibold border-2 border-navy-950 text-navy-950 hover:bg-navy-950 hover:text-white transition-colors"
-          >
-            {showLoadPanel ? 'Hide' : 'Browse Courses'}
-          </button>
-        </div>
+      <div className="space-y-8">
 
-        {loadedSlug && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm" style={{ background: 'rgba(20,180,163,0.08)', border: '1px solid rgba(20,180,163,0.25)', color: '#0d8f82' }}>
-            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Loaded: <strong>{title}</strong> — saving will update this course in Sanity.
+        {/* ── Load Existing Course ── */}
+        <section className="rounded-2xl border p-6 space-y-4" style={C.card}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-white">Load Existing Course</h2>
+              <p className="text-xs mt-0.5" style={{ color: '#475569' }}>Load a course to edit its structure or add more lessons.</p>
+            </div>
+            <button
+              onClick={handleOpenLoadPanel}
+              className="h-9 px-4 rounded-lg text-sm font-semibold"
+              style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #D4A017' }}
+            >
+              {showLoadPanel ? 'Hide' : 'Browse Courses'}
+            </button>
           </div>
-        )}
 
-        {showLoadPanel && (
-          <div className="border border-slate-200 rounded-xl overflow-hidden">
-            {loadingList && (
-              <p className="text-sm text-slate-400 px-4 py-6 text-center">Loading courses...</p>
-            )}
-            {loadError && (
-              <p className="text-sm text-crimson-600 px-4 py-3">{loadError}</p>
-            )}
-            {!loadingList && courseList.length === 0 && (
-              <p className="text-sm text-slate-400 px-4 py-6 text-center">No courses found.</p>
-            )}
-            {!loadingList && courseList.map(c => (
-              <button
-                key={c._id}
-                onClick={() => handleLoadCourse(c.slug)}
-                disabled={loadingCourse}
-                className="w-full flex items-center gap-4 px-4 py-3 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors text-left disabled:opacity-50"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-navy-950 truncate">{c.title}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{c.level} · {c.chapterCount ?? 0} chapters · {c.status}</p>
-                </div>
-                <span className="text-xs font-bold px-2.5 py-1 rounded-full shrink-0"
-                  style={{
-                    background: c.status === 'published' ? 'rgba(20,180,163,0.1)' : 'rgba(212,160,23,0.1)',
-                    color:      c.status === 'published' ? '#0d8f82' : '#B8860B',
-                  }}
+          {loadedSlug && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm" style={C.success}>
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Loaded: <strong>{title}</strong> — saving will update this course.
+            </div>
+          )}
+
+          {showLoadPanel && (
+            <div className="rounded-xl border overflow-hidden" style={{ borderColor: '#1a2238' }}>
+              {loadingList && (
+                <p className="text-sm px-4 py-6 text-center" style={{ color: '#475569' }}>Loading courses...</p>
+              )}
+              {loadError && (
+                <p className="text-sm px-4 py-3" style={{ color: '#ef4444' }}>{loadError}</p>
+              )}
+              {!loadingList && courseList.length === 0 && (
+                <p className="text-sm px-4 py-6 text-center" style={{ color: '#475569' }}>No courses found.</p>
+              )}
+              {!loadingList && courseList.map(c => (
+                <button
+                  key={c._id}
+                  onClick={() => handleLoadCourse(c.slug)}
+                  disabled={loadingCourse}
+                  className="w-full flex items-center gap-4 px-4 py-3 border-b last:border-0 hover:bg-white/[0.02] transition-colors text-left disabled:opacity-50"
+                  style={{ borderColor: '#1a2238' }}
                 >
-                  {c.status}
-                </span>
-                <svg className="w-4 h-4 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            ))}
-            {loadingCourse && (
-              <p className="text-sm text-navy-950 px-4 py-3 text-center font-semibold">Loading course structure...</p>
-            )}
-          </div>
-        )}
-      </section>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white truncate">{c.title}</p>
+                    <p className="text-xs mt-0.5" style={{ color: '#475569' }}>{c.level} · {c.chapterCount ?? 0} chapters · {c.status}</p>
+                  </div>
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full shrink-0"
+                    style={{
+                      background: c.status === 'published' ? 'rgba(16,185,129,0.1)' : 'rgba(212,160,23,0.1)',
+                      color:      c.status === 'published' ? '#10b981' : '#D4A017',
+                    }}
+                  >
+                    {c.status}
+                  </span>
+                  <svg className="w-4 h-4 shrink-0" style={{ color: '#334155' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              ))}
+              {loadingCourse && (
+                <p className="text-sm px-4 py-3 text-center font-semibold text-white">Loading course structure...</p>
+              )}
+            </div>
+          )}
+        </section>
 
-      {/* ── Step 1: Metadata ── */}
-      <section className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-        <h2 className="font-display text-lg text-navy-950 flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full bg-navy-950 text-white text-xs font-bold flex items-center justify-center">1</span>
-          Course Details
-        </h2>
+        {/* ── Step 1: Metadata ── */}
+        <section className="rounded-2xl border p-6 space-y-4" style={C.card}>
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center"
+              style={{ background: '#D4A017', color: '#0C1A3D' }}>1</span>
+            Course Details
+          </h2>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-500 mb-1">Course Title <span className="text-crimson-500">*</span></label>
-          <input
-            type="text"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            placeholder="e.g. Financial Accounting Fundamentals"
-            className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-slate-500 mb-1">Description</label>
-          <textarea
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            placeholder="Brief course overview shown on the catalogue page..."
-            rows={3}
-            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950 resize-none"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1">Level</label>
-            <select
-              value={level}
-              onChange={e => setLevel(e.target.value)}
-              className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950"
-            >
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
-            </select>
+            <label className="block text-xs font-semibold mb-1" style={{ color: '#475569' }}>Course Title <span style={{ color: '#ef4444' }}>*</span></label>
+            <input
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="e.g. Financial Accounting Fundamentals"
+              className="w-full h-10 px-3 text-sm focus:outline-none"
+              style={C.input}
+            />
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1">Status</label>
-            <select
-              value={status}
-              onChange={e => setStatus(e.target.value)}
-              className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950"
-            >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="archived">Archived</option>
-            </select>
-          </div>
-        </div>
 
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isFeatured}
-            onChange={e => setIsFeatured(e.target.checked)}
-            className="w-4 h-4 rounded border-slate-300 text-navy-950 focus:ring-navy-950"
-          />
-          <span className="text-sm text-slate-600">Feature this course on the homepage</span>
-        </label>
-        {/* ── Publish To ── */}
-        <div className="pt-2 space-y-3">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Publish To</p>
-          <div className="flex gap-2 flex-wrap">
-            {['accountingbody', 'ethiotax', 'hrlake'].map(site => (
-              <button
-                key={site}
-                onClick={() => setShowOnSites(prev =>
-                  prev.includes(site) ? prev.filter(s => s !== site) : [...prev, site]
-                )}
-                className="rounded-lg px-3 py-2 text-xs font-semibold transition-all border"
-                style={showOnSites.includes(site)
-                  ? { background: 'rgba(37,99,235,0.12)', border: '1px solid #2563eb', color: '#fff' }
-                  : { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#64748b' }}
+          <div>
+            <label className="block text-xs font-semibold mb-1" style={{ color: '#475569' }}>Description</label>
+            <textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="Brief course overview shown on the catalogue page..."
+              rows={3}
+              className="w-full px-3 py-2 text-sm resize-none focus:outline-none"
+              style={C.input}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold mb-1" style={{ color: '#475569' }}>Level</label>
+              <select
+                value={level}
+                onChange={e => setLevel(e.target.value)}
+                className="w-full h-10 px-3 text-sm focus:outline-none"
+                style={C.select}
               >
-                {showOnSites.includes(site) && <span className="mr-1">&#10003;</span>}
-                {site}
-                {site === 'accountingbody' && <span className="ml-2 text-yellow-400 text-xs">Required</span>}
-              </button>
-            ))}
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold mb-1" style={{ color: '#475569' }}>Status</label>
+              <select
+                value={status}
+                onChange={e => setStatus(e.target.value)}
+                className="w-full h-10 px-3 text-sm focus:outline-none"
+                style={C.select}
+              >
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+                <option value="archived">Archived</option>
+              </select>
+            </div>
           </div>
-          <div className="space-y-1 pt-1">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Canonical Owner</p>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isFeatured}
+              onChange={e => setIsFeatured(e.target.checked)}
+              className="w-4 h-4 rounded"
+            />
+            <span className="text-sm" style={{ color: '#64748b' }}>Feature this course on the homepage</span>
+          </label>
+          {/* ── Publish To ── */}
+          <div className="pt-2 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#475569' }}>Publish To</p>
             <div className="flex gap-2 flex-wrap">
               {['accountingbody', 'ethiotax', 'hrlake'].map(site => (
                 <button
                   key={site}
-                  onClick={() => setCanonical(site)}
+                  onClick={() => setShowOnSites(prev =>
+                    prev.includes(site) ? prev.filter(s => s !== site) : [...prev, site]
+                  )}
                   className="rounded-lg px-3 py-2 text-xs font-semibold transition-all border"
-                  style={canonical === site
-                    ? { background: 'rgba(16,185,129,0.12)', border: '1px solid #10b981', color: '#10b981' }
-                    : { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#64748b' }}
+                  style={showOnSites.includes(site)
+                    ? { background: 'rgba(37,99,235,0.12)', border: '1px solid #2563eb', color: '#fff' }
+                    : C.idle}
                 >
-                  {canonical === site && <span className="mr-1">&#10003;</span>}
+                  {showOnSites.includes(site) && <span className="mr-1">&#10003;</span>}
                   {site}
+                  {site === 'accountingbody' && <span className="ml-2 text-xs" style={{ color: '#D4A017' }}>Required</span>}
                 </button>
               ))}
             </div>
+            <div className="space-y-1 pt-1">
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#475569' }}>Canonical Owner</p>
+              <div className="flex gap-2 flex-wrap">
+                {['accountingbody', 'ethiotax', 'hrlake'].map(site => (
+                  <button
+                    key={site}
+                    onClick={() => setCanonical(site)}
+                    className="rounded-lg px-3 py-2 text-xs font-semibold transition-all border"
+                    style={canonical === site
+                      ? { background: 'rgba(16,185,129,0.12)', border: '1px solid #10b981', color: '#10b981' }
+                      : C.idle}
+                  >
+                    {canonical === site && <span className="mr-1">&#10003;</span>}
+                    {site}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── Step 2: Content ID Fetch ── */}
-      <section className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-        <h2 className="font-display text-lg text-navy-950 flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full bg-navy-950 text-white text-xs font-bold flex items-center justify-center">2</span>
-          Add Content by ID
-        </h2>
-        <p className="text-xs text-slate-400">Enter a wpId (e.g. 1999) or contentId (e.g. AB-ART-00001) to fetch an article.</p>
+        {/* ── Step 2: Content ID Fetch ── */}
+        <section className="rounded-2xl border p-6 space-y-4" style={C.card}>
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center"
+              style={{ background: '#D4A017', color: '#0C1A3D' }}>2</span>
+            Add Content by ID
+          </h2>
+          <p className="text-xs" style={{ color: '#475569' }}>Enter a wpId (e.g. 1999) or contentId (e.g. AB-ART-00001) to fetch an article.</p>
 
-        <div className="flex gap-2">
-          <textarea
-            value={idInput}
-            onChange={e => setIdInput(e.target.value)}
-            placeholder="Paste one or multiple IDs separated by commas e.g. 41267, 41273, 41278 or AB-ART-00001, AB-ART-00002"
-            rows={3}
-            className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950 resize-none"
-          />
-          <button
-            onClick={handleFetch}
-            disabled={fetching || !idInput.trim()}
-            className="h-10 px-5 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors disabled:opacity-40 self-start"
-          >
-            {fetching ? 'Fetching...' : 'Fetch All'}
-          </button>
-        </div>
-
-        {fetchError && (
-          <p className="text-sm text-crimson-600 bg-crimson-50 border border-crimson-200 rounded-lg px-3 py-2">{fetchError}</p>
-        )}
-
-        {fetchedArticles.length > 0 && (
-          <div className="border border-teal-200 bg-teal-50 rounded-xl p-4 space-y-3">
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-5 h-5 text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-sm font-semibold text-teal-700">{fetchedArticles.length} article{fetchedArticles.length > 1 ? 's' : ''} found</p>
-            </div>
-            <div className="space-y-1.5 max-h-40 overflow-y-auto">
-              {fetchedArticles.map((a, i) => (
-                <div key={a._id} className="flex items-center gap-2">
-                  <span className="text-xs text-teal-600 font-bold w-5 shrink-0">{i + 1}.</span>
-                  <p className="text-xs text-navy-950 truncate">{a.title}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-teal-200">
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Add to Chapter</label>
-                <select
-                  value={targetChapter}
-                  onChange={e => { setTargetChapter(e.target.value); setTargetLesson('new') }}
-                  className="w-full h-9 px-2 rounded-lg border border-slate-200 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950"
-                >
-                  {chapters.map((ch, ci) => (
-                    <option key={ch.id} value={ci}>{ch.title}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Add to Lesson</label>
-                <select
-                  value={targetLesson}
-                  onChange={e => setTargetLesson(e.target.value)}
-                  className="w-full h-9 px-2 rounded-lg border border-slate-200 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950"
-                >
-                  <option value="new">+ Create new lesson (all articles)</option>
-                  <option value="one-per-chapter">+ One chapter per article</option>
-                  {chapters[parseInt(targetChapter)]?.lessons.map((l, li) => (
-                    <option key={l.id} value={li}>{l.title}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
+          <div className="flex gap-2">
+            <textarea
+              value={idInput}
+              onChange={e => setIdInput(e.target.value)}
+              placeholder="Paste one or multiple IDs separated by commas e.g. 41267, 41273, 41278 or AB-ART-00001, AB-ART-00002"
+              rows={3}
+              className="flex-1 px-3 py-2 text-sm resize-none focus:outline-none"
+              style={C.input}
+            />
             <button
-              onClick={handleAddArticles}
-              className="w-full h-9 rounded-lg text-sm font-semibold bg-teal-600 text-white hover:bg-teal-700 transition-colors"
+              onClick={handleFetch}
+              disabled={fetching || !idInput.trim()}
+              className="h-10 px-5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-40 self-start"
+              style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #D4A017' }}
             >
-              {targetLesson === 'one-per-chapter' ? `Add ${fetchedArticles.length} Articles as ${fetchedArticles.length} Chapters` : `Add ${fetchedArticles.length} Article${fetchedArticles.length > 1 ? 's' : ''} to Course`}
+              {fetching ? 'Fetching...' : 'Fetch All'}
             </button>
           </div>
-        )}
-      </section>
 
-      {/* ── Step 3: Chapter & Lesson Structure ── */}
-      <section className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg text-navy-950 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-navy-950 text-white text-xs font-bold flex items-center justify-center">3</span>
-            Course Structure
-          </h2>
-          <span className="text-xs text-slate-400">{chapters.length} chapters · {totalLessons} lessons</span>
-        </div>
+          {fetchError && (
+            <p className="text-sm rounded-lg px-3 py-2" style={C.danger}>{fetchError}</p>
+          )}
 
-        <div className="space-y-4">
-          {chapters.map((chapter, ci) => (
-            <div key={chapter.id} className="border border-slate-200 rounded-xl overflow-hidden">
-              {/* Chapter header */}
-              <div className="flex items-center gap-3 bg-slate-50 px-4 py-3 border-b border-slate-200">
-                <span className="w-6 h-6 rounded bg-navy-950 text-white text-xs font-bold flex items-center justify-center shrink-0">
-                  {ci + 1}
-                </span>
-                <input
-                  type="text"
-                  value={chapter.title}
-                  onChange={e => updateChapterTitle(ci, e.target.value)}
-                  className="flex-1 h-8 px-2 rounded border border-slate-200 text-sm font-semibold text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950"
-                />
-                <button
-                  onClick={() => removeChapter(ci)}
-                  className="text-slate-400 hover:text-crimson-500 transition-colors p-1"
-                  title="Remove chapter"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+          {fetchedArticles.length > 0 && (
+            <div className="rounded-xl p-4 space-y-3" style={C.success}>
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm font-semibold">{fetchedArticles.length} article{fetchedArticles.length > 1 ? 's' : ''} found</p>
+              </div>
+              <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                {fetchedArticles.map((a, i) => (
+                  <div key={a._id} className="flex items-center gap-2">
+                    <span className="text-xs font-bold w-5 shrink-0">{i + 1}.</span>
+                    <p className="text-xs text-white truncate">{a.title}</p>
+                  </div>
+                ))}
               </div>
 
-              {/* Lessons */}
-              <div className="divide-y divide-slate-100">
-                {chapter.lessons.length === 0 ? (
-                  <p className="text-xs text-slate-400 px-4 py-3 italic">No lessons yet — fetch content above and add to this chapter.</p>
-                ) : (
-                  chapter.lessons.map((lesson, li) => (
-                    <div key={lesson.id} className="px-4 py-3 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-400 w-5 shrink-0">{li + 1}.</span>
-                        <input
-                          type="text"
-                          value={lesson.title}
-                          onChange={e => updateLessonTitle(ci, li, e.target.value)}
-                          className="flex-1 h-8 px-2 rounded border border-slate-100 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950"
-                        />
-                        <button onClick={() => moveLessonUp(ci, li)} disabled={li === 0} className="p-1 text-slate-400 hover:text-navy-950 disabled:opacity-20 transition-colors">
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeWidth="2" d="M5 15l7-7 7 7" />
-                          </svg>
-                        </button>
-                        <button onClick={() => moveLessonDown(ci, li)} disabled={li === chapter.lessons.length - 1} className="p-1 text-slate-400 hover:text-navy-950 disabled:opacity-20 transition-colors">
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-                        <button onClick={() => removeLesson(ci, li)} className="p-1 text-slate-400 hover:text-crimson-500 transition-colors">
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                      {/* Articles in lesson */}
-                      {lesson.articles.map((article, ai) => (
-                        <div key={article._id} className="flex items-center gap-2 pl-5">
-                          <svg className="w-3.5 h-3.5 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          <span className="text-xs text-slate-600 flex-1 truncate">{article.title}</span>
-                          <button onClick={() => removeArticle(ci, li, ai)} className="p-0.5 text-slate-300 hover:text-crimson-500 transition-colors shrink-0">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="grid grid-cols-2 gap-3 pt-2 border-t" style={{ borderColor: 'rgba(16,185,129,0.2)' }}>
+                <div>
+                  <label className="block text-xs font-semibold mb-1" style={{ color: '#475569' }}>Add to Chapter</label>
+                  <select
+                    value={targetChapter}
+                    onChange={e => { setTargetChapter(e.target.value); setTargetLesson('new') }}
+                    className="w-full h-9 px-2 text-sm focus:outline-none"
+                    style={C.select}
+                  >
+                    {chapters.map((ch, ci) => (
+                      <option key={ch.id} value={ci}>{ch.title}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-1" style={{ color: '#475569' }}>Add to Lesson</label>
+                  <select
+                    value={targetLesson}
+                    onChange={e => setTargetLesson(e.target.value)}
+                    className="w-full h-9 px-2 text-sm focus:outline-none"
+                    style={C.select}
+                  >
+                    <option value="new">+ Create new lesson (all articles)</option>
+                    <option value="one-per-chapter">+ One chapter per article</option>
+                    {chapters[parseInt(targetChapter)]?.lessons.map((l, li) => (
+                      <option key={l.id} value={li}>{l.title}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <button
+                onClick={handleAddArticles}
+                className="w-full h-9 rounded-lg text-sm font-semibold transition-colors"
+                style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #D4A017' }}
+              >
+                {targetLesson === 'one-per-chapter' ? `Add ${fetchedArticles.length} Articles as ${fetchedArticles.length} Chapters` : `Add ${fetchedArticles.length} Article${fetchedArticles.length > 1 ? 's' : ''} to Course`}
+              </button>
+            </div>
+          )}
+        </section>
+
+        {/* ── Step 3: Chapter & Lesson Structure ── */}
+        <section className="rounded-2xl border p-6 space-y-4" style={C.card}>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center"
+                style={{ background: '#D4A017', color: '#0C1A3D' }}>3</span>
+              Course Structure
+            </h2>
+            <span className="text-xs" style={{ color: '#475569' }}>{chapters.length} chapters · {totalLessons} lessons</span>
+          </div>
+
+          <div className="space-y-4">
+            {chapters.map((chapter, ci) => (
+              <div key={chapter.id} className="rounded-xl border overflow-hidden" style={{ borderColor: '#1a2238' }}>
+                {/* Chapter header */}
+                <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ background: '#111827', borderColor: '#1a2238' }}>
+                  <span className="w-6 h-6 rounded text-xs font-bold flex items-center justify-center shrink-0"
+                    style={{ background: '#D4A017', color: '#0C1A3D' }}>
+                    {ci + 1}
+                  </span>
+                  <input
+                    type="text"
+                    value={chapter.title}
+                    onChange={e => updateChapterTitle(ci, e.target.value)}
+                    className="flex-1 h-8 px-2 text-sm font-semibold focus:outline-none"
+                    style={C.input}
+                  />
+                  <button
+                    onClick={() => removeChapter(ci)}
+                    className="p-1 transition-colors"
+                    style={{ color: '#475569' }}
+                    title="Remove chapter"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Lessons */}
+                <div className="divide-y" style={{ borderColor: '#1a2238' }}>
+                  {chapter.lessons.length === 0 ? (
+                    <p className="text-xs px-4 py-3 italic" style={{ color: '#475569' }}>No lessons yet — fetch content above and add to this chapter.</p>
+                  ) : (
+                    chapter.lessons.map((lesson, li) => (
+                      <div key={lesson.id} className="px-4 py-3 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs w-5 shrink-0" style={{ color: '#475569' }}>{li + 1}.</span>
+                          <input
+                            type="text"
+                            value={lesson.title}
+                            onChange={e => updateLessonTitle(ci, li, e.target.value)}
+                            className="flex-1 h-8 px-2 text-sm focus:outline-none"
+                            style={C.input}
+                          />
+                          <button onClick={() => moveLessonUp(ci, li)} disabled={li === 0} className="p-1 disabled:opacity-20 transition-colors" style={{ color: '#475569' }}>
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+                            </svg>
+                          </button>
+                          <button onClick={() => moveLessonDown(ci, li)} disabled={li === chapter.lessons.length - 1} className="p-1 disabled:opacity-20 transition-colors" style={{ color: '#475569' }}>
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                          <button onClick={() => removeLesson(ci, li)} className="p-1 transition-colors" style={{ color: '#475569' }}>
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                           </button>
                         </div>
-                      ))}
-                    </div>
-                  ))
-                )}
+                        {/* Articles in lesson */}
+                        {lesson.articles.map((article, ai) => (
+                          <div key={article._id} className="flex items-center gap-2 pl-5">
+                            <svg className="w-3.5 h-3.5 shrink-0" style={{ color: '#334155' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span className="text-xs flex-1 truncate" style={{ color: '#64748b' }}>{article.title}</span>
+                            <button onClick={() => removeArticle(ci, li, ai)} className="p-0.5 transition-colors shrink-0" style={{ color: '#334155' }}>
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        <button
-          onClick={addChapter}
-          className="w-full h-10 rounded-lg border-2 border-dashed border-slate-300 text-sm font-semibold text-slate-500 hover:border-navy-950 hover:text-navy-950 transition-colors"
-        >
-          + Add Chapter
-        </button>
-      </section>
-
-      {/* ── Step 4: Save ── */}
-      <section className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-        <h2 className="font-display text-lg text-navy-950 flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full bg-navy-950 text-white text-xs font-bold flex items-center justify-center">4</span>
-          Save Course
-        </h2>
-
-        {/* Preview summary */}
-        <div className="bg-slate-50 rounded-lg border border-slate-200 p-4 text-sm space-y-1">
-          <p><span className="font-semibold text-navy-950">Title:</span> <span className="text-slate-600">{title || '—'}</span></p>
-          <p><span className="font-semibold text-navy-950">Level:</span> <span className="text-slate-600">{level}</span></p>
-          <p><span className="font-semibold text-navy-950">Status:</span> <span className="text-slate-600">{status}</span></p>
-          <p><span className="font-semibold text-navy-950">Chapters:</span> <span className="text-slate-600">{chapters.length}</span></p>
-          <p><span className="font-semibold text-navy-950">Total Lessons:</span> <span className="text-slate-600">{totalLessons}</span></p>
-        </div>
-
-        {saveError && (
-          <p className="text-sm text-crimson-600 bg-crimson-50 border border-crimson-200 rounded-lg px-3 py-2">{saveError}</p>
-        )}
-        {saveMsg && (
-          <p className="text-sm text-teal-700 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2">{saveMsg}</p>
-        )}
-
-        <button
-          onClick={handleSave}
-          disabled={saving || !title.trim()}
-          className="w-full h-12 rounded-xl text-base font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors disabled:opacity-40"
-        >
-          {saving ? 'Saving...' : 'Save Course'}
-        </button>
-
-        {/* Delete course — only shown when a course is loaded */}
-        {loadedSlug && (
-          <div className="pt-4 border-t border-slate-100 space-y-3">
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Danger Zone</p>
-              <p className="text-xs text-slate-400">
-                Permanently deletes this course and all its lesson documents. Cannot be undone.
-              </p>
-            </div>
-            {deleteError && (
-              <p className="text-sm text-crimson-600 bg-crimson-50 border border-crimson-200 rounded-lg px-3 py-2">{deleteError}</p>
-            )}
-            {deleteMsg && (
-              <p className="text-sm text-teal-700 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2">{deleteMsg}</p>
-            )}
-            <button
-              onClick={handleDeleteCourse}
-              disabled={deleting}
-              className="w-full h-11 rounded-xl text-sm font-bold transition-colors disabled:opacity-40"
-              style={{ background: 'rgba(244,63,94,0.08)', color: '#f43f5e', border: '1.5px solid rgba(244,63,94,0.25)' }}
-            >
-              {deleting ? 'Deleting...' : `Delete "${title}" + all lesson documents`}
-            </button>
+            ))}
           </div>
-        )}
-      </section>
+
+          <button
+            onClick={addChapter}
+            className="w-full h-10 rounded-lg border-2 border-dashed text-sm font-semibold transition-colors"
+            style={{ borderColor: '#1f2937', color: '#475569' }}
+          >
+            + Add Chapter
+          </button>
+        </section>
+
+        {/* ── Step 4: Save ── */}
+        <section className="rounded-2xl border p-6 space-y-4" style={C.card}>
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center"
+              style={{ background: '#D4A017', color: '#0C1A3D' }}>4</span>
+            Save Course
+          </h2>
+
+          {/* Preview summary */}
+          <div className="rounded-lg border p-4 text-sm space-y-1" style={{ background: '#111827', borderColor: '#1f2937' }}>
+            <p><span className="font-semibold text-white">Title:</span> <span style={{ color: '#64748b' }}>{title || '—'}</span></p>
+            <p><span className="font-semibold text-white">Level:</span> <span style={{ color: '#64748b' }}>{level}</span></p>
+            <p><span className="font-semibold text-white">Status:</span> <span style={{ color: '#64748b' }}>{status}</span></p>
+            <p><span className="font-semibold text-white">Chapters:</span> <span style={{ color: '#64748b' }}>{chapters.length}</span></p>
+            <p><span className="font-semibold text-white">Total Lessons:</span> <span style={{ color: '#64748b' }}>{totalLessons}</span></p>
+          </div>
+
+          {saveError && (
+            <p className="text-sm rounded-lg px-3 py-2" style={C.danger}>{saveError}</p>
+          )}
+          {saveMsg && (
+            <p className="text-sm rounded-lg px-3 py-2" style={C.success}>{saveMsg}</p>
+          )}
+
+          <button
+            onClick={handleSave}
+            disabled={saving || !title.trim()}
+            className="w-full h-12 rounded-xl text-base font-bold transition-colors disabled:opacity-40"
+            style={{ background: '#D4A017', color: '#0C1A3D' }}
+          >
+            {saving ? 'Saving...' : 'Save Course'}
+          </button>
+
+          {/* Delete course — only shown when a course is loaded */}
+          {loadedSlug && (
+            <div className="pt-4 border-t space-y-3" style={{ borderColor: '#1a2238' }}>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#475569' }}>Danger Zone</p>
+                <p className="text-xs" style={{ color: '#475569' }}>
+                  Permanently deletes this course and all its chapters and lessons. Cannot be undone.
+                </p>
+              </div>
+              {deleteError && (
+                <p className="text-sm rounded-lg px-3 py-2" style={C.danger}>{deleteError}</p>
+              )}
+              {deleteMsg && (
+                <p className="text-sm rounded-lg px-3 py-2" style={C.success}>{deleteMsg}</p>
+              )}
+              <button
+                onClick={handleDeleteCourse}
+                disabled={deleting}
+                className="w-full h-11 rounded-xl text-sm font-bold transition-colors disabled:opacity-40"
+                style={C.danger}
+              >
+                {deleting ? 'Deleting...' : `Delete "${title}" + all chapters and lessons`}
+              </button>
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   )
 }

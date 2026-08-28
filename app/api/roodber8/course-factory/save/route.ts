@@ -49,6 +49,14 @@ export async function POST(req: NextRequest) {
   const platform = SITE_CODE_MAP[resolvedCanonical] ?? 'ab'
 
   try {
+    // Check if course already exists (to decide rollback scope)
+    const { data: existingCourse } = await supabase
+      .from('courses')
+      .select('id')
+      .eq('slug', slug)
+      .maybeSingle()
+    const isNewCourse = !existingCourse
+
     // Step 1 — Upsert course
     const { data: course, error: courseError } = await supabase
       .from('courses')
@@ -59,7 +67,8 @@ export async function POST(req: NextRequest) {
         level:            level ?? 'beginner',
         status:           status ?? 'draft',
         is_featured:      isFeatured ?? false,
-        show_on_sites:    showOnSites ?? ['accountingbody'],
+        show_on_sites:    (showOnSites ?? ['accountingbody'])
+          .map((s: string) => SITE_CODE_MAP[s] ?? s),
         canonical_owner:  resolvedCanonical,
         platform,
         updated_at:       new Date().toISOString(),
@@ -134,11 +143,15 @@ export async function POST(req: NextRequest) {
 
     } catch (err: any) {
       console.error('course-factory/save: insert failed, rolling back:', err)
-      const { error: rollbackError } = await supabase
-        .from('courses')
-        .delete()
-        .eq('slug', slug)
-      if (rollbackError) console.error('course-factory/save: rollback delete failed:', rollbackError)
+      if (isNewCourse) {
+        const { error: rollbackError } = await supabase
+          .from('courses')
+          .delete()
+          .eq('slug', slug)
+        if (rollbackError) console.error('course-factory/save: rollback delete failed:', rollbackError)
+      } else {
+        console.error('course-factory/save: mid-write failure on update — chapters partially rewritten, manual recovery may be needed for slug:', slug)
+      }
       return NextResponse.json(
         { error: 'Course save failed mid-write. Partial data has been rolled back. Please try again.' },
         { status: 500 }

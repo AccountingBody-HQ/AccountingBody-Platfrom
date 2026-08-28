@@ -39,7 +39,6 @@ export async function GET(req: NextRequest) {
   const query = supabase
     .from('articles')
     .select('id, title, slug, excerpt, content_id, wp_id')
-    .eq('platform', 'ab')
 
   const { data, error } = isContentId
     ? await query.eq('content_id', id).maybeSingle()
