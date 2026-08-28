@@ -328,6 +328,7 @@ This will permanently delete the course and all its lesson documents from Sanity
       setStatus(c.status ?? 'draft')
       setIsFeatured(c.isFeatured ?? false)
       setLoadedSlug(c.slug ?? '')
+      setCanonical(c.canonicalOwner ?? 'accountingbody')
       const rebuilt = (c.chapters ?? []).map((ch: any) => ({
         id:    uid(),
         title: ch.chapterTitle ?? 'Chapter',
@@ -372,6 +373,7 @@ This will permanently delete the course and all its lesson documents from Sanity
       status,
       isFeatured,
       showOnSites,
+      canonical,
       chapters:    chapters.map((ch, ci) => ({
         _type:        'chapter',
         _key:         ch.id,

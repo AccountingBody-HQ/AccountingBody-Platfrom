@@ -19,11 +19,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const { title, slug, description, level, status, isFeatured, showOnSites, chapters } = body
+  const { title, slug, description, level, status, isFeatured, showOnSites, chapters, canonical } = body
 
   if (!title || !slug) {
     return NextResponse.json({ error: 'Title and slug are required' }, { status: 400 })
   }
+
+  // UI sends full site names; Supabase's show_on_sites/platform columns use short codes (only 'ab' has prior precedent)
+  const SITE_CODE_MAP: Record<string, string> = {
+    accountingbody: 'ab',
+    hrlake:         'hr',
+    ethiotax:       'et',
+  }
+  const resolvedCanonical: string = (canonical as string | undefined) ?? 'accountingbody'
+  const platform = SITE_CODE_MAP[resolvedCanonical] ?? 'ab'
 
   try {
     // Step 1 — Upsert course
@@ -37,8 +46,8 @@ export async function POST(req: NextRequest) {
         status:           status ?? 'draft',
         is_featured:      isFeatured ?? false,
         show_on_sites:    showOnSites ?? ['accountingbody'],
-        canonical_owner:  showOnSites?.[0] ?? 'accountingbody',
-        platform:         'ab',
+        canonical_owner:  resolvedCanonical,
+        platform,
         updated_at:       new Date().toISOString(),
       }, { onConflict: 'slug' })
       .select('id')

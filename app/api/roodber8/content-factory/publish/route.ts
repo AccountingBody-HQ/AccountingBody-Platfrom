@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { marked } from 'marked'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -24,80 +25,13 @@ const SITE_CODE_MAP: Record<string, string> = {
   ethiotax:       'et',
 }
 
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-}
-
-function parseInline(text: string): string {
-  const parts = text.split(/(\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g)
-  let html = ''
-  for (const part of parts) {
-    if (!part) continue
-    if (part.startsWith('***') && part.endsWith('***')) {
-      html += `<strong><em>${escapeHtml(part.slice(3, -3))}</em></strong>`
-    } else if (part.startsWith('**') && part.endsWith('**')) {
-      html += `<strong>${escapeHtml(part.slice(2, -2))}</strong>`
-    } else if (part.startsWith('*') && part.endsWith('*')) {
-      html += `<em>${escapeHtml(part.slice(1, -1))}</em>`
-    } else if (part.startsWith('`') && part.endsWith('`')) {
-      html += `<code>${escapeHtml(part.slice(1, -1))}</code>`
-    } else {
-      html += escapeHtml(part)
-    }
-  }
-  return html
-}
+marked.setOptions({
+  gfm:    true,
+  breaks: false,
+})
 
 function markdownToHtml(markdown: string): string {
-  const lines = markdown.split('\n')
-  const blocks: string[] = []
-  let i = 0
-  while (i < lines.length) {
-    const line = lines[i]
-    if (!line.trim()) { i++; continue }
-    if (line.startsWith('#### ')) { blocks.push(`<h4>${parseInline(line.slice(5).trim())}</h4>`); i++; continue }
-    if (line.startsWith('### '))  { blocks.push(`<h3>${parseInline(line.slice(4).trim())}</h3>`); i++; continue }
-    if (line.startsWith('## '))   { blocks.push(`<h2>${parseInline(line.slice(3).trim())}</h2>`); i++; continue }
-    if (line.startsWith('# '))    { blocks.push(`<h1>${parseInline(line.slice(2).trim())}</h1>`); i++; continue }
-    if (line.match(/^[-*+] /)) {
-      const items: string[] = []
-      while (i < lines.length && lines[i].match(/^[-*+] /)) {
-        items.push(`<li>${parseInline(lines[i].replace(/^[-*+] /, '').trim())}</li>`)
-        i++
-      }
-      blocks.push(`<ul>${items.join('')}</ul>`)
-      continue
-    }
-    if (line.match(/^\d+\. /)) {
-      const items: string[] = []
-      while (i < lines.length && lines[i].match(/^\d+\. /)) {
-        items.push(`<li>${parseInline(lines[i].replace(/^\d+\. /, '').trim())}</li>`)
-        i++
-      }
-      blocks.push(`<ol>${items.join('')}</ol>`)
-      continue
-    }
-    if (line.trim() === '---' || line.trim() === '***') { i++; continue }
-    const paraLines: string[] = []
-    while (
-      i < lines.length &&
-      lines[i].trim() &&
-      !lines[i].match(/^#{1,4} /) &&
-      !lines[i].match(/^[-*+] /) &&
-      !lines[i].match(/^\d+\. /) &&
-      lines[i].trim() !== '---'
-    ) {
-      paraLines.push(lines[i].trim())
-      i++
-    }
-    if (paraLines.length > 0) {
-      blocks.push(`<p>${parseInline(paraLines.join(' '))}</p>`)
-    }
-  }
-  return blocks.join('\n')
+  return marked.parse(markdown, { async: false })
 }
 
 function generateSlug(title: string): string {

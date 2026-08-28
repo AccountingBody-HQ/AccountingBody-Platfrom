@@ -4,7 +4,13 @@
 // Replaces Sanity GROQ fetch — Session 35
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 import { getCourseBySlug } from '@/lib/coursesNew'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SECRET_KEY!
+)
 
 export async function GET(req: NextRequest) {
   try {
@@ -22,9 +28,30 @@ export async function GET(req: NextRequest) {
     for (const ch of course.chapters) {
       for (const ls of ch.lessons) {
         totalArticles += ls.articles.length
-        // questions are stored in question_sets linked via article mcq_url
-        // count not available at preview stage — show 0 until generate is run
-        totalQuestions += 0
+      }
+    }
+
+    // Count published, AccountingBody-owned question sets linked to this course's articles
+    const articleSlugs = Array.from(new Set(
+      course.chapters.flatMap(ch => ch.lessons.flatMap(ls => ls.articles.map(a => a.slug).filter(Boolean)))
+    ))
+
+    if (articleSlugs.length > 0) {
+      try {
+        const { count, error: questionsError } = await supabase
+          .from('question_sets')
+          .select('*', { count: 'exact', head: true })
+          .in('article_slug', articleSlugs)
+          .eq('status', 'published')
+          .eq('platform', 'ab')
+
+        if (questionsError) {
+          console.error('ab-press/preview: question_sets count query failed:', questionsError)
+        } else {
+          totalQuestions = count ?? 0
+        }
+      } catch (err) {
+        console.error('ab-press/preview: question_sets count query threw:', err)
       }
     }
 

@@ -22,10 +22,18 @@ export async function POST(req: NextRequest) {
       const referenceNumber = generateReferenceNumber(platform, "C")
       const profileToken = generateProfileToken()
 
-      await supabase
+      const { error: updateError } = await supabase
         .from("job_seeker_registrations")
         .update({ reference_number: referenceNumber, update_token: profileToken })
         .eq("id", id)
+
+      if (updateError) {
+        console.error('notify-candidate: token update failed:', updateError)
+        return NextResponse.json(
+          { error: 'Failed to save candidate token — email not sent', detail: updateError.message },
+          { status: 500 }
+        )
+      }
 
       const manageUrl = baseUrl + "/jobs/find-work/manage?token=" + profileToken
 
