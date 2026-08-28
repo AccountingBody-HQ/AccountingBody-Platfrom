@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { unstable_noStore as noStore } from 'next/cache'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
 import { createClient } from '@supabase/supabase-js'
-import { FileText, Plus, ExternalLink, FileJson, Search } from 'lucide-react'
+import { FileText, Sparkles, ExternalLink, FileJson, Search } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -117,10 +117,10 @@ export default async function ArticlesLibraryPage({
             style={{ background: 'rgba(212,160,23,0.12)', color: '#D4A017', border: '1px solid #D4A017' }}>
             <FileJson size={15} /> Import JSON
           </Link>
-          <Link href="/roodber8/articles/new"
+          <Link href="/roodber8/content-factory"
             className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl"
             style={{ background: '#D4A017', color: '#0C1A3D' }}>
-            <Plus size={15} /> New Article
+            <Sparkles size={15} /> Generate
           </Link>
         </div>
       </div>

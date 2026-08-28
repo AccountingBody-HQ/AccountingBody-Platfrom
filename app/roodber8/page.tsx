@@ -106,16 +106,6 @@ export default async function AdminCommandCentre() {
 
   const STAT_CARDS = [
     {
-      label: "Articles",
-      value: stats.articleCount,
-      sub: stats.articleCount + " on AB · " + stats.articleEtCount + " on ET",
-      color: "#D4A017",
-      bg: "rgba(212,160,23,0.08)",
-      border: "rgba(212,160,23,0.2)",
-      icon: FileText,
-      href: "/roodber8/articles",
-    },
-    {
       label: "Contact Submissions",
       value: stats.contactCount,
       sub: "from contact form",
@@ -164,6 +154,16 @@ export default async function AdminCommandCentre() {
       border: "rgba(236,72,153,0.2)",
       icon: Briefcase,
       href: "/roodber8/jobs-firms",
+    },
+    {
+      label: "Articles",
+      value: stats.articleCount,
+      sub: stats.articleCount + " on AB · " + stats.articleEtCount + " on ET",
+      color: "#D4A017",
+      bg: "rgba(212,160,23,0.08)",
+      border: "rgba(212,160,23,0.2)",
+      icon: FileText,
+      href: "/roodber8/articles",
     },
   ]
 
