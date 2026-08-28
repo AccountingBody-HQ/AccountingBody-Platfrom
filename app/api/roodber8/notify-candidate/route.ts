@@ -3,7 +3,26 @@ import { Resend } from "resend"
 import { createClient } from "@supabase/supabase-js"
 import { generateReferenceNumber, generateProfileToken } from "@/lib/profileUtils"
 
+async function sha256Hex(message: string): Promise<string> {
+  const msgBuffer = new TextEncoder().encode(message)
+  const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
+}
+
+async function isAuthenticated(req: NextRequest): Promise<boolean> {
+  const token = req.cookies.get("admin_token")?.value
+  if (!token) return false
+  const secret = process.env.ADMIN_SECRET
+  if (!secret) return false
+  const expectedHash = await sha256Hex(secret)
+  return token === expectedHash
+}
+
 export async function POST(req: NextRequest) {
+  if (!(await isAuthenticated(req))) {
+    return NextResponse.json({ error: "Unauthorised" }, { status: 401 })
+  }
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
     const { id, status, email, name, platform } = await req.json()
