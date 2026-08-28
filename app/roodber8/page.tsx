@@ -4,7 +4,7 @@ import Link from "next/link"
 import AutoRefresh from "@/components/roodber8/AutoRefresh"
 import {
   Mail, Users, HelpCircle, Building2, Briefcase,
-  ArrowRight, TrendingUp, Factory, Inbox, BookOpen
+  ArrowRight, TrendingUp, Factory, Inbox, BookOpen, FileText
 } from "lucide-react"
 
 export const dynamic = "force-dynamic"
@@ -27,6 +27,7 @@ async function getStats() {
     { count: etHelpCount },
     { count: etSubscriberCount },
     { count: etOpenHelpCount },
+    { count: articleCount },
   ] = await Promise.all([
     supabase.from("contact_submissions").select("*", { count: "exact", head: true }).eq("platform", "ab"),
     supabase.from("email_subscribers").select("*", { count: "exact", head: true }).eq("platform", "ab"),
@@ -39,6 +40,7 @@ async function getStats() {
     supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("platform", "et"),
     supabase.from("email_subscribers").select("*", { count: "exact", head: true }).eq("platform", "et"),
     supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("platform", "et").eq("status", "open"),
+    supabase.from("articles").select("*", { count: "exact", head: true }).eq("platform", "ab"),
   ])
 
   const { data: recentSubmissions } = await supabase
@@ -92,6 +94,7 @@ async function getStats() {
     etSubscriberCount:   etSubscriberCount   ?? 0,
     etOpenHelpCount:     etOpenHelpCount     ?? 0,
     etRecentHelpRequests: (etRecentHelpRequests ?? []) as Array<{id: string; name: string; email: string; service_type: string; status: string; created_at: string}>,
+    articleCount:        articleCount        ?? 0,
   }
 }
 
@@ -99,6 +102,16 @@ export default async function AdminCommandCentre() {
   const stats = await getStats()
 
   const STAT_CARDS = [
+    {
+      label: "Articles",
+      value: stats.articleCount,
+      sub: "published study content",
+      color: "#D4A017",
+      bg: "rgba(212,160,23,0.08)",
+      border: "rgba(212,160,23,0.2)",
+      icon: FileText,
+      href: "/roodber8/articles",
+    },
     {
       label: "Contact Submissions",
       value: stats.contactCount,
@@ -157,6 +170,7 @@ export default async function AdminCommandCentre() {
     { label: "Content Factory",    sub: "Generate AI study content",href: "/roodber8/content-factory", icon: Factory,     color: "#f59e0b" },
     { label: "Jobs & Firms",       sub: "Listings & applications",  href: "/roodber8/jobs-firms",      icon: Briefcase,   color: "#8b5cf6" },
     { label: "Questions",          sub: "Generate practice questions",href: "/roodber8/questions",       icon: HelpCircle,  color: "#D4A017" },
+    { label: "Articles",           sub: "Manage and import study content", href: "/roodber8/articles",   icon: FileText,    color: "#D4A017" },
     { label: "Course Factory",     sub: "Assemble structured courses", href: "/roodber8/course-factory",  icon: Factory,     color: "#14b4a3" },
     { label: "AB Press",           sub: "Generate KDP-ready study books", href: "/roodber8/ab-press",        icon: BookOpen,    color: "#D4A017" },
   ]
@@ -174,7 +188,7 @@ export default async function AdminCommandCentre() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-6 gap-4 mb-8">
         {STAT_CARDS.map(card => (
           <Link key={card.label} href={card.href}
             className="rounded-2xl p-5 border transition-all hover:scale-[1.02] group"
