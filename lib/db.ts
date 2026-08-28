@@ -53,15 +53,15 @@ export interface Question {
   question_order:       number
   type:                 string
   question_text:        string
-  option_a:             string
-  option_b:             string
-  option_c:             string
-  option_d:             string
-  correct_index:        number
+  option_a:             string | null
+  option_b:             string | null
+  option_c:             string | null
+  option_d:             string | null
+  correct_index:        number | null
   explanation?:         string
-  writing_model_answer?: string
-  writing_explanation?: string
-  case_id?:             string
+  writing_model_answer?: string | null
+  writing_explanation?: string | null
+  case_id?:             string | null
   primary_topic?:       string
   difficulty?:          string
   time_target_minutes?: number
@@ -76,6 +76,7 @@ export async function getArticleBySlug(slug: string): Promise<ArticleFull | null
     .select('*')
     .eq('slug', slug)
     .eq('status', 'published')
+    .contains('show_on_sites', ['ab'])
     .single()
   if (error || !data) return null
   return data as ArticleFull
@@ -108,6 +109,7 @@ export async function getAllArticleSlugs(): Promise<string[]> {
     .from('articles')
     .select('slug')
     .eq('status', 'published')
+    .contains('show_on_sites', ['ab'])
   if (error || !data) return []
   return data.map((r: { slug: string }) => r.slug)
 }
@@ -125,17 +127,21 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
       .select('*', { count: 'exact', head: true })
       .eq('category', cat)
       .eq('status', 'published')
+      .contains('show_on_sites', ['ab'])
     counts[cat] = count ?? 0
   }
   return counts
 }
 
 export async function searchArticles(query: string): Promise<ArticleSummary[]> {
+  const safeQuery = query.replace(/[,()]/g, '')
+  if (!safeQuery) return []
   const { data, error } = await supabase
     .from('articles')
     .select('id, title, slug, excerpt, category, category_title, exam_body, published_at')
     .eq('status', 'published')
-    .or(`title.ilike.%${query}%,excerpt.ilike.%${query}%`)
+    .contains('show_on_sites', ['ab'])
+    .or(`title.ilike.%${safeQuery}%,excerpt.ilike.%${safeQuery}%`)
     .order('published_at', { ascending: false })
     .limit(50)
   if (error || !data) return []

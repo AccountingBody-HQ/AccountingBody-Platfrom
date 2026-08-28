@@ -74,67 +74,81 @@ export async function POST(req: NextRequest) {
 
     if (courseError) return NextResponse.json({ error: courseError.message }, { status: 500 })
 
-    // Step 2 — Delete existing chapters (CASCADE removes lessons + lesson_articles)
-    const { error: deleteError } = await supabase
-      .from('course_chapters')
-      .delete()
-      .eq('course_id', course.id)
-
-    if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 500 })
-
-    // Step 3 — Insert chapters, lessons, and lesson-article links
-    for (let ci = 0; ci < chapters.length; ci++) {
-      const chapter = chapters[ci]
-
-      const { data: ch, error: chError } = await supabase
+    try {
+      // Step 2 — Delete existing chapters (CASCADE removes lessons + lesson_articles)
+      const { error: deleteError } = await supabase
         .from('course_chapters')
-        .insert({
-          course_id:     course.id,
-          chapter_title: chapter.chapterTitle,
-          chapter_order: ci + 1,
-        })
-        .select('id')
-        .single()
+        .delete()
+        .eq('course_id', course.id)
 
-      if (chError) return NextResponse.json({ error: chError.message }, { status: 500 })
+      if (deleteError) throw deleteError
 
-      for (let li = 0; li < chapter.lessonRefs.length; li++) {
-        const lessonRef  = chapter.lessonRefs[li]
-        const lessonSlug = `${slug}-ch${ci + 1}-l${li + 1}`
+      // Step 3 — Insert chapters, lessons, and lesson-article links
+      for (let ci = 0; ci < chapters.length; ci++) {
+        const chapter = chapters[ci]
 
-        const { data: lesson, error: lessonError } = await supabase
-          .from('course_lessons')
+        const { data: ch, error: chError } = await supabase
+          .from('course_chapters')
           .insert({
-            chapter_id:   ch.id,
-            course_id:    course.id,
-            title:        lessonRef.title,
-            slug:         lessonSlug,
-            lesson_order: li + 1,
+            course_id:     course.id,
+            chapter_title: chapter.chapterTitle,
+            chapter_order: ci + 1,
           })
           .select('id')
           .single()
 
-        if (lessonError) return NextResponse.json({ error: lessonError.message }, { status: 500 })
+        if (chError) throw chError
 
-        // Step 4 — Link articles to lesson
-        for (let ai = 0; ai < lessonRef.articleIds.length; ai++) {
-          const articleId = lessonRef.articleIds[ai]
+        for (let li = 0; li < chapter.lessonRefs.length; li++) {
+          const lessonRef  = chapter.lessonRefs[li]
+          const lessonSlug = `${slug}-ch${ci + 1}-l${li + 1}`
 
-          // articleIds are Supabase UUIDs (a.id from the fetch-article route)
-          const { error: linkError } = await supabase
-            .from('course_lesson_articles')
+          const { data: lesson, error: lessonError } = await supabase
+            .from('course_lessons')
             .insert({
-              lesson_id:    lesson.id,
-              article_id:   articleId,
-              article_order: ai + 1,
+              chapter_id:   ch.id,
+              course_id:    course.id,
+              title:        lessonRef.title,
+              slug:         lessonSlug,
+              lesson_order: li + 1,
             })
+            .select('id')
+            .single()
 
-          if (linkError) return NextResponse.json({ error: linkError.message }, { status: 500 })
+          if (lessonError) throw lessonError
+
+          // Step 4 — Link articles to lesson
+          for (let ai = 0; ai < lessonRef.articleIds.length; ai++) {
+            const articleId = lessonRef.articleIds[ai]
+
+            // articleIds are Supabase UUIDs (a.id from the fetch-article route)
+            const { error: linkError } = await supabase
+              .from('course_lesson_articles')
+              .insert({
+                lesson_id:    lesson.id,
+                article_id:   articleId,
+                article_order: ai + 1,
+              })
+
+            if (linkError) throw linkError
+          }
         }
       }
-    }
 
-    return NextResponse.json({ success: true, id: course.id })
+      return NextResponse.json({ success: true, id: course.id })
+
+    } catch (err: any) {
+      console.error('course-factory/save: insert failed, rolling back:', err)
+      const { error: rollbackError } = await supabase
+        .from('courses')
+        .delete()
+        .eq('slug', slug)
+      if (rollbackError) console.error('course-factory/save: rollback delete failed:', rollbackError)
+      return NextResponse.json(
+        { error: 'Course save failed mid-write. Partial data has been rolled back. Please try again.' },
+        { status: 500 }
+      )
+    }
 
   } catch (e: any) {
     return NextResponse.json({ error: e.message ?? 'Unknown error' }, { status: 500 })
