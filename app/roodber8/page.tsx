@@ -40,7 +40,7 @@ async function getStats() {
     supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("platform", "et"),
     supabase.from("email_subscribers").select("*", { count: "exact", head: true }).eq("platform", "et"),
     supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("platform", "et").eq("status", "open"),
-    supabase.from("articles").select("*", { count: "exact", head: true }).eq("platform", "ab"),
+    supabase.from("articles").select("*", { count: "exact", head: true }).contains("show_on_sites", ["ab"]),
   ])
 
   const { data: recentSubmissions } = await supabase
@@ -105,7 +105,7 @@ export default async function AdminCommandCentre() {
     {
       label: "Articles",
       value: stats.articleCount,
-      sub: "published study content",
+      sub: stats.articleCount + " visible on AB",
       color: "#D4A017",
       bg: "rgba(212,160,23,0.08)",
       border: "rgba(212,160,23,0.2)",

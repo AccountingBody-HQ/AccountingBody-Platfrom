@@ -35,7 +35,9 @@ const DIFF_STYLE: Record<string, { bg: string; color: string; border: string }> 
   advanced:     { bg: 'rgba(239,68,68,0.08)',   color: '#ef4444', border: 'rgba(239,68,68,0.2)'   },
 }
 
-async function getArticles(safeSearch: string) {
+const ALPHABET = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i))
+
+async function getArticles(safeSearch: string, letter: string) {
   noStore()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,9 +48,10 @@ async function getArticles(safeSearch: string) {
     .from('articles')
     .select('id, title, slug, category, category_title, exam_body, status, show_on_sites, platform, published_at, created_at, author_name, read_time, difficulty')
     .order('created_at', { ascending: false })
-    .limit(200)
+    .limit(2000)
 
   if (safeSearch) listQuery = listQuery.ilike('title', `%${safeSearch}%`)
+  if (letter) listQuery = listQuery.ilike('title', `${letter}%`)
 
   const [{ data: articles }, { count }] = await Promise.all([
     listQuery,
@@ -64,12 +67,14 @@ async function getArticles(safeSearch: string) {
 export default async function ArticlesLibraryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string }>
+  searchParams?: { search?: string; letter?: string }
 }) {
-  const sp = await searchParams
-  const safeSearch = (sp.search ?? '').replace(/[,()%]/g, '')
+  const search = searchParams?.search ?? ''
+  const letter = searchParams?.letter ?? ''
+  const safeSearch = search.replace(/[,()%]/g, '')
+  const safeLetter = letter.replace(/[,()%]/g, '').slice(0, 1).toUpperCase()
 
-  const { articles, total } = await getArticles(safeSearch)
+  const { articles, total } = await getArticles(safeSearch, safeLetter)
 
   const publishedCount = articles.filter(a => a.status === 'published').length
   const draftCount     = articles.filter(a => a.status === 'draft').length
@@ -131,6 +136,26 @@ export default async function ArticlesLibraryPage({
         ))}
       </div>
 
+      {/* A–Z Filter */}
+      <div className="flex flex-wrap gap-1.5 mb-4">
+        <Link href="/roodber8/articles"
+          className="text-xs font-bold px-2.5 py-1.5 rounded-lg"
+          style={!safeLetter
+            ? { background: '#D4A017', color: '#0C1A3D' }
+            : { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#475569' }}>
+          All
+        </Link>
+        {ALPHABET.map(l => (
+          <Link key={l} href={`/roodber8/articles?letter=${l}`}
+            className="text-xs font-bold px-2.5 py-1.5 rounded-lg"
+            style={safeLetter === l
+              ? { background: '#D4A017', color: '#0C1A3D' }
+              : { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#475569' }}>
+            {l}
+          </Link>
+        ))}
+      </div>
+
       {/* Search */}
       <div className="rounded-2xl border p-4 mb-6 flex items-center gap-3 flex-wrap"
         style={{ background: '#0d1424', borderColor: '#1a2238' }}>
@@ -147,7 +172,7 @@ export default async function ArticlesLibraryPage({
             style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
             Search
           </button>
-          {safeSearch && (
+          {(safeSearch || safeLetter) && (
             <Link href="/roodber8/articles" className="text-xs font-semibold" style={{ color: '#475569' }}>Clear</Link>
           )}
         </form>
@@ -156,9 +181,11 @@ export default async function ArticlesLibraryPage({
       {/* Article list */}
       <div className="rounded-2xl border overflow-hidden" style={C.card}>
         <div className="px-6 py-4 border-b flex items-center justify-between" style={{ borderColor: '#1a2238' }}>
-          <h2 className="text-white font-bold text-sm">All Articles</h2>
+          <h2 className="text-white font-bold text-sm">
+            {safeLetter ? `Articles starting with '${safeLetter}'` : safeSearch ? `Search results for '${safeSearch}'` : 'All Articles'}
+          </h2>
           <span className="text-xs font-semibold" style={{ color: '#475569' }}>
-            {total} articles total
+            {articles.length} articles
           </span>
         </div>
 
@@ -167,7 +194,7 @@ export default async function ArticlesLibraryPage({
             <FileText size={32} style={{ color: '#1a2238' }} className="mx-auto mb-4" />
             <p className="text-white font-semibold mb-2">No articles yet</p>
             <p className="text-sm mb-6" style={{ color: '#334155' }}>
-              {safeSearch ? 'No articles match your search.' : 'Import your first article using the button above.'}
+              {(safeSearch || safeLetter) ? 'No articles match your search.' : 'Import your first article using the button above.'}
             </p>
             <Link href="/roodber8/articles/import"
               className="inline-flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl"
