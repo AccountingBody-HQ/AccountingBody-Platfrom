@@ -7,7 +7,7 @@ import { Briefcase, Building2, Search } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-async function getJobsAndFirms(filters: { search?: string; status?: string; platform?: string }) {
+async function getJobsAndFirms(filters: { safeSearch?: string; status?: string; platform?: string }) {
   noStore()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,7 +15,7 @@ async function getJobsAndFirms(filters: { search?: string; status?: string; plat
   )
   let firmsQuery = supabase.from('firms_applications').select('*').order('created_at', { ascending: false })
   if (filters.status) firmsQuery = firmsQuery.eq('status', filters.status)
-  if (filters.search) firmsQuery = firmsQuery.or('firm_name.ilike.%' + filters.search + '%,contact_name.ilike.%' + filters.search + '%,contact_email.ilike.%' + filters.search + '%')
+  if (filters.safeSearch) firmsQuery = firmsQuery.or(`firm_name.ilike.%${filters.safeSearch}%,contact_name.ilike.%${filters.safeSearch}%,contact_email.ilike.%${filters.safeSearch}%`)
   if (filters.platform) firmsQuery = firmsQuery.eq('platform', filters.platform)
   const [{ data: jobListings }, { data: firmsApplications }] = await Promise.all([
     supabase.from('job_listings').select('*').order('created_at', { ascending: false }),
@@ -32,11 +32,11 @@ export default async function JobsFirmsPage({
 }: {
   searchParams: Promise<{ search?: string; status?: string }>
 }) {
-  const sp       = await searchParams
-  const search   = sp.search ?? ''
-  const status   = sp.status ?? ''
-  const platform = (sp as any).platform ?? ''
-  const { jobListings, firmsApplications } = await getJobsAndFirms({ search, status, platform })
+  const sp         = await searchParams
+  const safeSearch = (sp.search ?? '').replace(/[,()]/g, '')
+  const status     = sp.status ?? ''
+  const platform   = (sp as any).platform ?? ''
+  const { jobListings, firmsApplications } = await getJobsAndFirms({ safeSearch, status, platform })
 
   const pendingCount  = firmsApplications.filter((f: any) => f.status === 'pending' || !f.status).length
   const approvedCount = firmsApplications.filter((f: any) => f.status === 'approved').length
@@ -89,7 +89,7 @@ export default async function JobsFirmsPage({
           <div className="flex items-center gap-2 flex-1 min-w-48 rounded-xl px-3 py-2"
             style={{ background: '#111827', border: '1px solid #1f2937' }}>
             <Search size={13} style={{ color: '#475569' }} />
-            <input name="search" defaultValue={search} placeholder="Search name or email..."
+            <input name="search" defaultValue={safeSearch} placeholder="Search name or email..."
               className="bg-transparent text-white text-sm flex-1 focus:outline-none placeholder-slate-600"
               style={{ minWidth: 0 }} />
           </div>
@@ -113,7 +113,7 @@ export default async function JobsFirmsPage({
             style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
             Filter
           </button>
-          {(search || status || platform) && (
+          {(safeSearch || status || platform) && (
             <a href="/roodber8/jobs-firms" className="text-xs font-semibold" style={{ color: '#475569' }}>Clear</a>
           )}
         </form>

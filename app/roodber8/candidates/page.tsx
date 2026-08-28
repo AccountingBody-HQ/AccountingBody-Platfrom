@@ -8,7 +8,7 @@ import { CandidateActionButtons } from '@/components/roodber8/CandidateActions'
 
 export const dynamic = 'force-dynamic'
 
-async function getCandidates(filters: { search?: string; status?: string; platform?: string }) {
+async function getCandidates(filters: { safeSearch?: string; status?: string; platform?: string }) {
   noStore()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,8 +21,8 @@ async function getCandidates(filters: { search?: string; status?: string; platfo
     .order('created_at', { ascending: false })
   if (filters.status)   query = query.eq('status', filters.status)
   if (filters.platform) query = query.eq('platform', filters.platform)
-  if (filters.search)   query = query.or(
-    'full_name.ilike.%' + filters.search + '%,email.ilike.%' + filters.search + '%,professional_role.ilike.%' + filters.search + '%'
+  if (filters.safeSearch) query = query.or(
+    `full_name.ilike.%${filters.safeSearch}%,email.ilike.%${filters.safeSearch}%,professional_role.ilike.%${filters.safeSearch}%`
   )
   const { data } = await query
   return (data ?? []) as any[]
@@ -33,11 +33,11 @@ export default async function CandidatesPage({
 }: {
   searchParams: Promise<{ search?: string; status?: string; platform?: string }>
 }) {
-  const sp       = await searchParams
-  const search   = sp.search   ?? ''
-  const status   = sp.status   ?? ''
-  const platform = sp.platform ?? ''
-  const candidates = await getCandidates({ search, status, platform })
+  const sp         = await searchParams
+  const safeSearch = (sp.search ?? '').replace(/[,()]/g, '')
+  const status     = sp.status   ?? ''
+  const platform   = sp.platform ?? ''
+  const candidates = await getCandidates({ safeSearch, status, platform })
 
   const pendingVerCount = candidates.filter((c: any) => c.status === 'pending_verification').length
   const pendingRevCount = candidates.filter((c: any) => c.status === 'pending_review').length
@@ -93,7 +93,7 @@ export default async function CandidatesPage({
           <div className="flex items-center gap-2 flex-1 min-w-48 rounded-xl px-3 py-2"
             style={{ background: '#111827', border: '1px solid #1f2937' }}>
             <Search size={13} style={{ color: '#475569' }} />
-            <input name="search" defaultValue={search} placeholder="Search name, email or role..."
+            <input name="search" defaultValue={safeSearch} placeholder="Search name, email or role..."
               className="bg-transparent text-white text-sm flex-1 focus:outline-none placeholder-slate-600"
               style={{ minWidth: 0 }} />
           </div>
@@ -118,7 +118,7 @@ export default async function CandidatesPage({
             style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
             Filter
           </button>
-          {(search || status || platform) && (
+          {(safeSearch || status || platform) && (
             <a href="/roodber8/candidates" className="text-xs font-semibold" style={{ color: '#475569' }}>Clear</a>
           )}
         </form>

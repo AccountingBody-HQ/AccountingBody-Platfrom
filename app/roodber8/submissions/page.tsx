@@ -7,7 +7,7 @@ import { HelpCircle, Mail, Search } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-async function getSubmissions(filters: { search?: string; serviceType?: string; status?: string; platform?: string }) {
+async function getSubmissions(filters: { safeSearch?: string; serviceType?: string; status?: string; platform?: string }) {
   noStore()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,10 +18,10 @@ async function getSubmissions(filters: { search?: string; serviceType?: string; 
   let helpQuery = supabase.from('help_requests').select('*').eq('platform', platformFilter).order('created_at', { ascending: false })
   if (filters.status)      helpQuery = helpQuery.eq('status', filters.status)
   if (filters.serviceType) helpQuery = helpQuery.eq('service_type', filters.serviceType)
-  if (filters.search)      helpQuery = helpQuery.or('name.ilike.%' + filters.search + '%,email.ilike.%' + filters.search + '%')
+  if (filters.safeSearch)  helpQuery = helpQuery.or(`name.ilike.%${filters.safeSearch}%,email.ilike.%${filters.safeSearch}%`)
 
   let contactQuery = supabase.from('contact_submissions').select('*').eq('platform', platformFilter).order('created_at', { ascending: false })
-  if (filters.search) contactQuery = contactQuery.or('name.ilike.%' + filters.search + '%,email.ilike.%' + filters.search + '%')
+  if (filters.safeSearch) contactQuery = contactQuery.or(`name.ilike.%${filters.safeSearch}%,email.ilike.%${filters.safeSearch}%`)
 
   const [{ data: helpRequests }, { data: contactSubmissions }] = await Promise.all([helpQuery, contactQuery])
 
@@ -45,13 +45,13 @@ export default async function SubmissionsPage({
   searchParams: Promise<{ search?: string; service?: string; status?: string; platform?: string }>
 }) {
   const sp          = await searchParams
-  const search      = sp.search ?? ''
+  const safeSearch  = (sp.search ?? '').replace(/[,()]/g, '')
   const serviceType = sp.service ?? ''
   const status      = sp.status ?? ''
   const platform    = sp.platform ?? 'ab'
 
   const [{ helpRequests, contactSubmissions }, serviceTypes] = await Promise.all([
-    getSubmissions({ search, serviceType, status, platform }),
+    getSubmissions({ safeSearch, serviceType, status, platform }),
     getServiceTypes(platform),
   ])
 
@@ -100,7 +100,7 @@ export default async function SubmissionsPage({
           <div className="flex items-center gap-2 flex-1 min-w-48 rounded-xl px-3 py-2"
             style={{ background: '#111827', border: '1px solid #1f2937' }}>
             <Search size={13} style={{ color: '#475569' }} />
-            <input name="search" defaultValue={search} placeholder="Search name or email…"
+            <input name="search" defaultValue={safeSearch} placeholder="Search name or email…"
               className="bg-transparent text-white text-sm flex-1 focus:outline-none placeholder-slate-600"
               style={{ minWidth: 0 }} />
           </div>
@@ -130,7 +130,7 @@ export default async function SubmissionsPage({
             style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
             Filter
           </button>
-          {(search || serviceType || status) && (
+          {(safeSearch || serviceType || status) && (
             <a href="/roodber8/submissions" className="text-xs font-semibold" style={{ color: '#475569' }}>Clear</a>
           )}
         </form>
@@ -149,7 +149,7 @@ export default async function SubmissionsPage({
 
         {helpRequests.length === 0 ? (
           <div className="px-6 py-12 text-center text-sm" style={{ color: '#334155' }}>
-            No help requests{search || serviceType || status ? ' matching filters' : ' yet'}.
+            No help requests{safeSearch || serviceType || status ? ' matching filters' : ' yet'}.
           </div>
         ) : (
           <div className="divide-y" style={{ borderColor: '#1a2238' }}>
@@ -203,7 +203,7 @@ export default async function SubmissionsPage({
 
         {contactSubmissions.length === 0 ? (
           <div className="px-6 py-12 text-center text-sm" style={{ color: '#334155' }}>
-            No contact submissions{search ? ' matching search' : ' yet'}.
+            No contact submissions{safeSearch ? ' matching search' : ' yet'}.
           </div>
         ) : (
           <div className="divide-y" style={{ borderColor: '#1a2238' }}>

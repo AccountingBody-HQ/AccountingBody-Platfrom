@@ -8,7 +8,7 @@ import { Building2, Search } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-async function getEmployerBriefs(filters: { search?: string; status?: string; platform?: string }) {
+async function getEmployerBriefs(filters: { safeSearch?: string; status?: string; platform?: string }) {
   noStore()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,8 +21,8 @@ async function getEmployerBriefs(filters: { search?: string; status?: string; pl
     .order('created_at', { ascending: false })
   if (filters.status)   query = query.eq('status', filters.status)
   if (filters.platform) query = query.eq('platform', filters.platform)
-  if (filters.search)   query = query.or(
-    'company_name.ilike.%' + filters.search + '%,contact_name.ilike.%' + filters.search + '%,contact_email.ilike.%' + filters.search + '%,role_title.ilike.%' + filters.search + '%'
+  if (filters.safeSearch) query = query.or(
+    `company_name.ilike.%${filters.safeSearch}%,contact_name.ilike.%${filters.safeSearch}%,contact_email.ilike.%${filters.safeSearch}%,role_title.ilike.%${filters.safeSearch}%`
   )
   const { data } = await query
   return (data ?? []) as any[]
@@ -33,11 +33,11 @@ export default async function EmployersPage({
 }: {
   searchParams: Promise<{ search?: string; status?: string; platform?: string }>
 }) {
-  const sp       = await searchParams
-  const search   = sp.search   ?? ''
-  const status   = sp.status   ?? ''
-  const platform = sp.platform ?? ''
-  const briefs = await getEmployerBriefs({ search, status, platform })
+  const sp         = await searchParams
+  const safeSearch = (sp.search ?? '').replace(/[,()]/g, '')
+  const status     = sp.status   ?? ''
+  const platform   = sp.platform ?? ''
+  const briefs = await getEmployerBriefs({ safeSearch, status, platform })
 
   const pendingCount    = briefs.filter((b: any) => b.status === 'pending').length
   const reviewingCount  = briefs.filter((b: any) => b.status === 'reviewing').length
@@ -92,7 +92,7 @@ export default async function EmployersPage({
           <div className="flex items-center gap-2 flex-1 min-w-48 rounded-xl px-3 py-2"
             style={{ background: '#111827', border: '1px solid #1f2937' }}>
             <Search size={13} style={{ color: '#475569' }} />
-            <input name="search" defaultValue={search} placeholder="Search company, contact or role..."
+            <input name="search" defaultValue={safeSearch} placeholder="Search company, contact or role..."
               className="bg-transparent text-white text-sm flex-1 focus:outline-none placeholder-slate-600"
               style={{ minWidth: 0 }} />
           </div>
@@ -117,7 +117,7 @@ export default async function EmployersPage({
             style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
             Filter
           </button>
-          {(search || status || platform) && (
+          {(safeSearch || status || platform) && (
             <a href="/roodber8/employers" className="text-xs font-semibold" style={{ color: '#475569' }}>Clear</a>
           )}
         </form>
