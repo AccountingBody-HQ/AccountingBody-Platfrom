@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Sparkles, ChevronRight, BookOpen, Edit3, Check, Loader2, AlertCircle, Send } from 'lucide-react'
 
 const QUALIFICATIONS = ['ACCA', 'CIMA', 'ICAEW', 'AAT', 'ETICPA / CPA', 'ETICPA / ATQ']
@@ -74,45 +74,13 @@ function SelectCard({ active, onClick, children }: { active: boolean; onClick: (
   )
 }
 
-// Two-pass progress indicator
-function GeneratingIndicator({ pass }: { pass: 1 | 2 }) {
-  return (
-    <div className="rounded-xl p-4 mb-4" style={{ background: 'rgba(212,160,23,0.06)', border: '1px solid rgba(212,160,23,0.2)' }}>
-      <div className="flex items-center gap-3 mb-3">
-        <Loader2 size={15} className="animate-spin" style={{ color: '#D4A017' }} />
-        <span className="text-sm font-bold text-white">
-          {pass === 1 ? 'Pass 1 of 2 — Authoring content…' : 'Pass 2 of 2 — Critic reviewing…'}
-        </span>
-      </div>
-      <div className="flex gap-2">
-        {[1, 2].map(p => (
-          <div key={p} className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold"
-            style={p < pass
-              ? { background: 'rgba(16,185,129,0.12)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)' }
-              : p === pass
-                ? { background: 'rgba(212,160,23,0.15)', color: '#D4A017', border: '1px solid rgba(212,160,23,0.3)' }
-                : { background: 'rgba(255,255,255,0.03)', color: '#334155', border: '1px solid #1f2937' }}>
-            {p < pass ? <Check size={10} /> : p === pass ? <Loader2 size={10} className="animate-spin" /> : null}
-            {p === 1 ? 'Author' : 'Critic'}
-          </div>
-        ))}
-      </div>
-      <p className="text-xs mt-3" style={{ color: '#475569' }}>
-        {pass === 1
-          ? 'Generating content calibrated to qualification level and subject standards…'
-          : 'Auditing technical accuracy, compliance, and insight density…'}
-      </p>
-    </div>
-  )
-}
-
 export default function ContentFactoryPage() {
   const [step, setStep]             = useState(0)
   const [config, setConfig]         = useState<Config>(EMPTY)
   const [generated, setGenerated]   = useState('')
   const [edited, setEdited]         = useState('')
   const [generating, setGenerating] = useState(false)
-  const [generatingPass, setGeneratingPass] = useState<1 | 2>(1)
+  const [generateStatus, setGenerateStatus] = useState<'idle' | 'in-flight' | 'success'>('idle')
   const [publishing, setPublishing] = useState(false)
   const [published, setPublished]   = useState(false)
   const [error, setError]           = useState('')
@@ -131,21 +99,19 @@ export default function ContentFactoryPage() {
     }
   }
   const [docId, setDocId]           = useState('')
-  const passTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [categories, setCategories] = useState<{slug:string;title:string}[]>([])
+  const [categoriesError, setCategoriesError] = useState(false)
 
-  useEffect(() => {
+  function fetchCategories() {
+    setCategoriesError(false)
     fetch('/api/roodber8/categories')
       .then(r => r.json())
       .then(d => setCategories(d.categories ?? []))
-      .catch(() => {})
-  }, [])
-
-  // Estimate pass 2 starts after ~40% of expected total duration
-  const pass2Delays: Record<string, number> = { short: 18000, standard: 28000, deep: 45000 }
+      .catch(() => setCategoriesError(true))
+  }
 
   useEffect(() => {
-    return () => { if (passTimerRef.current) clearTimeout(passTimerRef.current) }
+    fetchCategories()
   }, [])
 
   const wordCount = (edited || generated).split(/\s+/).filter(Boolean).length
@@ -165,11 +131,8 @@ export default function ContentFactoryPage() {
 
   async function handleGenerate() {
     setGenerating(true)
-    setGeneratingPass(1)
+    setGenerateStatus('in-flight')
     setError('')
-    // Schedule pass 2 indicator
-    const delay = pass2Delays[config.length] ?? pass2Delays.standard
-    passTimerRef.current = setTimeout(() => setGeneratingPass(2), delay)
     try {
       const controller = new AbortController()
       const tid = setTimeout(() => controller.abort(), 180000)
@@ -180,16 +143,16 @@ export default function ContentFactoryPage() {
         signal: controller.signal,
       })
       clearTimeout(tid)
-      if (passTimerRef.current) clearTimeout(passTimerRef.current)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Generation failed')
       setGenerated(data.content)
       setEdited(data.content)
       if (data.aiSummary) setConfig(c => ({ ...c, aiSummary: data.aiSummary }))
       if (data.keyTerms)  setConfig(c => ({ ...c, keyTerms: data.keyTerms }))
+      setGenerateStatus('success')
       setStep(3)
     } catch (e: any) {
-      if (passTimerRef.current) clearTimeout(passTimerRef.current)
+      setGenerateStatus('idle')
       setError(e.message)
     } finally {
       setGenerating(false)
@@ -340,7 +303,16 @@ export default function ContentFactoryPage() {
           <div className="rounded-2xl border p-6" style={C.card}>
             <h2 className="text-white font-bold text-sm mb-1">Category <span style={{ color: '#475569', fontWeight: 400 }}>(optional)</span></h2>
             <p className="text-xs mb-4" style={{ color: '#334155' }}>Assign this content to a category</p>
-            {categories.length === 0 ? (
+            {categoriesError ? (
+              <div className="rounded-xl p-4 flex items-center justify-between gap-3" style={{ background: '#111827', border: '1px solid #1f2937' }}>
+                <p className="text-xs" style={{ color: '#ef4444' }}>Couldn&apos;t load categories.</p>
+                <button onClick={fetchCategories}
+                  className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                  style={{ background: 'rgba(255,255,255,0.04)', color: '#64748b', border: '1px solid #1f2937' }}>
+                  Retry
+                </button>
+              </div>
+            ) : categories.length === 0 ? (
               <p className="text-xs" style={{ color: '#334155' }}>Loading categories…</p>
             ) : (
               <div className="grid grid-cols-3 gap-3">
@@ -468,7 +440,20 @@ export default function ContentFactoryPage() {
             </div>
           </div>
 
-          {generating && <GeneratingIndicator pass={generatingPass} />}
+          {generating && (
+            <div className="rounded-xl p-4 mb-4 flex items-center gap-3"
+              style={{ background: 'rgba(212,160,23,0.06)', border: '1px solid rgba(212,160,23,0.2)' }}>
+              <Loader2 size={15} className="animate-spin" style={{ color: '#D4A017' }} />
+              <span className="text-sm font-bold text-white">Generating content… this may take up to 60 seconds</span>
+            </div>
+          )}
+          {!generating && generateStatus === 'success' && (
+            <div className="rounded-xl p-4 mb-4 flex items-center gap-3"
+              style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)' }}>
+              <Check size={15} style={{ color: '#10b981' }} />
+              <span className="text-sm font-bold text-white">Generation complete — reviewing below</span>
+            </div>
+          )}
 
           <div className="flex justify-between">
             <button onClick={() => setStep(1)} disabled={generating}
@@ -480,7 +465,7 @@ export default function ContentFactoryPage() {
               className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl disabled:opacity-40"
               style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
               {generating
-                ? <><Loader2 size={14} className="animate-spin" /> {generatingPass === 1 ? 'Authoring...' : 'Reviewing...'}</>
+                ? <><Loader2 size={14} className="animate-spin" /> Generating...</>
                 : <><Sparkles size={14} /> Generate Content</>}
             </button>
           </div>

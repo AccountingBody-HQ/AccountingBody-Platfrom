@@ -5,9 +5,10 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Inbox, Users, Briefcase, Building2,
   Factory, Settings, LogOut, ExternalLink,
-  ChevronRight, Palette, BookOpen
+  ChevronRight, BookOpen
 } from 'lucide-react'
 
+// Sanity Studio nav entry removed — Sanity CMS is fully decommissioned (replaced by Supabase).
 const NAV = [
   { href: '/roodber8',                 exact: true,  icon: LayoutDashboard, label: 'Command Centre',  sub: 'Overview & live stats'     },
   { href: '/roodber8/submissions',     exact: false, icon: Inbox,           label: 'Submissions',     sub: 'Help & contact forms'      },
@@ -19,7 +20,6 @@ const NAV = [
   { href: '/roodber8/content-factory', exact: false, icon: Factory,         label: 'Content Factory', sub: 'AI content generation'     },
   { href: '/roodber8/course-factory',   exact: false, icon: BookOpen,        label: 'Course Factory',  sub: 'Assemble structured courses' },
   { href: '/roodber8/ab-press',         exact: false, icon: BookOpen,        label: 'AB Press',        sub: 'Generate KDP-ready books'    },
-  { href: 'https://accountingbody-website.vercel.app/studio',                exact: false, icon: Palette,         label: 'Sanity Studio',   sub: 'CMS & content editor'      },
   { href: '/roodber8/settings',        exact: false, icon: Settings,        label: 'Settings',        sub: 'Environment & checklist'   },
 ]
 
@@ -28,19 +28,31 @@ function isActive(pathname: string, href: string, exact: boolean) {
   return pathname === href || pathname.startsWith(href + '/')
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 function getBreadcrumb(pathname: string) {
   const map: Record<string, string> = {
-    '/roodber8':                 'Command Centre',
-    '/roodber8/submissions':     'Submissions',
-    '/roodber8/subscribers':     'Subscribers',
-    '/roodber8/jobs-firms':      'Jobs & Firms',
-    '/roodber8/candidates':      'Candidates',
-    '/roodber8/employers':        'Employers',
-    '/roodber8/content-factory': 'Content Factory',
-    '/roodber8/course-factory':   'Course Factory',
-    '/roodber8/ab-press':         'AB Press',
+    '/roodber8':                    'Command Centre',
+    '/roodber8/submissions':        'Submissions',
+    '/roodber8/subscribers':        'Subscribers',
+    '/roodber8/jobs-firms':         'Jobs & Firms',
+    '/roodber8/candidates':         'Candidates',
+    '/roodber8/employers':          'Employers',
+    '/roodber8/questions':          'Questions',
+    '/roodber8/questions/generate': 'Generate',
+    '/roodber8/questions/import':   'Import',
+    '/roodber8/content-factory':    'Content Factory',
+    '/roodber8/course-factory':     'Course Factory',
+    '/roodber8/ab-press':           'AB Press',
   }
-  const base = '/' + pathname.split('/').slice(1, 3).join('/')
+  if (map[pathname]) return map[pathname]
+
+  const segments = pathname.split('/')
+  if (segments[1] === 'roodber8' && segments[2] === 'questions' && segments[3] && UUID_RE.test(segments[3])) {
+    return 'Manage Set'
+  }
+
+  const base = '/' + segments.slice(1, 3).join('/')
   return map[base] ?? 'Admin'
 }
 

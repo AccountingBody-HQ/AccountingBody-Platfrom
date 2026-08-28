@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { marked } from 'marked'
+import { SITE_CODE_MAP } from '@/lib/site-codes'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -16,13 +17,6 @@ const CONTENT_TYPE_MAP: Record<string, string> = {
 
 const DIFFICULTY_MAP: Record<string, string> = {
   Foundation: 'beginner', Intermediate: 'intermediate', Advanced: 'advanced'
-}
-
-// UI sends full site names; Supabase's show_on_sites/platform columns use short codes (only 'ab' has prior precedent)
-const SITE_CODE_MAP: Record<string, string> = {
-  accountingbody: 'ab',
-  hrlake:         'hr',
-  ethiotax:       'et',
 }
 
 marked.setOptions({

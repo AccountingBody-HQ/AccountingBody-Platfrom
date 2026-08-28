@@ -1,16 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { SITE_CODE_MAP } from '@/lib/site-codes'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
-
-// UI sends full site names; Supabase's show_on_sites/platform columns use short codes (only 'ab' has prior precedent)
-const SITE_CODE_MAP: Record<string, string> = {
-  accountingbody: 'ab',
-  hrlake:         'hr',
-  ethiotax:       'et',
-}
 
 function generateSlug(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 200)

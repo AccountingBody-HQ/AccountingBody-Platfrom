@@ -1,4 +1,4 @@
-import { CheckCircle, Circle, Server } from "lucide-react"
+import { CheckCircle, Circle, HelpCircle, Server } from "lucide-react"
 
 export default function SettingsPage() {
   const envVars = [
@@ -15,25 +15,25 @@ export default function SettingsPage() {
     { name: "NEXT_PUBLIC_ADSENSE_ID", required: false, description: "AdSense verification ID" },
   ]
 
-  const checklist = [
+  const checklist: { label: string; done: boolean; manual?: boolean }[] = [
     { label: "Admin panel built", done: true },
     { label: "ADMIN_SECRET set", done: !!process.env.ADMIN_SECRET },
     { label: "ANTHROPIC_API_KEY set", done: !!process.env.ANTHROPIC_API_KEY },
     { label: "Clerk test keys upgraded to production", done: (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "").startsWith("pk_live_") },
     { label: "GTM ID configured", done: !!process.env.NEXT_PUBLIC_GTM_ID },
     { label: "AdSense ID configured", done: !!process.env.NEXT_PUBLIC_ADSENSE_ID },
-    { label: "Supabase Pro upgrade", done: false },
-    { label: "Vercel Pro upgrade", done: false },
-    { label: "Rate limiting on AI routes", done: false },
-    { label: "CSP headers configured", done: false },
-    { label: "Contact form tested end-to-end", done: false },
-    { label: "Subscribe form tested end-to-end", done: false },
-    { label: "WordPress content migration", done: false },
-    { label: "EthioTax: HMRC AML registration", done: false },
-    { label: "EthioTax: ICO GDPR registration", done: false },
-    { label: "EthioTax: Terms of Service (UK solicitor)", done: false },
-    { label: "EthioTax: First real client testimonial", done: false },
-    { label: "EthioTax: GSC sitemap submitted", done: false },
+    { label: "Supabase Pro upgrade", done: false, manual: true },
+    { label: "Vercel Pro upgrade", done: false, manual: true },
+    { label: "Rate limiting on AI routes", done: false, manual: true },
+    { label: "CSP headers configured", done: false, manual: true },
+    { label: "Contact form tested end-to-end", done: false, manual: true },
+    { label: "Subscribe form tested end-to-end", done: false, manual: true },
+    { label: "WordPress content migration", done: false, manual: true },
+    { label: "EthioTax: HMRC AML registration", done: false, manual: true },
+    { label: "EthioTax: ICO GDPR registration", done: false, manual: true },
+    { label: "EthioTax: Terms of Service (UK solicitor)", done: false, manual: true },
+    { label: "EthioTax: First real client testimonial", done: false, manual: true },
+    { label: "EthioTax: GSC sitemap submitted", done: false, manual: true },
   ]
 
   const completedCount = checklist.filter((i) => i.done).length
@@ -57,8 +57,17 @@ export default function SettingsPage() {
         <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "12px" }}>
           {checklist.map((item) => (
             <div key={item.label} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              {item.done ? <CheckCircle size={16} style={{ color: "#10b981" }} /> : <Circle size={16} style={{ color: "#334155" }} />}
-              <span style={{ fontSize: "14px", color: item.done ? "#10b981" : "#94a3b8" }}>{item.label}</span>
+              {item.done
+                ? <CheckCircle size={16} style={{ color: "#10b981" }} />
+                : item.manual
+                  ? <HelpCircle size={16} style={{ color: "#f59e0b" }} />
+                  : <Circle size={16} style={{ color: "#334155" }} />}
+              <span style={{ fontSize: "14px", color: item.done ? "#10b981" : item.manual ? "#f59e0b" : "#94a3b8" }}>
+                {item.label}
+                {item.manual && !item.done && (
+                  <span style={{ marginLeft: "8px", fontSize: "12px", color: "#64748b" }}>(Verify manually)</span>
+                )}
+              </span>
             </div>
           ))}
         </div>

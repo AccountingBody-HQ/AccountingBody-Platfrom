@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { SITE_CODE_MAP } from '@/lib/site-codes'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -44,12 +45,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Title and slug are required' }, { status: 400 })
   }
 
-  // UI sends full site names; Supabase's show_on_sites/platform columns use short codes (only 'ab' has prior precedent)
-  const SITE_CODE_MAP: Record<string, string> = {
-    accountingbody: 'ab',
-    hrlake:         'hr',
-    ethiotax:       'et',
-  }
   const resolvedCanonical: string = (canonical as string | undefined) ?? 'accountingbody'
   const platform = SITE_CODE_MAP[resolvedCanonical] ?? 'ab'
 
