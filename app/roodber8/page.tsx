@@ -28,6 +28,7 @@ async function getStats() {
     { count: etSubscriberCount },
     { count: etOpenHelpCount },
     { count: articleCount },
+    { count: articleEtCount },
   ] = await Promise.all([
     supabase.from("contact_submissions").select("*", { count: "exact", head: true }).eq("platform", "ab"),
     supabase.from("email_subscribers").select("*", { count: "exact", head: true }).eq("platform", "ab"),
@@ -41,6 +42,7 @@ async function getStats() {
     supabase.from("email_subscribers").select("*", { count: "exact", head: true }).eq("platform", "et"),
     supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("platform", "et").eq("status", "open"),
     supabase.from("articles").select("*", { count: "exact", head: true }).contains("show_on_sites", ["ab"]),
+    supabase.from("articles").select("*", { count: "exact", head: true }).contains("show_on_sites", ["et"]),
   ])
 
   const { data: recentSubmissions } = await supabase
@@ -95,6 +97,7 @@ async function getStats() {
     etOpenHelpCount:     etOpenHelpCount     ?? 0,
     etRecentHelpRequests: (etRecentHelpRequests ?? []) as Array<{id: string; name: string; email: string; service_type: string; status: string; created_at: string}>,
     articleCount:        articleCount        ?? 0,
+    articleEtCount:      articleEtCount      ?? 0,
   }
 }
 
@@ -105,7 +108,7 @@ export default async function AdminCommandCentre() {
     {
       label: "Articles",
       value: stats.articleCount,
-      sub: stats.articleCount + " visible on AB",
+      sub: stats.articleCount + " on AB · " + stats.articleEtCount + " on ET",
       color: "#D4A017",
       bg: "rgba(212,160,23,0.08)",
       border: "rgba(212,160,23,0.2)",

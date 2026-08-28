@@ -67,7 +67,9 @@ export async function POST(req: NextRequest) {
       : ['accountingbody']
     const canonicalOwner = typeof body.canonicalOwner === 'string' ? body.canonicalOwner : 'accountingbody'
 
-    const showOnSitesCodes = showOnSites.map(s => SITE_CODE_MAP[s] ?? s)
+    const showOnSitesCodes = Array.from(new Set(
+      showOnSites.map(s => SITE_CODE_MAP[s] ?? s)
+    ))
     const platform = SITE_CODE_MAP[canonicalOwner] ?? canonicalOwner
 
     // Query the highest existing AB-ART-XXXXX content_id and use the next one in sequence

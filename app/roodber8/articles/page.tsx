@@ -48,7 +48,7 @@ async function getArticles(safeSearch: string, letter: string) {
     .from('articles')
     .select('id, title, slug, category, category_title, exam_body, status, show_on_sites, platform, published_at, created_at, author_name, read_time, difficulty')
     .order('created_at', { ascending: false })
-    .limit(2000)
+    .limit(3000)
 
   if (safeSearch) listQuery = listQuery.ilike('title', `%${safeSearch}%`)
   if (letter) listQuery = listQuery.ilike('title', `${letter}%`)
