@@ -108,20 +108,30 @@ export default async function QuestionsLibraryPage({
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SECRET_KEY!
   )
-  const [{ sets: posts, filteredCount }, { count: totalSets }] = await Promise.all([
+  const [
+    { sets: posts, filteredCount },
+    { count: totalSets },
+    { count: mcqCount },
+    { count: scenarioCount },
+    { count: writingCount },
+    { count: totalQsCount },
+  ] = await Promise.all([
     getQuestionSets(safeSearch, safeLetter, page),
-    supabaseForCount.from('question_sets')
-      .select('*', { count: 'exact', head: true }),
+    supabaseForCount.from('question_sets').select('*', { count: 'exact', head: true }),
+    supabaseForCount.from('question_sets').select('*', { count: 'exact', head: true })
+      .eq('question_type', 'multiple-choice'),
+    supabaseForCount.from('question_sets').select('*', { count: 'exact', head: true })
+      .eq('question_type', 'scenario'),
+    supabaseForCount.from('question_sets').select('*', { count: 'exact', head: true })
+      .eq('question_type', 'writing'),
+    supabaseForCount.from('questions').select('*', { count: 'exact', head: true }),
   ])
 
   const totalPages = Math.ceil(filteredCount / PAGE_SIZE)
   const isFiltered = !!(safeSearch || safeLetter)
 
-  const total         = totalSets ?? 0
-  const totalQs       = posts.reduce((sum, p) => sum + (p.question_count ?? 0), 0)
-  const mcqCount      = posts.filter(p => p.question_type === 'multiple-choice').length
-  const scenarioCount = posts.filter(p => p.question_type === 'scenario').length
-  const writingCount  = posts.filter(p => p.question_type === 'writing').length
+  const total   = totalSets ?? 0
+  const totalQs = totalQsCount ?? 0
 
   const prevPage = page > 1 ? page - 1 : null
   const nextPage = page < totalPages ? page + 1 : null
@@ -186,9 +196,9 @@ export default async function QuestionsLibraryPage({
         {[
           { label: 'Question Sets',   value: total,         color: '#D4A017', bg: 'rgba(212,160,23,0.08)',  border: 'rgba(212,160,23,0.2)',  icon: BookOpen   },
           { label: 'Total Questions', value: totalQs,       color: '#3b82f6', bg: 'rgba(59,130,246,0.08)',  border: 'rgba(59,130,246,0.2)',  icon: CheckCircle2 },
-          { label: 'MCQ Sets',        value: mcqCount,      color: '#10b981', bg: 'rgba(16,185,129,0.08)',  border: 'rgba(16,185,129,0.2)',  icon: FileText   },
-          { label: 'Scenario Sets',   value: scenarioCount, color: '#8b5cf6', bg: 'rgba(139,92,246,0.08)',  border: 'rgba(139,92,246,0.2)',  icon: Layers     },
-          { label: 'Writing Sets',    value: writingCount,  color: '#ec4899', bg: 'rgba(236,72,153,0.08)',  border: 'rgba(236,72,153,0.2)',  icon: PenLine    },
+          { label: 'MCQ Sets',        value: mcqCount ?? 0,      color: '#10b981', bg: 'rgba(16,185,129,0.08)',  border: 'rgba(16,185,129,0.2)',  icon: FileText   },
+          { label: 'Scenario Sets',   value: scenarioCount ?? 0, color: '#8b5cf6', bg: 'rgba(139,92,246,0.08)',  border: 'rgba(139,92,246,0.2)',  icon: Layers     },
+          { label: 'Writing Sets',    value: writingCount ?? 0,  color: '#ec4899', bg: 'rgba(236,72,153,0.08)',  border: 'rgba(236,72,153,0.2)',  icon: PenLine    },
         ].map(s => (
           <div key={s.label} className="rounded-2xl border p-5"
             style={{ background: s.bg, borderColor: s.border }}>

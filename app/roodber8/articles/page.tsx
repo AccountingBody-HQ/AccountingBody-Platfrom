@@ -96,31 +96,37 @@ export default async function ArticlesLibraryPage({
     process.env.SUPABASE_SECRET_KEY!
   )
 
-  const [{ articles, filteredCount }, { count: total }] = await Promise.all([
+  const [
+    { articles, filteredCount },
+    { count: total },
+    { count: publishedCount },
+    { count: draftCount },
+    { count: abContainsCount },
+    { count: bothSitesCount },
+  ] = await Promise.all([
     getArticles(safeSearch, safeLetter, page),
     supabase.from('articles').select('*', { count: 'exact', head: true }),
+    supabase.from('articles').select('*', { count: 'exact', head: true })
+      .eq('status', 'published'),
+    supabase.from('articles').select('*', { count: 'exact', head: true })
+      .eq('status', 'draft'),
+    supabase.from('articles').select('*', { count: 'exact', head: true })
+      .contains('show_on_sites', ['ab']),
+    supabase.from('articles').select('*', { count: 'exact', head: true })
+      .contains('show_on_sites', ['ab', 'et']),
   ])
+
+  const abOnlyCount = (abContainsCount ?? 0) - (bothSitesCount ?? 0)
 
   const totalPages = Math.ceil(filteredCount / PAGE_SIZE)
   const isFiltered = !!(safeSearch || safeLetter)
 
-  const publishedCount = articles.filter(a => a.status === 'published').length
-  const draftCount     = articles.filter(a => a.status === 'draft').length
-  const abOnlyCount    = articles.filter(a => {
-    const sites = a.show_on_sites ?? []
-    return sites.includes('ab') && !sites.includes('et')
-  }).length
-  const bothSitesCount = articles.filter(a => {
-    const sites = a.show_on_sites ?? []
-    return sites.includes('ab') && sites.includes('et')
-  }).length
-
   const STATS = [
-    { label: 'Total Articles', value: total ?? 0,        color: '#D4A017', bg: 'rgba(212,160,23,0.08)', border: 'rgba(212,160,23,0.2)' },
-    { label: 'Published',      value: publishedCount,    color: '#10b981', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)' },
-    { label: 'Draft',          value: draftCount,        color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)' },
-    { label: 'AB Only',        value: abOnlyCount,       color: '#3b82f6', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.2)' },
-    { label: 'Both Sites',     value: bothSitesCount,     color: '#8b5cf6', bg: 'rgba(139,92,246,0.08)', border: 'rgba(139,92,246,0.2)' },
+    { label: 'Total Articles', value: total ?? 0,           color: '#D4A017', bg: 'rgba(212,160,23,0.08)', border: 'rgba(212,160,23,0.2)' },
+    { label: 'Published',      value: publishedCount ?? 0,  color: '#10b981', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)' },
+    { label: 'Draft',          value: draftCount ?? 0,      color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)' },
+    { label: 'AB Only',        value: abOnlyCount,          color: '#3b82f6', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.2)' },
+    { label: 'Both Sites',     value: bothSitesCount ?? 0,  color: '#8b5cf6', bg: 'rgba(139,92,246,0.08)', border: 'rgba(139,92,246,0.2)' },
   ]
 
   const prevPage = page > 1 ? page - 1 : null
