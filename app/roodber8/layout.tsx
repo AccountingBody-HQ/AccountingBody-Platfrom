@@ -19,7 +19,8 @@ const NAV = [
   { href: '/roodber8/questions',        exact: false, icon: BookOpen,        label: 'Questions',       sub: 'Generate and manage MCQs'  },
   { href: '/roodber8/articles',        exact: false, icon: FileText,        label: 'Articles',        sub: 'Manage and import content' },
   { href: '/roodber8/content-factory', exact: false, icon: Factory,         label: 'Content Factory', sub: 'AI content generation'     },
-  { href: '/roodber8/course-factory',   exact: false, icon: BookOpen,        label: 'Course Factory',  sub: 'Assemble structured courses' },
+  { href: '/roodber8/courses',          exact: false, icon: BookOpen,        label: 'Courses',         sub: 'Manage and publish courses'  },
+  { href: '/roodber8/course-factory',   exact: false, icon: Factory,         label: 'Course Factory',  sub: 'Assemble structured courses' },
   { href: '/roodber8/ab-press',         exact: false, icon: BookOpen,        label: 'AB Press',        sub: 'Generate KDP-ready books'    },
   { href: '/roodber8/settings',        exact: false, icon: Settings,        label: 'Settings',        sub: 'Environment & checklist'   },
 ]
@@ -45,6 +46,7 @@ function getBreadcrumb(pathname: string) {
     '/roodber8/content-factory':    'Content Factory',
     '/roodber8/articles':           'Articles',
     '/roodber8/articles/import':    'Import Article',
+    '/roodber8/courses':            'Courses',
     '/roodber8/course-factory':     'Course Factory',
     '/roodber8/ab-press':           'AB Press',
   }
@@ -56,6 +58,9 @@ function getBreadcrumb(pathname: string) {
   }
   if (segments[1] === 'roodber8' && segments[2] === 'articles' && segments[3] && UUID_RE.test(segments[3])) {
     return 'Edit Article'
+  }
+  if (segments[1] === 'roodber8' && segments[2] === 'courses' && segments[3] && UUID_RE.test(segments[3])) {
+    return 'Edit Course'
   }
 
   const base = '/' + segments.slice(1, 3).join('/')

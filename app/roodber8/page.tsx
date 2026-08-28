@@ -31,6 +31,8 @@ async function getStats() {
     { count: articleEtCount },
     { count: questionSetsCount },
     { count: questionsCount },
+    { count: publishedCoursesCount },
+    { count: totalCoursesCount },
   ] = await Promise.all([
     supabase.from("contact_submissions").select("*", { count: "exact", head: true }).eq("platform", "ab"),
     supabase.from("email_subscribers").select("*", { count: "exact", head: true }).eq("platform", "ab"),
@@ -47,6 +49,8 @@ async function getStats() {
     supabase.from("articles").select("*", { count: "exact", head: true }).contains("show_on_sites", ["et"]),
     supabase.from("question_sets").select("*", { count: "exact", head: true }),
     supabase.from("questions").select("*", { count: "exact", head: true }),
+    supabase.from("courses").select("*", { count: "exact", head: true }).eq("status", "published"),
+    supabase.from("courses").select("*", { count: "exact", head: true }),
   ])
 
   const { data: recentSubmissions } = await supabase
@@ -104,6 +108,8 @@ async function getStats() {
     articleEtCount:      articleEtCount      ?? 0,
     questionSetsCount:   questionSetsCount   ?? 0,
     questionsCount:      questionsCount      ?? 0,
+    publishedCoursesCount: publishedCoursesCount ?? 0,
+    totalCoursesCount:     totalCoursesCount     ?? 0,
   }
 }
 
@@ -162,6 +168,16 @@ export default async function AdminCommandCentre() {
       href: "/roodber8/jobs-firms",
     },
     {
+      label: "Courses",
+      value: stats.publishedCoursesCount,
+      sub: stats.totalCoursesCount + " total · " + stats.publishedCoursesCount + " published",
+      color: "#14b4a3",
+      bg: "rgba(20,180,163,0.08)",
+      border: "rgba(20,180,163,0.2)",
+      icon: BookOpen,
+      href: "/roodber8/courses",
+    },
+    {
       label: "Question Sets",
       value: stats.questionSetsCount,
       sub: stats.questionsCount + " total questions",
@@ -190,6 +206,7 @@ export default async function AdminCommandCentre() {
     { label: "Jobs & Firms",       sub: "Listings & applications",  href: "/roodber8/jobs-firms",      icon: Briefcase,   color: "#8b5cf6" },
     { label: "Questions",          sub: "Generate practice questions",href: "/roodber8/questions",       icon: HelpCircle,  color: "#D4A017" },
     { label: "Articles",           sub: "Manage and import study content", href: "/roodber8/articles",   icon: FileText,    color: "#D4A017" },
+    { label: "Courses",            sub: "Manage and publish structured courses", href: "/roodber8/courses", icon: BookOpen, color: "#14b4a3" },
     { label: "Course Factory",     sub: "Assemble structured courses", href: "/roodber8/course-factory",  icon: Factory,     color: "#14b4a3" },
     { label: "AB Press",           sub: "Generate KDP-ready study books", href: "/roodber8/ab-press",        icon: BookOpen,    color: "#D4A017" },
   ]
