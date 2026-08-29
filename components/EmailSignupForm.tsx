@@ -79,13 +79,20 @@ export default function EmailSignupForm() {
         <input type="text" value={honeypot} onChange={e => setHoneypot(e.target.value)} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
         {/* Turnstile invisible widget */}
         <div
+          id="turnstile-container"
           ref={(el) => {
-            if (el && window.turnstile && !turnstileWidgetId.current) {
-              turnstileWidgetId.current = window.turnstile.render(el, {
-                sitekey: (typeof window !== "undefined" && window.location.hostname.includes("ethiotax.com")) ? "0x4AAAAADwBt_NeRfGCSU-0" : "0x4AAAAAAB6YVvZ_yKyzZHLp",
-                size: 'invisible',
-              })
+            if (!el || turnstileWidgetId.current) return
+            const sitekey = window.location.hostname.includes("ethiotax.com")
+              ? "0x4AAAAADwBt_NeRfGCSU-0"
+              : "0x4AAAAAAB6YVvZ_yKyzZHLp"
+            const tryRender = () => {
+              if (window.turnstile) {
+                turnstileWidgetId.current = window.turnstile.render(el, { sitekey, size: "invisible" })
+              } else {
+                setTimeout(tryRender, 100)
+              }
             }
+            tryRender()
           }}
         />
         {status === 'error' && (
