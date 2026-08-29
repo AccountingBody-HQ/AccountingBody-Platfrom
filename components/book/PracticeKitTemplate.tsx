@@ -154,11 +154,6 @@ function parseExplanation(raw: string): ParsedExplanation {
   return result
 }
 
-function cleanLessonTitle(title: string): string {
-  // Remove "Ch N: " or "Ch N. " prefix from lesson titles
-  return title.replace(/^Ch\s+\d+[:.]\s*/i, '').trim()
-}
-
 function truncate(text: string, max: number): string {
   const t = sanitise(text)
   return t.length > max ? t.slice(0, max - 1).trimEnd() + "..." : t
@@ -170,7 +165,7 @@ function truncate(text: string, max: number): string {
 interface LessonQuestions {
   li: number
   lesson: any
-  questions: { q: any; num: number; localNum: number }[]
+  questions: { q: any; num: number }[]
 }
 interface ChapterQuestions {
   ci: number
@@ -187,7 +182,6 @@ function buildQuestionIndex(course: any): { chapters: ChapterQuestions[]; totalQ
     const ch = allChapters[ci]
     const lessons: LessonQuestions[] = []
     let chapterTotal = 0
-    let chapterLocalN = 0
     const allLessons = ch.lessons || []
     for (let li = 0; li < allLessons.length; li++) {
       const ls = allLessons[li]
@@ -198,7 +192,7 @@ function buildQuestionIndex(course: any): { chapters: ChapterQuestions[]; totalQ
         }
       }
       if (raw.length === 0) continue
-      const questions = raw.map((q) => ({ q, num: ++globalN, localNum: ++chapterLocalN }))
+      const questions = raw.map((q) => ({ q, num: ++globalN }))
       chapterTotal += questions.length
       lessons.push({ li, lesson: ls, questions })
     }
@@ -262,7 +256,6 @@ const s = StyleSheet.create({
   tocTitle: { fontSize: 18, fontFamily: "BookSans-Bold", color: "#0C1A3D", marginBottom: 20 },
   tocChapterRow: { marginBottom: 8 },
   tocChapterText: { fontSize: 10, fontFamily: "BookSans-Bold", color: "#0C1A3D" },
-  tocChapterSubtitle: { fontSize: 9, color: "#555555", marginTop: 1 },
   tocLessonRow: { paddingLeft: 14, marginBottom: 3 },
   tocLessonText: { fontSize: 9, color: "#555555" },
   dotLeader: {
@@ -307,10 +300,10 @@ const s = StyleSheet.create({
   },
   topicTitle: { fontSize: 13, fontFamily: "BookSans-Bold", color: "#0C1A3D", marginBottom: 4 },
   topicMeta: { fontSize: 9, color: "#777777", marginBottom: 6 },
-  topicRule: { borderBottomWidth: 0.5, borderBottomColor: "#D4A017", marginBottom: 10 },
+  topicRule: { borderBottomWidth: 0.5, borderBottomColor: "#D4A017", marginBottom: 14 },
   // Question block
   questionOuter: {
-    marginBottom: 12, paddingLeft: 12, paddingTop: 8, paddingBottom: 8,
+    marginBottom: 16, paddingLeft: 12, paddingTop: 10, paddingBottom: 10,
     borderLeftWidth: 3, borderLeftColor: "#D4A017", backgroundColor: "#fafafa",
   },
   questionOuterScenario: { borderLeftColor: "#C9982A" },
@@ -438,16 +431,15 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap }: Prac
           <View key={chapter._key || ci}>
             <View style={s.tocChapterRow}>
               <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
-                <Text style={s.tocChapterText}>Chapter {ci + 1}</Text>
+                <Text style={s.tocChapterText}>Chapter {ci + 1}: {sanitise(chapter.chapterTitle)}</Text>
                 <View style={s.dotLeader} />
                 <Text style={s.tocChapterText}>{pageFor("ch-" + ci)}</Text>
               </View>
-              <Text style={s.tocChapterSubtitle}>{sanitise(chapter.chapterTitle)}</Text>
             </View>
             {lessons.map(({ li, lesson }) => (
               <View key={lesson._id || li} style={s.tocLessonRow}>
                 <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
-                  <Text style={s.tocLessonText}>{cleanLessonTitle(sanitise(lesson.title))}</Text>
+                  <Text style={s.tocLessonText}>{sanitise(lesson.title)}</Text>
                   <View style={s.dotLeader} />
                   <Text style={s.tocLessonText}>{pageFor("lesson-" + ci + "-" + li)}</Text>
                 </View>
@@ -466,12 +458,11 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap }: Prac
 
       {/* ── 4. Chapters ──────────────────────────────────────────────────────── */}
       {qIndex.map(({ ci, chapter, lessons, totalQuestions: chapterTotalQ }) => (
-        <React.Fragment key={chapter._key || ci}>
-        {/* 4a. Chapter opener — its own Page */}
-        <Page size={[W, H]} style={s.page}>
+        <Page key={chapter._key || ci} size={[W, H]} style={s.page}>
           <Text style={s.runningHead} fixed>{sanitise(subtitle)}</Text>
           <View style={s.runningLine} fixed />
 
+          {/* 4a. Chapter opener */}
           <View style={s.chapterWrap}>
             <Text style={s.chapterLabel}>Chapter {ci + 1}</Text>
             <Text style={s.chapterTitle}>{sanitise(chapter.chapterTitle)}</Text>
@@ -493,7 +484,7 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap }: Prac
             </View>
             {lessons.map(({ li, lesson, questions }, idx) => (
               <View key={lesson._id || li} style={[s.tableRow, idx % 2 === 1 ? s.tableRowAlt : {}]}>
-                <Text style={[s.tableCell, { flex: 2 }]}>{truncate(cleanLessonTitle(lesson.title), 45)}</Text>
+                <Text style={[s.tableCell, { flex: 2 }]}>{truncate(lesson.title, 45)}</Text>
                 <Text style={[s.tableCell, s.tableCellRight, { flex: 1 }]}>{questions.length}</Text>
                 <Text style={[s.tableCell, s.tableCellRight, { flex: 1 }]}>{questions.length * 2}</Text>
                 <Text style={[s.tableCell, s.tableCellRight, { flex: 1 }]}>{questions.length * 2} mins</Text>
@@ -507,24 +498,17 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap }: Prac
             </View>
           </View>
 
-          <Text style={s.pageNum} render={({ pageNumber }) => String(pageNumber)} fixed />
-        </Page>
-
-        {/* 4b. Lessons and questions — separate Page(s) */}
-        <Page size={[W, H]} style={s.page}>
-          <Text style={s.runningHead} fixed>{sanitise(subtitle)}</Text>
-          <View style={s.runningLine} fixed />
-
+          {/* 4b. Topics and questions */}
           {lessons.map(({ li, lesson, questions }) => (
             <View key={lesson._id || li}>
               <View style={{ marginTop: 20 }} minPresenceAhead={120} wrap={false}>
                 <Text style={s.topicLabel}>Topic {ci + 1}.{li + 1}</Text>
-                <Text style={s.topicTitle}>{cleanLessonTitle(sanitise(lesson.title))}</Text>
+                <Text style={s.topicTitle}>{sanitise(lesson.title)}</Text>
                 <Text style={s.topicMeta}>{questions.length} questions  |  {questions.length * 2} marks  |  ~{questions.length * 2} minutes</Text>
                 <View style={s.topicRule} />
               </View>
 
-              {questions.map(({ q, num, localNum }) => {
+              {questions.map(({ q, num }) => {
                 const rawText = sanitise(q.questionText || "")
                 const isScenario = rawText.startsWith("SCENARIO:")
                 const displayText = isScenario ? rawText.slice("SCENARIO:".length).trim() : rawText
@@ -532,11 +516,11 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap }: Prac
                   <View
                     key={num}
                     style={[s.questionOuter, isScenario ? s.questionOuterScenario : {}]}
-                    minPresenceAhead={60}
+                    wrap={false}
                   >
                     {isScenario ? <Text style={s.scenarioLabel}>Scenario Question</Text> : null}
-                    <View style={s.questionHeaderRow} wrap={false}>
-                      <Text style={s.questionNum}>Q{localNum}</Text>
+                    <View style={s.questionHeaderRow}>
+                      <Text style={s.questionNum}>Q{num}</Text>
                       <Text style={s.questionMeta}>2 marks  |  ~2 mins</Text>
                     </View>
                     <Text style={s.questionText}>{displayText}</Text>
@@ -559,7 +543,6 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap }: Prac
 
           <Text style={s.pageNum} render={({ pageNumber }) => String(pageNumber)} fixed />
         </Page>
-        </React.Fragment>
       ))}
 
       {/* ── 5. Answers and Explanations ──────────────────────────────────────── */}
@@ -576,23 +559,23 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap }: Prac
           Work through the answers only after you have attempted the questions. For each incorrect answer, identify whether the error was conceptual (re-read the relevant study material) or a misreading of the question (review your exam technique).
         </Text>
 
-        {qIndex.map(({ ci, chapter, lessons, totalQuestions: chapterTotalQ }) => (
+        {qIndex.map(({ ci, chapter, lessons }) => (
           <View key={chapter._key || ci}>
-            <Text style={s.ansChapterHeader}>Chapter {ci + 1}: {sanitise(chapter.chapterTitle)}  ({chapterTotalQ} questions)</Text>
+            <Text style={s.ansChapterHeader}>Chapter {ci + 1}: {sanitise(chapter.chapterTitle)}</Text>
             <View style={s.ansChapterRule} />
 
             {lessons.map(({ li, lesson, questions }) => (
               <View key={lesson._id || li}>
-                <Text style={s.ansTopicHeader}>Topic {ci + 1}.{li + 1}: {cleanLessonTitle(sanitise(lesson.title))}</Text>
+                <Text style={s.ansTopicHeader}>Topic {ci + 1}.{li + 1}: {sanitise(lesson.title)}</Text>
 
-                {questions.map(({ q, num, localNum }, qi) => {
+                {questions.map(({ q, num }, qi) => {
                   const parsed = parseExplanation(sanitise(q.explanation || ""))
                   const letter = LETTERS[q.correctIndex ?? 0]
                   const isLast = qi === questions.length - 1
                   return (
                     <View key={num} style={s.ansBlockWrap}>
                       <View style={s.ansHeaderRow}>
-                        <Text style={s.ansQNum}>Q{localNum}:</Text>
+                        <Text style={s.ansQNum}>Q{num}:</Text>
                         <View style={s.ansCircle}>
                           <Text style={s.ansCircleText}>{letter}</Text>
                         </View>
@@ -601,7 +584,7 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap }: Prac
                       {parsed.concept ? <Text style={s.conceptText}>{parsed.concept}</Text> : null}
 
                       {parsed.caseWalkthrough ? [
-                        <Text key="wl" style={s.workedLabel}>Solution:</Text>,
+                        <Text key="wl" style={s.workedLabel}>Worked:</Text>,
                         <Text key="wt" style={s.workedText}>{parsed.caseWalkthrough}</Text>,
                       ] : null}
 

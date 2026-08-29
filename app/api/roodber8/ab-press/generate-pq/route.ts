@@ -206,15 +206,15 @@ async function isAuthenticated(req: NextRequest): Promise<boolean> {
 // Calibrated for 6x9, 10pt body, 1.75 leading.
 function estimatePQPageMap(course: any, bookType: string): Record<string, number> {
   void bookType // kept in the signature for parity with the caller; PQ estimation doesn't branch on book type
-  const PAGE_HEIGHT_LINES = 36        // usable lines per page
-  const CHARS_PER_LINE = 60           // chars per line at 6in minus margins
-  const CHAPTER_OPENER_PAGES = 2      // chapter opener often spills to 2 pages
-  const LESSON_HEADER_LINES = 6       // topic header block
-  const QUESTION_BASE_LINES = 6       // Q label + marks line + gap
-  const CHARS_PER_OPTION_LINE = 48    // options are indented, narrower
-  const ANSWER_BASE_LINES = 4         // Q label + answer letter block + gap
-  const ANSWER_CHARS_PER_LINE = 55    // answers slightly narrower due to indent
-  const FIXED_PAGES_BEFORE_CHAPTERS = 4  // title + how-to-use + TOC + blank
+  const PAGE_HEIGHT_LINES = 42        // usable lines per page
+  const CHARS_PER_LINE = 68           // chars per line at 6in minus margins
+  const CHAPTER_OPENER_PAGES = 1      // chapter opener always ~1 page
+  const LESSON_HEADER_LINES = 4       // topic header block
+  const QUESTION_BASE_LINES = 5       // Q label + marks line + gap
+  const CHARS_PER_OPTION_LINE = 55    // options are indented, narrower
+  const ANSWER_BASE_LINES = 3         // Q label + answer letter block + gap
+  const ANSWER_CHARS_PER_LINE = 62    // answers slightly narrower due to indent
+  const FIXED_PAGES_BEFORE_CHAPTERS = 3  // title + how-to-use + TOC
 
   function linesForText(text: string, charsPerLine: number): number {
     if (!text || !text.trim()) return 0
@@ -265,7 +265,7 @@ function estimatePQPageMap(course: any, bookType: string): Record<string, number
         const qLines = linesForQuestion(q)
         lineAcc += qLines
       }
-      currentPage += Math.ceil(lineAcc / PAGE_HEIGHT_LINES * 1.15)
+      currentPage += Math.ceil(lineAcc / PAGE_HEIGHT_LINES)
     }
   }
 
@@ -287,7 +287,7 @@ function estimatePQPageMap(course: any, bookType: string): Record<string, number
         lineAcc += linesForAnswer(q)
       }
     }
-    currentPage += Math.ceil(lineAcc / PAGE_HEIGHT_LINES * 1.15)
+    currentPage += Math.ceil(lineAcc / PAGE_HEIGHT_LINES)
   }
 
   return sectionMap
