@@ -11,7 +11,7 @@ declare global {
   }
 }
 
-export default function EmailSignupForm() {
+export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: boolean }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [email, setEmail] = useState('')
   const [honeypot, setHoneypot] = useState('')
@@ -82,7 +82,7 @@ export default function EmailSignupForm() {
           ref={(el) => {
             if (el && window.turnstile && !turnstileWidgetId.current) {
               turnstileWidgetId.current = window.turnstile.render(el, {
-                sitekey: (typeof document !== 'undefined' && document.cookie.includes('x-et-platform=ethiotax')) ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? ''),
+                sitekey: isEthioTax ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? ''),
                 size: 'invisible',
               })
             }
