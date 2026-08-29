@@ -8,7 +8,7 @@ import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { BookTemplate } from "@/components/book/BookTemplate"
 import { FullCoverTemplate } from "@/components/book/FullCoverTemplate"
-import { buildCourse } from "@/lib/ab-press-builder"
+import { buildCourse, createSupabaseClient } from "@/lib/ab-press-builder"
 
 export const maxDuration = 300
 
@@ -258,6 +258,65 @@ export async function POST(req: NextRequest) {
       { name: "metadata.txt",         data: metaBuffer      },
       { name: "preflight-report.txt", data: preflightBuffer },
     ])
+
+    // ── Record publication state (Phase 5) ──────────────────────────────────
+    // Best-effort: the ZIP is already built, so a logging/DB failure here
+    // must never fail the request — the admin still gets their download.
+    try {
+      const chapterCount = course.chapters.length
+      let lessonCount = 0
+      let articleCount = 0
+      let questionCount = 0
+      let articlesWithWebElements = 0
+      let emptyArticles = 0
+
+      for (const ch of course.chapters) {
+        for (const ls of (ch.lessons || [])) {
+          lessonCount++
+          for (const art of (ls.linkedArticles || [])) {
+            articleCount++
+            questionCount += (art.quizQuestions || []).length
+            const pubWarnings: string[] = (art.publicationWarnings || []).filter((w: string) => !w.startsWith("Total:"))
+            if (pubWarnings.length > 0) articlesWithWebElements++
+            const body = art.body || []
+            const hasContent = body.some((b: any) => (b.children || []).some((c: any) => c.text?.trim()))
+            if (!hasContent) emptyArticles++
+          }
+        }
+      }
+
+      const preflightStr    = preflightBuffer.toString()
+      const kdpReady        = preflightStr.includes("VERDICT: KDP-READY")
+      const preflightVerdict = preflightStr.split("\n").find((l) => l.startsWith("VERDICT:")) ?? ""
+      const contentHash = await sha256Hex(
+        course.slug + "|" + String(articleCount) + "|" + String(questionCount) + "|" + new Date().toISOString().slice(0, 19)
+      )
+
+      const sb = createSupabaseClient()
+      const { error: insertError } = await sb.from("book_publications").insert({
+        course_slug: course.slug,
+        course_title: course.title,
+        book_type: bookType,
+        edition: edition || "2026/27 Edition",
+        subtitle: subtitle || course.title,
+        page_count: pageCount,
+        chapter_count: chapterCount,
+        lesson_count: lessonCount,
+        article_count: articleCount,
+        question_count: questionCount,
+        kdp_ready: kdpReady,
+        preflight_verdict: preflightVerdict,
+        content_hash: contentHash,
+        articles_with_web_elements: articlesWithWebElements,
+        empty_articles: emptyArticles,
+        platform: "ab",
+      })
+      if (insertError) {
+        console.error("ab-press/generate: book_publications insert failed:", insertError)
+      }
+    } catch (err) {
+      console.error("ab-press/generate: book_publications insert threw:", err)
+    }
 
     return new NextResponse(new Uint8Array(zip), {
       status: 200,

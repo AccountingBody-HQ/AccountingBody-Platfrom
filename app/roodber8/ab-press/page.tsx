@@ -9,6 +9,16 @@ const BOOK_TYPES = [
 ]
 const EDITIONS = ['2025/26 Edition', '2026/27 Edition', '2027/28 Edition']
 
+function formatGeneratedAt(iso: string): string {
+  const d = new Date(iso)
+  const day   = d.getDate()
+  const month = d.toLocaleString('en-GB', { month: 'short' })
+  const year  = d.getFullYear()
+  const hh    = String(d.getHours()).padStart(2, '0')
+  const mm    = String(d.getMinutes()).padStart(2, '0')
+  return `${day} ${month} ${year}, ${hh}:${mm}`
+}
+
 export default function AbPressPage() {
   const [courses,     setCourses]     = useState([] as any[])
   const [slug,        setSlug]        = useState('')
@@ -17,6 +27,7 @@ export default function AbPressPage() {
   const [subtitle,    setSubtitle]    = useState('')
   const [preview,     setPreview]     = useState(null as any)
   const [health,      setHealth]      = useState(null as any)
+  const [history,     setHistory]     = useState(null as any)
   const [showEmptyList,   setShowEmptyList]   = useState(false)
   const [showWebWarnings, setShowWebWarnings] = useState(false)
   const [loading,     setLoading]     = useState(false)
@@ -46,13 +57,13 @@ export default function AbPressPage() {
     const selected = courses.find((c: any) => c.slug === e.target.value)
     setSlug(e.target.value)
     if (selected) setSubtitle(selected.title)
-    setPreview(null); setHealth(null); setShowEmptyList(false); setShowWebWarnings(false)
+    setPreview(null); setHealth(null); setHistory(null); setShowEmptyList(false); setShowWebWarnings(false)
     setDownloadUrl(''); setError(''); setGenError('')
   }
 
   const handlePreview = async () => {
     if (!slug.trim()) { setError('Select a course first'); return }
-    setLoading(true); setError(''); setPreview(null); setHealth(null)
+    setLoading(true); setError(''); setPreview(null); setHealth(null); setHistory(null)
     setShowEmptyList(false); setShowWebWarnings(false)
     setDownloadUrl(''); setGenError('')
     try {
@@ -61,6 +72,7 @@ export default function AbPressPage() {
       if (!res.ok) { setError(data.error || 'Preview failed'); return }
       setPreview(data)
       setHealth(data.health ?? null)
+      setHistory(data.history ?? [])
       if (!subtitle) setSubtitle(data.course?.title || '')
     } catch {
       setError('Network error - could not load preview')
@@ -416,6 +428,49 @@ export default function AbPressPage() {
                 >
                   {exportingWord ? 'Exporting Word...' : 'Export as Word (.docx)'}
                 </button>
+              )}
+            </div>
+          ) : null}
+
+          {/* Publication History */}
+          {history !== null ? (
+            <div className="bg-[#081428] rounded-xl p-6 border border-slate-700">
+              <h2 className="text-sm font-semibold text-[#D4A017] uppercase tracking-wide mb-4">Publication History</h2>
+              {history.length === 0 ? (
+                <p className="text-slate-500 text-sm">No books generated yet for this course.</p>
+              ) : (
+                <div>
+                  {history.slice(0, 5).map((h: any) => (
+                    <div key={h.id} className="bg-[#0C1A3D] border border-slate-700 rounded-lg p-3 mb-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-white text-sm font-medium">
+                          {BOOK_TYPES.find(b => b.value === h.bookType)?.label || h.bookType}
+                        </p>
+                        <p className="text-slate-400 text-xs">{h.edition}</p>
+                      </div>
+                      <p className="text-slate-400 text-xs mt-1">
+                        {h.subtitle && h.subtitle.length > 50 ? h.subtitle.slice(0, 50) + '…' : h.subtitle}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        <span className="text-slate-300 text-xs">{h.pageCount ?? '—'} pages</span>
+                        <span
+                          className="px-2 py-0.5 rounded text-xs font-medium"
+                          style={
+                            h.kdpReady
+                              ? { backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }
+                              : { backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }
+                          }
+                        >
+                          {h.kdpReady ? 'KDP Ready' : 'Not Ready'}
+                        </span>
+                        <span className="text-slate-500 text-xs">{formatGeneratedAt(h.generatedAt)}</span>
+                      </div>
+                      {h.contentHash ? (
+                        <p className="text-slate-600 text-xs font-mono mt-1">{String(h.contentHash).slice(0, 12)}</p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           ) : null}

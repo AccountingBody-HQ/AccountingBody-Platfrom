@@ -139,6 +139,39 @@ export async function GET(req: NextRequest) {
       articlesWithWebElements > 0 ? 'warnings' :
       'ready'
 
+    // ── Publication history (Phase 5) ───────────────────────────────────────
+    // Best-effort: a missing/broken book_publications table must never fail
+    // the preview request — just fall back to an empty history list.
+    let history: any[] = []
+    try {
+      const { data: historyRows } = await supabase
+        .from('book_publications')
+        .select('id, book_type, edition, subtitle, page_count, article_count, question_count, kdp_ready, preflight_verdict, content_hash, articles_with_web_elements, empty_articles, generated_at')
+        .eq('course_slug', slug)
+        .eq('platform', 'ab')
+        .order('generated_at', { ascending: false })
+        .limit(5)
+
+      history = (historyRows ?? []).map(r => ({
+        id: r.id,
+        bookType: r.book_type,
+        edition: r.edition,
+        subtitle: r.subtitle,
+        pageCount: r.page_count,
+        articleCount: r.article_count,
+        questionCount: r.question_count,
+        kdpReady: r.kdp_ready,
+        preflightVerdict: r.preflight_verdict,
+        contentHash: r.content_hash,
+        articlesWithWebElements: r.articles_with_web_elements,
+        emptyArticles: r.empty_articles,
+        generatedAt: r.generated_at,
+      }))
+    } catch (err) {
+      console.error('ab-press/preview: book_publications history query threw:', err)
+      history = []
+    }
+
     // Return in shape the AB Press UI expects
     return NextResponse.json({
       course: {
@@ -181,6 +214,7 @@ export async function GET(req: NextRequest) {
         emptyList,
         webWarningDetails,
       },
+      history,
     })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
