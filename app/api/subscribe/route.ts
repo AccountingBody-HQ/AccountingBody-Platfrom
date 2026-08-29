@@ -30,10 +30,10 @@ export async function POST(req: NextRequest) {
 
     const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for") ?? ""
 
-    // Turnstile is now mandatory — reject if missing or invalid
-    if (!turnstileToken) return NextResponse.json({ success: true })
-    const valid = await verifyTurnstile(turnstileToken, ip, isET)
-    if (!valid) return NextResponse.json({ success: true })
+    if (turnstileToken) {
+      const valid = await verifyTurnstile(turnstileToken, ip, isET)
+      if (!valid) return NextResponse.json({ success: true })
+    }
 
     const BLOCKED = [
       "mailinator.com", "guerrillamail.com", "trashmail.com", "tempmail.com",
