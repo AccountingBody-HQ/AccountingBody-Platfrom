@@ -2,17 +2,19 @@ import { NextRequest, NextResponse } from "next/server"
 import { Resend } from "resend"
 import { SignJWT } from "jose"
 
-async function verifyTurnstile(token: string, ip: string, isET: boolean): Promise<boolean> {
+async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
   if (!token) return false
-  const secret = isET ? process.env.TURNSTILE_SECRET_KEY : process.env.TURNSTILE_SECRET_KEY_AB
-  if (!secret) return false
-  const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ secret, response: token, remoteip: ip }),
-  })
-  const data = await res.json()
-  return data.success === true
+  const secrets = [process.env.TURNSTILE_SECRET_KEY, process.env.TURNSTILE_SECRET_KEY_AB].filter(Boolean)
+  for (const secret of secrets) {
+    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ secret, response: token, remoteip: ip }),
+    })
+    const data = await res.json()
+    if (data.success === true) return true
+  }
+  return false
 }
 
 export async function POST(req: NextRequest) {
@@ -33,7 +35,7 @@ export async function POST(req: NextRequest) {
 
     // Turnstile is mandatory
     if (!turnstileToken) return NextResponse.json({ success: true })
-    const valid = await verifyTurnstile(turnstileToken, ip, isET)
+    const valid = await verifyTurnstile(turnstileToken, ip)
     if (!valid) return NextResponse.json({ success: true })
 
     const BLOCKED = [
