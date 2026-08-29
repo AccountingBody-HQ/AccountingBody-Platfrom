@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     .single()
 
   if (existing?.status === "subscribed") {
-    return NextResponse.redirect("https://" + brand.domain + "/?confirmed=already")
+    return NextResponse.redirect("https://" + brand.domain + "/?confirmed=already", { headers: { "cache-control": "no-store, no-cache, must-revalidate" } })
   }
 
   const { error: upsertError } = await supabase
@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
 
   if (upsertError) {
     console.error("Confirm subscription error:", upsertError)
-    return NextResponse.redirect("https://" + brand.domain + "/?confirmed=error")
+    return NextResponse.redirect("https://" + brand.domain + "/?confirmed=error", { headers: { "cache-control": "no-store, no-cache, must-revalidate" } })
   }
 
   try {
@@ -69,5 +69,5 @@ export async function GET(req: NextRequest) {
     console.error("Admin notification error:", emailError)
   }
 
-  return NextResponse.redirect("https://" + brand.domain + "/?confirmed=true")
+  return NextResponse.redirect("https://" + brand.domain + "/?confirmed=true", { headers: { "cache-control": "no-store, no-cache, must-revalidate" } })
 }
