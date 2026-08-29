@@ -71,7 +71,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   const requestHeaders = new Headers(req.headers)
   const forwardedHost = req.headers.get('x-forwarded-host') ?? ''
   const host = req.headers.get('host') ?? ''
-  const isEthioTax = forwardedHost.includes('ethiotax.com') || host.includes('ethiotax.com')
+  const isEthioTax = forwardedHost.includes('ethiotax.com') || host.includes('ethiotax.com') || req.headers.get('x-et-platform') === 'ethiotax'
   if (isEthioTax) {
     requestHeaders.set('x-et-platform', 'ethiotax')
   }
