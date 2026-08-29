@@ -282,7 +282,7 @@ function ArticleCard({ article }: { article: FeaturedArticle }) {
     </article>
   )
 }
-function EmailSignupSection({ isEthioTax = false }: { isEthioTax?: boolean }) {
+function EmailSignupSection() {
   return (
     <section className="section-navy section relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -1993,7 +1993,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       {/* ════════════════════════════════════════════════════════════════
           11. EMAIL SIGNUP
           ════════════════════════════════════════════════════════════════ */}
-      <EmailSignupSection isEthioTax={isEthioTax} />
+      <EmailSignupSection />
 
       {/* ════════════════════════════════════════════════════════════════
           12. BOTTOM CTA
