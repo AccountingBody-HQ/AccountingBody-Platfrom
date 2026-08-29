@@ -21,7 +21,10 @@ Font.register({
 })
 Font.register({
   family: "BookSans-Bold",
-  src: FONT_BASE + "/LiberationSans-Bold.ttf",
+  fonts: [
+    { src: FONT_BASE + "/LiberationSans-Bold.ttf" },
+    { src: FONT_BASE + "/LiberationSans-BoldItalic.ttf", fontStyle: "italic" },
+  ],
 })
 
 // ── Dimensions ──────────────────────────────────────────────────────────────
