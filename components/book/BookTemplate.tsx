@@ -21,10 +21,7 @@ Font.register({
 })
 Font.register({
   family: "BookSans-Bold",
-  fonts: [
-    { src: FONT_BASE + "/LiberationSans-Bold.ttf" },
-    { src: FONT_BASE + "/LiberationSans-BoldItalic.ttf", fontStyle: "italic" },
-  ],
+  src: FONT_BASE + "/LiberationSans-Bold.ttf",
 })
 
 // ── Dimensions ──────────────────────────────────────────────────────────────
@@ -258,8 +255,14 @@ function renderSpans(children: any[]): React.ReactNode {
       }
     }
     const style: any = {}
-    if (isBold)   style.fontFamily  = "BookSans-Bold"
-    if (isItalic) style.fontStyle   = "italic"
+    if (isBold) {
+      style.fontFamily = "BookSans-Bold"
+      // Bold-italic not available (no BoldItalic TTF in public/fonts).
+      // Bold takes priority — italic is suppressed on bold spans to prevent
+      // react-pdf throwing "Could not resolve font for BookSans-Bold italic".
+    } else if (isItalic) {
+      style.fontStyle = "italic"
+    }
     nodes.push(<Text key={i} style={style}>{raw}</Text>)
     lastRenderedText = raw
   })
