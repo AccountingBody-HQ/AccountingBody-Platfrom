@@ -502,11 +502,10 @@ interface BookTemplateProps {
   edition:  string
   subtitle: string
   pageMap?: Record<number, number>
-  onChapterPage?: (ci: number, page: number) => void
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export function BookTemplate({ course, bookType, edition, subtitle, pageMap, onChapterPage }: BookTemplateProps) {
+export function BookTemplate({ course, bookType, edition, subtitle, pageMap }: BookTemplateProps) {
   const year         = new Date().getFullYear()
   const showNotes    = bookType === "combined" || bookType === "study"
   const showQuestions = bookType === "combined" || bookType === "practice"
@@ -615,7 +614,6 @@ export function BookTemplate({ course, bookType, edition, subtitle, pageMap, onC
 
           {/* Chapter header */}
           <View style={s.chapterWrap}>
-            <Text style={{ fontSize: 0.1 }} render={({ pageNumber }) => { if (onChapterPage) onChapterPage(ci, pageNumber); return "" }} />
             <Text style={s.chapterLabel}>Chapter {ci + 1}</Text>
             <Text style={s.chapterTitle}>{sanitise(ch.chapterTitle)}</Text>
             <View style={s.chapterRule} />
@@ -686,7 +684,6 @@ export function BookTemplate({ course, bookType, edition, subtitle, pageMap, onC
           <Text style={s.runningHead} fixed>{sanitise(subtitle)}</Text>
           <View style={s.runningLine} fixed />
           <View style={s.chapterWrap}>
-            <Text style={{ fontSize: 0.1 }} render={({ pageNumber }) => { if (onChapterPage) onChapterPage((course.chapters || []).length, pageNumber); return "" }} />
             <Text style={s.chapterLabel}>Answers</Text>
             <Text style={s.chapterTitle}>Answers and Explanations</Text>
             <View style={s.chapterRule} />

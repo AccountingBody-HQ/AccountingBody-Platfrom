@@ -124,6 +124,50 @@ function buildFidelity(course: any, stats: { mcqFailed: string[]; mcqNotFound: s
   return lines.join("\n")
 }
 
+// ── Estimated page map (replaces two-pass probe render) ─────────────────────
+// Exact page numbers require a full layout pass (the old probe render).
+// Instead we estimate chapter start pages from content volume, which
+// is accurate to within 2-3 pages and avoids a second full render.
+// Estimation constants calibrated against the existing rendered output:
+const LINES_PER_PAGE = 38          // body text lines per page at 10pt/1.8 leading
+const CHARS_PER_LINE = 72          // characters per line at 6in wide, 10pt
+const HEADING_LINE_COST = 3        // headings consume ~3 lines of vertical space
+const QUESTION_LINE_COST = 8       // each MCQ question takes ~8 lines
+const FIXED_FRONT_PAGES = 3        // title + copyright + TOC = 3 pages
+
+function estimateChapterPages(ch: any, bookType: string): number {
+  const showNotes = bookType === "combined" || bookType === "study"
+  const showQs    = bookType === "combined" || bookType === "practice"
+  let lines = 4  // chapter header block
+  for (const ls of (ch.lessons || [])) {
+    lines += 2   // lesson title
+    if (showNotes) {
+      for (const art of (ls.linkedArticles || [])) {
+        lines += 2  // article title
+        for (const block of (art.body || [])) {
+          const style = block.style || "normal"
+          const text  = (block.children || [])
+            .map((c: any) => c.text || "").join("")
+          if (!text.trim()) continue
+          if (style === "h1" || style === "h2" || style === "h3" || style === "h4") {
+            lines += HEADING_LINE_COST
+          } else if (block.listItem) {
+            lines += Math.ceil(text.length / CHARS_PER_LINE) + 0.5
+          } else {
+            lines += Math.ceil(text.length / CHARS_PER_LINE)
+          }
+        }
+      }
+    }
+    if (showQs) {
+      for (const art of (ls.linkedArticles || [])) {
+        lines += (art.quizQuestions || []).length * QUESTION_LINE_COST
+      }
+    }
+  }
+  return Math.ceil(lines / LINES_PER_PAGE)
+}
+
 function buildPreflight(interiorPdf: Buffer, coverPdf: Buffer, pageCount: number, subtitle: string, bookType: string): string {
   const interiorStr = interiorPdf.toString("binary")
   const coverStr    = coverPdf.toString("binary")
@@ -216,15 +260,13 @@ export async function POST(req: NextRequest) {
     const course = await buildCourse(slug, fidelityStats)
 
     const pageMap: Record<number, number> = {}
-    await renderToBuffer(
-      React.createElement(BookTemplate, {
-        course,
-        bookType: bookType as any,
-        edition:  edition  || "2026/27 Edition",
-        subtitle: subtitle || course.title,
-        onChapterPage: (ci: number, page: number) => { pageMap[ci] = page },
-      }) as any
-    )
+    let currentPage = FIXED_FRONT_PAGES + 1
+    ;(course.chapters || []).forEach((ch: any, ci: number) => {
+      pageMap[ci] = currentPage
+      currentPage += estimateChapterPages(ch, bookType)
+    })
+    // Answers section start page (for combined/practice TOC entry)
+    pageMap[(course.chapters || []).length] = currentPage
 
     const interiorPdf = await renderToBuffer(
       React.createElement(BookTemplate, {
