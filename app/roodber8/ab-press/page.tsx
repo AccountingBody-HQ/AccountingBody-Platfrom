@@ -252,12 +252,15 @@ export default function AbPressPage() {
       const chapterCount = preview.course.chapters.length
       const chapterPdfs: Uint8Array[] = []
       const chapterPageCounts: number[] = []
+      const chapterQuestionOffsets: number[] = []
       let questionNumberOffset = 0
 
       // 1. Render each chapter
       for (let i = 0; i < chapterCount; i++) {
         setGenerationPhase(`Rendering chapter ${i + 1} of ${chapterCount}...`)
         setGenerationProgress({ current: i + 1, total: chapterCount })
+
+        chapterQuestionOffsets.push(questionNumberOffset)
 
         const res = await fetch('/api/roodber8/ab-press/generate-chapter', {
           method: 'POST',
@@ -276,18 +279,29 @@ export default function AbPressPage() {
         questionNumberOffset += data.questionCount ?? 0
       }
 
-      // 2. Render answers section if needed
-      let answersPdf: Uint8Array | null = null
+      // 2. Render answers section chapter by chapter if needed. Each call is
+      // scoped to one chapter (same pattern as generate-chapter above) so a
+      // large course's full answer key doesn't blow the 60s render budget in
+      // one request; a chapter with no questions comes back with pdf: null
+      // and is skipped from the merge.
+      const answerChapterPdfs: Uint8Array[] = []
       if (bookType === 'combined' || bookType === 'practice') {
-        setGenerationPhase('Rendering answers section...')
-        const res = await fetch('/api/roodber8/ab-press/generate-answers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ slug: slug.trim(), bookType, edition, subtitle })
-        })
-        const data = await res.json()
-        if (!res.ok || data.error) throw new Error(data.error || 'Answers render failed')
-        answersPdf = Uint8Array.from(atob(data.pdf), c => c.charCodeAt(0))
+        for (let i = 0; i < chapterCount; i++) {
+          setGenerationPhase(`Rendering answers ${i + 1} of ${chapterCount}...`)
+          const res = await fetch('/api/roodber8/ab-press/generate-answers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              slug: slug.trim(), bookType, edition, subtitle,
+              chapterIndex: i, questionNumberOffset: chapterQuestionOffsets[i]
+            })
+          })
+          const data = await res.json()
+          if (!res.ok || data.error) throw new Error(data.error || `Answers chapter ${i + 1} failed`)
+          if (data.pdf) {
+            answerChapterPdfs.push(Uint8Array.from(atob(data.pdf), c => c.charCodeAt(0)))
+          }
+        }
       }
 
       // 3. Compute chapter page starts (cumulative, offset by 3 frontmatter pages)
@@ -297,7 +311,7 @@ export default function AbPressPage() {
         chapterPageStarts.push(pageAcc)
         pageAcc += count
       }
-      const totalInteriorPages = pageAcc + (answersPdf ? 1 : 0)
+      const totalInteriorPages = pageAcc + answerChapterPdfs.length
 
       // 4. Render frontmatter (title + copyright + TOC with real page numbers)
       setGenerationPhase('Rendering frontmatter and TOC...')
@@ -318,8 +332,7 @@ export default function AbPressPage() {
       const { PDFDocument } = await import('pdf-lib')
       const mergedDoc = await PDFDocument.create()
 
-      const allPdfs = [frontmatterPdf, ...chapterPdfs]
-      if (answersPdf) allPdfs.push(answersPdf)
+      const allPdfs = [frontmatterPdf, ...chapterPdfs, ...answerChapterPdfs]
 
       for (const pdfBytes of allPdfs) {
         const srcDoc = await PDFDocument.load(pdfBytes)

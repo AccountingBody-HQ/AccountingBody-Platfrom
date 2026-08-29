@@ -1,10 +1,14 @@
 // app/api/roodber8/ab-press/generate-answers/route.ts
 // Accounting Body Press - Answers and Explanations PDF Generation API
 // Renders only the "Answers and Explanations" back-of-book section, for
-// combined/practice book types. Called once by the client orchestration
-// flow after all chapters have rendered. Question numbering here is
-// continuous across the whole course (a single running counter over every
-// chapter in order) to match ChapterTemplate's questionNumberOffset
+// combined/practice book types. With an optional chapterIndex, renders
+// just that chapter's answers (large-course orchestration calls this once
+// per chapter, same pattern as generate-chapter, to avoid the 60s timeout
+// rendering every chapter's answers in one call would hit); without it,
+// renders every chapter in one call (small-course path). Question
+// numbering here is continuous across the whole course (a single running
+// counter over every chapter in order, continued via questionNumberOffset
+// on the per-chapter path) to match ChapterTemplate's questionNumberOffset
 // scheme — unlike the single-request BookTemplate.tsx fallback, which
 // numbers "Question 1" fresh within each chapter.
 //
@@ -170,12 +174,19 @@ function formatExplanation(text: string): React.ReactElement[] {
 interface AnswersDocProps {
   course:   { chapters: { chapterTitle: string; lessons: { linkedArticles: { quizQuestions: any[] }[] }[] }[] }
   subtitle: string
+  // Chapter number (0-based) of course.chapters[0] within the full book —
+  // 0 when rendering every chapter, chapterIndex when rendering just one.
+  chapterIndexOffset?: number
+  // Running question counter to start from, so a single-chapter render
+  // continues the same continuous numbering ChapterTemplate produces via
+  // questionNumberOffset instead of restarting at 1.
+  startNumber?: number
 }
 
-function AnswersDocument({ course, subtitle }: AnswersDocProps) {
+function AnswersDocument({ course, subtitle, chapterIndexOffset = 0, startNumber = 0 }: AnswersDocProps) {
   // Single running counter across the whole course — matches the
   // continuous numbering ChapterTemplate produces via questionNumberOffset.
-  let n = 0
+  let n = startNumber
 
   return (
     <Document
@@ -205,7 +216,7 @@ function AnswersDocument({ course, subtitle }: AnswersDocProps) {
           if (list.length === 0) return null
           return (
             <View key={ci}>
-              <Text style={s.sectionHeader}>Chapter {ci + 1}: {sanitise(ch.chapterTitle)}</Text>
+              <Text style={s.sectionHeader}>Chapter {ci + chapterIndexOffset + 1}: {sanitise(ch.chapterTitle)}</Text>
               {list.map(({ q, num }) => (
                 <View key={num} style={s.answerWrap}>
                   <Text style={s.answerLabel}>Q{num}: {LETTERS[q.correctIndex ?? 0]}</Text>
@@ -242,11 +253,15 @@ export async function POST(req: NextRequest) {
   }
   try {
     const body = await req.json()
-    const { slug, subtitle } = body
+    const { slug, subtitle, chapterIndex, questionNumberOffset } = body
     if (!slug) return NextResponse.json({ error: "slug is required" }, { status: 400 })
 
     const rawCourse = await getCourseBySlug(slug, true)
     if (!rawCourse) return NextResponse.json({ error: "Course not found" }, { status: 404 })
+
+    if (chapterIndex !== undefined && !rawCourse.chapters[chapterIndex]) {
+      return NextResponse.json({ error: "Invalid chapterIndex" }, { status: 400 })
+    }
 
     const supabase = createSupabaseClient()
 
@@ -319,10 +334,25 @@ export async function POST(req: NextRequest) {
       })),
     }
 
+    const chaptersToRender = chapterIndex !== undefined
+      ? [course.chapters[chapterIndex]]
+      : course.chapters
+
+    const questionCount = chaptersToRender.reduce((sum, ch) =>
+      sum + ch.lessons.reduce((s, ls) =>
+        s + ls.linkedArticles.reduce((a, art) =>
+          a + (art.quizQuestions || []).length, 0), 0), 0)
+
+    if (chapterIndex !== undefined && questionCount === 0) {
+      return NextResponse.json({ pdf: null, pageCount: 0, questionCount: 0 })
+    }
+
     const pdfBuffer = await renderToBuffer(
       React.createElement(AnswersDocument, {
-        course,
+        course: { chapters: chaptersToRender },
         subtitle: subtitle || rawCourse.title,
+        chapterIndexOffset: chapterIndex ?? 0,
+        startNumber: questionNumberOffset ?? 0,
       }) as any
     )
 
@@ -333,6 +363,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       pdf: pdfBuffer.toString("base64"),
       pageCount,
+      questionCount,
     })
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Unknown error"
