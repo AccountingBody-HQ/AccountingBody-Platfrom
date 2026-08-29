@@ -376,9 +376,40 @@ export default function AbPressPage() {
     }
   }
 
-  // Dispatcher: courses <= 50 articles keep the original single-request
-  // path unchanged; larger courses use the chapter-by-chapter flow.
+  // Practice Kit: dedicated single-render route (generate-pq) — topic-organised,
+  // exact page numbers, no study-note bodies to push it over the timeout.
+  const handleGeneratePQ = async () => {
+    setGenerating(true); setGenError(''); setDownloadUrl('')
+    setGenerationPhase('Generating Practice Kit...')
+    try {
+      const res = await fetch('/api/roodber8/ab-press/generate-pq', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug: slug.trim(), edition, subtitle })
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        setGenError(data.error || 'Generation failed')
+        return
+      }
+      const blob = await res.blob()
+      setDownloadUrl(URL.createObjectURL(blob))
+    } catch {
+      setGenError('Network error — generation failed')
+    } finally {
+      setGenerating(false)
+      setGenerationPhase('')
+    }
+  }
+
+  // Dispatcher: Practice Kit always uses the dedicated PQ route; courses
+  // <= 50 articles keep the original single-request path unchanged; larger
+  // combined/study courses use the chapter-by-chapter flow.
   const handleGenerate = () => {
+    if (bookType === 'practice') {
+      handleGeneratePQ()
+      return
+    }
     if (!preview) return
     const articleCount = preview.stats?.articleCount ?? 0
     if (articleCount > 50) {
