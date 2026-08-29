@@ -77,6 +77,49 @@ export async function buildCourse(slug: string, stats: BuildStats) {
 
   const articleMap = new Map((articleRows ?? []).map((a) => [a.id, a]))
 
+  // ── Bulk-fetch all quiz questions in 2 queries instead of one round-trip
+  // per article (was up to N sequential queries for N articles with an
+  // mcq_url — hit the Vercel 300s limit on large courses).
+  const mcqSlugs = Array.from(new Set(
+    (articleRows ?? [])
+      .map((a) => a.mcq_url)
+      .filter(Boolean)
+      .map((url) => url.split("/").filter(Boolean).pop())
+      .filter(Boolean)
+  ))
+
+  const slugToSetId = new Map<string, string>()
+  const setIdToQuestions = new Map<string, any[]>()
+
+  if (mcqSlugs.length > 0) {
+    const { data: allSets } = await supabase
+      .from("question_sets")
+      .select("id, slug")
+      .in("slug", mcqSlugs)
+
+    for (const s of (allSets ?? [])) slugToSetId.set(s.slug, s.id)
+
+    const allSetIds = (allSets ?? []).map((s) => s.id)
+    if (allSetIds.length > 0) {
+      const { data: allQuestions } = await supabase
+        .from("questions")
+        .select("set_id, question_text, option_a, option_b, option_c, option_d, correct_index, explanation")
+        .in("set_id", allSetIds)
+        .order("question_order", { ascending: true })
+
+      for (const q of (allQuestions ?? [])) {
+        const arr = setIdToQuestions.get(q.set_id) ?? []
+        arr.push({
+          questionText:  q.question_text,
+          options:       [q.option_a, q.option_b, q.option_c, q.option_d].filter(Boolean),
+          correctIndex:  q.correct_index,
+          explanation:   q.explanation ?? "",
+        })
+        setIdToQuestions.set(q.set_id, arr)
+      }
+    }
+  }
+
   const chapters = await Promise.all(
     course.chapters.map(async (ch) => {
       const lessons = await Promise.all(
@@ -89,7 +132,13 @@ export async function buildCourse(slug: string, stats: BuildStats) {
               const body = htmlToBlocks(rawContent, true)
               let quizQuestions: any[] = []
               if (row?.mcq_url) {
-                quizQuestions = await fetchQuestions(row.mcq_url, stats)
+                const practiceSlug = row.mcq_url.split("/").filter(Boolean).pop() ?? ""
+                const setId = slugToSetId.get(practiceSlug)
+                if (setId) {
+                  quizQuestions = setIdToQuestions.get(setId) ?? []
+                } else if (practiceSlug) {
+                  stats.mcqNotFound.push(practiceSlug)
+                }
               }
               return {
                 _id:          a.id,
