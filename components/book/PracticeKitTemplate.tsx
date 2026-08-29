@@ -373,24 +373,11 @@ interface PracticeKitTemplateProps {
   edition: string
   subtitle: string
   pageMap?: Record<string, number>
-  onSectionPage?: (key: string, page: number) => void
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export function PracticeKitTemplate({ course, edition, subtitle, pageMap, onSectionPage }: PracticeKitTemplateProps) {
+export function PracticeKitTemplate({ course, edition, subtitle, pageMap }: PracticeKitTemplateProps) {
   const { chapters: qIndex } = buildQuestionIndex(course)
-
-  function mark(key: string) {
-    return (
-      <Text
-        style={{ fontSize: 0.1 }}
-        render={({ pageNumber }) => {
-          if (onSectionPage) onSectionPage(key, pageNumber)
-          return ""
-        }}
-      />
-    )
-  }
 
   function pageFor(key: string): string {
     return pageMap && pageMap[key] ? String(pageMap[key]) : ""
@@ -474,7 +461,6 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, onSect
         <Page key={chapter._key || ci} size={[W, H]} style={s.page}>
           <Text style={s.runningHead} fixed>{sanitise(subtitle)}</Text>
           <View style={s.runningLine} fixed />
-          {mark("ch-" + ci)}
 
           {/* 4a. Chapter opener */}
           <View style={s.chapterWrap}>
@@ -516,7 +502,6 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, onSect
           {lessons.map(({ li, lesson, questions }) => (
             <View key={lesson._id || li}>
               <View style={{ marginTop: 20 }} minPresenceAhead={120} wrap={false}>
-                {mark("lesson-" + ci + "-" + li)}
                 <Text style={s.topicLabel}>Topic {ci + 1}.{li + 1}</Text>
                 <Text style={s.topicTitle}>{sanitise(lesson.title)}</Text>
                 <Text style={s.topicMeta}>{questions.length} questions  |  {questions.length * 2} marks  |  ~{questions.length * 2} minutes</Text>
@@ -564,7 +549,6 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, onSect
       <Page size={[W, H]} style={s.page}>
         <Text style={s.runningHead} fixed>{sanitise(subtitle)}</Text>
         <View style={s.runningLine} fixed />
-        {mark("answers")}
 
         <View style={s.chapterWrap}>
           <Text style={s.chapterLabel}>Answers</Text>

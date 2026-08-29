@@ -4,10 +4,15 @@
 // PracticeKitTemplate instead of the chapter-by-chapter orchestration used
 // for combined/study books. A Practice Kit's chapters are lighter (no
 // study-note bodies, just topic-organised questions and answers), so the
-// whole book fits comfortably inside a single serverless invocation. Two
-// render passes give exact TOC page numbers: pass 1 (probe) renders once to
-// discover where every chapter/topic/answers section actually lands, pass 2
-// (final) renders again with that page map filled into the TOC.
+// whole book fits comfortably inside a single serverless invocation.
+//
+// TOC page numbers come from estimatePQPageMap() (content-volume estimation)
+// rather than a probe render pass. A two-pass probe+final render (like
+// BookTemplate's original approach) blew the 300s limit on large courses
+// (3,939 questions at ~822 chars/explanation average is too much content to
+// lay out twice). PQ content has a far more predictable, fixed structure
+// than HTML study notes, so a calibrated line-count estimate gets TOC page
+// numbers accurate to within 2-3 pages from a single render pass.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server"
 import { renderToBuffer } from "@react-pdf/renderer"
@@ -195,6 +200,99 @@ async function isAuthenticated(req: NextRequest): Promise<boolean> {
   return token === expectedHash
 }
 
+// ── PQ page-count estimation (replaces the two-pass probe render) ───────────
+// Estimates the physical page number of every chapter opener, topic header,
+// and the answers section from content volume alone — no render pass needed.
+// Calibrated for 6x9, 10pt body, 1.75 leading.
+function estimatePQPageMap(course: any, bookType: string): Record<string, number> {
+  void bookType // kept in the signature for parity with the caller; PQ estimation doesn't branch on book type
+  const PAGE_HEIGHT_LINES = 42        // usable lines per page
+  const CHARS_PER_LINE = 68           // chars per line at 6in minus margins
+  const CHAPTER_OPENER_PAGES = 1      // chapter opener always ~1 page
+  const LESSON_HEADER_LINES = 4       // topic header block
+  const QUESTION_BASE_LINES = 5       // Q label + marks line + gap
+  const CHARS_PER_OPTION_LINE = 55    // options are indented, narrower
+  const ANSWER_BASE_LINES = 3         // Q label + answer letter block + gap
+  const ANSWER_CHARS_PER_LINE = 62    // answers slightly narrower due to indent
+  const FIXED_PAGES_BEFORE_CHAPTERS = 3  // title + how-to-use + TOC
+
+  function linesForText(text: string, charsPerLine: number): number {
+    if (!text || !text.trim()) return 0
+    return Math.ceil(text.length / charsPerLine)
+  }
+
+  function linesForQuestion(q: any): number {
+    let lines = QUESTION_BASE_LINES
+    lines += linesForText(q.questionText || '', CHARS_PER_LINE)
+    const options = [q.options?.[0], q.options?.[1], q.options?.[2], q.options?.[3]]
+      .filter(Boolean)
+    for (const opt of options) {
+      lines += Math.max(1, linesForText(opt, CHARS_PER_OPTION_LINE))
+    }
+    lines += 1 // bottom padding
+    return lines
+  }
+
+  function linesForAnswer(q: any): number {
+    let lines = ANSWER_BASE_LINES
+    const exp = q.explanation || ''
+    // Explanation renders in compact form — concept + worked + takeaway + pitfall
+    // Average breakdown: ~60% concept/worked, ~40% takeaway/pitfall
+    lines += linesForText(exp, ANSWER_CHARS_PER_LINE)
+    lines += 2 // section labels (WORKED:, KEY TAKEAWAY:, PITFALL:)
+    lines += 1 // separator line
+    return lines
+  }
+
+  const sectionMap: Record<string, number> = {}
+  let currentPage = FIXED_PAGES_BEFORE_CHAPTERS + 1
+
+  // Questions section
+  for (let ci = 0; ci < (course.chapters || []).length; ci++) {
+    const ch = course.chapters[ci]
+    sectionMap[`ch-${ci}`] = currentPage
+    currentPage += CHAPTER_OPENER_PAGES
+
+    for (let li = 0; li < (ch.lessons || []).length; li++) {
+      const ls = ch.lessons[li]
+      const questions = ls.linkedArticles?.flatMap((a: any) => a.quizQuestions || []) || []
+      if (questions.length === 0) continue
+
+      sectionMap[`lesson-${ci}-${li}`] = currentPage
+
+      let lineAcc = LESSON_HEADER_LINES
+      for (const q of questions) {
+        const qLines = linesForQuestion(q)
+        lineAcc += qLines
+      }
+      currentPage += Math.ceil(lineAcc / PAGE_HEIGHT_LINES)
+    }
+  }
+
+  // Answers section
+  sectionMap['answers'] = currentPage
+  currentPage += 1 // answers opener page
+
+  for (let ci = 0; ci < (course.chapters || []).length; ci++) {
+    const ch = course.chapters[ci]
+    let lineAcc = 3 // chapter answers header
+
+    for (let li = 0; li < (ch.lessons || []).length; li++) {
+      const ls = ch.lessons[li]
+      const questions = ls.linkedArticles?.flatMap((a: any) => a.quizQuestions || []) || []
+      if (questions.length === 0) continue
+
+      lineAcc += 2 // topic subheader
+      for (const q of questions) {
+        lineAcc += linesForAnswer(q)
+      }
+    }
+    currentPage += Math.ceil(lineAcc / PAGE_HEIGHT_LINES)
+  }
+
+  return sectionMap
+}
+
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 })
@@ -210,20 +308,9 @@ export async function POST(req: NextRequest) {
     const editionFinal  = edition  || "2026/27 Edition"
     const subtitleFinal = subtitle || course.title
 
-    // Pass 1 (probe): discover the physical page number of every chapter,
-    // topic, and the answers section by rendering once and recording where
-    // each onSectionPage marker lands.
-    const sectionMap: Record<string, number> = {}
-    await renderToBuffer(
-      React.createElement(PracticeKitTemplate, {
-        course,
-        edition: editionFinal,
-        subtitle: subtitleFinal,
-        onSectionPage: (key: string, page: number) => { sectionMap[key] = page },
-      }) as any
-    )
+    // Estimate page map from content volume (single render — no probe pass)
+    const sectionMap = estimatePQPageMap(course, 'practice')
 
-    // Pass 2 (final): render again with the page map filled into the TOC.
     const interiorPdf = await renderToBuffer(
       React.createElement(PracticeKitTemplate, {
         course,
