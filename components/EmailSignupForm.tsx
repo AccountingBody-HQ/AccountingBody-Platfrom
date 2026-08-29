@@ -11,7 +11,7 @@ declare global {
   }
 }
 
-export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: boolean }) {
+export default function EmailSignupForm() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [email, setEmail] = useState('')
   const [honeypot, setHoneypot] = useState('')

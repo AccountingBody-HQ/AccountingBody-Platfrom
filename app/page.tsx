@@ -298,7 +298,7 @@ function EmailSignupSection({ isEthioTax = false }: { isEthioTax?: boolean }) {
           <p className="text-white/65 text-lg mb-8 leading-relaxed">
             New accounting and finance jobs, managed placement updates, and exam-standard practice question releases — delivered weekly. Written for accounting professionals. No spam, ever.
           </p>
-          <EmailSignupForm isEthioTax={isEthioTax} />
+          <EmailSignupForm />
           <div className="w-full flex justify-center mt-4">
             <p className="text-white/35 text-xs text-center">Join accounting and finance professionals. Unsubscribe any time.</p>
           </div>
@@ -1032,7 +1032,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <p className="text-white/65 text-lg mb-8 leading-relaxed">
         ERCA deadlines, ETICPA news, new practice question releases and Ethiopian finance job alerts — delivered weekly. No spam, ever.
       </p>
-      <EmailSignupForm isEthioTax={isEthioTax} />
+      <EmailSignupForm />
       <div className="w-full flex justify-center mt-4">
         <p className="text-white/35 text-xs text-center">Join the EthioTax community. Unsubscribe any time.</p>
       </div>
