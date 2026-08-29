@@ -2,19 +2,17 @@ import { NextRequest, NextResponse } from "next/server"
 import { Resend } from "resend"
 import { SignJWT } from "jose"
 
-async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
+async function verifyTurnstile(token: string, ip: string, isET: boolean): Promise<boolean> {
   if (!token) return false
-  const secrets = [process.env.TURNSTILE_SECRET_KEY, process.env.TURNSTILE_SECRET_KEY_AB].filter(Boolean)
-  for (const secret of secrets) {
-    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ secret, response: token, remoteip: ip }),
-    })
-    const data = await res.json()
-    if (data.success === true) return true
-  }
-  return false
+  const secret = isET ? process.env.TURNSTILE_SECRET_KEY : process.env.TURNSTILE_SECRET_KEY_AB
+  if (!secret) return false
+  const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ secret, response: token, remoteip: ip }),
+  })
+  const data = await res.json()
+  return data.success === true
 }
 
 export async function POST(req: NextRequest) {
@@ -24,7 +22,6 @@ export async function POST(req: NextRequest) {
     const { email, _h } = body
     const turnstileToken = body["cf-turnstile-response"] ?? ""
     const isET = req.headers.get("x-et-platform") === "ethiotax"
-    console.log("x-et-platform header:", req.headers.get("x-et-platform"), "isET:", isET)
     const brand = isET
       ? { name: "EthioTax", domain: "ethiotax.com", color: "#1A4731" }
       : { name: "Accounting Body", domain: "accountingbody.com", color: "#0C1A3D" }
@@ -33,10 +30,10 @@ export async function POST(req: NextRequest) {
 
     const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for") ?? ""
 
-    // Turnstile is mandatory
-    if (!turnstileToken) return NextResponse.json({ success: true })
-    const valid = await verifyTurnstile(turnstileToken, ip)
-    if (!valid) return NextResponse.json({ success: true })
+    if (turnstileToken) {
+      const valid = await verifyTurnstile(turnstileToken, ip, isET)
+      if (!valid) return NextResponse.json({ success: true })
+    }
 
     const BLOCKED = [
       "mailinator.com", "guerrillamail.com", "trashmail.com", "tempmail.com",

@@ -11,7 +11,7 @@ declare global {
   }
 }
 
-export default function EmailSignupForm() {
+export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: boolean }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [email, setEmail] = useState('')
   const [honeypot, setHoneypot] = useState('')
@@ -79,20 +79,13 @@ export default function EmailSignupForm() {
         <input type="text" value={honeypot} onChange={e => setHoneypot(e.target.value)} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
         {/* Turnstile invisible widget */}
         <div
-          id="turnstile-container"
           ref={(el) => {
-            if (!el || turnstileWidgetId.current) return
-            const sitekey = window.location.hostname.includes("ethiotax.com")
-              ? "0x4AAAAADwBt_NeRfGCSU-0"
-              : "0x4AAAAAAB6YVvZ_yKyzZHLp"
-            const tryRender = () => {
-              if (window.turnstile) {
-                turnstileWidgetId.current = window.turnstile.render(el, { sitekey, size: "invisible" })
-              } else {
-                setTimeout(tryRender, 100)
-              }
+            if (el && window.turnstile && !turnstileWidgetId.current) {
+              turnstileWidgetId.current = window.turnstile.render(el, {
+                sitekey: isEthioTax ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? ''),
+                size: 'invisible',
+              })
             }
-            tryRender()
           }}
         />
         {status === 'error' && (

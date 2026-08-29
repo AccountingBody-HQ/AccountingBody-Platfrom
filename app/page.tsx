@@ -282,7 +282,7 @@ function ArticleCard({ article }: { article: FeaturedArticle }) {
     </article>
   )
 }
-function EmailSignupSection() {
+function EmailSignupSection({ isEthioTax = false }: { isEthioTax?: boolean }) {
   return (
     <section className="section-navy section relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -298,7 +298,7 @@ function EmailSignupSection() {
           <p className="text-white/65 text-lg mb-8 leading-relaxed">
             New accounting and finance jobs, managed placement updates, and exam-standard practice question releases — delivered weekly. Written for accounting professionals. No spam, ever.
           </p>
-          <EmailSignupForm />
+          <EmailSignupForm isEthioTax={isEthioTax} />
           <div className="w-full flex justify-center mt-4">
             <p className="text-white/35 text-xs text-center">Join accounting and finance professionals. Unsubscribe any time.</p>
           </div>
@@ -1032,7 +1032,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <p className="text-white/65 text-lg mb-8 leading-relaxed">
         ERCA deadlines, ETICPA news, new practice question releases and Ethiopian finance job alerts — delivered weekly. No spam, ever.
       </p>
-      <EmailSignupForm />
+      <EmailSignupForm isEthioTax={isEthioTax} />
       <div className="w-full flex justify-center mt-4">
         <p className="text-white/35 text-xs text-center">Join the EthioTax community. Unsubscribe any time.</p>
       </div>
@@ -1993,7 +1993,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       {/* ════════════════════════════════════════════════════════════════
           11. EMAIL SIGNUP
           ════════════════════════════════════════════════════════════════ */}
-      <EmailSignupSection />
+      <EmailSignupSection isEthioTax={isEthioTax} />
 
       {/* ════════════════════════════════════════════════════════════════
           12. BOTTOM CTA
