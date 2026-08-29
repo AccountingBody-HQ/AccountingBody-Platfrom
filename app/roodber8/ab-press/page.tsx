@@ -16,6 +16,9 @@ export default function AbPressPage() {
   const [edition,     setEdition]     = useState('2026/27 Edition')
   const [subtitle,    setSubtitle]    = useState('')
   const [preview,     setPreview]     = useState(null as any)
+  const [health,      setHealth]      = useState(null as any)
+  const [showEmptyList,   setShowEmptyList]   = useState(false)
+  const [showWebWarnings, setShowWebWarnings] = useState(false)
   const [loading,     setLoading]     = useState(false)
   const [generating,  setGenerating]  = useState(false)
   const [error,       setError]       = useState('')
@@ -29,6 +32,9 @@ export default function AbPressPage() {
     setCourses([])
     setSlug('')
     setPreview(null)
+    setHealth(null)
+    setShowEmptyList(false)
+    setShowWebWarnings(false)
     setDownloadUrl('')
     fetch('/api/roodber8/course-factory/load-course?action=list')
       .then(r => r.json())
@@ -40,17 +46,21 @@ export default function AbPressPage() {
     const selected = courses.find((c: any) => c.slug === e.target.value)
     setSlug(e.target.value)
     if (selected) setSubtitle(selected.title)
-    setPreview(null); setDownloadUrl(''); setError(''); setGenError('')
+    setPreview(null); setHealth(null); setShowEmptyList(false); setShowWebWarnings(false)
+    setDownloadUrl(''); setError(''); setGenError('')
   }
 
   const handlePreview = async () => {
     if (!slug.trim()) { setError('Select a course first'); return }
-    setLoading(true); setError(''); setPreview(null); setDownloadUrl(''); setGenError('')
+    setLoading(true); setError(''); setPreview(null); setHealth(null)
+    setShowEmptyList(false); setShowWebWarnings(false)
+    setDownloadUrl(''); setGenError('')
     try {
       const res  = await fetch('/api/roodber8/ab-press/preview?slug=' + encodeURIComponent(slug.trim()))
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Preview failed'); return }
       setPreview(data)
+      setHealth(data.health ?? null)
       if (!subtitle) setSubtitle(data.course?.title || '')
     } catch {
       setError('Network error - could not load preview')
@@ -230,7 +240,7 @@ export default function AbPressPage() {
                     { val: stats.chapterCount,  label: 'Chapters'     },
                     { val: stats.lessonCount,   label: 'Lessons'      },
                     { val: stats.articleCount,  label: 'Study Notes'  },
-                    { val: stats.questionCount, label: 'Practice Qs'  },
+                    { val: stats.questionCount, label: 'Practice Sets' },
                   ].map(({ val, label }) => (
                     <div key={label} className="bg-[#0C1A3D] rounded-lg p-3 border border-slate-700">
                       <p className="text-2xl font-bold text-[#D4A017]">{val}</p>
@@ -249,6 +259,116 @@ export default function AbPressPage() {
               </div>
             ) : null}
           </div>
+
+          {/* Content Health */}
+          {health ? (
+            <div className="bg-[#081428] rounded-xl p-6 border border-slate-700">
+              <h2 className="text-sm font-semibold text-[#D4A017] uppercase tracking-wide mb-4">Content Health</h2>
+
+              <div
+                className="flex items-center gap-2 rounded-lg px-4 py-3 mb-4 text-sm font-medium"
+                style={
+                  health.verdict === 'ready'
+                    ? { backgroundColor: 'rgba(16, 185, 129, 0.12)', color: '#10b981' }
+                    : health.verdict === 'warnings'
+                    ? { backgroundColor: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b' }
+                    : { backgroundColor: 'rgba(239, 68, 68, 0.12)', color: '#ef4444' }
+                }
+              >
+                {health.verdict === 'ready' ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" /><path d="M8 12l3 3 5-6" />
+                  </svg>
+                ) : health.verdict === 'warnings' ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                    <path d="M12 9v4" /><path d="M12 17h.01" />
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" /><path d="M12 8v4" /><path d="M12 16h.01" />
+                  </svg>
+                )}
+                <span>
+                  {health.verdict === 'ready'
+                    ? 'Content ready for publication'
+                    : health.verdict === 'warnings'
+                    ? 'Web elements removed — review below'
+                    : `${health.emptyArticles} article(s) need attention before publishing`}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                {[
+                  { val: health.emptyArticles,           label: 'Empty Articles',    alert: health.emptyArticles > 0 },
+                  { val: health.articlesWithWebElements, label: 'Web Cleaned' },
+                  { val: health.totalWebElementsRemoved, label: 'Elements Removed' },
+                  { val: health.mcqLinked,               label: 'Practice Links' },
+                ].map(({ val, label, alert }) => (
+                  <div key={label} className="bg-[#0C1A3D] rounded-lg p-3 border border-slate-700">
+                    <p className={"text-2xl font-bold " + (alert ? "text-red-400" : "text-[#D4A017]")}>{val}</p>
+                    <p className="text-xs text-slate-400">{label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {health.emptyList && health.emptyList.length > 0 ? (
+                <div className="mb-4">
+                  <button
+                    onClick={() => setShowEmptyList(!showEmptyList)}
+                    className="text-xs font-medium text-red-400 hover:text-red-300"
+                  >
+                    {showEmptyList ? 'Hide' : `Show empty articles (${health.emptyList.length})`}
+                  </button>
+                  {showEmptyList ? (
+                    <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+                      {health.emptyList.map((title: string, i: number) => (
+                        <div
+                          key={i}
+                          className="rounded-lg px-3 py-2 text-xs text-red-300"
+                          style={{ backgroundColor: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+                        >
+                          {title}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {health.webWarningDetails && health.webWarningDetails.length > 0 ? (
+                <div className="mb-4">
+                  <button
+                    onClick={() => setShowWebWarnings(!showWebWarnings)}
+                    className="text-xs font-medium text-[#f59e0b] hover:text-yellow-400"
+                  >
+                    {showWebWarnings ? 'Hide' : `Show cleaned content (${health.webWarningDetails.length})`}
+                  </button>
+                  {showWebWarnings ? (
+                    <div className="mt-2 space-y-2 max-h-52 overflow-y-auto">
+                      {health.webWarningDetails.map((item: { title: string; warnings: string[] }, i: number) => (
+                        <div
+                          key={i}
+                          className="rounded-lg px-3 py-2 text-xs"
+                          style={{ backgroundColor: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.3)' }}
+                        >
+                          <p className="text-amber-300 font-medium mb-1">{item.title}</p>
+                          <ul className="list-disc list-inside text-slate-300 space-y-0.5">
+                            {item.warnings.map((w: string, wi: number) => <li key={wi}>{w}</li>)}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              <p className="text-slate-500 text-xs">
+                Web elements are automatically removed before printing.
+                Empty articles print as &quot;Study notes not yet available.&quot;
+              </p>
+            </div>
+          ) : null}
 
           {/* Step 4 - Generate */}
           {preview ? (

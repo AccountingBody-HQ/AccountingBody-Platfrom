@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getCourseBySlug } from '@/lib/coursesNew'
+import { filterForPublication, getPublicationWarnings } from '@/lib/publication-filter'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -74,6 +75,66 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // ── Content health check (Phase 3) ──────────────────────────────────────
+    // Second, separate Supabase query — same bulk SELECT shape as
+    // generate/route.ts buildCourse(), fetched independently of the
+    // question_sets count query above.
+    const allArticles = course.chapters.flatMap(ch => ch.lessons.flatMap(ls => ls.articles))
+    const allArticleIds = allArticles.map(a => a.id)
+    const articleTitleMap = new Map(allArticles.map(a => [a.id, a.title]))
+
+    let emptyArticlesCount = 0
+    let articlesWithWebElements = 0
+    let totalWebElementsRemoved = 0
+    let mcqLinked = 0
+    const emptyList: string[] = []
+    const webWarningDetails: { title: string; warnings: string[] }[] = []
+
+    if (allArticleIds.length > 0) {
+      try {
+        const { data: contentRows, error: contentError } = await supabase
+          .from('articles')
+          .select('id, content, mcq_url')
+          .in('id', allArticleIds)
+
+        if (contentError) {
+          console.error('ab-press/preview: article content query failed:', contentError)
+        } else {
+          for (const row of (contentRows ?? [])) {
+            const rawContent = row.content ?? ''
+            const title = articleTitleMap.get(row.id) ?? row.id
+
+            const strippedLength = rawContent.replace(/<[^>]+>/g, '').trim().length
+            if (strippedLength === 0) {
+              emptyArticlesCount++
+              emptyList.push(title)
+            }
+
+            const filtered = filterForPublication(rawContent)
+            const warnings = getPublicationWarnings(rawContent, filtered)
+            const removalWarnings = warnings.filter((w) => !w.startsWith('Total:'))
+
+            if (removalWarnings.length > 0) {
+              articlesWithWebElements++
+              totalWebElementsRemoved += removalWarnings.length
+              if (webWarningDetails.length < 10) {
+                webWarningDetails.push({ title, warnings: removalWarnings })
+              }
+            }
+
+            if (row.mcq_url) mcqLinked++
+          }
+        }
+      } catch (err) {
+        console.error('ab-press/preview: article content query threw:', err)
+      }
+    }
+
+    const verdict: 'ready' | 'warnings' | 'issues' =
+      emptyArticlesCount > 0 ? 'issues' :
+      articlesWithWebElements > 0 ? 'warnings' :
+      'ready'
+
     // Return in shape the AB Press UI expects
     return NextResponse.json({
       course: {
@@ -104,6 +165,17 @@ export async function GET(req: NextRequest) {
         lessonCount:   course.chapters.reduce((a, c) => a + c.lessons.length, 0),
         articleCount:  totalArticles,
         questionCount: totalQuestions,
+        emptyArticles: emptyArticlesCount,
+        articlesWithWebElements,
+      },
+      health: {
+        verdict,
+        emptyArticles: emptyArticlesCount,
+        articlesWithWebElements,
+        totalWebElementsRemoved,
+        mcqLinked,
+        emptyList,
+        webWarningDetails,
       },
     })
   } catch (err: unknown) {
