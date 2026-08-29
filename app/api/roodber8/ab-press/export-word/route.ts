@@ -10,6 +10,7 @@ import {
 } from "docx"
 import { getCourseBySlug } from "@/lib/coursesNew"
 import { htmlToBlocks } from "@/lib/html-to-blocks"
+import { filterForPublication, getPublicationWarnings } from "@/lib/publication-filter"
 import { createClient } from "@supabase/supabase-js"
 
 const supabase = createClient(
@@ -67,7 +68,9 @@ async function buildCourse(slug: string) {
           const linkedArticles = await Promise.all(
             l.articles.map(async (a) => {
               const row = articleMap.get(a.id)
-              const body = htmlToBlocks(row?.content ?? "")
+              const rawContent = row?.content ?? ""
+              const pubWarnings = getPublicationWarnings(rawContent, filterForPublication(rawContent))
+              const body = htmlToBlocks(rawContent, true)
               let quizQuestions: any[] = []
               if (row?.mcq_url) {
                 quizQuestions = await fetchQuestions(row.mcq_url)
@@ -79,6 +82,7 @@ async function buildCourse(slug: string) {
                 excerpt:      a.excerpt ?? "",
                 body,
                 quizQuestions,
+                publicationWarnings: pubWarnings,
               }
             })
           )

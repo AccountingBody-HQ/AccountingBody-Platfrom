@@ -10,6 +10,7 @@ import { BookTemplate } from "@/components/book/BookTemplate"
 import { FullCoverTemplate } from "@/components/book/FullCoverTemplate"
 import { getCourseBySlug } from "@/lib/coursesNew"
 import { htmlToBlocks } from "@/lib/html-to-blocks"
+import { filterForPublication, getPublicationWarnings } from "@/lib/publication-filter"
 import { createClient } from "@supabase/supabase-js"
 
 export const maxDuration = 300
@@ -76,7 +77,9 @@ async function buildCourse(slug: string, stats: { mcqFailed: string[]; mcqNotFou
           const linkedArticles = await Promise.all(
             l.articles.map(async (a) => {
               const row = articleMap.get(a.id)
-              const body = htmlToBlocks(row?.content ?? "")
+              const rawContent = row?.content ?? ""
+              const pubWarnings = getPublicationWarnings(rawContent, filterForPublication(rawContent))
+              const body = htmlToBlocks(rawContent, true)
               let quizQuestions: any[] = []
               if (row?.mcq_url) {
                 quizQuestions = await fetchQuestions(row.mcq_url, stats)
@@ -89,6 +92,7 @@ async function buildCourse(slug: string, stats: { mcqFailed: string[]; mcqNotFou
                 mcqUrl:       row?.mcq_url ?? "",
                 body,
                 quizQuestions,
+                publicationWarnings: pubWarnings,
               }
             })
           )
@@ -164,6 +168,7 @@ function buildMetadata(subtitle: string, bookType: string, edition: string, cour
 function buildFidelity(course: any, stats: { mcqFailed: string[]; mcqNotFound: string[] }, bookType: string): string {
   const chapters = course.chapters || []
   let lessons = 0, articles = 0, emptyBodies = 0, questions = 0, mcqLinks = 0
+  let articlesWithWebElements = 0, webElementsRemoved = 0
   const emptyList: string[] = []
   for (const ch of chapters) {
     for (const ls of (ch.lessons || [])) {
@@ -178,6 +183,8 @@ function buildFidelity(course: any, stats: { mcqFailed: string[]; mcqNotFound: s
         if (!hasContent) { emptyBodies++; emptyList.push(art.title || art._id) }
         if (art.mcqUrl) mcqLinks++
         questions += (art.quizQuestions || []).length
+        const pubWarnings: string[] = (art.publicationWarnings || []).filter((w: string) => !w.startsWith("Total:"))
+        if (pubWarnings.length > 0) { articlesWithWebElements++; webElementsRemoved += pubWarnings.length }
       }
     }
   }
@@ -212,6 +219,11 @@ function buildFidelity(course: any, stats: { mcqFailed: string[]; mcqNotFound: s
   } else {
     lines.push("[PASS] No practice fetch errors")
   }
+  lines.push("")
+  lines.push("PUBLICATION FILTER (web-only elements removed before print)")
+  lines.push("-------------------------------------------------------------")
+  lines.push("  Articles with web elements removed: " + articlesWithWebElements + " of " + articles)
+  lines.push("  Total web elements removed: " + webElementsRemoved)
   lines.push("")
   lines.push(issues === 0
     ? "FIDELITY VERDICT: COMPLETE - everything fetched from Supabase is accounted for in this book."
