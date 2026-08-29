@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
     const { email, _h } = body
     const turnstileToken = body["cf-turnstile-response"] ?? ""
     const isET = req.headers.get("x-et-platform") === "ethiotax"
+    console.log("x-et-platform header:", req.headers.get("x-et-platform"), "isET:", isET)
     const brand = isET
       ? { name: "EthioTax", domain: "ethiotax.com", color: "#1A4731" }
       : { name: "Accounting Body", domain: "accountingbody.com", color: "#0C1A3D" }
