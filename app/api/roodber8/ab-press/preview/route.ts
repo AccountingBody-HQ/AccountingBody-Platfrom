@@ -58,17 +58,21 @@ export async function GET(req: NextRequest) {
 
     if (articleSlugs.length > 0) {
       try {
-        const { count, error: questionsError } = await supabase
+        // Step 1: get matching set IDs
+        const { data: matchingSets } = await supabase
           .from('question_sets')
-          .select('*', { count: 'exact', head: true })
+          .select('id')
           .in('article_slug', articleSlugs)
           .eq('status', 'published')
           .eq('platform', 'ab')
 
-        if (questionsError) {
-          console.error('ab-press/preview: question_sets count query failed:', questionsError)
-        } else {
-          totalQuestions = count ?? 0
+        if (matchingSets && matchingSets.length > 0) {
+          const setIds = matchingSets.map(s => s.id)
+          const { count: qCount } = await supabase
+            .from('questions')
+            .select('*', { count: 'exact', head: true })
+            .in('set_id', setIds)
+          totalQuestions = qCount ?? 0
         }
       } catch (err) {
         console.error('ab-press/preview: question_sets count query threw:', err)

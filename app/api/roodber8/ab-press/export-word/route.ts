@@ -8,93 +8,7 @@ import {
   Document, Packer, Paragraph, TextRun, HeadingLevel,
   AlignmentType, PageBreak, convertInchesToTwip,
 } from "docx"
-import { getCourseBySlug } from "@/lib/coursesNew"
-import { htmlToBlocks } from "@/lib/html-to-blocks"
-import { filterForPublication, getPublicationWarnings } from "@/lib/publication-filter"
-import { createClient } from "@supabase/supabase-js"
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!
-)
-
-// ── Fetch questions for an article via mcq_url ───────────────────────────────
-async function fetchQuestions(mcqUrl: string): Promise<any[]> {
-  try {
-    const parts = mcqUrl.split("/")
-    const practiceSlug = parts[parts.length - 1]
-    if (!practiceSlug) return []
-    const { data: qSet } = await supabase
-      .from("question_sets")
-      .select("id")
-      .eq("slug", practiceSlug)
-      .maybeSingle()
-    if (!qSet) return []
-    const { data: questions } = await supabase
-      .from("questions")
-      .select("question_text, option_a, option_b, option_c, option_d, correct_index, explanation")
-      .eq("set_id", qSet.id)
-      .order("question_order", { ascending: true })
-    return (questions ?? []).map((q) => ({
-      questionText: q.question_text,
-      options:      [q.option_a, q.option_b, q.option_c, q.option_d].filter(Boolean),
-      correctIndex: q.correct_index,
-      explanation:  q.explanation ?? "",
-    }))
-  } catch {
-    return []
-  }
-}
-
-// ── Build course in block shape ───────────────────────────────────────────────
-async function buildCourse(slug: string) {
-  const course = await getCourseBySlug(slug, true)
-  if (!course) throw new Error("Course not found")
-
-  const allArticleIds = course.chapters
-    .flatMap((ch) => ch.lessons.flatMap((l) => l.articles.map((a) => a.id)))
-
-  const { data: articleRows } = await supabase
-    .from("articles")
-    .select("id, content, mcq_url")
-    .in("id", allArticleIds)
-
-  const articleMap = new Map((articleRows ?? []).map((a) => [a.id, a]))
-
-  const chapters = await Promise.all(
-    course.chapters.map(async (ch) => {
-      const lessons = await Promise.all(
-        ch.lessons.map(async (l) => {
-          const linkedArticles = await Promise.all(
-            l.articles.map(async (a) => {
-              const row = articleMap.get(a.id)
-              const rawContent = row?.content ?? ""
-              const pubWarnings = getPublicationWarnings(rawContent, filterForPublication(rawContent))
-              const body = htmlToBlocks(rawContent, true)
-              let quizQuestions: any[] = []
-              if (row?.mcq_url) {
-                quizQuestions = await fetchQuestions(row.mcq_url)
-              }
-              return {
-                _id:          a.id,
-                title:        a.title,
-                slug:         a.slug,
-                excerpt:      a.excerpt ?? "",
-                body,
-                quizQuestions,
-                publicationWarnings: pubWarnings,
-              }
-            })
-          )
-          return { _id: l.id, title: l.title, slug: l.slug, linkedArticles }
-        })
-      )
-      return { _key: ch.id, chapterTitle: ch.title, chapterOrder: ch.chapterOrder, lessons }
-    })
-  )
-
-  return { title: course.title, slug: course.slug, level: course.level ?? "", chapters }
-}
+import { buildCourse, BuildStats } from "@/lib/ab-press-builder"
 
 // ── Text cleaner ─────────────────────────────────────────────────────────────
 function clean(text: string): string {
@@ -208,7 +122,8 @@ export async function POST(req: NextRequest) {
     if (!slug)     return NextResponse.json({ error: "slug is required" },     { status: 400 })
     if (!bookType) return NextResponse.json({ error: "bookType is required" }, { status: 400 })
 
-    const course    = await buildCourse(slug)
+    const buildStats: BuildStats = { mcqFailed: [], mcqNotFound: [] }
+    const course    = await buildCourse(slug, buildStats)
     const showNotes = bookType === "combined" || bookType === "study"
     const showQs    = bookType === "combined" || bookType === "practice"
     const title     = subtitle || course.title

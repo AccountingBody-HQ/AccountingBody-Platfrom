@@ -240,7 +240,7 @@ export default function AbPressPage() {
                     { val: stats.chapterCount,  label: 'Chapters'     },
                     { val: stats.lessonCount,   label: 'Lessons'      },
                     { val: stats.articleCount,  label: 'Study Notes'  },
-                    { val: stats.questionCount, label: 'Practice Sets' },
+                    { val: stats.questionCount, label: 'Practice Qs' },
                   ].map(({ val, label }) => (
                     <div key={label} className="bg-[#0C1A3D] rounded-lg p-3 border border-slate-700">
                       <p className="text-2xl font-bold text-[#D4A017]">{val}</p>
