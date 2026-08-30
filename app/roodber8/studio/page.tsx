@@ -481,6 +481,10 @@ export default function StudioPage() {
   const [pqTasks, setPqTasks] = useState<PqTask[]>([])
   const [pqPromptText, setPqPromptText] = useState<Record<string, string>>({})
   const [pqBuilding, setPqBuilding] = useState<Record<string, boolean>>({})
+  const [manualArticleId, setManualArticleId] = useState('')
+  const [manualArticleAdding, setManualArticleAdding] = useState(false)
+  const [manualArticleError, setManualArticleError] = useState<string | null>(null)
+  const [manualArticles, setManualArticles] = useState<DailyArticle[]>([])
 
   const [articleTask, setArticleTask] = useState<ArticleTaskState>(DEFAULT_ARTICLE_TASK)
   const [articleMode, setArticleMode] = useState<'url' | 'topic' | 'idea'>('url')
@@ -594,9 +598,70 @@ export default function StudioPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  async function handleAddManualArticle() {
+    const id = manualArticleId.trim().toUpperCase()
+    if (!id.startsWith('AB-ART-')) {
+      setManualArticleError('Please enter a valid Article ID (e.g. AB-ART-02013)')
+      return
+    }
+    // Check not already in auto or manual list
+    const allArticles = [...dailyArticles, ...manualArticles]
+    if (allArticles.some(a => a.content_id === id)) {
+      setManualArticleError('This article is already in the list')
+      return
+    }
+    setManualArticleAdding(true)
+    setManualArticleError(null)
+    try {
+      const res = await fetch(
+        `/api/roodber8/articles/lookup?id=${encodeURIComponent(id)}`
+      )
+      if (!res.ok) {
+        setManualArticleError('Article ID not found — check and try again')
+        return
+      }
+      const data = await res.json() as { article?: { title: string; slug: string; excerpt: string; category: string; category_title: string; exam_body: string[]; difficulty: string; content_id: string } }
+      if (!data.article) {
+        setManualArticleError('Article ID not found — check and try again')
+        return
+      }
+      const art = data.article
+      const newArticle: DailyArticle = {
+        id: art.content_id,
+        title: art.title,
+        slug: art.slug,
+        content_id: art.content_id,
+        category: art.category,
+        category_title: art.category_title,
+        exam_body: art.exam_body,
+        difficulty: art.difficulty,
+        read_time: null,
+        excerpt: art.excerpt,
+        content_preview: '',
+      }
+      setManualArticles(prev => [...prev, newArticle])
+      // Add a fresh task for this article
+      const newTask = makeFreshTask(newArticle)
+      setPqTasks(prev => {
+        const updated = [...prev, newTask]
+        patchSession({ pq_tasks: updated })
+        return updated
+      })
+      setManualArticleId('')
+      setManualArticleError(null)
+    } catch {
+      setManualArticleError('Failed to fetch article. Please try again.')
+    } finally {
+      setManualArticleAdding(false)
+    }
+  }
+
   // Manual refresh — clear everything and fetch fresh articles
   function handleRefreshSelection() {
     setPqPromptText({})
+    setManualArticles([])
+    setManualArticleId('')
+    setManualArticleError(null)
     loadDailyArticlesWithTasks([], true)
   }
 
@@ -841,6 +906,32 @@ export default function StudioPage() {
           </button>
         </div>
 
+        {/* Manual article ID override */}
+        <div className="flex items-center gap-2 mb-5 flex-wrap">
+          <input
+            value={manualArticleId}
+            onChange={e => { setManualArticleId(e.target.value); setManualArticleError(null) }}
+            onKeyDown={e => { if (e.key === 'Enter') handleAddManualArticle() }}
+            placeholder="Add any article by ID — e.g. AB-ART-02013"
+            className="text-sm rounded-xl px-3 py-2 focus:outline-none flex-1 min-w-48"
+            style={C.input}
+          />
+          <button
+            onClick={handleAddManualArticle}
+            disabled={manualArticleAdding || !manualArticleId.trim()}
+            className="flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl"
+            style={{ background: 'rgba(212,160,23,0.12)', color: '#D4A017', border: '1px solid #D4A017', opacity: manualArticleId.trim() ? 1 : 0.5 }}>
+            {manualArticleAdding
+              ? <><Loader2 size={13} className="animate-spin" /> Adding…</>
+              : <><Plus size={13} /> Add Article</>}
+          </button>
+          {manualArticleError && (
+            <p className="text-xs w-full" style={{ color: '#ef4444' }}>
+              ✗ {manualArticleError}
+            </p>
+          )}
+        </div>
+
         {articlesError && (
           <div className="rounded-xl p-4 flex items-center gap-3 mb-4" style={C.danger}>
             <AlertTriangle size={14} className="shrink-0" />
@@ -872,7 +963,7 @@ export default function StudioPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {dailyArticles.map(article => {
+            {[...dailyArticles, ...manualArticles].map(article => {
               const key = article.content_id ?? article.slug
               const task = pqTasks.find(t => t.article_id === key) ?? makeFreshTask(article)
               return (
