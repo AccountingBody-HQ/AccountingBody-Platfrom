@@ -4,7 +4,7 @@ import Link from "next/link"
 import AutoRefresh from "@/components/roodber8/AutoRefresh"
 import {
   Mail, Users, HelpCircle, Building2, Briefcase,
-  ArrowRight, TrendingUp, Factory, Inbox, BookOpen, FileText
+  ArrowRight, TrendingUp, Factory, Inbox, BookOpen, FileText, Sparkles
 } from "lucide-react"
 
 export const dynamic = "force-dynamic"
@@ -200,6 +200,7 @@ export default async function AdminCommandCentre() {
   ]
 
   const QUICK_ACTIONS = [
+    { label: "Content Studio",     sub: "Daily refresh workflow",   href: "/roodber8/studio",          icon: Sparkles,    color: "#D4A017" },
     { label: "View Submissions",   sub: "Help & contact forms",     href: "/roodber8/submissions",     icon: Inbox,       color: "#3b82f6" },
     { label: "Manage Subscribers", sub: "Email list & CSV export",  href: "/roodber8/subscribers",     icon: Users,       color: "#10b981" },
     { label: "Content Factory",    sub: "Generate AI study content",href: "/roodber8/content-factory", icon: Factory,     color: "#f59e0b" },

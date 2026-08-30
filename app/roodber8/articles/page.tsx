@@ -39,7 +39,13 @@ const DIFF_STYLE: Record<string, { bg: string; color: string; border: string }> 
 const ALPHABET = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i))
 const PAGE_SIZE = 50
 
-async function getArticles(safeSearch: string, letter: string, page: number) {
+async function getArticles(
+  safeSearch: string,
+  letter: string,
+  page: number,
+  pqFilter: 'all' | 'with_pq' | 'without_pq',
+  linkedArticleSlugs: Set<string>
+) {
   noStore()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -73,8 +79,15 @@ async function getArticles(safeSearch: string, letter: string, page: number) {
     countQuery,
   ])
 
+  let rows = (articles ?? []) as ArticleRow[]
+  if (pqFilter === 'with_pq') {
+    rows = rows.filter(a => a.slug ? linkedArticleSlugs.has(a.slug) : false)
+  } else if (pqFilter === 'without_pq') {
+    rows = rows.filter(a => a.slug ? !linkedArticleSlugs.has(a.slug) : true)
+  }
+
   return {
-    articles: (articles ?? []) as ArticleRow[],
+    articles: rows,
     filteredCount: filteredCount ?? 0,
   }
 }
@@ -82,12 +95,15 @@ async function getArticles(safeSearch: string, letter: string, page: number) {
 export default async function ArticlesLibraryPage({
   searchParams,
 }: {
-  searchParams?: { search?: string; letter?: string; page?: string }
+  searchParams?: { search?: string; letter?: string; page?: string; pqFilter?: string }
 }) {
   const search = searchParams?.search ?? ''
   const letter = searchParams?.letter ?? ''
   const safeSearch = search.replace(/[,()%]/g, '')
   const safeLetter = letter.replace(/[,()%]/g, '').slice(0, 1).toUpperCase()
+  const pqFilterParam = searchParams?.pqFilter ?? 'all'
+  const pqFilter: 'all' | 'with_pq' | 'without_pq' =
+    pqFilterParam === 'with_pq' || pqFilterParam === 'without_pq' ? pqFilterParam : 'all'
 
   const pageParam = parseInt(searchParams?.page ?? '1', 10)
   const page = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
@@ -95,6 +111,15 @@ export default async function ArticlesLibraryPage({
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SECRET_KEY!
+  )
+
+  const { data: linkedSlugsData } = await supabase
+    .from('question_sets')
+    .select('article_slug')
+    .not('article_slug', 'is', null)
+
+  const linkedArticleSlugs = new Set<string>(
+    (linkedSlugsData ?? []).map(r => r.article_slug as string)
   )
 
   const [
@@ -105,7 +130,7 @@ export default async function ArticlesLibraryPage({
     { count: abContainsCount },
     { count: bothSitesCount },
   ] = await Promise.all([
-    getArticles(safeSearch, safeLetter, page),
+    getArticles(safeSearch, safeLetter, page, pqFilter, linkedArticleSlugs),
     supabase.from('articles').select('*', { count: 'exact', head: true }),
     supabase.from('articles').select('*', { count: 'exact', head: true })
       .eq('status', 'published'),
@@ -119,14 +144,6 @@ export default async function ArticlesLibraryPage({
 
   const abOnlyCount = (abContainsCount ?? 0) - (bothSitesCount ?? 0)
 
-  const { data: linkedSlugsData } = await supabase
-    .from('question_sets')
-    .select('article_slug')
-    .not('article_slug', 'is', null)
-
-  const linkedArticleSlugs = new Set<string>(
-    (linkedSlugsData ?? []).map(r => r.article_slug as string)
-  )
   const pqLinkedCount = linkedArticleSlugs.size
   const noLinkedCount = (total ?? 0) - pqLinkedCount
 
@@ -150,7 +167,16 @@ export default async function ArticlesLibraryPage({
     const params = new URLSearchParams()
     if (safeSearch) params.set('search', safeSearch)
     if (safeLetter) params.set('letter', safeLetter)
+    if (pqFilter && pqFilter !== 'all') params.set('pqFilter', pqFilter)
     params.set('page', String(p))
+    return `/roodber8/articles?${params.toString()}`
+  }
+
+  function pqFilterHref(value: 'all' | 'with_pq' | 'without_pq') {
+    const params = new URLSearchParams()
+    if (safeSearch) params.set('search', safeSearch)
+    if (safeLetter) params.set('letter', safeLetter)
+    if (value !== 'all') params.set('pqFilter', value)
     return `/roodber8/articles?${params.toString()}`
   }
 
@@ -231,6 +257,31 @@ export default async function ArticlesLibraryPage({
             {l}
           </Link>
         ))}
+      </div>
+
+      {/* PQ Filter */}
+      <div className="flex flex-wrap gap-1.5 mb-4">
+        <Link href={pqFilterHref('all')}
+          className="text-xs font-bold px-2.5 py-1.5 rounded-lg"
+          style={pqFilter === 'all'
+            ? { background: '#D4A017', color: '#0C1A3D' }
+            : { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#475569' }}>
+          All Articles
+        </Link>
+        <Link href={pqFilterHref('with_pq')}
+          className="text-xs font-bold px-2.5 py-1.5 rounded-lg"
+          style={pqFilter === 'with_pq'
+            ? { background: '#D4A017', color: '#0C1A3D' }
+            : { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#475569' }}>
+          PQ Linked ✓
+        </Link>
+        <Link href={pqFilterHref('without_pq')}
+          className="text-xs font-bold px-2.5 py-1.5 rounded-lg"
+          style={pqFilter === 'without_pq'
+            ? { background: '#D4A017', color: '#0C1A3D' }
+            : { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#475569' }}>
+          No PQ
+        </Link>
       </div>
 
       {/* Search */}

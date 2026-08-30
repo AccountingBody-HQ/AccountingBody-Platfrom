@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Inbox, Users, Briefcase, Building2,
   Factory, Settings, LogOut, ExternalLink,
-  ChevronRight, BookOpen, FileText
+  ChevronRight, BookOpen, FileText, Sparkles
 } from 'lucide-react'
 
 // Sanity Studio nav entry removed — Sanity CMS is fully decommissioned (replaced by Supabase).
@@ -19,6 +19,7 @@ const NAV = [
   { href: '/roodber8/questions',        exact: false, icon: BookOpen,        label: 'Questions',       sub: 'Generate and manage MCQs'  },
   { href: '/roodber8/articles',        exact: false, icon: FileText,        label: 'Articles',        sub: 'Manage and import content' },
   { href: '/roodber8/content-factory', exact: false, icon: Factory,         label: 'Content Factory', sub: 'AI content generation'     },
+  { href: '/roodber8/studio',           exact: false, icon: Sparkles,        label: 'Studio',          sub: 'Daily content refresh'      },
   { href: '/roodber8/courses',          exact: false, icon: BookOpen,        label: 'Courses',         sub: 'Manage and publish courses'  },
   { href: '/roodber8/course-factory',   exact: false, icon: Factory,         label: 'Course Factory',  sub: 'Assemble structured courses' },
   { href: '/roodber8/ab-press',         exact: false, icon: BookOpen,        label: 'AB Press',        sub: 'Generate KDP-ready books'    },
@@ -44,6 +45,7 @@ function getBreadcrumb(pathname: string) {
     '/roodber8/questions/generate': 'Generate',
     '/roodber8/questions/import':   'Import',
     '/roodber8/content-factory':    'Content Factory',
+    '/roodber8/studio':             'Studio',
     '/roodber8/articles':           'Articles',
     '/roodber8/articles/import':    'Import Article',
     '/roodber8/courses':            'Courses',
