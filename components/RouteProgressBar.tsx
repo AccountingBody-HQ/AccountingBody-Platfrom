@@ -10,11 +10,24 @@ export default function RouteProgressBar() {
   const timers = useRef<ReturnType<typeof setTimeout>[]>([])
   const started = useRef(false)
   const touchStart = useRef<{x: number, y: number} | null>(null)
+  const safetyTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
 
   const clearAll = useCallback(() => {
     timers.current.forEach(clearTimeout)
     timers.current = []
   }, [])
+
+  const completeBar = useCallback(() => {
+    started.current = false
+    clearAll()
+    if (safetyTimeoutRef.current) {
+      clearTimeout(safetyTimeoutRef.current)
+      safetyTimeoutRef.current = undefined
+    }
+    setWidth(100)
+    const hide = setTimeout(() => setVisible(false), 400)
+    timers.current = [hide]
+  }, [clearAll])
 
   const startBar = useCallback(() => {
     if (started.current) return
@@ -26,15 +39,14 @@ export default function RouteProgressBar() {
     const t2 = setTimeout(() => setWidth(70), 300)
     const t3 = setTimeout(() => setWidth(85), 800)
     timers.current = [t1, t2, t3]
-  }, [clearAll])
-
-  const completeBar = useCallback(() => {
-    started.current = false
-    clearAll()
-    setWidth(100)
-    const hide = setTimeout(() => setVisible(false), 400)
-    timers.current = [hide]
-  }, [clearAll])
+    // General safety net: if pathname/searchParams never change (e.g. a
+    // target="_blank" link slips through, or navigation otherwise stalls),
+    // force the bar to complete instead of sitting stuck indefinitely.
+    if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current)
+    safetyTimeoutRef.current = setTimeout(() => {
+      if (started.current) completeBar()
+    }, 8000)
+  }, [clearAll, completeBar])
 
   useEffect(() => {
     const onMouseDown = (e: MouseEvent) => {
@@ -43,6 +55,7 @@ export default function RouteProgressBar() {
       const href = target.getAttribute('href')
       if (!href || href.startsWith('http') || href.startsWith('mailto') || href.startsWith('#')) return
       if (href === window.location.pathname) return
+      if (target.target === '_blank') return
       startBar()
     }
 
@@ -62,6 +75,7 @@ export default function RouteProgressBar() {
       const href = target.getAttribute('href')
       if (!href || href.startsWith('http') || href.startsWith('mailto') || href.startsWith('#')) return
       if (href === window.location.pathname) return
+      if (target.target === '_blank') return
       startBar()
     }
 
@@ -72,6 +86,7 @@ export default function RouteProgressBar() {
       document.removeEventListener('mousedown', onMouseDown)
       document.removeEventListener('touchstart', onTouchStart)
       document.removeEventListener('touchend', onTouchEnd)
+      if (safetyTimeoutRef.current) clearTimeout(safetyTimeoutRef.current)
     }
   }, [startBar])
 
