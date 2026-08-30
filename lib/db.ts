@@ -76,7 +76,6 @@ export async function getArticleBySlug(slug: string): Promise<ArticleFull | null
     .select('*')
     .eq('slug', slug)
     .eq('status', 'published')
-    .contains('show_on_sites', ['ab'])
     .single()
   if (error || !data) return null
   return data as ArticleFull

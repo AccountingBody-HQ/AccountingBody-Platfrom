@@ -220,6 +220,32 @@ export default function ImportQuestionsPage() {
   const [publishError, setPublishError] = useState('')
   const [publishedSlug, setPublishedSlug] = useState('')
   const [articleSlug, setArticleSlug]     = useState('')
+  const [articleFetchStatus, setArticleFetchStatus] = useState<'idle'|'loading'|'found'|'not_found'>('idle')
+
+  async function lookupArticleById(id: string) {
+    const trimmed = id.trim().toUpperCase()
+    if (!trimmed.startsWith('AB-ART-')) return
+    setArticleFetchStatus('loading')
+    try {
+      const res = await fetch(`/api/roodber8/articles/lookup?id=${encodeURIComponent(trimmed)}`)
+      if (!res.ok) { setArticleFetchStatus('not_found'); return }
+      const data = await res.json()
+      if (!data.article) { setArticleFetchStatus('not_found'); return }
+      const art = data.article
+      if (!metaTitle || metaTitle.startsWith('Imported Question Set')) {
+        setMetaTitle(`${art.title} — Practice Questions`)
+      }
+      if (!metaTopic && (art.category_title || art.category)) {
+        setMetaTopic(art.category_title || art.category)
+      }
+      if (!metaExcerpt || metaExcerpt === '1 imported question.' || metaExcerpt.startsWith('1 imported') || metaExcerpt.startsWith('Imported')) {
+        setMetaExcerpt(art.excerpt || '')
+      }
+      setArticleFetchStatus('found')
+    } catch {
+      setArticleFetchStatus('not_found')
+    }
+  }
 
   async function handleParse() {
     if (!rawJson.trim()) { setParseError('Paste your JSON first'); return }
@@ -293,6 +319,7 @@ export default function ImportQuestionsPage() {
     setShowOnSites(['accountingbody']); setCanonical('accountingbody')
     setPublishedSlug('')
     setArticleSlug('')
+    setArticleFetchStatus('idle')
   }
 
   const EXAM_BODIES = ['acca', 'cima', 'icaew', 'aat', 'eticpa']
@@ -573,11 +600,23 @@ export default function ImportQuestionsPage() {
               <input
                 type="text"
                 value={articleSlug}
-                onChange={e => setArticleSlug(e.target.value)}
+                onChange={e => { setArticleSlug(e.target.value); setArticleFetchStatus('idle') }}
+                onBlur={e => lookupArticleById(e.target.value)}
                 placeholder="e.g. AB-ART-02013"
                 className="w-full px-3 py-2 text-sm focus:outline-none"
                 style={C.input}
               />
+              {articleFetchStatus === 'loading' && (
+                <p className="text-xs mt-1.5 flex items-center gap-1.5" style={{ color: '#475569' }}>
+                  <Loader2 size={11} className="animate-spin" /> Looking up article…
+                </p>
+              )}
+              {articleFetchStatus === 'found' && (
+                <p className="text-xs mt-1.5" style={{ color: '#10b981' }}>✓ Article found — title, topic and excerpt pre-filled</p>
+              )}
+              {articleFetchStatus === 'not_found' && (
+                <p className="text-xs mt-1.5" style={{ color: '#ef4444' }}>✗ Article ID not found — check and try again</p>
+              )}
             </div>
           </div>
 

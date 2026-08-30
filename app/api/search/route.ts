@@ -30,23 +30,18 @@ export async function GET(req: NextRequest) {
 
   const search = q.trim().toLowerCase()
 
-  const isEt = req.headers.get('x-et-platform') === 'ethiotax'
-  const siteCode = isEt ? 'et' : 'ab'
-
   const [articleResults, pqResults] = await Promise.all([
     supabase
       .from('articles')
       .select('id, title, slug, excerpt, category, exam_body, published_at, created_at')
       .eq('status', 'published')
-      .contains('show_on_sites', [siteCode])
       .or(`title.ilike.%${search}%,excerpt.ilike.%${search}%`)
-      .order('published_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
       .limit(40),
     supabase
       .from('question_sets')
       .select('id, title, slug, excerpt, difficulty, published_at')
       .eq('status', 'published')
-      .contains('show_on_sites', [siteCode])
       .ilike('title', `%${search}%`)
       .order('published_at', { ascending: false, nullsFirst: false })
       .limit(20),
