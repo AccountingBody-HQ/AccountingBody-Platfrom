@@ -9,6 +9,10 @@ import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 
 export async function generateStaticParams() {
   const slugs = await getAllArticleSlugs()
+  // getAllArticleSlugs returns slug strings only — use 'acca' as the
+  // default category segment. The category param is not used for DB lookup
+  // (getArticleBySlug uses slug only), so this pre-generates the primary
+  // canonical path. Non-acca paths are served dynamically on first request.
   return slugs.map(slug => ({ category: 'acca', slug }))
 }
 

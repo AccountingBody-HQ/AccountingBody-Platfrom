@@ -41,7 +41,12 @@ const AB_POPULAR_SEARCHES = [
 
 function getUrl(r: SearchResult): string {
   switch (r._type) {
-    case 'article':        return `/articles/${r.slug}`
+    case 'article': {
+      const body = Array.isArray(r.examBody) ? r.examBody[0] : r.examBody
+      return body
+        ? `/study/${body.toLowerCase()}/${r.slug}`
+        : `/articles/${r.slug}`
+    }
     case 'practicePost':   return `/practice-questions/${r.slug}`
     case 'course':         return `/courses/${r.slug}`
     case 'quiz':           return `/quiz/${r.slug}`

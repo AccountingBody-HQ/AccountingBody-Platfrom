@@ -30,20 +30,25 @@ export async function GET(req: NextRequest) {
 
   const search = q.trim().toLowerCase()
 
+  const isEt = req.headers.get('x-et-platform') === 'ethiotax'
+  const siteCode = isEt ? 'et' : 'ab'
+
   const [articleResults, pqResults] = await Promise.all([
     supabase
       .from('articles')
-      .select('id, title, slug, excerpt, category, exam_body, published_at')
+      .select('id, title, slug, excerpt, category, exam_body, published_at, created_at')
       .eq('status', 'published')
+      .contains('show_on_sites', [siteCode])
       .or(`title.ilike.%${search}%,excerpt.ilike.%${search}%`)
-      .order('published_at', { ascending: false })
+      .order('published_at', { ascending: false, nullsFirst: false })
       .limit(40),
     supabase
       .from('question_sets')
       .select('id, title, slug, excerpt, difficulty, published_at')
       .eq('status', 'published')
+      .contains('show_on_sites', [siteCode])
       .ilike('title', `%${search}%`)
-      .order('published_at', { ascending: false })
+      .order('published_at', { ascending: false, nullsFirst: false })
       .limit(20),
   ])
 
@@ -55,7 +60,7 @@ export async function GET(req: NextRequest) {
     excerpt:    a.excerpt,
     category:   a.category,
     examBody:   a.exam_body,
-    publishedAt: a.published_at,
+    publishedAt: a.published_at ?? a.created_at,
   }))
 
   const pqs = (pqResults.data ?? []).map(p => ({
