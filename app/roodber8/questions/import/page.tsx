@@ -219,6 +219,7 @@ export default function ImportQuestionsPage() {
   const [publishing, setPublishing]   = useState(false)
   const [publishError, setPublishError] = useState('')
   const [publishedSlug, setPublishedSlug] = useState('')
+  const [articleSlug, setArticleSlug]     = useState('')
 
   async function handleParse() {
     if (!rawJson.trim()) { setParseError('Paste your JSON first'); return }
@@ -269,6 +270,7 @@ export default function ImportQuestionsPage() {
           examBody:      metaExamBody,
           showOnSites,
           canonicalOwner: canonical,
+          articleSlug:    articleSlug.trim() || null,
         }),
       })
       const data = await res.json()
@@ -290,6 +292,7 @@ export default function ImportQuestionsPage() {
     setMetaExamBody('acca')
     setShowOnSites(['accountingbody']); setCanonical('accountingbody')
     setPublishedSlug('')
+    setArticleSlug('')
   }
 
   const EXAM_BODIES = ['acca', 'cima', 'icaew', 'aat', 'eticpa']
@@ -561,6 +564,20 @@ export default function ImportQuestionsPage() {
                   ))}
                 </div>
               </div>
+            </div>
+
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider mb-1.5" style={{ color: '#475569' }}>
+                Linked Article Slug <span style={{ color: '#334155', fontWeight: 400 }}>(optional — paste the article slug to link this PQ set to an article)</span>
+              </p>
+              <input
+                type="text"
+                value={articleSlug}
+                onChange={e => setArticleSlug(e.target.value)}
+                placeholder="e.g. base-currency-explained-what-it-is-and-how-it-works"
+                className="w-full px-3 py-2 text-sm focus:outline-none"
+                style={C.input}
+              />
             </div>
           </div>
 

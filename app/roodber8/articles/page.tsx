@@ -10,6 +10,7 @@ interface ArticleRow {
   id:             string
   title:          string
   slug:           string
+  content_id:     string | null
   category:       string | null
   category_title: string | null
   exam_body:      string[] | null
@@ -50,7 +51,7 @@ async function getArticles(safeSearch: string, letter: string, page: number) {
 
   let listQuery = supabase
     .from('articles')
-    .select('id, title, slug, category, category_title, exam_body, status, show_on_sites, platform, published_at, created_at, author_name, read_time, difficulty')
+    .select('id, title, slug, content_id, category, category_title, exam_body, status, show_on_sites, platform, published_at, created_at, author_name, read_time, difficulty')
     .order('created_at', { ascending: false })
     .range(from, to)
 
@@ -118,6 +119,17 @@ export default async function ArticlesLibraryPage({
 
   const abOnlyCount = (abContainsCount ?? 0) - (bothSitesCount ?? 0)
 
+  const { data: linkedSlugsData } = await supabase
+    .from('question_sets')
+    .select('article_slug')
+    .not('article_slug', 'is', null)
+
+  const linkedArticleSlugs = new Set<string>(
+    (linkedSlugsData ?? []).map(r => r.article_slug as string)
+  )
+  const pqLinkedCount = linkedArticleSlugs.size
+  const noLinkedCount = (total ?? 0) - pqLinkedCount
+
   const totalPages = Math.ceil(filteredCount / PAGE_SIZE)
   const isFiltered = !!(safeSearch || safeLetter)
 
@@ -127,6 +139,8 @@ export default async function ArticlesLibraryPage({
     { label: 'Draft',          value: draftCount ?? 0,      color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)' },
     { label: 'AB Only',        value: abOnlyCount,          color: '#3b82f6', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.2)' },
     { label: 'Both Sites',     value: bothSitesCount ?? 0,  color: '#8b5cf6', bg: 'rgba(139,92,246,0.08)', border: 'rgba(139,92,246,0.2)' },
+    { label: 'PQ Linked',      value: pqLinkedCount,        color: '#10b981', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)' },
+    { label: 'No PQ',          value: noLinkedCount,        color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)' },
   ]
 
   const prevPage = page > 1 ? page - 1 : null
@@ -189,7 +203,7 @@ export default async function ArticlesLibraryPage({
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-7 gap-4 mb-6">
         {STATS.map(s => (
           <div key={s.label} className="rounded-2xl border p-5"
             style={{ background: s.bg, borderColor: s.border }}>
@@ -270,6 +284,7 @@ export default async function ArticlesLibraryPage({
             {articles.map(article => {
               const diff = article.difficulty ? DIFF_STYLE[article.difficulty] ?? DIFF_STYLE.intermediate : null
               const examBody = article.exam_body?.[0] ?? ''
+              const isPqLinked = article.slug ? linkedArticleSlugs.has(article.slug) : false
               return (
                 <div key={article.id} className="px-6 py-4 flex items-center gap-4 hover:bg-white/[0.02] transition-colors">
                   <div className="flex-1 min-w-0">
@@ -304,6 +319,23 @@ export default async function ArticlesLibraryPage({
                     )}
                     {article.read_time != null && (
                       <span className="text-xs" style={{ color: '#475569' }}>{article.read_time} min read</span>
+                    )}
+                    {article.content_id && (
+                      <span
+                        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #1f2937', color: '#475569', fontFamily: 'monospace', fontSize: '10px', padding: '2px 6px', borderRadius: 6 }}>
+                        {article.content_id}
+                      </span>
+                    )}
+                    {isPqLinked ? (
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-lg"
+                        style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', color: '#10b981' }}>
+                        PQ ✓
+                      </span>
+                    ) : (
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-lg"
+                        style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#f59e0b' }}>
+                        No PQ
+                      </span>
                     )}
                     <Link href={`/roodber8/articles/${article.id}`}
                       className="text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1"

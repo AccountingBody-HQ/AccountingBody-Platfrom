@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
       examBody,
       showOnSites = ['accountingbody'],
       canonicalOwner = 'accountingbody',
+      articleSlug,
     } = body
 
     if (!bundle || !bundle.questions?.length) {
@@ -99,6 +100,7 @@ export async function POST(req: NextRequest) {
       platform,
       content_id:       contentId,
       published_at:     now,
+      article_slug:     articleSlug ?? null,
     }
 
     const { data: insertedSet, error: setError } = await supabase
