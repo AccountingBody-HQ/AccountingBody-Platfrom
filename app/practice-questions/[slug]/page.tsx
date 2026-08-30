@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
-import { getQuestionSetBySlug, getQuestionsBySetId, getCasesBySetId } from '@/lib/db'
+import { getQuestionSetBySlug, getQuestionsBySetId, getCasesBySetId, getArticleBySlug } from '@/lib/db'
 import QuizRenderer from '@/components/QuizRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 
@@ -30,9 +30,10 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
   const qset = await getQuestionSetBySlug(slug)
   if (!qset) notFound()
-  const [questions, cases] = await Promise.all([
+  const [questions, cases, relatedArticleData] = await Promise.all([
     getQuestionsBySetId(qset.id),
     getCasesBySetId(qset.id),
+    qset.article_slug ? getArticleBySlug(qset.article_slug) : Promise.resolve(null),
   ])
   const quizJson = JSON.stringify({
     question_type: qset.question_type ?? 'multiple-choice',
@@ -65,8 +66,14 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
     excerpt: qset.excerpt,
     difficulty: qset.difficulty,
     quizJson,
-    relatedArticle: qset.article_slug
-      ? { title: qset.article_slug.replace(/-/g, ' '), slug: qset.article_slug }
+    relatedArticle: relatedArticleData
+      ? {
+          title: relatedArticleData.title,
+          slug:  relatedArticleData.slug,
+          href:  relatedArticleData.exam_body?.[0]
+            ? `/study/${relatedArticleData.exam_body[0].toLowerCase()}/${relatedArticleData.slug}`
+            : `/articles/${relatedArticleData.slug}`,
+        }
       : null,
   }
 
@@ -130,7 +137,7 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
                       <p className='font-display text-navy-950 text-base font-semibold mb-1'>{post.relatedArticle.title}</p>
                       <p className='text-slate-500 text-sm mb-3'>Read the full study note to strengthen your understanding of this topic.</p>
                       <Link
-                        href={`/articles/${post.relatedArticle.slug}`}
+                        href={post.relatedArticle.href}
                         className='inline-flex items-center gap-2 text-sm font-semibold text-navy-950 hover:text-gold-600 transition-colors'
                       >
                         Read study note
@@ -194,7 +201,7 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
                     <p className='font-display text-white text-sm mb-2 leading-snug'>Study this topic</p>
                     <p className='text-white/55 text-xs leading-relaxed mb-3'>Read the full study note before attempting the questions.</p>
                     <Link
-                      href={`/articles/${post.relatedArticle.slug}`}
+                      href={post.relatedArticle.href}
                       className='flex items-center justify-center gap-2 w-full h-10 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors'
                     >
                       <svg className='w-3.5 h-3.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeWidth='2' d='M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' /></svg>

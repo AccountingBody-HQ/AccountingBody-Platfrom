@@ -189,6 +189,24 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Close the bidirectional link: update articles.mcq_url so the
+    // article page's "Practice this topic" CTA points to this PQ set.
+    // Non-fatal: PQ is already published; a failure here is logged only.
+    if (resolvedArticleSlug) {
+      const mcqUrl = `/practice-questions/${slug}`
+      const { error: mcqUpdateError } = await supabase
+        .from('articles')
+        .update({
+          mcq_url:    mcqUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('slug', resolvedArticleSlug)
+        .eq('status', 'published')
+      if (mcqUpdateError) {
+        console.error('questions/publish mcq_url update error:', mcqUpdateError)
+      }
+    }
+
     return NextResponse.json({
       success:       true,
       documentId:    setId,
