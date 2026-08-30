@@ -852,7 +852,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   <div className="container-site">
     <div className="flex items-end justify-between mb-10 gap-4">
       <div>
-        <span className="eyebrow mb-3 block">News &amp; Insights</span>
+        <span className="eyebrow mb-3 block">Daily Digest</span>
         <h2 className="section-title">Latest from EthioTax</h2>
         <p className="text-slate-500 text-base leading-relaxed mt-2 max-w-xl">
           Industry updates, tax briefs and insights for Ethiopian finance professionals and the diaspora.
@@ -1657,7 +1657,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           <div className="flex items-end justify-between mb-10 gap-4">
             <div>
               <span className={`eyebrow mb-3 block`}>
-                {isEthioTax ? 'News & Insights' : 'Insights & Analysis'}
+                {isEthioTax ? 'Daily Digest' : 'Daily Digest'}
               </span>
               <h2 className="section-title">
                 {isEthioTax ? 'Latest from EthioTax' : 'Latest from Accounting Body'}
@@ -1691,7 +1691,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               className={`inline-flex items-center gap-2 h-11 px-6 rounded-lg text-sm font-semibold transition-colors shadow-sm ${isEthioTax ? 'text-white hover:opacity-90' : 'bg-navy-950 text-white hover:bg-navy-900'}`}
               style={isEthioTax ? {backgroundColor: '#1A4731'} : {}}
             >
-              {isEthioTax ? 'Browse all insights' : 'Browse all 3,000+ articles'}
+              {isEthioTax ? 'Browse all insights' : 'Browse all articles'}
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>

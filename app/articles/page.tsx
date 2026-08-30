@@ -56,7 +56,7 @@ export default async function ArticlesPage() {
           </nav>
           {isEthioTax ? (
             <>
-              <p className="text-[#C9982A] text-[11px] font-bold uppercase tracking-[0.12em] mb-4">News & Insights</p>
+              <p className="text-[#C9982A] text-[11px] font-bold uppercase tracking-[0.12em] mb-4">Daily Digest</p>
               <h1 className="font-display text-white text-4xl md:text-5xl mb-4 leading-tight">Latest from EthioTax</h1>
               <p className="text-white/60 text-xl leading-relaxed max-w-2xl">
                 Industry updates, tax briefs, accounting news and insights — curated for Ethiopian finance professionals and the diaspora.
@@ -64,7 +64,7 @@ export default async function ArticlesPage() {
             </>
           ) : (
             <>
-              <p className="text-gold-400 text-[11px] font-bold uppercase tracking-[0.12em] mb-4">News & Insights</p>
+              <p className="text-gold-400 text-[11px] font-bold uppercase tracking-[0.12em] mb-4">Daily Digest</p>
               <h1 className="font-display text-white text-4xl md:text-5xl mb-4 leading-tight">Latest from Accounting Body</h1>
               <p className="text-white/60 text-xl leading-relaxed max-w-2xl">
                 Industry updates, accounting news, finance briefs and the latest insights — all in one place.
