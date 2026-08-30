@@ -44,9 +44,16 @@ async function getArticles(
   letter: string,
   page: number,
   pqFilter: 'all' | 'with_pq' | 'without_pq',
-  linkedArticleSlugs: Set<string>
+  linkedSlugs: string[]
 ) {
   noStore()
+
+  // 'with_pq' with no linked articles at all can never match anything —
+  // short-circuit rather than issuing a query that would return everything.
+  if (pqFilter === 'with_pq' && linkedSlugs.length === 0) {
+    return { articles: [] as ArticleRow[], filteredCount: 0 }
+  }
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SECRET_KEY!
@@ -74,20 +81,21 @@ async function getArticles(
     countQuery = countQuery.ilike('title', `${letter}%`)
   }
 
+  if (pqFilter === 'with_pq') {
+    listQuery  = listQuery.in('slug', linkedSlugs)
+    countQuery = countQuery.in('slug', linkedSlugs)
+  } else if (pqFilter === 'without_pq' && linkedSlugs.length > 0) {
+    listQuery  = listQuery.notIn('slug', linkedSlugs)
+    countQuery = countQuery.notIn('slug', linkedSlugs)
+  }
+
   const [{ data: articles }, { count: filteredCount }] = await Promise.all([
     listQuery,
     countQuery,
   ])
 
-  let rows = (articles ?? []) as ArticleRow[]
-  if (pqFilter === 'with_pq') {
-    rows = rows.filter(a => a.slug ? linkedArticleSlugs.has(a.slug) : false)
-  } else if (pqFilter === 'without_pq') {
-    rows = rows.filter(a => a.slug ? !linkedArticleSlugs.has(a.slug) : true)
-  }
-
   return {
-    articles: rows,
+    articles: (articles ?? []) as ArticleRow[],
     filteredCount: filteredCount ?? 0,
   }
 }
@@ -121,6 +129,7 @@ export default async function ArticlesLibraryPage({
   const linkedArticleSlugs = new Set<string>(
     (linkedSlugsData ?? []).map(r => r.article_slug as string)
   )
+  const linkedSlugsArray = Array.from(linkedArticleSlugs)
 
   const [
     { articles, filteredCount },
@@ -130,7 +139,7 @@ export default async function ArticlesLibraryPage({
     { count: abContainsCount },
     { count: bothSitesCount },
   ] = await Promise.all([
-    getArticles(safeSearch, safeLetter, page, pqFilter, linkedArticleSlugs),
+    getArticles(safeSearch, safeLetter, page, pqFilter, linkedSlugsArray),
     supabase.from('articles').select('*', { count: 'exact', head: true }),
     supabase.from('articles').select('*', { count: 'exact', head: true })
       .eq('status', 'published'),
