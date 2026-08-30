@@ -19,61 +19,72 @@ function checkRateLimit(ip: string): boolean {
   return true
 }
 
+// Strip characters that are special in PostgREST filter syntax.
+// Commas delimit .or() expressions; ( ) . % have syntactic meaning.
+// Stripping them from word tokens prevents filter string corruption.
+function sanitiseWord(w: string): string {
+  return w.replace(/[,().%]/g, '').trim()
+}
+
 export async function GET(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
   if (!checkRateLimit(ip)) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Cache-Control': 'no-store' } }
+    )
   }
 
   const q = req.nextUrl.searchParams.get('q') ?? ''
-  if (q.trim().length < 2) return NextResponse.json([])
+  if (q.trim().length < 2) {
+    return NextResponse.json([], { headers: { 'Cache-Control': 'no-store' } })
+  }
 
-  const search = q.trim().toLowerCase()
-
-  // Split query into meaningful words (≥2 chars, deduplicated)
+  // Sanitise the raw query: lowercase, strip PostgREST special chars,
+  // split into individual words, deduplicate, drop empty/single-char tokens.
+  const rawSearch = q.trim().toLowerCase()
   const words = Array.from(
-    new Set(search.split(/\s+/).filter(w => w.length >= 2))
+    new Set(
+      rawSearch
+        .split(/\s+/)
+        .map(sanitiseWord)
+        .filter(w => w.length >= 2)
+    )
   )
 
-  // Build article query: chain one .ilike per word so ALL words must
-  // appear somewhere in title OR excerpt. Each chained .ilike is ANDed.
-  // This correctly handles punctuation between words in the title.
+  // If sanitising stripped everything (e.g. query was only punctuation),
+  // return empty rather than sending a malformed or unbounded query.
+  if (words.length === 0) {
+    return NextResponse.json([], { headers: { 'Cache-Control': 'no-store' } })
+  }
+
+  // Build article query.
+  // Strategy: chain one .or() per word so ALL words must appear somewhere
+  // in title OR excerpt. Each chained .or() is ANDed with the others by
+  // Supabase/PostgREST. Each word token is already sanitised so no
+  // PostgREST-special characters appear inside the ilike pattern.
+  // Fetch 100 candidates so relevance re-ranking has a wide pool —
+  // ordering by date before ranking would bury older relevant articles.
   let articleQuery = supabase
     .from('articles')
     .select('id, title, slug, excerpt, category, exam_body, published_at, created_at')
     .eq('status', 'published')
 
-  if (words.length === 1) {
-    // Single word: standard OR across title and excerpt
+  for (const word of words) {
     articleQuery = articleQuery.or(
-      `title.ilike.%${words[0]}%,excerpt.ilike.%${words[0]}%`
+      `title.ilike.%${word}%,excerpt.ilike.%${word}%`
     )
-  } else {
-    // Multiple words: each word must appear in title OR excerpt.
-    // Chain .or() calls — each is ANDed with the others.
-    for (const word of words) {
-      articleQuery = articleQuery.or(
-        `title.ilike.%${word}%,excerpt.ilike.%${word}%`
-      )
-    }
   }
-
-  // Fetch more than the display limit so relevance re-ranking has
-  // enough candidates. 100 gives good coverage without excessive load.
   articleQuery = articleQuery.limit(100)
 
-  // PQ query: title match only (excerpts are auto-generated and less useful)
+  // Build PQ query — title match only.
   let pqQuery = supabase
     .from('question_sets')
     .select('id, title, slug, excerpt, difficulty, published_at')
     .eq('status', 'published')
 
-  if (words.length === 1) {
-    pqQuery = pqQuery.ilike('title', `%${words[0]}%`)
-  } else {
-    for (const word of words) {
-      pqQuery = pqQuery.ilike('title', `%${word}%`)
-    }
+  for (const word of words) {
+    pqQuery = pqQuery.ilike('title', `%${word}%`)
   }
   pqQuery = pqQuery
     .order('published_at', { ascending: false, nullsFirst: false })
@@ -84,25 +95,33 @@ export async function GET(req: NextRequest) {
     pqQuery,
   ])
 
-  // Relevance scoring — multi-tier:
-  // 4: exact full phrase match in title
-  // 3: all query words appear in title
-  // 2: exact full phrase match in excerpt
-  // 1: all query words appear in excerpt
-  // 0: fallback (shouldn't reach given filter above)
-  function scoreArticle(title: string, excerpt: string): number {
-    const t = title.toLowerCase()
-    const e = (excerpt ?? '').toLowerCase()
-    if (t.includes(search)) return 4
+  // Relevance scoring — multi-tier (higher = more relevant).
+  // Uses sanitised words for word-level checks.
+  // Uses rawSearch for exact-phrase check — rawSearch has punctuation
+  // stripped only of PostgREST specials; the title/excerpt comparison
+  // is done on lowercased strings so minor punctuation differences
+  // (parentheses already stripped from rawSearch) won't prevent a match.
+  const rawSearchSanitised = sanitiseWord(rawSearch.replace(/\s+/g, ' '))
+
+  function scoreText(title: string, excerpt: string): number {
+    const t = title.toLowerCase().replace(/[,().%]/g, '')
+    const e = (excerpt ?? '').toLowerCase().replace(/[,().%]/g, '')
+    const s = rawSearchSanitised
+    // Tier 4: sanitised full phrase appears in sanitised title
+    if (t.includes(s)) return 4
+    // Tier 3: all sanitised words appear in sanitised title
     if (words.every(w => t.includes(w))) return 3
-    if (e.includes(search)) return 2
+    // Tier 2: sanitised full phrase appears in sanitised excerpt
+    if (e.includes(s)) return 2
+    // Tier 1: all sanitised words appear in sanitised excerpt
     if (words.every(w => e.includes(w))) return 1
     return 0
   }
 
   function scorePQ(title: string): number {
-    const t = title.toLowerCase()
-    if (t.includes(search)) return 4
+    const t = title.toLowerCase().replace(/[,().%]/g, '')
+    const s = rawSearchSanitised
+    if (t.includes(s)) return 4
     if (words.every(w => t.includes(w))) return 3
     return 1
   }
@@ -116,7 +135,7 @@ export async function GET(req: NextRequest) {
     category:    a.category,
     examBody:    a.exam_body,
     publishedAt: a.published_at ?? a.created_at,
-    _score:      scoreArticle(a.title ?? '', a.excerpt ?? ''),
+    _score:      scoreText(a.title ?? '', a.excerpt ?? ''),
   }))
 
   const pqs = (pqResults.data ?? []).map(p => ({
@@ -129,18 +148,20 @@ export async function GET(req: NextRequest) {
     _score:      scorePQ(p.title ?? ''),
   }))
 
-  // Sort by score descending; within same score, articles before PQs
+  // Sort by score descending.
+  // Tie-break: articles before PQs (study content takes priority).
   const combined = [...articles, ...pqs]
   combined.sort((a, b) => {
     if (b._score !== a._score) return b._score - a._score
-    // Tie-break: articles before PQs, then by date
     if (a._type !== b._type) return a._type === 'article' ? -1 : 1
     return 0
   })
 
-  // Strip internal _score before returning
+  // Remove internal scoring field before returning.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const results = combined.map(({ _score, ...r }) => r)
 
-  return NextResponse.json(results)
+  return NextResponse.json(results, {
+    headers: { 'Cache-Control': 'no-store' },
+  })
 }
