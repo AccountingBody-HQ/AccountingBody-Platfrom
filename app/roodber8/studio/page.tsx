@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
   Sparkles, Share2, Copy, Check, RefreshCw, Loader2, X, Plus,
-  FileText, HelpCircle, BookOpen, ExternalLink,
+  FileText, HelpCircle, BookOpen, ExternalLink, AlertTriangle,
 } from 'lucide-react'
 
 const C = {
@@ -111,11 +111,10 @@ function stripHtmlAndTruncate(html: string, maxLen = 4000): string {
 }
 
 function buildPqPrompt(article: DailyArticle, fullContent: string): string {
-  const examBodyUpper = (article.exam_body?.[0] || '').toUpperCase()
+  const examBodyUpper = (article.exam_body?.[0] || 'ACCA').toUpperCase()
   const examBodyLower = examBodyUpper.toLowerCase()
   const categoryLower = (article.category || article.category_title || '').toLowerCase()
   const cleanContent = stripHtmlAndTruncate(fullContent, 4000)
-  const slug = article.slug
 
   return `You are an expert accounting and finance examination question writer
 with deep knowledge of professional qualifications including
@@ -126,10 +125,10 @@ multiple-choice questions (MCQs) based on the following article.
 
 ARTICLE DETAILS:
 Title: ${article.title}
-Category: ${article.category_title}
+Category: ${article.category_title || article.category || 'Accounting'}
 Exam Body: ${examBodyUpper}
-Difficulty: ${article.difficulty}
-Topic: ${article.excerpt}
+Difficulty: ${article.difficulty || 'intermediate'}
+Topic: ${article.excerpt || article.title}
 
 ARTICLE CONTENT:
 ${cleanContent}
@@ -185,10 +184,10 @@ code fences. Return a single JSON object with this exact structure:
 
 {
   "title": "${article.title} — Practice Questions",
-  "slug": "${slug}-practice-questions",
-  "excerpt": "25 exam-standard practice questions covering ${article.category_title} concepts from the article: ${article.title}. Tests understanding across beginner, intermediate and advanced levels.",
-  "difficulty": "${article.difficulty}",
-  "topic": "${article.category_title}",
+  "slug": "${article.slug}-practice-questions",
+  "excerpt": "25 exam-standard practice questions covering ${article.category_title || article.category} concepts from the article: ${article.title}. Tests understanding across beginner, intermediate and advanced levels.",
+  "difficulty": "${article.difficulty || 'intermediate'}",
+  "topic": "${article.category_title || article.category || 'Accounting'}",
   "questionType": "multiple-choice",
   "tags": ["${examBodyLower}", "${categoryLower}"],
   "cases": [],
@@ -217,18 +216,18 @@ Question ids must be sequential: "q1" through "q25".
 
 AFTER IMPORTING:
 When you import this JSON via the Questions Import page, enter
-the Article ID ${article.content_id} in the "Linked Article ID"
-field to automatically link the questions to this article.`
+the Article ID ${article.content_id ?? '(see articles list)'} in the
+"Linked Article ID" field to automatically link the questions to this article.`
 }
 
 function buildArticlePrompt(mode: 'url' | 'topic' | 'idea', value: string): string {
   let inputContext: string
   if (mode === 'url') {
-    inputContext = `REFERENCE SOURCE:\nURL: ${value}\n\nUsing this URL as\nthematic inspiration (do not reproduce its content), write an\noriginal educational article on the topic it covers.`
+    inputContext = `REFERENCE SOURCE:\nURL: ${value}\n\nUsing this URL as thematic inspiration (do not reproduce its content), write an original educational article on the topic it covers.`
   } else if (mode === 'topic') {
-    inputContext = `TOPIC:\n${value}\n\nWrite a comprehensive educational\narticle on this topic.`
+    inputContext = `TOPIC:\n${value}\n\nWrite a comprehensive educational article on this topic.`
   } else {
-    inputContext = `ARTICLE IDEA:\n${value}\n\nWrite a comprehensive\neducational article based on this idea.`
+    inputContext = `ARTICLE IDEA:\n${value}\n\nWrite a comprehensive educational article based on this idea.`
   }
 
   return `You are an expert financial and accounting writer producing
@@ -285,8 +284,7 @@ Return a single JSON object with this exact structure:
 {
   "title": "Article title here",
   "slug": "url-friendly-slug-here",
-  "excerpt": "One or two sentence summary (max 160 chars) describing
-    what the article covers and why it matters.",
+  "excerpt": "One or two sentence summary (max 160 chars).",
   "content": "<h2>Introduction</h2><p>...</p><h2>...</h2><p>...</p>",
   "category": "financial-accounting",
   "category_title": "Financial Accounting",
@@ -314,20 +312,32 @@ async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
+function makeFreshTask(article: DailyArticle): PqTask {
+  return {
+    article_id: article.content_id ?? article.slug,
+    article_title: article.title,
+    article_slug: article.slug,
+    prompt_built: false,
+    prompt_copied: false,
+    json_imported: false,
+    published_at: null,
+  }
+}
+
 function mergePqTasks(articles: DailyArticle[], existing: PqTask[]): PqTask[] {
   return articles.map(a => {
-    const found = existing.find(t => t.article_id === a.content_id)
-    if (found) return found
-    return {
-      article_id: a.content_id ?? a.slug,
-      article_title: a.title,
-      article_slug: a.slug,
-      prompt_built: false,
-      prompt_copied: false,
-      json_imported: false,
-      published_at: null,
-    }
+    const key = a.content_id ?? a.slug
+    return existing.find(t => t.article_id === key) ?? makeFreshTask(a)
   })
+}
+
+// ── Skeleton shimmer ──────────────────────────────────────────────────────
+
+function Skeleton({ h = 'h-5', w = 'w-24' }: { h?: string; w?: string }) {
+  return (
+    <div className={`${h} ${w} rounded animate-pulse`}
+      style={{ background: '#1a2238' }} />
+  )
 }
 
 // ── Article PQ Card ──────────────────────────────────────────────────────
@@ -359,9 +369,19 @@ function ArticlePQCard({
   }
 
   return (
-    <div className="rounded-2xl border p-5" style={C.card}>
-      <p className="text-white font-bold text-sm mb-2">{article.title}</p>
-      <div className="flex items-center gap-2 flex-wrap mb-3">
+    <div className="rounded-2xl border p-5 flex flex-col gap-3" style={C.card}>
+
+      {/* No content_id warning */}
+      {!article.content_id && (
+        <div className="flex items-center gap-2 rounded-lg px-3 py-2" style={C.warning}>
+          <AlertTriangle size={12} />
+          <p className="text-xs">No Article ID — prompt uses preview content only</p>
+        </div>
+      )}
+
+      <p className="text-white font-bold text-sm leading-snug">{article.title}</p>
+
+      <div className="flex items-center gap-2 flex-wrap">
         {article.content_id && (
           <span style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #1f2937', color: '#475569', fontFamily: 'monospace', fontSize: '10px', padding: '2px 6px', borderRadius: 6 }}>
             {article.content_id}
@@ -391,33 +411,34 @@ function ArticlePQCard({
       </div>
 
       {/* Status row */}
-      <div className="flex items-center gap-4 mb-4">
-        <span className="text-xs font-semibold flex items-center gap-1"
-          style={{ color: task.prompt_built ? '#10b981' : '#334155' }}>
-          <Check size={12} /> Prompt Built
-        </span>
-        <span className="text-xs font-semibold flex items-center gap-1"
-          style={{ color: task.prompt_copied ? '#10b981' : '#334155' }}>
-          <Check size={12} /> Prompt Copied
-        </span>
-        <span className="text-xs font-semibold flex items-center gap-1"
-          style={{ color: task.json_imported ? '#10b981' : '#334155' }}>
-          <Check size={12} /> Imported
-        </span>
+      <div className="flex items-center gap-4">
+        {[
+          { label: 'Prompt Built', done: task.prompt_built },
+          { label: 'Copied',       done: task.prompt_copied },
+          { label: 'Imported',     done: task.json_imported },
+        ].map(s => (
+          <span key={s.label} className="text-xs font-semibold flex items-center gap-1"
+            style={{ color: s.done ? '#10b981' : '#334155' }}>
+            <Check size={12} /> {s.label}
+          </span>
+        ))}
       </div>
 
+      {/* Build prompt button */}
       {!promptText && (
         <button onClick={onBuildPrompt} disabled={building}
-          className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl"
+          className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl w-fit"
           style={{ background: '#D4A017', color: '#0C1A3D', opacity: building ? 0.6 : 1 }}>
-          {building ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
-          {building ? 'Building…' : 'Build Prompt'}
+          {building
+            ? <><Loader2 size={15} className="animate-spin" /> Building…</>
+            : <><Sparkles size={15} /> Build Prompt</>}
         </button>
       )}
 
+      {/* Prompt area */}
       {promptText && (
-        <div>
-          <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button onClick={handleCopy}
               className="flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl"
               style={copiedFlash ? C.success : { background: '#D4A017', color: '#0C1A3D' }}>
@@ -425,18 +446,19 @@ function ArticlePQCard({
             </button>
             {task.prompt_copied && !task.json_imported && (
               <button onClick={onMarkImported}
-                className="text-xs font-bold px-4 py-2 rounded-xl"
-                style={C.success}>
+                className="text-xs font-bold px-4 py-2 rounded-xl" style={C.success}>
                 Mark as Imported
               </button>
             )}
             {task.json_imported && (
-              <span className="text-xs font-bold px-4 py-2 rounded-xl" style={C.success}>Imported ✓</span>
+              <span className="text-xs font-bold px-4 py-2 rounded-xl" style={C.success}>
+                ✓ Imported
+              </span>
             )}
           </div>
           <textarea readOnly value={promptText}
-            className="w-full text-xs font-mono rounded-xl p-3 mb-2"
-            style={{ ...C.input, height: 180, resize: 'vertical' }} />
+            className="w-full text-xs font-mono rounded-xl p-3"
+            style={{ ...C.input, height: 160, resize: 'vertical' }} />
           <a href="/roodber8/questions/import" target="_blank" rel="noopener noreferrer"
             className="text-xs font-semibold flex items-center gap-1 w-fit" style={{ color: '#2563eb' }}>
             → Import Questions <ExternalLink size={10} />
@@ -452,6 +474,8 @@ function ArticlePQCard({
 export default function StudioPage() {
   const [sessionLoading, setSessionLoading] = useState(true)
   const [articlesLoading, setArticlesLoading] = useState(true)
+  const [articlesError, setArticlesError] = useState<string | null>(null)
+  const [refsError, setRefsError] = useState<string | null>(null)
 
   const [dailyArticles, setDailyArticles] = useState<DailyArticle[]>([])
   const [pqTasks, setPqTasks] = useState<PqTask[]>([])
@@ -463,6 +487,7 @@ export default function StudioPage() {
   const [articleInputValue, setArticleInputValue] = useState('')
   const [articlePromptText, setArticlePromptText] = useState<string | null>(null)
   const [articleCopiedFlash, setArticleCopiedFlash] = useState(false)
+  const [articlePromptStale, setArticlePromptStale] = useState(false)
 
   const [socialTask, setSocialTask] = useState<SocialTaskState>(DEFAULT_SOCIAL_TASK)
 
@@ -474,7 +499,12 @@ export default function StudioPage() {
   const [refCategory, setRefCategory] = useState('news')
   const [refSaving, setRefSaving] = useState(false)
 
-  async function patchSession(partial: Partial<{ pq_tasks: PqTask[]; article_task: ArticleTaskState; social_task: SocialTaskState }>) {
+  // Sequential open-sources state
+  const [openSourceIndex, setOpenSourceIndex] = useState(-1)
+
+  const patchSession = useCallback(async (
+    partial: Partial<{ pq_tasks: PqTask[]; article_task: ArticleTaskState; social_task: SocialTaskState }>
+  ) => {
     try {
       await fetch('/api/roodber8/studio/session', {
         method: 'PATCH',
@@ -482,23 +512,30 @@ export default function StudioPage() {
         body: JSON.stringify(partial),
       })
     } catch {
-      // best-effort persistence; UI state already updated optimistically
+      // best-effort — UI state already updated
     }
-  }
+  }, [])
 
-  async function loadDailyArticles() {
+  // Load articles with explicit saved tasks (avoids stale state closure)
+  async function loadDailyArticlesWithTasks(savedTasks: PqTask[], clearPrompts: boolean) {
     setArticlesLoading(true)
+    setArticlesError(null)
     try {
       const res = await fetch('/api/roodber8/studio/daily-articles')
+      if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json() as { articles?: DailyArticle[] }
       const articles = data.articles ?? []
       setDailyArticles(articles)
-      setPqTasks(prev => {
-        const merged = mergePqTasks(articles, prev)
+      const merged = clearPrompts
+        ? articles.map(a => makeFreshTask(a))
+        : mergePqTasks(articles, savedTasks)
+      setPqTasks(merged)
+      if (clearPrompts) {
+        setPqPromptText({})
         patchSession({ pq_tasks: merged })
-        return merged
-      })
-      setPqPromptText({})
+      }
+    } catch {
+      setArticlesError('Failed to load articles. Click retry to try again.')
     } finally {
       setArticlesLoading(false)
     }
@@ -506,35 +543,62 @@ export default function StudioPage() {
 
   async function loadReferences() {
     setRefsLoading(true)
+    setRefsError(null)
     try {
       const res = await fetch('/api/roodber8/studio/references')
+      if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json() as { references?: ReferenceSource[] }
       setReferences(data.references ?? [])
+    } catch {
+      setRefsError('Failed to load reference sources.')
     } finally {
       setRefsLoading(false)
     }
   }
 
+  // Sequential init: session first, then articles with session data
   useEffect(() => {
     async function init() {
       setSessionLoading(true)
+      let savedPqTasks: PqTask[] = []
       try {
         const res = await fetch('/api/roodber8/studio/session')
-        const data = await res.json() as { session?: StudioSession }
-        if (data.session) {
-          setArticleTask(data.session.article_task ?? DEFAULT_ARTICLE_TASK)
-          setSocialTask(data.session.social_task ?? DEFAULT_SOCIAL_TASK)
-          setPqTasks(data.session.pq_tasks ?? [])
+        if (res.ok) {
+          const data = await res.json() as { session?: StudioSession }
+          if (data.session) {
+            savedPqTasks = data.session.pq_tasks ?? []
+            const savedArticleTask = data.session.article_task ?? DEFAULT_ARTICLE_TASK
+            setArticleTask(savedArticleTask)
+            setSocialTask(data.session.social_task ?? DEFAULT_SOCIAL_TASK)
+            // Restore article input from session
+            if (savedArticleTask.input_value) {
+              setArticleInputValue(savedArticleTask.input_value)
+            }
+            if (savedArticleTask.input_type) {
+              setArticleMode(savedArticleTask.input_type)
+            }
+            // If prompt was built before but we don't have it in memory, flag as stale
+            if (savedArticleTask.prompt_built && !savedArticleTask.json_imported) {
+              setArticlePromptStale(true)
+            }
+          }
         }
       } finally {
         setSessionLoading(false)
       }
+      // Load articles AFTER session resolves, passing saved tasks directly
+      await loadDailyArticlesWithTasks(savedPqTasks, false)
+      loadReferences()
     }
     init()
-    loadDailyArticles()
-    loadReferences()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Manual refresh — clear everything and fetch fresh articles
+  function handleRefreshSelection() {
+    setPqPromptText({})
+    loadDailyArticlesWithTasks([], true)
+  }
 
   async function handleBuildPqPrompt(article: DailyArticle) {
     const key = article.content_id ?? article.slug
@@ -542,7 +606,9 @@ export default function StudioPage() {
     try {
       let fullContent = article.content_preview
       if (article.content_id) {
-        const res = await fetch(`/api/roodber8/studio/article-content?id=${encodeURIComponent(article.content_id)}`)
+        const res = await fetch(
+          `/api/roodber8/studio/article-content?id=${encodeURIComponent(article.content_id)}`
+        )
         if (res.ok) {
           const data = await res.json() as { article?: { content?: string } }
           if (data.article?.content) fullContent = data.article.content
@@ -551,7 +617,9 @@ export default function StudioPage() {
       const prompt = buildPqPrompt(article, fullContent)
       setPqPromptText(prev => ({ ...prev, [key]: prompt }))
       setPqTasks(prev => {
-        const updated = prev.map(t => t.article_id === key ? { ...t, prompt_built: true } : t)
+        const updated = prev.map(t =>
+          t.article_id === key ? { ...t, prompt_built: true } : t
+        )
         patchSession({ pq_tasks: updated })
         return updated
       })
@@ -562,7 +630,9 @@ export default function StudioPage() {
 
   function handlePqCopy(articleId: string) {
     setPqTasks(prev => {
-      const updated = prev.map(t => t.article_id === articleId ? { ...t, prompt_copied: true } : t)
+      const updated = prev.map(t =>
+        t.article_id === articleId ? { ...t, prompt_copied: true } : t
+      )
       patchSession({ pq_tasks: updated })
       return updated
     })
@@ -570,9 +640,11 @@ export default function StudioPage() {
 
   function handlePqMarkImported(articleId: string) {
     setPqTasks(prev => {
-      const updated = prev.map(t => t.article_id === articleId
-        ? { ...t, json_imported: true, published_at: new Date().toISOString() }
-        : t)
+      const updated = prev.map(t =>
+        t.article_id === articleId
+          ? { ...t, json_imported: true, published_at: new Date().toISOString() }
+          : t
+      )
       patchSession({ pq_tasks: updated })
       return updated
     })
@@ -582,6 +654,7 @@ export default function StudioPage() {
     if (!articleInputValue.trim()) return
     const prompt = buildArticlePrompt(articleMode, articleInputValue.trim())
     setArticlePromptText(prompt)
+    setArticlePromptStale(false)
     const updated: ArticleTaskState = {
       ...articleTask,
       input_type: articleMode,
@@ -605,7 +678,11 @@ export default function StudioPage() {
   }
 
   function handleArticleMarkImported() {
-    const updated: ArticleTaskState = { ...articleTask, json_imported: true, published_at: new Date().toISOString() }
+    const updated: ArticleTaskState = {
+      ...articleTask,
+      json_imported: true,
+      published_at: new Date().toISOString(),
+    }
     setArticleTask(updated)
     patchSession({ article_task: updated })
   }
@@ -634,14 +711,31 @@ export default function StudioPage() {
   async function handleDeleteReference(id: string) {
     setReferences(prev => prev.filter(r => r.id !== id))
     try {
-      await fetch(`/api/roodber8/studio/references?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+      await fetch(
+        `/api/roodber8/studio/references?id=${encodeURIComponent(id)}`,
+        { method: 'DELETE' }
+      )
     } catch {
       await loadReferences()
     }
   }
 
-  function handleOpenAllSources() {
-    references.forEach(r => window.open(r.url, '_blank', 'noopener,noreferrer'))
+  // Sequential source opener — each call is a direct user gesture so
+  // window.open() is never blocked by popup blockers.
+  function handleStartOpenSources() {
+    if (references.length === 0) return
+    window.open(references[0].url, '_blank', 'noopener,noreferrer')
+    setOpenSourceIndex(0)
+  }
+
+  function handleOpenNextSource() {
+    const next = openSourceIndex + 1
+    if (next >= references.length) {
+      setOpenSourceIndex(-1)
+      return
+    }
+    window.open(references[next].url, '_blank', 'noopener,noreferrer')
+    setOpenSourceIndex(next)
   }
 
   const todayLabel = new Date().toLocaleDateString('en-GB', {
@@ -649,17 +743,12 @@ export default function StudioPage() {
   })
 
   const pqDoneCount = pqTasks.filter(t => t.json_imported).length
-  const pqTotal = dailyArticles.length || 4
-  const pqDotColor = pqDoneCount >= pqTotal && pqTotal > 0 ? '#10b981' : pqDoneCount > 0 ? '#f59e0b' : '#ef4444'
-
-  const articleStatusText = articleTask.json_imported ? 'Imported' : articleTask.prompt_built ? 'Prompt ready' : 'Not started'
+  const pqDotColor = pqDoneCount >= 4 ? '#10b981' : pqDoneCount > 0 ? '#f59e0b' : '#ef4444'
+  const articleStatusText = articleTask.json_imported ? 'Imported ✓' : articleTask.prompt_built ? 'Prompt ready' : 'Not started'
   const articleDotColor = articleTask.json_imported ? '#10b981' : articleTask.prompt_built ? '#f59e0b' : '#ef4444'
-
-  const totalTasks = pqTotal + 1
+  const totalTasks = 5 // 4 PQ + 1 article
   const doneTasks = pqDoneCount + (articleTask.json_imported ? 1 : 0)
-  const overallPercent = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0
-
-  const loading = sessionLoading || articlesLoading
+  const overallPercent = Math.round((doneTasks / totalTasks) * 100)
 
   return (
     <div className="p-8">
@@ -672,79 +761,123 @@ export default function StudioPage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">Content & Prompt Studio</h1>
-          <p className="text-sm" style={{ color: '#475569' }}>Daily content refresh — prompts, imports, and publishing.</p>
+          <p className="text-sm" style={{ color: '#475569' }}>
+            Daily content refresh — prompts, imports, and publishing.
+          </p>
         </div>
       </div>
       <p className="text-sm font-semibold mb-8" style={{ color: '#D4A017' }}>{todayLabel}</p>
 
-      {/* Section 1 — Daily Progress Board */}
+      {/* ── Section 1: Daily Progress Board ────────────────────────────── */}
       <div className="rounded-2xl border p-6 mb-6" style={C.card}>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-2 h-2 rounded-full" style={{ background: loading ? '#334155' : pqDotColor }} />
-              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: '#64748b' }}>Practice Questions</p>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 rounded-full shrink-0"
+                style={{ background: sessionLoading ? '#334155' : pqDotColor }} />
+              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: '#64748b' }}>
+                Practice Questions
+              </p>
             </div>
-            <p className="text-lg font-black text-white">
-              {loading ? '—' : `${pqDoneCount}/${pqTotal} articles done`}
-            </p>
+            {sessionLoading
+              ? <Skeleton h="h-6" w="w-28" />
+              : <p className="text-lg font-black text-white">{pqDoneCount}/4 articles done</p>}
           </div>
+
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-2 h-2 rounded-full" style={{ background: loading ? '#334155' : articleDotColor }} />
-              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: '#64748b' }}>Today&apos;s Article</p>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 rounded-full shrink-0"
+                style={{ background: sessionLoading ? '#334155' : articleDotColor }} />
+              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: '#64748b' }}>
+                Today&apos;s Article
+              </p>
             </div>
-            <p className="text-lg font-black text-white">{loading ? '—' : articleStatusText}</p>
+            {sessionLoading
+              ? <Skeleton h="h-6" w="w-24" />
+              : <p className="text-lg font-black text-white">{articleStatusText}</p>}
           </div>
+
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-2 h-2 rounded-full" style={{ background: '#334155' }} />
-              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: '#64748b' }}>Social Update</p>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 rounded-full shrink-0" style={{ background: '#334155' }} />
+              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: '#64748b' }}>
+                Social Update
+              </p>
             </div>
             <p className="text-lg font-black text-white">Coming soon</p>
           </div>
+
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: '#64748b' }}>Today&apos;s Progress</p>
-            <p className="text-3xl font-black" style={{ color: '#D4A017' }}>{loading ? '—' : `${overallPercent}%`}</p>
+            <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#64748b' }}>
+              Today&apos;s Progress
+            </p>
+            {sessionLoading
+              ? <Skeleton h="h-9" w="w-16" />
+              : (
+                <p className="text-3xl font-black" style={{ color: '#D4A017' }}>
+                  {overallPercent}%
+                </p>
+              )}
           </div>
         </div>
       </div>
 
-      {/* Section 2 — Practice Questions */}
+      {/* ── Section 2: Practice Questions ──────────────────────────────── */}
       <div className="rounded-2xl border p-6 mb-6" style={C.card}>
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <HelpCircle size={16} style={{ color: '#D4A017' }} />
             <h2 className="text-white font-bold text-sm">Practice Questions — 4 Articles</h2>
           </div>
-          <button onClick={loadDailyArticles} disabled={articlesLoading}
+          <button
+            onClick={handleRefreshSelection}
+            disabled={articlesLoading}
             className="flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl"
             style={C.idle}>
-            {articlesLoading ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
-            Refresh Selection
+            {articlesLoading
+              ? <><Loader2 size={13} className="animate-spin" /> Loading…</>
+              : <><RefreshCw size={13} /> Refresh Selection</>}
           </button>
         </div>
 
+        {articlesError && (
+          <div className="rounded-xl p-4 flex items-center gap-3 mb-4" style={C.danger}>
+            <AlertTriangle size={14} className="shrink-0" />
+            <p className="text-sm flex-1">{articlesError}</p>
+            <button
+              onClick={() => { setArticlesError(null); handleRefreshSelection() }}
+              className="text-xs font-bold px-3 py-1.5 rounded-lg shrink-0"
+              style={C.danger}>
+              Retry
+            </button>
+          </div>
+        )}
+
         {articlesLoading ? (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-40 rounded-2xl animate-pulse" style={{ background: '#111827' }} />
+              <div key={i} className="h-40 rounded-2xl animate-pulse"
+                style={{ background: '#111827' }} />
             ))}
           </div>
-        ) : dailyArticles.length === 0 ? (
+        ) : dailyArticles.length === 0 && !articlesError ? (
           <div className="py-12 text-center">
-            <p className="text-sm" style={{ color: '#334155' }}>No unlinked published articles found.</p>
+            <p className="text-sm mb-2" style={{ color: '#475569' }}>
+              All published articles have linked practice questions.
+            </p>
+            <p className="text-xs" style={{ color: '#334155' }}>
+              Great work! Add more articles or check the articles list.
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {dailyArticles.map(article => {
               const key = article.content_id ?? article.slug
-              const task = pqTasks.find(t => t.article_id === key) ?? {
-                article_id: key, article_title: article.title, article_slug: article.slug,
-                prompt_built: false, prompt_copied: false, json_imported: false, published_at: null,
-              }
+              const task = pqTasks.find(t => t.article_id === key) ?? makeFreshTask(article)
               return (
-                <ArticlePQCard key={key}
+                <ArticlePQCard
+                  key={key}
                   article={article}
                   task={task}
                   promptText={pqPromptText[key]}
@@ -759,17 +892,31 @@ export default function StudioPage() {
         )}
       </div>
 
-      {/* Section 3 — Article Prompt Builder */}
+      {/* ── Section 3: Article Prompt Builder ──────────────────────────── */}
       <div className="rounded-2xl border p-6 mb-6" style={C.card}>
         <div className="flex items-center gap-2 mb-1">
           <FileText size={16} style={{ color: '#D4A017' }} />
           <h2 className="text-white font-bold text-sm">Today&apos;s Article</h2>
         </div>
-        <p className="text-xs mb-4" style={{ color: '#475569' }}>Generate one professionally crafted article.</p>
+        <p className="text-xs mb-4" style={{ color: '#475569' }}>
+          Generate one professionally crafted article.
+        </p>
 
+        {/* Stale prompt notice */}
+        {articlePromptStale && !articlePromptText && (
+          <div className="rounded-xl p-3 mb-4 flex items-center gap-2" style={C.warning}>
+            <AlertTriangle size={13} className="shrink-0" />
+            <p className="text-xs">
+              A prompt was built earlier today. Re-enter your input below and rebuild to get a fresh copy.
+            </p>
+          </div>
+        )}
+
+        {/* Mode tabs */}
         <div className="flex items-center gap-2 mb-4">
           {(['url', 'topic', 'idea'] as const).map(mode => (
-            <button key={mode} onClick={() => setArticleMode(mode)}
+            <button key={mode}
+              onClick={() => { setArticleMode(mode); setArticleInputValue('') }}
               className="text-xs font-bold px-4 py-2 rounded-xl capitalize"
               style={articleMode === mode ? C.active : C.idle}>
               {mode}
@@ -779,45 +926,60 @@ export default function StudioPage() {
 
         {articleMode === 'url' && (
           <div className="mb-4">
-            <input value={articleInputValue} onChange={e => setArticleInputValue(e.target.value)}
-              placeholder="Paste article URL"
+            <input
+              value={articleInputValue}
+              onChange={e => setArticleInputValue(e.target.value)}
+              placeholder="Paste article URL from a reference source"
               className="w-full text-sm rounded-xl px-3 py-2.5 mb-2 focus:outline-none"
-              style={C.input} />
+              style={C.input}
+            />
             <p className="text-xs" style={{ color: '#334155' }}>
-              Paste a URL from a reference source. The system will build a prompt based on the topic and theme.
+              The system uses the URL as context for the prompt — it does not fetch the page content.
             </p>
           </div>
         )}
+
         {articleMode === 'topic' && (
           <div className="mb-4">
-            <input value={articleInputValue} onChange={e => setArticleInputValue(e.target.value)}
+            <input
+              value={articleInputValue}
+              onChange={e => setArticleInputValue(e.target.value)}
               placeholder="e.g. The impact of rising interest rates on corporate investment decisions"
               className="w-full text-sm rounded-xl px-3 py-2.5 focus:outline-none"
-              style={C.input} />
-          </div>
-        )}
-        {articleMode === 'idea' && (
-          <div className="mb-4">
-            <textarea value={articleInputValue} onChange={e => setArticleInputValue(e.target.value)}
-              placeholder="e.g. Explain why companies are currently holding unusually high cash reserves and what this means for investors"
-              className="w-full text-sm rounded-xl px-3 py-2.5 focus:outline-none"
-              style={{ ...C.input, height: 90, resize: 'vertical' }} />
+              style={C.input}
+            />
           </div>
         )}
 
-        <button onClick={handleBuildArticlePrompt} disabled={!articleInputValue.trim()}
+        {articleMode === 'idea' && (
+          <div className="mb-4">
+            <textarea
+              value={articleInputValue}
+              onChange={e => setArticleInputValue(e.target.value)}
+              placeholder="e.g. Explain why companies are currently holding unusually high cash reserves and what this means for investors"
+              className="w-full text-sm rounded-xl px-3 py-2.5 focus:outline-none"
+              style={{ ...C.input, height: 90, resize: 'vertical' }}
+            />
+          </div>
+        )}
+
+        <button
+          onClick={handleBuildArticlePrompt}
+          disabled={!articleInputValue.trim()}
           className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl mb-4"
           style={{ background: '#D4A017', color: '#0C1A3D', opacity: articleInputValue.trim() ? 1 : 0.4 }}>
           <Sparkles size={15} /> Build Article Prompt
         </button>
 
         {articlePromptText && (
-          <div>
-            <div className="flex items-center justify-between mb-2">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button onClick={handleArticleCopy}
                 className="flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl"
                 style={articleCopiedFlash ? C.success : { background: '#D4A017', color: '#0C1A3D' }}>
-                {articleCopiedFlash ? <><Check size={13} /> Copied!</> : <><Copy size={13} /> Copy Prompt</>}
+                {articleCopiedFlash
+                  ? <><Check size={13} /> Copied!</>
+                  : <><Copy size={13} /> Copy Prompt</>}
               </button>
               {articleTask.prompt_copied && !articleTask.json_imported && (
                 <button onClick={handleArticleMarkImported}
@@ -826,11 +988,13 @@ export default function StudioPage() {
                 </button>
               )}
               {articleTask.json_imported && (
-                <span className="text-xs font-bold px-4 py-2 rounded-xl" style={C.success}>Imported ✓</span>
+                <span className="text-xs font-bold px-4 py-2 rounded-xl" style={C.success}>
+                  ✓ Imported
+                </span>
               )}
             </div>
             <textarea readOnly value={articlePromptText}
-              className="w-full text-xs font-mono rounded-xl p-3 mb-2"
+              className="w-full text-xs font-mono rounded-xl p-3"
               style={{ ...C.input, height: 220, resize: 'vertical' }} />
             <a href="/roodber8/articles/import" target="_blank" rel="noopener noreferrer"
               className="text-xs font-semibold flex items-center gap-1 w-fit" style={{ color: '#2563eb' }}>
@@ -840,7 +1004,7 @@ export default function StudioPage() {
         )}
       </div>
 
-      {/* Section 4 — Reference Library */}
+      {/* ── Section 4: Reference Library ───────────────────────────────── */}
       <div className="rounded-2xl border p-6 mb-6" style={C.card}>
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
@@ -848,31 +1012,61 @@ export default function StudioPage() {
             <h2 className="text-white font-bold text-sm">Reference Sources</h2>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={handleOpenAllSources} disabled={references.length === 0}
-              className="text-xs font-bold px-4 py-2 rounded-xl"
-              style={{ background: '#D4A017', color: '#0C1A3D', opacity: references.length === 0 ? 0.4 : 1 }}>
-              Open All Sources
-            </button>
+            {/* Sequential open — each click is a direct user gesture, never blocked */}
+            {openSourceIndex === -1 ? (
+              <button
+                onClick={handleStartOpenSources}
+                disabled={references.length === 0}
+                className="text-xs font-bold px-4 py-2 rounded-xl"
+                style={{ background: '#D4A017', color: '#0C1A3D', opacity: references.length === 0 ? 0.4 : 1 }}>
+                Open Sources
+              </button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold" style={{ color: '#D4A017' }}>
+                  {openSourceIndex + 1} of {references.length} opened
+                </span>
+                {openSourceIndex + 1 < references.length ? (
+                  <button onClick={handleOpenNextSource}
+                    className="text-xs font-bold px-4 py-2 rounded-xl"
+                    style={{ background: '#D4A017', color: '#0C1A3D' }}>
+                    Open Next →
+                  </button>
+                ) : (
+                  <button onClick={() => setOpenSourceIndex(-1)}
+                    className="text-xs font-bold px-4 py-2 rounded-xl" style={C.success}>
+                    ✓ All opened
+                  </button>
+                )}
+              </div>
+            )}
             <button onClick={() => setShowAddRef(v => !v)}
-              className="flex items-center gap-1 text-xs font-bold px-4 py-2 rounded-xl" style={C.idle}>
+              className="flex items-center gap-1 text-xs font-bold px-4 py-2 rounded-xl"
+              style={C.idle}>
               <Plus size={13} /> Add Source
             </button>
           </div>
         </div>
 
         {showAddRef && (
-          <div className="rounded-xl p-4 mb-4 flex items-center gap-2 flex-wrap" style={{ background: '#111827', border: '1px solid #1f2937' }}>
-            <input value={refLabel} onChange={e => setRefLabel(e.target.value)} placeholder="Label"
-              className="text-sm rounded-lg px-3 py-2 focus:outline-none flex-1 min-w-32" style={C.input} />
-            <input value={refUrl} onChange={e => setRefUrl(e.target.value)} placeholder="https://..."
-              className="text-sm rounded-lg px-3 py-2 focus:outline-none flex-1 min-w-48" style={C.input} />
+          <div className="rounded-xl p-4 mb-4 flex items-center gap-2 flex-wrap"
+            style={{ background: '#111827', border: '1px solid #1f2937' }}>
+            <input value={refLabel} onChange={e => setRefLabel(e.target.value)}
+              placeholder="Label (e.g. BBC Business)"
+              className="text-sm rounded-lg px-3 py-2 focus:outline-none flex-1 min-w-32"
+              style={C.input} />
+            <input value={refUrl} onChange={e => setRefUrl(e.target.value)}
+              placeholder="https://..."
+              className="text-sm rounded-lg px-3 py-2 focus:outline-none flex-1 min-w-48"
+              style={C.input} />
             <select value={refCategory} onChange={e => setRefCategory(e.target.value)}
               className="text-sm rounded-lg px-3 py-2 focus:outline-none" style={C.input}>
               <option value="news">News</option>
               <option value="professional">Professional</option>
               <option value="academic">Academic</option>
             </select>
-            <button onClick={handleAddReference} disabled={refSaving || !refLabel.trim() || !refUrl.trim()}
+            <button onClick={handleAddReference}
+              disabled={refSaving || !refLabel.trim() || !refUrl.trim()}
               className="text-xs font-bold px-4 py-2 rounded-xl"
               style={{ background: '#D4A017', color: '#0C1A3D', opacity: refSaving ? 0.6 : 1 }}>
               {refSaving ? 'Saving…' : 'Save'}
@@ -884,22 +1078,40 @@ export default function StudioPage() {
           </div>
         )}
 
+        {refsError && (
+          <div className="rounded-xl p-4 flex items-center gap-3 mb-4" style={C.danger}>
+            <AlertTriangle size={14} className="shrink-0" />
+            <p className="text-sm flex-1">{refsError}</p>
+            <button onClick={() => { setRefsError(null); loadReferences() }}
+              className="text-xs font-bold px-3 py-1.5 rounded-lg shrink-0" style={C.danger}>
+              Retry
+            </button>
+          </div>
+        )}
+
         {refsLoading ? (
-          <div className="py-8 text-center">
-            <Loader2 size={18} className="animate-spin mx-auto" style={{ color: '#334155' }} />
+          <div className="py-8 flex justify-center">
+            <Loader2 size={18} className="animate-spin" style={{ color: '#334155' }} />
           </div>
         ) : references.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="text-sm" style={{ color: '#334155' }}>No reference sources yet.</p>
+            <p className="text-sm" style={{ color: '#334155' }}>
+              No reference sources yet. Add one above.
+            </p>
           </div>
         ) : (
           <div className="divide-y" style={{ borderColor: '#1a2238' }}>
-            {references.map(ref => (
-              <div key={ref.id} className="py-3 flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full shrink-0" style={{ background: CATEGORY_DOT[ref.category] ?? '#64748b' }} />
-                <p className="text-sm font-bold text-white shrink-0">{ref.label}</p>
+            {references.map((ref, idx) => (
+              <div key={ref.id}
+                className="py-3 flex items-center gap-3"
+                style={openSourceIndex === idx
+                  ? { borderLeft: '2px solid #D4A017', paddingLeft: 8, marginLeft: -8 }
+                  : {}}>
+                <div className="w-2 h-2 rounded-full shrink-0"
+                  style={{ background: CATEGORY_DOT[ref.category] ?? '#64748b' }} />
+                <p className="text-sm font-bold text-white shrink-0 min-w-32">{ref.label}</p>
                 <a href={ref.url} target="_blank" rel="noopener noreferrer"
-                  className="text-xs truncate flex-1" style={{ color: '#475569' }}>
+                  className="text-xs truncate flex-1 hover:underline" style={{ color: '#475569' }}>
                   {ref.url}
                 </a>
                 <button onClick={() => handleDeleteReference(ref.id)}
@@ -913,24 +1125,28 @@ export default function StudioPage() {
         )}
       </div>
 
-      {/* Section 5 — Social (placeholder) */}
+      {/* ── Section 5: Social (placeholder) ────────────────────────────── */}
       <div className="rounded-2xl border p-8 text-center" style={C.card}>
         <Share2 size={28} className="mx-auto mb-3" style={{ color: '#334155' }} />
         <p className="text-white font-semibold mb-1">Social posting — coming soon</p>
         <p className="text-sm mb-5" style={{ color: '#475569' }}>
-          Facebook and LinkedIn posting will be available here once platform accounts are configured.
+          Facebook and LinkedIn posting will be available here
+          once platform accounts are configured.
         </p>
         <div className="flex items-center justify-center gap-3">
-          <button disabled className="text-sm font-bold px-5 py-2.5 rounded-xl opacity-40 cursor-not-allowed"
+          <button disabled
+            className="text-sm font-bold px-5 py-2.5 rounded-xl opacity-40 cursor-not-allowed"
             style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#64748b' }}>
             Post to Facebook {socialTask.facebook_published ? '✓' : ''}
           </button>
-          <button disabled className="text-sm font-bold px-5 py-2.5 rounded-xl opacity-40 cursor-not-allowed"
+          <button disabled
+            className="text-sm font-bold px-5 py-2.5 rounded-xl opacity-40 cursor-not-allowed"
             style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#64748b' }}>
             Post to LinkedIn {socialTask.linkedin_published ? '✓' : ''}
           </button>
         </div>
       </div>
+
     </div>
   )
 }
