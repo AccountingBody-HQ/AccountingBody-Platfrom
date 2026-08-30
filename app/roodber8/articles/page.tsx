@@ -343,7 +343,12 @@ export default async function ArticlesLibraryPage({
                       Manage
                     </Link>
                     {article.slug && (
-                      <a href={`/${article.slug}`} target="_blank" rel="noopener noreferrer"
+                      <a href={(() => {
+                          const body = article.exam_body?.[0]
+                          return body
+                            ? `/study/${body.toLowerCase()}/${article.slug}`
+                            : `/articles/${article.slug}`
+                        })()} target="_blank" rel="noopener noreferrer"
                         className="text-xs font-medium flex items-center gap-1" style={{ color: '#2563eb' }}>
                         View <ExternalLink size={10} />
                       </a>

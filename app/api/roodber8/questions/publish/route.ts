@@ -84,6 +84,24 @@ export async function POST(req: NextRequest) {
     }
     const contentId = 'AB-QZ-' + String(nextNum).padStart(5, '0')
 
+    // Resolve articleSlug: if caller passed an AB-ART-XXXXX content_id,
+    // look up the real slug from the articles table.
+    let resolvedArticleSlug: string | null = null
+    if (articleSlug) {
+      const trimmed = String(articleSlug).trim().toUpperCase()
+      if (trimmed.startsWith('AB-ART-')) {
+        const { data: artRow } = await supabase
+          .from('articles')
+          .select('slug')
+          .eq('content_id', trimmed)
+          .maybeSingle()
+        resolvedArticleSlug = artRow?.slug ?? null
+      } else {
+        // Fallback: treat as a raw slug (legacy behaviour)
+        resolvedArticleSlug = articleSlug.trim() || null
+      }
+    }
+
     const setRow: any = {
       title,
       slug,
@@ -100,7 +118,7 @@ export async function POST(req: NextRequest) {
       platform,
       content_id:       contentId,
       published_at:     now,
-      article_slug:     articleSlug ?? null,
+      article_slug:     resolvedArticleSlug,
     }
 
     const { data: insertedSet, error: setError } = await supabase

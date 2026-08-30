@@ -568,13 +568,13 @@ export default function ImportQuestionsPage() {
 
             <div>
               <p className="text-xs font-bold uppercase tracking-wider mb-1.5" style={{ color: '#475569' }}>
-                Linked Article Slug <span style={{ color: '#334155', fontWeight: 400 }}>(optional — paste the article slug to link this PQ set to an article)</span>
+                Linked Article ID <span style={{ color: '#334155', fontWeight: 400 }}>(optional — paste the Article ID to link this PQ set to an article)</span>
               </p>
               <input
                 type="text"
                 value={articleSlug}
                 onChange={e => setArticleSlug(e.target.value)}
-                placeholder="e.g. base-currency-explained-what-it-is-and-how-it-works"
+                placeholder="e.g. AB-ART-02013"
                 className="w-full px-3 py-2 text-sm focus:outline-none"
                 style={C.input}
               />
