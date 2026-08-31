@@ -4,10 +4,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!
+  )
+}
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -41,6 +43,7 @@ export async function GET(req: NextRequest) {
 
   try {
     // Fetch published ETICPA question sets for this level + module
+    const supabase = getSupabase()
     const { data: questionSets, error: qsError } = await supabase
       .from('question_sets')
       .select('id, title')
