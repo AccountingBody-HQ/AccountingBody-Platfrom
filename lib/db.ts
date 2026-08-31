@@ -1,9 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!
+  )
+}
 
 export interface ArticleSummary {
   id:             string
@@ -71,6 +73,7 @@ export interface Question {
 // ── Articles ──────────────────────────────────────────────────────────────────
 
 export async function getArticleBySlug(slug: string): Promise<ArticleFull | null> {
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from('articles')
     .select('*')
@@ -84,6 +87,7 @@ export async function getArticleBySlug(slug: string): Promise<ArticleFull | null
 const QUALIFICATION_SLUGS = ['acca', 'cima', 'aat', 'icaew', 'eticpa', 'eticpa-atq', 'eticpa-cpa']
 
 export async function getArticlesByCategory(categorySlug: string): Promise<ArticleSummary[]> {
+  const supabase = getSupabase()
   const isQualification = QUALIFICATION_SLUGS.includes(categorySlug.toLowerCase())
   let query = supabase
     .from('articles')
@@ -104,6 +108,7 @@ export async function getArticlesByCategory(categorySlug: string): Promise<Artic
 }
 
 export async function getAllArticleSlugs(): Promise<string[]> {
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from('articles')
     .select('slug')
@@ -119,6 +124,7 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
     'financial-market', 'business-management', 'audit-assurance',
     'taxation', 'economics', 'cryptocurrency', 'tools-templates',
   ]
+  const supabase = getSupabase()
   const counts: Record<string, number> = {}
   for (const cat of categories) {
     const { count } = await supabase
@@ -133,6 +139,7 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
 }
 
 export async function searchArticles(query: string): Promise<ArticleSummary[]> {
+  const supabase = getSupabase()
   const safeQuery = query.replace(/[,()]/g, '')
   if (!safeQuery) return []
   const { data, error } = await supabase
@@ -150,6 +157,7 @@ export async function searchArticles(query: string): Promise<ArticleSummary[]> {
 // ── Question Sets ─────────────────────────────────────────────────────────────
 
 export async function getQuestionSetBySlug(slug: string): Promise<QuestionSet | null> {
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from('question_sets')
     .select('*')
@@ -161,6 +169,7 @@ export async function getQuestionSetBySlug(slug: string): Promise<QuestionSet | 
 }
 
 export async function getQuestionsBySetId(setId: string): Promise<Question[]> {
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from('questions')
     .select('*')
@@ -180,6 +189,7 @@ export interface QuestionCase {
 }
 
 export async function getCasesBySetId(setId: string): Promise<QuestionCase[]> {
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from('question_cases')
     .select('*')
@@ -197,6 +207,7 @@ export async function getQuestionSets(params: {
   perPage?: number
   sortBy?: string
 }): Promise<{ sets: QuestionSet[]; total: number }> {
+  const supabase = getSupabase()
   const { difficulty, search, page = 1, perPage = 12, sortBy = 'alpha' } = params
   const start = (page - 1) * perPage
   const end   = start + perPage - 1
@@ -223,6 +234,7 @@ export async function getQuestionSets(params: {
 }
 
 export async function getQuestionSetCount(): Promise<number> {
+  const supabase = getSupabase()
   const { count } = await supabase
     .from('question_sets')
     .select('*', { count: 'exact', head: true })
@@ -232,6 +244,7 @@ export async function getQuestionSetCount(): Promise<number> {
 }
 
 export async function getETICPAModuleArticles(level: string, module: string): Promise<ArticleSummary[]> {
+  const supabase = getSupabase()
   const { data, error } = await supabase
     .from('articles')
     .select('id, title, slug, excerpt, category, category_title, exam_body, read_time, published_at, author_name')
@@ -247,6 +260,7 @@ export async function getETICPAModuleArticles(level: string, module: string): Pr
 // ── Admin: Question Sets (roodber8) ─────────────────────────────────────────
 
 export async function getAllQuestionSetsForAdmin(): Promise<QuestionSet[]> {
+  const supabase = getSupabase()
   const { data: setsData, error: setsError } = await supabase
     .from('question_sets')
     .select('id, title, slug, difficulty, topic, exam_body, question_type, created_at')

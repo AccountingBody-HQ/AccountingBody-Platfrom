@@ -5,10 +5,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getCourseBySlug } from '@/lib/coursesNew'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!
+  )
+}
 
 // GET /api/roodber8/course-factory/load-course
 // ?action=list  → returns all courses (id, title, slug, status, level, chapterCount)
@@ -38,6 +40,7 @@ export async function GET(req: NextRequest) {
   const action = searchParams.get('action')
 
   if (action === 'list') {
+    const supabase = getSupabase()
     const { data: courses, error } = await supabase
       .from('courses')
       .select('id, title, slug, status, level, course_chapters(id)')

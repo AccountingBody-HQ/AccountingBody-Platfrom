@@ -7,10 +7,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!
+  )
+}
 
 async function sha256Hex(message: string): Promise<string> {
   const msgBuffer = new TextEncoder().encode(message)
@@ -49,6 +51,7 @@ export async function POST(req: NextRequest) {
   const platform = SITE_CODE_MAP[resolvedCanonical] ?? 'ab'
 
   try {
+    const supabase = getSupabase()
     // Check if course already exists (to decide rollback scope)
     const { data: existingCourse } = await supabase
       .from('courses')

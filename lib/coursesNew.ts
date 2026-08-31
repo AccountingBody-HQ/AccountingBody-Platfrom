@@ -1,9 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!
+  )
+}
 
 export interface CourseArticle {
   id:         string
@@ -130,6 +132,7 @@ interface RawLessonArticleLinkRow {
 }
 
 export async function getPublishedCourses(site?: string): Promise<CourseSummary[]> {
+  const supabase = getSupabase()
   // Stage 1: fetch courses (flat, no embed)
   let query = supabase
     .from('courses')
@@ -202,6 +205,7 @@ export async function getPublishedCourses(site?: string): Promise<CourseSummary[
 
 export async function getCourseBySlug(slug: string, adminMode = false): Promise<Course | null> {
   try {
+  const supabase = getSupabase()
   // Stage 1: fetch course
   const { data: courseData, error: courseError } = await supabase
     .from('courses')
@@ -337,6 +341,7 @@ export async function getLessonData(courseSlug: string, lessonSlug: string): Pro
   nextLesson: { slug: string; title: string; courseSlug: string } | null
 } | null> {
   try {
+  const supabase = getSupabase()
   const course = await getCourseBySlug(courseSlug)
   if (!course) return null
 

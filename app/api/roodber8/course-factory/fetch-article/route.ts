@@ -5,10 +5,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!
+  )
+}
 
 async function sha256Hex(message: string): Promise<string> {
   const msgBuffer = new TextEncoder().encode(message)
@@ -36,6 +38,7 @@ export async function GET(req: NextRequest) {
   const isContentId = id.startsWith('AB-')
   const isSlug      = !isContentId && !id.startsWith('wp-') && isNaN(Number(id))
 
+  const supabase = getSupabase()
   const query = supabase
     .from('articles')
     .select('id, title, slug, excerpt, content_id, wp_id')

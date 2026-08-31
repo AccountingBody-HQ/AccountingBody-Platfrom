@@ -8,10 +8,12 @@ import { createClient } from '@supabase/supabase-js'
 import { getCourseBySlug } from '@/lib/coursesNew'
 import { filterForPublication, getPublicationWarnings } from '@/lib/publication-filter'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!
+  )
+}
 
 async function sha256Hex(message: string): Promise<string> {
   const msgBuffer = new TextEncoder().encode(message)
@@ -34,6 +36,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
   try {
+    const supabase = getSupabase()
     const { searchParams } = new URL(req.url)
     const slug = searchParams.get('slug')
     if (!slug) return NextResponse.json({ error: 'slug is required' }, { status: 400 })

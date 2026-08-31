@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!
+  )
+}
 
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
 function checkRateLimit(ip: string): boolean {
@@ -65,6 +67,7 @@ export async function GET(req: NextRequest) {
   // PostgREST-special characters appear inside the ilike pattern.
   // Fetch 100 candidates so relevance re-ranking has a wide pool —
   // ordering by date before ranking would bury older relevant articles.
+  const supabase = getSupabase()
   let articleQuery = supabase
     .from('articles')
     .select('id, title, slug, excerpt, category, exam_body, published_at, created_at')

@@ -25,11 +25,10 @@ export function createSupabaseClient() {
   )
 }
 
-const supabase = createSupabaseClient()
-
 // ── Fetch questions for an article via mcq_url ───────────────────────────────
 export async function fetchQuestions(mcqUrl: string, stats: BuildStats): Promise<any[]> {
   try {
+    const supabase = createSupabaseClient()
     const parts = mcqUrl.split("/")
     const practiceSlug = parts[parts.length - 1]
     if (!practiceSlug) return []
@@ -63,6 +62,7 @@ export async function fetchQuestions(mcqUrl: string, stats: BuildStats): Promise
 
 // ── Build course in BookTemplate shape ───────────────────────────────────────
 export async function buildCourse(slug: string, stats: BuildStats) {
+  const supabase = createSupabaseClient()
   const course = await getCourseBySlug(slug, true)
   if (!course) throw new Error("Course not found")
 
