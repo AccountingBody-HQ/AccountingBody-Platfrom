@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ProxyAgent } from "undici"
+import { createClient } from "@supabase/supabase-js"
 
 export const dynamic = "force-dynamic"
 
@@ -12,6 +13,27 @@ const proxyDispatcher = process.env.FIXIE_URL ? new ProxyAgent(process.env.FIXIE
 
 const NO_CACHE_HEADERS = {
   "Cache-Control": "no-store, no-cache, must-revalidate",
+}
+
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
+
+function buildCacheKey(
+  role: string,
+  location: string,
+  page: string,
+  pageSize: string,
+  sort: string,
+  contractType: string,
+  workHours: string
+): string {
+  return [role, location, page, pageSize, sort, contractType, workHours]
+    .map(v => v.trim().toLowerCase())
+    .join("|")
 }
 
 function getClientIp(req: NextRequest): string {
@@ -73,6 +95,31 @@ export async function GET(req: NextRequest) {
 
   const requestUrl = `${CAREERJET_ENDPOINT}?${params.toString()}`
 
+  const cacheKey = buildCacheKey(role, location, page, pageSize, sort, contractType, workHours)
+
+  // --- Cache read ---
+  try {
+    const supabase = getSupabase()
+    const { data: cached, error: cacheReadError } = await supabase
+      .from("careerjet_cache")
+      .select("response_json, created_at")
+      .eq("cache_key", cacheKey)
+      .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .single()
+
+    if (cacheReadError && cacheReadError.code !== "PGRST116") {
+      console.error("Careerjet cache read error:", cacheReadError)
+    }
+
+    if (cached) {
+      console.log("Serving from cache for key:", cacheKey)
+      return NextResponse.json(cached.response_json, { headers: NO_CACHE_HEADERS })
+    }
+  } catch (cacheErr) {
+    console.error("Careerjet cache read failed, falling through to Careerjet:", cacheErr)
+  }
+
+  // --- Careerjet fetch ---
   try {
     console.log("Careerjet request URL:", requestUrl)
 
@@ -109,15 +156,31 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    return NextResponse.json(
-      {
-        jobs: Array.isArray(data.jobs) ? data.jobs : [],
-        total: typeof data.hits === "number" ? data.hits : 0,
-        pages: typeof data.pages === "number" ? data.pages : 1,
-        hits: typeof data.hits === "number" ? data.hits : 0,
-      },
-      { headers: NO_CACHE_HEADERS }
-    )
+    const responsePayload = {
+      jobs: Array.isArray(data.jobs) ? data.jobs : [],
+      total: typeof data.hits === "number" ? data.hits : 0,
+      pages: typeof data.pages === "number" ? data.pages : 1,
+      hits: typeof data.hits === "number" ? data.hits : 0,
+    }
+
+    // --- Cache write ---
+    try {
+      const supabase = getSupabase()
+      console.log("Writing to cache for key:", cacheKey)
+      const { error: cacheWriteError } = await supabase
+        .from("careerjet_cache")
+        .upsert(
+          { cache_key: cacheKey, response_json: responsePayload, created_at: new Date().toISOString() },
+          { onConflict: "cache_key" }
+        )
+      if (cacheWriteError) {
+        console.error("Careerjet cache write error:", cacheWriteError)
+      }
+    } catch (cacheWriteErr) {
+      console.error("Careerjet cache write failed:", cacheWriteErr)
+    }
+
+    return NextResponse.json(responsePayload, { headers: NO_CACHE_HEADERS })
   } catch (err) {
     console.error("Careerjet API request failed", err)
     return NextResponse.json(
