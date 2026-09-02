@@ -335,9 +335,12 @@ field to link the questions to this article.`
 }
 
 function buildArticlePrompt(mode: 'url' | 'topic' | 'idea', value: string): string {
+  const looksLikeUrl = value.trim().startsWith('http://') || value.trim().startsWith('https://')
   let inputContext: string
-  if (mode === 'url') {
+  if (mode === 'url' && looksLikeUrl) {
     inputContext = `REFERENCE SOURCE:\nURL: ${value}\n\nUsing this URL as thematic inspiration only — do not reproduce, paraphrase, or mirror its content. Write a fully original educational article on the topic it covers.`
+  } else if (mode === 'url' && !looksLikeUrl) {
+    inputContext = `TOPIC:\n${value}\n\nWrite a comprehensive, fully original educational article on this topic.`
   } else if (mode === 'topic') {
     inputContext = `TOPIC:\n${value}\n\nWrite a comprehensive, fully original educational article on this topic.`
   } else {
