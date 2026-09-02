@@ -1,3 +1,4 @@
+// Session 41 — private repo deploy test
 import { createClient } from '@supabase/supabase-js'
 
 function getSupabase() {
