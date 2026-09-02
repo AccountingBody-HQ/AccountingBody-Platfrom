@@ -116,71 +116,183 @@ function buildPqPrompt(article: DailyArticle, fullContent: string): string {
   const categoryLower = (article.category || article.category_title || '').toLowerCase()
   const cleanContent = stripHtmlAndTruncate(fullContent, 4000)
 
-  return `You are an expert accounting and finance examination question writer
-with deep knowledge of professional qualifications including
-${examBodyUpper} (and ACCA, CIMA, ICAEW, AAT where relevant).
+  return `You are a senior examiner and question architect with 20+ years of experience
+writing professional accounting and finance examinations for ACCA, CIMA, ICAEW,
+and AAT. You have written questions that appear in live professional examinations
+and understand exactly what separates a truly discriminating exam question from
+a mediocre one.
 
-Your task is to generate exactly 25 high-quality, exam-standard
-multiple-choice questions (MCQs) based on the following article.
+Your task is to generate exactly 25 original, exam-standard multiple-choice
+questions (MCQs) based on the article provided below.
 
-ARTICLE DETAILS:
+═══════════════════════════════════════════════════════════
+ARTICLE DETAILS
+═══════════════════════════════════════════════════════════
 Title: ${article.title}
 Category: ${article.category_title || article.category || 'Accounting'}
 Exam Body: ${examBodyUpper}
 Difficulty: ${article.difficulty || 'intermediate'}
-Topic: ${article.excerpt || article.title}
+Topic Summary: ${article.excerpt || article.title}
 
 ARTICLE CONTENT:
 ${cleanContent}
 
-QUALITY REQUIREMENTS:
-Each question must be:
-- Exam-standard — matching the rigour of ${examBodyUpper} professional examinations
-- Technically accurate — no errors in accounting, finance, or business concepts
-- Challenging — testing genuine understanding, not surface recall
-- Unambiguous — one clearly correct answer, three clearly wrong distractors
-- Educational — the explanation must teach, not just confirm
-- Original — do not lift sentences directly from the article
+═══════════════════════════════════════════════════════════
+SECTION 1 — QUESTION QUALITY STANDARDS (NON-NEGOTIABLE)
+═══════════════════════════════════════════════════════════
 
-QUESTION STRUCTURE:
-Each of the 25 questions must include ALL of the following fields:
+Every question must meet ALL of the following standards without exception.
+A question that fails any one of these standards must be rewritten before output.
 
-questionText: The question stem. Clear, professional, concise.
-  May include a scenario, calculation, or conceptual challenge.
+1.1 ORIGINALITY
+— Do not lift, paraphrase, or closely mirror any sentence from the article.
+— Every question stem must be written from first principles.
+— Scenarios must use original numbers, company names, and contexts.
+— The article is source knowledge only — not raw material to copy from.
 
-options: Array of exactly 4 strings [A, B, C, D].
-  Each option must be plausible. Wrong options should represent
-  common misconceptions or calculation errors, not obvious nonsense.
+1.2 APPLICATION OVER RECALL
+— Do not test whether a student can remember a definition.
+— Every question must require the student to APPLY, ANALYSE, or EVALUATE
+  a concept in a realistic professional context.
+— If the correct answer could be found by scanning the article for a
+  matching phrase, rewrite the question.
+— Ask yourself: would a student who understood the concept but had never
+  read this article be able to answer this question? They should be able to.
 
-correctIndex: 0-based integer (0=A, 1=B, 2=C, 3=D)
+1.3 STEM QUALITY
+— The stem must be self-contained and unambiguous.
+— State all assumptions the student needs. Never leave implicit what
+  should be explicit.
+— For calculation questions: provide all figures, rates, and dates needed
+  to reach a unique correct answer.
+— For scenario questions: set a realistic business context (named entity,
+  currency, transaction type, date) before asking the question.
+— Stem length: sufficient to be precise, no longer. No padding.
+— Never write negative stems ("Which of the following is NOT...") unless
+  the concept genuinely requires elimination-based reasoning.
 
-explanation: A detailed explanation (minimum 80 words) covering:
-  - Why the correct answer is correct (with working/reasoning)
-  - Why each wrong option is wrong (briefly but clearly)
-  - The underlying concept being tested
-  - A learning takeaway the student should remember
+1.4 DISTRACTOR QUALITY (CRITICAL)
+— Each wrong option must represent a specific, named misconception or
+  error that a real exam candidate plausibly makes.
+— Acceptable distractor types:
+    (a) A common conceptual error
+    (b) A correct calculation using the wrong rate or the wrong method
+    (c) A correct statement about a different standard or a different scenario
+    (d) A reversal of the correct relationship
+— NEVER write distractors that are:
+    (a) Obviously nonsensical or clearly unrelated
+    (b) Slightly reworded versions of each other
+    (c) Detectable as wrong by reading the stem alone, without accounting knowledge
+— All four options must be the same type and approximately the same length.
+— Options containing "All of the above", "None of the above", or
+  "Both A and B" are PROHIBITED.
 
-primaryTopic: The specific sub-topic within the article this
-  question tests (2-6 words)
+1.5 SINGLE CORRECT ANSWER
+— There must be exactly one defensibly correct answer.
+— Run a mental adversarial check: could a well-prepared candidate
+  construct a reasonable argument for any wrong option being correct?
+  If yes, revise the question or the distractor.
 
-difficulty: One of: beginner | intermediate | advanced
-  Aim for roughly: 5 beginner, 15 intermediate, 5 advanced
+1.6 TECHNICAL ACCURACY
+— Every calculation must be verified before output.
+— Every standard reference (IAS 21, IFRS 9, etc.) must be cited correctly.
+— Every accounting treatment must reflect current IFRS/UK GAAP as applicable
+  to the exam body specified.
 
-type: "multiple-choice"
+═══════════════════════════════════════════════════════════
+SECTION 2 — QUESTION SET ARCHITECTURE
+═══════════════════════════════════════════════════════════
 
-QUESTION DISTRIBUTION:
-- Cover the full breadth of the article — do not cluster all
-  questions on one section
-- Include calculation-based questions where the article
-  contains numerical concepts
-- Include scenario-based questions that apply concepts to
-  realistic business situations
-- Include conceptual questions that test understanding of
-  principles, not just definitions
+2.1 DIFFICULTY DISTRIBUTION
+Generate exactly:
+— 4 BEGINNER questions — foundational understanding, one-step reasoning,
+  no multi-part calculations
+— 16 INTERMEDIATE questions — application in realistic single-entity
+  scenarios, may include two-step calculations, standard rule application
+— 5 ADVANCED questions — professional judgement across multiple concepts,
+  multi-step calculations, edge cases within the standard, situations where
+  two plausible treatments exist and the candidate must select the correct one
 
-OUTPUT FORMAT:
-Return ONLY valid JSON. No preamble, no explanation, no markdown
-code fences. Return a single JSON object with this exact structure:
+2.2 QUESTION TYPE DISTRIBUTION
+Across the 25 questions, include:
+— Minimum 8 CALCULATION questions: original numbers, compute a specific
+  figure, show full working in the explanation
+— Minimum 8 SCENARIO questions: named entity in a realistic business
+  situation, identify correct treatment, classification, or measurement
+— Minimum 5 CONCEPTUAL questions: understanding of principles or
+  relationships between concepts — never pure definition recall
+— Remaining: judgement questions requiring distinction between two or
+  more plausible treatments
+
+2.3 TOPIC COVERAGE
+— Distribute questions proportionally across all major sections of the article.
+— No single section may account for more than 35% of the 25 questions.
+— At least one question must address each major section of the article.
+
+2.4 PROGRESSION
+— Order questions from beginner to advanced: q1–q4 beginner,
+  q5–q20 intermediate, q21–q25 advanced.
+
+═══════════════════════════════════════════════════════════
+SECTION 3 — EXPLANATION STANDARDS
+═══════════════════════════════════════════════════════════
+
+Every explanation must contain ALL FIVE components. An explanation
+missing any component must be completed before output.
+
+COMPONENT 1 — CORRECT ANSWER REASONING (mandatory)
+Precisely why the correct answer is correct. For calculations, show
+full step-by-step working with intermediate figures labelled. For
+conceptual questions, cite the specific rule or principle.
+
+COMPONENT 2 — WRONG OPTION ANALYSIS (mandatory — all three)
+For each wrong option in sequence: name the specific misconception it
+represents, explain in one to three sentences why it is wrong, and if
+numerically wrong, show where the calculation breaks down.
+
+COMPONENT 3 — UNDERLYING CONCEPT (mandatory)
+One to two sentences stating the broader accounting or finance principle
+being tested, written as a teaching statement.
+
+COMPONENT 4 — STANDARD REFERENCE (mandatory where applicable)
+Cite the specific standard, paragraph, or rule (e.g. IAS 21.23). If no
+specific standard applies, cite the conceptual framework principle.
+
+COMPONENT 5 — LEARNING TAKEAWAY (mandatory)
+One sentence beginning with "Remember:" giving the student a durable,
+exam-applicable rule they can carry into any question on this topic.
+
+Minimum explanation length: 120 words. Maximum: 300 words.
+Prose paragraphs only — no bullet points inside explanations.
+
+═══════════════════════════════════════════════════════════
+SECTION 4 — SELF-AUDIT BEFORE OUTPUT
+═══════════════════════════════════════════════════════════
+
+Before producing the JSON, run these checks silently.
+Do not output the audit — only output the corrected JSON.
+
+□ Exactly 25 questions present, q1 through q25
+□ Exactly 4 beginner, 16 intermediate, 5 advanced
+□ At least 8 calculation questions with verified arithmetic
+□ At least 8 scenario questions with named entities and contexts
+□ No question stem lifted or closely paraphrased from the article
+□ Every distractor represents a named, plausible misconception
+□ No "All of the above", "None of the above", "Both A and B" options
+□ Every explanation contains all 5 required components
+□ Every explanation is minimum 120 words
+□ All four options within each question are the same type and length
+□ correctIndex verified against the options array (0-based)
+□ All calculations independently verified
+□ No single article section exceeds 35% of questions
+□ JSON is valid and matches the required output structure exactly
+
+═══════════════════════════════════════════════════════════
+SECTION 5 — OUTPUT FORMAT
+═══════════════════════════════════════════════════════════
+
+Return ONLY valid JSON. No preamble. No explanation. No markdown fences.
+No text before or after the JSON object.
 
 {
   "title": "${article.title} — Practice Questions",
@@ -203,21 +315,23 @@ code fences. Return a single JSON object with this exact structure:
       "writingExplanation": null,
       "caseId": null,
       "primaryTopic": "...",
-      "difficulty": "intermediate",
+      "difficulty": "beginner",
       "timeTargetMinutes": 2,
       "points": 2
     }
   ]
 }
 
-The JSON must be valid and importable directly into the platform.
-The "questions" array must contain exactly 25 items.
+The questions array must contain exactly 25 items.
 Question ids must be sequential: "q1" through "q25".
+difficulty per question must be one of: beginner | intermediate | advanced
+correctIndex must be 0, 1, 2, or 3 (0-based integer, not a string).
+All string values must use straight double quotes — no smart quotes.
 
 AFTER IMPORTING:
-When you import this JSON via the Questions Import page, enter
-the Article ID ${article.content_id ?? '(see articles list)'} in the
-"Linked Article ID" field to automatically link the questions to this article.`
+When importing via the Questions Import page, enter the Article ID
+${article.content_id ?? '(see articles list)'} in the "Linked Article ID"
+field to link the questions to this article.`
 }
 
 function buildArticlePrompt(mode: 'url' | 'topic' | 'idea', value: string): string {
