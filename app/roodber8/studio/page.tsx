@@ -749,6 +749,10 @@ export default function StudioPage() {
   const [fbPosted, setFbPosted] = useState(false)
   const [fbError, setFbError] = useState<string | null>(null)
   const [fbPostId, setFbPostId] = useState<string | null>(null)
+  const [socialContentId, setSocialContentId] = useState('')
+  const [socialContentType, setSocialContentType] = useState<'article' | 'pq' | null>(null)
+  const [socialContentTitle, setSocialContentTitle] = useState<string | null>(null)
+  const [socialIdError, setSocialIdError] = useState<string | null>(null)
 
   const [references, setReferences] = useState<ReferenceSource[]>([])
   const [refsLoading, setRefsLoading] = useState(true)
@@ -1008,33 +1012,32 @@ export default function StudioPage() {
   }
 
   async function handleGenerateFbCaption() {
-    // Use the first imported article from today, or first daily article
-    const source = [...dailyArticles, ...manualArticles].find(a => {
-      const key = a.content_id ?? a.slug
-      return pqTasks.find(t => t.article_id === key && t.json_imported)
-    }) ?? dailyArticles[0] ?? manualArticles[0]
-
-    if (!source) return
+    const id = socialContentId.trim().toUpperCase()
+    if (!id.startsWith('AB-ART-') && !id.startsWith('AB-QZ-')) {
+      setSocialIdError('Enter a valid Article ID (AB-ART-XXXXX) or Question Set ID (AB-QZ-XXXXX)')
+      return
+    }
+    setSocialIdError(null)
     setFbGenerating(true)
     setFbError(null)
+    setFbCaption('')
+    setSocialContentType(null)
+    setSocialContentTitle(null)
     try {
       const res = await fetch('/api/roodber8/studio/post-social', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'generate',
-          article: {
-            title: source.title,
-            excerpt: source.excerpt,
-            category_title: source.category_title,
-            slug: source.slug,
-            exam_body: source.exam_body,
-          },
-        }),
+        body: JSON.stringify({ action: 'generate', contentId: id }),
       })
-      const data = await res.json() as { caption?: string; error?: string }
+      const data = await res.json() as {
+        caption?: string
+        title?: string
+        error?: string
+      }
       if (data.error) throw new Error(data.error)
       setFbCaption(data.caption ?? '')
+      setSocialContentType(id.startsWith('AB-ART-') ? 'article' : 'pq')
+      setSocialContentTitle(data.title ?? null)
     } catch (err: unknown) {
       setFbError(err instanceof Error ? err.message : 'Failed to generate caption')
     } finally {
@@ -1052,7 +1055,11 @@ export default function StudioPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'post', caption: fbCaption }),
       })
-      const data = await res.json() as { success?: boolean; postId?: string; error?: string }
+      const data = await res.json() as {
+        success?: boolean
+        postId?: string
+        error?: string
+      }
       if (data.error) throw new Error(data.error)
       setFbPosted(true)
       setFbPostId(data.postId ?? null)
@@ -1540,31 +1547,80 @@ export default function StudioPage() {
           <h2 className="text-white font-bold text-sm">Social Posting</h2>
         </div>
         <p className="text-xs mb-5" style={{ color: '#475569' }}>
-          Generate and publish today&apos;s post to the AccountingBody Facebook page.
+          Enter an Article ID or Question Set ID to generate and publish a post.
         </p>
 
+        {/* ID input */}
+        <div className="flex flex-col gap-2 mb-5">
+          <div className="flex items-center gap-2">
+            <input
+              value={socialContentId}
+              onChange={e => {
+                setSocialContentId(e.target.value)
+                setSocialIdError(null)
+                setFbCaption('')
+                setFbPosted(false)
+                setFbError(null)
+                setSocialContentType(null)
+                setSocialContentTitle(null)
+              }}
+              placeholder="AB-ART-02017 or AB-QZ-00181"
+              className="text-sm rounded-xl px-3 py-2.5 focus:outline-none flex-1"
+              style={C.input}
+            />
+          </div>
+          {socialIdError && (
+            <p className="text-xs" style={{ color: '#ef4444' }}>✗ {socialIdError}</p>
+          )}
+          <p className="text-xs" style={{ color: '#334155' }}>
+            Article IDs start with AB-ART- · Question Set IDs start with AB-QZ-
+          </p>
+        </div>
+
         {/* Facebook */}
-        <div className="rounded-xl p-4 mb-4" style={{ background: '#111827', border: '1px solid #1f2937' }}>
+        <div className="rounded-xl p-4 mb-4"
+          style={{ background: '#111827', border: '1px solid #1f2937' }}>
           <div className="flex items-center gap-2 mb-3">
             <div className="w-6 h-6 rounded flex items-center justify-center text-white font-black text-xs"
               style={{ background: '#1877F2' }}>f</div>
             <p className="text-sm font-bold text-white">Facebook — Accounting Body</p>
             {socialTask.facebook_published && (
-              <span className="text-xs font-bold px-2 py-0.5 rounded-lg ml-auto" style={C.success}>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-lg ml-auto"
+                style={C.success}>
                 ✓ Posted today
               </span>
             )}
           </div>
 
+          {socialContentType && (
+            <div className="mb-3 flex items-center gap-2 flex-wrap">
+              <span className="px-2 py-1 rounded-lg w-fit text-xs font-semibold"
+                style={{
+                  background: socialContentType === 'article'
+                    ? 'rgba(212,160,23,0.1)' : 'rgba(20,180,163,0.1)',
+                  color: socialContentType === 'article' ? '#D4A017' : '#14b4a3',
+                }}>
+                {socialContentType === 'article' ? 'Article post' : 'Practice Questions post'}
+              </span>
+              {socialContentTitle && (
+                <span className="text-xs" style={{ color: '#475569' }}>{socialContentTitle}</span>
+              )}
+            </div>
+          )}
+
           {!fbCaption && !fbPosted && (
             <button
               onClick={handleGenerateFbCaption}
-              disabled={fbGenerating || dailyArticles.length === 0}
+              disabled={fbGenerating || !socialContentId.trim()}
               className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl"
-              style={{ background: '#D4A017', color: '#0C1A3D', opacity: fbGenerating ? 0.6 : 1 }}>
+              style={{
+                background: '#D4A017',
+                color: '#0C1A3D',
+                opacity: (fbGenerating || !socialContentId.trim()) ? 0.5 : 1,
+              }}>
               {fbGenerating
-                ? <><Loader2 size={15} className="animate-spin" /> Generating caption…</>
-                : <><Sparkles size={15} /> Generate Post Caption</>}
+                ? <><Loader2 size={15} className="animate-spin" /> Generating…</>
+                : <><Sparkles size={15} /> Generate Post</>}
             </button>
           )}
 
@@ -1574,26 +1630,32 @@ export default function StudioPage() {
                 value={fbCaption}
                 onChange={e => setFbCaption(e.target.value)}
                 className="w-full text-sm rounded-xl p-3 focus:outline-none"
-                style={{ ...C.input, height: 200, resize: 'vertical', lineHeight: 1.6 }}
+                style={{ ...C.input, height: 220, resize: 'vertical', lineHeight: 1.7 }}
               />
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={handlePostToFacebook}
                   disabled={fbPosting || !fbCaption.trim()}
                   className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl"
-                  style={{ background: '#1877F2', color: '#fff', opacity: fbPosting ? 0.6 : 1 }}>
+                  style={{
+                    background: '#1877F2',
+                    color: '#fff',
+                    opacity: fbPosting ? 0.6 : 1,
+                  }}>
                   {fbPosting
                     ? <><Loader2 size={15} className="animate-spin" /> Posting…</>
                     : <><Share2 size={15} /> Post to Facebook</>}
                 </button>
                 <button
-                  onClick={handleGenerateFbCaption}
+                  onClick={() => {
+                    setFbCaption('')
+                    setFbPosted(false)
+                    setFbError(null)
+                  }}
                   disabled={fbGenerating}
                   className="flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl"
                   style={C.idle}>
-                  {fbGenerating
-                    ? <><Loader2 size={13} className="animate-spin" /> Regenerating…</>
-                    : <><RefreshCw size={13} /> Regenerate</>}
+                  <RefreshCw size={13} /> Regenerate
                 </button>
               </div>
             </div>
@@ -1604,13 +1666,11 @@ export default function StudioPage() {
               <div className="rounded-xl p-3 flex items-center gap-2" style={C.success}>
                 <Check size={14} />
                 <p className="text-sm font-bold">
-                  Posted successfully{fbPostId ? ` — Post ID: ${fbPostId}` : ''}
+                  Posted successfully{fbPostId ? ` — ID: ${fbPostId}` : ''}
                 </p>
               </div>
-              <a
-                href={`https://www.facebook.com/profile.php?id=1221866157684247`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <a href="https://www.facebook.com/profile.php?id=1221866157684247"
+                target="_blank" rel="noopener noreferrer"
                 className="text-xs font-semibold flex items-center gap-1 w-fit"
                 style={{ color: '#1877F2' }}>
                 View on Facebook <ExternalLink size={10} />
@@ -1626,21 +1686,27 @@ export default function StudioPage() {
           )}
         </div>
 
-        {/* LinkedIn — manual for now */}
-        <div className="rounded-xl p-4" style={{ background: '#111827', border: '1px solid #1f2937' }}>
+        {/* LinkedIn */}
+        <div className="rounded-xl p-4"
+          style={{ background: '#111827', border: '1px solid #1f2937' }}>
           <div className="flex items-center gap-2 mb-3">
             <div className="w-6 h-6 rounded flex items-center justify-center text-white font-black text-xs"
               style={{ background: '#0A66C2' }}>in</div>
             <p className="text-sm font-bold text-white">LinkedIn</p>
             <span className="text-xs px-2 py-0.5 rounded-lg ml-auto"
-              style={{ background: 'rgba(245,158,11,0.08)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)' }}>
+              style={{
+                background: 'rgba(245,158,11,0.08)',
+                color: '#f59e0b',
+                border: '1px solid rgba(245,158,11,0.2)',
+              }}>
               Company page needed
             </span>
           </div>
           <p className="text-xs mb-3" style={{ color: '#475569' }}>
-            Create a LinkedIn Company Page to enable direct posting. Until then, copy the Facebook caption and post manually.
+            Create a LinkedIn Company Page to enable direct posting.
+            Until then, copy the caption and post manually.
           </p>
-          {fbCaption && (
+          {fbCaption ? (
             <button
               onClick={async () => {
                 await copyToClipboard(fbCaption)
@@ -1650,10 +1716,9 @@ export default function StudioPage() {
               style={{ background: '#0A66C2', color: '#fff' }}>
               <Copy size={13} /> Copy caption + Open LinkedIn
             </button>
-          )}
-          {!fbCaption && (
+          ) : (
             <p className="text-xs" style={{ color: '#334155' }}>
-              Generate the Facebook caption first — it will be reused here.
+              Generate a post first — the caption will be available here.
             </p>
           )}
         </div>

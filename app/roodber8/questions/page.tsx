@@ -26,6 +26,7 @@ interface QuestionSetRow {
   id:             string
   title:          string
   slug?:          string
+  content_id?:    string | null
   difficulty?:    string
   topic?:         string
   exam_body?:     string[]
@@ -49,7 +50,7 @@ async function getQuestionSets(safeSearch: string, letter: string, page: number)
 
   let query = supabase
     .from('question_sets')
-    .select('id, title, slug, difficulty, topic, exam_body, question_type, created_at')
+    .select('id, title, slug, content_id, difficulty, topic, exam_body, question_type, created_at')
     .order('created_at', { ascending: false })
     .range(from, to)
 
@@ -283,6 +284,21 @@ export default async function QuestionsLibraryPage({
                 <div key={post.id} className="px-6 py-4 flex items-center gap-4 hover:bg-white/[0.02] transition-colors">
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-semibold truncate">{post.title ?? 'Untitled'}</p>
+                    {post.content_id && (
+                      <span style={{
+                        background: 'rgba(255,255,255,0.04)',
+                        border: '1px solid #1f2937',
+                        color: '#475569',
+                        fontFamily: 'monospace',
+                        fontSize: '10px',
+                        padding: '2px 6px',
+                        borderRadius: 6,
+                        display: 'inline-block',
+                        marginTop: 2,
+                      }}>
+                        {post.content_id}
+                      </span>
+                    )}
                     <div className="flex items-center gap-3 mt-1 flex-wrap">
                       {post.topic && <span className="text-xs" style={{ color: '#475569' }}>{post.topic}</span>}
                       {examBody && (
