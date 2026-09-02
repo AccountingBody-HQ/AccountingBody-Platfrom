@@ -1675,6 +1675,20 @@ export default function StudioPage() {
                 style={{ color: '#1877F2' }}>
                 View on Facebook <ExternalLink size={10} />
               </a>
+              <button
+                onClick={() => {
+                  setFbCaption('')
+                  setFbPosted(false)
+                  setFbPostId(null)
+                  setFbError(null)
+                  setSocialContentId('')
+                  setSocialContentType(null)
+                  setSocialContentTitle(null)
+                }}
+                className="flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl mt-2 w-fit"
+                style={C.idle}>
+                <RefreshCw size={13} /> Post another
+              </button>
             </div>
           )}
 
