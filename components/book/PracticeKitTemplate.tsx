@@ -4,17 +4,12 @@
 // topic-organised table of contents, chapter openers (own page) with a
 // topic summary table, questions (own page(s), numbered per chapter,
 // restarting at Q1 every chapter), and an answers section that mirrors the
-// question structure chapter-by-chapter and topic-by-topic. Font
-// registrations, sanitise(), hasText(), and the KDP 6x9 page dimensions are
-// duplicated from BookTemplate.tsx (self-contained pure functions, safe to
-// duplicate per the pattern already used by ChapterTemplate.tsx).
+// question structure chapter-by-chapter and topic-by-topic.
 //
-// probeOnly mode: when rendered with probeOnly=true, the component renders
-// a lightweight structural skeleton instead — fixed-height spacer Views
-// sized from content length, no real question/answer text — and reports
-// the real page number of every section via onSectionPage(). This is the
-// fast first pass generate-pq/route.ts uses to get exact TOC page numbers
-// before the real (full-content) render.
+// probeOnly mode: renders structural spacers only and fires onSectionPage()
+// callbacks with the real page number of every section. The probe Page
+// structure mirrors the full render exactly so markers land on the correct
+// pages and TOC entries are accurate.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react"
 import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer"
@@ -34,53 +29,31 @@ Font.register({
   src: FONT_BASE + "/LiberationSans-Bold.ttf",
 })
 
-// ── Dimensions (identical to BookTemplate.tsx) ────────────────────────────────
 const W = 6 * 72
 const H = 9 * 72
 const MT = 0.75 * 72
 const MB = 0.75 * 72
 const MI = 0.75 * 72
-const MO = 0.5 * 72
+const MO = 0.5  * 72
 
-// ── Unicode sanitiser (duplicated from BookTemplate.tsx) ──────────────────────────────────────
 function sanitise(text: string): string {
   if (!text) return ""
   return text
-    .replace(/\u2013/g, "-")
-    .replace(/\u2014/g, "-")
-    .replace(/\u2212/g, "-")
-    .replace(/[\u2018\u2019]/g, "'")
-    .replace(/[\u201C\u201D]/g, "\"")
-    .replace(/\u2192/g, "->")
-    .replace(/\u2190/g, "<-")
-    .replace(/\u21D2/g, "=>")
-    .replace(/\u00D7/g, "x")
-    .replace(/\u00F7/g, "/")
-    .replace(/\u2260/g, "!=")
-    .replace(/\u2265/g, ">=")
-    .replace(/\u2264/g, "<=")
-    .replace(/\u00B1/g, "+/-")
-    .replace(/\u2022/g, "-")
-    .replace(/\u2026/g, "...")
-    .replace(/\u00a0/g, " ")
-    .replace(/\u200b/g, "")
-    .replace(/\u200c/g, "")
-    .replace(/\u200d/g, "")
-    .replace(/\ufeff/g, "")
-    .replace(/[\r\n]+/g, " ")
-    .replace(/  +/g, " ")
-    .trim()
+    .replace(/\u2013/g, "-").replace(/\u2014/g, "-").replace(/\u2212/g, "-")
+    .replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, "\"")
+    .replace(/\u2192/g, "->").replace(/\u2190/g, "<-").replace(/\u21D2/g, "=>")
+    .replace(/\u00D7/g, "x").replace(/\u00F7/g, "/")
+    .replace(/\u2260/g, "!=").replace(/\u2265/g, ">=").replace(/\u2264/g, "<=")
+    .replace(/\u00B1/g, "+/-").replace(/\u2022/g, "-").replace(/\u2026/g, "...")
+    .replace(/\u00a0/g, " ").replace(/\u200b/g, "").replace(/\u200c/g, "")
+    .replace(/\u200d/g, "").replace(/\ufeff/g, "")
+    .replace(/[\r\n]+/g, " ").replace(/  +/g, " ").trim()
 }
 
-// ── Visibility check (duplicated from BookTemplate.tsx) ───────────────────────
 function hasText(raw: string): boolean {
   return raw.replace(/[\s\u00a0\u200b\u200c\u200d\ufeff]/g, "").length > 0
 }
 
-// ── Title cleaning ───────────────────────────────────────────────────────────
-// Course data embeds CMS authoring conventions in titles ("Unit 1 - ...",
-// "Ch 1: ...") that read as redundant/unprofessional once the template
-// already shows "Chapter 1" / "Topic 1.1" as a separate label alongside them.
 function cleanChapterTitle(raw: string): string {
   return (raw || "").replace(/^Unit\s+\d+\s*[-:]\s*/i, "").trim()
 }
@@ -89,7 +62,6 @@ function cleanLessonTitle(raw: string): string {
   return (raw || "").replace(/^Ch\.?\s*\d+[:.]\s*/i, "").trim()
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
 const LETTERS = ["A", "B", "C", "D", "E"]
 
 const HTU_PARA_1 =
@@ -107,12 +79,6 @@ const HTU_MARKING = "Each question carries 2 marks. There is no negative marking
 const HTU_EXPLANATION =
   "Each answer includes: the correct answer letter; a concept explanation; a case-specific walkthrough; and a key takeaway with common pitfall identification."
 
-// ── parseExplanation() ─────────────────────────────────────────────────────────
-// The explanation field is structured text with known section labels.
-// OVERVIEW -> concept; DATA/METHOD/SOLUTION/APPLY TO THIS CASE -> caseWalkthrough
-// (concatenated in order, labels stripped); KEY TAKEAWAY -> keyTakeaway;
-// COMMON PITFALL -> pitfall. Any leading unlabelled text becomes concept.
-// Text with no recognised labels goes entirely into concept.
 const EXPLANATION_KEYS = [
   "OVERVIEW:",
   "DATA (INPUTS & ASSUMPTIONS):",
@@ -134,40 +100,27 @@ function parseExplanation(raw: string): ParsedExplanation {
   const text = (raw || "").trim()
   const result: ParsedExplanation = { concept: "", caseWalkthrough: "", keyTakeaway: "", pitfall: "" }
   if (!text) return result
-
   const markers: { pos: number; label: string }[] = []
   for (const key of EXPLANATION_KEYS) {
     const pos = text.indexOf(key)
     if (pos >= 0) markers.push({ pos, label: key })
   }
   markers.sort((a, b) => a.pos - b.pos)
-
-  if (markers.length === 0) {
-    result.concept = text
-    return result
-  }
-
+  if (markers.length === 0) { result.concept = text; return result }
   if (markers[0].pos > 0) {
     const lead = text.slice(0, markers[0].pos).trim()
     if (lead) result.concept = lead
   }
-
   const caseParts: string[] = []
   for (let i = 0; i < markers.length; i++) {
     const { pos, label } = markers[i]
     const end = i + 1 < markers.length ? markers[i + 1].pos : text.length
     const chunk = text.slice(pos + label.length, end).trim()
     if (!chunk) continue
-    if (label === "OVERVIEW:") {
-      result.concept = chunk
-    } else if (label === "KEY TAKEAWAY:") {
-      result.keyTakeaway = chunk
-    } else if (label === "COMMON PITFALL:") {
-      result.pitfall = chunk
-    } else {
-      // DATA (INPUTS & ASSUMPTIONS): / METHOD: / SOLUTION (STEP-BY-STEP): / APPLY TO THIS CASE:
-      caseParts.push(chunk)
-    }
+    if (label === "OVERVIEW:") result.concept = chunk
+    else if (label === "KEY TAKEAWAY:") result.keyTakeaway = chunk
+    else if (label === "COMMON PITFALL:") result.pitfall = chunk
+    else caseParts.push(chunk)
   }
   result.caseWalkthrough = caseParts.join(" ")
   return result
@@ -178,10 +131,6 @@ function truncate(text: string, max: number): string {
   return t.length > max ? t.slice(0, max - 1).trimEnd() + "..." : t
 }
 
-// ── Per-chapter question numbering ──────────────────────────────────────────
-// Computed from course data alone, so probe and final render passes produce
-// identical grouping regardless of pageMap. Questions restart at 1 every
-// chapter (chapterLocalNum) — globalNum is kept only for React key stability.
 interface LessonQuestions {
   li: number
   lesson: any
@@ -222,7 +171,6 @@ function buildQuestionIndex(course: any): { chapters: ChapterQuestions[]; totalQ
   return { chapters, totalQuestions: globalN }
 }
 
-// ── Styles ───────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
   page: {
     width: W, height: H,
@@ -243,7 +191,6 @@ const s = StyleSheet.create({
     position: "absolute", bottom: 18, right: MO,
     fontSize: 8, color: "#999999",
   },
-  // Title page
   titlePage: { flex: 1, justifyContent: "center", alignItems: "center" },
   abPressLabel: {
     fontSize: 8, color: "#888888", marginBottom: 8,
@@ -262,7 +209,6 @@ const s = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: "#D4A017",
     marginVertical: 18, width: "50%", alignSelf: "center",
   },
-  // How to use this book
   htuHeading: { fontSize: 18, fontFamily: "BookSans-Bold", color: "#0C1A3D", marginBottom: 8 },
   htuRule: { borderBottomWidth: 2, borderBottomColor: "#D4A017", marginBottom: 18 },
   htuBody: { fontSize: 10, color: "#1a1a1a", lineHeight: 1.8, marginBottom: 10 },
@@ -273,7 +219,6 @@ const s = StyleSheet.create({
   bulletRow: { flexDirection: "row", marginBottom: 5, paddingLeft: 4 },
   bulletDot: { fontSize: 10, color: "#D4A017", width: 14 },
   bulletText: { fontSize: 10, color: "#1a1a1a", flex: 1, lineHeight: 1.6 },
-  // Table of contents
   tocTitle: { fontSize: 18, fontFamily: "BookSans-Bold", color: "#0C1A3D", marginBottom: 20 },
   tocChapterRow: { marginBottom: 8 },
   tocChapterText: { fontSize: 10, fontFamily: "BookSans-Bold", color: "#0C1A3D" },
@@ -284,7 +229,6 @@ const s = StyleSheet.create({
     flex: 1, borderBottomWidth: 0.7, borderBottomColor: "#bbbbbb",
     borderBottomStyle: "dotted", marginHorizontal: 4, marginBottom: 2,
   },
-  // Chapter opener
   chapterWrap: { marginBottom: 24 },
   chapterLabel: {
     fontSize: 8, color: "#D4A017", fontFamily: "BookSans-Bold",
@@ -296,7 +240,6 @@ const s = StyleSheet.create({
   },
   chapterRule: { borderBottomWidth: 2, borderBottomColor: "#D4A017", marginBottom: 20 },
   chapterIntro: { fontSize: 10, color: "#555555" },
-  // Topic summary table
   tableHeaderRow: {
     flexDirection: "row", backgroundColor: "#0C1A3D",
     paddingVertical: 5, paddingHorizontal: 8,
@@ -315,7 +258,6 @@ const s = StyleSheet.create({
     borderTopWidth: 0.8, borderTopColor: "#0C1A3D",
   },
   tableFooterCell: { fontSize: 9, color: "#0C1A3D", fontFamily: "BookSans-Bold" },
-  // Topic (lesson) header
   topicLabel: {
     fontSize: 7, color: "#D4A017", fontFamily: "BookSans-Bold",
     textTransform: "uppercase", letterSpacing: 2, marginBottom: 3,
@@ -323,7 +265,6 @@ const s = StyleSheet.create({
   topicTitle: { fontSize: 13, fontFamily: "BookSans-Bold", color: "#0C1A3D", marginBottom: 4 },
   topicMeta: { fontSize: 9, color: "#777777", marginBottom: 6 },
   topicRule: { borderBottomWidth: 0.5, borderBottomColor: "#D4A017", marginBottom: 14 },
-  // Question block
   questionOuter: {
     marginBottom: 12, paddingLeft: 10, paddingTop: 8, paddingBottom: 8,
     borderLeftWidth: 2.5, borderLeftColor: "#D4A017", backgroundColor: "#ffffff",
@@ -340,10 +281,8 @@ const s = StyleSheet.create({
   optionRow: { flexDirection: "row", marginBottom: 5 },
   optionLetter: { fontSize: 9, color: "#0C1A3D", fontFamily: "BookSans-Bold", width: 16 },
   optionText: { fontSize: 9, color: "#333333", flex: 1, lineHeight: 1.6 },
-  // End of chapter
   endChapterWrap: { marginTop: 24, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#dddddd" },
   endChapterText: { fontSize: 9, color: "#aaaaaa", textAlign: "center" },
-  // Answers section
   ansIntro: { fontSize: 10, color: "#555555", lineHeight: 1.7, marginBottom: 16 },
   ansChapterHeader: { fontSize: 11, fontFamily: "BookSans-Bold", color: "#0C1A3D", marginTop: 20, marginBottom: 8 },
   ansChapterRule: { borderBottomWidth: 0.5, borderBottomColor: "#D4A017", marginBottom: 12 },
@@ -383,7 +322,6 @@ const s = StyleSheet.create({
   },
   pitfallText: { fontSize: 8, color: "#555555" },
   ansSeparator: { borderBottomWidth: 0.5, borderBottomColor: "#eeeeee", marginTop: 6, marginBottom: 8 },
-  // Closing pages
   notesHeading: { fontSize: 11, fontFamily: "BookSans-Bold", color: "#0C1A3D", marginBottom: 16 },
   noteLine: { borderBottomWidth: 0.5, borderBottomColor: "#dddddd", height: 22 },
   aboutWrap: { flex: 1, justifyContent: "center", alignItems: "center" },
@@ -392,37 +330,36 @@ const s = StyleSheet.create({
   aboutDisclaimer: { fontSize: 8, color: "#666666", lineHeight: 1.6, textAlign: "center", maxWidth: 320 },
 })
 
-// ── Probe-pass height calibration ───────────────────────────────────────────
-// Per-question/answer/opener heights are estimated from actual content
-// length rather than a flat average per element — a flat average would
-// reintroduce the same page-number drift that motivated replacing the old
-// char-count page estimator: scenario questions run from ~3 lines to 15+,
-// and chapter openers grow with topic count (the summary table has one row
-// per lesson). These constants mirror the real style metrics above
-// (questionText 10pt/1.75, optionText 9pt/1.6, explanation 8.5pt/1.55).
-const Q_CHARS_PER_LINE = 62
-const OPT_CHARS_PER_LINE = 50
-const Q_LINE_PT = 17.5   // 10pt * 1.75 line-height
-const OPT_LINE_PT = 14.4 // 9pt * 1.6 line-height
-const ANS_CHARS_PER_LINE = 68
-const ANS_LINE_PT = 13.2 // 8.5pt * 1.55 line-height
-const ANSWER_HEADER_OVERHEAD_PT = 44   // Q label/circle row + block margin/separator
-const LESSON_HEADER_HEIGHT_PT = 55     // topic label + title + meta + rule
-const CHAPTER_OPENER_BASE_PT = 220     // chapter label/title/rule/intro/spacers + table header/footer
-const CHAPTER_OPENER_ROW_PT = 15       // one topic summary table row per lesson
-const ANSWERS_CHAPTER_HEADER_PT = 50   // chapter header + rule
-const ANSWERS_TOPIC_HEADER_PT = 30     // topic subheader
+// ── Probe height calibration ───────────────────────────────────────
+// Usable content width for questions:
+//   page 432pt - MI 54pt - MO 36pt - questionOuter paddingLeft 10pt = 332pt
+// At 9pt Liberation Sans: ~6.9pt per char = ~48 chars per line.
+// Option text same width minus 16pt letter prefix = ~46 chars per line.
+// Answer explanation: 332pt - explanationText paddingLeft 8pt = 324pt
+// At 8.5pt: ~6.5pt per char = ~50 chars per line.
+const Q_CHARS_PER_LINE   = 48
+const OPT_CHARS_PER_LINE = 46
+const Q_LINE_PT          = 17.5
+const OPT_LINE_PT        = 14.4
+const ANS_CHARS_PER_LINE = 50
+const ANS_LINE_PT        = 13.2
+const ANSWER_HEADER_OVERHEAD_PT  = 44
+const LESSON_HEADER_HEIGHT_PT    = 55
+const CHAPTER_OPENER_BASE_PT     = 220
+const CHAPTER_OPENER_ROW_PT      = 15
+const ANSWERS_CHAPTER_HEADER_PT  = 50
+const ANSWERS_TOPIC_HEADER_PT    = 30
 
 function estimateQuestionHeightPt(q: any): number {
   const qText = (q.questionText || "").replace(/^SCENARIO:\s*/i, "")
   const qLines = Math.max(1, Math.ceil(qText.length / Q_CHARS_PER_LINE))
-  let height = 20 + qLines * Q_LINE_PT // header row + question text
+  let height = 20 + qLines * Q_LINE_PT
   const options = [q.options?.[0], q.options?.[1], q.options?.[2], q.options?.[3]].filter(Boolean)
   for (const opt of options) {
     const oLines = Math.max(1, Math.ceil(String(opt).length / OPT_CHARS_PER_LINE))
     height += oLines * OPT_LINE_PT + 5
   }
-  return height + 16 // block padding + margin
+  return height + 16
 }
 
 function estimateAnswerHeightPt(q: any): number {
@@ -436,13 +373,15 @@ function estimateChapterOpenerHeightPt(ch: any): number {
   return CHAPTER_OPENER_BASE_PT + lessonCount * CHAPTER_OPENER_ROW_PT
 }
 
-// ── Probe document ───────────────────────────────────────────────────────────
-// Structural skeleton only: fixed-height View spacers instead of question/
-// answer Text content, so react-pdf never has to shape or wrap real text.
-// The page structure (frontmatter page count, one Page per chapter opener,
-// one Page per chapter's lessons, filtering of empty lessons) exactly
-// mirrors the full render below, so the marker Text elements land on the
-// same page numbers the full render will actually produce.
+// ── ProbeDocument ────────────────────────────────────────────
+// Page structure mirrors the full render EXACTLY:
+//   3 frontmatter pages
+//   Per chapter: Page A (opener) + Page B+ (questions, flowing naturally)
+//   1 answers page (flowing)
+//   3 closing pages (Notes x2, About)
+// Each lesson block is a sequence of individual height spacers so react-pdf
+// flows them across as many pages as needed. marker() fires at the START of
+// each lesson block so it records the correct page number.
 interface ProbeDocumentProps {
   course: any
   onSectionPage?: (key: string, page: number) => void
@@ -465,32 +404,30 @@ function ProbeDocument({ course, onSectionPage }: ProbeDocumentProps) {
 
   return (
     <Document>
-      {/* Frontmatter: title + how-to-use + TOC — fixed 3 pages, same as the full render */}
       <Page size={[W, H]} style={s.page} />
       <Page size={[W, H]} style={s.page} />
       <Page size={[W, H]} style={s.page} />
 
       {chapters.map((ch: any, ci: number) => (
         <React.Fragment key={ci}>
-          {/* Chapter opener — its own Page, mirrors Fix B in the full render */}
           <Page size={[W, H]} style={s.page}>
             {marker(`ch-${ci}`)}
             <View style={{ height: estimateChapterOpenerHeightPt(ch) }} />
           </Page>
 
-          {/* Lessons and questions — separate Page, auto-flows like the full render */}
           <Page size={[W, H]} style={s.page}>
             {(ch.lessons || []).map((ls: any, li: number) => {
               const qs = (ls.linkedArticles || [])
                 .flatMap((a: any) => a.quizQuestions || [])
                 .filter((q: any) => hasText(q.questionText || ""))
               if (qs.length === 0) return null
-              const blockHeight = LESSON_HEADER_HEIGHT_PT +
-                qs.reduce((sum: number, q: any) => sum + estimateQuestionHeightPt(q), 0)
               return (
                 <View key={li}>
                   {marker(`lesson-${ci}-${li}`)}
-                  <View style={{ height: blockHeight }} />
+                  <View style={{ height: LESSON_HEADER_HEIGHT_PT }} />
+                  {qs.map((q: any, qi: number) => (
+                    <View key={qi} style={{ height: estimateQuestionHeightPt(q) }} />
+                  ))}
                 </View>
               )
             })}
@@ -498,27 +435,37 @@ function ProbeDocument({ course, onSectionPage }: ProbeDocumentProps) {
         </React.Fragment>
       ))}
 
-      {/* Answers section */}
       <Page size={[W, H]} style={s.page}>
         {marker("answers")}
         {chapters.map((ch: any, ci: number) => {
-          let height = ANSWERS_CHAPTER_HEADER_PT
+          const blocks: React.ReactElement[] = [
+            <View key={`ch-hdr-${ci}`} style={{ height: ANSWERS_CHAPTER_HEADER_PT }} />,
+          ]
           for (const ls of (ch.lessons || [])) {
             const qs = (ls.linkedArticles || [])
               .flatMap((a: any) => a.quizQuestions || [])
               .filter((q: any) => hasText(q.questionText || ""))
             if (qs.length === 0) continue
-            height += ANSWERS_TOPIC_HEADER_PT
-            for (const q of qs) height += estimateAnswerHeightPt(q)
+            blocks.push(
+              <View key={`t-${ci}-${blocks.length}`} style={{ height: ANSWERS_TOPIC_HEADER_PT }} />
+            )
+            for (let qi = 0; qi < qs.length; qi++) {
+              blocks.push(
+                <View key={`a-${ci}-${blocks.length}-${qi}`} style={{ height: estimateAnswerHeightPt(qs[qi]) }} />
+              )
+            }
           }
-          return <View key={ci} style={{ height }} />
+          return <React.Fragment key={ci}>{blocks}</React.Fragment>
         })}
       </Page>
+
+      <Page size={[W, H]} style={s.page} />
+      <Page size={[W, H]} style={s.page} />
+      <Page size={[W, H]} style={s.page} />
     </Document>
   )
 }
 
-// ── Props ─────────────────────────────────────────────────────────────────────
 interface PracticeKitTemplateProps {
   course: any
   edition: string
@@ -528,7 +475,6 @@ interface PracticeKitTemplateProps {
   onSectionPage?: (key: string, page: number) => void
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
 export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeOnly, onSectionPage }: PracticeKitTemplateProps) {
   if (probeOnly) {
     return <ProbeDocument course={course} onSectionPage={onSectionPage} />
@@ -547,7 +493,6 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
       creator="Accounting Body Press"
       producer="Accounting Body Press"
     >
-      {/* ── 1. Title Page ────────────────────────────────────────────────── */}
       <Page size={[W, H]} style={s.page}>
         <View style={s.titlePage}>
           <Text style={s.abPressLabel}>Accounting Body Press</Text>
@@ -559,13 +504,11 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
         </View>
       </Page>
 
-      {/* ── 2. How to Use This Book ─────────────────────────────────────────── */}
       <Page size={[W, H]} style={s.page}>
         <Text style={s.htuHeading}>How to Use This Book</Text>
         <View style={s.htuRule} />
         <Text style={s.htuBody}>{HTU_PARA_1}</Text>
         <Text style={s.htuBody}>{HTU_PARA_2}</Text>
-
         <Text style={s.htuSubheading}>How to Attempt Questions</Text>
         {HTU_ATTEMPT_BULLETS.map((b, i) => (
           <View key={i} style={s.bulletRow}>
@@ -573,15 +516,12 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
             <Text style={s.bulletText}>{b}</Text>
           </View>
         ))}
-
         <Text style={s.htuSubheading}>Marking</Text>
         <Text style={s.htuBody}>{HTU_MARKING}</Text>
-
         <Text style={s.htuSubheading}>Explanation Structure</Text>
         <Text style={s.htuBody}>{HTU_EXPLANATION}</Text>
       </Page>
 
-      {/* ── 3. Table of Contents ─────────────────────────────────────────────── */}
       <Page size={[W, H]} style={s.page}>
         <Text style={s.tocTitle}>Contents</Text>
         {qIndex.map(({ ci, chapter, lessons }) => (
@@ -614,26 +554,21 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
         </View>
       </Page>
 
-      {/* ── 4. Chapters ──────────────────────────────────────────────────────── */}
       {qIndex.map(({ ci, chapter, lessons, totalQuestions: chapterTotalQ }) => (
         <React.Fragment key={chapter._key || ci}>
-          {/* 4a. Chapter opener — its own Page */}
           <Page size={[W, H]} style={s.page}>
             <Text style={s.runningHead} fixed>{sanitise(subtitle)}</Text>
             <View style={s.runningLine} fixed />
-
             <View style={s.chapterWrap}>
               <Text style={s.chapterLabel}>Chapter {ci + 1}</Text>
               <Text style={s.chapterTitle}>{cleanChapterTitle(sanitise(chapter.chapterTitle))}</Text>
               <View style={s.chapterRule} />
             </View>
-
             <View style={{ height: 20 }} />
             <Text style={s.chapterIntro}>
               This chapter contains {chapterTotalQ} questions across {lessons.length} topics. Estimated time: {chapterTotalQ * 2} minutes.
             </Text>
             <View style={{ height: 12 }} />
-
             <View wrap={false}>
               <View style={s.tableHeaderRow}>
                 <Text style={[s.tableHeaderCell, { flex: 2 }]}>Topic</Text>
@@ -656,24 +591,20 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
                 <Text style={[s.tableFooterCell, s.tableCellRight, { flex: 1 }]}>{chapterTotalQ * 2} mins</Text>
               </View>
             </View>
-
             <Text style={s.pageNum} render={({ pageNumber }) => String(pageNumber)} fixed />
           </Page>
 
-          {/* 4b. Lessons and questions — separate Page(s), flows naturally */}
           <Page size={[W, H]} style={s.page}>
             <Text style={s.runningHead} fixed>{sanitise(subtitle)}</Text>
             <View style={s.runningLine} fixed />
-
             {lessons.map(({ li, lesson, questions }) => (
               <View key={lesson._id || li}>
-                <View style={{ marginTop: 20 }} minPresenceAhead={80} wrap={false}>
+                <View style={{ marginTop: 20 }} minPresenceAhead={80}>
                   <Text style={s.topicLabel}>Topic {ci + 1}.{li + 1}</Text>
                   <Text style={s.topicTitle}>{cleanLessonTitle(sanitise(lesson.title))}</Text>
                   <Text style={s.topicMeta}>{questions.length} questions  |  {questions.length * 2} marks  |  ~{questions.length * 2} minutes</Text>
                   <View style={s.topicRule} />
                 </View>
-
                 {questions.map(({ q, num, chapterLocalNum }) => {
                   const rawText = sanitise(q.questionText || "")
                   const isScenario = rawText.startsWith("SCENARIO:")
@@ -681,18 +612,17 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
                   return (
                     <View
                       key={num}
+                      wrap={false}
                       style={[s.questionOuter, isScenario ? s.questionOuterScenario : {}]}
                     >
-                      <View wrap={false}>
-                        {isScenario ? <Text style={s.scenarioLabel}>Scenario Question</Text> : null}
-                        <View style={s.questionHeaderRow}>
-                          <Text style={s.questionNum}>Q{chapterLocalNum}</Text>
-                          <Text style={s.questionMeta}>2 marks  |  ~2 mins</Text>
-                        </View>
-                        <Text style={s.questionText}>{displayText}</Text>
+                      {isScenario ? <Text style={s.scenarioLabel}>Scenario Question</Text> : null}
+                      <View style={s.questionHeaderRow}>
+                        <Text style={s.questionNum}>Q{chapterLocalNum}</Text>
+                        <Text style={s.questionMeta}>2 marks  |  ~2 mins</Text>
                       </View>
+                      <Text style={s.questionText}>{displayText}</Text>
                       {(q.options || []).map((opt: any, oi: number) => (
-                        <View key={oi} style={s.optionRow} wrap={false}>
+                        <View key={oi} style={s.optionRow}>
                           <Text style={s.optionLetter}>{LETTERS[oi]}.</Text>
                           <Text style={s.optionText}>{sanitise(opt)}</Text>
                         </View>
@@ -702,22 +632,17 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
                 })}
               </View>
             ))}
-
-            {/* End of chapter */}
             <View style={s.endChapterWrap}>
               <Text style={s.endChapterText}>End of Chapter {ci + 1} - {chapterTotalQ} questions</Text>
             </View>
-
             <Text style={s.pageNum} render={({ pageNumber }) => String(pageNumber)} fixed />
           </Page>
         </React.Fragment>
       ))}
 
-      {/* ── 5. Answers and Explanations ──────────────────────────────────────── */}
       <Page size={[W, H]} style={s.page}>
         <Text style={s.runningHead} fixed>{sanitise(subtitle)}</Text>
         <View style={s.runningLine} fixed />
-
         <View style={s.chapterWrap}>
           <Text style={s.chapterLabel}>Answers</Text>
           <Text style={s.chapterTitle}>Answers and Explanations</Text>
@@ -726,16 +651,13 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
         <Text style={s.ansIntro}>
           Work through the answers only after you have attempted the questions. For each incorrect answer, identify whether the error was conceptual (re-read the relevant study material) or a misreading of the question (review your exam technique).
         </Text>
-
         {qIndex.map(({ ci, chapter, lessons }) => (
           <View key={chapter._key || ci}>
             <Text style={s.ansChapterHeader}>Chapter {ci + 1}: {cleanChapterTitle(sanitise(chapter.chapterTitle))}</Text>
             <View style={s.ansChapterRule} />
-
             {lessons.map(({ li, lesson, questions }) => (
               <View key={lesson._id || li}>
                 <Text style={s.ansTopicHeader}>Topic {ci + 1}.{li + 1}: {cleanLessonTitle(sanitise(lesson.title))}</Text>
-
                 {questions.map(({ q, num, chapterLocalNum }, qi) => {
                   const parsed = parseExplanation(sanitise(q.explanation || ""))
                   const letter = LETTERS[q.correctIndex ?? 0]
@@ -748,19 +670,15 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
                           <Text style={s.ansCircleText}>{letter}</Text>
                         </View>
                       </View>
-
                       {parsed.concept ? <Text style={s.conceptText}>{parsed.concept}</Text> : null}
-
                       {parsed.caseWalkthrough ? [
                         <Text key="wl" style={s.explanationLabel}>Explanation:</Text>,
                         <Text key="wt" style={s.explanationText}>{parsed.caseWalkthrough}</Text>,
                       ] : null}
-
                       {parsed.keyTakeaway ? [
                         <Text key="kl" style={s.keyTakeawayLabel}>Key Takeaway</Text>,
                         <Text key="kt" style={s.keyTakeawayText}>{parsed.keyTakeaway}</Text>,
                       ] : null}
-
                       {parsed.pitfall ? (
                         <View style={s.pitfallWrap}>
                           <Text>
@@ -769,7 +687,6 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
                           </Text>
                         </View>
                       ) : null}
-
                       {!isLast ? <View style={s.ansSeparator} /> : null}
                     </View>
                   )
@@ -778,11 +695,9 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
             ))}
           </View>
         ))}
-
         <Text style={s.pageNum} render={({ pageNumber }) => String(pageNumber)} fixed />
       </Page>
 
-      {/* ── 6. Closing Pages ─────────────────────────────────────────────────── */}
       {[1, 2].map((n) => (
         <Page key={"notes-" + n} size={[W, H]} style={s.page}>
           <Text style={s.notesHeading}>Notes</Text>
