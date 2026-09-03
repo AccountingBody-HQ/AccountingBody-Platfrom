@@ -4,18 +4,20 @@
 // Route for "practice" book type, using PracticeKitTemplate instead of the
 // chapter-by-chapter orchestration used for combined/study books.
 //
-// TOC page numbers come from a two-pass render:
-//   Pass 1 (probe): PracticeKitTemplate with probeOnly=true renders only
-//     structural spacers sized from content length — no question/answer
-//     text is laid out — and reports the real page number of every
-//     chapter, lesson, and the answers section via onSectionPage(). This
-//     is fast because react-pdf never has to shape or wrap any text.
-//   Pass 2 (final): the full visual render, using the probe's page
-//     numbers to fill in the TOC.
-// A naive two-pass render (full content laid out twice) previously blew
-// the 300s serverless limit on large courses (3,939+ questions). Probing
-// with spacers instead of real text keeps pass 1 to a few hundred fixed-
-// height boxes, so the combined two passes still fit comfortably.
+// TOC page numbers come from a two-pass full real render:
+//   Pass 1: PracticeKitTemplate with pageMap={} and skipAnswers=true renders
+//     the full visual content (chapters, topics, questions) and reports the
+//     real page number of every chapter, lesson, and the answers section via
+//     onSectionPage(), using react-pdf's own render() callbacks — exact, no
+//     estimation. skipAnswers renders answer text as a single blank page so
+//     large courses finish pass 1 faster (answers come after every
+//     TOC-referenced section, so skipping them does not affect any page
+//     number pass 2 needs).
+//   Pass 2: the same full visual render again, this time with pageMap
+//     supplied from pass 1's onSectionPage results, so the TOC shows the
+//     correct page numbers. Full answers are always rendered in pass 2.
+// Both passes render identical layout for everything before the answers
+// section, so pass 1's page numbers are guaranteed to match pass 2's.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server"
 import { renderToBuffer } from "@react-pdf/renderer"
@@ -218,21 +220,32 @@ export async function POST(req: NextRequest) {
     const editionFinal  = edition  || "2026/27 Edition"
     const subtitleFinal = subtitle || course.title
 
-    // Pass 1: structural probe — spacers only, no question/answer text —
-    // fires onSectionPage with the real page number react-pdf lays each
-    // section on.
+    // Pass 1: full real render with empty pageMap.
+    // TOC page number slots are blank ("") — this does not affect pagination
+    // because the dot-leader (flex:1) absorbs the space difference between
+    // "" and a 3-digit page number string. The onSectionPage markers use
+    // react-pdf's own render() callback which fires after layout is complete,
+    // so every page number recorded is exact — no estimation, no drift.
+    // skipAnswers=true skips rendering answer text in pass 1 so large
+    // courses finish pass 1 faster; answer content comes after all
+    // TOC-referenced sections so skipping it does not affect any page
+    // numbers we need.
     const sectionMap: Record<string, number> = {}
     await renderToBuffer(
       React.createElement(PracticeKitTemplate, {
         course,
         edition: editionFinal,
         subtitle: subtitleFinal,
-        probeOnly: true,
+        pageMap: {},
+        skipAnswers: true,
         onSectionPage: (key: string, page: number) => { sectionMap[key] = page },
       }) as any
     )
 
-    // Pass 2: full visual render, TOC page numbers filled from the probe map
+    // Pass 2: full real render with sectionMap from pass 1.
+    // Produces identical layout to pass 1 (same content, same styles,
+    // same wrap rules, same font metrics). TOC now shows correct page
+    // numbers. This is the PDF that goes into the ZIP.
     const interiorPdf = await renderToBuffer(
       React.createElement(PracticeKitTemplate, {
         course,

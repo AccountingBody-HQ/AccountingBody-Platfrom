@@ -1,15 +1,10 @@
 // components/book/PracticeKitTemplate.tsx
 // Accounting Body Press - Practice & Revision Kit PDF Template
-// Renders the "practice" book type: title page, how-to-use guide,
-// topic-organised table of contents, chapter openers (own page) with a
-// topic summary table, questions (own page(s), numbered per chapter,
-// restarting at Q1 every chapter), and an answers section that mirrors the
-// question structure chapter-by-chapter and topic-by-topic.
-//
-// probeOnly mode: renders structural spacers only and fires onSectionPage()
-// callbacks with the real page number of every section. The probe Page
-// structure mirrors the full render exactly so markers land on the correct
-// pages and TOC entries are accurate.
+// Two-pass TOC system:
+//   Pass 1: full real render, pageMap={}, onSectionPage fires with real page numbers
+//   Pass 2: full real render, pageMap=sectionMap from pass 1, TOC shows correct pages
+// Marker Text elements use render() callbacks which fire after layout,
+// so page numbers are always exact — no estimation, no drift.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react"
 import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer"
@@ -330,139 +325,30 @@ const s = StyleSheet.create({
   aboutDisclaimer: { fontSize: 8, color: "#666666", lineHeight: 1.6, textAlign: "center", maxWidth: 320 },
 })
 
-// ── Probe height calibration ───────────────────────────────────────
-// Usable content width for questions:
-//   page 432pt - MI 54pt - MO 36pt - questionOuter paddingLeft 10pt = 332pt
-// At 9pt Liberation Sans: ~6.9pt per char = ~48 chars per line.
-// Option text same width minus 16pt letter prefix = ~46 chars per line.
-// Answer explanation: 332pt - explanationText paddingLeft 8pt = 324pt
-// At 8.5pt: ~6.5pt per char = ~50 chars per line.
-const Q_CHARS_PER_LINE   = 48
-const OPT_CHARS_PER_LINE = 46
-const Q_LINE_PT          = 17.5
-const OPT_LINE_PT        = 14.4
-const ANS_CHARS_PER_LINE = 50
-const ANS_LINE_PT        = 13.2
-const ANSWER_HEADER_OVERHEAD_PT  = 34
-const LESSON_HEADER_HEIGHT_PT    = 44
-const CHAPTER_OPENER_BASE_PT     = 220
-const CHAPTER_OPENER_ROW_PT      = 15
-const ANSWERS_CHAPTER_HEADER_PT  = 50
-const ANSWERS_TOPIC_HEADER_PT    = 30
-
-function estimateQuestionHeightPt(q: any): number {
-  const qText = (q.questionText || "").replace(/^SCENARIO:\s*/i, "")
-  const qLines = Math.max(1, Math.ceil(qText.length / Q_CHARS_PER_LINE))
-  let height = 20 + qLines * Q_LINE_PT
-  const options = [q.options?.[0], q.options?.[1], q.options?.[2], q.options?.[3]].filter(Boolean)
-  for (const opt of options) {
-    const oLines = Math.max(1, Math.ceil(String(opt).length / OPT_CHARS_PER_LINE))
-    height += oLines * OPT_LINE_PT + 5
-  }
-  return height + 16
+// ── Invisible page-number marker ─────────────────────────────────
+// Placed as first child of chapter opener Pages and inside topic header Views.
+// position:absolute + fontSize:0.1 means zero layout impact.
+// The render() callback fires AFTER react-pdf layout is complete, so
+// pageNumber is always the real final page — no estimation, no drift.
+// For topic headers: the marker lives INSIDE the minPresenceAhead View,
+// so if minPresenceAhead pushes the header to the next page, the marker
+// moves with it and fires on the correct page.
+const markerStyle = {
+  position: "absolute" as const,
+  top: 0, left: 0,
+  fontSize: 0.1, color: "transparent",
 }
 
-function estimateAnswerHeightPt(q: any): number {
-  const exp = q.explanation || ""
-  const expLines = Math.max(1, Math.ceil(exp.length / ANS_CHARS_PER_LINE))
-  return ANSWER_HEADER_OVERHEAD_PT + expLines * ANS_LINE_PT
-}
-
-function estimateChapterOpenerHeightPt(ch: any): number {
-  const lessonCount = (ch.lessons || []).length
-  return CHAPTER_OPENER_BASE_PT + lessonCount * CHAPTER_OPENER_ROW_PT
-}
-
-// ── ProbeDocument ────────────────────────────────────────────
-// Page structure mirrors the full render EXACTLY:
-//   3 frontmatter pages
-//   Per chapter: Page A (opener) + Page B+ (questions, flowing naturally)
-//   1 answers page (flowing)
-//   3 closing pages (Notes x2, About)
-// Each lesson block is a sequence of individual height spacers so react-pdf
-// flows them across as many pages as needed. marker() fires at the START of
-// each lesson block so it records the correct page number.
-interface ProbeDocumentProps {
-  course: any
-  onSectionPage?: (key: string, page: number) => void
-}
-
-function ProbeDocument({ course, onSectionPage }: ProbeDocumentProps) {
-  const chapters = course.chapters || []
-
-  function marker(key: string) {
-    return (
-      <Text
-        style={{ fontSize: 0.1 }}
-        render={({ pageNumber }) => {
-          if (onSectionPage) onSectionPage(key, pageNumber)
-          return ""
-        }}
-      />
-    )
-  }
-
+function sectionMarker(key: string, onSectionPage?: (key: string, page: number) => void) {
+  if (!onSectionPage) return null
   return (
-    <Document>
-      <Page size={[W, H]} style={s.page} />
-      <Page size={[W, H]} style={s.page} />
-      <Page size={[W, H]} style={s.page} />
-
-      {chapters.map((ch: any, ci: number) => (
-        <React.Fragment key={ci}>
-          <Page size={[W, H]} style={s.page}>
-            {marker(`ch-${ci}`)}
-            <View style={{ height: estimateChapterOpenerHeightPt(ch) }} />
-          </Page>
-
-          <Page size={[W, H]} style={s.page}>
-            {(ch.lessons || []).map((ls: any, li: number) => {
-              const qs = (ls.linkedArticles || [])
-                .flatMap((a: any) => a.quizQuestions || [])
-                .filter((q: any) => hasText(q.questionText || ""))
-              if (qs.length === 0) return null
-              return (
-                <View key={li}>
-                  {marker(`lesson-${ci}-${li}`)}
-                  <View style={{ height: LESSON_HEADER_HEIGHT_PT }} />
-                  {qs.map((q: any, qi: number) => (
-                    <View key={qi} style={{ height: estimateQuestionHeightPt(q) }} />
-                  ))}
-                </View>
-              )
-            })}
-          </Page>
-        </React.Fragment>
-      ))}
-
-      <Page size={[W, H]} style={s.page}>
-        {marker("answers")}
-        {chapters.map((ch: any, ci: number) => {
-          const blocks: React.ReactElement[] = [
-            <View key={`ch-hdr-${ci}`} style={{ height: ANSWERS_CHAPTER_HEADER_PT }} />,
-          ]
-          for (const ls of (ch.lessons || [])) {
-            const qs = (ls.linkedArticles || [])
-              .flatMap((a: any) => a.quizQuestions || [])
-              .filter((q: any) => hasText(q.questionText || ""))
-            if (qs.length === 0) continue
-            blocks.push(
-              <View key={`t-${ci}-${blocks.length}`} style={{ height: ANSWERS_TOPIC_HEADER_PT }} />
-            )
-            for (let qi = 0; qi < qs.length; qi++) {
-              blocks.push(
-                <View key={`a-${ci}-${blocks.length}-${qi}`} style={{ height: estimateAnswerHeightPt(qs[qi]) }} />
-              )
-            }
-          }
-          return <React.Fragment key={ci}>{blocks}</React.Fragment>
-        })}
-      </Page>
-
-      <Page size={[W, H]} style={s.page} />
-      <Page size={[W, H]} style={s.page} />
-      <Page size={[W, H]} style={s.page} />
-    </Document>
+    <Text
+      style={markerStyle}
+      render={({ pageNumber }) => {
+        onSectionPage(key, pageNumber)
+        return ""
+      }}
+    />
   )
 }
 
@@ -471,15 +357,20 @@ interface PracticeKitTemplateProps {
   edition: string
   subtitle: string
   pageMap?: Record<string, number>
-  probeOnly?: boolean
+  // Pass 1: omit or pass {} — TOC shows blanks, markers fire onSectionPage
+  // Pass 2: pass sectionMap from pass 1 — TOC shows correct page numbers
   onSectionPage?: (key: string, page: number) => void
+  // skipAnswers: pass 1 optimisation for large courses — renders answer
+  // section as a single blank page so pass 1 finishes faster. Page numbers
+  // for chapters/topics (all before answers) are unaffected. Pass 2 always
+  // renders full answers regardless of this flag.
+  skipAnswers?: boolean
 }
 
-export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeOnly, onSectionPage }: PracticeKitTemplateProps) {
-  if (probeOnly) {
-    return <ProbeDocument course={course} onSectionPage={onSectionPage} />
-  }
-
+export function PracticeKitTemplate({
+  course, edition, subtitle,
+  pageMap, onSectionPage, skipAnswers,
+}: PracticeKitTemplateProps) {
   const { chapters: qIndex } = buildQuestionIndex(course)
 
   function pageFor(key: string): string {
@@ -493,6 +384,7 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
       creator="Accounting Body Press"
       producer="Accounting Body Press"
     >
+      {/* ── 1. Title Page ── */}
       <Page size={[W, H]} style={s.page}>
         <View style={s.titlePage}>
           <Text style={s.abPressLabel}>Accounting Body Press</Text>
@@ -504,6 +396,7 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
         </View>
       </Page>
 
+      {/* ── 2. How to Use This Book ── */}
       <Page size={[W, H]} style={s.page}>
         <Text style={s.htuHeading}>How to Use This Book</Text>
         <View style={s.htuRule} />
@@ -522,6 +415,7 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
         <Text style={s.htuBody}>{HTU_EXPLANATION}</Text>
       </Page>
 
+      {/* ── 3. Table of Contents ── */}
       <Page size={[W, H]} style={s.page}>
         <Text style={s.tocTitle}>Contents</Text>
         {qIndex.map(({ ci, chapter, lessons }) => (
@@ -554,9 +448,14 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
         </View>
       </Page>
 
+      {/* ── 4. Chapters ── */}
       {qIndex.map(({ ci, chapter, lessons, totalQuestions: chapterTotalQ }) => (
         <React.Fragment key={chapter._key || ci}>
+
+          {/* 4a. Chapter opener — its own Page.
+              Marker is first child: fires on the page this opener lands on. */}
           <Page size={[W, H]} style={s.page}>
+            {sectionMarker("ch-" + ci, onSectionPage)}
             <Text style={s.runningHead} fixed>{sanitise(subtitle)}</Text>
             <View style={s.runningLine} fixed />
             <View style={s.chapterWrap}>
@@ -594,12 +493,17 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
             <Text style={s.pageNum} render={({ pageNumber }) => String(pageNumber)} fixed />
           </Page>
 
+          {/* 4b. Questions — flows naturally across as many pages as needed.
+              Topic header marker lives INSIDE the minPresenceAhead View so
+              it moves with the header if minPresenceAhead triggers a page
+              break, and fires on the correct page. */}
           <Page size={[W, H]} style={s.page}>
             <Text style={s.runningHead} fixed>{sanitise(subtitle)}</Text>
             <View style={s.runningLine} fixed />
             {lessons.map(({ li, lesson, questions }) => (
               <View key={lesson._id || li}>
                 <View style={{ marginTop: 20 }} minPresenceAhead={80}>
+                  {sectionMarker("lesson-" + ci + "-" + li, onSectionPage)}
                   <Text style={s.topicLabel}>Topic {ci + 1}.{li + 1}</Text>
                   <Text style={s.topicTitle}>{cleanLessonTitle(sanitise(lesson.title))}</Text>
                   <Text style={s.topicMeta}>{questions.length} questions  |  {questions.length * 2} marks  |  ~{questions.length * 2} minutes</Text>
@@ -640,7 +544,14 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
         </React.Fragment>
       ))}
 
+      {/* ── 5. Answers and Explanations ──
+          Marker fires on the page this section starts on.
+          skipAnswers=true (pass 1 of large courses): renders a single blank
+          page in place of full answer content. Since answers come after all
+          TOC-referenced sections, their internal layout does not affect any
+          page numbers we need. Pass 2 always renders full content. */}
       <Page size={[W, H]} style={s.page}>
+        {sectionMarker("answers", onSectionPage)}
         <Text style={s.runningHead} fixed>{sanitise(subtitle)}</Text>
         <View style={s.runningLine} fixed />
         <View style={s.chapterWrap}>
@@ -648,56 +559,61 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
           <Text style={s.chapterTitle}>Answers and Explanations</Text>
           <View style={s.chapterRule} />
         </View>
-        <Text style={s.ansIntro}>
-          Work through the answers only after you have attempted the questions. For each incorrect answer, identify whether the error was conceptual (re-read the relevant study material) or a misreading of the question (review your exam technique).
-        </Text>
-        {qIndex.map(({ ci, chapter, lessons }) => (
-          <View key={chapter._key || ci}>
-            <Text style={s.ansChapterHeader}>Chapter {ci + 1}: {cleanChapterTitle(sanitise(chapter.chapterTitle))}</Text>
-            <View style={s.ansChapterRule} />
-            {lessons.map(({ li, lesson, questions }) => (
-              <View key={lesson._id || li}>
-                <Text style={s.ansTopicHeader}>Topic {ci + 1}.{li + 1}: {cleanLessonTitle(sanitise(lesson.title))}</Text>
-                {questions.map(({ q, num, chapterLocalNum }, qi) => {
-                  const parsed = parseExplanation(sanitise(q.explanation || ""))
-                  const letter = LETTERS[q.correctIndex ?? 0]
-                  const isLast = qi === questions.length - 1
-                  return (
-                    <View key={num} style={s.ansBlockWrap}>
-                      <View style={s.ansHeaderRow}>
-                        <Text style={s.ansQNum}>Q{chapterLocalNum}:</Text>
-                        <View style={s.ansCircle}>
-                          <Text style={s.ansCircleText}>{letter}</Text>
+        {!skipAnswers && (
+          <>
+            <Text style={s.ansIntro}>
+              Work through the answers only after you have attempted the questions. For each incorrect answer, identify whether the error was conceptual (re-read the relevant study material) or a misreading of the question (review your exam technique).
+            </Text>
+            {qIndex.map(({ ci, chapter, lessons }) => (
+              <View key={chapter._key || ci}>
+                <Text style={s.ansChapterHeader}>Chapter {ci + 1}: {cleanChapterTitle(sanitise(chapter.chapterTitle))}</Text>
+                <View style={s.ansChapterRule} />
+                {lessons.map(({ li, lesson, questions }) => (
+                  <View key={lesson._id || li}>
+                    <Text style={s.ansTopicHeader}>Topic {ci + 1}.{li + 1}: {cleanLessonTitle(sanitise(lesson.title))}</Text>
+                    {questions.map(({ q, num, chapterLocalNum }, qi) => {
+                      const parsed = parseExplanation(sanitise(q.explanation || ""))
+                      const letter = LETTERS[q.correctIndex ?? 0]
+                      const isLast = qi === questions.length - 1
+                      return (
+                        <View key={num} style={s.ansBlockWrap}>
+                          <View style={s.ansHeaderRow}>
+                            <Text style={s.ansQNum}>Q{chapterLocalNum}:</Text>
+                            <View style={s.ansCircle}>
+                              <Text style={s.ansCircleText}>{letter}</Text>
+                            </View>
+                          </View>
+                          {parsed.concept ? <Text style={s.conceptText}>{parsed.concept}</Text> : null}
+                          {parsed.caseWalkthrough ? [
+                            <Text key="wl" style={s.explanationLabel}>Explanation:</Text>,
+                            <Text key="wt" style={s.explanationText}>{parsed.caseWalkthrough}</Text>,
+                          ] : null}
+                          {parsed.keyTakeaway ? [
+                            <Text key="kl" style={s.keyTakeawayLabel}>Key Takeaway</Text>,
+                            <Text key="kt" style={s.keyTakeawayText}>{parsed.keyTakeaway}</Text>,
+                          ] : null}
+                          {parsed.pitfall ? (
+                            <View style={s.pitfallWrap}>
+                              <Text>
+                                <Text style={s.pitfallLabel}>Pitfall: </Text>
+                                <Text style={s.pitfallText}>{parsed.pitfall}</Text>
+                              </Text>
+                            </View>
+                          ) : null}
+                          {!isLast ? <View style={s.ansSeparator} /> : null}
                         </View>
-                      </View>
-                      {parsed.concept ? <Text style={s.conceptText}>{parsed.concept}</Text> : null}
-                      {parsed.caseWalkthrough ? [
-                        <Text key="wl" style={s.explanationLabel}>Explanation:</Text>,
-                        <Text key="wt" style={s.explanationText}>{parsed.caseWalkthrough}</Text>,
-                      ] : null}
-                      {parsed.keyTakeaway ? [
-                        <Text key="kl" style={s.keyTakeawayLabel}>Key Takeaway</Text>,
-                        <Text key="kt" style={s.keyTakeawayText}>{parsed.keyTakeaway}</Text>,
-                      ] : null}
-                      {parsed.pitfall ? (
-                        <View style={s.pitfallWrap}>
-                          <Text>
-                            <Text style={s.pitfallLabel}>Pitfall: </Text>
-                            <Text style={s.pitfallText}>{parsed.pitfall}</Text>
-                          </Text>
-                        </View>
-                      ) : null}
-                      {!isLast ? <View style={s.ansSeparator} /> : null}
-                    </View>
-                  )
-                })}
+                      )
+                    })}
+                  </View>
+                ))}
               </View>
             ))}
-          </View>
-        ))}
+          </>
+        )}
         <Text style={s.pageNum} render={({ pageNumber }) => String(pageNumber)} fixed />
       </Page>
 
+      {/* ── 6. Closing Pages ── */}
       {[1, 2].map((n) => (
         <Page key={"notes-" + n} size={[W, H]} style={s.page}>
           <Text style={s.notesHeading}>Notes</Text>
