@@ -144,6 +144,7 @@ export default function AbPressPage() {
   const [wordUrl,        setWordUrl]        = useState('')
   const [exportingWord,  setExportingWord]  = useState(false)
   const [wordError,      setWordError]      = useState('')
+  const [showHistory,    setShowHistory]    = useState(false)
 
   useEffect(() => {
     setCourses([])
@@ -734,46 +735,63 @@ export default function AbPressPage() {
             </div>
           ) : null}
 
-          {/* Publication History */}
+          {/* Publication History — collapsible accordion */}
           {history !== null ? (
-            <div className="bg-[#081428] rounded-xl p-6 border border-slate-700">
-              <h2 className="text-sm font-semibold text-[#D4A017] uppercase tracking-wide mb-4">Publication History</h2>
-              {history.length === 0 ? (
-                <p className="text-slate-500 text-sm">No books generated yet for this course.</p>
-              ) : (
-                <div>
-                  {history.slice(0, 5).map((h: any) => (
-                    <div key={h.id} className="bg-[#0C1A3D] border border-slate-700 rounded-lg p-3 mb-2">
-                      <div className="flex items-center justify-between">
-                        <p className="text-white text-sm font-medium">
-                          {BOOK_TYPES.find(b => b.value === h.bookType)?.label || h.bookType}
-                        </p>
-                        <p className="text-slate-400 text-xs">{h.edition}</p>
-                      </div>
-                      <p className="text-slate-400 text-xs mt-1">
-                        {h.subtitle && h.subtitle.length > 50 ? h.subtitle.slice(0, 50) + '…' : h.subtitle}
-                      </p>
-                      <div className="flex items-center gap-2 mt-2 flex-wrap">
-                        <span className="text-slate-300 text-xs">{h.pageCount ?? '—'} pages</span>
-                        <span
-                          className="px-2 py-0.5 rounded text-xs font-medium"
-                          style={
-                            h.kdpReady
-                              ? { backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }
-                              : { backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }
-                          }
-                        >
-                          {h.kdpReady ? 'KDP Ready' : 'Not Ready'}
-                        </span>
-                        <span className="text-slate-500 text-xs">{formatGeneratedAt(h.generatedAt)}</span>
-                      </div>
-                      {h.contentHash ? (
-                        <p className="text-slate-600 text-xs font-mono mt-1">{String(h.contentHash).slice(0, 12)}</p>
-                      ) : null}
-                    </div>
-                  ))}
+            <div className="bg-[#081428] rounded-xl border border-slate-700">
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="w-full flex items-center justify-between px-6 py-4 text-left"
+              >
+                <h2 className="text-sm font-semibold text-[#D4A017] uppercase tracking-wide">Publication History</h2>
+                <div className="flex items-center gap-3">
+                  {history.length > 0 && !showHistory ? (
+                    <span className="text-slate-400 text-xs">
+                      {history.length} publication{history.length !== 1 ? 's' : ''} — last: {formatGeneratedAt(history[0].generatedAt)}
+                    </span>
+                  ) : null}
+                  <span className="text-slate-400 text-xs">{showHistory ? '▲' : '▼'}</span>
                 </div>
-              )}
+              </button>
+              {showHistory ? (
+                <div className="px-6 pb-6">
+                  {history.length === 0 ? (
+                    <p className="text-slate-500 text-sm">No books generated yet for this course.</p>
+                  ) : (
+                    <div>
+                      {history.slice(0, 5).map((h: any) => (
+                        <div key={h.id} className="bg-[#0C1A3D] border border-slate-700 rounded-lg p-3 mb-2">
+                          <div className="flex items-center justify-between">
+                            <p className="text-white text-sm font-medium">
+                              {BOOK_TYPES.find(b => b.value === h.bookType)?.label || h.bookType}
+                            </p>
+                            <p className="text-slate-400 text-xs">{h.edition}</p>
+                          </div>
+                          <p className="text-slate-400 text-xs mt-1">
+                            {h.subtitle && h.subtitle.length > 50 ? h.subtitle.slice(0, 50) + '…' : h.subtitle}
+                          </p>
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <span className="text-slate-300 text-xs">{h.pageCount ?? '—'} pages</span>
+                            <span
+                              className="px-2 py-0.5 rounded text-xs font-medium"
+                              style={
+                                h.kdpReady
+                                  ? { backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }
+                                  : { backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }
+                              }
+                            >
+                              {h.kdpReady ? 'KDP Ready' : 'Not Ready'}
+                            </span>
+                            <span className="text-slate-500 text-xs">{formatGeneratedAt(h.generatedAt)}</span>
+                          </div>
+                          {h.contentHash ? (
+                            <p className="text-slate-600 text-xs font-mono mt-1">{String(h.contentHash).slice(0, 12)}</p>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : null}
             </div>
           ) : null}
 

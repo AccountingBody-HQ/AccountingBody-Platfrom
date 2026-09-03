@@ -121,10 +121,6 @@ function parseExplanation(raw: string): ParsedExplanation {
   return result
 }
 
-function truncate(text: string, max: number): string {
-  const t = sanitise(text)
-  return t.length > max ? t.slice(0, max - 1).trimEnd() + "..." : t
-}
 
 interface LessonQuestions {
   li: number
@@ -477,7 +473,7 @@ export function PracticeKitTemplate({
               </View>
               {lessons.map(({ li, lesson, questions }, idx) => (
                 <View key={lesson._id || li} style={[s.tableRow, idx % 2 === 1 ? s.tableRowAlt : {}]}>
-                  <Text style={[s.tableCell, { flex: 2 }]}>{truncate(cleanLessonTitle(lesson.title), 45)}</Text>
+                  <Text style={[s.tableCell, { flex: 2 }]}>{cleanLessonTitle(sanitise(lesson.title))}</Text>
                   <Text style={[s.tableCell, s.tableCellRight, { flex: 1 }]}>{questions.length}</Text>
                   <Text style={[s.tableCell, s.tableCellRight, { flex: 1 }]}>{questions.length * 2}</Text>
                   <Text style={[s.tableCell, s.tableCellRight, { flex: 1 }]}>{questions.length * 2} mins</Text>
@@ -577,7 +573,7 @@ export function PracticeKitTemplate({
                       const isLast = qi === questions.length - 1
                       return (
                         <View key={num} style={s.ansBlockWrap}>
-                          <View style={s.ansHeaderRow}>
+                          <View style={s.ansHeaderRow} wrap={false}>
                             <Text style={s.ansQNum}>Q{chapterLocalNum}:</Text>
                             <View style={s.ansCircle}>
                               <Text style={s.ansCircleText}>{letter}</Text>
