@@ -481,7 +481,7 @@ export function ChapterTemplate({ course, chapterIndex, bookType, subtitle, ques
                 ? [...(art.body || []).slice(0, firstIdx), ...(art.body || []).slice(firstIdx + 1)]
                 : (art.body || [])
               return (
-                <View key={art._id || ai}>
+                <React.Fragment key={art._id || ai}>
                   {ai === 0 ? (
                     <View wrap={false} minPresenceAhead={150}>
                       {sameTitle(ls.title, ch.chapterTitle) ? null : <Text style={s.lessonTitle}>{cleanLessonTitle(sanitise(ls.title))}</Text>}
@@ -495,7 +495,7 @@ export function ChapterTemplate({ course, chapterIndex, bookType, subtitle, ques
                     ? renderBlocks(bodyToRender)
                     : (firstIdx === -1 ? <Text style={s.noContent}>Study notes not yet available.</Text> : null)
                   }
-                </View>
+                </React.Fragment>
               )
             })}
           </View>
