@@ -154,17 +154,23 @@ function tokenizeBlocks(html: string): RawBlock[] {
 }
 
 // ── Long-block splitter ──────────────────────────────────────────────────────
-// react-pdf's yoga layout engine fails when a <Text> has 50+ inline children,
-// rendering the block at page origin (0, paddingTop) and overlapping prior
-// content. This splits oversized "normal" paragraph blocks at sentence
-// boundaries between spans so each block's child count stays safe.
-// Threshold: 800 chars (~133 words) — well above any normal paragraph.
-// Headings and list items are never split.
+// react-pdf's yoga layout engine fails when a <Text> has too many inline
+// child <Text> nodes. It computes width=0 for the container and renders
+// the block at page origin (0, paddingTop), overlapping prior content.
+//
+// The trigger is SPAN COUNT, not character count. Blocks with 50+ spans
+// are at risk. This splitter caps each output block at MAX_SPANS spans,
+// splitting at natural sentence boundaries where possible, and force-
+// splitting at FORCE_SPLIT_AT spans when no sentence boundary is found.
+//
 // Splitting happens BETWEEN spans (never mid-span) so bold/italic marks
 // on each span are fully preserved in the resulting blocks.
+// Headings, blockquotes, and list items are never split.
 function splitLongBlocks(blocks: RawBlock[]): RawBlock[] {
-  const CHAR_THRESHOLD = 800
-  const FLUSH_AFTER = 400
+  const MAX_SPANS       = 40  // flush at sentence boundary once we reach this
+  const FORCE_SPLIT_AT  = 48  // force flush regardless if no boundary found
+  // Sentence boundary: span text ends with . ? ! (optionally + closing quote/bracket)
+  const SENTENCE_END = /[.?!]["'\])]?\s*$/
   const result: RawBlock[] = []
 
   for (const block of blocks) {
@@ -174,32 +180,32 @@ function splitLongBlocks(blocks: RawBlock[]): RawBlock[] {
       continue
     }
 
-    const totalChars = block.spans.reduce((sum, s) => sum + s.text.length, 0)
-    if (totalChars <= CHAR_THRESHOLD) {
+    // Fast path: block is already small enough
+    if (block.spans.length <= MAX_SPANS) {
       result.push(block)
       continue
     }
 
-    // Split into smaller blocks at sentence boundaries between spans.
-    // A sentence boundary is detected when a span's text ends with
-    // a sentence-ending punctuation (. ? !) optionally followed by
-    // a closing quote or bracket, then whitespace.
-    const SENTENCE_END = /[.?!]["'\])]?\s*$/
+    // Walk spans, flushing at sentence boundaries after MAX_SPANS,
+    // or force-flushing at FORCE_SPLIT_AT regardless.
     let current: Span[] = []
-    let accumulated = 0
 
     for (const span of block.spans) {
       current.push(span)
-      accumulated += span.text.length
+      const count = current.length
 
-      if (accumulated >= FLUSH_AFTER && SENTENCE_END.test(span.text)) {
+      const atSentenceBoundary = SENTENCE_END.test(span.text)
+      const shouldFlush =
+        (count >= MAX_SPANS && atSentenceBoundary) ||
+        count >= FORCE_SPLIT_AT
+
+      if (shouldFlush) {
         result.push({ style: "normal", spans: current })
         current = []
-        accumulated = 0
       }
     }
 
-    // Flush any remaining spans
+    // Flush remaining spans
     if (current.length > 0) {
       result.push({ style: "normal", spans: current })
     }
