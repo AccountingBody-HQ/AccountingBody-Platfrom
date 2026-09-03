@@ -266,7 +266,7 @@ const s = StyleSheet.create({
   topicMeta: { fontSize: 9, color: "#777777", marginBottom: 6 },
   topicRule: { borderBottomWidth: 0.5, borderBottomColor: "#D4A017", marginBottom: 14 },
   questionOuter: {
-    marginBottom: 12, paddingLeft: 10, paddingTop: 8, paddingBottom: 8,
+    marginBottom: 6, paddingLeft: 10, paddingTop: 5, paddingBottom: 5,
     borderLeftWidth: 2.5, borderLeftColor: "#D4A017", backgroundColor: "#ffffff",
   },
   questionOuterScenario: { borderLeftColor: "#C9982A" },
@@ -277,8 +277,8 @@ const s = StyleSheet.create({
   questionHeaderRow: { flexDirection: "row", justifyContent: "space-between" },
   questionNum: { fontSize: 9, color: "#0C1A3D", fontFamily: "BookSans-Bold", letterSpacing: 0.5 },
   questionMeta: { fontSize: 7, color: "#999999" },
-  questionText: { fontSize: 10, color: "#111111", lineHeight: 1.75, marginTop: 6, marginBottom: 10 },
-  optionRow: { flexDirection: "row", marginBottom: 5 },
+  questionText: { fontSize: 10, color: "#111111", lineHeight: 1.6, marginTop: 4, marginBottom: 6 },
+  optionRow: { flexDirection: "row", marginBottom: 3 },
   optionLetter: { fontSize: 9, color: "#0C1A3D", fontFamily: "BookSans-Bold", width: 16 },
   optionText: { fontSize: 9, color: "#333333", flex: 1, lineHeight: 1.6 },
   endChapterWrap: { marginTop: 24, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#dddddd" },
@@ -612,6 +612,7 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
                   return (
                     <View
                       key={num}
+                      wrap={false}
                       style={[s.questionOuter, isScenario ? s.questionOuterScenario : {}]}
                     >
                       {isScenario ? <Text style={s.scenarioLabel}>Scenario Question</Text> : null}
