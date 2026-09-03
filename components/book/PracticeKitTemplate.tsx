@@ -612,7 +612,6 @@ export function PracticeKitTemplate({ course, edition, subtitle, pageMap, probeO
                   return (
                     <View
                       key={num}
-                      wrap={false}
                       style={[s.questionOuter, isScenario ? s.questionOuterScenario : {}]}
                     >
                       {isScenario ? <Text style={s.scenarioLabel}>Scenario Question</Text> : null}
