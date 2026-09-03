@@ -330,7 +330,7 @@ export default function AbPressPage() {
 
       // 5. Merge all PDFs using pdf-lib (client-side)
       setGenerationPhase('Merging PDF pages...')
-      const { PDFDocument } = await import('pdf-lib')
+      const { PDFDocument, StandardFonts, rgb } = await import('pdf-lib')
       const mergedDoc = await PDFDocument.create()
 
       const allPdfs = [frontmatterPdf, ...chapterPdfs, ...answerChapterPdfs]
@@ -341,6 +341,28 @@ export default function AbPressPage() {
         pages.forEach((p: any) => mergedDoc.addPage(p))
       }
 
+      // Draw page numbers on every page after frontmatter using pdf-lib.
+      // ChapterTemplate cannot use react-pdf's render() callback for page
+      // numbers because each chapter renders as its own PDF starting at
+      // page 1 — after pdf-lib merges them the embedded numbers would be
+      // wrong. Instead we draw the correct sequential page number here,
+      // after the merge, when the final page index is known.
+      // Frontmatter = pages 1-3 (title, copyright, TOC) — no page number.
+      // Pages 4+ get their sequential number at bottom-right, matching
+      // the Practice Kit's s.pageNum position (MO=36pt, y=18pt, 8pt grey).
+      const helvetica = await mergedDoc.embedFont(StandardFonts.Helvetica)
+      const FRONTMATTER_PAGES = 3
+      for (let i = FRONTMATTER_PAGES; i < mergedDoc.getPageCount(); i++) {
+        const pdfPage = mergedDoc.getPage(i)
+        const { width } = pdfPage.getSize()
+        pdfPage.drawText(String(i + 1), {
+          x: width - 36,
+          y: 18,
+          size: 8,
+          font: helvetica,
+          color: rgb(0.6, 0.6, 0.6),
+        })
+      }
       const mergedBytes = await mergedDoc.save()
       const interiorPdf = new Uint8Array(mergedBytes)
 

@@ -168,6 +168,10 @@ function sanitise(text: string): string {
     .trim()
 }
 
+function cleanChapterTitle(raw: string): string {
+  return (raw || "").replace(/^Unit\s+\d+\s*[-:]\s*/i, "").trim()
+}
+
 // ── Visibility check (duplicated from BookTemplate.tsx) ───────────────────────
 function hasText(raw: string): boolean {
   return raw.replace(/[\s ​‌‍﻿]/g, "").length > 0
@@ -454,7 +458,7 @@ export function ChapterTemplate({ course, chapterIndex, bookType, subtitle, ques
         {/* Chapter header */}
         <View style={s.chapterWrap}>
           <Text style={s.chapterLabel}>Chapter {chapterIndex + 1}</Text>
-          <Text style={s.chapterTitle}>{sanitise(ch.chapterTitle)}</Text>
+          <Text style={s.chapterTitle}>{cleanChapterTitle(sanitise(ch.chapterTitle))}</Text>
           <View style={s.chapterRule} />
         </View>
 
@@ -513,7 +517,7 @@ export function ChapterTemplate({ course, chapterIndex, bookType, subtitle, ques
           </View>
         )}
 
-        <Text style={s.footerLine} fixed>{sanitise(subtitle)} | {sanitise(ch.chapterTitle)}</Text>
+        <Text style={s.footerLine} fixed>{sanitise(subtitle)} | {cleanChapterTitle(sanitise(ch.chapterTitle))}</Text>
       </Page>
     </Document>
   )

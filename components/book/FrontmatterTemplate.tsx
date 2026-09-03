@@ -95,6 +95,10 @@ function sanitise(text: string): string {
     .trim()
 }
 
+function cleanChapterTitle(raw: string): string {
+  return (raw || "").replace(/^Unit\s+\d+\s*[-:]\s*/i, "").trim()
+}
+
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface FrontmatterTemplateProps {
   course:             any
@@ -163,7 +167,7 @@ export function FrontmatterTemplate({ course, bookType, edition, subtitle, chapt
           <View key={ch._key || ci} style={s.tocChapterRow}>
             <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
               <Text style={s.tocChapterText}>
-                Chapter {ci + 1}: {sanitise(ch.chapterTitle)}
+                Chapter {ci + 1}: {cleanChapterTitle(sanitise(ch.chapterTitle))}
               </Text>
               <View style={{ flex: 1, borderBottomWidth: 0.7, borderBottomColor: "#bbbbbb", borderBottomStyle: "dotted", marginHorizontal: 4, marginBottom: 2 }} />
               <Text style={s.tocChapterText}>{chapterPageStarts[ci] ? String(chapterPageStarts[ci]) : ""}</Text>
