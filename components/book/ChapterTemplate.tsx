@@ -172,6 +172,10 @@ function cleanChapterTitle(raw: string): string {
   return (raw || "").replace(/^Unit\s+\d+\s*[-:]\s*/i, "").trim()
 }
 
+function cleanLessonTitle(raw: string): string {
+  return (raw || "").replace(/^Ch\.?\s*\d+[:.]\s*/i, "").trim()
+}
+
 // ── Visibility check (duplicated from BookTemplate.tsx) ───────────────────────
 function hasText(raw: string): boolean {
   return raw.replace(/[\s ​‌‍﻿]/g, "").length > 0
@@ -466,7 +470,7 @@ export function ChapterTemplate({ course, chapterIndex, bookType, subtitle, ques
         {(ch.lessons || []).map((ls: any, li: number) => (
           <View key={ls._id || li}>
             {(!showNotes || !ls.linkedArticles || ls.linkedArticles.length === 0) && !sameTitle(ls.title, ch.chapterTitle) && (
-              <Text style={s.lessonTitle}>{sanitise(ls.title)}</Text>
+              <Text style={s.lessonTitle}>{cleanLessonTitle(sanitise(ls.title))}</Text>
             )}
             {/* Study Notes */}
             {showNotes && (ls.linkedArticles || []).map((art: any, ai: number) => {
@@ -480,7 +484,7 @@ export function ChapterTemplate({ course, chapterIndex, bookType, subtitle, ques
                 <View key={art._id || ai}>
                   {ai === 0 ? (
                     <View wrap={false} minPresenceAhead={150}>
-                      {sameTitle(ls.title, ch.chapterTitle) ? null : <Text style={s.lessonTitle}>{sanitise(ls.title)}</Text>}
+                      {sameTitle(ls.title, ch.chapterTitle) ? null : <Text style={s.lessonTitle}>{cleanLessonTitle(sanitise(ls.title))}</Text>}
                       {sameTitle(art.title, ls.title) || sameTitle(art.title, ch.chapterTitle) ? null : <Text style={s.articleTitle}>{sanitise(art.title)}</Text>}
                       {renderFirstBlock(art.body || [])}
                     </View>
