@@ -1,4 +1,5 @@
 // app/api/roodber8/ab-press/generate-pq/route.ts
+// Build: force clean deploy 2026-09-03
 // Accounting Body Press - Practice & Revision Kit Generation API
 // Route for "practice" book type, using PracticeKitTemplate instead of the
 // chapter-by-chapter orchestration used for combined/study books.
