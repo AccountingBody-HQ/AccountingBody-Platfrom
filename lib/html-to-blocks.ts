@@ -153,14 +153,71 @@ function tokenizeBlocks(html: string): RawBlock[] {
   return out
 }
 
+// ── Long-block splitter ──────────────────────────────────────────────────────
+// react-pdf's yoga layout engine fails when a <Text> has 50+ inline children,
+// rendering the block at page origin (0, paddingTop) and overlapping prior
+// content. This splits oversized "normal" paragraph blocks at sentence
+// boundaries between spans so each block's child count stays safe.
+// Threshold: 800 chars (~133 words) — well above any normal paragraph.
+// Headings and list items are never split.
+// Splitting happens BETWEEN spans (never mid-span) so bold/italic marks
+// on each span are fully preserved in the resulting blocks.
+function splitLongBlocks(blocks: RawBlock[]): RawBlock[] {
+  const CHAR_THRESHOLD = 800
+  const FLUSH_AFTER = 400
+  const result: RawBlock[] = []
+
+  for (const block of blocks) {
+    // Never split headings, blockquotes, or list items
+    if (block.style !== "normal" || block.listItem) {
+      result.push(block)
+      continue
+    }
+
+    const totalChars = block.spans.reduce((sum, s) => sum + s.text.length, 0)
+    if (totalChars <= CHAR_THRESHOLD) {
+      result.push(block)
+      continue
+    }
+
+    // Split into smaller blocks at sentence boundaries between spans.
+    // A sentence boundary is detected when a span's text ends with
+    // a sentence-ending punctuation (. ? !) optionally followed by
+    // a closing quote or bracket, then whitespace.
+    const SENTENCE_END = /[.?!]["'\])]?\s*$/
+    let current: Span[] = []
+    let accumulated = 0
+
+    for (const span of block.spans) {
+      current.push(span)
+      accumulated += span.text.length
+
+      if (accumulated >= FLUSH_AFTER && SENTENCE_END.test(span.text)) {
+        result.push({ style: "normal", spans: current })
+        current = []
+        accumulated = 0
+      }
+    }
+
+    // Flush any remaining spans
+    if (current.length > 0) {
+      result.push({ style: "normal", spans: current })
+    }
+  }
+
+  return result
+}
+
 // ── Public API ───────────────────────────────────────────────────────────────
 
 export function htmlToBlocks(html: string, filterFirst = false): any[] {
   if (!html) return []
   const source = filterFirst ? filterForPublication(html) : html
 
-  const rawBlocks = tokenizeBlocks(source).filter((b) =>
-    b.spans.some((s) => s.text.trim().length > 0)
+  const rawBlocks = splitLongBlocks(
+    tokenizeBlocks(source).filter((b) =>
+      b.spans.some((s) => s.text.trim().length > 0)
+    )
   )
 
   return rawBlocks.map((b, i) => {
