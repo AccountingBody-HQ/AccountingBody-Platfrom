@@ -329,6 +329,7 @@ export async function POST(req: NextRequest) {
         "Content-Type":        "application/zip",
         "Content-Disposition": `attachment; filename="${slug}-practice.zip"`,
         "Content-Length":      String(zip.length),
+        "Cache-Control":       "no-store",
       },
     })
   } catch (err: unknown) {
