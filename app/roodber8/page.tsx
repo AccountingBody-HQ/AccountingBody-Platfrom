@@ -21,7 +21,8 @@ async function getStats() {
     { count: subscriberCount },
     { count: helpCount },
     { count: firmsCount },
-    { count: jobsCount },
+    { count: jobsDirectCount },
+    { count: jobsPendingCount },
     { count: openHelpCount },
     { count: pendingFirmsCount },
     { count: etHelpCount },
@@ -38,7 +39,8 @@ async function getStats() {
     supabase.from("email_subscribers").select("*", { count: "exact", head: true }).eq("platform", "ab"),
     supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("platform", "ab"),
     supabase.from("firms_applications").select("*", { count: "exact", head: true }).eq("platform", "ab"),
-    supabase.from("job_listings").select("*", { count: "exact", head: true }),
+    supabase.from("jobs").select("*", { count: "exact", head: true }).eq("source", "employer").eq("status", "active").contains("platform", ["ab"]),
+    supabase.from("jobs").select("*", { count: "exact", head: true }).eq("status", "pending_approval"),
     supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("platform", "ab").eq("status", "open"),
     supabase.from("firms_applications").select("*", { count: "exact", head: true }).eq("platform", "ab").in("status", ["pending", "under_review"]),
     // EthioTax stats
@@ -93,7 +95,8 @@ async function getStats() {
     subscriberCount:   subscriberCount   ?? 0,
     helpCount:         helpCount         ?? 0,
     firmsCount:        firmsCount        ?? 0,
-    jobsCount:         jobsCount         ?? 0,
+    jobsDirectCount:   jobsDirectCount   ?? 0,
+    jobsPendingCount:  jobsPendingCount  ?? 0,
     openHelpCount:     openHelpCount     ?? 0,
     pendingFirmsCount: pendingFirmsCount ?? 0,
     recentSubmissions:   (recentSubmissions   ?? []) as Array<{id: string; name: string; email: string; subject: string; created_at: string}>,
@@ -158,14 +161,24 @@ export default async function AdminCommandCentre() {
       href: "/roodber8/jobs-firms",
     },
     {
-      label: "Job Listings",
-      value: stats.jobsCount,
-      sub: "on the job board",
-      color: "#ec4899",
-      bg: "rgba(236,72,153,0.08)",
-      border: "rgba(236,72,153,0.2)",
+      label: "Jobs (Direct)",
+      value: stats.jobsDirectCount,
+      sub: "active employer listings",
+      color: "#60a5fa",
+      bg: "rgba(96,165,250,0.08)",
+      border: "rgba(96,165,250,0.2)",
       icon: Briefcase,
-      href: "/roodber8/jobs-firms",
+      href: "/roodber8/jobs",
+    },
+    {
+      label: "Pending Approval",
+      value: stats.jobsPendingCount,
+      sub: "job listings awaiting review",
+      color: "#fbbf24",
+      bg: "rgba(245,158,11,0.08)",
+      border: "rgba(245,158,11,0.2)",
+      icon: Briefcase,
+      href: "/roodber8/jobs?status=pending_approval",
     },
     {
       label: "Courses",
@@ -205,6 +218,8 @@ export default async function AdminCommandCentre() {
     { label: "Manage Subscribers", sub: "Email list & CSV export",  href: "/roodber8/subscribers",     icon: Users,       color: "#10b981" },
     { label: "Content Factory",    sub: "Generate AI study content",href: "/roodber8/content-factory", icon: Factory,     color: "#f59e0b" },
     { label: "Jobs & Firms",       sub: "Listings & applications",  href: "/roodber8/jobs-firms",      icon: Briefcase,   color: "#8b5cf6" },
+    { label: "Manage Jobs",        sub: "Approve, reject & feature listings", href: "/roodber8/jobs",  icon: Briefcase,   color: "#60a5fa" },
+    { label: "Post a Job",         sub: "Public employer posting form", href: "/jobs/post-a-job",      icon: Briefcase,   color: "#D4A017", external: true },
     { label: "Questions",          sub: "Generate practice questions",href: "/roodber8/questions",       icon: HelpCircle,  color: "#D4A017" },
     { label: "Articles",           sub: "Manage and import study content", href: "/roodber8/articles",   icon: FileText,    color: "#D4A017" },
     { label: "Courses",            sub: "Manage and publish structured courses", href: "/roodber8/courses", icon: BookOpen, color: "#14b4a3" },
@@ -445,6 +460,8 @@ export default async function AdminCommandCentre() {
         <div className="grid grid-cols-4 divide-x" style={{ borderColor: "#1a2238" }}>
           {QUICK_ACTIONS.map(action => (
             <Link key={action.label} href={action.href}
+              target={action.external ? "_blank" : undefined}
+              rel={action.external ? "noopener noreferrer" : undefined}
               className="px-6 py-5 flex flex-col gap-3 transition-all group hover:bg-white/[0.02]">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center"
                 style={{ background: `${action.color}15` }}>

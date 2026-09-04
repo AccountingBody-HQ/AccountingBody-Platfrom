@@ -19,6 +19,25 @@ interface CareerjetResponse {
   error?: string
 }
 
+interface DirectJob {
+  id: string
+  slug: string
+  title: string
+  company_name: string
+  location_text: string
+  salary_text: string | null
+  employment_type: string | null
+  created_at: string
+  published_at: string | null
+  apply_method: 'platform' | 'external' | 'email'
+  application_url: string | null
+  application_email: string | null
+}
+
+interface DirectJobsResponse {
+  jobs?: DirectJob[]
+}
+
 type SortOption = 'relevance' | 'date' | 'salary'
 type ContractFilter = 'all' | 'permanent' | 'contract' | 'temporary' | 'parttime'
 
@@ -50,6 +69,18 @@ function contractQueryParams(filter: ContractFilter): Record<string, string> {
     case 'temporary': return { contract_type: 't' }
     case 'parttime': return { work_hours: 'p' }
     default: return {}
+  }
+}
+
+// jobs.employment_type uses a different vocabulary ('part_time' vs
+// Careerjet's work_hours=p) — mapped separately for the direct-jobs API.
+function directEmploymentType(filter: ContractFilter): string | undefined {
+  switch (filter) {
+    case 'permanent': return 'permanent'
+    case 'contract': return 'contract'
+    case 'temporary': return 'temporary'
+    case 'parttime': return 'part_time'
+    default: return undefined
   }
 }
 
@@ -200,6 +231,65 @@ function JobCard({ job, fallbackLocation }: { job: CareerjetJob; fallbackLocatio
   )
 }
 
+function trackAndOpen(job: DirectJob) {
+  // Fire-and-forget click tracking — never blocks navigation.
+  fetch(`/api/jobs/click/${job.id}`, { method: 'POST' }).catch(() => {})
+
+  if (job.apply_method === 'external' && job.application_url) {
+    window.open(job.application_url, '_blank', 'noopener,noreferrer')
+  } else if (job.apply_method === 'email' && job.application_email) {
+    window.location.href = `mailto:${job.application_email}?subject=${encodeURIComponent('Application: ' + job.title)}`
+  } else {
+    window.open(`/jobs/apply/${job.id}`, '_blank', 'noopener,noreferrer')
+  }
+}
+
+function DirectJobCard({ job }: { job: DirectJob }) {
+  return (
+    <div className="group card-base bg-white flex flex-col p-5 relative">
+      <span className="absolute top-4 right-4 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
+        style={{ background: 'rgba(45,212,191,0.12)', color: '#0d9488', border: '1px solid rgba(45,212,191,0.3)' }}>
+        Hiring Direct
+      </span>
+      <h3 className="font-display text-lg text-navy-950 leading-snug group-hover:text-navy-700 transition-colors mb-1 pr-24">
+        {job.title}
+      </h3>
+      <p className="text-sm font-semibold text-navy-700 mb-3">{job.company_name}</p>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mb-4 text-xs text-slate-500">
+        <span className="flex items-center gap-1">
+          <LocationIcon />
+          {job.location_text}
+        </span>
+        {job.employment_type && (
+          <span className="capitalize">{job.employment_type.replace('_', ' ')}</span>
+        )}
+      </div>
+
+      {job.salary_text && (
+        <div className="mb-4">
+          <span className="inline-flex items-center rounded-full bg-gold-50 text-gold-700 border border-gold-300 px-2.5 py-1 text-xs font-bold whitespace-nowrap">
+            {job.salary_text}
+          </span>
+        </div>
+      )}
+
+      <div className="mt-auto pt-3 border-t border-slate-100">
+        <button
+          type="button"
+          onClick={() => trackAndOpen(job)}
+          className="inline-flex items-center justify-center gap-2 w-full h-10 rounded-lg text-sm font-semibold transition-colors"
+          style={{ background: '#C9982A', color: '#0C1A3D' }}>
+          Apply Now
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function JobCardSkeleton() {
   return (
     <div className="card-base bg-white p-5 animate-pulse">
@@ -226,6 +316,8 @@ export default function JobListingsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const [directJobs, setDirectJobs] = useState<DirectJob[]>([])
+
   const resultsRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
 
@@ -251,7 +343,29 @@ export default function JobListingsPage() {
 
     setLoading(true)
     setError(null)
-    try {
+
+    // Direct employer jobs are only shown alongside page 1 — they're a
+    // small, fixed "top of feed" set, not a paginated source in their own
+    // right, so repeating them across every Careerjet page would just be
+    // confusing duplication for a low-volume Phase-1 inventory.
+    const directPromise = page === 1
+      ? fetch(
+          `/api/jobs/direct?${new URLSearchParams({
+            search: activeRole,
+            location: activeLocation,
+            ...(directEmploymentType(activeContract) ? { employment_type: directEmploymentType(activeContract)! } : {}),
+          }).toString()}`,
+          { signal: controller.signal }
+        )
+          .then(res => (res.ok ? (res.json() as Promise<DirectJobsResponse>) : { jobs: [] }))
+          .then(data => Array.isArray(data.jobs) ? data.jobs : [])
+          .catch(err => {
+            if ((err as Error).name !== 'AbortError') console.error('Direct jobs fetch failed:', err)
+            return [] as DirectJob[]
+          })
+      : Promise.resolve([] as DirectJob[])
+
+    const careerjetPromise = (async () => {
       const params = new URLSearchParams({
         role: activeRole,
         location: activeLocation,
@@ -262,6 +376,13 @@ export default function JobListingsPage() {
       })
       const res = await fetch(`/api/careerjet?${params.toString()}`, { signal: controller.signal })
       const data: CareerjetResponse = await res.json()
+      return { res, data }
+    })()
+
+    try {
+      const [direct, { res, data }] = await Promise.all([directPromise, careerjetPromise])
+
+      setDirectJobs(direct)
 
       if (!res.ok || data.error) {
         setError(data.error || 'Could not load jobs right now. Please try again.')
@@ -322,8 +443,10 @@ export default function JobListingsPage() {
     setPage(1)
   }
 
-  const count = hits ?? jobs.length
-  const isFirstLoad = loading && jobs.length === 0
+  // Combined count only adds direct jobs when there are any — avoids
+  // inflating the displayed total on searches with zero direct matches.
+  const count = (hits ?? jobs.length) + (directJobs.length > 0 ? directJobs.length : 0)
+  const isFirstLoad = loading && jobs.length === 0 && directJobs.length === 0
 
   return (
     <main className="min-h-screen bg-white">
@@ -520,7 +643,7 @@ export default function JobListingsPage() {
             </div>
           )}
 
-          {!error && !isFirstLoad && jobs.length === 0 && (
+          {!error && !isFirstLoad && jobs.length === 0 && directJobs.length === 0 && (
             <div className="text-center py-16 border border-slate-200 rounded-xl bg-white">
               <p className="text-navy-950 font-semibold mb-1">No jobs found</p>
               <p className="text-sm text-slate-500 mb-4">Try broadening your search or clearing filters.</p>
@@ -534,7 +657,7 @@ export default function JobListingsPage() {
             </div>
           )}
 
-          {!error && jobs.length > 0 && (
+          {!error && (jobs.length > 0 || directJobs.length > 0) && (
             <div className="relative">
               {loading && (
                 <div className="absolute inset-0 flex items-start justify-center pt-12 z-10">
@@ -543,6 +666,9 @@ export default function JobListingsPage() {
               )}
               <div className={`transition-opacity duration-200 ${loading ? 'opacity-40 pointer-events-none' : ''}`}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {directJobs.map(job => (
+                    <DirectJobCard key={`direct-${job.id}`} job={job} />
+                  ))}
                   {jobs.map((job, i) => (
                     <JobCard key={`${job.url}-${i}`} job={job} fallbackLocation={activeLocation} />
                   ))}

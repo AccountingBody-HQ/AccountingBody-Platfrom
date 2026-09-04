@@ -103,6 +103,7 @@ export const JOBS_NAV = {
     {
       title: 'For Employers',
       links: [
+        { label: 'Post a Job',    href: '/jobs/post-a-job', badge: 'New', description: 'List your own vacancy directly — £9, live for 60 days' },
         { label: 'Hire Talent',   href: '/jobs/hire-talent', description: 'Tell us your hiring need and we will find the right candidate' },
         { label: 'Our Guarantee', href: '/jobs/guarantee', description: '90-day replacement guarantee on every permanent placement' },
       ],
@@ -137,6 +138,7 @@ export const ET_JOBS_NAV = {
     {
       title: 'For Employers',
       links: [
+        { label: 'Post a Job',    href: '/jobs/post-a-job', badge: 'New', description: 'List your own vacancy directly — £9, live for 60 days' },
         { label: 'Hire Talent',   href: '/jobs/hire-talent', description: 'Access our vetted pool of Ethiopian-origin finance professionals' },
         { label: 'Our Guarantee', href: '/jobs/guarantee', description: '90-day replacement guarantee on every permanent placement' },
       ],
