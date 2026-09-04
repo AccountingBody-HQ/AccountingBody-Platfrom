@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import Stripe from 'stripe'
-import { createJob, type ApplyMethod, type JobInsert } from '@/lib/jobs'
+import { createJob, type ApplyMethod, type Job, type JobInsert } from '@/lib/jobs'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
-
-const LISTING_PRICE_PENCE = 900 // £9.00 — 60-day listing
 
 function getSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SECRET_KEY!
   )
-}
-
-function getStripe(): Stripe {
-  return new Stripe(process.env.STRIPE_SECRET_KEY!)
 }
 
 function siteUrl(): string {
@@ -28,8 +21,79 @@ const REQUIRED_FIELDS: (keyof JobInsert)[] = [
   'employer_email', 'employer_name', 'employer_company',
 ]
 
+// Countries billed in USD — everything else (UK + Europe by default) is GBP.
+const USD_COUNTRIES = new Set([
+  'United States', 'US', 'Canada', 'CA', 'Australia', 'AU', 'New Zealand', 'NZ',
+  'Singapore', 'SG', 'Hong Kong', 'HK', 'UAE', 'AE', 'South Africa', 'ZA',
+  'Nigeria', 'NG', 'Kenya', 'KE', 'Ethiopia', 'ET', 'Ghana', 'GH',
+])
+
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null
+}
+
+interface LemonSqueezyCheckoutResponse {
+  data?: { attributes?: { url?: string } }
+}
+
+async function createLemonSqueezyCheckout(
+  job: Job,
+  variantId: string,
+  apiKey: string,
+  storeId: string
+): Promise<string> {
+  const res = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      Accept: 'application/vnd.api+json',
+      'Content-Type': 'application/vnd.api+json',
+    },
+    body: JSON.stringify({
+      data: {
+        type: 'checkouts',
+        attributes: {
+          checkout_data: {
+            email: job.employer_email,
+            name: job.employer_name,
+            custom: {
+              job_id: job.id,
+              employer_email: job.employer_email,
+              job_title: job.title,
+              company_name: job.company_name,
+            },
+          },
+          checkout_options: {
+            embed: false,
+            media: false,
+            logo: true,
+          },
+          product_options: {
+            name: 'Job Listing — 60 Days on AccountingBody',
+            description: 'Your job will be reviewed and published within 24 hours. Includes Hiring Direct badge and top placement above aggregated results.',
+            redirect_url: `${siteUrl()}/jobs/post-a-job/success`,
+            receipt_thank_you_note: 'Thank you for posting with AccountingBody. Your listing is under review and will go live within 24 hours.',
+          },
+        },
+        relationships: {
+          store: { data: { type: 'stores', id: storeId } },
+          variant: { data: { type: 'variants', id: variantId } },
+        },
+      },
+    }),
+  })
+
+  if (!res.ok) {
+    const errText = await res.text()
+    throw new Error(`Lemon Squeezy checkout creation failed (${res.status}): ${errText}`)
+  }
+
+  const json = (await res.json()) as LemonSqueezyCheckoutResponse
+  const url = json.data?.attributes?.url
+  if (!url) {
+    throw new Error('Lemon Squeezy did not return a checkout URL')
+  }
+  return url
 }
 
 export async function POST(req: NextRequest) {
@@ -58,6 +122,17 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         )
       }
+    }
+
+    // Fail fast on missing config, before creating a draft job, so a
+    // misconfigured deploy never leaves an orphaned pending_payment row.
+    const apiKey = process.env.LEMONSQUEEZY_API_KEY
+    const storeId = process.env.LEMONSQUEEZY_STORE_ID
+    const variantIdGbp = process.env.LEMONSQUEEZY_VARIANT_ID_GBP
+    const variantIdUsd = process.env.LEMONSQUEEZY_VARIANT_ID_USD
+    if (!apiKey || !storeId || !variantIdGbp || !variantIdUsd) {
+      console.error('jobs/employer/checkout: Lemon Squeezy env vars not configured')
+      return NextResponse.json({ error: 'Payment provider not configured' }, { status: 500 })
     }
 
     const isEthioTax = req.headers.get('x-et-platform') === 'ethiotax'
@@ -92,40 +167,12 @@ export async function POST(req: NextRequest) {
     const job = await createJob(jobInsert)
     createdJobId = job.id
 
-    const stripe = getStripe()
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      line_items: [
-        {
-          price_data: {
-            currency: 'gbp',
-            unit_amount: LISTING_PRICE_PENCE,
-            product_data: {
-              name: 'Job Listing — 60 days on AccountingBody',
-              description: `${job.title} at ${job.company_name}`,
-            },
-          },
-          quantity: 1,
-        },
-      ],
-      metadata: {
-        job_id: job.id,
-        employer_email: job.employer_email,
-      },
-      success_url: `${siteUrl()}/jobs/post-a-job/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl()}/jobs/post-a-job?cancelled=true`,
-      customer_email: job.employer_email,
-    })
+    const useUsd = job.location_country ? USD_COUNTRIES.has(job.location_country) : false
+    const variantId = useUsd ? variantIdUsd : variantIdGbp
 
-    // Record the session on the draft job so the webhook and any manual
-    // reconciliation can trace this listing back to its Checkout Session.
-    await getSupabase().from('jobs').update({ stripe_session_id: session.id }).eq('id', job.id)
+    const checkoutUrl = await createLemonSqueezyCheckout(job, variantId, apiKey, storeId)
 
-    if (!session.url) {
-      throw new Error('Stripe did not return a checkout URL')
-    }
-
-    return NextResponse.json({ checkoutUrl: session.url })
+    return NextResponse.json({ checkoutUrl })
   } catch (err: unknown) {
     console.error('jobs/employer/checkout error:', err)
 
@@ -146,7 +193,7 @@ export async function POST(req: NextRequest) {
     // than a generic 500.
     if (isRecord(err) && err.code === '23505') {
       return NextResponse.json(
-        { error: 'You already have a listing for this role, company and location on file. Please check your email or contact us if you need to make changes.' },
+        { error: 'A listing for this role and company already exists.' },
         { status: 409 }
       )
     }

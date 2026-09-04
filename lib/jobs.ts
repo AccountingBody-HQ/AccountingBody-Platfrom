@@ -508,10 +508,17 @@ export async function expireJob(id: string): Promise<void> {
   if (error) throw error
 }
 
+/**
+ * Marks a job as paid. `stripe_session_id` and `stripe_payment_intent_id`
+ * are legacy column names from the original Stripe integration — they now
+ * store the payment provider's references regardless of which provider
+ * (Lemon Squeezy or otherwise) processed the payment. Renaming the columns
+ * is out of scope; only the parameter names here are provider-agnostic.
+ */
 export async function markJobPaid(
   id: string,
-  stripeSessionId: string,
-  stripePaymentIntentId: string,
+  providerSessionId: string,
+  providerOrderId: string,
   pricePaidPence: number
 ): Promise<Job> {
   const supabase = getSupabase()
@@ -520,8 +527,8 @@ export async function markJobPaid(
     .from('jobs')
     .update({
       payment_status: 'paid',
-      stripe_session_id: stripeSessionId,
-      stripe_payment_intent_id: stripePaymentIntentId,
+      stripe_session_id: providerSessionId,
+      stripe_payment_intent_id: providerOrderId,
       price_paid_pence: pricePaidPence,
       status: 'pending_approval',
     })

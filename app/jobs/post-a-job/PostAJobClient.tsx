@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
 
 type ApplyMethod = 'platform' | 'external' | 'email'
 
@@ -83,28 +84,31 @@ const STEPS = [
 
 function ProgressBar({ currentStep, brand }: { currentStep: number; brand: string }) {
   return (
-    <div className="mb-10">
+    <div className="mb-8">
       <div className="hidden sm:flex items-start justify-between mb-3">
         {STEPS.map(step => (
           <div key={step.number} className="flex flex-col items-center" style={{ width: '33.33%' }}>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mb-1 transition-all"
-              style={{ background: currentStep >= step.number ? brand : '#e2e8f0', color: currentStep >= step.number ? '#fff' : '#94a3b8' }}>
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mb-1 transition-all"
+              style={{ background: currentStep >= step.number ? brand : '#e2e8f0', color: currentStep >= step.number ? '#fff' : '#94a3b8' }}
+            >
               {currentStep > step.number
                 ? <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
                 : step.number}
             </div>
-            <span className="text-xs font-medium text-center leading-tight" style={{ color: currentStep >= step.number ? brand : '#94a3b8' }}>
+            <span className="text-xs text-center leading-tight" style={{ color: currentStep >= step.number ? brand : '#94a3b8', fontWeight: currentStep === step.number ? 600 : 400 }}>
               {step.label}
             </span>
           </div>
         ))}
       </div>
-      <div className="sm:hidden text-sm font-semibold mb-2" style={{ color: brand }}>
-        Step {currentStep} of {STEPS.length} — {STEPS[currentStep - 1].label}
-      </div>
-      <div className="relative h-1.5 bg-slate-200 rounded-full overflow-hidden">
-        <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-300"
+      <div className="relative h-1.5 rounded-full bg-slate-200 overflow-hidden">
+        <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
           style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%`, background: brand }} />
+      </div>
+      <div className="flex sm:hidden justify-between items-center mt-2">
+        <span className="text-xs text-slate-400">Step {currentStep} of {STEPS.length}</span>
+        <span className="text-xs font-semibold" style={{ color: brand }}>{STEPS[currentStep - 1].label}</span>
       </div>
     </div>
   )
@@ -113,7 +117,7 @@ function ProgressBar({ currentStep, brand }: { currentStep: number; brand: strin
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="mb-5">
-      <label className="block text-sm font-semibold text-navy-950 mb-1.5">
+      <label className="block text-sm font-semibold text-navy-950 mb-2">
         {label}{required && <span style={{ color: '#C9982A' }}> *</span>}
       </label>
       {children}
@@ -121,7 +125,7 @@ function Field({ label, required, children }: { label: string; required?: boolea
   )
 }
 
-const inputClass = 'w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-navy-950 outline-none focus:border-navy-950 transition-colors'
+const inputClass = 'w-full border border-slate-200 rounded-lg px-4 py-3 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-colors'
 
 export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) {
   const brand = isEthioTax ? '#1A4731' : '#0C1A3D'
@@ -249,28 +253,42 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
   }
 
   return (
-    <main className="min-h-screen" style={{ background: '#F8F7F4' }}>
-      <section className="relative overflow-hidden py-16" style={{ background: brand }}>
+    <main className="min-h-screen bg-surface">
+
+      {/* HERO */}
+      <section className="relative overflow-hidden py-16 md:py-20" style={{ background: brand }}>
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-20"
+            style={{ background: 'radial-gradient(ellipse at center top, rgba(212,160,23,0.3) 0%, transparent 70%)' }} />
+          <div className="absolute inset-0 opacity-[0.03]"
+            style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+        </div>
         <div className="container-site relative z-10">
-          <span className="eyebrow mb-4 block" style={{ color: gold }}>For Employers</span>
-          <h1 className="font-display text-white text-3xl md:text-4xl mb-3 leading-tight" style={{ letterSpacing: '-0.02em' }}>
-            Post a job on {platformName}
+          <nav className="flex items-center gap-2 text-white/40 text-sm mb-8">
+            <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+            <Link href="/jobs" className="hover:text-white/70 transition-colors">Jobs</Link>
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+            <span className="text-white/70">Post a Job</span>
+          </nav>
+          <span className="eyebrow text-gold-400 mb-4 block">{platformName} Recruitment</span>
+          <h1 className="font-display text-white text-4xl md:text-5xl mb-4 leading-tight" style={{ letterSpacing: '-0.02em' }}>
+            Post a Job on {platformName}
           </h1>
-          <p className="text-white/60 text-lg max-w-2xl">
-            Reach accounting and finance candidates directly. £9, live for 60 days, reviewed within 24 hours.
+          <p className="text-white/60 text-xl leading-relaxed max-w-2xl">
+            Reach thousands of qualified accounting and finance professionals. Your listing goes live within 24 hours after review.
           </p>
         </div>
       </section>
 
-      <section className="py-12">
-        <div className="container-site max-w-2xl mx-auto">
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-10">
+      {/* MAIN CONTENT */}
+      <section className="py-16 px-6">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
             <ProgressBar currentStep={step} brand={brand} />
 
             {stepError && (
-              <div className="mb-6 px-4 py-3 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.08)', color: '#b91c1c', border: '1px solid rgba(239,68,68,0.2)' }}>
-                {stepError}
-              </div>
+              <p className="text-sm font-semibold mb-6" style={{ color: gold }}>{stepError}</p>
             )}
 
             {step === 1 && (
@@ -285,7 +303,7 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
                   <input className={inputClass} value={form.locationText} onChange={e => update('locationText', e.target.value)}
                     placeholder="e.g. London, UK" disabled={form.locationRemote} />
                   <label className="flex items-center gap-2 mt-2 text-sm text-slate-600">
-                    <input type="checkbox" checked={form.locationRemote} onChange={e => update('locationRemote', e.target.checked)} />
+                    <input type="checkbox" checked={form.locationRemote} onChange={e => update('locationRemote', e.target.checked)} className="accent-gold-500" />
                     This role is fully remote
                   </label>
                 </Field>
@@ -311,8 +329,8 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {QUALIFICATIONS.map(q => (
                       <label key={q} className="flex items-center gap-2 text-sm text-slate-600 px-3 py-2 rounded-lg border border-slate-200 cursor-pointer"
-                        style={form.qualifications.includes(q) ? { borderColor: brand, background: 'rgba(12,26,61,0.04)' } : undefined}>
-                        <input type="checkbox" checked={form.qualifications.includes(q)} onChange={() => toggleQualification(q)} />
+                        style={form.qualifications.includes(q) ? { borderColor: gold, background: '#fdf8ee' } : undefined}>
+                        <input type="checkbox" checked={form.qualifications.includes(q)} onChange={() => toggleQualification(q)} className="accent-gold-500" />
                         {q}
                       </label>
                     ))}
@@ -341,27 +359,27 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
               <div>
                 <Field label="How should candidates apply?" required>
                   <div className="space-y-3">
-                    <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 cursor-pointer"
-                      style={form.applyMethod === 'platform' ? { borderColor: brand, background: 'rgba(12,26,61,0.04)' } : undefined}>
-                      <input type="radio" className="mt-1" name="applyMethod" checked={form.applyMethod === 'platform'}
+                    <label className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 cursor-pointer"
+                      style={form.applyMethod === 'platform' ? { borderColor: gold, background: '#fdf8ee' } : undefined}>
+                      <input type="radio" className="mt-1 accent-gold-500" name="applyMethod" checked={form.applyMethod === 'platform'}
                         onChange={() => update('applyMethod', 'platform')} />
                       <span className="text-sm text-navy-950 font-semibold">
                         Candidates apply on {platformName}
                         <span className="block text-xs font-normal text-slate-500 mt-0.5">We collect applications directly through this listing.</span>
                       </span>
                     </label>
-                    <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 cursor-pointer"
-                      style={form.applyMethod === 'external' ? { borderColor: brand, background: 'rgba(12,26,61,0.04)' } : undefined}>
-                      <input type="radio" className="mt-1" name="applyMethod" checked={form.applyMethod === 'external'}
+                    <label className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 cursor-pointer"
+                      style={form.applyMethod === 'external' ? { borderColor: gold, background: '#fdf8ee' } : undefined}>
+                      <input type="radio" className="mt-1 accent-gold-500" name="applyMethod" checked={form.applyMethod === 'external'}
                         onChange={() => update('applyMethod', 'external')} />
                       <span className="text-sm text-navy-950 font-semibold">
                         Link to your own application page
                         <span className="block text-xs font-normal text-slate-500 mt-0.5">Candidates are sent to your careers site or ATS.</span>
                       </span>
                     </label>
-                    <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 cursor-pointer"
-                      style={form.applyMethod === 'email' ? { borderColor: brand, background: 'rgba(12,26,61,0.04)' } : undefined}>
-                      <input type="radio" className="mt-1" name="applyMethod" checked={form.applyMethod === 'email'}
+                    <label className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 cursor-pointer"
+                      style={form.applyMethod === 'email' ? { borderColor: gold, background: '#fdf8ee' } : undefined}>
+                      <input type="radio" className="mt-1 accent-gold-500" name="applyMethod" checked={form.applyMethod === 'email'}
                         onChange={() => update('applyMethod', 'email')} />
                       <span className="text-sm text-navy-950 font-semibold">
                         Candidates email you directly
@@ -422,28 +440,26 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
                   </dl>
                 </div>
 
-                <div className="rounded-xl p-5 mb-6" style={{ background: brand }}>
-                  <p className="text-white font-display text-2xl mb-1">£9.00</p>
-                  <ul className="text-white/70 text-sm space-y-1">
-                    <li>60-day listing</li>
-                    <li>&quot;Hiring Direct&quot; badge on your listing</li>
-                    <li>Top placement above aggregated results</li>
-                  </ul>
+                <div className="rounded-xl p-6 mb-6" style={{ background: brand }}>
+                  <p className="text-white font-display text-4xl mb-2">£9.00</p>
+                  <p className="text-white/70 text-sm mb-1">60-day listing · Hiring Direct badge · Top placement</p>
+                  <p className="text-white/40 text-xs">All taxes included · Powered by Lemon Squeezy</p>
                 </div>
 
                 {submitError && (
-                  <div className="mb-4 px-4 py-3 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.08)', color: '#b91c1c', border: '1px solid rgba(239,68,68,0.2)' }}>
-                    {submitError}
-                  </div>
+                  <p className="text-red-500 text-sm mb-4">{submitError}</p>
                 )}
 
                 <button
                   type="button"
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="w-full h-12 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 h-12 rounded-lg font-semibold text-sm transition-opacity hover:opacity-90 disabled:opacity-50"
                   style={{ background: gold, color: brand }}>
-                  {submitting ? 'Redirecting to payment…' : 'Post Job & Pay £9'}
+                  {submitting
+                    ? 'Processing...'
+                    : <>Post Job & Pay £9 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg></>
+                  }
                 </button>
               </div>
             )}
@@ -451,21 +467,26 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
             {step !== 3 && (
               <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-100">
                 {step > 1 ? (
-                  <button type="button" onClick={goBack} className="text-sm font-semibold text-slate-500 hover:text-navy-950">
-                    ← Back
+                  <button type="button" onClick={goBack}
+                    className="flex items-center gap-2 text-sm font-semibold h-11 px-6 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" /></svg>
+                    Back
                   </button>
-                ) : <span />}
+                ) : <div />}
                 <button type="button" onClick={goNext}
-                  className="h-11 px-8 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                  className="flex items-center gap-2 text-sm font-semibold h-11 px-6 rounded-lg text-white transition-colors"
                   style={{ background: brand }}>
                   Continue
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                 </button>
               </div>
             )}
             {step === 3 && (
               <div className="flex items-center justify-start mt-4">
-                <button type="button" onClick={goBack} className="text-sm font-semibold text-slate-500 hover:text-navy-950">
-                  ← Back
+                <button type="button" onClick={goBack}
+                  className="flex items-center gap-2 text-sm font-semibold h-11 px-6 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" /></svg>
+                  Back
                 </button>
               </div>
             )}

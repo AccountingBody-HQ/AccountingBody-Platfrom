@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
 import { unstable_noStore as noStore } from 'next/cache'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
-import { FirmApplicationCard, ReplyButton, DeleteButton } from '@/components/roodber8/AdminActions'
-import { Briefcase, Building2, Search } from 'lucide-react'
+import { FirmApplicationCard } from '@/components/roodber8/AdminActions'
+import { Building2, Search } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,12 +18,8 @@ async function getJobsAndFirms(filters: { safeSearch?: string; status?: string; 
   if (filters.status) firmsQuery = firmsQuery.eq('status', filters.status)
   if (filters.safeSearch) firmsQuery = firmsQuery.or(`firm_name.ilike.%${filters.safeSearch}%,contact_name.ilike.%${filters.safeSearch}%,contact_email.ilike.%${filters.safeSearch}%`)
   if (filters.platform) firmsQuery = firmsQuery.eq('platform', filters.platform)
-  const [{ data: jobListings }, { data: firmsApplications }] = await Promise.all([
-    supabase.from('job_listings').select('*').order('created_at', { ascending: false }),
-    firmsQuery,
-  ])
+  const { data: firmsApplications } = await firmsQuery
   return {
-    jobListings:       (jobListings ?? [])       as any[],
     firmsApplications: (firmsApplications ?? []) as any[],
   }
 }
@@ -36,7 +33,7 @@ export default async function JobsFirmsPage({
   const safeSearch = (sp.search ?? '').replace(/[,()]/g, '')
   const status     = sp.status ?? ''
   const platform   = (sp as any).platform ?? ''
-  const { jobListings, firmsApplications } = await getJobsAndFirms({ safeSearch, status, platform })
+  const { firmsApplications } = await getJobsAndFirms({ safeSearch, status, platform })
 
   const pendingCount  = firmsApplications.filter((f: any) => f.status === 'pending' || !f.status).length
   const approvedCount = firmsApplications.filter((f: any) => f.status === 'approved').length
@@ -53,11 +50,16 @@ export default async function JobsFirmsPage({
     <div className="p-8">
       <AutoRefresh />
 
+      <Link href="/roodber8/jobs" className="inline-flex items-center gap-1.5 text-xs font-semibold mb-4"
+        style={{ color: '#D4A017' }}>
+        Job listings have moved →
+      </Link>
+
       <div className="flex items-start justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white mb-1">Jobs & Firms</h1>
           <p className="text-sm" style={{ color: '#475569' }}>
-            {firmsApplications.length} firm applications · {jobListings.length} job listings
+            {firmsApplications.length} firm applications
           </p>
         </div>
         <a href={'data:text/csv;charset=utf-8,' + encodeURIComponent(firmsCsvContent)} download="firms-applications.csv"
@@ -136,53 +138,6 @@ export default async function JobsFirmsPage({
           <div className="divide-y" style={{ borderColor: '#1a2238' }}>
             {firmsApplications.map((item: any) => (
               <FirmApplicationCard key={item.id} item={item} />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Job Listings */}
-      <div className="rounded-2xl border overflow-hidden" style={{ background: '#0d1424', borderColor: '#1a2238' }}>
-        <div className="px-6 py-4 border-b flex items-center gap-3" style={{ borderColor: '#1a2238' }}>
-          <Briefcase size={16} style={{ color: '#3b82f6' }} />
-          <h2 className="text-white font-bold text-sm">Job Listings</h2>
-          <span className="text-xs px-2 py-0.5 rounded-full font-semibold ml-auto"
-            style={{ background: 'rgba(59,130,246,0.12)', color: '#60a5fa' }}>
-            {jobListings.length}
-          </span>
-        </div>
-
-        {jobListings.length === 0 ? (
-          <div className="px-6 py-12 text-center text-sm" style={{ color: '#334155' }}>No job listings yet.</div>
-        ) : (
-          <div className="divide-y" style={{ borderColor: '#1a2238' }}>
-            {jobListings.map((item: any) => (
-              <div key={item.id} className="px-6 py-4 hover:bg-white/[0.01] transition-colors">
-                <div className="flex items-start justify-between gap-4 flex-wrap">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2 flex-wrap">
-                      <p className="text-white font-bold text-sm">{item.job_title ?? '—'}</p>
-                      <span className="text-xs font-medium" style={{ color: '#94a3b8' }}>{item.company_name ?? '—'}</span>
-                      {item.job_type && (
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded-lg"
-                          style={{ background: 'rgba(37,99,235,0.1)', color: '#60a5fa', border: '1px solid rgba(37,99,235,0.2)' }}>
-                          {item.job_type}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-4 text-xs flex-wrap" style={{ color: '#475569' }}>
-                      {item.location    && <span>{item.location}</span>}
-                      {item.salary_range && <span style={{ color: '#34d399' }}>{item.salary_range}</span>}
-                      <a href={'mailto:' + item.contact_email} style={{ color: '#60a5fa' }}>{item.contact_email ?? '—'}</a>
-                      <span>{item.created_at ? new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <ReplyButton email={item.contact_email} subject={'Re: ' + (item.job_title ?? 'Job listing')} platform={item.platform} />
-                    <DeleteButton id={item.id} table="job_listings" />
-                  </div>
-                </div>
-              </div>
             ))}
           </div>
         )}
