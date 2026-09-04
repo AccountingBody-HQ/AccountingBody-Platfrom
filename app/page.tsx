@@ -478,13 +478,6 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </div>
       </div>
 
-      <p className="text-sm text-white/70 mt-6 mb-2 text-center lg:text-left">
-        Hiring accounting professionals in Ethiopia?{' '}
-        <a href="/jobs/post-a-job" className="text-white font-semibold hover:text-white hover:underline">
-          Post a job from £9 →
-        </a>
-      </p>
-
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-2xl">
         {[
           '1,000+ diaspora accounting jobs',
@@ -498,6 +491,19 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             {label}
           </span>
         ))}
+      </div>
+
+      <div className="mt-5 flex justify-center lg:justify-start">
+        <Link
+          href="/jobs/post-a-job"
+          className="inline-flex items-center gap-2 border border-[#C9982A]/50 rounded-full px-4 py-2 text-sm text-white/80 hover:border-[#C9982A] hover:text-white transition-colors duration-200 group"
+        >
+          <span className="text-xs">🏢</span>
+          <span>Hiring in Ethiopia? </span>
+          <span className="text-[#C9982A] font-medium group-hover:text-white transition-colors duration-200">
+            Post a job from £9 →
+          </span>
+        </Link>
       </div>
 
     </div>
@@ -1104,7 +1110,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           />
           <div
             className="absolute bottom-0 right-0 w-1/2 h-1/2 opacity-10"
-            style={{ background: 'radial-gradient(ellipse at bottom right, #D4A017 0%, transparent 60%)' }}
+            style={{ background: 'radial-gradient(ellipse at bottom right, #C9982A 0%, transparent 60%)' }}
           />
         </div>
 
@@ -1131,7 +1137,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               <br />
               <span
                 style={{
-                  background: 'linear-gradient(135deg, #D4A017 0%, #e8c050 100%)',
+                  background: 'linear-gradient(135deg, #C9982A 0%, #e8c050 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -1149,22 +1155,28 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
             <HomepageJobSearch />
 
-            <p className="text-sm text-white/70 mt-6 mb-2 text-center lg:text-left">
-              Hiring accounting professionals?{' '}
-              <a href="/jobs/post-a-job" className="text-white font-semibold hover:text-white hover:underline">
-                Post a job from £9 →
-              </a>
-            </p>
-
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-6 w-full max-w-2xl">
               {['250,000+ live jobs', '20,000+ practice questions', 'Free to start'].map(label => (
                 <span key={label} className="flex items-center gap-1.5 text-xs font-medium text-white/50">
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="#D4A017" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   {label}
                 </span>
               ))}
+            </div>
+
+            <div className="mt-5 flex justify-center lg:justify-start">
+              <Link
+                href="/jobs/post-a-job"
+                className="inline-flex items-center gap-2 border border-[#C9982A]/50 rounded-full px-4 py-2 text-sm text-white/80 hover:border-[#C9982A] hover:text-white transition-colors duration-200 group"
+              >
+                <span className="text-xs">🏢</span>
+                <span>Hiring? </span>
+                <span className="text-[#C9982A] font-medium group-hover:text-white transition-colors duration-200">
+                  Post a job from £9 →
+                </span>
+              </Link>
             </div>
 
           </div>
@@ -1180,7 +1192,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
               >
                 <div className="px-6 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#D4A017' }}>Practice Questions</p>
+                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>Practice Questions</p>
                   <h3 className="font-display text-white text-lg mt-1 leading-snug">20,000+ exam-standard questions</h3>
                 </div>
 
@@ -1208,7 +1220,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   <Link
                     href="/practice-questions"
                     className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
-                    style={{ background: '#D4A017', color: '#0C1A3D' }}
+                    style={{ background: '#C9982A', color: '#0C1A3D' }}
                   >
                     Start practising free →
                   </Link>
@@ -1221,7 +1233,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}
               >
                 <div className="px-6 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#D4A017' }}>Managed Recruitment</p>
+                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>Managed Recruitment</p>
                   <h3 className="font-display text-white text-lg mt-1 leading-snug">Get personally matched to roles</h3>
                 </div>
 
@@ -1237,7 +1249,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                         className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5"
                         style={{ background: 'rgba(212,160,23,0.2)', border: '1px solid rgba(212,160,23,0.3)' }}
                       >
-                        <svg className="w-2.5 h-2.5" fill="none" stroke="#D4A017" viewBox="0 0 24 24">
+                        <svg className="w-2.5 h-2.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
@@ -1250,7 +1262,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   <Link
                     href="/jobs/find-work"
                     className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
-                    style={{ border: '1.5px solid rgba(212,160,23,0.5)', color: '#D4A017', background: 'transparent' }}
+                    style={{ border: '1.5px solid rgba(212,160,23,0.5)', color: '#C9982A', background: 'transparent' }}
                   >
                     Register as a candidate →
                   </Link>
@@ -1616,7 +1628,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 <Link
                   href="/mock-exams/acca"
                   className="h-12 px-8 inline-flex items-center gap-2 rounded-xl text-sm font-semibold transition-colors"
-                  style={{ border: '2px solid #D4A017', color: '#B8860B', background: 'transparent' }}
+                  style={{ border: '2px solid #C9982A', color: '#B8860B', background: 'transparent' }}
                 >
                   Try a mock exam →
                 </Link>
@@ -1964,7 +1976,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         <div className="bg-navy-950 p-8 relative overflow-hidden">
           <div
             className="absolute inset-0 opacity-20"
-            style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 50%)' }}
+            style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #C9982A 0%, transparent 50%)' }}
           />
           <div className="relative z-10">
             <p className="text-gold-400 text-xs font-semibold uppercase tracking-widest mb-5">

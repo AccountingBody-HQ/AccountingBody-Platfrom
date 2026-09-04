@@ -385,21 +385,8 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
           </button>
         </div>
 
-        {/* Post a Job CTA — top of mobile menu, above all nav items */}
-        <div className="px-5 pt-4 pb-3 lg:hidden">
-          <Link
-            href="/jobs/post-a-job"
-            onClick={onClose}
-            className="w-full min-h-[44px] flex items-center justify-center py-3 px-6 rounded-xl text-white font-semibold text-base bg-[#D4A017] hover:bg-[#C9982A] active:bg-[#C9982A] transition-colors duration-200"
-          >
-            Post a Job →
-          </Link>
-        </div>
-
         {/* Language switcher — ET only, below header */}
         {isEthioTax && <MobileLangSwitcher />}
-
-        <div className="border-b border-slate-200" />
 
         {/* Nav items */}
         <nav className="flex-1 overflow-y-auto py-2">
@@ -462,10 +449,10 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
                             onClick={onClose}
                             className={[
                               'flex items-center gap-2 px-5 py-2 text-sm hover:bg-slate-100 transition-colors',
-                              isPostAJob ? 'text-[#D4A017] hover:text-[#C9982A]' : 'text-slate-700 hover:text-navy-950',
+                              isPostAJob ? 'text-[#C9982A] hover:text-[#b8871f]' : 'text-slate-700 hover:text-navy-950',
                             ].join(' ')}
                           >
-                            {isPostAJob && <span aria-hidden="true" style={{ color: '#D4A017' }}>●</span>}
+                            {isPostAJob && <span aria-hidden="true" style={{ color: '#C9982A' }}>●</span>}
                             <span {...(link.noTranslate ? { translate: "no" } : {})}>{link.label}</span>
                             {link.badge && (
                               <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-teal-50 text-teal-700">
@@ -484,6 +471,17 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
             )
           })}
         </nav>
+
+        {/* Post a Job CTA — bottom of drawer, pinned above footer search */}
+        <div className="border-t border-slate-200 p-4">
+          <Link
+            href="/jobs/post-a-job"
+            onClick={onClose}
+            className="flex items-center justify-center w-full bg-[#C9982A] hover:bg-[#b8871f] text-white font-semibold text-sm rounded-xl py-3 transition-colors duration-200"
+          >
+            Post a Job →
+          </Link>
+        </div>
 
         {/* Mobile footer — search */}
         <div className="border-t border-slate-200">
@@ -766,7 +764,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
             <div className="w-px h-5 bg-slate-200" />
             <Link
               href="/jobs/post-a-job"
-              className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#D4A017] hover:bg-[#C9982A] transition-colors duration-200"
+              className="border border-[#C9982A] text-[#C9982A] rounded-full px-3 py-1.5 text-sm font-medium whitespace-nowrap hover:bg-[#C9982A] hover:text-white transition-colors duration-200"
             >
               Post a Job
             </Link>
