@@ -496,11 +496,11 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <div className="mt-5 flex justify-center lg:justify-start">
         <Link
           href="/jobs/post-a-job"
-          className="inline-flex items-center gap-2 h-10 rounded-xl px-5 text-sm font-semibold transition-all duration-200 border border-[#C9982A]/60 hover:border-[#C9982A] hover:bg-[#C9982A]/10 text-[#C9982A]"
+          className="inline-flex items-center gap-2 h-10 rounded-xl px-5 text-sm font-semibold border border-[#C9982A]/60 hover:border-[#C9982A] hover:bg-[#C9982A]/10 text-[#C9982A] transition-all duration-200"
         >
-          <span className="text-[10px] text-[#C9982A]" aria-hidden="true">◆</span>
-          <span className="text-white/80 text-sm font-medium">Hiring in Ethiopia?</span>
-          <span className="text-[#C9982A] font-semibold text-sm">Post a job from £9 →</span>
+          <span className="text-[10px]" aria-hidden="true">◆</span>
+          <span className="text-white/80 font-medium">Hiring in Ethiopia?</span>
+          <span className="font-semibold">Post a job from £9 →</span>
         </Link>
       </div>
 
@@ -1167,11 +1167,11 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <div className="mt-5 flex justify-center lg:justify-start">
               <Link
                 href="/jobs/post-a-job"
-                className="inline-flex items-center gap-2 h-10 rounded-xl px-5 text-sm font-semibold transition-all duration-200 border border-[#C9982A]/60 hover:border-[#C9982A] hover:bg-[#C9982A]/10 text-[#C9982A]"
+                className="inline-flex items-center gap-2 h-10 rounded-xl px-5 text-sm font-semibold border border-[#C9982A]/60 hover:border-[#C9982A] hover:bg-[#C9982A]/10 text-[#C9982A] transition-all duration-200"
               >
-                <span className="text-[10px] text-[#C9982A]" aria-hidden="true">◆</span>
-                <span className="text-white/80 text-sm font-medium">Hiring?</span>
-                <span className="text-[#C9982A] font-semibold text-sm">Post a job from £9 →</span>
+                <span className="text-[10px]" aria-hidden="true">◆</span>
+                <span className="text-white/80 font-medium">Hiring?</span>
+                <span className="font-semibold">Post a job from £9 →</span>
               </Link>
             </div>
 
