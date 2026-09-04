@@ -94,7 +94,7 @@ STYLE RULES — follow these exactly:
 — Maximum 3 short paragraphs
 
 STRUCTURE:
-Paragraph 1 (2-3 sentences): Open with a specific, thought-provoking observation or question
+${includeLink ? `Paragraph 1 (2-3 sentences): Open with a specific, thought-provoking observation or question
 directly related to this article's topic. Make the reader feel this is relevant to their
 professional life right now. Be specific — not generic accounting commentary.
 
@@ -102,11 +102,22 @@ Paragraph 2 (2-3 sentences): Describe what the article covers in plain, confiden
 What will the reader understand after reading it that they may not have before?
 Do not list bullet points — write it as natural prose.
 
-${includeLink ? `Then on its own line, just the URL — no "Read more" or "Read the full article" prefix:
+Then on its own line, just the URL — no "Read more" or "Read the full article" prefix:
 ${articleUrl}
 
-` : ''}Then on its own line, the hashtags:
-${hashtags}
+Then on its own line, the hashtags:
+${hashtags}` : `Paragraph 1 (2-3 sentences): Open with a specific, thought-provoking observation or question
+directly related to this article's topic. Make the reader feel this is relevant to their
+professional life right now. Be specific — not generic accounting commentary.
+
+Paragraph 2 (2-3 sentences): Develop the insight further — share a second
+observation, a professional implication, or a nuance that makes a practitioner
+stop and think. Write as a self-contained post. Do not reference an article,
+link, or external resource. Do not use phrases like "read more", "find out",
+"learn how", or "click". The post must stand completely alone.
+
+Then on its own line, the hashtags:
+${hashtags}`}
 
 ARTICLE:
 Title: ${article.title}
@@ -155,18 +166,29 @@ STYLE RULES — follow these exactly:
 — Maximum 2 short paragraphs
 
 STRUCTURE:
-Paragraph 1 (2 sentences): Open with a direct, specific challenge or question that tests
+${includeLink ? `Paragraph 1 (2 sentences): Open with a direct, specific challenge or question that tests
 whether the reader actually understands this topic at exam level. Be specific to the topic —
 not generic exam advice.
 
 Paragraph 2 (2 sentences): Describe what the practice questions test, in plain confident
 language. Mention the exam body and level naturally. Do not mention question count.
 
-${includeLink ? `Then on its own line, just the URL — no prefix:
+Then on its own line, just the URL — no prefix:
 ${pqUrl}
 
-` : ''}Then on its own line, the hashtags:
-${hashtags}
+Then on its own line, the hashtags:
+${hashtags}` : `Paragraph 1 (2 sentences): Open with a direct, specific challenge or question that tests
+whether the reader actually understands this topic at exam level. Be specific to the topic —
+not generic exam advice.
+
+Paragraph 2 (2 sentences): Follow with a second exam-relevant observation or
+a common mistake candidates make on this topic. Write as a self-contained post.
+Do not reference a link, quiz, question set, or external resource. Do not use
+phrases like "test yourself", "try our", "find out", or "click". The post must
+stand completely alone.
+
+Then on its own line, the hashtags:
+${hashtags}`}
 
 QUESTION SET:
 Title: ${qs.title}
