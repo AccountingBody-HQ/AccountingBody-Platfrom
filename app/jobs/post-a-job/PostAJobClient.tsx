@@ -77,9 +77,9 @@ const INITIAL_STATE: FormState = {
 }
 
 const STEPS = [
-  { number: 1, label: 'Job Details' },
-  { number: 2, label: 'Application Method' },
-  { number: 3, label: 'Your Details & Payment' },
+  { number: 1, label: 'Job Details', shortLabel: 'Details' },
+  { number: 2, label: 'Application Method', shortLabel: 'Method' },
+  { number: 3, label: 'Your Details & Payment', shortLabel: 'Payment' },
 ]
 
 function ProgressBar({ currentStep, brand }: { currentStep: number; brand: string }) {
@@ -108,7 +108,7 @@ function ProgressBar({ currentStep, brand }: { currentStep: number; brand: strin
       </div>
       <div className="flex sm:hidden justify-between items-center mt-2">
         <span className="text-xs text-slate-400">Step {currentStep} of {STEPS.length}</span>
-        <span className="text-xs font-semibold" style={{ color: brand }}>{STEPS[currentStep - 1].label}</span>
+        <span className="text-xs font-semibold" style={{ color: brand }}>{STEPS[currentStep - 1].shortLabel}</span>
       </div>
     </div>
   )
@@ -330,9 +330,9 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
                 <Field label="Qualifications required">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {QUALIFICATIONS.map(q => (
-                      <label key={q} className="flex items-center gap-2 text-sm text-slate-600 px-3 py-2 rounded-lg border border-slate-200 cursor-pointer"
+                      <label key={q} className="flex items-center gap-2 min-h-[44px] text-sm text-slate-600 px-3 py-2 rounded-lg border border-slate-200 cursor-pointer"
                         style={form.qualifications.includes(q) ? { borderColor: gold, background: '#fdf8ee' } : undefined}>
-                        <input type="checkbox" checked={form.qualifications.includes(q)} onChange={() => toggleQualification(q)} className="accent-gold-500" />
+                        <input type="checkbox" checked={form.qualifications.includes(q)} onChange={() => toggleQualification(q)} className="accent-gold-500 shrink-0" />
                         {q}
                       </label>
                     ))}
@@ -434,11 +434,11 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
                 <div className="rounded-xl border border-slate-200 p-5 mb-6" style={{ background: '#FAFAF8' }}>
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Summary</p>
                   <dl className="space-y-1.5 text-sm">
-                    <div className="flex justify-between gap-4"><dt className="text-slate-500">Job title</dt><dd className="text-navy-950 font-semibold text-right">{form.title || '—'}</dd></div>
-                    <div className="flex justify-between gap-4"><dt className="text-slate-500">Company</dt><dd className="text-navy-950 font-semibold text-right">{form.companyName || '—'}</dd></div>
-                    <div className="flex justify-between gap-4"><dt className="text-slate-500">Location</dt><dd className="text-navy-950 font-semibold text-right">{form.locationRemote ? 'Remote' : (form.locationText || '—')}</dd></div>
-                    <div className="flex justify-between gap-4"><dt className="text-slate-500">Employment type</dt><dd className="text-navy-950 font-semibold text-right capitalize">{form.employmentType.replace('_', ' ') || '—'}</dd></div>
-                    <div className="flex justify-between gap-4"><dt className="text-slate-500">Application method</dt><dd className="text-navy-950 font-semibold text-right capitalize">{form.applyMethod}</dd></div>
+                    <div className="flex justify-between gap-4"><dt className="text-slate-500 shrink-0">Job title</dt><dd className="text-navy-950 font-semibold text-right min-w-0 break-words">{form.title || '—'}</dd></div>
+                    <div className="flex justify-between gap-4"><dt className="text-slate-500 shrink-0">Company</dt><dd className="text-navy-950 font-semibold text-right min-w-0 break-words">{form.companyName || '—'}</dd></div>
+                    <div className="flex justify-between gap-4"><dt className="text-slate-500 shrink-0">Location</dt><dd className="text-navy-950 font-semibold text-right min-w-0 break-words">{form.locationRemote ? 'Remote' : (form.locationText || '—')}</dd></div>
+                    <div className="flex justify-between gap-4"><dt className="text-slate-500 shrink-0">Employment type</dt><dd className="text-navy-950 font-semibold text-right capitalize min-w-0 break-words">{form.employmentType.replace('_', ' ') || '—'}</dd></div>
+                    <div className="flex justify-between gap-4"><dt className="text-slate-500 shrink-0">Application method</dt><dd className="text-navy-950 font-semibold text-right capitalize min-w-0 break-words">{form.applyMethod}</dd></div>
                   </dl>
                 </div>
 

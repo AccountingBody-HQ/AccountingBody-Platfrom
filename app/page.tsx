@@ -478,6 +478,13 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </div>
       </div>
 
+      <p className="text-sm text-white/70 mt-6 mb-2 text-center lg:text-left">
+        Hiring accounting professionals in Ethiopia?{' '}
+        <a href="/jobs/post-a-job" className="text-white font-semibold hover:text-white hover:underline">
+          Post a job from £9 →
+        </a>
+      </p>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-2xl">
         {[
           '1,000+ diaspora accounting jobs',
@@ -1141,6 +1148,13 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             </p>
 
             <HomepageJobSearch />
+
+            <p className="text-sm text-white/70 mt-6 mb-2 text-center lg:text-left">
+              Hiring accounting professionals?{' '}
+              <a href="/jobs/post-a-job" className="text-white font-semibold hover:text-white hover:underline">
+                Post a job from £9 →
+              </a>
+            </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-6 w-full max-w-2xl">
               {['250,000+ live jobs', '20,000+ practice questions', 'Free to start'].map(label => (

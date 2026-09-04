@@ -161,7 +161,7 @@ function PillButton({
       type="button"
       onClick={onClick}
       className={[
-        'w-full rounded-[20px] py-[8px] text-[12px] text-center transition-colors cursor-pointer',
+        'w-full min-h-[44px] flex items-center justify-center rounded-[20px] px-2 text-[12px] text-center transition-colors cursor-pointer',
         active ? activeClasses : 'bg-white text-[#444] border border-[#E0E0E0] hover:bg-gray-50',
       ].join(' ')}
     >
@@ -278,7 +278,7 @@ function DirectJobCard({ job }: { job: DirectJob }) {
         <button
           type="button"
           onClick={() => trackAndOpen(job)}
-          className="inline-flex items-center justify-center gap-2 w-full h-10 rounded-lg text-sm font-semibold transition-colors"
+          className="inline-flex items-center justify-center gap-2 w-full h-11 rounded-lg text-sm font-semibold transition-colors"
           style={{ background: '#C9982A', color: '#0C1A3D' }}>
           Apply Now
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -630,7 +630,7 @@ export default function JobListingsPage() {
               <button
                 type="button"
                 onClick={() => fetchJobs()}
-                className="h-10 px-6 rounded-lg bg-navy-950 text-white text-sm font-semibold hover:bg-navy-900 transition-colors"
+                className="h-11 px-6 rounded-lg bg-navy-950 text-white text-sm font-semibold hover:bg-navy-900 transition-colors"
               >
                 Retry
               </button>
@@ -650,7 +650,7 @@ export default function JobListingsPage() {
               <button
                 type="button"
                 onClick={handleReset}
-                className="h-10 px-6 rounded-lg border border-navy-950 text-navy-950 text-sm font-semibold hover:bg-navy-950 hover:text-white transition-colors"
+                className="h-11 px-6 rounded-lg border border-navy-950 text-navy-950 text-sm font-semibold hover:bg-navy-950 hover:text-white transition-colors"
               >
                 Reset filters
               </button>
@@ -680,7 +680,7 @@ export default function JobListingsPage() {
                       type="button"
                       onClick={() => { setPage(p => Math.max(1, p - 1)); scrollToResults() }}
                       disabled={page <= 1}
-                      className="h-10 px-5 rounded-lg text-sm font-medium border border-navy-950 text-navy-950 disabled:opacity-40 disabled:pointer-events-none hover:bg-navy-950 hover:text-white transition-colors"
+                      className="h-11 px-5 rounded-lg text-sm font-medium border border-navy-950 text-navy-950 disabled:opacity-40 disabled:pointer-events-none hover:bg-navy-950 hover:text-white transition-colors"
                     >
                       Previous
                     </button>
@@ -691,7 +691,7 @@ export default function JobListingsPage() {
                       type="button"
                       onClick={() => { setPage(p => Math.min(totalPages, p + 1)); scrollToResults() }}
                       disabled={page >= totalPages}
-                      className="h-10 px-5 rounded-lg text-sm font-medium border border-navy-950 text-navy-950 disabled:opacity-40 disabled:pointer-events-none hover:bg-navy-950 hover:text-white transition-colors"
+                      className="h-11 px-5 rounded-lg text-sm font-medium border border-navy-950 text-navy-950 disabled:opacity-40 disabled:pointer-events-none hover:bg-navy-950 hover:text-white transition-colors"
                     >
                       Next
                     </button>

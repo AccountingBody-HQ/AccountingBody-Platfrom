@@ -148,7 +148,7 @@ export default function ManageListingClient({ token, isEthioTax }: { token: stri
           {/* LISTING SUMMARY */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 mb-6">
             <h2 className="font-display text-xl mb-6" style={{ color: brand }}>Listing summary</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
               <div><p className="text-slate-400 text-xs mb-1">Job title</p><p className="font-semibold text-slate-700">{job.title}</p></div>
               <div><p className="text-slate-400 text-xs mb-1">Company</p><p className="font-semibold text-slate-700">{job.company_name}</p></div>
               <div><p className="text-slate-400 text-xs mb-1">Location</p><p className="font-semibold text-slate-700">{job.location_text}</p></div>
@@ -158,7 +158,7 @@ export default function ManageListingClient({ token, isEthioTax }: { token: stri
               <div><p className="text-slate-400 text-xs mb-1">Posted</p><p className="font-semibold text-slate-700">{formatDate(job.created_at)}</p></div>
               <div><p className="text-slate-400 text-xs mb-1">Expires</p><p className="font-semibold text-slate-700">{formatDate(job.expires_at)}</p></div>
               {job.qualifications_required.length > 0 && (
-                <div className="col-span-2 sm:col-span-3">
+                <div className="col-span-1 sm:col-span-2 lg:col-span-3">
                   <p className="text-slate-400 text-xs mb-1">Qualifications required</p>
                   <p className="font-semibold text-slate-700">{job.qualifications_required.join(', ')}</p>
                 </div>
@@ -180,14 +180,14 @@ export default function ManageListingClient({ token, isEthioTax }: { token: stri
                   <p className="text-sm font-semibold mb-1" style={{ color: '#991b1b' }}>Are you sure you want to withdraw this listing?</p>
                   <p className="text-sm mb-4" style={{ color: '#991b1b' }}>This cannot be undone. Your listing will be removed from the platform immediately.</p>
                   {withdrawError && <p className="text-sm font-semibold mb-4" style={{ color: '#991b1b' }}>{withdrawError}</p>}
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                     <button type="button" onClick={handleWithdraw} disabled={withdrawing}
-                      className="text-sm font-semibold h-11 px-6 rounded-lg text-white disabled:opacity-50"
+                      className="w-full sm:w-auto text-sm font-semibold h-11 px-6 rounded-lg text-white disabled:opacity-50"
                       style={{ background: '#dc2626' }}>
                       {withdrawing ? 'Withdrawing...' : 'Yes, withdraw listing'}
                     </button>
                     <button type="button" onClick={() => { setConfirming(false); setWithdrawError(null) }} disabled={withdrawing}
-                      className="text-sm font-semibold h-11 px-6 rounded-lg border-2 disabled:opacity-50"
+                      className="w-full sm:w-auto text-sm font-semibold h-11 px-6 rounded-lg border-2 disabled:opacity-50"
                       style={{ borderColor: '#cbd5e1', color: '#64748b', background: 'transparent' }}>
                       Cancel
                     </button>
