@@ -747,7 +747,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           </nav>
 
           {/* Desktop right actions — search (always visible) */}
-          <div className="hidden xl:flex items-center justify-end gap-3 shrink-0">
+          <div className="hidden xl:flex items-center justify-end gap-2 shrink-0">
             {etGetHelpLinks && (
               <div className="flex items-center">
                 <LanguageSwitcher />
@@ -769,10 +769,10 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
             <button
               type="button"
               onClick={() => router.push('/search')}
-              className="flex items-center justify-center w-9 h-9 rounded-lg text-navy-950 hover:bg-slate-100 transition-colors duration-150"
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-navy-950 hover:bg-slate-100 transition-colors duration-150"
               aria-label="Search"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"/>
                 <path d="m21 21-4.35-4.35"/>
               </svg>

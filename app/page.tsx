@@ -496,11 +496,14 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <div className="mt-5 flex justify-center lg:justify-start">
         <Link
           href="/jobs/post-a-job"
-          className="inline-flex items-center gap-2.5 border-2 border-[#C9982A]/70 bg-white/5 hover:bg-[#C9982A]/15 hover:border-[#C9982A] text-white rounded-xl px-5 py-2.5 text-sm font-medium transition-all duration-200 group"
+          className="inline-flex items-center gap-2 h-10 rounded-xl px-5 text-sm font-semibold transition-all duration-200 group"
+          style={{ border: '1.5px solid rgba(201,152,42,0.6)', color: '#C9982A', background: 'transparent' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(201,152,42,0.08)'; (e.currentTarget as HTMLAnchorElement).style.borderColor = '#C9982A' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(201,152,42,0.6)' }}
         >
-          <span className="text-[#C9982A] text-xs" aria-hidden="true">◆</span>
-          <span className="text-white/85 group-hover:text-white transition-colors duration-200 font-medium">Hiring in Ethiopia?</span>
-          <span className="text-[#C9982A] font-semibold group-hover:text-white transition-colors duration-200">Post a job from £9 →</span>
+          <span className="text-[10px]" aria-hidden="true">◆</span>
+          <span className="text-white/80 group-hover:text-white transition-colors duration-200 font-medium text-sm">Hiring in Ethiopia?</span>
+          <span className="font-semibold text-sm">Post a job from £9 →</span>
         </Link>
       </div>
 
@@ -1167,11 +1170,14 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <div className="mt-5 flex justify-center lg:justify-start">
               <Link
                 href="/jobs/post-a-job"
-                className="inline-flex items-center gap-2.5 border-2 border-[#C9982A]/70 bg-white/5 hover:bg-[#C9982A]/15 hover:border-[#C9982A] text-white rounded-xl px-5 py-2.5 text-sm font-medium transition-all duration-200 group"
+                className="inline-flex items-center gap-2 h-10 rounded-xl px-5 text-sm font-semibold transition-all duration-200 group"
+                style={{ border: '1.5px solid rgba(201,152,42,0.6)', color: '#C9982A', background: 'transparent' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(201,152,42,0.08)'; (e.currentTarget as HTMLAnchorElement).style.borderColor = '#C9982A' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(201,152,42,0.6)' }}
               >
-                <span className="text-[#C9982A] text-xs" aria-hidden="true">◆</span>
-                <span className="text-white/85 group-hover:text-white transition-colors duration-200 font-medium">Hiring?</span>
-                <span className="text-[#C9982A] font-semibold group-hover:text-white transition-colors duration-200">Post a job from £9 →</span>
+                <span className="text-[10px]" aria-hidden="true">◆</span>
+                <span className="text-white/80 group-hover:text-white transition-colors duration-200 font-medium text-sm">Hiring?</span>
+                <span className="font-semibold text-sm">Post a job from £9 →</span>
               </Link>
             </div>
 
