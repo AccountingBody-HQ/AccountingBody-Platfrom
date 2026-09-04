@@ -72,7 +72,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       const adminNotes = typeof body.admin_notes === 'string' ? body.admin_notes : undefined
       const job = await approveJob(id, adminNotes)
       try {
-        await sendJobApprovalEmail(job)
+        await sendJobApprovalEmail(job, job.manage_token ?? '')
       } catch (emailErr: unknown) {
         console.error('roodber8/jobs approve: email failed (non-fatal):', emailErr)
       }

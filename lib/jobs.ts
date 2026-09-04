@@ -51,6 +51,7 @@ export interface Job {
   payment_status: PaymentStatus
   stripe_payment_intent_id: string | null
   stripe_session_id: string | null
+  manage_token: string | null
   price_paid_pence: number | null
   employer_brief_id: string | null
   employer_email: string
@@ -102,6 +103,7 @@ export interface JobInsert {
   source_url?: string
   raw_source_data?: Record<string, unknown>
   stripe_session_id?: string
+  manage_token?: string
 }
 
 // ── Internal helpers ─────────────────────────────────────────────────────────
@@ -288,6 +290,20 @@ export async function getJobBySlug(slug: string): Promise<Job | null> {
   return data as Job
 }
 
+// No status filter — an employer managing their own listing via its unique
+// manage_token should be able to see it regardless of status (pending
+// payment, under review, live, closed, etc).
+export async function getJobByManageToken(token: string): Promise<Job | null> {
+  const supabase = getSupabase()
+  const { data, error } = await supabase
+    .from('jobs')
+    .select(JOB_COLUMNS)
+    .eq('manage_token', token)
+    .single()
+  if (error || !data) return null
+  return data as Job
+}
+
 // ── Admin reads ──────────────────────────────────────────────────────────────
 
 const ADMIN_PAGE_SIZE = 50
@@ -434,6 +450,7 @@ export async function createJob(data: JobInsert): Promise<Job> {
     status,
     payment_status: paymentStatus,
     stripe_session_id: data.stripe_session_id ?? null,
+    manage_token: data.manage_token ?? null,
     employer_email: data.employer_email,
     employer_name: data.employer_name,
     employer_company: data.employer_company,
@@ -506,6 +523,34 @@ export async function expireJob(id: string): Promise<void> {
     .eq('id', id)
 
   if (error) throw error
+}
+
+const TERMINAL_STATUSES: JobStatus[] = ['closed', 'expired', 'rejected']
+
+/**
+ * Employer self-service withdrawal via manage_token. Idempotent: if the job
+ * is already in a terminal status it is returned as-is rather than erroring
+ * or re-firing the close (an employer double-clicking or reloading the
+ * manage page should never see a failure).
+ */
+export async function closeJobByManageToken(token: string): Promise<Job | null> {
+  const job = await getJobByManageToken(token)
+  if (!job) return null
+
+  if (TERMINAL_STATUSES.includes(job.status)) {
+    return job
+  }
+
+  const supabase = getSupabase()
+  const { data, error } = await supabase
+    .from('jobs')
+    .update({ status: 'closed', closed_at: new Date().toISOString() })
+    .eq('id', job.id)
+    .select(JOB_COLUMNS)
+    .single()
+
+  if (error || !data) throw error ?? new Error('closeJobByManageToken: update returned no row')
+  return data as Job
 }
 
 /**

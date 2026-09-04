@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
       if (job.impression_count <= 0) continue
       if (!isInWarningWindow(job.expires_at)) continue
       try {
-        await sendJobExpiryWarningEmail(job)
+        await sendJobExpiryWarningEmail(job, job.manage_token ?? '')
         warned += 1
       } catch (emailErr: unknown) {
         console.error('cron/expire-jobs: warning email failed (non-fatal):', job.id, emailErr)

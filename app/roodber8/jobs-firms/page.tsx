@@ -50,10 +50,11 @@ export default async function JobsFirmsPage({
     <div className="p-8">
       <AutoRefresh />
 
-      <Link href="/roodber8/jobs" className="inline-flex items-center gap-1.5 text-xs font-semibold mb-4"
-        style={{ color: '#D4A017' }}>
-        Job listings have moved →
-      </Link>
+      <div className="rounded-xl px-4 py-3 mb-6 text-sm"
+        style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)', color: '#3b82f6' }}>
+        Job listings have moved to the new Jobs admin →{' '}
+        <Link href="/roodber8/jobs" className="font-bold" style={{ color: '#D4A017' }}>Manage Jobs</Link>
+      </div>
 
       <div className="flex items-start justify-between mb-8">
         <div>

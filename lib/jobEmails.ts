@@ -54,6 +54,13 @@ function wrapEmail(brand: Brand, eyebrow: string, heading: string, bodyHtml: str
 </body></html>`
 }
 
+function manageListingButton(brand: Brand, manageToken: string): string {
+  if (!manageToken) return ''
+  const manageUrl = `${siteUrl(brand)}/jobs/manage-listing?token=${manageToken}`
+  return `<a href="${manageUrl}" style="display:inline-block;background:${brand.color};color:#fff;font-weight:700;font-size:14px;padding:14px 28px;border-radius:8px;text-decoration:none;margin-bottom:12px;">Manage your listing &rarr;</a>
+     <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0 0 24px;">Use this link to view or withdraw your listing at any time. Keep this email safe — the link is unique to your listing.</p>`
+}
+
 function jobSummaryTable(job: Pick<Job, 'title' | 'company_name' | 'location_text' | 'employment_type'>): string {
   return `<table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px;">
     <tr style="background:#f8fafc;"><td style="padding:10px 12px;color:#64748b;font-weight:600;width:140px;">Role</td><td style="padding:10px 12px;color:#1e293b;font-weight:700;">${job.title}</td></tr>
@@ -65,7 +72,7 @@ function jobSummaryTable(job: Pick<Job, 'title' | 'company_name' | 'location_tex
 
 // ── Employer: payment received, listing under review ──────────────────────────
 
-export async function sendJobConfirmationEmail(job: Job): Promise<void> {
+export async function sendJobConfirmationEmail(job: Job, manageToken: string): Promise<void> {
   const brand = brandFor(job.platform)
   const firstName = job.employer_name.split(' ')[0]
   const html = wrapEmail(
@@ -78,6 +85,7 @@ export async function sendJobConfirmationEmail(job: Job): Promise<void> {
      <div style="background:#f8fafc;border-radius:8px;border-left:3px solid #D4A017;padding:16px 20px;margin:0 0 24px;">
        <p style="margin:0;color:#475569;font-size:13px;line-height:1.6;">Our team will review your listing within 24 hours. You'll receive a confirmation email as soon as it goes live.</p>
      </div>
+     ${manageListingButton(brand, manageToken)}
      <p style="color:#475569;font-size:14px;line-height:1.7;margin:0;">If you have any questions in the meantime, simply reply to this email.</p>`
   )
 
@@ -113,7 +121,7 @@ export async function sendAdminJobNotificationEmail(job: Job): Promise<void> {
 
 // ── Employer: listing approved and live ────────────────────────────────────────
 
-export async function sendJobApprovalEmail(job: Job): Promise<void> {
+export async function sendJobApprovalEmail(job: Job, manageToken: string): Promise<void> {
   const brand = brandFor(job.platform)
   const firstName = job.employer_name.split(' ')[0]
   const liveUrl = `${siteUrl(brand)}/jobs/listings`
@@ -127,6 +135,8 @@ export async function sendJobApprovalEmail(job: Job): Promise<void> {
      <div style="background:#f0fdf4;border-radius:8px;border-left:3px solid #16a34a;padding:16px 20px;margin:0 0 24px;">
        <p style="margin:0;color:#166534;font-size:13px;line-height:1.6;">Your listing runs for 60 days from today and will automatically expire after that.</p>
      </div>
+     <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 16px;">Your listing is now live. Use the link below to view or manage it.</p>
+     ${manageListingButton(brand, manageToken)}
      <a href="${liveUrl}" style="display:inline-block;background:${brand.color};color:#fff;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;">View live listings</a>`
   )
 
@@ -165,7 +175,7 @@ export async function sendJobRejectionEmail(job: Job): Promise<void> {
 
 // ── Employer: listing expiring in 7 days ───────────────────────────────────────
 
-export async function sendJobExpiryWarningEmail(job: Job): Promise<void> {
+export async function sendJobExpiryWarningEmail(job: Job, manageToken: string): Promise<void> {
   const brand = brandFor(job.platform)
   const firstName = job.employer_name.split(' ')[0]
   const postUrl = `${siteUrl(brand)}/jobs/post-a-job`
@@ -175,6 +185,8 @@ export async function sendJobExpiryWarningEmail(job: Job): Promise<void> {
     'Your job listing expires in 7 days.',
     `<p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 16px;">Dear ${firstName},</p>
      <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Your listing for <strong>${job.title}</strong> at ${job.company_name} expires in 7 days. After that, it will come down from ${brand.name} and no longer be visible to candidates.</p>
+     <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Click below to view your listing details.</p>
+     ${manageListingButton(brand, manageToken)}
      <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 24px;">If the role is still open, repost it to keep it visible.</p>
      <a href="${postUrl}" style="display:inline-block;background:${brand.color};color:#fff;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;">Repost this listing</a>`
   )

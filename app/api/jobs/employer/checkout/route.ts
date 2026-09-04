@@ -58,6 +58,7 @@ async function createLemonSqueezyCheckout(
             name: job.employer_name,
             custom: {
               job_id: job.id,
+              manage_token: job.manage_token,
               employer_email: job.employer_email,
               job_title: job.title,
               company_name: job.company_name,
@@ -162,6 +163,7 @@ export async function POST(req: NextRequest) {
       application_email: typeof body.application_email === 'string' ? body.application_email.trim() || undefined : undefined,
       platform: [isEthioTax ? 'et' : 'ab'],
       source: 'employer',
+      manage_token: crypto.randomUUID(),
     }
 
     const job = await createJob(jobInsert)

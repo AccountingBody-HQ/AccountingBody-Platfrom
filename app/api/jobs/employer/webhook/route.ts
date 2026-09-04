@@ -39,14 +39,18 @@ async function verifyLemonSqueezySignature(rawBody: string, signature: string, s
   return computedSignature === signature
 }
 
-function extractJobId(payload: unknown): string | null {
-  if (!isRecord(payload)) return null
+function extractCustomData(payload: unknown): { jobId: string | null; manageToken: string | null } {
+  if (!isRecord(payload)) return { jobId: null, manageToken: null }
   const meta = payload.meta
-  if (!isRecord(meta)) return null
+  if (!isRecord(meta)) return { jobId: null, manageToken: null }
   const customData = meta.custom_data
-  if (!isRecord(customData)) return null
+  if (!isRecord(customData)) return { jobId: null, manageToken: null }
   const jobId = customData.job_id
-  return typeof jobId === 'string' ? jobId : null
+  const manageToken = customData.manage_token
+  return {
+    jobId: typeof jobId === 'string' ? jobId : null,
+    manageToken: typeof manageToken === 'string' ? manageToken : null,
+  }
 }
 
 // CRITICAL: this route must always return 200 once the signature has been
@@ -86,7 +90,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ received: true })
       }
 
-      const jobId = extractJobId(payload)
+      const { jobId, manageToken } = extractCustomData(payload)
       if (!jobId) {
         console.error('jobs/employer/webhook: order_created with no job_id in meta.custom_data', data.id)
         return NextResponse.json({ received: true })
@@ -108,7 +112,7 @@ export async function POST(req: NextRequest) {
       }
 
       try {
-        await sendJobConfirmationEmail(job)
+        await sendJobConfirmationEmail(job, manageToken ?? job.manage_token ?? '')
       } catch (emailErr: unknown) {
         console.error('jobs/employer/webhook: confirmation email failed (non-fatal):', emailErr)
       }
@@ -123,7 +127,7 @@ export async function POST(req: NextRequest) {
 
     if (eventName === 'order_refunded') {
       const payload: unknown = JSON.parse(rawBody)
-      const jobId = extractJobId(payload)
+      const { jobId } = extractCustomData(payload)
 
       if (jobId) {
         const supabase = getSupabase()

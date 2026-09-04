@@ -273,10 +273,12 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
           </nav>
           <span className="eyebrow text-gold-400 mb-4 block">{platformName} Recruitment</span>
           <h1 className="font-display text-white text-4xl md:text-5xl mb-4 leading-tight" style={{ letterSpacing: '-0.02em' }}>
-            Post a Job on {platformName}
+            {isEthioTax ? 'Post a Job on EthioTax' : 'Post a Job'}
           </h1>
           <p className="text-white/60 text-xl leading-relaxed max-w-2xl">
-            Reach thousands of qualified accounting and finance professionals. Your listing goes live within 24 hours after review.
+            {isEthioTax
+              ? 'Reach the Ethiopian accounting and finance community worldwide.'
+              : 'Reach thousands of qualified accounting and finance professionals. Listings go live within 24 hours after review.'}
           </p>
         </div>
       </section>
@@ -288,7 +290,7 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
             <ProgressBar currentStep={step} brand={brand} />
 
             {stepError && (
-              <p className="text-sm font-semibold mb-6" style={{ color: gold }}>{stepError}</p>
+              <p className="text-red-500 text-sm mb-6">{stepError}</p>
             )}
 
             {step === 1 && (
@@ -443,7 +445,7 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
                 <div className="rounded-xl p-6 mb-6" style={{ background: brand }}>
                   <p className="text-white font-display text-4xl mb-2">£9.00</p>
                   <p className="text-white/70 text-sm mb-1">60-day listing · Hiring Direct badge · Top placement</p>
-                  <p className="text-white/40 text-xs">All taxes included · Powered by Lemon Squeezy</p>
+                  <p className="text-white/40 text-xs">All taxes handled · Secure payment via Lemon Squeezy</p>
                 </div>
 
                 {submitError && (
@@ -457,7 +459,13 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
                   className="w-full flex items-center justify-center gap-2 h-12 rounded-lg font-semibold text-sm transition-opacity hover:opacity-90 disabled:opacity-50"
                   style={{ background: gold, color: brand }}>
                   {submitting
-                    ? 'Processing...'
+                    ? <>
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                        </svg>
+                        Processing...
+                      </>
                     : <>Post Job & Pay £9 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg></>
                   }
                 </button>
