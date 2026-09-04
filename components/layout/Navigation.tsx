@@ -352,7 +352,7 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-navy-950/50 backdrop-blur-sm z-40 transition-opacity duration-300 lg:hidden ${
+        className={`fixed inset-0 bg-navy-950/50 backdrop-blur-sm z-40 transition-opacity duration-300 xl:hidden ${
           open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
@@ -362,7 +362,7 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
       {/* Drawer */}
       <div
         className={`fixed top-0 right-0 h-full w-[88vw] max-w-sm bg-white z-50 flex flex-col
-          shadow-2xl transition-transform duration-300 ease-decelerate lg:hidden
+          shadow-2xl transition-transform duration-300 ease-decelerate xl:hidden
           ${open ? 'translate-x-0' : 'translate-x-full'}
         `}
         role="dialog"
@@ -473,13 +473,19 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
         </nav>
 
         {/* Post a Job CTA — bottom of drawer, pinned above footer search */}
-        <div className="border-t border-slate-200 p-4">
+        <div className="px-4 pb-3 pt-3 border-t border-slate-100">
           <Link
             href="/jobs/post-a-job"
             onClick={onClose}
-            className="flex items-center justify-center w-full bg-[#C9982A] hover:bg-[#b8871f] text-white font-semibold text-sm rounded-xl py-3 transition-colors duration-200"
+            className="flex items-center justify-center gap-2 w-full bg-[#C9982A] hover:bg-[#b8871f] text-white font-semibold text-sm rounded-xl py-3.5 transition-colors duration-200"
           >
-            Post a Job →
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+              <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+              <line x1="12" y1="12" x2="12" y2="17"/>
+              <line x1="9" y1="14.5" x2="15" y2="14.5"/>
+            </svg>
+            Post a Job
           </Link>
         </div>
 
@@ -617,11 +623,6 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
     setSearchQuery('')
   }
 
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') handleSearchSubmit()
-    if (e.key === 'Escape') { setSearchQuery('') }
-  }
-
   const handleMouseEnter = (id: string) => {
     if (closeTimer.current) clearTimeout(closeTimer.current)
     setActiveDropdown(id)
@@ -659,7 +660,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center justify-center gap-0.5" aria-label="Main navigation">
+          <nav className="hidden xl:flex items-center justify-center gap-0.5" aria-label="Main navigation">
             {sections.map(section => {
               const isActive      = activeDropdown === section.id
               const hasDropdown   = Boolean(section.groups?.length)
@@ -755,7 +756,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           </nav>
 
           {/* Desktop right actions — search (always visible) */}
-          <div className="hidden lg:flex items-center justify-end gap-3 shrink-0">
+          <div className="hidden xl:flex items-center justify-end gap-3 shrink-0">
             {etGetHelpLinks && (
               <div className="flex items-center">
                 <LanguageSwitcher />
@@ -764,32 +765,31 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
             <div className="w-px h-5 bg-slate-200" />
             <Link
               href="/jobs/post-a-job"
-              className="border border-[#C9982A] text-[#C9982A] rounded-full px-3 py-1.5 text-sm font-medium whitespace-nowrap hover:bg-[#C9982A] hover:text-white transition-colors duration-200"
+              className="inline-flex items-center gap-2 bg-[#C9982A] hover:bg-[#b8871f] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors duration-200 whitespace-nowrap"
             >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                <line x1="12" y1="12" x2="12" y2="17"/>
+                <line x1="9" y1="14.5" x2="15" y2="14.5"/>
+              </svg>
               Post a Job
             </Link>
-            <form onSubmit={handleSearchSubmit} className="relative">
-              <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
-                fill="none" stroke="currentColor" viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <button
+              type="button"
+              onClick={handleSearchSubmit}
+              className="flex items-center justify-center w-9 h-9 rounded-lg text-slate-500 hover:text-navy-950 hover:bg-slate-100 transition-colors duration-150"
+              aria-label="Search"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
               </svg>
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-                placeholder="Search articles, questions, glossary…"
-                autoComplete="off"
-                className="h-9 w-72 pl-9 pr-4 rounded-lg border border-slate-200 text-sm text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all bg-slate-50 hover:bg-white hover:border-slate-300 focus:bg-white"
-                aria-label="Search AccountingBody"
-              />
-            </form>
+            </button>
           </div>
 
           {/* Mobile menu button */}
-          <div className="flex items-center gap-2 justify-end lg:hidden">
+          <div className="flex items-center gap-2 justify-end xl:hidden">
             <button
               onClick={() => router.push('/search')}
               className="w-11 h-11 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
