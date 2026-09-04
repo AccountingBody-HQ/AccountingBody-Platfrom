@@ -389,7 +389,7 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
         {isEthioTax && <MobileLangSwitcher />}
 
         {/* Nav items */}
-        <nav className="flex-1 overflow-y-auto py-2">
+        <nav className="overflow-y-auto py-2">
           {sections.map(section => {
             const isExpanded  = expandedSection === section.id
             const hasDropdown = Boolean(section.groups?.length)
