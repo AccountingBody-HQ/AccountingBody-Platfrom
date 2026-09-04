@@ -474,19 +474,34 @@ export function ChapterTemplate({ course, chapterIndex, bookType, subtitle, ques
             )}
             {/* Study Notes */}
             {showNotes && (ls.linkedArticles || []).map((art: any, ai: number) => {
-              const firstIdx = ai === 0
+              const _rawFirstIdx = ai === 0
                 ? (art.body || []).findIndex((b: any) => b._type === "block" && !b.listItem && hasText((b.children || []).map((c: any) => c.text || "").join("")))
                 : -1
-              const bodyToRender = firstIdx >= 0
-                ? [...(art.body || []).slice(0, firstIdx), ...(art.body || []).slice(firstIdx + 1)]
+              // If the first extracted block is a heading whose text matches the
+              // article title, it duplicates the articleTitle rendered above —
+              // drop it from the body entirely (both from the pulled-up first
+              // block and from the remaining flow) instead of just skipping past
+              // it, so it cannot resurface via renderFirstBlock or renderBlocks.
+              const firstBlockText = _rawFirstIdx >= 0
+                ? ((art.body[_rawFirstIdx].children || []) as any[]).map((c: any) => c.text || "").join("").trim()
+                : ""
+              const dupTitleBlock = _rawFirstIdx >= 0 && sameTitle(firstBlockText, art.title || "")
+              const bodyNoDupTitle = dupTitleBlock
+                ? [...(art.body || []).slice(0, _rawFirstIdx), ...(art.body || []).slice(_rawFirstIdx + 1)]
                 : (art.body || [])
+              const firstIdx = dupTitleBlock
+                ? bodyNoDupTitle.findIndex((b: any) => b._type === "block" && !b.listItem && hasText((b.children || []).map((c: any) => c.text || "").join("")))
+                : _rawFirstIdx
+              const bodyToRender = firstIdx >= 0
+                ? [...bodyNoDupTitle.slice(0, firstIdx), ...bodyNoDupTitle.slice(firstIdx + 1)]
+                : bodyNoDupTitle
               return (
                 <React.Fragment key={art._id || ai}>
                   {ai === 0 ? (
                     <View wrap={false} minPresenceAhead={150}>
                       {sameTitle(ls.title, ch.chapterTitle) ? null : <Text style={s.lessonTitle}>{cleanLessonTitle(sanitise(ls.title))}</Text>}
                       {sameTitle(art.title, ls.title) || sameTitle(art.title, ch.chapterTitle) ? null : <Text style={s.articleTitle}>{sanitise(art.title)}</Text>}
-                      {renderFirstBlock(art.body || [])}
+                      {renderFirstBlock(bodyNoDupTitle)}
                     </View>
                   ) : (
                     sameTitle(art.title, ls.title) || sameTitle(art.title, ch.chapterTitle) ? null : <Text style={s.articleTitle}>{sanitise(art.title)}</Text>
