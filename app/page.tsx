@@ -496,11 +496,11 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <div className="mt-5 flex justify-center lg:justify-start">
         <Link
           href="/jobs/post-a-job"
-          className="inline-flex items-center gap-2 border border-[#C9982A] bg-transparent hover:bg-[#C9982A]/10 text-white rounded-xl px-5 py-3 text-sm font-medium transition-colors duration-200 group"
+          className="inline-flex items-center gap-2.5 border-2 border-[#C9982A]/70 bg-white/5 hover:bg-[#C9982A]/15 hover:border-[#C9982A] text-white rounded-xl px-5 py-2.5 text-sm font-medium transition-all duration-200 group"
         >
-          <span className="text-[#C9982A] font-semibold" aria-hidden="true">◆</span>
-          <span className="text-white/80 group-hover:text-white transition-colors duration-200">Hiring in Ethiopia?</span>
-          <span className="text-[#C9982A] font-semibold group-hover:text-[#d4a93a] transition-colors duration-200">Post a job from £9 →</span>
+          <span className="text-[#C9982A] text-xs" aria-hidden="true">◆</span>
+          <span className="text-white/85 group-hover:text-white transition-colors duration-200 font-medium">Hiring in Ethiopia?</span>
+          <span className="text-[#C9982A] font-semibold group-hover:text-white transition-colors duration-200">Post a job from £9 →</span>
         </Link>
       </div>
 
@@ -1167,11 +1167,11 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <div className="mt-5 flex justify-center lg:justify-start">
               <Link
                 href="/jobs/post-a-job"
-                className="inline-flex items-center gap-2 border border-[#C9982A] bg-transparent hover:bg-[#C9982A]/10 text-white rounded-xl px-5 py-3 text-sm font-medium transition-colors duration-200 group"
+                className="inline-flex items-center gap-2.5 border-2 border-[#C9982A]/70 bg-white/5 hover:bg-[#C9982A]/15 hover:border-[#C9982A] text-white rounded-xl px-5 py-2.5 text-sm font-medium transition-all duration-200 group"
               >
-                <span className="text-[#C9982A] font-semibold" aria-hidden="true">◆</span>
-                <span className="text-white/80 group-hover:text-white transition-colors duration-200">Hiring?</span>
-                <span className="text-[#C9982A] font-semibold group-hover:text-[#d4a93a] transition-colors duration-200">Post a job from £9 →</span>
+                <span className="text-[#C9982A] text-xs" aria-hidden="true">◆</span>
+                <span className="text-white/85 group-hover:text-white transition-colors duration-200 font-medium">Hiring?</span>
+                <span className="text-[#C9982A] font-semibold group-hover:text-white transition-colors duration-200">Post a job from £9 →</span>
               </Link>
             </div>
 
