@@ -749,6 +749,7 @@ export default function StudioPage() {
   const [fbPosted, setFbPosted] = useState(false)
   const [fbError, setFbError] = useState<string | null>(null)
   const [fbPostId, setFbPostId] = useState<string | null>(null)
+  const [fbIncludeLink, setFbIncludeLink] = useState(true)
   const [socialContentId, setSocialContentId] = useState('')
   const [socialContentType, setSocialContentType] = useState<'article' | 'pq' | null>(null)
   const [socialContentTitle, setSocialContentTitle] = useState<string | null>(null)
@@ -1027,11 +1028,12 @@ export default function StudioPage() {
       const res = await fetch('/api/roodber8/studio/post-social', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'generate', contentId: id }),
+        body: JSON.stringify({ action: 'generate', contentId: id, includeLink: fbIncludeLink }),
       })
       const data = await res.json() as {
         caption?: string
         title?: string
+        includeLink?: boolean
         error?: string
       }
       if (data.error) throw new Error(data.error)
@@ -1053,7 +1055,7 @@ export default function StudioPage() {
       const res = await fetch('/api/roodber8/studio/post-social', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'post', caption: fbCaption }),
+        body: JSON.stringify({ action: 'post', caption: fbCaption, includeLink: fbIncludeLink }),
       })
       const data = await res.json() as {
         success?: boolean
@@ -1609,6 +1611,29 @@ export default function StudioPage() {
           )}
 
           {!fbCaption && !fbPosted && (
+            <label className="flex items-start gap-2 mb-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={fbIncludeLink}
+                onChange={e => {
+                  setFbIncludeLink(e.target.checked)
+                  setFbCaption('')
+                  setFbPosted(false)
+                  setFbError(null)
+                }}
+                className="w-4 h-4 rounded mt-0.5"
+                style={{ accentColor: '#D4A017' }}
+              />
+              <span>
+                <span className="block text-sm font-semibold text-white">Include link in post</span>
+                <span className="block text-xs mt-0.5" style={{ color: '#475569' }}>
+                  Turn off if Facebook is suppressing your post. Post without link, then add the URL in the first comment.
+                </span>
+              </span>
+            </label>
+          )}
+
+          {!fbCaption && !fbPosted && (
             <button
               onClick={handleGenerateFbCaption}
               disabled={fbGenerating || !socialContentId.trim()}
@@ -1669,6 +1694,12 @@ export default function StudioPage() {
                   Posted successfully{fbPostId ? ` — ID: ${fbPostId}` : ''}
                 </p>
               </div>
+              {!fbIncludeLink && (
+                <div className="rounded-xl p-3 flex items-center gap-2" style={C.warning}>
+                  <AlertTriangle size={13} className="shrink-0" />
+                  <p className="text-xs">Remember to add the article link as the first comment on this post.</p>
+                </div>
+              )}
               <a href="https://www.facebook.com/profile.php?id=1221866157684247"
                 target="_blank" rel="noopener noreferrer"
                 className="text-xs font-semibold flex items-center gap-1 w-fit"
@@ -1684,6 +1715,7 @@ export default function StudioPage() {
                   setSocialContentId('')
                   setSocialContentType(null)
                   setSocialContentTitle(null)
+                  setFbIncludeLink(true)
                 }}
                 className="flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl mt-2 w-fit"
                 style={C.idle}>

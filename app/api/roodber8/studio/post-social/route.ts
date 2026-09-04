@@ -72,7 +72,7 @@ async function generateArticleCaption(article: {
   category: string | null
   category_title: string | null
   exam_body: string[] | null
-}): Promise<string> {
+}, includeLink: boolean): Promise<string> {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const examBody = (article.exam_body?.[0] ?? 'ACCA').toUpperCase()
   const category = article.category ?? 'financial-accounting'
@@ -102,10 +102,10 @@ Paragraph 2 (2-3 sentences): Describe what the article covers in plain, confiden
 What will the reader understand after reading it that they may not have before?
 Do not list bullet points — write it as natural prose.
 
-Then on its own line, just the URL — no "Read more" or "Read the full article" prefix:
+${includeLink ? `Then on its own line, just the URL — no "Read more" or "Read the full article" prefix:
 ${articleUrl}
 
-Then on its own line, the hashtags:
+` : ''}Then on its own line, the hashtags:
 ${hashtags}
 
 ARTICLE:
@@ -134,7 +134,7 @@ async function generatePqCaption(qs: {
   topic: string | null
   exam_body: string[] | null
   difficulty: string | null
-}): Promise<string> {
+}, includeLink: boolean): Promise<string> {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const examBody = (qs.exam_body?.[0] ?? 'ACCA').toUpperCase()
   const pqUrl = `https://accountingbody.com/practice-questions/${qs.slug}`
@@ -162,10 +162,10 @@ not generic exam advice.
 Paragraph 2 (2 sentences): Describe what the practice questions test, in plain confident
 language. Mention the exam body and level naturally. Do not mention question count.
 
-Then on its own line, just the URL — no prefix:
+${includeLink ? `Then on its own line, just the URL — no prefix:
 ${pqUrl}
 
-Then on its own line, the hashtags:
+` : ''}Then on its own line, the hashtags:
 ${hashtags}
 
 QUESTION SET:
@@ -244,6 +244,7 @@ export async function POST(req: NextRequest) {
       action: 'resolve' | 'generate' | 'post'
       contentId?: string
       caption?: string
+      includeLink?: boolean
     }
 
     // Resolve content ID to type + metadata
@@ -263,20 +264,21 @@ export async function POST(req: NextRequest) {
     // Generate caption
     if (body.action === 'generate') {
       const id = (body.contentId ?? '').trim().toUpperCase()
+      const includeLink = body.includeLink ?? true
       let caption: string
       let title: string
       if (id.startsWith('AB-ART-')) {
         const article = await fetchArticleById(id)
-        caption = await generateArticleCaption(article)
+        caption = await generateArticleCaption(article, includeLink)
         title = article.title
       } else if (id.startsWith('AB-QZ-')) {
         const qs = await fetchQuestionSetById(id)
-        caption = await generatePqCaption(qs)
+        caption = await generatePqCaption(qs, includeLink)
         title = qs.title
       } else {
         return NextResponse.json({ error: 'Invalid ID' }, { status: 400 })
       }
-      return NextResponse.json({ caption, title })
+      return NextResponse.json({ caption, title, includeLink })
     }
 
     // Post to Facebook
@@ -294,6 +296,7 @@ export async function POST(req: NextRequest) {
           post_id: result.id,
           posted_at: new Date().toISOString(),
           platform_ab: 'ab',
+          link_included: body.includeLink ?? true,
         })
       } catch {
         // best-effort
