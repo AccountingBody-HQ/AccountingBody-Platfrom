@@ -496,11 +496,12 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <div className="mt-5 flex justify-center lg:justify-start">
         <Link
           href="/jobs/post-a-job"
-          className="inline-flex items-center gap-2 h-10 rounded-xl px-5 text-sm font-semibold border border-[#C9982A]/60 hover:border-[#C9982A] hover:bg-[#C9982A]/10 text-[#C9982A] transition-all duration-200"
+          className="inline-flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
+          style={{ border: '1.5px solid rgba(212,160,23,0.5)', color: '#C9982A', background: 'transparent' }}
         >
-          <span className="text-[10px]" aria-hidden="true">◆</span>
-          <span className="text-white/80 font-medium">Hiring in Ethiopia?</span>
-          <span className="font-semibold">Post a job from £9 →</span>
+          <span aria-hidden="true">◆</span>
+          <span style={{ color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>Hiring in Ethiopia?</span>
+          <span>Post a job from £9 →</span>
         </Link>
       </div>
 
@@ -1170,9 +1171,9 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 className="inline-flex items-center justify-center gap-2 h-10 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
                 style={{ border: '1.5px solid rgba(212,160,23,0.5)', color: '#C9982A', background: 'transparent' }}
               >
-                <span className="text-[10px]" aria-hidden="true">◆</span>
-                <span style={{ color: 'rgba(255,255,255,0.8)' }}>Hiring?</span>
-                <span style={{ color: '#C9982A' }}>Post a job from £9 →</span>
+                <span aria-hidden="true">◆</span>
+                <span style={{ color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>Hiring?</span>
+                <span>Post a job from £9 →</span>
               </Link>
             </div>
 

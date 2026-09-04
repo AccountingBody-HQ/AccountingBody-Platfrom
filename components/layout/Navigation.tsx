@@ -747,13 +747,12 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           </nav>
 
           {/* Desktop right actions — search (always visible) */}
-          <div className="hidden xl:flex items-center justify-end gap-1 shrink-0">
+          <div className="hidden xl:flex items-center justify-end gap-3 shrink-0">
             {etGetHelpLinks && (
               <div className="flex items-center">
                 <LanguageSwitcher />
               </div>
             )}
-            <div className="w-px h-4 bg-slate-200 mx-1" aria-hidden="true" />
             <Link
               href="/jobs/post-a-job"
               className="inline-flex items-center gap-2 bg-[#C9982A] hover:bg-[#b8871f] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors duration-200 whitespace-nowrap"
