@@ -632,7 +632,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
         }`}
         style={{ height: 'var(--nav-height, 64px)' }}
       >
-        <div className="container-wide h-full grid grid-cols-[auto_1fr_auto] items-center gap-4 px-2">
+        <div className="container-wide h-full grid grid-cols-[auto_1fr_auto] items-center gap-4 px-6">
 
           {/* Logo */}
           <Link
