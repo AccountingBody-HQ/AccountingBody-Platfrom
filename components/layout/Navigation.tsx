@@ -637,7 +637,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-2 shrink-0 mr-2 focus:outline-none"
+            className="flex items-center gap-2 shrink-0 mr-0 focus:outline-none"
             aria-label={isEthioTax ? 'EthioTax home' : 'AccountingBody home'}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -651,7 +651,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           </Link>
 
           {/* Desktop nav */}
-          <nav className={`hidden xl:flex items-center gap-1.5 ${isEthioTax ? 'justify-center' : 'justify-end'}`} aria-label="Main navigation">
+          <nav className={`hidden xl:flex items-center gap-1.5 ${isEthioTax ? 'justify-center' : 'justify-between'}`} aria-label="Main navigation">
             {sections.map(section => {
               const isActive      = activeDropdown === section.id
               const hasDropdown   = Boolean(section.groups?.length)
