@@ -744,38 +744,56 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                 </div>
               )
             })}
-            <Link
-              href="/jobs/post-a-job"
-              className="inline-flex items-center gap-2 bg-[#C9982A] hover:bg-[#b8871f] text-[#0C1A3D] text-sm font-semibold px-5 py-2 rounded-full transition-colors duration-200 whitespace-nowrap ml-3"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-                <line x1="12" y1="12" x2="12" y2="17"/>
-                <line x1="9" y1="14.5" x2="15" y2="14.5"/>
-              </svg>
-              Post a Job
-            </Link>
+            {isEthioTax && (
+              <Link
+                href="/jobs/post-a-job"
+                className="inline-flex items-center gap-2 bg-[#C9982A] hover:bg-[#b8871f] text-[#0C1A3D] text-sm font-semibold px-5 py-2 rounded-full transition-colors duration-200 whitespace-nowrap ml-3"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                  <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                  <line x1="12" y1="12" x2="12" y2="17"/>
+                  <line x1="9" y1="14.5" x2="15" y2="14.5"/>
+                </svg>
+                Post a Job
+              </Link>
+            )}
           </nav>
 
           {/* Desktop right actions — search (always visible) */}
-          <div className="hidden xl:flex items-center justify-end gap-3 shrink-0 pl-3 border-l border-slate-200/70">
-            <button
-              type="button"
-              onClick={() => router.push('/search')}
-              className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-navy-950 hover:bg-slate-100 transition-colors duration-150"
-              aria-label="Search"
-            >
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="m21 21-4.35-4.35"/>
-              </svg>
-            </button>
-            {etGetHelpLinks && (
-              <div className="flex items-center">
-                <LanguageSwitcher />
-              </div>
+          <div className="hidden xl:flex items-center justify-end gap-3 shrink-0">
+            {!isEthioTax && (
+              <Link
+                href="/jobs/post-a-job"
+                className="inline-flex items-center gap-2 bg-[#C9982A] hover:bg-[#b8871f] text-[#0C1A3D] text-sm font-semibold px-5 py-2 rounded-full transition-colors duration-200 whitespace-nowrap"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                  <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                  <line x1="12" y1="12" x2="12" y2="17"/>
+                  <line x1="9" y1="14.5" x2="15" y2="14.5"/>
+                </svg>
+                Post a Job
+              </Link>
             )}
+            <div className="flex items-center gap-2 pl-3 border-l border-slate-200/70">
+              <button
+                type="button"
+                onClick={() => router.push('/search')}
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-navy-950 hover:bg-slate-100 transition-colors duration-150"
+                aria-label="Search"
+              >
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="m21 21-4.35-4.35"/>
+                </svg>
+              </button>
+              {etGetHelpLinks && (
+                <div className="flex items-center">
+                  <LanguageSwitcher />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Mobile menu button */}
