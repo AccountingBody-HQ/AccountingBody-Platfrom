@@ -496,7 +496,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <div className="mt-5 flex justify-center lg:justify-start">
         <Link
           href="/jobs/post-a-job"
-          className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
+          className="inline-flex items-center justify-center gap-2 h-10 px-5 min-w-[260px] rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
           style={{ border: '1.5px solid rgba(212,160,23,0.5)', color: '#C9982A', background: 'transparent' }}
         >
           <span aria-hidden="true">◆</span>
@@ -1168,7 +1168,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <div className="mt-5 flex justify-center lg:justify-start">
               <Link
                 href="/jobs/post-a-job"
-                className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
+                className="inline-flex items-center justify-center gap-2 h-10 px-5 min-w-[260px] rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
                 style={{ border: '1.5px solid rgba(212,160,23,0.5)', color: '#C9982A', background: 'transparent' }}
               >
                 <span aria-hidden="true">◆</span>
