@@ -632,7 +632,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
         }`}
         style={{ height: 'var(--nav-height, 64px)' }}
       >
-        <div className="container-wide h-full grid grid-cols-[auto_1fr_auto] items-center gap-6">
+        <div className="container-wide h-full grid grid-cols-[auto_1fr_auto] items-center gap-4">
 
           {/* Logo */}
           <Link
@@ -651,7 +651,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden xl:flex items-center justify-center gap-1.5" aria-label="Main navigation">
+          <nav className="hidden xl:flex items-center justify-end gap-1.5" aria-label="Main navigation">
             {sections.map(section => {
               const isActive      = activeDropdown === section.id
               const hasDropdown   = Boolean(section.groups?.length)
@@ -748,11 +748,6 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
 
           {/* Desktop right actions — search (always visible) */}
           <div className="hidden xl:flex items-center justify-end gap-3 shrink-0">
-            {etGetHelpLinks && (
-              <div className="flex items-center">
-                <LanguageSwitcher />
-              </div>
-            )}
             <Link
               href="/jobs/post-a-job"
               className="inline-flex items-center gap-2 bg-[#C9982A] hover:bg-[#b8871f] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors duration-200 whitespace-nowrap"
@@ -776,6 +771,11 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                 <path d="m21 21-4.35-4.35"/>
               </svg>
             </button>
+            {etGetHelpLinks && (
+              <div className="flex items-center">
+                <LanguageSwitcher />
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
