@@ -744,13 +744,9 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                 </div>
               )
             })}
-          </nav>
-
-          {/* Desktop right actions — search (always visible) */}
-          <div className="hidden xl:flex items-center justify-end gap-3 shrink-0">
             <Link
               href="/jobs/post-a-job"
-              className="inline-flex items-center gap-2 bg-[#C9982A] hover:bg-[#b8871f] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors duration-200 whitespace-nowrap"
+              className="inline-flex items-center gap-2 bg-[#C9982A] hover:bg-[#b8871f] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors duration-200 whitespace-nowrap ml-2"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
@@ -760,6 +756,10 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
               </svg>
               Post a Job
             </Link>
+          </nav>
+
+          {/* Desktop right actions — search (always visible) */}
+          <div className="hidden xl:flex items-center justify-end gap-2 shrink-0">
             <button
               type="button"
               onClick={() => router.push('/search')}
