@@ -81,6 +81,48 @@ export async function POST(req: NextRequest) {
 
     if (courseError) return NextResponse.json({ error: courseError.message }, { status: 500 })
 
+    // ── Snapshot existing structure before any destructive operation (update path only) ──
+    // The CREATE path doesn't need this — on failure it rolls back by deleting the
+    // orphaned course row instead (see the isNewCourse branch in the catch block below).
+    // On the UPDATE path, this snapshot is the restore point if re-insertion fails
+    // partway through Step 3, after Step 2 has already deleted the old structure.
+    let snapshot: { chapters: any[]; lessons: any[]; articles: any[] } | null = null
+    if (!isNewCourse) {
+      const { data: snapshotChapters, error: snapshotChError } = await supabase
+        .from('course_chapters')
+        .select('*')
+        .eq('course_id', course.id)
+      if (snapshotChError) console.error('course-factory/save: snapshot chapters read failed:', snapshotChError)
+      const chapterIds = (snapshotChapters ?? []).map((c: any) => c.id)
+
+      let snapshotLessons: any[] = []
+      if (chapterIds.length > 0) {
+        const { data: lessonsData, error: snapshotLsError } = await supabase
+          .from('course_lessons')
+          .select('*')
+          .in('chapter_id', chapterIds)
+        if (snapshotLsError) console.error('course-factory/save: snapshot lessons read failed:', snapshotLsError)
+        snapshotLessons = lessonsData ?? []
+      }
+      const lessonIds = snapshotLessons.map((l: any) => l.id)
+
+      let snapshotArticles: any[] = []
+      if (lessonIds.length > 0) {
+        const { data: articlesData, error: snapshotArError } = await supabase
+          .from('course_lesson_articles')
+          .select('*')
+          .in('lesson_id', lessonIds)
+        if (snapshotArError) console.error('course-factory/save: snapshot articles read failed:', snapshotArError)
+        snapshotArticles = articlesData ?? []
+      }
+
+      snapshot = {
+        chapters: snapshotChapters ?? [],
+        lessons:  snapshotLessons,
+        articles: snapshotArticles,
+      }
+    }
+
     try {
       // Step 2 — Delete existing chapters (CASCADE removes lessons + lesson_articles)
       const { error: deleteError } = await supabase
@@ -152,13 +194,52 @@ export async function POST(req: NextRequest) {
           .delete()
           .eq('slug', slug)
         if (rollbackError) console.error('course-factory/save: rollback delete failed:', rollbackError)
-      } else {
-        console.error('course-factory/save: mid-write failure on update — chapters partially rewritten, manual recovery may be needed for slug:', slug)
+
+        return NextResponse.json(
+          { error: 'Course save failed mid-write. Partial data has been rolled back. Please try again.' },
+          { status: 500 }
+        )
       }
-      return NextResponse.json(
-        { error: 'Course save failed mid-write. Partial data has been rolled back. Please try again.' },
-        { status: 500 }
-      )
+
+      // Update path — restore the pre-write snapshot rather than leaving the
+      // course truncated. Clear out whatever partial structure the failed
+      // write left behind first, so the restore doesn't collide with it.
+      console.error('course-factory/save: mid-write failure on update — attempting restore from snapshot for slug:', slug)
+      try {
+        const { error: clearError } = await supabase
+          .from('course_chapters')
+          .delete()
+          .eq('course_id', course.id)
+        if (clearError) throw clearError
+
+        if (snapshot!.chapters.length > 0) {
+          const { error: restoreChError } = await supabase.from('course_chapters').insert(snapshot!.chapters)
+          if (restoreChError) throw restoreChError
+        }
+        if (snapshot!.lessons.length > 0) {
+          const { error: restoreLsError } = await supabase.from('course_lessons').insert(snapshot!.lessons)
+          if (restoreLsError) throw restoreLsError
+        }
+        if (snapshot!.articles.length > 0) {
+          const { error: restoreArError } = await supabase.from('course_lesson_articles').insert(snapshot!.articles)
+          if (restoreArError) throw restoreArError
+        }
+
+        console.error('course-factory/save: restore from snapshot succeeded for slug:', slug, 'original error:', err)
+        return NextResponse.json(
+          { error: 'Course update failed — your original content has been restored. Please try again.' },
+          { status: 500 }
+        )
+      } catch (restoreErr: any) {
+        console.error('course-factory/save: restore from snapshot FAILED for slug:', slug, 'original error:', err, 'restore error:', restoreErr)
+        return NextResponse.json(
+          {
+            error: 'Course update failed and automatic restore was unsuccessful. Please check your course content and contact support.',
+            restoreFailed: true,
+          },
+          { status: 500 }
+        )
+      }
     }
 
   } catch (e: any) {

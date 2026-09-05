@@ -8,6 +8,43 @@ import { Building2, Search } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
+// ── Platform segmented filter (All / AB / ET) — additive with search + status ──
+const PLATFORM_SEGMENTS = [
+  { value: '',   label: 'All' },
+  { value: 'ab', label: 'AB'  },
+  { value: 'et', label: 'ET'  },
+]
+const SEGMENT_ACTIVE   = { background: 'rgba(201,152,42,0.15)', border: '1px solid #C9982A', color: '#C9982A', borderRadius: 6, padding: '3px 10px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }
+const SEGMENT_INACTIVE = { background: 'transparent', border: '1px solid #1f2937', color: '#64748b', borderRadius: 6, padding: '3px 10px', fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer' }
+
+function platformHref(basePath: string, current: { search?: string; status?: string }, platform: string) {
+  const params = new URLSearchParams()
+  if (current.search) params.set('search', current.search)
+  if (current.status) params.set('status', current.status)
+  if (platform) params.set('platform', platform)
+  const qs = params.toString()
+  return qs ? `${basePath}?${qs}` : basePath
+}
+
+// ── Per-row platform badge — never hides a record's platform, shows "—" if unknown ──
+const AB_BADGE_STYLE = { background: 'rgba(12,26,61,0.12)', border: '1px solid rgba(12,26,61,0.4)', color: '#0C1A3D', fontSize: '0.65rem', fontWeight: 600, padding: '1px 6px', borderRadius: 4, letterSpacing: '0.05em' }
+const ET_BADGE_STYLE = { background: 'rgba(26,71,49,0.12)', border: '1px solid rgba(26,71,49,0.4)', color: '#1A4731', fontSize: '0.65rem', fontWeight: 600, padding: '1px 6px', borderRadius: 4, letterSpacing: '0.05em' }
+
+function PlatformBadges({ platform }: { platform: unknown }) {
+  const values = Array.isArray(platform) ? platform : (platform ? [platform] : [])
+  const hasAB = values.includes('ab')
+  const hasET = values.includes('et')
+  if (!hasAB && !hasET) {
+    return <span className="text-xs" style={{ color: '#334155' }}>—</span>
+  }
+  return (
+    <>
+      {hasAB && <span style={AB_BADGE_STYLE}>AB</span>}
+      {hasET && <span style={ET_BADGE_STYLE}>ET</span>}
+    </>
+  )
+}
+
 async function getEmployerBriefs(filters: { safeSearch?: string; status?: string; platform?: string }) {
   noStore()
   const supabase = createClient(
@@ -86,9 +123,19 @@ export default async function EmployersPage({
       </div>
 
       {/* Filter bar */}
-      <div className="rounded-2xl border p-4 mb-6 flex items-center gap-3 flex-wrap"
+      <div className="rounded-2xl border p-4 mb-6 flex flex-col gap-3"
         style={{ background: '#0d1424', borderColor: '#1a2238' }}>
+        <div className="flex items-center gap-1">
+          {PLATFORM_SEGMENTS.map(seg => (
+            <a key={seg.value || 'all'}
+              href={platformHref('/roodber8/employers', { search: safeSearch, status }, seg.value)}
+              style={platform === seg.value ? SEGMENT_ACTIVE : SEGMENT_INACTIVE}>
+              {seg.label}
+            </a>
+          ))}
+        </div>
         <form method="GET" className="flex items-center gap-3 flex-wrap flex-1">
+          <input type="hidden" name="platform" value={platform} />
           <div className="flex items-center gap-2 flex-1 min-w-48 rounded-xl px-3 py-2"
             style={{ background: '#111827', border: '1px solid #1f2937' }}>
             <Search size={13} style={{ color: '#475569' }} />
@@ -104,13 +151,6 @@ export default async function EmployersPage({
             <option value="reviewing">Reviewing</option>
             <option value="placed">Placed</option>
             <option value="closed">Closed</option>
-          </select>
-          <select name="platform" defaultValue={platform}
-            className="rounded-xl px-3 py-2 text-sm focus:outline-none"
-            style={{ background: '#111827', border: '1px solid #1f2937', color: platform ? '#ffffff' : '#475569' }}>
-            <option value="">All platforms</option>
-            <option value="ab">Accounting Body</option>
-            <option value="et">EthioTax</option>
           </select>
           <button type="submit"
             className="px-4 py-2 rounded-xl text-sm font-semibold"
@@ -156,10 +196,7 @@ export default async function EmployersPage({
                           style={{ background: st.bg, color: st.color }}>
                           {st.label}
                         </span>
-                        <span className="text-xs px-2 py-0.5 rounded-lg font-semibold"
-                          style={{ background: b.platform === 'et' ? 'rgba(26,71,49,0.3)' : 'rgba(12,26,61,0.3)', color: b.platform === 'et' ? '#4ade80' : '#60a5fa' }}>
-                          {b.platform === 'et' ? 'ET' : 'AB'}
-                        </span>
+                        <PlatformBadges platform={b.platform} />
                       </div>
                       <div className="flex items-center gap-4 text-xs flex-wrap mb-2" style={{ color: '#475569' }}>
                         <span className="font-semibold" style={{ color: '#e2e8f0' }}>{b.role_title}</span>

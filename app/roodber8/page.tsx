@@ -23,6 +23,8 @@ async function getStats() {
     { count: firmsCount },
     { count: jobsDirectCount },
     { count: jobsPendingCount },
+    { count: jobsPendingAB },
+    { count: jobsPendingET },
     { count: openHelpCount },
     { count: pendingFirmsCount },
     { count: etHelpCount },
@@ -41,6 +43,8 @@ async function getStats() {
     supabase.from("firms_applications").select("*", { count: "exact", head: true }).eq("platform", "ab"),
     supabase.from("jobs").select("*", { count: "exact", head: true }).eq("source", "employer").eq("status", "active").contains("platform", ["ab"]),
     supabase.from("jobs").select("*", { count: "exact", head: true }).eq("status", "pending_approval"),
+    supabase.from("jobs").select("*", { count: "exact", head: true }).eq("status", "pending_approval").contains("platform", ["ab"]),
+    supabase.from("jobs").select("*", { count: "exact", head: true }).eq("status", "pending_approval").contains("platform", ["et"]),
     supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("platform", "ab").eq("status", "open"),
     supabase.from("firms_applications").select("*", { count: "exact", head: true }).eq("platform", "ab").in("status", ["pending", "under_review"]),
     // EthioTax stats
@@ -97,6 +101,8 @@ async function getStats() {
     firmsCount:        firmsCount        ?? 0,
     jobsDirectCount:   jobsDirectCount   ?? 0,
     jobsPendingCount:  jobsPendingCount  ?? 0,
+    jobsPendingAB:     jobsPendingAB     ?? 0,
+    jobsPendingET:     jobsPendingET     ?? 0,
     openHelpCount:     openHelpCount     ?? 0,
     pendingFirmsCount: pendingFirmsCount ?? 0,
     recentSubmissions:   (recentSubmissions   ?? []) as Array<{id: string; name: string; email: string; subject: string; created_at: string}>,
@@ -255,6 +261,11 @@ export default async function AdminCommandCentre() {
             <p className="text-3xl font-black text-white mb-1">{card.value}</p>
             <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: card.color }}>{card.label}</p>
             <p className="text-xs" style={{ color: "#334155" }}>{card.sub}</p>
+            {card.label === "Pending Approval" && (
+              <p className="text-xs mt-0.5" style={{ color: "#334155" }}>
+                AB: {stats.jobsPendingAB} · ET: {stats.jobsPendingET}
+              </p>
+            )}
           </Link>
         ))}
       </div>
