@@ -761,7 +761,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           </nav>
 
           {/* Desktop right actions — search (always visible) */}
-          <div className="hidden xl:flex items-center justify-end gap-3 shrink-0 pl-4 border-l border-slate-200/70">
+          <div className="hidden xl:flex items-center justify-end gap-3 shrink-0 pl-6 border-l border-slate-200/70">
             {!isEthioTax && (
               <Link
                 href="/jobs/post-a-job"
