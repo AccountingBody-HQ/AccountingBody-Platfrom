@@ -747,7 +747,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
             {isEthioTax && (
               <Link
                 href="/jobs/post-a-job"
-                className="inline-flex items-center gap-2 bg-[#C9982A] hover:bg-[#b8891f] hover:text-white text-[#0C1A3D] text-sm font-semibold px-5 py-2 rounded-full transition-colors duration-200 whitespace-nowrap ml-3"
+                className="inline-flex items-center gap-2 bg-[#C9982A] hover:bg-[#C9982A] text-[#1A4731] text-sm font-semibold px-5 py-2 rounded-full transition-colors duration-200 whitespace-nowrap ml-3"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
