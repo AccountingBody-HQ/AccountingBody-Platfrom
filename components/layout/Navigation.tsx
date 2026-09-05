@@ -632,7 +632,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
         }`}
         style={{ height: 'var(--nav-height, 64px)' }}
       >
-        <div className="container-wide h-full grid grid-cols-[auto_1fr_auto] items-center gap-4">
+        <div className="container-wide h-full grid grid-cols-[auto_1fr_auto] items-center gap-4 pr-2">
 
           {/* Logo */}
           <Link
@@ -759,7 +759,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           </nav>
 
           {/* Desktop right actions — search (always visible) */}
-          <div className="hidden xl:flex items-center justify-end gap-2 shrink-0">
+          <div className="hidden xl:flex items-center justify-end gap-3 shrink-0 pl-3 border-l border-slate-200/70">
             <button
               type="button"
               onClick={() => router.push('/search')}
