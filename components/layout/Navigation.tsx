@@ -637,7 +637,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-2 shrink-0 mr-0 focus:outline-none"
+            className="flex items-center gap-2 shrink-0 mr-2 focus:outline-none"
             aria-label={isEthioTax ? 'EthioTax home' : 'AccountingBody home'}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -651,7 +651,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           </Link>
 
           {/* Desktop nav */}
-          <nav className={`hidden xl:flex items-center gap-1.5 ${isEthioTax ? 'justify-center' : 'justify-between'}`} aria-label="Main navigation">
+          <nav className="hidden xl:flex items-center justify-center gap-1.5" aria-label="Main navigation">
             {sections.map(section => {
               const isActive      = activeDropdown === section.id
               const hasDropdown   = Boolean(section.groups?.length)
@@ -761,7 +761,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           </nav>
 
           {/* Desktop right actions — search (always visible) */}
-          <div className="hidden xl:flex items-center justify-end gap-3 shrink-0">
+          <div className="hidden xl:flex items-center justify-end gap-3 shrink-0 pl-4 border-l border-slate-200/70">
             {!isEthioTax && (
               <Link
                 href="/jobs/post-a-job"
@@ -776,24 +776,22 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                 Post a Job
               </Link>
             )}
-            <div className="flex items-center gap-2 pl-3 border-l border-slate-200/70">
-              <button
-                type="button"
-                onClick={() => router.push('/search')}
-                className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-navy-950 hover:bg-slate-100 transition-colors duration-150"
-                aria-label="Search"
-              >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8"/>
-                  <path d="m21 21-4.35-4.35"/>
-                </svg>
-              </button>
-              {etGetHelpLinks && (
-                <div className="flex items-center">
-                  <LanguageSwitcher />
-                </div>
-              )}
-            </div>
+            <button
+              type="button"
+              onClick={() => router.push('/search')}
+              className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-navy-950 hover:bg-slate-100 transition-colors duration-150"
+              aria-label="Search"
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+              </svg>
+            </button>
+            {etGetHelpLinks && (
+              <div className="flex items-center">
+                <LanguageSwitcher />
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
