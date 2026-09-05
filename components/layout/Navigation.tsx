@@ -632,7 +632,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
         }`}
         style={{ height: 'var(--nav-height, 64px)' }}
       >
-        <div className="container-wide h-full grid grid-cols-[auto_1fr_auto] items-center gap-4 px-6">
+        <div className="container-wide h-full grid grid-cols-[auto_1fr_auto] items-center gap-4">
 
           {/* Logo */}
           <Link
@@ -651,7 +651,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden xl:flex items-center gap-1.5" aria-label="Main navigation">
+          <nav className="hidden xl:flex items-center justify-center gap-1.5" aria-label="Main navigation">
             {sections.map(section => {
               const isActive      = activeDropdown === section.id
               const hasDropdown   = Boolean(section.groups?.length)
