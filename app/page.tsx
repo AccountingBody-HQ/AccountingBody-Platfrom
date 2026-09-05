@@ -493,13 +493,18 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         ))}
       </div>
 
-      <div className="mt-5">
+      <div className="mt-5 flex justify-center lg:justify-start">
         <Link
           href="/jobs/post-a-job"
           className="inline-flex items-center justify-center gap-2 h-10 w-full rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
           style={{ border: '1.5px solid rgba(212,160,23,0.5)', color: '#C9982A', background: 'transparent' }}
         >
-          <span aria-hidden="true">◆</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+            <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+            <line x1="12" y1="12" x2="12" y2="17"/>
+            <line x1="9" y1="14.5" x2="15" y2="14.5"/>
+          </svg>
           <span style={{ color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>Hiring in Ethiopia?</span>
           <span>Post a job from £9 →</span>
         </Link>
@@ -1165,13 +1170,18 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               ))}
             </div>
 
-            <div className="mt-5">
+            <div className="mt-5 flex justify-center lg:justify-start">
               <Link
                 href="/jobs/post-a-job"
                 className="inline-flex items-center justify-center gap-2 h-10 w-full rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
                 style={{ border: '1.5px solid rgba(212,160,23,0.5)', color: '#C9982A', background: 'transparent' }}
               >
-                <span aria-hidden="true">◆</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                  <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                  <line x1="12" y1="12" x2="12" y2="17"/>
+                  <line x1="9" y1="14.5" x2="15" y2="14.5"/>
+                </svg>
                 <span style={{ color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>Hiring?</span>
                 <span>Post a job from £9 →</span>
               </Link>
