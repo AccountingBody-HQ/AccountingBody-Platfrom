@@ -9,6 +9,18 @@ export interface AdzunaMarket {
   platform: string[]
 }
 
+export const ADZUNA_KEYWORDS: string[] = [
+  'accountant',
+  'ACCA',
+  'finance manager',
+  'audit',
+  'tax accountant',
+  'FP&A',
+  'management accountant',
+  'CIMA',
+  'ICAEW',
+]
+
 // Confirmed final market list. Note: the country code 'et' (Ethiopia) and
 // the `platform` value 'et' (the EthioTax brand) are unrelated namespaces
 // that happen to share two letters — Ethiopia the market maps to
