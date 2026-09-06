@@ -9,7 +9,24 @@ const CAREERJET_ENDPOINT = "https://search.api.careerjet.net/v4/query"
 const BASE_KEYWORDS =
   'accountant OR auditor OR bookkeeper OR "finance manager" OR "financial analyst" OR "financial controller" OR "management accountant" OR payroll OR "tax manager" OR "tax accountant" OR treasury OR comptroller OR "accounts payable" OR "accounts receivable" OR CFO OR "chief financial officer" OR "credit analyst" OR "credit controller" OR "finance director" OR "investment analyst" OR "fund accountant" OR "cost accountant" OR ACCA OR CIMA OR ACA OR CPA OR actuary OR insolvency OR "revenue accountant" OR "finance business partner"'
 
-const proxyDispatcher = process.env.FIXIE_URL ? new ProxyAgent(process.env.FIXIE_URL) : undefined
+const FIXIE_URLS = [
+  process.env.FIXIE_URL,
+  process.env.FIXIE_URL_2,
+].filter(Boolean) as string[]
+
+async function fetchWithProxyFallback(url: string, options: Record<string, unknown>): Promise<Response> {
+  for (const proxyUrl of FIXIE_URLS) {
+    try {
+      const dispatcher = new ProxyAgent(proxyUrl)
+      const res = await fetch(url, { ...options, dispatcher } as Record<string, unknown>)
+      return res
+    } catch (err) {
+      console.warn("Proxy failed, trying next:", proxyUrl, err)
+    }
+  }
+  // Last resort: no proxy
+  return fetch(url, options as Record<string, unknown>)
+}
 
 const NO_CACHE_HEADERS = {
   "Cache-Control": "no-store, no-cache, must-revalidate",
@@ -123,14 +140,12 @@ export async function GET(req: NextRequest) {
   try {
     console.log("Careerjet request URL:", requestUrl)
 
-    const res = await fetch(requestUrl, {
+    const res = await fetchWithProxyFallback(requestUrl, {
       headers: {
         Accept: "application/json",
         Authorization: authHeader,
         Referer: "https://accountingbody.com/jobs/listings",
       },
-      // @ts-expect-error - `dispatcher` is a Node/undici fetch extension not in the DOM fetch types
-      dispatcher: proxyDispatcher,
     })
 
     console.log("Careerjet response status:", res.status)
