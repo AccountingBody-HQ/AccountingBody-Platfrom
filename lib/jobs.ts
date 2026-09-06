@@ -319,6 +319,7 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
     .contains('platform', [platform])
     .in('source', sources)
     .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+    .order('source_score', { ascending: false })
     .order('published_at', { ascending: false })
     .limit(500) // candidate pool — re-ranked and paginated in JS below
 
