@@ -62,14 +62,17 @@
     }
   ],
   "crons": [
-    {
-      "path": "/api/cron/expire-jobs",
-      "schedule": "0 6 * * *"
-    },
-    {
-      "path": "/api/cron/ingest-adzuna",
-      "schedule": "0 7 * * *"
-    }
+    { "path": "/api/cron/expire-jobs", "schedule": "0 6 * * *" },
+    { "path": "/api/cron/ingest-adzuna/gb", "schedule": "0 7 * * *" },
+    { "path": "/api/cron/ingest-adzuna/us", "schedule": "1 7 * * *" },
+    { "path": "/api/cron/ingest-adzuna/ae", "schedule": "2 7 * * *" },
+    { "path": "/api/cron/ingest-adzuna/sg", "schedule": "3 7 * * *" },
+    { "path": "/api/cron/ingest-adzuna/au", "schedule": "4 7 * * *" },
+    { "path": "/api/cron/ingest-adzuna/ca", "schedule": "5 7 * * *" },
+    { "path": "/api/cron/ingest-adzuna/ng", "schedule": "6 7 * * *" },
+    { "path": "/api/cron/ingest-adzuna/za", "schedule": "7 7 * * *" },
+    { "path": "/api/cron/ingest-adzuna/ke", "schedule": "8 7 * * *" },
+    { "path": "/api/cron/ingest-adzuna/et", "schedule": "9 7 * * *" }
   ],
   "headers": [
     {
