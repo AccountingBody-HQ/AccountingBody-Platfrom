@@ -48,15 +48,20 @@ interface KeywordResult {
  * needs fields `JobInsert`/`createJob` don't support directly — an explicit
  * `status: 'active'` (Adzuna listings publish immediately, skipping the
  * employer pending_approval flow) and a caller-supplied `expires_at`.
+ *
+ * `dedupHash` is passed in rather than computed here because the caller
+ * now needs it *before* deciding whether to insert at all (the dedup_hash
+ * pre-check) — computing it twice would be wasteful and risks the two
+ * computations drifting apart.
  */
-async function buildJobRow(
+function buildJobRow(
   job: AdzunaJobResult,
   market: AdzunaMarket,
   expiresAt: string,
-  publishedAt: string
+  publishedAt: string,
+  dedupHash: string
 ) {
   const slug = `${slugify(job.title)}-${slugify(job.company_name)}-${randomSuffix()}`
-  const dedupHash = await computeDedupHash(job.title, job.company_name, job.location_text)
   const qualityScore = computeQualityScore({
     title: job.title,
     company_name: job.company_name,
@@ -175,56 +180,83 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       continue
     }
 
-    // Batch dedup check: which of these apply URLs already exist among
-    // our own Adzuna-sourced rows? Scoped to source='adzuna' so a
-    // coincidental application_url match against a different source
-    // (e.g. an employer-submitted or Careerjet listing) never blocks an
-    // Adzuna insert.
-    const applyUrls = jobs.map(j => j.application_url)
-    let existingUrls = new Set<string>()
+    // Batch dedup check via dedup_hash — the same title|company|location
+    // hash the `jobs` table already enforces as a partial unique index
+    // (see lib/jobs.ts's createJob comment). The previous version checked
+    // application_url instead, which caused two problems: it missed
+    // duplicates that come back under a different apply URL (a repost or a
+    // second aggregator listing of the same real posting), and it produced
+    // 23505 unique-violation errors on every dedup_hash collision it didn't
+    // catch — 107 of the 450 GB jobs failed this way on the previous live
+    // run (see adzuna-final-architecture.md). Computing the hash for the
+    // whole batch up front and pre-checking it directly closes both gaps.
+    const hashedJobs = await Promise.all(
+      jobs.map(async job => ({
+        job,
+        dedupHash: await computeDedupHash(job.title, job.company_name, job.location_text),
+      }))
+    )
+
+    const allHashes = hashedJobs.map(h => h.dedupHash)
+    let existingHashes = new Set<string>()
     try {
       const { data: existing, error } = await supabase
         .from('jobs')
-        .select('application_url')
-        .eq('source', 'adzuna')
-        .in('application_url', applyUrls)
+        .select('dedup_hash')
+        .in('dedup_hash', allHashes)
 
       if (error) {
         console.error(`cron/ingest-adzuna/${market.code}: dedup lookup failed for "${keyword}":`, error)
       } else {
-        existingUrls = new Set(
+        existingHashes = new Set(
           (existing ?? [])
-            .map((r: { application_url: string | null }) => r.application_url)
-            .filter((url): url is string => Boolean(url))
+            .map((r: { dedup_hash: string | null }) => r.dedup_hash)
+            .filter((hash): hash is string => Boolean(hash))
         )
       }
     } catch (err: unknown) {
       console.error(`cron/ingest-adzuna/${market.code}: dedup lookup threw for "${keyword}":`, err)
     }
 
-    const newJobs = jobs.filter(j => !existingUrls.has(j.application_url))
-    kw.duplicates = jobs.length - newJobs.length
+    const newHashedJobs = hashedJobs.filter(h => !existingHashes.has(h.dedupHash))
+    kw.duplicates = hashedJobs.length - newHashedJobs.length
     totalDuplicates += kw.duplicates
 
     // Inserted one row at a time (not a single multi-row insert): a
     // dedup_hash unique-index collision on one row must not abort its
-    // siblings in the same batch.
-    for (const job of newJobs) {
+    // siblings in the same batch. With the pre-check above, a 23505 here
+    // should be rare — it can still happen if two jobs in this same batch
+    // share a hash (the pre-check only catches hashes already in the
+    // table, not duplicates within the batch itself) or from a race with
+    // another concurrent insert. Either way, a 23505 at this point is a
+    // duplicate, not a genuine error.
+    for (const { job, dedupHash } of newHashedJobs) {
       try {
-        const row = await buildJobRow(job, market, expiresAt, publishedAt)
+        const row = buildJobRow(job, market, expiresAt, publishedAt, dedupHash)
         const { error } = await supabase.from('jobs').insert(row)
         if (error) {
-          console.error(`cron/ingest-adzuna/${market.code}: insert failed for "${keyword}" (${job.source_job_id}):`, error)
-          kw.errors += 1
-          totalErrors += 1
+          if (error.code === '23505') {
+            kw.duplicates += 1
+            totalDuplicates += 1
+          } else {
+            console.error(`cron/ingest-adzuna/${market.code}: insert failed for "${keyword}" (${job.source_job_id}):`, error)
+            kw.errors += 1
+            totalErrors += 1
+          }
         } else {
           kw.inserted += 1
           totalInserted += 1
         }
       } catch (err: unknown) {
-        console.error(`cron/ingest-adzuna/${market.code}: insert threw for "${keyword}" (${job.source_job_id}):`, err)
-        kw.errors += 1
-        totalErrors += 1
+        const code = (err as { code?: string } | null | undefined)?.code
+        if (code === '23505') {
+          kw.duplicates += 1
+          totalDuplicates += 1
+        } else {
+          console.error(`cron/ingest-adzuna/${market.code}: insert threw for "${keyword}" (${job.source_job_id}):`, err)
+          kw.errors += 1
+          totalErrors += 1
+        }
       }
     }
 
