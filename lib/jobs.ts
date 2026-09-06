@@ -210,27 +210,107 @@ function compositeScore(job: Job): number {
 
 // ── Public reads ──────────────────────────────────────────────────────────────
 
-export async function getActiveDirectJobs(params: {
+interface GetActiveDirectJobsParams {
   platform: string
   search?: string
   location?: string
-  employmentType?: string
+  employmentTypes?: EmploymentType[]
   limit?: number
   offset?: number
   sources?: JobSource[]
-}): Promise<Job[]> {
+  countOnly?: boolean
+  seniorityLevels?: SeniorityLevel[]
+  remoteOnly?: boolean
+  salaryMin?: number
+  salaryMax?: number
+  postedWithin?: number
+  qualifications?: string[]
+}
+
+// PostgREST's `.or()` syntax uses commas to separate conditions and
+// parentheses for grouping — strip both out of each qualification before
+// interpolating it into the filter string, so a value containing them
+// can't break out of the intended `title/description ILIKE` conditions.
+function buildQualificationsOrFilter(qualifications: string[]): string | null {
+  const clauses = qualifications
+    .map(q => q.trim().replace(/[(),]/g, ''))
+    .filter(Boolean)
+    .flatMap(q => [`title.ilike.%${q}%`, `description.ilike.%${q}%`])
+
+  return clauses.length > 0 ? clauses.join(',') : null
+}
+
+export async function getActiveDirectJobs(params: GetActiveDirectJobsParams & { countOnly: true }): Promise<number>
+export async function getActiveDirectJobs(params: GetActiveDirectJobsParams & { countOnly?: false }): Promise<Job[]>
+export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Promise<Job[] | number> {
   const supabase = getSupabase()
   const {
     platform,
     search,
     location,
-    employmentType,
+    employmentTypes,
     limit = 20,
     offset = 0,
-    sources = ['employer'], // Phase 2: pass ['employer','careerjet','adzuna'] once those sources write into this table
+    sources = ['employer', 'adzuna'], // now includes adzuna — see adzuna-final-architecture.md et al.
+    countOnly = false,
+    seniorityLevels,
+    remoteOnly,
+    salaryMin,
+    salaryMax,
+    postedWithin,
+    qualifications,
   } = params
 
   const nowIso = new Date().toISOString()
+  const qualificationsOrFilter = qualifications && qualifications.length > 0 ? buildQualificationsOrFilter(qualifications) : null
+
+  // Count-only path: same WHERE filters as the row query below, deliberately
+  // duplicated rather than extracted into a shared builder so the existing
+  // row-query path stays completely untouched.
+  if (countOnly) {
+    let countQuery = supabase
+      .from('jobs')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'active')
+      .contains('platform', [platform])
+      .in('source', sources)
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+
+    if (search && search.trim()) {
+      countQuery = countQuery.textSearch('search_vector', search.trim(), { type: 'websearch' })
+    }
+    if (location && location.trim()) {
+      countQuery = countQuery.ilike('location_text', `%${location.trim()}%`)
+    }
+    if (employmentTypes && employmentTypes.length > 0) {
+      countQuery = countQuery.in('employment_type', employmentTypes)
+    }
+    if (seniorityLevels && seniorityLevels.length > 0) {
+      countQuery = countQuery.in('seniority_level', seniorityLevels)
+    }
+    if (remoteOnly) {
+      countQuery = countQuery.eq('location_remote', true)
+    }
+    if (salaryMin != null) {
+      countQuery = countQuery.gte('salary_min', salaryMin)
+    }
+    if (salaryMax != null) {
+      countQuery = countQuery.lte('salary_max', salaryMax)
+    }
+    if (postedWithin != null) {
+      countQuery = countQuery.gte('created_at', new Date(Date.now() - postedWithin * 24 * 60 * 60 * 1000).toISOString())
+    }
+    if (qualificationsOrFilter) {
+      countQuery = countQuery.or(qualificationsOrFilter)
+    }
+
+    const { count, error } = await countQuery
+    if (error) {
+      console.error('getActiveDirectJobs count error:', error)
+      return 0
+    }
+    return count ?? 0
+  }
 
   let query = supabase
     .from('jobs')
@@ -248,8 +328,26 @@ export async function getActiveDirectJobs(params: {
   if (location && location.trim()) {
     query = query.ilike('location_text', `%${location.trim()}%`)
   }
-  if (employmentType && employmentType.trim()) {
-    query = query.eq('employment_type', employmentType.trim())
+  if (employmentTypes && employmentTypes.length > 0) {
+    query = query.in('employment_type', employmentTypes)
+  }
+  if (seniorityLevels && seniorityLevels.length > 0) {
+    query = query.in('seniority_level', seniorityLevels)
+  }
+  if (remoteOnly) {
+    query = query.eq('location_remote', true)
+  }
+  if (salaryMin != null) {
+    query = query.gte('salary_min', salaryMin)
+  }
+  if (salaryMax != null) {
+    query = query.lte('salary_max', salaryMax)
+  }
+  if (postedWithin != null) {
+    query = query.gte('created_at', new Date(Date.now() - postedWithin * 24 * 60 * 60 * 1000).toISOString())
+  }
+  if (qualificationsOrFilter) {
+    query = query.or(qualificationsOrFilter)
   }
 
   const { data, error } = await query
