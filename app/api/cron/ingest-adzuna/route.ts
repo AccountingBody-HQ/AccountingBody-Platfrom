@@ -149,38 +149,54 @@ export async function GET(req: NextRequest) {
       keywords: [],
     }
 
-    for (const keyword of KEYWORDS) {
+    // All 9 keywords for this market are fetched concurrently — this is the
+    // fix for the 90-sequential-call timeout (see adzuna-manual-trigger.md):
+    // markets still run one at a time (outer loop), but each market's 9
+    // Adzuna calls now happen in parallel instead of one after another.
+    // Promise.allSettled (not Promise.all) so one rejected keyword can never
+    // block or discard the other 8 outcomes.
+    const settled = await Promise.allSettled(
+      KEYWORDS.map(keyword => fetchAdzunaJobs(market.code, keyword, 1))
+    )
+
+    // Because all 9 calls are already in flight before any of them resolve,
+    // a 404 can no longer be caught mid-loop to skip firing the rest of this
+    // country's requests (that optimisation required knowing the outcome of
+    // call 1 before sending call 2, which is exactly the sequential
+    // behaviour being removed). The country is still correctly reported as
+    // `country_not_supported` and no jobs from it are processed — the only
+    // change is that all 9 calls always fire, then get evaluated together.
+    let countryNotSupportedLogged = false
+
+    for (let i = 0; i < KEYWORDS.length; i++) {
+      const keyword = KEYWORDS[i]
+      const outcome = settled[i]
       const kw: KeywordResult = { keyword, fetched: 0, inserted: 0, duplicates: 0, errors: 0 }
 
-      let jobs: AdzunaJobResult[] = []
-      try {
-        const result = await fetchAdzunaJobs(market.code, keyword, 1)
-        jobs = result.jobs
-      } catch (err: unknown) {
-        // A 404 means Adzuna doesn't support this country code at all —
-        // every keyword would fail identically, so stop wasting calls on
-        // the rest of this country's keyword list and move to the next
-        // market. Any other error (network, 5xx, rate limit, etc.) is
-        // scoped to just this one keyword — log it and keep going.
+      if (outcome.status === 'rejected') {
+        const err: unknown = outcome.reason
+        // A 404 means Adzuna doesn't support this country code at all. Any
+        // other error (network, 5xx, rate limit, etc.) is scoped to just
+        // this one keyword.
         if (err instanceof AdzunaApiError && err.status === 404) {
-          console.warn(`cron/ingest-adzuna: country not supported by Adzuna: ${market.code}`)
+          if (!countryNotSupportedLogged) {
+            console.warn(`cron/ingest-adzuna: country not supported by Adzuna: ${market.code}`)
+            countryNotSupportedLogged = true
+          }
           kw.fetchError = 'country not supported by Adzuna'
-          countrySummary.errors += 1
-          totalErrors += 1
-          countrySummary.keywords.push(kw)
           countrySummary.status = 'country_not_supported'
-          break
+        } else {
+          const message = err instanceof Error ? err.message : String(err)
+          console.error(`cron/ingest-adzuna: fetch failed for ${market.code}/"${keyword}":`, message)
+          kw.fetchError = message
         }
-
-        const message = err instanceof Error ? err.message : String(err)
-        console.error(`cron/ingest-adzuna: fetch failed for ${market.code}/"${keyword}":`, message)
-        kw.fetchError = message
         countrySummary.errors += 1
         totalErrors += 1
         countrySummary.keywords.push(kw)
         continue
       }
 
+      const jobs = outcome.value.jobs
       kw.fetched = jobs.length
       countrySummary.fetched += jobs.length
       totalFetched += jobs.length
