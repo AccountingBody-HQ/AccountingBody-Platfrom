@@ -110,7 +110,7 @@ export interface JobInsert {
 
 const JOB_COLUMNS = '*'
 
-function slugify(value: string): string {
+export function slugify(value: string): string {
   return value
     .toLowerCase()
     .trim()
@@ -119,7 +119,7 @@ function slugify(value: string): string {
     .slice(0, 80) || 'job'
 }
 
-function randomSuffix(length = 4): string {
+export function randomSuffix(length = 4): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
   let out = ''
   for (let i = 0; i < length; i++) {
@@ -137,12 +137,12 @@ async function sha256Hex(message: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
-async function computeDedupHash(title: string, companyName: string, locationText: string): Promise<string> {
+export async function computeDedupHash(title: string, companyName: string, locationText: string): Promise<string> {
   const key = `${slugify(title)}|${slugify(companyName)}|${slugify(locationText)}`
   return sha256Hex(key)
 }
 
-function computeExcerpt(description: string, maxLen = 300): string {
+export function computeExcerpt(description: string, maxLen = 300): string {
   const trimmed = description.trim()
   if (trimmed.length <= maxLen) return trimmed
   const cut = trimmed.slice(0, maxLen)
@@ -150,7 +150,7 @@ function computeExcerpt(description: string, maxLen = 300): string {
   return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trim() + '…'
 }
 
-function computeQualityScore(data: JobInsert): number {
+export function computeQualityScore(data: JobInsert): number {
   let score = 0
   if (data.title) score += 0.15
   if (data.description && data.description.length > 200) score += 0.20
@@ -162,7 +162,7 @@ function computeQualityScore(data: JobInsert): number {
   return Math.min(1, Number(score.toFixed(3)))
 }
 
-const SOURCE_SCORE: Record<JobSource, number> = {
+export const SOURCE_SCORE: Record<JobSource, number> = {
   employer: 1.0,
   manual: 0.8,
   scrape: 0.6,

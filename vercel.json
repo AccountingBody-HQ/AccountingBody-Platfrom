@@ -65,6 +65,10 @@
     {
       "path": "/api/cron/expire-jobs",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/ingest-adzuna",
+      "schedule": "0 7 * * *"
     }
   ],
   "headers": [
