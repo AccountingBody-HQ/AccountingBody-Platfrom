@@ -7,6 +7,7 @@ import {
   failProviderRun,
   updateProviderHealth,
   logProviderError,
+  incrementProviderJobsToday,
 } from '@/lib/providers'
 import { getAdapter } from '@/lib/adapters'
 import { normalise } from '@/lib/ingestion/normalise'
@@ -153,6 +154,10 @@ export async function POST(
       responseMs:        fetchMs,
       rawResponseSample: rawJobs[0] as Record<string, unknown> | undefined,
     })
+
+    if (insertedCount > 0) {
+      await incrementProviderJobsToday(provider.id, insertedCount)
+    }
 
     await updateProviderHealth(provider.id, 'success', {
       jobsInserted: insertedCount,
