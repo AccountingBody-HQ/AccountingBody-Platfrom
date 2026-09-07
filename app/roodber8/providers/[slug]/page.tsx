@@ -3,8 +3,9 @@ import { createClient } from '@supabase/supabase-js'
 import { unstable_noStore as noStore } from 'next/cache'
 import { notFound } from 'next/navigation'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
+import RunNowButton from './RunNowButton'
 import { getProvider, type ProviderRun } from '@/lib/providers'
-import { Server, ChevronRight } from 'lucide-react'
+import { Server, ChevronRight, Pencil } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -147,9 +148,20 @@ export default async function ProviderDetailPage({
             <p className="text-sm font-mono" style={{ color: '#475569' }}>{provider.slug}</p>
           </div>
         </div>
-        <span className="text-xs font-semibold px-3 py-1.5 rounded-lg" style={{ background: healthStyle.bg, color: healthStyle.color }}>
-          {healthStyle.label}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-semibold px-3 py-1.5 rounded-lg" style={{ background: healthStyle.bg, color: healthStyle.color }}>
+            {healthStyle.label}
+          </span>
+          <Link
+            href={`/roodber8/providers/${provider.slug}/edit`}
+            className="flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition-opacity hover:opacity-90"
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid #1a2238', color: '#94a3b8' }}
+          >
+            <Pencil size={14} />
+            Edit
+          </Link>
+          <RunNowButton slug={provider.slug} />
+        </div>
       </div>
 
       {/* Stats */}
