@@ -48,9 +48,25 @@ export function validate(jobs: NormalisedJob[]): ValidationResult {
       continue
     }
 
+    // Constraint compliance — null out invalid values before DB insert
+    const VALID_EMPLOYMENT_TYPES = new Set([
+      'permanent', 'contract', 'temporary', 'part_time', 'internship'
+    ])
+    const VALID_SENIORITY_LEVELS = new Set([
+      'junior', 'mid', 'senior', 'executive', 'director'
+    ])
+    if (job.employment_type && !VALID_EMPLOYMENT_TYPES.has(job.employment_type)) {
+      job.employment_type = null
+      job.quality_flags.push('employment_type_normalised')
+    }
+    if (job.seniority_level && !VALID_SENIORITY_LEVELS.has(job.seniority_level)) {
+      job.seniority_level = null
+      job.quality_flags.push('seniority_normalised')
+    }
+
     // Compute quality flags (non-rejecting — job is still inserted with flags)
     const flags = computeQualityFlags(job)
-    job.quality_flags = flags
+    job.quality_flags = [...job.quality_flags, ...flags]
 
     valid.push(job)
   }
