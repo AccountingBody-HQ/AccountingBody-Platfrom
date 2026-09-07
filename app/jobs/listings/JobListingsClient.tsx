@@ -348,7 +348,7 @@ function JobCard({ job, onSelect }: { job: Job; onSelect: (job: Job) => void }) 
 
       <p className="text-sm font-semibold text-navy-700 mb-3">{job.company_name}</p>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mb-3 text-xs text-navy-600">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mb-3 text-xs text-gray-600">
         <span className="flex items-center gap-1">
           <LocationIcon />
           {job.location_text}
@@ -379,7 +379,7 @@ function JobCard({ job, onSelect }: { job: Job; onSelect: (job: Job) => void }) 
       </div>
 
       {job.excerpt && (
-        <p className="text-sm text-navy-600 leading-relaxed line-clamp-2 mb-3">{job.excerpt}</p>
+        <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 mb-3">{job.excerpt}</p>
       )}
 
       <div className="mt-auto pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
