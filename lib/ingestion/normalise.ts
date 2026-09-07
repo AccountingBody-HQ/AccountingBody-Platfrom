@@ -24,20 +24,22 @@ function resolvePath(obj: RawJob, path: string): unknown {
 
 // ── Employment type normaliser ─────────────────────────────────────────────
 const EMPLOYMENT_TYPE_MAP: Record<string, string> = {
-  'permanent': 'Full-time', 'full time': 'Full-time', 'full-time': 'Full-time',
-  'part time': 'Part-time', 'part-time': 'Part-time',
-  'contract': 'Contract', 'contractor': 'Contract', 'freelance': 'Contract',
-  'temporary': 'Temporary', 'temp': 'Temporary', 'fixed term': 'Temporary',
-  'internship': 'Internship', 'intern': 'Internship', 'graduate': 'Internship',
+  'full time': 'permanent', 'full-time': 'permanent', 'permanent': 'permanent',
+  'contract': 'contract', 'contractor': 'contract', 'freelance': 'contract', 'fixed term': 'contract',
+  'temporary': 'temporary', 'temp': 'temporary',
+  'part time': 'part_time', 'part-time': 'part_time',
+  'internship': 'internship', 'intern': 'internship', 'graduate': 'internship', 'trainee': 'internship',
 }
 
-function normaliseEmploymentType(raw: string | null | undefined): string | null {
+function normaliseEmploymentType(raw: string | string[] | null | undefined): string | null {
   if (!raw) return null
-  const lower = raw.toLowerCase().trim()
+  const value = Array.isArray(raw) ? raw[0] : raw
+  if (!value) return null
+  const lower = value.toLowerCase().trim()
   for (const [key, val] of Object.entries(EMPLOYMENT_TYPE_MAP)) {
     if (lower.includes(key)) return val
   }
-  return raw
+  return null
 }
 
 // ── Seniority detector ─────────────────────────────────────────────────────

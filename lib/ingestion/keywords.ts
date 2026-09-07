@@ -28,4 +28,12 @@ export const ACCOUNTING_FINANCE_KEYWORDS: string[] = [
   'cost accountant', 'management reporting', 'consolidation',
   // Payroll
   'payroll manager', 'payroll specialist', 'payroll administrator',
+  // Adjacent roles & fintech (pre-filtered provider coverage)
+  'product owner', 'finance operations', 'financial operations', 'fintech',
+  'accounts stack', 'accounting stack', 'fractional cfo', 'cpa firm',
+  // Accounting software / platforms
+  'accounting software', 'accounting platform', 'xero', 'quickbooks',
+  'netsuite', 'sage intacct', 'bill pay',
+  // Operational terms
+  'gl coding', 'reconciliation', 'financial reporting',
 ]
