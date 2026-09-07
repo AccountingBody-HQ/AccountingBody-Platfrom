@@ -239,7 +239,7 @@ export function normalise(
     salary_text: salaryText,
     employment_type: employmentType,
     seniority_level: seniorityLevel,
-    source: provider.adapter_key,
+    source: (provider as unknown as { source_name?: string | null }).source_name ?? provider.adapter_key,
     source_job_id: sourceJobId,
     source_url: sourceUrl,
     source_score: provider.source_score,

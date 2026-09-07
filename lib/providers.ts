@@ -51,6 +51,7 @@ export interface JobProvider {
   jobs_today: number
   dedup_rate_last_run: number | null
   notes: string | null
+  source_name: string | null
   commercial_terms: string | null
   created_at: string
   updated_at: string
