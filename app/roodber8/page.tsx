@@ -2,9 +2,10 @@ import { createClient } from "@supabase/supabase-js"
 import { unstable_noStore as noStore } from "next/cache"
 import Link from "next/link"
 import AutoRefresh from "@/components/roodber8/AutoRefresh"
+import { getAllProviders } from "@/lib/providers"
 import {
   Mail, Users, HelpCircle, Building2, Briefcase,
-  ArrowRight, TrendingUp, Factory, Inbox, BookOpen, FileText, Sparkles
+  ArrowRight, TrendingUp, Factory, Inbox, BookOpen, FileText, Sparkles, Server
 } from "lucide-react"
 
 export const dynamic = "force-dynamic"
@@ -94,6 +95,11 @@ async function getStats() {
     .order("created_at", { ascending: false })
     .limit(5)
 
+  const providers = await getAllProviders()
+  const providerActiveCount = providers.filter(p => p.status === "active").length
+  const providerJobsToday = providers.reduce((sum, p) => sum + (p.jobs_today ?? 0), 0)
+  const providerDownCount = providers.filter(p => p.health_status === "down").length
+
   return {
     contactCount:      contactCount      ?? 0,
     subscriberCount:   subscriberCount   ?? 0,
@@ -119,6 +125,10 @@ async function getStats() {
     questionsCount:      questionsCount      ?? 0,
     publishedCoursesCount: publishedCoursesCount ?? 0,
     totalCoursesCount:     totalCoursesCount     ?? 0,
+    providerActiveCount,
+    providerJobsToday,
+    providerDownCount,
+    providerTotalCount: providers.length,
   }
 }
 
@@ -457,6 +467,50 @@ export default async function AdminCommandCentre() {
                 </div>
               ))
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Provider Monitoring */}
+      <div className="rounded-2xl border overflow-hidden mb-6"
+        style={{ background: "#0d1424", borderColor: "#1a2238" }}>
+        <div className="px-6 py-4 border-b flex items-center justify-between"
+          style={{ borderColor: "#1a2238" }}>
+          <div className="flex items-center gap-2">
+            <Server size={15} style={{ color: "#60a5fa" }} />
+            <h2 className="text-white font-bold text-sm">Job Providers</h2>
+          </div>
+          <div className="flex items-center gap-3">
+            {stats.providerDownCount > 0 && (
+              <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                style={{ background: "rgba(239,68,68,0.12)", color: "#f87171" }}>
+                {stats.providerDownCount} down
+              </span>
+            )}
+            <Link href="/roodber8/providers"
+              className="text-xs font-semibold flex items-center gap-1"
+              style={{ color: "#475569" }}>
+              View all <ArrowRight size={11} />
+            </Link>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 divide-x" style={{ borderColor: "#1a2238" }}>
+          <div className="px-6 py-5">
+            <p className="text-3xl font-black text-white mb-1">{stats.providerActiveCount}</p>
+            <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "#34d399" }}>Active Providers</p>
+            <p className="text-xs mt-0.5" style={{ color: "#334155" }}>{stats.providerTotalCount} total configured</p>
+          </div>
+          <div className="px-6 py-5">
+            <p className="text-3xl font-black text-white mb-1">{stats.providerJobsToday.toLocaleString()}</p>
+            <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "#60a5fa" }}>Jobs Ingested Today</p>
+            <p className="text-xs mt-0.5" style={{ color: "#334155" }}>across all providers</p>
+          </div>
+          <div className="px-6 py-5">
+            <p className="text-3xl font-black mb-1" style={{ color: stats.providerDownCount > 0 ? "#f87171" : "#ffffff" }}>
+              {stats.providerDownCount}
+            </p>
+            <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "#f87171" }}>Providers Down</p>
+            <p className="text-xs mt-0.5" style={{ color: "#334155" }}>needs attention</p>
           </div>
         </div>
       </div>
