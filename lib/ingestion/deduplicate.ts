@@ -1,5 +1,6 @@
 import type { NormalisedJob } from './normalise'
 import { createClient } from '@supabase/supabase-js'
+import { slugify } from '../jobs'
 
 function getSupabase() {
   return createClient(
@@ -9,18 +10,18 @@ function getSupabase() {
 }
 
 // ── Dedup hash ────────────────────────────────────────────────────────────
-// SHA-256 of normalised title + company + location.
-// Matches the existing dedup_hash pattern already in the jobs table.
+// SHA-256 of slugified title + company + location, joined with "|".
+// Must byte-for-byte match lib/jobs.ts's computeDedupHash — the jobs table's
+// dedup_hash column, and the 2,078 existing Adzuna rows, were populated by
+// that algorithm. Reusing its `slugify` here (rather than a separate
+// lowercase/trim pass) keeps the two in lockstep instead of drifting apart.
 
 export async function computeDedupHash(
   title: string,
   companyName: string,
   locationText: string
 ): Promise<string> {
-  const input = `${title}|${companyName}|${locationText}`
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .trim()
+  const input = `${slugify(title)}|${slugify(companyName)}|${slugify(locationText)}`
   const encoder = new TextEncoder()
   const data = encoder.encode(input)
   const hashBuffer = await crypto.subtle.digest('SHA-256', data)
