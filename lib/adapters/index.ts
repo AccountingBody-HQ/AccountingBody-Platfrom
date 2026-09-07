@@ -1,9 +1,11 @@
 import type { ProviderAdapter } from './types'
 import { adzunaAdapter } from './adzuna'
+import { genericRestAdapter } from './generic-rest'
 
 // Adapter registry — add new adapters here as they are built
 const ADAPTERS: Record<string, ProviderAdapter> = {
-  'adzuna': adzunaAdapter,
+  'adzuna':       adzunaAdapter,
+  'generic-rest': genericRestAdapter,
 }
 
 // Returns the correct adapter for a provider's adapter_key.
