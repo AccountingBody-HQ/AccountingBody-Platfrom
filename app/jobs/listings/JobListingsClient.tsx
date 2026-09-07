@@ -346,7 +346,7 @@ function JobCard({ job, onSelect }: { job: Job; onSelect: (job: Job) => void }) 
         )}
       </div>
 
-      <p className="text-sm font-semibold text-navy-700 mb-3">{job.company_name}</p>
+      <p className="text-sm font-semibold text-gray-800 mb-3">{job.company_name}</p>
 
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mb-3 text-xs text-gray-600">
         <span className="flex items-center gap-1">
@@ -372,7 +372,7 @@ function JobCard({ job, onSelect }: { job: Job; onSelect: (job: Job) => void }) 
           </span>
         )}
         {seniority && (
-          <span className="inline-flex items-center rounded-full bg-slate-100 text-navy-600 px-2.5 py-1 text-xs font-semibold">
+          <span className="inline-flex items-center rounded-full bg-slate-100 text-gray-600 px-2.5 py-1 text-xs font-semibold">
             {seniority}
           </span>
         )}
@@ -517,7 +517,7 @@ function DetailPanelContent({ job, onClose }: { job: Job; onClose: () => void })
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="w-9 h-9 flex items-center justify-center rounded-full text-navy-600 hover:bg-slate-100 transition-colors"
+          className="w-9 h-9 flex items-center justify-center rounded-full text-gray-600 hover:bg-slate-100 transition-colors"
         >
           <CloseIcon />
         </button>
@@ -532,9 +532,9 @@ function DetailPanelContent({ job, onClose }: { job: Job; onClose: () => void })
             </span>
           )}
         </div>
-        <p className="text-base font-semibold text-navy-700 mb-4">{job.company_name}</p>
+        <p className="text-base font-semibold text-gray-800 mb-4">{job.company_name}</p>
 
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4 text-sm text-navy-600">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4 text-sm text-gray-600">
           <span className="flex items-center gap-1.5">
             <LocationIcon className="w-4 h-4" />
             {job.location_text}
@@ -549,7 +549,7 @@ function DetailPanelContent({ job, onClose }: { job: Job; onClose: () => void })
             </span>
           )}
           {seniority && (
-            <span className="inline-flex items-center rounded-full bg-slate-100 text-navy-600 px-2.5 py-1 text-xs font-semibold">
+            <span className="inline-flex items-center rounded-full bg-slate-100 text-gray-600 px-2.5 py-1 text-xs font-semibold">
               {seniority}
             </span>
           )}
@@ -865,7 +865,7 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
               type="button"
               onClick={() => setDrawerOpen(false)}
               aria-label="Close filters"
-              className="w-9 h-9 flex items-center justify-center rounded-full text-navy-600 hover:bg-slate-100 transition-colors"
+              className="w-9 h-9 flex items-center justify-center rounded-full text-gray-600 hover:bg-slate-100 transition-colors"
             >
               <CloseIcon />
             </button>
