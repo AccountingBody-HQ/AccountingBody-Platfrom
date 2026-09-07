@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Inbox, Users, Briefcase, Building2,
   Factory, Settings, LogOut, ExternalLink,
-  ChevronRight, BookOpen, FileText, Sparkles
+  ChevronRight, BookOpen, FileText, Sparkles, Server
 } from 'lucide-react'
 
 // Sanity Studio nav entry removed — Sanity CMS is fully decommissioned (replaced by Supabase).
@@ -15,6 +15,7 @@ const NAV = [
   { href: '/roodber8/subscribers',     exact: false, icon: Users,           label: 'Subscribers',     sub: 'Email list & export'       },
   { href: '/roodber8/jobs-firms',      exact: false, icon: Briefcase,       label: 'Jobs & Firms',    sub: 'Listings & applications'   },
   { href: '/roodber8/jobs',            exact: false, icon: Briefcase,       label: 'Jobs',            sub: 'Direct employer listings'  },
+  { href: '/roodber8/providers',       exact: false, icon: Server,          label: 'Providers',       sub: 'Job data sources & pipeline' },
   { href: '/roodber8/candidates',      exact: false, icon: Users,           label: 'Candidates',      sub: 'Candidate registrations'   },
   { href: '/roodber8/employers',        exact: false, icon: Building2,        label: 'Employers',       sub: 'Employer briefs'           },
   { href: '/roodber8/studio',           exact: false, icon: Sparkles,        label: 'Studio',          sub: 'Daily content refresh'      },
@@ -41,6 +42,8 @@ function getBreadcrumb(pathname: string) {
     '/roodber8/subscribers':        'Subscribers',
     '/roodber8/jobs-firms':         'Jobs & Firms',
     '/roodber8/jobs':               'Jobs',
+    '/roodber8/providers':          'Providers',
+    '/roodber8/providers/new':      'Add Provider',
     '/roodber8/candidates':         'Candidates',
     '/roodber8/employers':          'Employers',
     '/roodber8/questions':          'Questions',
@@ -65,6 +68,10 @@ function getBreadcrumb(pathname: string) {
   }
   if (segments[1] === 'roodber8' && segments[2] === 'courses' && segments[3] && UUID_RE.test(segments[3])) {
     return 'Edit Course'
+  }
+  if (segments[1] === 'roodber8' && segments[2] === 'providers' && segments[3] && segments[3] !== 'new') {
+    if (segments[4] === 'edit') return 'Edit Provider'
+    return 'Provider Detail'
   }
 
   const base = '/' + segments.slice(1, 3).join('/')

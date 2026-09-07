@@ -50,6 +50,12 @@ export default async function ProvidersPage() {
   const downCount = providers.filter(p => p.health_status === 'down').length
   const totalJobsToday = providers.reduce((sum, p) => sum + (p.jobs_today ?? 0), 0)
 
+  const now = Date.now()
+  const in60min = now + 60 * 60 * 1000
+  const providersDueSoon = providers
+    .filter(p => p.status === 'active' && p.next_fetch_at && new Date(p.next_fetch_at).getTime() <= in60min)
+    .sort((a, b) => new Date(a.next_fetch_at as string).getTime() - new Date(b.next_fetch_at as string).getTime())
+
   const STATS = [
     { label: 'Active Providers', value: activeCount,     color: '#34d399', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)' },
     { label: 'Jobs Today',       value: totalJobsToday,  color: '#60a5fa', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.2)' },
@@ -119,6 +125,35 @@ export default async function ProvidersPage() {
           <div className="divide-y" style={{ borderColor: '#1a2238' }}>
             {providers.map(provider => (
               <ProviderRow key={provider.slug} provider={provider} latestRun={runBySlug[provider.slug]} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Next Scheduled Runs */}
+      <div className="rounded-2xl border overflow-hidden mt-6" style={{ background: '#0d1424', border: '1px solid #1a2238' }}>
+        <div className="px-6 py-4 border-b flex items-center justify-between" style={{ borderColor: '#1a2238' }}>
+          <h2 className="text-white font-bold text-sm">Next Scheduled Runs (next 60 min)</h2>
+          <span className="text-xs font-semibold" style={{ color: '#475569' }}>
+            {providersDueSoon.length} provider{providersDueSoon.length !== 1 ? 's' : ''} due
+          </span>
+        </div>
+        {providersDueSoon.length === 0 ? (
+          <div className="px-6 py-8 text-center">
+            <p className="text-sm" style={{ color: '#334155' }}>All providers are up to date — no runs due in the next 60 minutes.</p>
+          </div>
+        ) : (
+          <div className="divide-y" style={{ borderColor: '#1a2238' }}>
+            {providersDueSoon.map(p => (
+              <div key={p.slug} className="px-6 py-3 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-white text-sm font-semibold">{p.name}</span>
+                  <span className="text-xs font-mono" style={{ color: '#475569' }}>{p.slug}</span>
+                </div>
+                <span className="text-xs font-mono" style={{ color: '#60a5fa' }}>
+                  {p.next_fetch_at ? new Date(p.next_fetch_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '—'}
+                </span>
+              </div>
             ))}
           </div>
         )}

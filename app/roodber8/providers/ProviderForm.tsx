@@ -19,6 +19,7 @@ export interface ProviderFormValues {
   country_codes: string
   regions: string
   platform_tags: string[]
+  keywords: string
   source_score: string
   source_name: string
   base_url: string
@@ -45,6 +46,7 @@ export const EMPTY_PROVIDER_FORM: ProviderFormValues = {
   country_codes: '',
   regions: '',
   platform_tags: [],
+  keywords: '',
   source_score: '0.5',
   source_name: '',
   base_url: '',
@@ -72,6 +74,7 @@ export function providerToFormValues(provider: JobProvider): ProviderFormValues 
     country_codes: (provider.country_codes ?? []).join(', '),
     regions: (provider.regions ?? []).join(', '),
     platform_tags: provider.platform_tags ?? [],
+    keywords: (provider.keywords ?? []).join(', '),
     source_score: String(provider.source_score ?? 0.5),
     source_name: provider.source_name ?? '',
     base_url: provider.base_url ?? '',
@@ -295,6 +298,11 @@ export default function ProviderForm({
             ))}
           </div>
         </Field>
+        <Field label="Keywords (comma-separated)" hint="Leave empty if the provider API already filters by category. Used by the ingestion pipeline for relevance filtering.">
+          <input type="text" value={values.keywords} onChange={e => set('keywords', e.target.value)}
+            placeholder="e.g. accountant, finance manager, auditor"
+            className={inputClass} style={C.input} />
+        </Field>
       </div>
 
       {/* Source */}
@@ -306,8 +314,9 @@ export default function ProviderForm({
               onChange={e => set('source_score', e.target.value)}
               className={inputClass} style={C.input} />
           </Field>
-          <Field label="Source Name">
+          <Field label="Source Name" hint="Human-readable source label stored on each ingested job. Overrides adapter_key for attribution.">
             <input type="text" value={values.source_name} onChange={e => set('source_name', e.target.value)}
+              placeholder="e.g. jobicy, remotive, adzuna"
               className={inputClass} style={C.input} />
           </Field>
         </div>

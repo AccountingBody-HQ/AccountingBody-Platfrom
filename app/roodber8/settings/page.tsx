@@ -13,6 +13,15 @@ export default function SettingsPage() {
     { name: "NEXT_PUBLIC_SITE_URL", required: true, description: "Public site URL" },
     { name: "NEXT_PUBLIC_GTM_ID", required: false, description: "Google Tag Manager ID" },
     { name: "NEXT_PUBLIC_ADSENSE_ID", required: false, description: "AdSense verification ID" },
+    { name: "ADZUNA_APP_ID", required: true, description: "Adzuna API application ID" },
+    { name: "ADZUNA_APP_KEY", required: true, description: "Adzuna API application key" },
+    { name: "CRON_SECRET", required: true, description: "Gates all cron and ingest endpoints — server only" },
+    { name: "NEXT_PUBLIC_CAREERJET_API_KEY", required: false, description: "Careerjet API key (retained, not in main feed)" },
+    { name: "FIXIE_URL", required: false, description: "Fixie proxy URL for Careerjet" },
+    { name: "LEMONSQUEEZY_API_KEY", required: false, description: "Required after Lemon Squeezy store approval" },
+    { name: "LEMONSQUEEZY_STORE_ID", required: false, description: "Required after Lemon Squeezy store approval" },
+    { name: "LEMONSQUEEZY_WEBHOOK_SECRET", required: false, description: "Lemon Squeezy webhook signing secret" },
+    { name: "SENTRY_AUTH_TOKEN", required: false, description: "Sentry error tracking token" },
   ]
 
   const checklist: { label: string; done: boolean; manual?: boolean }[] = [
@@ -34,6 +43,13 @@ export default function SettingsPage() {
     { label: "EthioTax: Terms of Service (UK solicitor)", done: false, manual: true },
     { label: "EthioTax: First real client testimonial", done: false, manual: true },
     { label: "EthioTax: GSC sitemap submitted", done: false, manual: true },
+    { label: "Adzuna Publisher Programme applied (for CPC revenue)", done: false, manual: true },
+    { label: "Lemon Squeezy store approved", done: false, manual: true },
+    { label: "Lemon Squeezy 5 env vars set in Vercel", done: false, manual: true },
+    { label: "Sentry SENTRY_AUTH_TOKEN configured", done: !!process.env.SENTRY_AUTH_TOKEN },
+    { label: "UptimeRobot keepalive active on /api/health (every 5 min)", done: false, manual: true },
+    { label: "Domain transfer to Cloudflare (before November expiry)", done: false, manual: true },
+    { label: "LinkedIn Company Page live", done: false, manual: true },
   ]
 
   const completedCount = checklist.filter((i) => i.done).length

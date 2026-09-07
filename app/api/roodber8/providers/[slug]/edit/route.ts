@@ -99,6 +99,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       country_codes:           toArray(body.country_codes),
       regions:                 toArray(body.regions),
       platform_tags:           toArray(body.platform_tags),
+      keywords:                toArray(body.keywords),
       source_score:            num(body.source_score, existing.source_score),
       source_name:             str(body.source_name) || null,
       base_url:                baseUrl,

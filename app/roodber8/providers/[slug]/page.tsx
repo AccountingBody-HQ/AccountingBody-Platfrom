@@ -4,6 +4,7 @@ import { unstable_noStore as noStore } from 'next/cache'
 import { notFound } from 'next/navigation'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
 import RunNowButton from './RunNowButton'
+import TestConnectionButton from './TestConnectionButton'
 import { getProvider, type ProviderRun } from '@/lib/providers'
 import { Server, ChevronRight, Pencil } from 'lucide-react'
 
@@ -148,7 +149,7 @@ export default async function ProviderDetailPage({
             <p className="text-sm font-mono" style={{ color: '#475569' }}>{provider.slug}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-start gap-3">
           <span className="text-xs font-semibold px-3 py-1.5 rounded-lg" style={{ background: healthStyle.bg, color: healthStyle.color }}>
             {healthStyle.label}
           </span>
@@ -160,6 +161,7 @@ export default async function ProviderDetailPage({
             <Pencil size={14} />
             Edit
           </Link>
+          <TestConnectionButton slug={provider.slug} />
           <RunNowButton slug={provider.slug} />
         </div>
       </div>

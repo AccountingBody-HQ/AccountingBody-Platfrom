@@ -226,9 +226,20 @@ export default async function AdminCommandCentre() {
       icon: FileText,
       href: "/roodber8/articles",
     },
+    {
+      label: "Job Providers",
+      value: stats.providerActiveCount,
+      sub: stats.providerJobsToday.toLocaleString() + " jobs today · " + (stats.providerDownCount > 0 ? stats.providerDownCount + " down" : "all healthy"),
+      color: "#60a5fa",
+      bg: "rgba(96,165,250,0.08)",
+      border: "rgba(96,165,250,0.2)",
+      icon: Server,
+      href: "/roodber8/providers",
+    },
   ]
 
   const QUICK_ACTIONS = [
+    { label: "Provider Pipeline",  sub: "Manage job data sources",  href: "/roodber8/providers",       icon: Server,      color: "#60a5fa" },
     { label: "Content Studio",     sub: "Daily refresh workflow",   href: "/roodber8/studio",          icon: Sparkles,    color: "#D4A017" },
     { label: "View Submissions",   sub: "Help & contact forms",     href: "/roodber8/submissions",     icon: Inbox,       color: "#3b82f6" },
     { label: "Manage Subscribers", sub: "Email list & CSV export",  href: "/roodber8/subscribers",     icon: Users,       color: "#10b981" },
@@ -487,6 +498,11 @@ export default async function AdminCommandCentre() {
                 {stats.providerDownCount} down
               </span>
             )}
+            <Link href="/roodber8/providers/new"
+              className="text-xs font-semibold px-2.5 py-1 rounded-lg"
+              style={{ background: "rgba(212,160,23,0.1)", color: "#D4A017", border: "1px solid rgba(212,160,23,0.2)" }}>
+              + Add Provider
+            </Link>
             <Link href="/roodber8/providers"
               className="text-xs font-semibold flex items-center gap-1"
               style={{ color: "#475569" }}>

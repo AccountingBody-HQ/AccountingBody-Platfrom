@@ -106,6 +106,7 @@ export async function POST(req: NextRequest) {
       country_codes:           toArray(body.country_codes),
       regions:                 toArray(body.regions),
       platform_tags:           toArray(body.platform_tags),
+      keywords:                toArray(body.keywords),
       source_score:            num(body.source_score, 0.5),
       source_name:             str(body.source_name) || null,
       base_url:                baseUrl,
