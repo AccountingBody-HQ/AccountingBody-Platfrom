@@ -621,7 +621,7 @@ function JobCard({ job, onSelect, saved, onSave }: {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-display text-base text-navy-950 leading-snug group-hover:text-navy-700 transition-colors line-clamp-2">
+            <h3 className="font-display text-[15px] font-semibold text-navy-950 leading-snug group-hover:text-navy-700 transition-colors line-clamp-2">
               {job.title}
             </h3>
             <button
@@ -637,60 +637,62 @@ function JobCard({ job, onSelect, saved, onSave }: {
         </div>
       </div>
 
-      {/* Location + badges */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3 text-xs text-gray-600">
-        <span className="flex items-center gap-1">
-          <LocationIcon />
+      {/* Location */}
+      <div className="flex items-center gap-1.5 mb-2 text-xs" style={{ color: '#64748b' }}>
+        <LocationIcon />
+        <span>
           {job.location_country && job.location_country !== job.location_text
             ? job.location_country
             : job.location_text}
         </span>
+      </div>
+
+      {/* Badges */}
+      <div className="flex flex-wrap items-center gap-1.5 mb-3">
+        {empLabel && (
+          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold" style={{ color: '#334155' }}>
+            {empLabel}
+          </span>
+        )}
+        {seniority && (
+          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold" style={{ color: '#334155' }}>
+            {seniority}
+          </span>
+        )}
         {job.location_remote && (
-          <span className="inline-flex items-center rounded-full bg-teal-50 text-teal-700 border border-teal-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+          <span className="inline-flex items-center rounded-full bg-teal-50 border border-teal-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ color: '#0d9185' }}>
             Remote
           </span>
         )}
         {isNew && (
-          <span className="inline-flex items-center rounded-full bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+          <span className="inline-flex items-center rounded-full bg-green-50 border border-green-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ color: '#16a34a' }}>
             New
           </span>
         )}
         {isEmployer && (
-          <span className="inline-flex items-center rounded-full bg-gold-50 text-gold-700 border border-gold-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+          <span className="inline-flex items-center rounded-full bg-gold-50 border border-gold-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ color: '#b87d10' }}>
             Direct
           </span>
         )}
         {job.is_featured && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-gold-50 text-gold-700 border border-gold-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+          <span className="inline-flex items-center gap-1 rounded-full bg-gold-50 border border-gold-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ color: '#b87d10' }}>
             <StarIcon className="w-3 h-3" />Featured
           </span>
         )}
       </div>
 
-      {/* Type + seniority badges */}
-      <div className="flex flex-wrap items-center gap-1.5 mb-3">
-        {empLabel && (
-          <span className="inline-flex items-center rounded-full bg-navy-50 text-navy-700 px-2.5 py-1 text-xs font-semibold">
-            {empLabel}
-          </span>
-        )}
-        {seniority && (
-          <span className="inline-flex items-center rounded-full bg-slate-100 text-gray-600 px-2.5 py-1 text-xs font-semibold">
-            {seniority}
-          </span>
-        )}
-      </div>
-
-      {/* Excerpt */}
+      {/* Excerpt (hidden on mobile to keep cards compact) */}
       {job.excerpt && (
-        <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 mb-3">{job.excerpt}</p>
+        <div className="hidden md:block">
+          <p className="text-sm leading-relaxed line-clamp-2 mb-3" style={{ color: '#64748b' }}>{job.excerpt}</p>
+        </div>
       )}
 
       {/* Footer: salary + date + CTA */}
       <div className="mt-auto pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
         <div className="min-w-0">
           {salary ? (
-            <span className="inline-flex items-center rounded-full bg-gold-50 text-gold-700 border border-gold-300 px-2.5 py-1 text-xs font-bold whitespace-nowrap">
+            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold whitespace-nowrap" style={{ background: '#fdf9ec', color: '#b87d10', border: '1px solid #f5e095' }}>
               {salary}
             </span>
           ) : (
@@ -698,8 +700,8 @@ function JobCard({ job, onSelect, saved, onSave }: {
           )}
           <p className="text-[11px] text-slate-400 mt-1.5">{formatRelativeDate(dateStr)}</p>
         </div>
-        <span className="shrink-0 inline-flex items-center justify-center h-9 px-4 rounded-lg bg-navy-950 text-white text-xs font-semibold group-hover:bg-navy-900 transition-colors">
-          View Job
+        <span className="shrink-0 inline-flex items-center justify-center h-9 px-4 rounded-lg text-xs font-bold transition-all" style={{ background: '#0C1A3D', color: '#ffffff' }}>
+          View Job →
         </span>
       </div>
     </div>
@@ -901,7 +903,7 @@ function DetailPanelContent({ job, onClose, saved, onSave }: {
         {/* Description */}
         <div className="space-y-3">
           {paragraphs.map((para, i) => (
-            <p key={i} className="text-sm text-navy-700 leading-relaxed">{para}</p>
+            <p key={i} className="text-sm leading-relaxed" style={{ color: '#334155' }}>{para}</p>
           ))}
         </div>
       </div>
@@ -910,12 +912,13 @@ function DetailPanelContent({ job, onClose, saved, onSave }: {
         <button
           type="button"
           onClick={() => applyJob(job)}
-          className="w-full h-12 rounded-lg bg-gold-500 text-navy-950 text-sm font-bold hover:bg-gold-400 transition-colors"
+          className="w-full h-14 rounded-xl text-sm font-bold transition-all active:scale-95"
+          style={{ background: '#D4A017', color: '#0C1A3D' }}
         >
-          Apply Now
+          Apply Now →
         </button>
-        <p className="text-xs text-center text-slate-400">
-          You will be redirected to the employer&apos;s application page
+        <p className="text-xs text-center mt-2" style={{ color: '#94a3b8' }}>
+          Opens the employer&apos;s application page
         </p>
       </div>
     </>
@@ -1046,7 +1049,7 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
       <div className="sticky top-0 z-nav bg-navy-950">
         <div className="container-wide py-4">
           <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-3">
-            <div className="flex-1 flex items-center gap-2 bg-white rounded-lg px-4 h-12">
+            <div className="flex-1 flex items-center gap-2 bg-white rounded-xl px-4 h-12 border border-white/20 shadow-sm">
               <span className="text-slate-400"><SearchIcon /></span>
               <input
                 type="text"
@@ -1063,7 +1066,7 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
                 </button>
               )}
             </div>
-            <div className="flex-1 flex items-center gap-2 bg-white rounded-lg px-4 h-12">
+            <div className="flex-1 flex items-center gap-2 bg-white rounded-xl px-4 h-12 border border-white/20 shadow-sm">
               <span className="text-slate-400 shrink-0"><LocationIcon className="w-4 h-4" /></span>
               <input
                 type="text"
@@ -1081,11 +1084,11 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
               )}
             </div>
             <button type="submit"
-              className="h-12 px-8 rounded-lg bg-gold-500 hover:bg-gold-400 text-navy-950 text-sm font-bold transition-colors shrink-0">
+              className="h-12 px-8 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 text-sm font-bold transition-colors shrink-0 w-full md:w-auto">
               Search
             </button>
           </form>
-          <p className="text-white/50 text-xs mt-3">
+          <p className="text-white/60 text-xs mt-2 font-medium">
             {loading && jobs.length === 0 ? 'Searching…' : `${total.toLocaleString()} accounting job${total === 1 ? '' : 's'} found`}
           </p>
         </div>
@@ -1094,17 +1097,20 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
       {/* MOBILE FILTER TRIGGER */}
       <div className="lg:hidden container-wide pt-4">
         <button type="button" onClick={() => setDrawerOpen(true)}
-          className="w-full h-11 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-navy-700 flex items-center justify-center gap-2">
+          className="w-full h-12 rounded-xl border-2 border-slate-200 bg-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-transform" style={{ color: '#0C1A3D' }}>
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="4" y1="6" x2="20" y2="6" /><line x1="8" y1="12" x2="16" y2="12" /><line x1="10" y1="18" x2="14" y2="18" />
+          </svg>
           Filters
           {activeFilterCount > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-gold-500 text-navy-950 text-xs font-bold">
+            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold" style={{ background: '#D4A017', color: '#0C1A3D' }}>
               {activeFilterCount}
             </span>
           )}
         </button>
       </div>
 
-      <div className="container-wide py-8" ref={resultsRef} style={{ scrollMarginTop: '5rem' }}>
+      <div className="container-wide pt-5 pb-10" ref={resultsRef} style={{ scrollMarginTop: '6rem' }}>
         <div className="flex gap-8 items-start">
           {/* DESKTOP SIDEBAR */}
           <aside className="hidden lg:block w-[280px] shrink-0 bg-white rounded-2xl border border-slate-100 p-5 sticky top-24">
@@ -1150,12 +1156,11 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
                 )}
                 <div className={`transition-opacity duration-200 ${loading ? 'opacity-40 pointer-events-none' : ''}`}>
                   {/* Sort bar + active chips */}
-                  <div className="flex items-center justify-between gap-4 mb-3 flex-wrap">
-                    <p className="text-sm text-slate-500">
-                      Showing {rangeStart}–{rangeEnd} of {total.toLocaleString()} jobs
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-400 font-medium whitespace-nowrap hidden sm:block">Sort by</span>
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <p className="text-sm text-slate-500 font-medium">
+                        {total.toLocaleString()} job{total === 1 ? '' : 's'} found
+                      </p>
                       <div className="relative">
                         <select
                           value={sortBy}
@@ -1171,6 +1176,9 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
                         </div>
                       </div>
                     </div>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Showing {rangeStart}–{rangeEnd} of {total.toLocaleString()}
+                    </p>
                   </div>
 
                   <ActiveFilterChips
