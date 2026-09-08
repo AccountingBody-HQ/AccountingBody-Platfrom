@@ -12,7 +12,6 @@ type PostedWithin = 'all' | '24h' | '7d' | '30d'
 type SortBy = 'relevance' | 'recent' | 'salary_high' | 'salary_low'
 
 const PAGE_SIZE = 24
-const DEBOUNCE_MS = 300
 
 const QUALIFICATIONS = ['ACCA', 'CIMA', 'ICAEW', 'CPA', 'AAT', 'CFA'] as const
 
@@ -130,15 +129,6 @@ function useRecentViews() {
 
 // ── Utilities ─────────────────────────────────────────────────────────────
 
-function useDebouncedValue<T>(value: T, delayMs: number): T {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delayMs)
-    return () => clearTimeout(timer)
-  }, [value, delayMs])
-  return debounced
-}
-
 function toggleInArray<T>(arr: T[], value: T): T[] {
   return arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value]
 }
@@ -224,15 +214,6 @@ function getCompanyColor(name: string): string {
 }
 
 // ── Icons ─────────────────────────────────────────────────────────────────
-
-function SearchIcon() {
-  return (
-    <svg className="w-4 h-4 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <circle cx="7" cy="7" r="5.5" />
-      <line x1="11" y1="11" x2="15" y2="15" strokeLinecap="round" />
-    </svg>
-  )
-}
 
 function LocationIcon({ className = 'w-3.5 h-3.5 shrink-0' }: { className?: string }) {
   return (
@@ -933,10 +914,14 @@ function DetailPanelContent({ job, onClose, saved, onSave }: {
 export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean }) {
   const platform = isEthioTax ? 'et' : 'ab'
 
-  const [roleInput, setRoleInput] = useState('')
-  const [locationInput, setLocationInput] = useState('')
-  const [activeSearch, setActiveSearch] = useState('')
-  const [activeLocation, setActiveLocation] = useState('')
+  const [activeSearch] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    return new URLSearchParams(window.location.search).get('search') ?? ''
+  })
+  const [activeLocation] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    return new URLSearchParams(window.location.search).get('location') ?? ''
+  })
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
   const [sortBy, setSortBy] = useState<SortBy>('relevance')
   const [page, setPage] = useState(1)
@@ -958,11 +943,6 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
   const abortRef = useRef<AbortController | null>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
 
-  const debouncedRole = useDebouncedValue(roleInput, DEBOUNCE_MS)
-  const debouncedLocation = useDebouncedValue(locationInput, DEBOUNCE_MS)
-
-  useEffect(() => { setActiveSearch(debouncedRole.trim()); setPage(1) }, [debouncedRole])
-  useEffect(() => { setActiveLocation(debouncedLocation.trim()); setPage(1) }, [debouncedLocation])
   useEffect(() => { if (selectedJob) { setDisplayedJob(selectedJob); recordView(selectedJob.id) } }, [selectedJob, recordView])
   useEffect(() => { document.body.style.overflow = selectedJob || drawerOpen ? 'hidden' : ''; return () => { document.body.style.overflow = '' } }, [selectedJob, drawerOpen])
   useEffect(() => {
@@ -1031,14 +1011,6 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
     resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  function handleSearchSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setActiveSearch(roleInput.trim())
-    setActiveLocation(locationInput.trim())
-    setPage(1)
-    scrollToResults()
-  }
-
   function handleFiltersChange(next: Filters) { setFilters(next); setPage(1) }
   function handleClearFilters() { setFilters(EMPTY_FILTERS); setSortBy('relevance'); setPage(1) }
   function handlePageChange(next: number) { setPage(next); scrollToResults() }
@@ -1048,64 +1020,8 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
 
   return (
     <main className="min-h-screen bg-slate-50">
-      {/* STICKY SEARCH BAR */}
-      <div className="sticky top-0 z-nav" style={{ background: '#0C1A3D', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="container-wide py-4 md:py-5">
-          <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-2 md:gap-3">
-            {/* Role search */}
-            <div className="flex-1 flex items-center gap-3 bg-white rounded-xl md:rounded-2xl px-4 md:px-5 h-13 md:h-16"
-              style={{ border: '1.5px solid rgba(255,255,255,0.12)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', minHeight: '52px' }}>
-              <span className="text-slate-400 shrink-0"><SearchIcon /></span>
-              <input
-                type="text"
-                value={roleInput}
-                onChange={e => setRoleInput(e.target.value)}
-                placeholder="Job title, skills, keywords"
-                className="flex-1 min-w-0 text-sm md:text-base font-medium text-navy-950 placeholder:text-slate-400 bg-transparent outline-none py-3"
-                autoComplete="off"
-              />
-              {roleInput && (
-                <button type="button" onClick={() => { setRoleInput(''); setActiveSearch(''); setPage(1) }}
-                  className="text-slate-300 hover:text-slate-500 transition-colors shrink-0">
-                  <CloseIcon />
-                </button>
-              )}
-            </div>
-            {/* Location search */}
-            <div className="flex-1 flex items-center gap-3 bg-white rounded-xl md:rounded-2xl px-4 md:px-5 h-13 md:h-16"
-              style={{ border: '1.5px solid rgba(255,255,255,0.12)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', minHeight: '52px' }}>
-              <span className="text-slate-400 shrink-0"><LocationIcon className="w-4 h-4" /></span>
-              <input
-                type="text"
-                value={locationInput}
-                onChange={e => setLocationInput(e.target.value)}
-                placeholder="Location or remote"
-                className="flex-1 min-w-0 text-sm md:text-base font-medium text-navy-950 placeholder:text-slate-400 bg-transparent outline-none py-3"
-                autoComplete="off"
-              />
-              {locationInput && (
-                <button type="button" onClick={() => { setLocationInput(''); setActiveLocation(''); setPage(1) }}
-                  className="text-slate-300 hover:text-slate-500 transition-colors shrink-0">
-                  <CloseIcon />
-                </button>
-              )}
-            </div>
-            {/* Search button */}
-            <button type="submit"
-              className="flex items-center justify-center gap-2 rounded-xl md:rounded-2xl font-bold transition-all active:scale-95 w-full md:w-auto md:px-10"
-              style={{ background: '#D4A017', color: '#0C1A3D', minHeight: '52px', fontSize: '15px' }}>
-              <SearchIcon />
-              <span>Search</span>
-            </button>
-          </form>
-          <p className="mt-2.5 text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>
-            {loading && jobs.length === 0 ? 'Searching…' : `${total.toLocaleString()} accounting & finance job${total === 1 ? '' : 's'} found`}
-          </p>
-        </div>
-      </div>
-
       {/* MOBILE FILTER TRIGGER */}
-      <div className="lg:hidden container-wide pt-4">
+      <div className="lg:hidden container-wide pt-5">
         <button type="button" onClick={() => setDrawerOpen(true)}
           className="w-full h-12 rounded-xl border-2 border-slate-200 bg-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-transform" style={{ color: '#0C1A3D' }}>
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1120,10 +1036,10 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
         </button>
       </div>
 
-      <div className="container-wide pt-6 pb-12" ref={resultsRef} style={{ scrollMarginTop: '7rem' }}>
+      <div className="container-wide pt-4 pb-12" ref={resultsRef} style={{ scrollMarginTop: '2rem' }}>
         <div className="flex gap-8 items-start">
           {/* DESKTOP SIDEBAR */}
-          <aside className="hidden lg:block w-[280px] shrink-0 bg-white rounded-2xl border border-slate-100 p-5 sticky top-28">
+          <aside className="hidden lg:block w-[280px] shrink-0 bg-white rounded-2xl border border-slate-100 p-5 sticky top-24">
             <FiltersPanel filters={filters} onChange={handleFiltersChange} onClear={handleClearFilters} />
           </aside>
 
