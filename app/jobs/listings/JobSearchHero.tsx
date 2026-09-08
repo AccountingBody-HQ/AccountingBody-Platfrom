@@ -34,19 +34,19 @@ export default function JobSearchHero() {
     router.push(`/jobs/listings${params.size > 0 ? '?' + params.toString() : ''}`)
   }
 
+  function quickSearch(term: string) {
+    const params = new URLSearchParams()
+    params.set('search', term)
+    router.push(`/jobs/listings?${params.toString()}`)
+  }
+
   return (
     <div className="w-full">
       <form onSubmit={handleSubmit} className="flex flex-col gap-3 w-full">
-        {/* Row 1: two inputs side by side on md+, stacked on mobile */}
         <div className="flex flex-col md:flex-row gap-3 w-full">
-          {/* Role input */}
           <div
             className="flex-1 flex items-center gap-3 bg-white rounded-2xl px-5"
-            style={{
-              height: '64px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.12)',
-              border: '1.5px solid rgba(255,255,255,0.15)',
-            }}
+            style={{ height: '64px', boxShadow: '0 8px 32px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.12)', border: '1.5px solid rgba(255,255,255,0.15)' }}
           >
             <span style={{ color: '#94a3b8', flexShrink: 0 }}><SearchIcon /></span>
             <input
@@ -59,12 +59,9 @@ export default function JobSearchHero() {
               autoComplete="off"
             />
             {role && (
-              <button
-                type="button"
-                onClick={() => setRole('')}
-                className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors"
-                style={{ background: '#f1f5f9', color: '#94a3b8' }}
-              >
+              <button type="button" onClick={() => setRole('')}
+                className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
+                style={{ background: '#f1f5f9', color: '#94a3b8' }}>
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -72,14 +69,9 @@ export default function JobSearchHero() {
             )}
           </div>
 
-          {/* Location input */}
           <div
             className="flex-1 flex items-center gap-3 bg-white rounded-2xl px-5"
-            style={{
-              height: '64px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.12)',
-              border: '1.5px solid rgba(255,255,255,0.15)',
-            }}
+            style={{ height: '64px', boxShadow: '0 8px 32px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.12)', border: '1.5px solid rgba(255,255,255,0.15)' }}
           >
             <span style={{ color: '#94a3b8', flexShrink: 0 }}><LocationIcon /></span>
             <input
@@ -92,12 +84,9 @@ export default function JobSearchHero() {
               autoComplete="off"
             />
             {location && (
-              <button
-                type="button"
-                onClick={() => setLocation('')}
-                className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors"
-                style={{ background: '#f1f5f9', color: '#94a3b8' }}
-              >
+              <button type="button" onClick={() => setLocation('')}
+                className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
+                style={{ background: '#f1f5f9', color: '#94a3b8' }}>
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -106,43 +95,25 @@ export default function JobSearchHero() {
           </div>
         </div>
 
-        {/* Row 2: full-width Search button */}
         <button
           type="submit"
           className="w-full flex items-center justify-center gap-2.5 rounded-2xl font-bold transition-all active:scale-[0.98]"
-          style={{
-            height: '60px',
-            background: 'linear-gradient(135deg, #D4A017 0%, #e8b830 100%)',
-            color: '#0C1A3D',
-            fontSize: '16px',
-            letterSpacing: '0.01em',
-            boxShadow: '0 4px 20px rgba(212,160,23,0.4), 0 2px 8px rgba(212,160,23,0.2)',
-          }}
+          style={{ height: '60px', background: 'linear-gradient(135deg, #D4A017 0%, #e8b830 100%)', color: '#0C1A3D', fontSize: '16px', letterSpacing: '0.01em', boxShadow: '0 4px 20px rgba(212,160,23,0.4)' }}
         >
           <SearchIcon />
           Search Jobs
         </button>
       </form>
 
-      {/* Quick links */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-4">
-        <span className="text-white/40 text-xs font-medium">Popular:</span>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-5">
+        <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>Popular:</span>
         {['Management Accountant', 'Tax Manager', 'Financial Controller', 'Audit Senior', 'FP&A Analyst'].map(term => (
           <button
             key={term}
             type="button"
-            onClick={() => {
-              setRole(term)
-              const params = new URLSearchParams()
-              params.set('search', term)
-              router.push(`/jobs/listings?${params.toString()}`)
-            }}
-            className="text-xs font-medium px-3 py-1 rounded-full transition-all"
-            style={{
-              background: 'rgba(255,255,255,0.08)',
-              color: 'rgba(255,255,255,0.65)',
-              border: '1px solid rgba(255,255,255,0.12)',
-            }}
+            onClick={() => quickSearch(term)}
+            className="text-xs font-medium px-3 py-1.5 rounded-full transition-all hover:bg-white/20"
+            style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.12)' }}
           >
             {term}
           </button>
