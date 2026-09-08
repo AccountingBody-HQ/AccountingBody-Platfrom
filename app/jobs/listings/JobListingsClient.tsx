@@ -1047,9 +1047,9 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
     <main className="min-h-screen bg-slate-50">
       {/* STICKY SEARCH BAR */}
       <div className="sticky top-0 z-nav bg-navy-950">
-        <div className="container-wide py-4">
-          <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-3">
-            <div className="flex-1 flex items-center gap-2 bg-white rounded-xl px-4 h-12 border border-white/20 shadow-sm">
+        <div className="container-wide py-5">
+          <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-2.5">
+            <div className="flex items-center gap-3 bg-white rounded-2xl px-5 h-14 shadow-md" style={{ border: '1.5px solid rgba(255,255,255,0.15)' }}>
               <span className="text-slate-400"><SearchIcon /></span>
               <input
                 type="text"
@@ -1066,7 +1066,7 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
                 </button>
               )}
             </div>
-            <div className="flex-1 flex items-center gap-2 bg-white rounded-xl px-4 h-12 border border-white/20 shadow-sm">
+            <div className="flex items-center gap-3 bg-white rounded-2xl px-5 h-14 shadow-md" style={{ border: '1.5px solid rgba(255,255,255,0.15)' }}>
               <span className="text-slate-400 shrink-0"><LocationIcon className="w-4 h-4" /></span>
               <input
                 type="text"
@@ -1084,7 +1084,7 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
               )}
             </div>
             <button type="submit"
-              className="h-12 px-8 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 text-sm font-bold transition-colors shrink-0 w-full md:w-auto">
+              className="h-14 px-8 rounded-2xl text-navy-950 text-sm font-bold transition-all w-full md:w-auto active:scale-95" style={{ background: '#D4A017' }}>
               Search
             </button>
           </form>
