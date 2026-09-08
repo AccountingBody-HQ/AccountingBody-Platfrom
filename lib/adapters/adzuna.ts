@@ -1,8 +1,9 @@
-import type { ProviderAdapter, RawJob } from './types'
+import type { ProviderAdapter, RawJob, AdapterResult } from './types'
 import type { JobProvider } from '../providers'
+import { fetchWithRetry } from './fetch-with-retry'
 
 export const adzunaAdapter: ProviderAdapter = {
-  async fetch(provider: JobProvider): Promise<RawJob[]> {
+  async fetch(provider: JobProvider): Promise<AdapterResult> {
     const appId  = process.env.ADZUNA_APP_ID
     const appKey = process.env.ADZUNA_APP_KEY
 
@@ -10,43 +11,59 @@ export const adzunaAdapter: ProviderAdapter = {
       throw new Error('ADZUNA_APP_ID or ADZUNA_APP_KEY not set')
     }
 
-    const keywords = provider.keywords ?? [
-      'accountant', 'ACCA', 'finance manager', 'audit',
-      'tax accountant', 'management accountant', 'CIMA',
-    ]
     const baseUrl = provider.base_url
     if (!baseUrl) throw new Error(`No base_url configured for provider ${provider.slug}`)
 
+    const keywords: string[] = Array.isArray(provider.keywords) && provider.keywords.length > 0
+      ? provider.keywords
+      : ['accountant', 'ACCA', 'finance manager', 'audit', 'tax accountant', 'management accountant', 'CIMA']
+
+    const maxPages = provider.max_pages_per_run ?? 1
     const allJobs: RawJob[] = []
     const errors: string[] = []
+    let totalPagesFetched = 0
 
-    // Fetch one page per keyword (same pattern as existing cron)
     await Promise.allSettled(
       keywords.map(async (keyword) => {
-        try {
-          const url = new URL(baseUrl)
-          url.searchParams.set('app_id', appId)
-          url.searchParams.set('app_key', appKey)
-          url.searchParams.set('results_per_page', '50')
-          url.searchParams.set('what', keyword)
-          url.searchParams.set('content-type', 'application/json')
+        let page = 1
+        while (page <= maxPages) {
+          try {
+            const url = new URL(baseUrl)
+            url.searchParams.set('app_id', appId)
+            url.searchParams.set('app_key', appKey)
+            url.searchParams.set('results_per_page', '50')
+            url.searchParams.set('what', keyword)
+            url.searchParams.set('page', String(page))
+            url.searchParams.set('content-type', 'application/json')
 
-          const res = await fetch(url.toString(), {
-            headers: { 'Content-Type': 'application/json' },
-            signal: AbortSignal.timeout(15000),
-          })
+            const res = await fetchWithRetry(
+              url.toString(),
+              { headers: { 'Content-Type': 'application/json' } },
+              3,
+              1000
+            )
 
-          if (!res.ok) {
-            errors.push(`Adzuna ${provider.slug} keyword "${keyword}": HTTP ${res.status}`)
-            return
+            if (!res.ok) {
+              errors.push(`Adzuna ${provider.slug} keyword "${keyword}" page ${page}: HTTP ${res.status}`)
+              break
+            }
+
+            const data = await res.json() as { results?: RawJob[]; count?: number }
+            const results = data.results ?? []
+            totalPagesFetched++
+
+            if (results.length === 0) break // No more results for this keyword
+
+            allJobs.push(...results)
+
+            // If we got fewer than 50, there are no more pages
+            if (results.length < 50) break
+
+            page++
+          } catch (err: unknown) {
+            errors.push(`Adzuna ${provider.slug} keyword "${keyword}" page ${page}: ${String(err)}`)
+            break
           }
-
-          const data = await res.json() as { results?: RawJob[] }
-          const results = data.results ?? []
-          allJobs.push(...results)
-
-        } catch (err) {
-          errors.push(`Adzuna ${provider.slug} keyword "${keyword}": ${String(err)}`)
         }
       })
     )
@@ -55,6 +72,10 @@ export const adzunaAdapter: ProviderAdapter = {
       console.warn(`[adzuna-adapter] ${provider.slug} partial errors:`, errors)
     }
 
-    return allJobs
+    return {
+      jobs: allJobs,
+      pagesFetched: totalPagesFetched,
+      totalAvailable: null,
+    }
   }
 }

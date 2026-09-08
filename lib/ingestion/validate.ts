@@ -16,11 +16,17 @@ function isAccountingFinanceRelevant(job: NormalisedJob): boolean {
 // ── Quality flags ──────────────────────────────────────────────────────────
 function computeQualityFlags(job: NormalisedJob): string[] {
   const flags: string[] = []
-  if (!job.salary_min && !job.salary_max) flags.push('missing_salary')
-  if (job.description.length < 100) flags.push('short_description')
-  if (job.title === job.title.toUpperCase() && job.title.length > 5) flags.push('all_caps_title')
-  if (!job.location_text || job.location_text.length < 2) flags.push('missing_location')
-  if (!isAccountingFinanceRelevant(job)) flags.push('low_relevance')
+  if (!job.salary_min && !job.salary_max)        flags.push('missing_salary')
+  if (job.description.length < 100)              flags.push('short_description')
+  if (job.description.length < 300)              flags.push('brief_description')
+  if (job.title === job.title.toUpperCase()
+      && job.title.length > 5)                   flags.push('all_caps_title')
+  if (!job.location_text
+      || job.location_text.length < 2)           flags.push('missing_location')
+  if (!job.location_country)                     flags.push('missing_country')
+  if (!job.employment_type)                      flags.push('missing_employment_type')
+  if (!isAccountingFinanceRelevant(job))         flags.push('low_relevance')
+  if (job.data_completeness < 0.5)               flags.push('low_completeness')
   return flags
 }
 
@@ -31,13 +37,13 @@ export function validate(jobs: NormalisedJob[]): ValidationResult {
   const rejectionReasons = new Map<string, string>()
 
   for (const job of jobs) {
-    // Hard reject conditions
-    if (!job.title || job.title.length < 3) {
+    // ── Hard reject conditions ───────────────────────────────────────────
+    if (!job.title || job.title.length < 2) {
       rejected.push(job)
       rejectionReasons.set(job.slug, 'MISSING_TITLE')
       continue
     }
-    if (!job.company_name) {
+    if (!job.company_name || job.company_name.length < 1) {
       rejected.push(job)
       rejectionReasons.set(job.slug, 'MISSING_COMPANY')
       continue
@@ -47,24 +53,13 @@ export function validate(jobs: NormalisedJob[]): ValidationResult {
       rejectionReasons.set(job.slug, 'MISSING_APPLICATION_URL')
       continue
     }
-
-    // Constraint compliance — null out invalid values before DB insert
-    const VALID_EMPLOYMENT_TYPES = new Set([
-      'permanent', 'contract', 'temporary', 'part_time', 'internship'
-    ])
-    const VALID_SENIORITY_LEVELS = new Set([
-      'junior', 'mid', 'senior', 'executive', 'director'
-    ])
-    if (job.employment_type && !VALID_EMPLOYMENT_TYPES.has(job.employment_type)) {
-      job.employment_type = null
-      job.quality_flags.push('employment_type_normalised')
-    }
-    if (job.seniority_level && !VALID_SENIORITY_LEVELS.has(job.seniority_level)) {
-      job.seniority_level = null
-      job.quality_flags.push('seniority_normalised')
+    if (job.description.length < 30) {
+      rejected.push(job)
+      rejectionReasons.set(job.slug, 'DESCRIPTION_TOO_SHORT')
+      continue
     }
 
-    // Compute quality flags (non-rejecting — job is still inserted with flags)
+    // ── Quality flags (non-rejecting) ────────────────────────────────────
     const flags = computeQualityFlags(job)
     job.quality_flags = [...job.quality_flags, ...flags]
 

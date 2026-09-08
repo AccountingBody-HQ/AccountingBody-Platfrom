@@ -255,6 +255,7 @@ export default function ProviderForm({
               className={inputClass} style={C.input}>
               <option value="adzuna">adzuna</option>
               <option value="generic-rest">generic-rest</option>
+              <option value="rss">rss</option>
             </select>
           </Field>
           <Field label="Status">
