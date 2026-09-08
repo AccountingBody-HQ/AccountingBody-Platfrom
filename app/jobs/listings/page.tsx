@@ -15,7 +15,7 @@ export default async function JobListingsPage() {
     <>
       <JobListingsStructuredData />
       {/* HERO — matches /study page pattern exactly */}
-      <section className="relative overflow-hidden bg-navy-950 py-14 md:py-20">
+      <section className="relative overflow-hidden bg-navy-950 py-10 md:py-16">
         {/* Background effects — identical to study page */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-20"
@@ -25,7 +25,7 @@ export default async function JobListingsPage() {
         </div>
         <div className="container-wide relative z-10">
           {/* Headline */}
-          <div className="max-w-2xl mb-8 md:mb-10">
+          <div className="max-w-2xl mb-7 md:mb-9">
             <span className="eyebrow text-gold-400 mb-3 block text-sm font-semibold uppercase tracking-widest">
               {isEthioTax ? 'Accounting & Finance Jobs — Africa' : 'Accounting & Finance Jobs'}
             </span>
