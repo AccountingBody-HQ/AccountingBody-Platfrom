@@ -382,7 +382,7 @@ function FiltersPanel({ filters, onChange, onClear }: {
 
       <FilterSection title="Remote">
         <label className="flex items-center justify-between cursor-pointer">
-          <span className="text-sm text-navy-700">Remote only</span>
+          <span className="text-sm" style={{ color: '#334155' }}>Remote only</span>
           <button
             type="button"
             role="switch"
@@ -827,7 +827,7 @@ function DetailPanelContent({ job, onClose, saved, onSave }: {
             {copied ? <span className="text-xs font-semibold text-green-600 px-1">Copied!</span> : <ShareIcon />}
           </button>
           <button type="button" onClick={onClose} aria-label="Close"
-            className="w-9 h-9 flex items-center justify-center rounded-full text-gray-600 hover:bg-slate-100 transition-colors">
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors" style={{ color: '#475569' }}>
             <CloseIcon />
           </button>
         </div>
@@ -846,7 +846,7 @@ function DetailPanelContent({ job, onClose, saved, onSave }: {
         </div>
 
         {/* Location + salary */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4 text-sm text-gray-600">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4 text-sm" style={{ color: '#475569' }}>
           <span className="flex items-center gap-1.5">
             <LocationIcon className="w-4 h-4" />
             {job.location_text}
@@ -860,10 +860,10 @@ function DetailPanelContent({ job, onClose, saved, onSave }: {
         {/* Badges */}
         <div className="flex flex-wrap items-center gap-1.5 mb-6">
           {empLabel && (
-            <span className="inline-flex items-center rounded-full bg-navy-50 text-navy-700 px-2.5 py-1 text-xs font-semibold">{empLabel}</span>
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold" style={{ color: '#334155' }}>{empLabel}</span>
           )}
           {seniority && (
-            <span className="inline-flex items-center rounded-full bg-slate-100 text-gray-600 px-2.5 py-1 text-xs font-semibold">{seniority}</span>
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold" style={{ color: '#334155' }}>{seniority}</span>
           )}
           {job.location_remote && (
             <span className="inline-flex items-center rounded-full bg-teal-50 text-teal-700 border border-teal-200 px-2.5 py-1 text-xs font-bold uppercase tracking-wide">Remote</span>
@@ -1146,7 +1146,7 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 sticky top-0 bg-white">
             <span className="text-sm font-semibold text-navy-950">Filters</span>
             <button type="button" onClick={() => setDrawerOpen(false)} aria-label="Close filters"
-              className="w-9 h-9 flex items-center justify-center rounded-full text-gray-600 hover:bg-slate-100 transition-colors">
+              className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors" style={{ color: '#475569' }}>
               <CloseIcon />
             </button>
           </div>
