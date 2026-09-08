@@ -318,8 +318,8 @@ function CheckboxRow({ label, checked, onChange }: { label: string; checked: boo
 
 function FilterSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="py-5 border-b border-slate-200 last:border-b-0">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">{title}</h3>
+    <div className="py-4 border-b border-slate-100 last:border-b-0">
+      <h3 className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: '#94a3b8', letterSpacing: '0.08em' }}>{title}</h3>
       {children}
     </div>
   )
@@ -610,8 +610,8 @@ function JobCard({ job, onSelect, saved, onSave }: {
       }}
       className={[
         'group bg-white rounded-2xl p-5 flex flex-col cursor-pointer transition-all duration-200',
-        'border border-slate-100',
-        isEmployer ? 'hover:shadow-gold-lg hover:border-gold-200' : 'hover:shadow-md hover:border-slate-200',
+        'border border-slate-100 shadow-sm',
+        isEmployer ? 'hover:shadow-lg hover:border-gold-200' : 'hover:shadow-md hover:border-slate-200',
       ].join(' ')}
     >
       {/* Header: avatar + title + bookmark */}
@@ -621,7 +621,7 @@ function JobCard({ job, onSelect, saved, onSave }: {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-display text-[15px] font-semibold text-navy-950 leading-snug group-hover:text-navy-700 transition-colors line-clamp-2">
+            <h3 className="font-display text-[15px] font-medium text-navy-950 leading-snug group-hover:text-navy-700 transition-colors line-clamp-2">
               {job.title}
             </h3>
             <button
@@ -689,7 +689,7 @@ function JobCard({ job, onSelect, saved, onSave }: {
       )}
 
       {/* Footer: salary + date + CTA */}
-      <div className="mt-auto pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+      <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
         <div className="min-w-0">
           {salary ? (
             <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold whitespace-nowrap" style={{ background: '#fdf9ec', color: '#b87d10', border: '1px solid #f5e095' }}>
@@ -710,7 +710,7 @@ function JobCard({ job, onSelect, saved, onSave }: {
 
 function JobCardSkeleton() {
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-5 animate-pulse">
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 animate-pulse">
       <div className="flex items-start gap-3 mb-3">
         <div className="w-10 h-10 rounded-xl bg-slate-200 shrink-0" />
         <div className="flex-1">
@@ -729,8 +729,11 @@ function JobCardSkeleton() {
 function EmptyState({ onClear }: { onClear: () => void }) {
   return (
     <div className="text-center py-20 border border-slate-200 rounded-2xl bg-white">
-      <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4">
-        <SearchIcon />
+      <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5" style={{ background: '#f8f7f4' }}>
+        <svg className="w-8 h-8" style={{ color: '#cbd5e1' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="11" cy="11" r="8" />
+          <path strokeLinecap="round" d="m21 21-4.35-4.35" />
+        </svg>
       </div>
       <p className="text-navy-950 font-semibold text-lg mb-1">No jobs found</p>
       <p className="text-sm text-slate-500 mb-5">Try adjusting your filters or broadening your search terms.</p>
@@ -852,7 +855,7 @@ function DetailPanelContent({ job, onClose, saved, onSave }: {
       <div className="flex-1 overflow-y-auto px-6 py-6">
         {/* Company avatar + title */}
         <div className="flex items-start gap-4 mb-4">
-          <div className={`w-14 h-14 rounded-2xl shrink-0 flex items-center justify-center text-lg font-bold ${getCompanyColor(job.company_name)}`}>
+          <div className={`w-16 h-16 rounded-2xl shrink-0 flex items-center justify-center text-xl font-bold ${getCompanyColor(job.company_name)}`}>
             {getCompanyInitials(job.company_name)}
           </div>
           <div className="flex-1 min-w-0">
@@ -1046,17 +1049,19 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
   return (
     <main className="min-h-screen bg-slate-50">
       {/* STICKY SEARCH BAR */}
-      <div className="sticky top-0 z-nav bg-navy-950">
-        <div className="container-wide py-5">
-          <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-2.5">
-            <div className="flex items-center gap-3 bg-white rounded-2xl px-5 h-14 shadow-md" style={{ border: '1.5px solid rgba(255,255,255,0.15)' }}>
-              <span className="text-slate-400"><SearchIcon /></span>
+      <div className="sticky top-0 z-nav" style={{ background: '#0C1A3D', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="container-wide py-4 md:py-5">
+          <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-2 md:gap-3">
+            {/* Role search */}
+            <div className="flex-1 flex items-center gap-3 bg-white rounded-xl md:rounded-2xl px-4 md:px-5 h-13 md:h-16"
+              style={{ border: '1.5px solid rgba(255,255,255,0.12)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', minHeight: '52px' }}>
+              <span className="text-slate-400 shrink-0"><SearchIcon /></span>
               <input
                 type="text"
                 value={roleInput}
                 onChange={e => setRoleInput(e.target.value)}
                 placeholder="Job title, skills, keywords"
-                className="flex-1 min-w-0 text-sm font-medium text-navy-950 placeholder:text-slate-400 bg-transparent outline-none"
+                className="flex-1 min-w-0 text-sm md:text-base font-medium text-navy-950 placeholder:text-slate-400 bg-transparent outline-none py-3"
                 autoComplete="off"
               />
               {roleInput && (
@@ -1066,14 +1071,16 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-3 bg-white rounded-2xl px-5 h-14 shadow-md" style={{ border: '1.5px solid rgba(255,255,255,0.15)' }}>
+            {/* Location search */}
+            <div className="flex-1 flex items-center gap-3 bg-white rounded-xl md:rounded-2xl px-4 md:px-5 h-13 md:h-16"
+              style={{ border: '1.5px solid rgba(255,255,255,0.12)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', minHeight: '52px' }}>
               <span className="text-slate-400 shrink-0"><LocationIcon className="w-4 h-4" /></span>
               <input
                 type="text"
                 value={locationInput}
                 onChange={e => setLocationInput(e.target.value)}
                 placeholder="Location or remote"
-                className="flex-1 min-w-0 text-sm font-medium text-navy-950 placeholder:text-slate-400 bg-transparent outline-none"
+                className="flex-1 min-w-0 text-sm md:text-base font-medium text-navy-950 placeholder:text-slate-400 bg-transparent outline-none py-3"
                 autoComplete="off"
               />
               {locationInput && (
@@ -1083,13 +1090,16 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
                 </button>
               )}
             </div>
+            {/* Search button */}
             <button type="submit"
-              className="h-14 px-8 rounded-2xl text-navy-950 text-sm font-bold transition-all w-full md:w-auto active:scale-95" style={{ background: '#D4A017' }}>
-              Search
+              className="flex items-center justify-center gap-2 rounded-xl md:rounded-2xl font-bold transition-all active:scale-95 w-full md:w-auto md:px-10"
+              style={{ background: '#D4A017', color: '#0C1A3D', minHeight: '52px', fontSize: '15px' }}>
+              <SearchIcon />
+              <span>Search</span>
             </button>
           </form>
-          <p className="text-white/60 text-xs mt-2 font-medium">
-            {loading && jobs.length === 0 ? 'Searching…' : `${total.toLocaleString()} accounting job${total === 1 ? '' : 's'} found`}
+          <p className="mt-2.5 text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            {loading && jobs.length === 0 ? 'Searching…' : `${total.toLocaleString()} accounting & finance job${total === 1 ? '' : 's'} found`}
           </p>
         </div>
       </div>
@@ -1110,10 +1120,10 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
         </button>
       </div>
 
-      <div className="container-wide pt-5 pb-10" ref={resultsRef} style={{ scrollMarginTop: '6rem' }}>
+      <div className="container-wide pt-6 pb-12" ref={resultsRef} style={{ scrollMarginTop: '7rem' }}>
         <div className="flex gap-8 items-start">
           {/* DESKTOP SIDEBAR */}
-          <aside className="hidden lg:block w-[280px] shrink-0 bg-white rounded-2xl border border-slate-100 p-5 sticky top-24">
+          <aside className="hidden lg:block w-[280px] shrink-0 bg-white rounded-2xl border border-slate-100 p-5 sticky top-28">
             <FiltersPanel filters={filters} onChange={handleFiltersChange} onClear={handleClearFilters} />
           </aside>
 
