@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getActiveDirectJobs, type JobSource, type SeniorityLevel, type EmploymentType } from '@/lib/jobs'
+import { getActiveDirectJobs, type SeniorityLevel, type EmploymentType } from '@/lib/jobs'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,6 +11,8 @@ const DEFAULT_LIMIT = 24
 
 const SENIORITY_VALUES: SeniorityLevel[] = ['junior', 'mid', 'senior', 'executive', 'director']
 const EMPLOYMENT_TYPE_VALUES: EmploymentType[] = ['permanent', 'contract', 'temporary', 'part_time', 'internship']
+const SORT_BY_VALUES = ['relevance', 'recent', 'salary_high', 'salary_low'] as const
+type SortBy = (typeof SORT_BY_VALUES)[number]
 
 function parsePositiveInt(value: string | null, fallback: number): number {
   const n = value ? parseInt(value, 10) : NaN
@@ -41,6 +43,10 @@ function parseEmploymentTypes(value: string | null): EmploymentType[] | undefine
   return values.length > 0 ? values : undefined
 }
 
+function parseSortBy(value: string | null): SortBy | undefined {
+  return value && (SORT_BY_VALUES as readonly string[]).includes(value) ? (value as SortBy) : undefined
+}
+
 // GET /api/jobs/direct — public, no auth. Returns active employer + Adzuna
 // listings for the jobs listings page. RLS on `jobs` (status = 'active')
 // already restricts this to publicly-safe rows even if a filter is ever
@@ -54,6 +60,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const search = searchParams.get('search')?.trim() || undefined
   const location = searchParams.get('location')?.trim() || undefined
+  const locationCountry = searchParams.get('location_country')?.trim() || undefined
   const platform = searchParams.get('platform')?.trim() || 'ab'
   const limit = parsePositiveInt(searchParams.get('limit'), DEFAULT_LIMIT)
   const offset = parsePositiveInt(searchParams.get('offset'), 0)
@@ -67,20 +74,23 @@ export async function GET(req: NextRequest) {
   const postedWithin = parseOptionalNumber(searchParams.get('posted_within'))
   const qualificationsList = parseCommaList(searchParams.get('qualifications'))
   const qualifications = qualificationsList.length > 0 ? qualificationsList : undefined
+  const sortBy = parseSortBy(searchParams.get('sort_by'))
 
-  const sources: JobSource[] = ['employer', 'adzuna']
+  // No `sources` restriction here — every active job is public regardless of
+  // source (employer, adzuna, or any ingestion pipeline provider).
   const baseParams = {
     platform,
     search,
     location,
+    locationCountry,
     employmentTypes,
-    sources,
     seniorityLevels,
     remoteOnly,
     salaryMin,
     salaryMax,
     postedWithin,
     qualifications,
+    sortBy,
   }
 
   try {

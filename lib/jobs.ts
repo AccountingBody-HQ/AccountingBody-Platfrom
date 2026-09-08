@@ -214,6 +214,7 @@ interface GetActiveDirectJobsParams {
   platform: string
   search?: string
   location?: string
+  locationCountry?: string
   employmentTypes?: EmploymentType[]
   limit?: number
   offset?: number
@@ -225,6 +226,7 @@ interface GetActiveDirectJobsParams {
   salaryMax?: number
   postedWithin?: number
   qualifications?: string[]
+  sortBy?: 'relevance' | 'recent' | 'salary_high' | 'salary_low'
 }
 
 // PostgREST's `.or()` syntax uses commas to separate conditions and
@@ -248,10 +250,11 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
     platform,
     search,
     location,
+    locationCountry,
     employmentTypes,
     limit = 20,
     offset = 0,
-    sources = ['employer', 'adzuna'], // now includes adzuna — see adzuna-final-architecture.md et al.
+    sources, // undefined = no source restriction, every active job is public regardless of source
     countOnly = false,
     seniorityLevels,
     remoteOnly,
@@ -259,6 +262,7 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
     salaryMax,
     postedWithin,
     qualifications,
+    sortBy,
   } = params
 
   const nowIso = new Date().toISOString()
@@ -273,14 +277,19 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
       .select('*', { count: 'exact', head: true })
       .eq('status', 'active')
       .contains('platform', [platform])
-      .in('source', sources)
       .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
 
+    if (sources && sources.length > 0) {
+      countQuery = countQuery.in('source', sources)
+    }
     if (search && search.trim()) {
       countQuery = countQuery.textSearch('search_vector', search.trim(), { type: 'websearch' })
     }
     if (location && location.trim()) {
       countQuery = countQuery.ilike('location_text', `%${location.trim()}%`)
+    }
+    if (locationCountry && locationCountry !== 'all') {
+      countQuery = countQuery.eq('location_country', locationCountry)
     }
     if (employmentTypes && employmentTypes.length > 0) {
       countQuery = countQuery.in('employment_type', employmentTypes)
@@ -312,22 +321,31 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
     return count ?? 0
   }
 
+  // DB-level pre-sort of the 500-row candidate pool. The JS layer below
+  // (compositeScore for relevance, or an explicit sortBy branch for
+  // recent/salary) determines the final order — this only shapes which 500
+  // rows are pulled from a potentially much larger active set.
   let query = supabase
     .from('jobs')
     .select(JOB_COLUMNS)
     .eq('status', 'active')
     .contains('platform', [platform])
-    .in('source', sources)
     .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
     .order('source_score', { ascending: false })
-    .order('published_at', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(500) // candidate pool — re-ranked and paginated in JS below
 
+  if (sources && sources.length > 0) {
+    query = query.in('source', sources)
+  }
   if (search && search.trim()) {
     query = query.textSearch('search_vector', search.trim(), { type: 'websearch' })
   }
   if (location && location.trim()) {
     query = query.ilike('location_text', `%${location.trim()}%`)
+  }
+  if (locationCountry && locationCountry !== 'all') {
+    query = query.eq('location_country', locationCountry)
   }
   if (employmentTypes && employmentTypes.length > 0) {
     query = query.in('employment_type', employmentTypes)
@@ -363,6 +381,35 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
     .sort((a, b) => b.score - a.score)
     .map(r => r.job)
 
+  if (sortBy === 'salary_high') {
+    jobs.sort((a, b) => {
+      const aMax = a.salary_max ?? a.salary_min ?? 0
+      const bMax = b.salary_max ?? b.salary_min ?? 0
+      return bMax - aMax
+    })
+    return jobs.slice(offset, offset + limit)
+  }
+  if (sortBy === 'salary_low') {
+    // Only sort jobs that have salary data; unsalaried jobs go to the end
+    const withSalary = jobs.filter(j => j.salary_min != null || j.salary_max != null)
+    const withoutSalary = jobs.filter(j => j.salary_min == null && j.salary_max == null)
+    withSalary.sort((a, b) => {
+      const aMin = a.salary_min ?? a.salary_max ?? 0
+      const bMin = b.salary_min ?? b.salary_max ?? 0
+      return aMin - bMin
+    })
+    return [...withSalary, ...withoutSalary].slice(offset, offset + limit)
+  }
+  if (sortBy === 'recent') {
+    jobs.sort((a, b) => {
+      const aDate = new Date(a.created_at ?? 0).getTime()
+      const bDate = new Date(b.created_at ?? 0).getTime()
+      return bDate - aDate
+    })
+    return jobs.slice(offset, offset + limit)
+  }
+
+  // Default: relevance composite score
   return ranked.slice(offset, offset + limit)
 }
 
