@@ -1,6 +1,7 @@
 import type { ProviderAdapter, RawJob, AdapterResult } from './types'
 import type { JobProvider } from '../providers'
 import { fetchWithRetry } from './fetch-with-retry'
+import { PROVIDER_QUERY_KEYWORDS } from '@/lib/ingestion/keywords'
 
 export const adzunaAdapter: ProviderAdapter = {
   async fetch(provider: JobProvider): Promise<AdapterResult> {
@@ -14,9 +15,7 @@ export const adzunaAdapter: ProviderAdapter = {
     const baseUrl = provider.base_url
     if (!baseUrl) throw new Error(`No base_url configured for provider ${provider.slug}`)
 
-    const keywords: string[] = Array.isArray(provider.keywords) && provider.keywords.length > 0
-      ? provider.keywords
-      : ['accountant', 'ACCA', 'finance manager', 'audit', 'tax accountant', 'management accountant', 'CIMA']
+    const keywords: string[] = PROVIDER_QUERY_KEYWORDS
 
     const maxPages = provider.max_pages_per_run ?? 1
     const allJobs: RawJob[] = []
