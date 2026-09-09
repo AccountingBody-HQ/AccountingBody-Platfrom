@@ -1,6 +1,16 @@
 import type { RawJob } from '../adapters/types'
 import type { JobProvider } from '../providers'
 
+// ── Safe integer parsing for salary_min / salary_max (Postgres integer columns) ──
+// Guarantees the result is either null or a finite, rounded integer — never NaN,
+// Infinity, or a non-integer decimal — before it can reach an INSERT.
+function parseSalaryInt(v: unknown): number | null {
+  if (v === null || v === undefined || v === '') return null
+  const n = Number(v)
+  if (!Number.isFinite(n)) return null
+  return Math.round(n)
+}
+
 // ── Module-level constants ─────────────────────────────────────────────────
 // Defined once — never recreated per job or per provider.
 
@@ -278,12 +288,16 @@ function parseSalaryFromRaw(raw: unknown): {
   // Handle nested salary object (common in Greenhouse, Lever, Workday)
   if (raw !== null && typeof raw === 'object' && !Array.isArray(raw)) {
     const obj = raw as Record<string, unknown>
-    const min = typeof obj.min === 'number' ? obj.min
-      : typeof obj.minimum === 'number' ? obj.minimum
-      : typeof obj.from === 'number' ? obj.from : null
-    const max = typeof obj.max === 'number' ? obj.max
-      : typeof obj.maximum === 'number' ? obj.maximum
-      : typeof obj.to === 'number' ? obj.to : null
+    const min = parseSalaryInt(
+      typeof obj.min === 'number' ? obj.min
+        : typeof obj.minimum === 'number' ? obj.minimum
+        : typeof obj.from === 'number' ? obj.from : null
+    )
+    const max = parseSalaryInt(
+      typeof obj.max === 'number' ? obj.max
+        : typeof obj.maximum === 'number' ? obj.maximum
+        : typeof obj.to === 'number' ? obj.to : null
+    )
     const currency = typeof obj.currency === 'string' ? obj.currency
       : typeof obj.currency_code === 'string' ? obj.currency_code : null
     return { min, max, currency, isHourly: false }
@@ -357,8 +371,8 @@ function parseSalaryFromRaw(raw: unknown): {
   if (min === 0 && max === 0) return { min: null, max: null, currency: detectedCurrency, isHourly }
 
   return {
-    min: min > 0 ? min : null,
-    max: max > 0 ? max : null,
+    min: min > 0 ? parseSalaryInt(min) : null,
+    max: max > 0 ? parseSalaryInt(max) : null,
     currency: detectedCurrency,
     isHourly,
   }
@@ -483,13 +497,11 @@ export function normalise(rawJob: RawJob, provider: JobProvider): NormalisedJob 
   // Strategy 1: Separate numeric min/max fields from field_mapping
   if (mapping.salary_min) {
     const v = resolvePath(rawJob, mapping.salary_min)
-    if (typeof v === 'number') salaryMin = v
-    else if (typeof v === 'string') salaryMin = parseFloat(v) || null
+    salaryMin = parseSalaryInt(v)
   }
   if (mapping.salary_max) {
     const v = resolvePath(rawJob, mapping.salary_max)
-    if (typeof v === 'number') salaryMax = v
-    else if (typeof v === 'string') salaryMax = parseFloat(v) || null
+    salaryMax = parseSalaryInt(v)
   }
   if (mapping.salary_currency) {
     salaryCurrency = String(resolvePath(rawJob, mapping.salary_currency) ?? '') || null
@@ -500,8 +512,8 @@ export function normalise(rawJob: RawJob, provider: JobProvider): NormalisedJob 
     const rawSalary = resolvePath(rawJob, mapping.salary_text)
     if (rawSalary !== null && rawSalary !== undefined && rawSalary !== '') {
       const parsed = parseSalaryFromRaw(rawSalary)
-      if (salaryMin === null) salaryMin = parsed.min
-      if (salaryMax === null) salaryMax = parsed.max
+      if (salaryMin === null) salaryMin = parseSalaryInt(parsed.min)
+      if (salaryMax === null) salaryMax = parseSalaryInt(parsed.max)
       if (!salaryCurrency && parsed.currency) salaryCurrency = parsed.currency
       if (parsed.isHourly) qualityFlags.push('salary_converted_from_hourly')
       // Preserve original for display if it's a string
