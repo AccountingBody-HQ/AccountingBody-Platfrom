@@ -251,3 +251,67 @@ export const PROVIDER_QUERY_KEYWORDS: string[] = [
   ...KEYWORD_TAXONOMY.roles_fund,
   ...KEYWORD_TAXONOMY.roles_risk,
 ]
+
+// Curated keyword set for Adzuna API queries.
+// These are sent as individual search terms to the Adzuna API.
+// Adzuna fans out one API call per keyword, so this set must be
+// broad enough for full coverage but focused enough to avoid
+// rate limit exhaustion.
+// Target: 50-80 high-signal, distinct terms that Adzuna returns
+// different results for. Avoid near-duplicates that would return
+// the same jobs.
+export const ADZUNA_QUERY_KEYWORDS: string[] = [
+  // Core roles
+  'accountant', 'auditor', 'bookkeeper', 'treasurer', 'actuary',
+
+  // Seniority
+  'CFO', 'finance director', 'financial controller',
+  'management accountant', 'assistant accountant',
+  'finance manager', 'finance business partner',
+  'head of finance', 'group accountant',
+
+  // Audit
+  'audit manager', 'internal auditor', 'external auditor',
+  'forensic accountant',
+
+  // Tax
+  'tax accountant', 'tax manager', 'tax consultant',
+  'VAT accountant', 'transfer pricing', 'corporate tax',
+
+  // Reporting
+  'financial reporting', 'consolidation accountant',
+  'statutory accountant', 'management reporting',
+
+  // FP&A
+  'FP&A', 'financial planning', 'commercial finance',
+  'financial analyst', 'finance analyst',
+
+  // Treasury
+  'treasury analyst', 'treasury manager', 'cash manager',
+
+  // Transactional
+  'accounts payable', 'accounts receivable', 'credit controller',
+  'payroll manager', 'purchase ledger', 'sales ledger',
+  'billing manager', 'cost accountant',
+
+  // Fund & investment
+  'fund accountant', 'investment accountant',
+  'portfolio accountant',
+
+  // Risk & compliance
+  'compliance officer', 'risk analyst', 'AML analyst',
+  'financial crime',
+
+  // Qualifications — global
+  'ACA', 'ACCA', 'CIMA', 'CPA', 'CFA', 'AAT', 'CIPFA',
+
+  // Qualifications — African & regional
+  'ICPAK', 'ICAN', 'SAICA', 'ICAZ',
+
+  // Software (high signal for specialist roles)
+  'SAP finance', 'Oracle finance', 'NetSuite accountant',
+
+  // Sector
+  'practice accountant', 'interim accountant',
+  'outsourced accountant', 'fractional CFO',
+]
