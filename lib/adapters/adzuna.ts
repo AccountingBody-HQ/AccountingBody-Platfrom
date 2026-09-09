@@ -27,12 +27,11 @@ export const adzunaAdapter: ProviderAdapter = {
         let page = 1
         while (page <= maxPages) {
           try {
-            const url = new URL(baseUrl)
+            const url = new URL(baseUrl + '/' + String(page))
             url.searchParams.set('app_id', appId)
             url.searchParams.set('app_key', appKey)
             url.searchParams.set('results_per_page', '50')
             url.searchParams.set('what', keyword)
-            url.searchParams.set('page', String(page))
             url.searchParams.set('content-type', 'application/json')
 
             const res = await fetchWithRetry(
