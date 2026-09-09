@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
   const sourceName = stringOrNull(b.source_name)
   const providerType = stringOrNull(b.provider_type)
   const authType = stringOr(b.auth_type, 'none')
+  const authConfig = recordOrNull(b.auth_config)
   const requestConfig = recordOrNull(b.request_config)
   const responsePath = stringOrNull(b.response_path)
   const fieldMapping = recordOrNull(b.field_mapping)
@@ -92,6 +93,7 @@ export async function POST(req: NextRequest) {
   const countryCodes = stringArray(b.country_codes, [])
   const regions = stringArray(b.regions, [])
   const fetchIntervalMinutes = numberOr(b.fetch_interval_minutes, 1440)
+  const fetchOffsetMinutes = numberOr(b.fetch_offset_minutes, 0)
   const sourceScore = numberOr(b.source_score, 0.50)
   const priority = numberOr(b.priority, 50)
   const commercialTerms = stringOrNull(b.commercial_terms)
@@ -109,6 +111,7 @@ export async function POST(req: NextRequest) {
     source_name: sourceName,
     provider_type: providerType,
     auth_type: authType,
+    auth_config: authConfig,
     request_config: requestConfig,
     response_path: responsePath,
     field_mapping: fieldMapping,
@@ -117,6 +120,7 @@ export async function POST(req: NextRequest) {
     country_codes: countryCodes,
     regions,
     fetch_interval_minutes: fetchIntervalMinutes,
+    fetch_offset_minutes: fetchOffsetMinutes,
     source_score: sourceScore,
     priority,
     commercial_terms: commercialTerms,

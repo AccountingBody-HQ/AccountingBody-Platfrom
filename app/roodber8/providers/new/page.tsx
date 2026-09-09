@@ -21,6 +21,7 @@ export default function AddProviderPage() {
     source_name: '',
     provider_type: 'api_rest',
     auth_type: 'none',
+    auth_config: '',
     request_config: '',
     response_path: 'jobs',
     field_mapping: '',
@@ -29,6 +30,7 @@ export default function AddProviderPage() {
     country_codes: '',
     regions: '',
     fetch_interval_minutes: 1440,
+    fetch_offset_minutes: 0,
     source_score: 0.50,
     priority: 50,
     commercial_terms: 'free',
@@ -112,6 +114,7 @@ export default function AddProviderPage() {
     // Parse JSON fields
     let parsedRequestConfig: Record<string, unknown> | null = null
     let parsedFieldMapping: Record<string, unknown> | null = null
+    let parsedAuthConfig: Record<string, unknown> | null = null
     if (formData.request_config.trim()) {
       try {
         parsedRequestConfig = JSON.parse(formData.request_config)
@@ -124,6 +127,13 @@ export default function AddProviderPage() {
         parsedFieldMapping = JSON.parse(formData.field_mapping)
       } catch {
         errs.field_mapping = 'Invalid JSON'
+      }
+    }
+    if (formData.auth_config.trim()) {
+      try {
+        parsedAuthConfig = JSON.parse(formData.auth_config)
+      } catch {
+        errs.auth_config = 'Invalid JSON'
       }
     }
 
@@ -150,6 +160,7 @@ export default function AddProviderPage() {
           source_name: formData.source_name || null,
           provider_type: formData.provider_type || null,
           auth_type: formData.auth_type,
+          auth_config: parsedAuthConfig,
           request_config: parsedRequestConfig,
           response_path: formData.response_path || null,
           field_mapping: parsedFieldMapping,
@@ -158,6 +169,7 @@ export default function AddProviderPage() {
           country_codes: parseTags(formData.country_codes),
           regions: parseTags(formData.regions),
           fetch_interval_minutes: formData.fetch_interval_minutes,
+          fetch_offset_minutes: formData.fetch_offset_minutes,
           source_score: formData.source_score,
           priority: formData.priority,
           commercial_terms: formData.commercial_terms || null,
@@ -387,6 +399,22 @@ export default function AddProviderPage() {
                 <p style={helperStyle}>JSON query params (e.g. {'{"count":"50","tag":"accounting"}'})</p>
                 {fieldErrors.request_config && <p style={errorTextStyle}>{fieldErrors.request_config}</p>}
               </div>
+
+              <div className="col-span-2">
+                <label style={labelStyle}>Auth Config</label>
+                <textarea
+                  rows={4}
+                  value={formData.auth_config}
+                  onChange={e => setFormData({ ...formData, auth_config: e.target.value })}
+                  placeholder='{"env_var":"MY_KEY_VAR"}'
+                  style={{ ...inputStyle, fontFamily: 'monospace', resize: 'vertical' as const }}
+                />
+                <p style={helperStyle}>
+                  JSON auth configuration. For api_key: {'{"env_var":"MY_KEY_VAR"}'}.
+                  NEVER store actual secrets here — reference env var names only.
+                </p>
+                {fieldErrors.auth_config && <p style={errorTextStyle}>{fieldErrors.auth_config}</p>}
+              </div>
             </div>
           </div>
 
@@ -465,6 +493,19 @@ export default function AddProviderPage() {
                   style={inputStyle}
                 />
                 <p style={helperStyle}>Minutes. 1440=daily, 720=twice daily</p>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Fetch Offset (min)</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={59}
+                  value={formData.fetch_offset_minutes}
+                  onChange={e => setFormData({ ...formData, fetch_offset_minutes: Number(e.target.value) })}
+                  style={inputStyle}
+                />
+                <p style={helperStyle}>Offset within the fetch interval to stagger runs (0-59 min)</p>
               </div>
 
               <div>
