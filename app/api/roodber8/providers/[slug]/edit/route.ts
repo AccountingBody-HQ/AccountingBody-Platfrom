@@ -1,22 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getProvider } from '@/lib/providers'
-
-async function sha256Hex(message: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(message)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-}
-
-async function isAuthenticated(req: NextRequest): Promise<boolean> {
-  const token = req.cookies.get('admin_token')?.value
-  if (!token) return false
-  const secret = process.env.ADMIN_SECRET
-  if (!secret) return false
-  const expected = await sha256Hex(secret)
-  return token === expected
-}
+import { isAuthenticated } from '@/lib/admin-auth'
 
 function getSupabase() {
   return createClient(
@@ -29,8 +14,8 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null
 }
 
-function str(v: unknown, fallback = ''): string {
-  return typeof v === 'string' ? v : fallback
+function str(v: unknown, fallback: string | null = ''): string {
+  return typeof v === 'string' ? v : (fallback ?? '')
 }
 
 function num(v: unknown, fallback: number): number {
@@ -68,7 +53,9 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ ok: false, error: 'Provider not found' }, { status: 404 })
   }
 
-  const body: unknown = await req.json()
+  let body: unknown
+  try { body = await req.json() }
+  catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }) }
   if (!isRecord(body)) {
     return NextResponse.json({ ok: false, error: 'Invalid request body' }, { status: 400 })
   }
@@ -101,19 +88,19 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       platform_tags:           toArray(body.platform_tags),
       keywords:                toArray(body.keywords),
       source_score:            num(body.source_score, existing.source_score),
-      source_name:             str(body.source_name) || null,
+      source_name:             str(body.source_name, existing.source_name) || null,
       base_url:                baseUrl,
       auth_type:               str(body.auth_type, existing.auth_type),
       request_config:          parseJsonField(body.request_config, existing.request_config),
       auth_config:             parseJsonField(body.auth_config, existing.auth_config),
       field_mapping:           parseJsonField(body.field_mapping, existing.field_mapping),
-      response_path:           str(body.response_path) || null,
+      response_path:           str(body.response_path, existing.response_path) || null,
       pagination_style:        str(body.pagination_style, existing.pagination_style ?? 'none'),
       max_pages_per_run:       num(body.max_pages_per_run, existing.max_pages_per_run),
       fetch_interval_minutes:  num(body.fetch_interval_minutes, existing.fetch_interval_minutes),
       fetch_offset_minutes:    num(body.fetch_offset_minutes, existing.fetch_offset_minutes),
-      commercial_terms:        str(body.commercial_terms) || null,
-      notes:                   str(body.notes) || null,
+      commercial_terms:        str(body.commercial_terms, existing.commercial_terms) || null,
+      notes:                   str(body.notes, existing.notes) || null,
     })
     .eq('slug', slug)
 
