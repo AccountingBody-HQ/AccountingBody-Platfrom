@@ -170,7 +170,7 @@ export default function ProviderForm({
     setSubmitting(true)
     try {
       const url = mode === 'create'
-        ? '/api/roodber8/providers/new'
+        ? '/api/roodber8/providers/create'
         : `/api/roodber8/providers/${initialValues.slug}/edit`
       const method = mode === 'create' ? 'POST' : 'PATCH'
 
