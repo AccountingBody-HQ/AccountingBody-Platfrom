@@ -7,6 +7,7 @@ import { getProvider, type JobProvider, type ProviderRun } from '@/lib/providers
 import { ADMIN_COLORS, HEALTH_COLORS, RUN_STATUS_COLORS } from '@/lib/admin-theme'
 import RunNowButton from './RunNowButton'
 import TestConnectionButton from './TestConnectionButton'
+import StatusToggleButton from './StatusToggleButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -289,6 +290,10 @@ export default async function ProviderDetailPage({
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <HealthBadge status={provider.health_status} />
+          <StatusToggleButton
+            slug={provider.slug}
+            initialStatus={provider.status}
+          />
           <TestConnectionButton slug={provider.slug} />
           <RunNowButton slug={provider.slug} />
           <Link
