@@ -52,6 +52,8 @@ export const KEYWORD_TAXONOMY = {
     'accounting associate', 'accounting coordinator',
     'accounting specialist', 'accounting analyst',
     'accounting supervisor', 'accounting manager',
+    'accounting and operations', 'accounting and tax',
+    'accounting and reporting', 'accounting operations',
   ],
 
   // ── Seniority & leadership ────────────────────────────────────────────────
@@ -76,6 +78,10 @@ export const KEYWORD_TAXONOMY = {
     'director, finance', 'vice president, tax',
     'vice president, audit', 'vice president, finance',
     'financial manager', 'corporate finance',
+    'vice president - audit', 'vice president - tax',
+    'vice president - finance', 'manager of accounting',
+    'manager of finance', 'director of corporate',
+    'manager of tax', 'director of tax',
   ],
 
   // ── Audit & assurance ─────────────────────────────────────────────────────
