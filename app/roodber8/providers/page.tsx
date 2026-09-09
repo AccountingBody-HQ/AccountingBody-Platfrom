@@ -173,6 +173,17 @@ export default async function ProvidersPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
+            {/*
+              Global app/globals.css defines an unscoped `tr:hover td { background-color: var(--color-slate-50) }`
+              rule (a near-white colour) that otherwise paints every cell of a hovered row near-white,
+              making this dark-theme table's light text invisible. Override it here, scoped to this
+              table only, using ADMIN_COLORS.borderLight instead — without touching globals.css.
+            */}
+            <style>{`
+              .provider-list-row:hover td {
+                background-color: ${ADMIN_COLORS.borderLight} !important;
+              }
+            `}</style>
             <table className="w-full" style={{ borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: ADMIN_COLORS.bg }}>
@@ -195,7 +206,11 @@ export default async function ProvidersPage() {
                   const nextRun = nextRunDisplay(provider)
 
                   return (
-                    <tr key={provider.slug} style={{ background: ADMIN_COLORS.card, borderBottom: `1px solid ${ADMIN_COLORS.border}` }}>
+                    <tr
+                      key={provider.slug}
+                      className="provider-list-row"
+                      style={{ background: ADMIN_COLORS.card, borderBottom: `1px solid ${ADMIN_COLORS.border}` }}
+                    >
                       {/* Provider */}
                       <td className="px-6 py-4 align-top">
                         <Link href={`/roodber8/providers/${provider.slug}`} className="font-bold" style={{ color: ADMIN_COLORS.text, fontSize: 14 }}>
