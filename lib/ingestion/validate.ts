@@ -30,6 +30,18 @@ function computeQualityFlags(job: NormalisedJob): string[] {
   return flags
 }
 
+// ── Constraint compliance (must match jobs table CHECK constraints) ────────
+const VALID_EMPLOYMENT_TYPES = new Set([
+  'permanent', 'contract', 'temporary', 'part_time', 'internship'
+])
+const VALID_SENIORITY_LEVELS = new Set([
+  'junior', 'mid', 'senior', 'executive', 'director'
+])
+const VALID_SOURCES = new Set([
+  'employer', 'careerjet', 'adzuna', 'scrape', 'manual', 'jobicy',
+  'reed', 'indeed', 'remotive', 'talent', 'generic', 'generic-rest'
+])
+
 // ── Main validate function ─────────────────────────────────────────────────
 export function validate(jobs: NormalisedJob[]): ValidationResult {
   const valid: NormalisedJob[] = []
@@ -62,6 +74,26 @@ export function validate(jobs: NormalisedJob[]): ValidationResult {
     // ── Quality flags (non-rejecting) ────────────────────────────────────
     const flags = computeQualityFlags(job)
     job.quality_flags = [...job.quality_flags, ...flags]
+
+    // ── Pre-insert constraint compliance ─────────────────────────────────
+    if (job.employment_type !== null && job.employment_type !== undefined
+        && !VALID_EMPLOYMENT_TYPES.has(job.employment_type)) {
+      job.employment_type = null
+      job.quality_flags.push('employment_type_normalised')
+    }
+
+    if (job.seniority_level !== null && job.seniority_level !== undefined
+        && !VALID_SENIORITY_LEVELS.has(job.seniority_level)) {
+      job.seniority_level = null
+      job.quality_flags.push('seniority_normalised')
+    }
+
+    if (!VALID_SOURCES.has(job.source)) {
+      console.error(`[validate] rejecting job "${job.slug}" — invalid source value: ${JSON.stringify(job.source)}`)
+      rejected.push(job)
+      rejectionReasons.set(job.slug, 'invalid_source_value')
+      continue
+    }
 
     valid.push(job)
   }
