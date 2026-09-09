@@ -54,6 +54,7 @@ export interface JobProvider {
   source_name: string | null
   commercial_terms: string | null
   keyword_cursor: number | null
+  enforce_relevance: boolean | null
   created_at: string
   updated_at: string
 }

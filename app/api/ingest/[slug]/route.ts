@@ -90,7 +90,7 @@ export async function POST(
     const { jobs: rawJobs, pagesFetched, totalAvailable } = adapterResult
 
     const normalised = rawJobs.map(raw => normalise(raw, provider))
-    const { valid, rejected } = validate(normalised)
+    const { valid, rejected } = validate(normalised, provider.enforce_relevance ?? false)
 
     // Log validation rejections
     for (const job of rejected) {

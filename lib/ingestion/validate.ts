@@ -43,7 +43,10 @@ const VALID_SOURCES = new Set([
 ])
 
 // ── Main validate function ─────────────────────────────────────────────────
-export function validate(jobs: NormalisedJob[]): ValidationResult {
+export function validate(
+  jobs: NormalisedJob[],
+  enforceRelevance = false
+): ValidationResult {
   const valid: NormalisedJob[] = []
   const rejected: NormalisedJob[] = []
   const rejectionReasons = new Map<string, string>()
@@ -74,6 +77,15 @@ export function validate(jobs: NormalisedJob[]): ValidationResult {
     // ── Quality flags (non-rejecting) ────────────────────────────────────
     const flags = computeQualityFlags(job)
     job.quality_flags = [...job.quality_flags, ...flags]
+
+    if (
+      enforceRelevance &&
+      job.quality_flags.includes('low_relevance')
+    ) {
+      rejected.push(job)
+      rejectionReasons.set(job.slug, 'not_relevant')
+      continue
+    }
 
     // ── Pre-insert constraint compliance ─────────────────────────────────
     if (job.employment_type !== null && job.employment_type !== undefined
