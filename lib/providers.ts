@@ -338,3 +338,34 @@ export async function getLatestRunPerProvider(): Promise<Record<string, Provider
   }
   return map
 }
+
+// Close provider_runs rows stuck at 'running' beyond the platform
+// timeout. A killed serverless function never reaches
+// completeProviderRun/failProviderRun, leaving the row open forever
+// and (via getProvidersDueForFetch) permanently blocking the
+// provider. Returns the number of rows reaped.
+export async function reapStaleRuns(
+  olderThanMinutes = 10
+): Promise<number> {
+  const supabase = getSupabase()
+  const cutoff = new Date(
+    Date.now() - olderThanMinutes * 60_000
+  ).toISOString()
+  const { data, error } = await supabase
+    .from('provider_runs')
+    .update({
+      status: 'failed',
+      completed_at: new Date().toISOString(),
+      error_message:
+        'Reaped: run exceeded platform timeout and never completed',
+      error_code: 'TIMEOUT_REAPED',
+    })
+    .eq('status', 'running')
+    .lt('started_at', cutoff)
+    .select('id')
+  if (error) {
+    console.error('[reapStaleRuns] failed:', error.message)
+    return 0
+  }
+  return data?.length ?? 0
+}

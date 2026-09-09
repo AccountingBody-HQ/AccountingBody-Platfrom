@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getProvidersDueForFetch } from '@/lib/providers'
+import { getProvidersDueForFetch, reapStaleRuns } from '@/lib/providers'
 
 export const maxDuration = 60
 
@@ -9,10 +9,17 @@ export async function GET(req: NextRequest) {
     return new Response('Unauthorized', { status: 401 })
   }
 
+  let reaped = 0
+  try {
+    reaped = await reapStaleRuns(10)
+  } catch (reapErr: unknown) {
+    console.error('[orchestrator] reaper failed:', reapErr)
+  }
+
   const dueProviders = await getProvidersDueForFetch()
 
   if (dueProviders.length === 0) {
-    return Response.json({ ok: true, dispatched: [], message: 'No providers due' })
+    return Response.json({ ok: true, dispatched: [], reaped, message: 'No providers due' })
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accountingbody.com'
@@ -52,6 +59,7 @@ export async function GET(req: NextRequest) {
     ok:        true,
     dispatched,
     count:     dispatched.length,
+    reaped,
     summary,
   })
 }
