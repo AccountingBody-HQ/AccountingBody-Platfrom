@@ -88,6 +88,7 @@ export const KEYWORD_TAXONOMY = {
     'VAT analyst', 'transfer pricing', 'corporate tax', 'personal tax',
     'indirect tax', 'direct tax', 'international tax',
     'private client tax', 'tax and consulting', 'audit and tax',
+    'tax consulting', 'tax technology', 'tax advisory',
   ],
 
   // ── Financial reporting & technical ───────────────────────────────────────
@@ -105,6 +106,8 @@ export const KEYWORD_TAXONOMY = {
     'client reporting', 'capital reporting',
     'regulatory reporting manager', 'reporting specialist',
     'finance reporting',
+    'capital management', 'international reporting',
+    'group financial reporting',
   ],
 
   // ── FP&A & commercial ─────────────────────────────────────────────────────
@@ -116,6 +119,8 @@ export const KEYWORD_TAXONOMY = {
     'commercial finance manager', 'finance analyst', 'financial analyst',
     'business analyst', 'finance business partner',
     'P&L', 'profit and loss', 'variance analysis',
+    'p and l', 'finance process', 'finance ops',
+    'financial operations analyst',
   ],
 
   // ── Treasury & cash ───────────────────────────────────────────────────────
@@ -179,6 +184,7 @@ export const KEYWORD_TAXONOMY = {
     'KYC', 'KYC analyst', 'SOX', 'Sarbanes-Oxley',
     'internal controls', 'COSO', 'credit risk', 'market risk',
     'operational risk', 'enterprise risk',
+    'credit portfolio', 'portfolio management', 'credit analyst',
   ],
 
   // ── Systems & ERP ─────────────────────────────────────────────────────────

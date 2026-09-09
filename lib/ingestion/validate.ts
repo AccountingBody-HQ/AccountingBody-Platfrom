@@ -28,6 +28,20 @@ function buildKeywordMatcher(keyword: string): RegExp {
 const KEYWORD_MATCHERS: RegExp[] = ACCOUNTING_FINANCE_KEYWORDS
   .map(buildKeywordMatcher)
 
+// Normalise text before keyword matching. Job titles routinely
+// write '&' where the taxonomy stores 'and' ("Finance & Operations
+// Director" vs 'finance and operations director'), so fold them
+// together rather than storing both spellings of every phrase.
+// Collapse the resulting whitespace so 'A & B' and 'A and B'
+// produce identical text.
+function normaliseForMatching(s: string): string {
+  return (s ?? '')
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 // A job is relevant if a taxonomy keyword appears as a whole word
 // in the TITLE, or if at least two distinct keywords appear as
 // whole words in the description. Title matches are decisive;
@@ -39,11 +53,11 @@ const KEYWORD_MATCHERS: RegExp[] = ACCOUNTING_FINANCE_KEYWORDS
 // existing `jobs` table rows — a different shape entirely — don't have
 // to fabricate a fake NormalisedJob just to reuse this logic.
 export function isRelevantByText(title: string, description: string): boolean {
-  const t = (title ?? '').toLowerCase()
+  const t = normaliseForMatching(title)
   for (const re of KEYWORD_MATCHERS) {
     if (re.test(t)) return true
   }
-  const d = (description ?? '').toLowerCase()
+  const d = normaliseForMatching(description)
   let hits = 0
   for (const re of KEYWORD_MATCHERS) {
     if (re.test(d)) {
