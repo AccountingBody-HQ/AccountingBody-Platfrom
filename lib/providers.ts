@@ -281,3 +281,19 @@ export async function incrementProviderJobsToday(
     p_count: count,
   })
 }
+
+// Get the most recent run for every provider, keyed by provider_slug
+export async function getLatestRunPerProvider(): Promise<Record<string, ProviderRun>> {
+  const sb = getSupabase()
+  const { data, error } = await sb
+    .from('provider_runs')
+    .select('*')
+    .order('started_at', { ascending: false })
+    .limit(500)
+  if (error) throw new Error(error.message)
+  const map: Record<string, ProviderRun> = {}
+  for (const run of data ?? []) {
+    if (!map[run.provider_slug]) map[run.provider_slug] = run
+  }
+  return map
+}
