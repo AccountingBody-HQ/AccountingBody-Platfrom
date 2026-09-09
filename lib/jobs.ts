@@ -108,7 +108,59 @@ export interface JobInsert {
 
 // ── Internal helpers ─────────────────────────────────────────────────────────
 
-const JOB_COLUMNS = '*'
+// Public column allowlist — every field the anonymous, unauthenticated
+// jobs API (getActiveDirectJobs -> /api/jobs/direct -> the public listings
+// page) is allowed to return. Deliberately excludes manage_token, employer
+// contact details, payment/moderation metadata, ranking internals, and
+// every other column with no business reaching an anonymous visitor.
+const JOB_COLUMNS = [
+  'id',
+  'slug',
+  'title',
+  'company_name',
+  'company_domain',
+  'description',
+  'excerpt',
+  'location_text',
+  'location_city',
+  'location_country',
+  'location_remote',
+  'salary_text',
+  'salary_min',
+  'salary_max',
+  'salary_currency',
+  'employment_type',
+  'seniority_level',
+  'category',
+  'qualifications_required',
+  'skills_required',
+  'skills_nice_to_have',
+  'apply_method',
+  'application_url',
+  'application_email',
+  'source',
+  'source_url',
+  'platform',
+  'is_featured',
+  'published_at',
+  'created_at',
+  'expires_at',
+].join(', ')
+
+// Columns needed only for the server-side relevance ranking inside
+// getActiveDirectJobs (see compositeScore). Selected in addition to
+// JOB_COLUMNS for that one query, then stripped from every row before it's
+// returned — they must never reach the client.
+const RANKING_COLUMNS = 'source_score, quality_score, ctr'
+
+// Full row — every other read/write path in this file needs fields
+// JOB_COLUMNS deliberately excludes (status, employer contact details,
+// manage_token, payment/moderation metadata, ranking internals, etc).
+// None of these paths hand the raw row to an anonymous JSON response as-is:
+// each requires an admin session, a cron secret, or the job's own
+// manage_token as a bearer credential — and app/api/jobs/manage/route.ts
+// additionally applies its own field-stripping before responding.
+const JOB_COLUMNS_ADMIN = '*'
 
 export function slugify(value: string): string {
   return value
@@ -206,6 +258,21 @@ function compositeScore(job: Job): number {
     job.quality_score * RANK_WEIGHTS.quality +
     job.ctr * RANK_WEIGHTS.ctr
   )
+}
+
+// Row shape returned by getActiveDirectJobs's query — JOB_COLUMNS plus the
+// RANKING_COLUMNS needed only to compute compositeScore server-side.
+type JobWithRanking = Job & { source_score: number; quality_score: number; ctr: number }
+
+// Removes the ranking-only columns before a row leaves getActiveDirectJobs.
+// The resulting object only actually has the JOB_COLUMNS fields at runtime;
+// casting it back to Job here matches the same accepted trade-off as the
+// existing `data as Job[]` casts elsewhere in this file — the public read
+// path never reads a field outside JOB_COLUMNS (see step29 report).
+function stripRankingColumns(job: JobWithRanking): Job {
+  const { source_score, quality_score, ctr, ...publicJob } = job
+  void source_score; void quality_score; void ctr
+  return publicJob as Job
 }
 
 // ── Public reads ──────────────────────────────────────────────────────────────
@@ -327,7 +394,7 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
   // rows are pulled from a potentially much larger active set.
   let query = supabase
     .from('jobs')
-    .select(JOB_COLUMNS)
+    .select(`${JOB_COLUMNS}, ${RANKING_COLUMNS}`)
     .eq('status', 'active')
     .contains('platform', [platform])
     .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
@@ -375,7 +442,12 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
     return []
   }
 
-  const jobs = data as Job[]
+  // JOB_COLUMNS is built with Array.prototype.join, so its type is a plain
+  // `string`, not a literal — Supabase's compile-time select-string parser
+  // can't statically infer columns from it and falls back to an internal
+  // error-placeholder type. Route through `unknown` (not `any`) to bridge
+  // that gap; the actual runtime shape is exactly JOB_COLUMNS + RANKING_COLUMNS.
+  const jobs = data as unknown as JobWithRanking[]
   const ranked = jobs
     .map(job => ({ job, score: compositeScore(job) }))
     .sort((a, b) => b.score - a.score)
@@ -387,7 +459,7 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
       const bMax = b.salary_max ?? b.salary_min ?? 0
       return bMax - aMax
     })
-    return jobs.slice(offset, offset + limit)
+    return jobs.slice(offset, offset + limit).map(stripRankingColumns)
   }
   if (sortBy === 'salary_low') {
     // Only sort jobs that have salary data; unsalaried jobs go to the end
@@ -398,7 +470,7 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
       const bMin = b.salary_min ?? b.salary_max ?? 0
       return aMin - bMin
     })
-    return [...withSalary, ...withoutSalary].slice(offset, offset + limit)
+    return [...withSalary, ...withoutSalary].slice(offset, offset + limit).map(stripRankingColumns)
   }
   if (sortBy === 'recent') {
     jobs.sort((a, b) => {
@@ -406,24 +478,34 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
       const bDate = new Date(b.created_at ?? 0).getTime()
       return bDate - aDate
     })
-    return jobs.slice(offset, offset + limit)
+    return jobs.slice(offset, offset + limit).map(stripRankingColumns)
   }
 
   // Default: relevance composite score
-  return ranked.slice(offset, offset + limit)
+  return ranked.slice(offset, offset + limit).map(stripRankingColumns)
 }
 
+// Used by the admin dashboard (app/api/roodber8/jobs/[id]/route.ts, itself
+// cookie-gated) and by app/jobs/apply/[id]/page.tsx (a public Server
+// Component that only ever interpolates title/company_name/location_text/
+// description/status into rendered HTML — it never passes the fetched job
+// object to a client component, so the wider row here never reaches the
+// browser as raw JSON the way /api/jobs/direct's response does).
 export async function getJobById(id: string): Promise<Job | null> {
   const supabase = getSupabase()
   const { data, error } = await supabase
     .from('jobs')
-    .select(JOB_COLUMNS)
+    .select(JOB_COLUMNS_ADMIN)
     .eq('id', id)
     .single()
   if (error || !data) return null
   return data as Job
 }
 
+// Not currently called anywhere, but its shape (status='active' filter, no
+// other internal-only intent) matches a public single-listing-by-slug
+// lookup, so it's kept on the public allowlist rather than JOB_COLUMNS_ADMIN
+// — wiring it up later shouldn't silently resurrect the full-row leak.
 export async function getJobBySlug(slug: string): Promise<Job | null> {
   const supabase = getSupabase()
   const { data, error } = await supabase
@@ -433,17 +515,21 @@ export async function getJobBySlug(slug: string): Promise<Job | null> {
     .eq('status', 'active')
     .single()
   if (error || !data) return null
-  return data as Job
+  // See the comment on the JOB_COLUMNS cast in getActiveDirectJobs — same
+  // non-literal-string limitation applies here.
+  return data as unknown as Job
 }
 
 // No status filter — an employer managing their own listing via its unique
 // manage_token should be able to see it regardless of status (pending
-// payment, under review, live, closed, etc).
+// payment, under review, live, closed, etc). Callers (app/api/jobs/manage/
+// route.ts, the expire-jobs cron) read status, employer_email, and
+// manage_token itself off the result, so this needs the full row.
 export async function getJobByManageToken(token: string): Promise<Job | null> {
   const supabase = getSupabase()
   const { data, error } = await supabase
     .from('jobs')
-    .select(JOB_COLUMNS)
+    .select(JOB_COLUMNS_ADMIN)
     .eq('manage_token', token)
     .single()
   if (error || !data) return null
@@ -469,7 +555,7 @@ export async function getAdminJobs(params: {
 
   let listQuery = supabase
     .from('jobs')
-    .select(JOB_COLUMNS)
+    .select(JOB_COLUMNS_ADMIN)
     .order('created_at', { ascending: false })
     .range(from, to)
 
@@ -532,7 +618,7 @@ export async function getExpiringJobs(daysFromNow: number): Promise<Job[]> {
 
   const { data, error } = await supabase
     .from('jobs')
-    .select(JOB_COLUMNS)
+    .select(JOB_COLUMNS_ADMIN)
     .eq('status', 'active')
     .not('expires_at', 'is', null)
     .lte('expires_at', threshold)
@@ -614,7 +700,7 @@ export async function createJob(data: JobInsert): Promise<Job> {
   const { data: inserted, error } = await supabase
     .from('jobs')
     .insert(row)
-    .select(JOB_COLUMNS)
+    .select(JOB_COLUMNS_ADMIN)
     .single()
 
   if (error || !inserted) {
@@ -640,7 +726,7 @@ export async function approveJob(id: string, adminNotes?: string): Promise<Job> 
     .from('jobs')
     .update(update)
     .eq('id', id)
-    .select(JOB_COLUMNS)
+    .select(JOB_COLUMNS_ADMIN)
     .single()
 
   if (error || !data) throw error ?? new Error('approveJob: update returned no row')
@@ -654,7 +740,7 @@ export async function rejectJob(id: string, reason: string): Promise<Job> {
     .from('jobs')
     .update({ status: 'rejected', rejection_reason: reason })
     .eq('id', id)
-    .select(JOB_COLUMNS)
+    .select(JOB_COLUMNS_ADMIN)
     .single()
 
   if (error || !data) throw error ?? new Error('rejectJob: update returned no row')
@@ -692,7 +778,7 @@ export async function closeJobByManageToken(token: string): Promise<Job | null> 
     .from('jobs')
     .update({ status: 'closed', closed_at: new Date().toISOString() })
     .eq('id', job.id)
-    .select(JOB_COLUMNS)
+    .select(JOB_COLUMNS_ADMIN)
     .single()
 
   if (error || !data) throw error ?? new Error('closeJobByManageToken: update returned no row')
@@ -724,7 +810,7 @@ export async function markJobPaid(
       status: 'pending_approval',
     })
     .eq('id', id)
-    .select(JOB_COLUMNS)
+    .select(JOB_COLUMNS_ADMIN)
     .single()
 
   if (error || !data) throw error ?? new Error('markJobPaid: update returned no row')
