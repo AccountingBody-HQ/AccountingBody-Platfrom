@@ -3,95 +3,96 @@
 // Add new terms here — never hardcode elsewhere.
 
 export const ACCOUNTING_FINANCE_KEYWORDS: string[] = [
-  // Qualifications
-  'acca', 'cima', 'aca', 'icaew', 'cpa', 'cfa', 'aat', 'icpak', 'ican',
-  'eticpa', 'saica', 'cga', 'cma', 'cfe', 'cia',
-  // Core roles
+  // Core role titles
   'accountant', 'auditor', 'bookkeeper', 'comptroller', 'controller',
-  'treasurer', 'actuary',
-  // Finance roles
-  'finance manager', 'financial analyst', 'financial controller',
-  'financial director', 'finance director', 'chief financial',
-  'fp&a', 'fpanda', 'financial planning',
-  // Specialisms
-  'management account', 'tax accountant', 'tax manager', 'tax analyst',
-  'accounts payable', 'accounts receivable', 'credit analyst',
-  'credit controller', 'payroll', 'audit manager', 'audit partner',
-  'internal audit', 'external audit', 'statutory audit',
-  'forensic account', 'insolvency', 'restructuring',
-  // Seniority variants
-  'cfo', 'vp finance', 'head of finance', 'head of tax',
-  'group accountant', 'group finance', 'senior accountant',
-  // General finance
-  'treasury', 'investment', 'fund account', 'fund manager',
-  'compliance', 'risk manager', 'financial risk',
-  'cost accountant', 'management reporting', 'consolidation',
-  // Payroll
-  'payroll manager', 'payroll specialist', 'payroll administrator',
-  // Adjacent roles & fintech (pre-filtered provider coverage)
-  'product owner', 'finance operations', 'financial operations', 'fintech',
-  'accounts stack', 'accounting stack', 'fractional cfo', 'cpa firm',
-  // Accounting software / platforms
-  'accounting software', 'accounting platform', 'xero', 'quickbooks',
-  'netsuite', 'sage intacct', 'bill pay',
-  // Operational terms
-  'gl coding', 'reconciliation', 'financial reporting',
-  // Expanded terms — session 3 pipeline v2 (deduplicated against the above)
-  'finance controller', 'bookkeeping', 'payroll officer', 'payroll analyst',
-  'treasury analyst', 'treasury manager', 'treasury accountant',
-  'cash management', 'cash flow', 'working capital',
-  'fp&a analyst', 'fp&a manager', 'finance analyst', 'business analyst finance',
-  'cost analyst', 'cost controller', 'cost manager',
-  'management accountant', 'management accounting',
-  'financial reporting manager', 'financial reporting analyst', 'reporting accountant',
-  'consolidation accountant', 'group reporting', 'statutory accountant',
-  'statutory reporting', 'technical accountant',
-  'internal auditor', 'external auditor', 'audit senior', 'audit associate',
-  'audit director', 'senior auditor',
-  'tax consultant', 'tax advisor', 'tax associate', 'tax director', 'tax partner',
-  'transfer pricing', 'vat manager', 'vat accountant', 'vat analyst',
-  'indirect tax', 'direct tax', 'corporate tax', 'personal tax',
-  'private client tax', 'tax compliance', 'tax reporting', 'tax planning',
-  'forensic accountant', 'forensic accounting', 'fraud examiner',
-  'risk analyst', 'credit risk', 'market risk', 'operational risk', 'enterprise risk',
-  'compliance officer', 'compliance manager', 'compliance analyst',
-  'aml analyst', 'anti-money laundering', 'financial crime', 'kyc analyst',
-  'investment accountant', 'fund accountant', 'fund administrator',
-  'hedge fund', 'private equity', 'venture capital', 'asset management',
-  'portfolio analyst', 'portfolio manager', 'investment analyst', 'equity analyst',
-  'financial modelling', 'financial modeling', 'valuation analyst', 'valuation manager',
-  'mergers and acquisitions', 'deal analyst', 'transaction services',
-  'due diligence', 'm&a analyst', 'corporate finance analyst',
-  'project accountant', 'systems accountant', 'erp consultant', 'erp analyst',
-  'sap finance', 'sap fico', 'oracle finance', 'oracle financials',
-  'dynamics finance', 'dynamics 365 finance', 'netsuite accountant',
-  'xero accountant', 'quickbooks accountant', 'sage accountant',
-  'icaz', 'newly qualified', 'part qualified', 'qualified accountant',
-  'finance graduate', 'accounting graduate', 'finance trainee', 'accounting trainee',
-  'finance apprentice', 'accounting apprentice',
-  'chief financial officer', 'group finance director', 'head of accounting',
-  'director of finance', 'director of accounting',
-  'accounts assistant', 'finance assistant', 'accounting assistant',
-  'purchase ledger', 'purchase ledger clerk', 'sales ledger', 'sales ledger clerk',
-  'ledger clerk', 'accounts clerk', 'finance clerk',
-  'billing analyst', 'billing manager', 'billing specialist',
-  'revenue accountant', 'revenue analyst', 'revenue recognition', 'revenue manager',
-  'ifrs', 'us gaap', 'uk gaap', 'gaap', 'frs102',
-  'financial services', 'banking', 'retail banking', 'investment banking',
-  'commercial banking', 'insurance',
-  'real estate finance', 'property accountant', 'property finance',
-  'construction accountant', 'construction finance',
-  'charity accountant', 'charity finance', 'ngo finance', 'third sector finance',
-  'public sector finance', 'government accountant', 'public finance',
-  'local government finance', 'nhs finance', 'healthcare finance',
-  'actuarial analyst', 'actuarial consultant',
-  'credit manager', 'debtor management',
-  'pension accountant', 'pension administrator', 'pensions finance',
-  'shared services', 'finance shared services', 'gbs finance',
-  'finance business partner', 'business partnering', 'finance partner',
-  'commercial finance', 'commercial accountant', 'commercial analyst',
-  'financial accountant', 'group financial accountant',
-  'assistant accountant', 'junior accountant',
-  'practice accountant', 'public practice', 'accounting practice',
-  'big four', 'big 4', 'grant thornton', 'bdo', 'rsm', 'mazars',
+  'treasurer', 'actuary', 'underwriter', 'analyst',
+
+  // Seniority + role combinations
+  'chief financial officer', 'CFO', 'finance director', 'FD',
+  'financial controller', 'group financial controller',
+  'chief accountant', 'group accountant', 'management accountant',
+  'assistant accountant', 'accounts assistant', 'finance manager',
+  'finance business partner', 'finance analyst', 'financial analyst',
+  'senior accountant', 'junior accountant', 'staff accountant',
+  'VP finance', 'head of finance', 'director of finance',
+
+  // Audit & assurance
+  'external auditor', 'internal auditor', 'audit manager',
+  'audit senior', 'audit assistant', 'audit associate',
+  'statutory audit', 'assurance', 'forensic accountant',
+  'forensic audit',
+
+  // Tax
+  'tax accountant', 'tax manager', 'tax director', 'tax analyst',
+  'tax adviser', 'tax advisor', 'tax consultant', 'tax specialist',
+  'VAT', 'VAT manager', 'VAT accountant', 'transfer pricing',
+  'corporate tax', 'personal tax', 'indirect tax', 'direct tax',
+  'international tax', 'tax compliance', 'tax planning',
+  'ATT', 'CTA', 'CIOT',
+
+  // Financial reporting & technical
+  'financial reporting', 'financial reporting manager',
+  'group reporting', 'statutory reporting', 'management reporting',
+  'consolidation', 'statutory accounts', 'annual report',
+  'IFRS', 'UK GAAP', 'US GAAP', 'technical accounting',
+  'revenue recognition', 'lease accounting',
+
+  // FP&A & commercial
+  'FP&A', 'financial planning', 'financial planning and analysis',
+  'budgeting', 'forecasting', 'planning and analysis',
+  'commercial finance', 'commercial analyst', 'business analyst',
+  'commercial accountant', 'business partner',
+
+  // Treasury & cash
+  'treasury', 'treasurer', 'treasury analyst', 'treasury manager',
+  'cash management', 'cash flow', 'liquidity', 'foreign exchange',
+  'FX', 'hedging', 'treasury accountant',
+
+  // Transactional finance
+  'accounts payable', 'accounts receivable', 'AP', 'AR',
+  'credit control', 'credit controller', 'billing', 'invoicing',
+  'purchase ledger', 'sales ledger', 'ledger', 'reconciliation',
+  'payroll', 'payroll manager', 'payroll accountant',
+  'expenses', 'fixed assets',
+
+  // Cost & management accounting
+  'cost accountant', 'cost accounting', 'cost analyst',
+  'management accounts', 'variance analysis', 'costing',
+  'standard costing', 'product costing', 'project accounting',
+
+  // Fund & investment accounting
+  'fund accountant', 'fund accounting', 'investment accountant',
+  'portfolio accountant', 'NAV', 'net asset value',
+  'hedge fund', 'private equity', 'venture capital',
+  'asset management', 'wealth management',
+
+  // Risk & compliance
+  'financial risk', 'risk analyst', 'risk manager',
+  'compliance', 'compliance officer', 'regulatory reporting',
+  'financial crime', 'AML', 'KYC', 'SOX', 'Sarbanes-Oxley',
+  'internal controls', 'COSO',
+
+  // Qualifications
+  'ACA', 'ACCA', 'CIMA', 'CPA', 'CFA', 'ICAEW', 'ICAS',
+  'AAT', 'CIPFA', 'CIA', 'CMA', 'CGMA', 'chartered accountant',
+  'chartered certified accountant', 'qualified accountant',
+  'part qualified', 'newly qualified', 'finalist',
+
+  // Software & systems
+  'SAP', 'Oracle', 'Xero', 'QuickBooks', 'Sage', 'NetSuite',
+  'Workday', 'Dynamics', 'D365', 'Power BI', 'Hyperion',
+  'OneStream', 'Anaplan', 'Cognos', 'TM1', 'BlackLine',
+  'Concur', 'Coupa',
+
+  // Sector / employer type
+  'Big Four', 'Big 4', 'mid-tier', 'practice', 'industry',
+  'financial services', 'banking', 'insurance', 'fintech',
+  'real estate', 'property', 'retail', 'manufacturing',
+  'public sector', 'charity', 'not for profit', 'NFP',
+  'professional services',
+
+  // Employment type qualifiers (help catch relevant contract/temp roles)
+  'finance contract', 'accounting contract', 'interim finance',
+  'interim accountant', 'interim CFO', 'interim financial controller',
+  'locum accountant',
 ]
