@@ -47,7 +47,7 @@ export const KEYWORD_TAXONOMY = {
     'accounts senior', 'accounts supervisor',
     'accounts coordinator', 'accounts administrator',
     'accounts operations', 'accounts technician', 'bursar',
-    'school bursar',
+    'school bursar', 'accounts lead',
   ],
 
   // ── Seniority & leadership ────────────────────────────────────────────────
@@ -89,6 +89,8 @@ export const KEYWORD_TAXONOMY = {
     'indirect tax', 'direct tax', 'international tax',
     'private client tax', 'tax and consulting', 'audit and tax',
     'tax consulting', 'tax technology', 'tax advisory',
+    'trust and tax', 'tax accounts', 'trust tax',
+    'trust accountant', 'trust manager', 'private client',
   ],
 
   // ── Financial reporting & technical ───────────────────────────────────────
