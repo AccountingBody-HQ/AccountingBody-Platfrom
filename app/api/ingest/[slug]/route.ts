@@ -140,49 +140,61 @@ export async function POST(
         apply_method:          'external' as const,
       }))
 
-      const { error, data } = await supabase.from('jobs').insert(rows).select('id')
+      const { error, data } = await supabase
+        .from('jobs')
+        .upsert(rows, {
+          onConflict: 'dedup_hash',
+          ignoreDuplicates: true,
+        })
+        .select('id')
 
       if (error) {
         // Batch failed — try individual inserts to salvage partial success
         console.warn(`[ingest/${slug}] Batch insert failed, falling back to individual inserts:`, error.message)
         for (const job of batch) {
-          const { error: singleError } = await supabase.from('jobs').insert({
-            title:                 job.title,
-            company_name:          job.company_name,
-            slug:                  job.slug,
-            description:           job.description,
-            excerpt:               job.excerpt,
-            location_text:         job.location_text,
-            location_country:      job.location_country,
-            location_remote:       job.location_remote,
-            salary_min:            job.salary_min,
-            salary_max:            job.salary_max,
-            salary_currency:       job.salary_currency,
-            salary_text:           job.salary_text,
-            employment_type:       job.employment_type,
-            seniority_level:       job.seniority_level,
-            source:                job.source,
-            source_job_id:         job.source_job_id,
-            source_url:            job.source_url,
-            source_score:          job.source_score,
-            application_url:       job.application_url,
-            dedup_hash:            job.dedup_hash,
-            platform:              job.platform,
-            status:                'active',
-            expires_at:            job.expires_at,
-            provider_id:           job.provider_id,
-            ingestion_run_id:      run.id,
-            data_completeness:     job.data_completeness,
-            quality_flags:         job.quality_flags,
-            normalisation_version: job.normalisation_version,
-            raw_source_data:       job.raw_source_data,
-            quality_score:         job.data_completeness,
-            payment_status:        'free',
-            employer_email:        `noreply+${provider.slug}@accountingbody.com`,
-            employer_name:         provider.name,
-            employer_company:      job.company_name,
-            apply_method:          'external',
-          })
+          const { error: singleError, data: singleData } = await supabase
+            .from('jobs')
+            .upsert({
+              title:                 job.title,
+              company_name:          job.company_name,
+              slug:                  job.slug,
+              description:           job.description,
+              excerpt:               job.excerpt,
+              location_text:         job.location_text,
+              location_country:      job.location_country,
+              location_remote:       job.location_remote,
+              salary_min:            job.salary_min,
+              salary_max:            job.salary_max,
+              salary_currency:       job.salary_currency,
+              salary_text:           job.salary_text,
+              employment_type:       job.employment_type,
+              seniority_level:       job.seniority_level,
+              source:                job.source,
+              source_job_id:         job.source_job_id,
+              source_url:            job.source_url,
+              source_score:          job.source_score,
+              application_url:       job.application_url,
+              dedup_hash:            job.dedup_hash,
+              platform:              job.platform,
+              status:                'active',
+              expires_at:            job.expires_at,
+              provider_id:           job.provider_id,
+              ingestion_run_id:      run.id,
+              data_completeness:     job.data_completeness,
+              quality_flags:         job.quality_flags,
+              normalisation_version: job.normalisation_version,
+              raw_source_data:       job.raw_source_data,
+              quality_score:         job.data_completeness,
+              payment_status:        'free',
+              employer_email:        `noreply+${provider.slug}@accountingbody.com`,
+              employer_name:         provider.name,
+              employer_company:      job.company_name,
+              apply_method:          'external',
+            }, {
+              onConflict: 'dedup_hash',
+              ignoreDuplicates: true,
+            })
+            .select('id')
           if (singleError) {
             insertErrors.push(`${job.slug}: ${singleError.message}`)
             await logProviderError(
@@ -191,7 +203,9 @@ export async function POST(
               singleError.message,
               job.raw_source_data as Record<string, unknown>
             )
-          } else {
+          } else if (singleData && singleData.length > 0) {
+            // ignoreDuplicates skips the row silently on conflict — no error,
+            // but also no row returned. Only count it when one actually came back.
             insertedCount++
           }
         }
@@ -243,6 +257,12 @@ export async function POST(
       responseMs:   fetchMs,
     })
 
+    // Cap the error list in the response payload only — logProviderError
+    // above already logged every single one.
+    const cappedInsertErrors = insertErrors.length > 20
+      ? [...insertErrors.slice(0, 20), `...and ${insertErrors.length - 20} more`]
+      : insertErrors
+
     return Response.json({
       ok:             true,
       provider:       slug,
@@ -252,7 +272,7 @@ export async function POST(
       rejected:       rejected.length,
       pagesFetched,
       totalAvailable: totalAvailable ?? undefined,
-      insertErrors:   insertErrors.length > 0 ? insertErrors : undefined,
+      insertErrors:   cappedInsertErrors.length > 0 ? cappedInsertErrors : undefined,
       durationMs,
     })
 
