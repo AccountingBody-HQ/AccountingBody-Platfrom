@@ -8,9 +8,46 @@ export interface ValidationResult {
 }
 
 // ── Relevance check ────────────────────────────────────────────────────────
+
+// Escape a keyword for safe use inside a RegExp.
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// Build a word-boundary matcher for a keyword. Matching on whole
+// words only prevents 'AP' matching inside 'apply' and 'AR'
+// matching inside 'career'.
+// NOTE: do NOT use the /u flag — it causes TS1501 in this repo
+// (see the repo's TypeScript conventions).
+function buildKeywordMatcher(keyword: string): RegExp {
+  return new RegExp(`(^|[^a-z0-9])${escapeRegex(keyword.toLowerCase())}([^a-z0-9]|$)`, 'i')
+}
+
+// Precomputed once at module scope — the per-job loop must not rebuild
+// 437 regexes for every job.
+const KEYWORD_MATCHERS: RegExp[] = ACCOUNTING_FINANCE_KEYWORDS
+  .map(buildKeywordMatcher)
+
+// A job is relevant if a taxonomy keyword appears as a whole word
+// in the TITLE, or if at least two distinct keywords appear as
+// whole words in the description. Title matches are decisive;
+// description matches require corroboration, because a single
+// incidental mention ("our accounts team will contact you") is
+// not evidence the ROLE is an accounting or finance role.
 function isAccountingFinanceRelevant(job: NormalisedJob): boolean {
-  const searchText = `${job.title} ${job.description}`.toLowerCase()
-  return ACCOUNTING_FINANCE_KEYWORDS.some(kw => searchText.includes(kw.toLowerCase()))
+  const title = (job.title ?? '').toLowerCase()
+  for (const re of KEYWORD_MATCHERS) {
+    if (re.test(title)) return true
+  }
+  const description = (job.description ?? '').toLowerCase()
+  let hits = 0
+  for (const re of KEYWORD_MATCHERS) {
+    if (re.test(description)) {
+      hits++
+      if (hits >= 2) return true
+    }
+  }
+  return false
 }
 
 // ── Quality flags ──────────────────────────────────────────────────────────
