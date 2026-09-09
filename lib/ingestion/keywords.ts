@@ -44,6 +44,10 @@ export const KEYWORD_TAXONOMY = {
     'finance administrator', 'finance clerk', 'accounts clerk',
     'billing clerk', 'ledger clerk', 'purchase ledger clerk',
     'sales ledger clerk',
+    'accounts senior', 'accounts supervisor',
+    'accounts coordinator', 'accounts administrator',
+    'accounts operations', 'accounts technician', 'bursar',
+    'school bursar',
   ],
 
   // ── Seniority & leadership ────────────────────────────────────────────────
@@ -60,6 +64,9 @@ export const KEYWORD_TAXONOMY = {
     'head of reporting', 'head of FP&A', 'head of commercial finance',
     'finance manager', 'accounts manager', 'finance business partner',
     'finance partner', 'business partnering',
+    'financial director', 'financial control',
+    'head of financial control', 'finance and operations director',
+    'finance operations director', 'director of financial control',
   ],
 
   // ── Audit & assurance ─────────────────────────────────────────────────────
@@ -80,7 +87,7 @@ export const KEYWORD_TAXONOMY = {
     'tax reporting', 'VAT', 'VAT manager', 'VAT accountant',
     'VAT analyst', 'transfer pricing', 'corporate tax', 'personal tax',
     'indirect tax', 'direct tax', 'international tax',
-    'private client tax',
+    'private client tax', 'tax and consulting', 'audit and tax',
   ],
 
   // ── Financial reporting & technical ───────────────────────────────────────
@@ -93,6 +100,11 @@ export const KEYWORD_TAXONOMY = {
     'financial reporting analyst', 'financial reporting manager',
     'IFRS', 'UK GAAP', 'US GAAP', 'GAAP', 'FRS102',
     'revenue recognition', 'lease accounting',
+    'reporting manager', 'reporting analyst',
+    'external reporting', 'internal reporting',
+    'client reporting', 'capital reporting',
+    'regulatory reporting manager', 'reporting specialist',
+    'finance reporting',
   ],
 
   // ── FP&A & commercial ─────────────────────────────────────────────────────
@@ -126,6 +138,8 @@ export const KEYWORD_TAXONOMY = {
     'collections analyst', 'collections manager', 'debtor management',
     'fixed assets', 'fixed asset accountant', 'capex', 'opex',
     'capex accountant', 'WIP accountant', 'reconciliation',
+    'billings manager', 'billings analyst', 'billings specialist',
+    'invoicing manager', 'revenue operations analyst',
   ],
 
   // ── Cost & management accounting ──────────────────────────────────────────
@@ -149,6 +163,11 @@ export const KEYWORD_TAXONOMY = {
     'valuation analyst', 'valuation manager',
     'mergers and acquisitions', 'M&A analyst', 'deal analyst',
     'transaction services', 'due diligence', 'corporate finance analyst',
+    'fund administration', 'fund administration specialist',
+    'fund operations', 'fund reporting', 'valuations director',
+    'valuations manager', 'forex trader', 'FX trader',
+    'structured finance', 'pension risk transfer',
+    'pricing manager', 'pricing analyst',
   ],
 
   // ── Risk & compliance ─────────────────────────────────────────────────────
