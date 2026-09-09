@@ -3,6 +3,10 @@ import type { JobProvider } from '../providers'
 import { fetchWithRetry } from './fetch-with-retry'
 import { ADZUNA_QUERY_KEYWORDS } from '@/lib/ingestion/keywords'
 
+// Keywords processed per run. Sized so a run finishes well inside
+// Vercel's 300s maxDuration at Adzuna's observed ~8s response time.
+const KEYWORDS_PER_RUN = 12
+
 export const adzunaAdapter: ProviderAdapter = {
   async fetch(provider: JobProvider): Promise<AdapterResult> {
     const appId  = process.env.ADZUNA_APP_ID
@@ -15,7 +19,14 @@ export const adzunaAdapter: ProviderAdapter = {
     const baseUrl = provider.base_url
     if (!baseUrl) throw new Error(`No base_url configured for provider ${provider.slug}`)
 
-    const keywords: string[] = ADZUNA_QUERY_KEYWORDS
+    const cursor = provider.keyword_cursor ?? 0
+    const total = ADZUNA_QUERY_KEYWORDS.length
+    const start = ((cursor % total) + total) % total
+    const keywords: string[] = []
+    for (let i = 0; i < Math.min(KEYWORDS_PER_RUN, total); i++) {
+      keywords.push(ADZUNA_QUERY_KEYWORDS[(start + i) % total])
+    }
+    const nextCursor = (start + keywords.length) % total
 
     const maxPages = provider.max_pages_per_run ?? 1
     const allJobs: RawJob[] = []
@@ -74,6 +85,7 @@ export const adzunaAdapter: ProviderAdapter = {
       jobs: allJobs,
       pagesFetched: totalPagesFetched,
       totalAvailable: null,
+      nextCursor,
     }
   }
 }

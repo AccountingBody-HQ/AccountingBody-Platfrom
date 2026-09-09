@@ -53,6 +53,7 @@ export interface JobProvider {
   notes: string | null
   source_name: string | null
   commercial_terms: string | null
+  keyword_cursor: number | null
   created_at: string
   updated_at: string
 }
@@ -368,4 +369,23 @@ export async function reapStaleRuns(
     return 0
   }
   return data?.length ?? 0
+}
+
+// Persist the adapter's keyword cursor so the next run resumes
+// where this one stopped.
+export async function updateProviderKeywordCursor(
+  providerId: string,
+  cursor: number
+): Promise<void> {
+  const supabase = getSupabase()
+  const { error } = await supabase
+    .from('job_providers')
+    .update({ keyword_cursor: cursor })
+    .eq('id', providerId)
+  if (error) {
+    console.error(
+      '[updateProviderKeywordCursor] failed:',
+      error.message
+    )
+  }
 }

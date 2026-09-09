@@ -8,6 +8,7 @@ import {
   updateProviderHealth,
   logProviderError,
   incrementProviderJobsToday,
+  updateProviderKeywordCursor,
 } from '@/lib/providers'
 import { getAdapter } from '@/lib/adapters'
 import { normalise } from '@/lib/ingestion/normalise'
@@ -213,6 +214,18 @@ export async function POST(
       responseMs:        fetchMs,
       rawResponseSample: rawJobs[0] as Record<string, unknown> | undefined,
     })
+
+    if (typeof adapterResult.nextCursor === 'number') {
+      try {
+        await updateProviderKeywordCursor(
+          provider.id,
+          adapterResult.nextCursor
+        )
+      } catch (cursorErr: unknown) {
+        console.error('[ingest] keyword cursor update failed:',
+          cursorErr)
+      }
+    }
 
     if (insertedCount > 0) {
       try {

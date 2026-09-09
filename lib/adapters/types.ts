@@ -16,6 +16,7 @@ export interface AdapterResult {
   jobs: RawJob[]
   pagesFetched: number
   totalAvailable: number | null
+  nextCursor?: number
 }
 
 /**
