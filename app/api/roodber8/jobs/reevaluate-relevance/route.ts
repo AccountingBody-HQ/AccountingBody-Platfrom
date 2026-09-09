@@ -16,7 +16,7 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 }
 
 const DEFAULT_LIMIT = 500
-const MAX_LIMIT = 2000
+const MAX_LIMIT = 10000
 const UPDATE_BATCH_SIZE = 100
 const SAMPLE_SIZE = 50
 
@@ -58,6 +58,11 @@ export async function POST(req: NextRequest) {
     : DEFAULT_LIMIT
   const limit = Math.min(Math.max(requestedLimit, 1), MAX_LIMIT)
 
+  const requestedOffset = typeof body.offset === 'number' && Number.isFinite(body.offset)
+    ? Math.trunc(body.offset)
+    : 0
+  const offset = Math.max(requestedOffset, 0)
+
   const supabase = getSupabase()
 
   let providerId: string | null = null
@@ -73,11 +78,19 @@ export async function POST(req: NextRequest) {
     .from('jobs')
     .select('id, title, description, slug, company_name')
     .eq('status', 'active')
-    .limit(limit)
 
   if (providerId) {
     query = query.eq('provider_id', providerId)
   }
+
+  // Deterministic order — without it, Postgres doesn't guarantee which
+  // rows a LIMIT returns, so successive sweep calls could re-scan the
+  // same slice instead of paging through the full active set.
+  query = query.order('created_at', { ascending: true })
+
+  query = offset > 0
+    ? query.range(offset, offset + limit - 1)
+    : query.limit(limit)
 
   const { data, error } = await query
   if (error) {
@@ -98,6 +111,8 @@ export async function POST(req: NextRequest) {
     return Response.json({
       ok: true,
       dry_run: true,
+      offset,
+      limit,
       examined: jobs.length,
       irrelevant: failing.length,
       updated: 0,
@@ -153,6 +168,8 @@ export async function POST(req: NextRequest) {
   return Response.json({
     ok: true,
     dry_run: false,
+    offset,
+    limit,
     examined: jobs.length,
     irrelevant: failing.length,
     updated,
