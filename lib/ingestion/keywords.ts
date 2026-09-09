@@ -48,6 +48,10 @@ export const KEYWORD_TAXONOMY = {
     'accounts coordinator', 'accounts administrator',
     'accounts operations', 'accounts technician', 'bursar',
     'school bursar', 'accounts lead',
+    'accounting technician', 'accounting clerk',
+    'accounting associate', 'accounting coordinator',
+    'accounting specialist', 'accounting analyst',
+    'accounting supervisor', 'accounting manager',
   ],
 
   // ── Seniority & leadership ────────────────────────────────────────────────
@@ -67,6 +71,11 @@ export const KEYWORD_TAXONOMY = {
     'financial director', 'financial control',
     'head of financial control', 'finance and operations director',
     'finance operations director', 'director of financial control',
+    'manager, accounting', 'director, accounting',
+    'manager, tax', 'director, tax', 'manager, finance',
+    'director, finance', 'vice president, tax',
+    'vice president, audit', 'vice president, finance',
+    'financial manager', 'corporate finance',
   ],
 
   // ── Audit & assurance ─────────────────────────────────────────────────────
@@ -77,6 +86,9 @@ export const KEYWORD_TAXONOMY = {
     'statutory audit', 'assurance', 'forensic accountant',
     'forensic accounting', 'forensic audit', 'fraud examiner',
     'internal audit', 'external audit',
+    'audit supervisor', 'audit coordinator', 'audit intern',
+    'audit professional', 'audit services', 'IT audit',
+    'audit specialist',
   ],
 
   // ── Tax ───────────────────────────────────────────────────────────────────
@@ -91,6 +103,8 @@ export const KEYWORD_TAXONOMY = {
     'tax consulting', 'tax technology', 'tax advisory',
     'trust and tax', 'tax accounts', 'trust tax',
     'trust accountant', 'trust manager', 'private client',
+    'tax and accounting', 'corporate tax manager', 'tax senior',
+    'tax intern',
   ],
 
   // ── Financial reporting & technical ───────────────────────────────────────
