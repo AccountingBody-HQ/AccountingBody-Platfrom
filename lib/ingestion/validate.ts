@@ -14,20 +14,6 @@ function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-// Build a word-boundary matcher for a keyword. Matching on whole
-// words only prevents 'AP' matching inside 'apply' and 'AR'
-// matching inside 'career'.
-// NOTE: do NOT use the /u flag — it causes TS1501 in this repo
-// (see the repo's TypeScript conventions).
-function buildKeywordMatcher(keyword: string): RegExp {
-  return new RegExp(`(^|[^a-z0-9])${escapeRegex(keyword.toLowerCase())}([^a-z0-9]|$)`, 'i')
-}
-
-// Precomputed once at module scope — the per-job loop must not rebuild
-// 437 regexes for every job.
-const KEYWORD_MATCHERS: RegExp[] = ACCOUNTING_FINANCE_KEYWORDS
-  .map(buildKeywordMatcher)
-
 // Normalise text before keyword matching. Job titles routinely
 // write '&' where the taxonomy stores 'and' ("Finance & Operations
 // Director" vs 'finance and operations director'), so fold them
@@ -41,6 +27,25 @@ function normaliseForMatching(s: string): string {
     .replace(/\s+/g, ' ')
     .trim()
 }
+
+// Build a word-boundary matcher for a keyword. Matching on whole
+// words only prevents 'AP' matching inside 'apply' and 'AR'
+// matching inside 'career'.
+// The keyword must go through the SAME normalisation as the search
+// text (normaliseForMatching, not a bare .toLowerCase()) — otherwise
+// an ampersand keyword like 'FP&A' is built as a literal '&' matcher
+// while the search text it's tested against never contains '&' any
+// more, and the keyword can never match again.
+// NOTE: do NOT use the /u flag — it causes TS1501 in this repo
+// (see the repo's TypeScript conventions).
+function buildKeywordMatcher(keyword: string): RegExp {
+  return new RegExp(`(^|[^a-z0-9])${escapeRegex(normaliseForMatching(keyword))}([^a-z0-9]|$)`, 'i')
+}
+
+// Precomputed once at module scope — the per-job loop must not rebuild
+// 437 regexes for every job.
+const KEYWORD_MATCHERS: RegExp[] = ACCOUNTING_FINANCE_KEYWORDS
+  .map(buildKeywordMatcher)
 
 // A job is relevant if a taxonomy keyword appears as a whole word
 // in the TITLE, or if at least two distinct keywords appear as

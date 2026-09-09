@@ -119,7 +119,7 @@ export const KEYWORD_TAXONOMY = {
     'commercial finance manager', 'finance analyst', 'financial analyst',
     'business analyst', 'finance business partner',
     'P&L', 'profit and loss', 'variance analysis',
-    'p and l', 'finance process', 'finance ops',
+    'finance process', 'finance ops',
     'financial operations analyst',
   ],
 
