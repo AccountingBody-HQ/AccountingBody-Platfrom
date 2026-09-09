@@ -34,20 +34,28 @@ const KEYWORD_MATCHERS: RegExp[] = ACCOUNTING_FINANCE_KEYWORDS
 // description matches require corroboration, because a single
 // incidental mention ("our accounts team will contact you") is
 // not evidence the ROLE is an accounting or finance role.
-function isAccountingFinanceRelevant(job: NormalisedJob): boolean {
-  const title = (job.title ?? '').toLowerCase()
+//
+// Takes plain strings (not a NormalisedJob) so callers re-evaluating
+// existing `jobs` table rows — a different shape entirely — don't have
+// to fabricate a fake NormalisedJob just to reuse this logic.
+export function isRelevantByText(title: string, description: string): boolean {
+  const t = (title ?? '').toLowerCase()
   for (const re of KEYWORD_MATCHERS) {
-    if (re.test(title)) return true
+    if (re.test(t)) return true
   }
-  const description = (job.description ?? '').toLowerCase()
+  const d = (description ?? '').toLowerCase()
   let hits = 0
   for (const re of KEYWORD_MATCHERS) {
-    if (re.test(description)) {
+    if (re.test(d)) {
       hits++
       if (hits >= 2) return true
     }
   }
   return false
+}
+
+export function isAccountingFinanceRelevant(job: NormalisedJob): boolean {
+  return isRelevantByText(job.title, job.description)
 }
 
 // ── Quality flags ──────────────────────────────────────────────────────────
