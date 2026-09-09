@@ -90,14 +90,33 @@ export async function getProvider(slug: string): Promise<JobProvider | null> {
 }
 
 // Get all providers due for a fetch right now
+// Excludes any provider that already has a run with status='running' —
+// prevents concurrent orchestrator ticks from dispatching the same
+// provider twice when a run outlives the 15-minute cron interval.
 export async function getProvidersDueForFetch(): Promise<JobProvider[]> {
   const supabase = getSupabase()
-  const { data, error } = await supabase
+
+  const { data: runningRuns, error: runningError } = await supabase
+    .from('provider_runs')
+    .select('provider_id')
+    .eq('status', 'running')
+  if (runningError) return []
+
+  const runningProviderIds = Array.from(
+    new Set((runningRuns ?? []).map(r => r.provider_id))
+  )
+
+  let query = supabase
     .from('job_providers')
     .select('*')
     .eq('status', 'active')
     .or('next_fetch_at.is.null,next_fetch_at.lte.' + new Date().toISOString())
-    .order('priority', { ascending: true })
+
+  if (runningProviderIds.length > 0) {
+    query = query.not('id', 'in', `(${runningProviderIds.join(',')})`)
+  }
+
+  const { data, error } = await query.order('priority', { ascending: true })
   if (error || !data) return []
   return data as JobProvider[]
 }
