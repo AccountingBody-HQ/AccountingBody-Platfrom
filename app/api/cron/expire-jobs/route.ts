@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 import { getExpiringJobs, expireJob } from '@/lib/jobs'
 import { sendJobExpiredEmail, sendJobExpiryWarningEmail } from '@/lib/jobEmails'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
+
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!
+  )
+}
 
 function isAuthorised(req: NextRequest): boolean {
   const secret = process.env.CRON_SECRET
@@ -61,6 +69,22 @@ export async function GET(req: NextRequest) {
       } catch (emailErr: unknown) {
         console.error('cron/expire-jobs: warning email failed (non-fatal):', job.id, emailErr)
       }
+    }
+
+    // 5. Reset daily job counters for all providers
+    try {
+      const supabase = getSupabase()
+      const { error: resetError } = await supabase
+        .from('job_providers')
+        .update({ jobs_today: 0 })
+        .neq('id', '00000000-0000-0000-0000-000000000000')
+        // .neq with a non-existent id effectively matches all rows
+        // Use this pattern since Supabase requires a filter on update
+      if (resetError) {
+        console.error('cron/expire-jobs: failed to reset jobs_today counters:', resetError.message)
+      }
+    } catch (resetErr: unknown) {
+      console.error('cron/expire-jobs: jobs_today reset threw:', resetErr)
     }
 
     return NextResponse.json({ expired, warned })

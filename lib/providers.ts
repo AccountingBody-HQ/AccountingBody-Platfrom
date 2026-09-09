@@ -276,10 +276,32 @@ export async function incrementProviderJobsToday(
   count: number
 ): Promise<void> {
   const supabase = getSupabase()
-  await supabase.rpc('increment_provider_jobs_today', {
-    p_provider_id: providerId,
-    p_count: count,
-  })
+  const { data: current, error: fetchError } = await supabase
+    .from('job_providers')
+    .select('jobs_today, total_jobs_ingested, jobs_last_run')
+    .eq('id', providerId)
+    .single()
+  if (fetchError || !current) {
+    console.error(
+      '[incrementProviderJobsToday] failed to fetch provider:',
+      fetchError?.message
+    )
+    return
+  }
+  const { error: updateError } = await supabase
+    .from('job_providers')
+    .update({
+      jobs_today: (current.jobs_today ?? 0) + count,
+      total_jobs_ingested: (current.total_jobs_ingested ?? 0) + count,
+      jobs_last_run: count,
+    })
+    .eq('id', providerId)
+  if (updateError) {
+    console.error(
+      '[incrementProviderJobsToday] failed to update counters:',
+      updateError.message
+    )
+  }
 }
 
 // Get the most recent run for every provider, keyed by provider_slug

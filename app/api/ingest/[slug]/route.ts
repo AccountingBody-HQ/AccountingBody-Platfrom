@@ -215,7 +215,14 @@ export async function POST(
     })
 
     if (insertedCount > 0) {
-      await incrementProviderJobsToday(provider.id, insertedCount)
+      try {
+        await incrementProviderJobsToday(provider.id, insertedCount)
+      } catch (counterErr: unknown) {
+        const msg = counterErr instanceof Error
+          ? counterErr.message : String(counterErr)
+        console.error('[ingest] jobs_today counter failed:', msg)
+        // do NOT rethrow — jobs were already inserted successfully
+      }
     }
 
     await updateProviderHealth(provider.id, 'success', {
