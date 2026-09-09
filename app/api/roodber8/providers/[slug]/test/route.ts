@@ -32,7 +32,7 @@ export async function POST(
   { params }: { params: { slug: string } }
 ) {
   if (!(await isAuthenticated(req))) {
-    return new Response('Unauthorized', { status: 401 })
+    return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
   }
 
   const provider = await getProvider(params.slug)

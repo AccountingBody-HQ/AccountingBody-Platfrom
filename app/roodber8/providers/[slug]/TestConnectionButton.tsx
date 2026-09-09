@@ -20,7 +20,13 @@ export default function TestConnectionButton({ slug }: { slug: string }) {
     setResult(null)
     try {
       const res = await fetch(`/api/roodber8/providers/${slug}/test`, { method: 'POST' })
-      const data = (await res.json()) as TestResult
+      const text = await res.text()
+      let data: TestResult
+      try {
+        data = JSON.parse(text) as TestResult
+      } catch {
+        data = { ok: false, error: text.trim().slice(0, 200) || `Request failed (${res.status})` }
+      }
       setResult(data)
     } catch {
       setResult({ ok: false, error: 'Network error' })
