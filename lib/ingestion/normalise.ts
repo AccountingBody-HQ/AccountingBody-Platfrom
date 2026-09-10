@@ -413,6 +413,7 @@ export interface NormalisedJob {
   salary_text: string | null
   employment_type: string | null
   seniority_level: string | null
+  qualifications_required: string[]
   source: string
   source_job_id: string | null
   source_url: string | null
@@ -488,6 +489,56 @@ function parseLocation(locationText: string): {
   return { city, country }
 }
 
+// ── Qualification extractor ────────────────────────────────────────────────
+
+// Professional qualifications we recognise, mapped to a canonical
+// label. Keys are matched as whole words only — bare substring
+// matching would match 'ACA' inside 'vacancy' and 'CIA' inside
+// 'financial'.
+const QUALIFICATION_PATTERNS: Array<{ label: string; terms: string[] }> = [
+  { label: 'ACCA',  terms: ['ACCA', 'chartered certified accountant'] },
+  { label: 'ACA',   terms: ['ACA', 'ICAEW', 'chartered accountant'] },
+  { label: 'CIMA',  terms: ['CIMA', 'chartered management accountant', 'CGMA'] },
+  { label: 'CPA',   terms: ['CPA', 'certified public accountant'] },
+  { label: 'CFA',   terms: ['CFA', 'chartered financial analyst'] },
+  { label: 'AAT',   terms: ['AAT'] },
+  { label: 'ATT',   terms: ['ATT'] },
+  { label: 'CTA',   terms: ['CTA', 'chartered tax adviser', 'CIOT'] },
+  { label: 'CIPFA', terms: ['CIPFA'] },
+  { label: 'CIA',   terms: ['CIA', 'certified internal auditor'] },
+  { label: 'CMA',   terms: ['CMA', 'certified management accountant'] },
+  { label: 'ICAS',  terms: ['ICAS'] },
+  { label: 'ICPAK', terms: ['ICPAK'] },
+  { label: 'ICAN',  terms: ['ICAN'] },
+  { label: 'SAICA', terms: ['SAICA'] },
+  { label: 'CFE',   terms: ['CFE', 'certified fraud examiner'] },
+]
+
+// Precompute matchers once at module load, never per job.
+const QUALIFICATION_MATCHERS: Array<{ label: string; matchers: RegExp[] }> =
+  QUALIFICATION_PATTERNS.map(({ label, terms }) => ({
+    label,
+    matchers: terms.map(t => new RegExp(
+      `(^|[^a-z0-9])${t.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z0-9]|$)`,
+      'i'
+    )),
+  }))
+
+// Extract the professional qualifications a role mentions.
+// Searches title and description. Returns canonical labels,
+// deduplicated, in the order defined above.
+function extractQualifications(
+  title: string,
+  description: string
+): string[] {
+  const text = `${title ?? ''} ${description ?? ''}`.toLowerCase()
+  const found: string[] = []
+  for (const { label, matchers } of QUALIFICATION_MATCHERS) {
+    if (matchers.some(re => re.test(text))) found.push(label)
+  }
+  return found
+}
+
 // ── Main normalise function ────────────────────────────────────────────────
 
 export function normalise(rawJob: RawJob, provider: JobProvider): NormalisedJob {
@@ -520,6 +571,8 @@ export function normalise(rawJob: RawJob, provider: JobProvider): NormalisedJob 
 
   const rawDescription = String(resolvePath(rawJob, mapping.description ?? '') ?? '')
   const description = stripHtml(rawDescription)
+
+  const qualificationsRequired = extractQualifications(title, description)
 
   const applicationUrl = mapping.application_url
     ? String(resolvePath(rawJob, mapping.application_url) ?? '') || null
@@ -659,6 +712,7 @@ export function normalise(rawJob: RawJob, provider: JobProvider): NormalisedJob 
     salary_text: salaryText,
     employment_type: normalisedEmploymentType,
     seniority_level: seniorityLevel,
+    qualifications_required: qualificationsRequired,
     source,
     source_job_id: sourceJobId,
     source_url: sourceUrl,
