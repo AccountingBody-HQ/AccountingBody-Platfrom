@@ -11,6 +11,18 @@ function parseSalaryInt(v: unknown): number | null {
   return Math.round(n)
 }
 
+// ── Adzuna salary_is_predicted flag ───────────────────────────────────────
+// Adzuna returns this as the STRING "1" (the salary was estimated by their
+// model) or "0" (the salary came from the posting itself). Anything else —
+// including a missing field — resolves to undefined: absent means "unknown",
+// NOT "not predicted". Deliberately not Boolean(raw): Boolean("0") is true,
+// which would incorrectly flag every single job as predicted.
+function parseSalaryIsPredicted(raw: unknown): boolean | undefined {
+  if (raw === '1') return true
+  if (raw === '0') return false
+  return undefined
+}
+
 // ── Module-level constants ─────────────────────────────────────────────────
 // Defined once — never recreated per job or per provider.
 
@@ -411,6 +423,7 @@ export interface NormalisedJob {
   salary_max: number | null
   salary_currency: string | null
   salary_text: string | null
+  salary_is_predicted?: boolean
   employment_type: string | null
   seniority_level: string | null
   qualifications_required: string[]
@@ -662,6 +675,11 @@ export function normalise(rawJob: RawJob, provider: JobProvider): NormalisedJob 
       : `${salaryCurrency} ${salaryMin.toLocaleString()} – ${salaryMax.toLocaleString()}`
   }
 
+  // ── Salary predicted flag — provider-mapped, string "1"/"0" only ──────────
+  const salaryIsPredicted = mapping.salary_is_predicted
+    ? parseSalaryIsPredicted(resolvePath(rawJob, mapping.salary_is_predicted))
+    : undefined
+
   // ── Employment type — mapped then constraint-enforced ─────────────────────
   const rawEmploymentType = mapping.employment_type
     ? resolvePath(rawJob, mapping.employment_type)
@@ -710,6 +728,7 @@ export function normalise(rawJob: RawJob, provider: JobProvider): NormalisedJob 
     salary_max: salaryMax,
     salary_currency: salaryCurrency,
     salary_text: salaryText,
+    salary_is_predicted: salaryIsPredicted,
     employment_type: normalisedEmploymentType,
     seniority_level: seniorityLevel,
     qualifications_required: qualificationsRequired,
