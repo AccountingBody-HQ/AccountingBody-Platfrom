@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { unstable_noStore as noStore } from 'next/cache'
 import { getAllProviders, getLatestRunPerProvider, type JobProvider, type ProviderRun } from '@/lib/providers'
-import { ADMIN_COLORS, HEALTH_COLORS, RUN_STATUS_COLORS } from '@/lib/admin-theme'
+import { ADMIN_COLORS, HEALTH_COLORS, DATA_QUALITY_COLORS, RUN_STATUS_COLORS } from '@/lib/admin-theme'
 
 export const dynamic = 'force-dynamic'
 
@@ -60,7 +60,7 @@ function Dot({ color }: { color: string }) {
 
 function groupRank(p: JobProvider): number {
   if (p.health_status === 'down') return 0
-  if (p.health_status === 'degraded') return 1
+  if (p.health_status === 'degraded' || p.data_quality_status === 'poor') return 1
   if (p.status === 'paused') return 2
   return 3
 }
@@ -100,7 +100,7 @@ export default async function ProvidersPage() {
   const totalProviders = providers.length
   const activeCount = providers.filter(p => p.status === 'active').length
   const needsAttentionCount = providers.filter(
-    p => p.health_status === 'down' || p.health_status === 'degraded'
+    p => p.health_status === 'down' || p.health_status === 'degraded' || p.data_quality_status === 'poor'
   ).length
   const jobsToday = providers.reduce((sum, p) => sum + (p.jobs_today ?? 0), 0)
 
@@ -189,6 +189,7 @@ export default async function ProvidersPage() {
                 <tr style={{ background: ADMIN_COLORS.bg }}>
                   <th className="text-left px-6 py-3 font-bold" style={{ color: ADMIN_COLORS.textDim, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Provider</th>
                   <th className="text-left px-6 py-3 font-bold" style={{ color: ADMIN_COLORS.textDim, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Health</th>
+                  <th className="text-left px-6 py-3 font-bold" style={{ color: ADMIN_COLORS.textDim, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Data Quality</th>
                   <th className="text-left px-6 py-3 font-bold" style={{ color: ADMIN_COLORS.textDim, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Last Run</th>
                   <th className="text-left px-6 py-3 font-bold" style={{ color: ADMIN_COLORS.textDim, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Performance</th>
                   <th className="text-left px-6 py-3 font-bold" style={{ color: ADMIN_COLORS.textDim, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Next Run</th>
@@ -199,6 +200,7 @@ export default async function ProvidersPage() {
                 {sortedProviders.map(provider => {
                   const latestRun: ProviderRun | undefined = latestRuns[provider.slug]
                   const health = HEALTH_COLORS[provider.health_status] ?? HEALTH_COLORS.unknown
+                  const dataQuality = DATA_QUALITY_COLORS[provider.data_quality_status ?? 'unknown'] ?? DATA_QUALITY_COLORS.unknown
                   const runStatus = latestRun ? (RUN_STATUS_COLORS[latestRun.status]?.color ?? ADMIN_COLORS.textMuted) : ADMIN_COLORS.textDim
                   const insertedColor = latestRun && latestRun.jobs_inserted === 0 && latestRun.jobs_fetched > 0
                     ? ADMIN_COLORS.textDim
@@ -239,6 +241,20 @@ export default async function ProvidersPage() {
                             {provider.consecutive_failures} failures
                           </div>
                         )}
+                      </td>
+
+                      {/* Data Quality */}
+                      <td className="px-6 py-4 align-top">
+                        <div
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold"
+                          style={{ background: dataQuality.bg, color: dataQuality.color, fontSize: 12 }}
+                        >
+                          <Dot color={dataQuality.color} />
+                          {dataQuality.label}
+                        </div>
+                        <div className="mt-1" style={{ color: ADMIN_COLORS.textDim, fontSize: 11 }}>
+                          {provider.last_relevance_rate === null ? '—' : `${provider.last_relevance_rate}% relevant`}
+                        </div>
                       </td>
 
                       {/* Last Run */}

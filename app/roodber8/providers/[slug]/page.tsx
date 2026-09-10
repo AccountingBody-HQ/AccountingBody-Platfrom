@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { unstable_noStore as noStore } from 'next/cache'
 import { notFound } from 'next/navigation'
 import { getProvider, type JobProvider, type ProviderRun } from '@/lib/providers'
-import { ADMIN_COLORS, HEALTH_COLORS, RUN_STATUS_COLORS } from '@/lib/admin-theme'
+import { ADMIN_COLORS, HEALTH_COLORS, DATA_QUALITY_COLORS, RUN_STATUS_COLORS } from '@/lib/admin-theme'
 import RunNowButton from './RunNowButton'
 import TestConnectionButton from './TestConnectionButton'
 import StatusToggleButton from './StatusToggleButton'
@@ -127,6 +127,24 @@ function HealthBadge({ status, large }: { status: string; large?: boolean }) {
   )
 }
 
+function DataQualityBadge({ status, large }: { status: string | null; large?: boolean }) {
+  const meta = DATA_QUALITY_COLORS[status ?? 'unknown'] ?? DATA_QUALITY_COLORS.unknown
+  return (
+    <span
+      className="inline-flex items-center gap-2 rounded-full font-semibold"
+      style={{
+        background: meta.bg,
+        color: meta.color,
+        fontSize: large ? 14 : 12,
+        padding: large ? '8px 16px' : '6px 12px',
+      }}
+    >
+      <Dot color={meta.color} />
+      {meta.label}
+    </span>
+  )
+}
+
 function SectionLabel({ children }: { children: ReactNode }) {
   return (
     <p
@@ -200,6 +218,36 @@ function MetricChip({ label, value }: { label: string; value: number }) {
   )
 }
 
+function formatFieldName(field: string): string {
+  return field
+    .split('_')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
+}
+
+function coverageColor(pct: number): string {
+  if (pct >= 80) return ADMIN_COLORS.success
+  if (pct >= 40) return ADMIN_COLORS.warning
+  return ADMIN_COLORS.danger
+}
+
+function FieldCoverageRow({ field, pct }: { field: string; pct: number }) {
+  const color = coverageColor(pct)
+  return (
+    <div className="flex items-center gap-3 py-1.5">
+      <span className="text-xs shrink-0" style={{ color: ADMIN_COLORS.textMuted, width: 170 }}>
+        {formatFieldName(field)}
+      </span>
+      <div className="flex-1 rounded-full overflow-hidden" style={{ background: ADMIN_COLORS.bg, height: 6 }}>
+        <div style={{ width: `${Math.min(Math.max(pct, 0), 100)}%`, height: '100%', background: color }} />
+      </div>
+      <span className="font-mono text-xs text-right shrink-0" style={{ color, width: 90 }}>
+        {pct}%{pct === 0 ? ' MISSING' : ''}
+      </span>
+    </div>
+  )
+}
+
 // ── Data ─────────────────────────────────────────────────────────────────
 
 async function getProviderDetail(slug: string): Promise<{
@@ -269,6 +317,14 @@ export default async function ProviderDetailPage({
   ]
 
   const groupedErrors = groupErrorsByType(errors)
+
+  // Field coverage comes from the LATEST run only (runs is ordered
+  // started_at desc, so runs[0] is the most recent) — sorted ascending
+  // so the worst-covered fields surface first; the gaps are the point.
+  const latestRun = runs[0]
+  const fieldCoverageEntries = latestRun?.field_coverage
+    ? Object.entries(latestRun.field_coverage).sort((a, b) => a[1] - b[1])
+    : []
 
   return (
     <div className="p-8" style={{ background: ADMIN_COLORS.bg }}>
@@ -392,10 +448,27 @@ export default async function ProviderDetailPage({
             <h2 className="font-bold text-sm" style={{ color: ADMIN_COLORS.text }}>Health &amp; Operations</h2>
           </div>
           <div className="px-6 py-5">
-            <div className="mb-4">
+            <div className="mb-2">
               <HealthBadge status={provider.health_status} large />
             </div>
+            <div className="mb-4">
+              <DataQualityBadge status={provider.data_quality_status} large />
+            </div>
             <div className="space-y-1">
+              <ConfigRow
+                label="Relevance Rate"
+                value={provider.last_relevance_rate === null ? 'Not measured' : `${provider.last_relevance_rate}%`}
+              />
+              <ConfigRow
+                label="Avg Description Length"
+                value={provider.last_avg_description_length === null ? '—' : `${provider.last_avg_description_length} chars`}
+              />
+              <ConfigRow
+                label="Quality Checked"
+                value={provider.data_quality_checked_at ? relativeTime(provider.data_quality_checked_at) : 'Never'}
+              />
+            </div>
+            <div className="space-y-1 mt-3">
               <ConfigRow label="Last Successful Run" value={provider.last_success_at ? relativeTime(provider.last_success_at) : 'Never'} />
               <ConfigRow label="Last Fetched" value={provider.last_fetched_at ? relativeTime(provider.last_fetched_at) : 'Never'} />
               <ConfigRow label="Next Fetch" value={provider.next_fetch_at ? timeUntil(provider.next_fetch_at) : 'Not scheduled'} />
@@ -421,6 +494,26 @@ export default async function ProviderDetailPage({
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Field Coverage */}
+      <div className="rounded-2xl overflow-hidden mb-6" style={{ background: ADMIN_COLORS.card, border: `1px solid ${ADMIN_COLORS.border}` }}>
+        <div className="px-6 py-4" style={{ borderBottom: `1px solid ${ADMIN_COLORS.border}` }}>
+          <h2 className="font-bold text-sm" style={{ color: ADMIN_COLORS.text }}>Field Coverage</h2>
+        </div>
+        <div className="px-6 py-5">
+          {fieldCoverageEntries.length === 0 ? (
+            <p className="text-sm" style={{ color: ADMIN_COLORS.textDim }}>
+              No coverage data — run this provider to measure.
+            </p>
+          ) : (
+            <div>
+              {fieldCoverageEntries.map(([field, pct]) => (
+                <FieldCoverageRow key={field} field={field} pct={pct} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

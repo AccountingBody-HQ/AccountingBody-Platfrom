@@ -25,6 +25,15 @@ export const HEALTH_COLORS: Record<string, { color: string; bg: string; label: s
   unknown:  { color: '#64748b', bg: 'rgba(100,116,139,0.1)', label: 'Unknown'  },
 }
 
+// Sourced from ADMIN_COLORS tokens (Rule 92) — unlike HEALTH_COLORS above,
+// which predates this rule and still hardcodes its hex/rgba values.
+export const DATA_QUALITY_COLORS: Record<string, { color: string; bg: string; label: string }> = {
+  good:    { color: ADMIN_COLORS.success,   bg: ADMIN_COLORS.successBg, label: 'Good'        },
+  warning: { color: ADMIN_COLORS.warning,   bg: ADMIN_COLORS.warningBg, label: 'Warning'      },
+  poor:    { color: ADMIN_COLORS.danger,    bg: ADMIN_COLORS.dangerBg,  label: 'Poor'         },
+  unknown: { color: ADMIN_COLORS.textMuted, bg: ADMIN_COLORS.border,    label: 'Not measured' },
+}
+
 export const RUN_STATUS_COLORS: Record<string, { color: string; label: string }> = {
   completed: { color: '#22c55e', label: 'Completed' },
   failed:    { color: '#ef4444', label: 'Failed'    },
