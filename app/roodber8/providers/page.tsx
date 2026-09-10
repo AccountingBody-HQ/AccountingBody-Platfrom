@@ -279,7 +279,7 @@ export default async function ProvidersPage() {
                               ↑ {latestRun.jobs_inserted} inserted
                             </div>
                             <div style={{ color: ADMIN_COLORS.textMuted, fontSize: 11 }}>
-                              {latestRun.jobs_fetched} fetched · {latestRun.jobs_deduplicated} dedup
+                              {latestRun.jobs_fetched} fetched · {latestRun.jobs_deduplicated} dedup · {latestRun.jobs_rejected} rejected
                             </div>
                           </div>
                         )}
