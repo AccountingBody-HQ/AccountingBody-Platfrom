@@ -277,8 +277,16 @@ export const KEYWORD_TAXONOMY = {
 // DERIVED EXPORTS — do not edit these directly, edit KEYWORD_TAXONOMY above
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Flat array of every keyword — used for relevance filtering
-export const ACCOUNTING_FINANCE_KEYWORDS: string[] = Object.values(KEYWORD_TAXONOMY).flat()
+// Flat array of every keyword — used for relevance filtering.
+// Deduplicated: a term can legitimately sit in two taxonomy categories
+// (e.g. "treasurer" in roles_core and roles_treasury), but the derived
+// list must hold each distinct keyword once — otherwise validate.ts's
+// two-hit description rule can be satisfied by a single mention of one
+// duplicated term. Array.from(new Set(...)) not [...set] — the latter
+// raises TS2802 under this repo's compile target.
+export const ACCOUNTING_FINANCE_KEYWORDS: string[] = Array.from(
+  new Set(Object.values(KEYWORD_TAXONOMY).flat())
+)
 
 // Curated subset for API provider query terms — roles and qualifications only.
 // These are the terms sent as search queries to external APIs (Adzuna etc).
