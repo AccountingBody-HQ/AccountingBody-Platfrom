@@ -222,14 +222,23 @@ export const KEYWORD_TAXONOMY = {
     'finance systems', 'accounting software', 'cloud accounting',
   ],
 
-  // ── Sector & employer type ────────────────────────────────────────────────
-  sectors: [
+  // ── Sector & employer type — bare context words ───────────────────────────
+  // Excluded from ACCOUNTING_FINANCE_KEYWORDS (see below) — these are bare
+  // English/sector words that match non-accounting job descriptions
+  // ('best practice', 'intellectual property'), confirmed against a live
+  // Remotive marketing role on 10 Sep 2026.
+  sector_context: [
     'Big Four', 'Big 4', 'mid-tier', 'practice', 'industry',
-    'financial services', 'banking', 'retail banking',
-    'investment banking', 'commercial banking', 'insurance', 'fintech',
+    'financial services', 'banking', 'insurance', 'fintech',
     'real estate', 'property', 'retail', 'manufacturing',
     'public sector', 'charity', 'not for profit', 'NFP',
-    'professional services', 'energy finance', 'oil and gas finance',
+    'professional services', 'shared services',
+  ],
+
+  // ── Sector & employer type — compound / high-signal terms ─────────────────
+  sectors: [
+    'retail banking', 'investment banking', 'commercial banking',
+    'energy finance', 'oil and gas finance',
     'shipping finance', 'aviation finance', 'media finance',
     'film finance', 'tech finance', 'healthcare finance',
     'pharma finance', 'construction finance', 'retail finance',
@@ -239,7 +248,7 @@ export const KEYWORD_TAXONOMY = {
     'local government finance', 'NHS finance',
     'actuarial analyst', 'actuarial consultant',
     'pension accountant', 'pension administrator', 'pensions finance',
-    'shared services', 'finance shared services', 'GBS finance',
+    'finance shared services', 'GBS finance',
     'Grant Thornton', 'BDO', 'RSM', 'Mazars',
   ],
 
@@ -277,8 +286,14 @@ export const KEYWORD_TAXONOMY = {
 // DERIVED EXPORTS — do not edit these directly, edit KEYWORD_TAXONOMY above
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Flat array of every keyword — used for relevance filtering
-export const ACCOUNTING_FINANCE_KEYWORDS: string[] = Object.values(KEYWORD_TAXONOMY).flat()
+// Flat array of every keyword — used for relevance filtering.
+// Every taxonomy category contributes EXCEPT sector_context (bare
+// context words — see the comment on that key above). Derived by
+// omitting the one key, not by naming the categories to include, so
+// any category added later is picked up automatically.
+export const ACCOUNTING_FINANCE_KEYWORDS: string[] = Object.entries(KEYWORD_TAXONOMY)
+  .filter(([key]) => key !== 'sector_context')
+  .flatMap(([, terms]) => terms)
 
 // Curated subset for API provider query terms — roles and qualifications only.
 // These are the terms sent as search queries to external APIs (Adzuna etc).
