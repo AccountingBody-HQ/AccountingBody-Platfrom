@@ -402,6 +402,7 @@ export interface NormalisedJob {
   company_name: string
   location_text: string
   location_country: string | null
+  location_city: string | null
   location_remote: boolean
   description: string
   excerpt: string
@@ -425,6 +426,66 @@ export interface NormalisedJob {
   quality_flags: string[]
   normalisation_version: number
   raw_source_data: RawJob
+}
+
+// ── Location string parser ─────────────────────────────────────────────────
+
+// Country names and codes we can recognise at the tail of a
+// location string. Ordered longest-first so "United Kingdom"
+// wins over "United".
+const KNOWN_COUNTRIES: Record<string, string> = {
+  'united kingdom': 'United Kingdom',
+  'great britain': 'United Kingdom',
+  'england': 'United Kingdom',
+  'scotland': 'United Kingdom',
+  'wales': 'United Kingdom',
+  'northern ireland': 'United Kingdom',
+  'uk': 'United Kingdom',
+  'gb': 'United Kingdom',
+  'united states': 'United States',
+  'usa': 'United States',
+  'us': 'United States',
+  'canada': 'Canada',
+  'australia': 'Australia',
+  'singapore': 'Singapore',
+  'south africa': 'South Africa',
+  'kenya': 'Kenya',
+  'nigeria': 'Nigeria',
+  'ethiopia': 'Ethiopia',
+  'united arab emirates': 'United Arab Emirates',
+  'uae': 'United Arab Emirates',
+  'ireland': 'Ireland',
+  'india': 'India',
+  'new zealand': 'New Zealand',
+}
+
+// Split a human-readable location string into city and country.
+// "Hoddesdon, Hertfordshire"  -> city Hoddesdon,  country null
+// "London, UK"                -> city London,     country United Kingdom
+// "The Rocks, Sydney"         -> city The Rocks,  country null
+// Country is only set when the final segment is recognised.
+// The first segment is treated as the city, which is correct for
+// the overwhelming majority of "City, Region" and "City, Country"
+// formats.
+function parseLocation(locationText: string): {
+  city: string | null
+  country: string | null
+} {
+  const raw = (locationText ?? '').trim()
+  if (!raw) return { city: null, country: null }
+
+  const parts = raw.split(',').map(p => p.trim()).filter(Boolean)
+  if (parts.length === 0) return { city: null, country: null }
+
+  let country: string | null = null
+  const last = parts[parts.length - 1].toLowerCase()
+  if (KNOWN_COUNTRIES[last]) {
+    country = KNOWN_COUNTRIES[last]
+    parts.pop()
+  }
+
+  const city = parts.length > 0 ? parts[0] : null
+  return { city, country }
 }
 
 // ── Main normalise function ────────────────────────────────────────────────
@@ -472,17 +533,29 @@ export function normalise(rawJob: RawJob, provider: JobProvider): NormalisedJob 
     ? String(resolvePath(rawJob, mapping.source_url) ?? '') || null
     : null
 
-  // ── Location country + universal remote inference ─────────────────────────
-  let locationCountry = mapping.location_country
+  // ── Location city + country + universal remote inference ──────────────────
+  const parsedLocation = parseLocation(locationText)
+  const locationCity = parsedLocation.city
+
+  const mappedLocationCountry = mapping.location_country
     ? String(resolvePath(rawJob, mapping.location_country) ?? '') || null
     : null
 
-  // Universal remote inference — any provider using these terms gets Worldwide
-  if (!locationCountry) {
+  let locationCountry: string | null = null
+  if (mappedLocationCountry && KNOWN_COUNTRIES[mappedLocationCountry.toLowerCase().trim()]) {
+    // 1. Mapping points at a genuine, recognised country value — trust it.
+    locationCountry = KNOWN_COUNTRIES[mappedLocationCountry.toLowerCase().trim()]
+  } else if (parsedLocation.country) {
+    // 2. Mapping was empty or unrecognised (e.g. a display string like
+    //    "Hoddesdon, Hertfordshire") — fall back to what parseLocation found.
+    locationCountry = parsedLocation.country
+  } else {
+    // 3. Universal remote inference — any provider using these terms gets Worldwide
     const lt = locationText.toLowerCase().trim()
     if (REMOTE_LOCATION_TERMS.has(lt) || lt.includes('remote') || lt.includes('worldwide')) {
       locationCountry = 'Worldwide'
     }
+    // 4. Otherwise locationCountry stays null.
   }
 
   const locationRemote = locationCountry === 'Worldwide' || detectRemote(title, locationText)
@@ -575,6 +648,7 @@ export function normalise(rawJob: RawJob, provider: JobProvider): NormalisedJob 
     company_name: companyName,
     location_text: locationText,
     location_country: locationCountry,
+    location_city: locationCity,
     location_remote: locationRemote,
     description,
     excerpt,
