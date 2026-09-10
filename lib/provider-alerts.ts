@@ -55,12 +55,16 @@ function stateLabel(state: AlertState): string {
 function buildAlertEmail(
   provider: JobProvider,
   newState: AlertState,
-  isRecovery: boolean
+  isRecovery: boolean,
+  consecutiveFailures: number,
+  justAutoPaused: boolean
 ): { subject: string; html: string } {
   const providerUrl = `${SITE_URL}/roodber8/providers/${provider.slug}`
   const subject = isRecovery
     ? `[AccountingBody] ${provider.slug}: recovered`
-    : `[AccountingBody] ${provider.slug}: ${stateLabel(newState)}`
+    : justAutoPaused
+      ? `[AccountingBody] ${provider.slug}: PAUSED after ${consecutiveFailures} failures`
+      : `[AccountingBody] ${provider.slug}: ${stateLabel(newState)}`
 
   const rows: string[] = [
     `<tr><td style="padding:6px 12px;color:#64748b;">Provider</td><td style="padding:6px 12px;color:#1e293b;font-weight:700;">${provider.name}</td></tr>`,
@@ -68,12 +72,21 @@ function buildAlertEmail(
     `<tr><td style="padding:6px 12px;color:#64748b;">Changed</td><td style="padding:6px 12px;color:#1e293b;">${provider.last_alert_state ?? 'unrecorded'} &rarr; ${newState}</td></tr>`,
   ]
 
+  if (justAutoPaused) {
+    rows.push(`<tr><td style="padding:6px 12px;color:#64748b;">Auto-paused</td><td style="padding:6px 12px;color:#ef4444;font-weight:700;">Yes — status set to 'paused', will not run again until manually reactivated</td></tr>`)
+  }
+
   // The relevant numbers per state — JobProvider carries no direct
   // "jobs fetched this run" field (that lives on provider_runs, and
   // this function's signature is JobProvider-only), so each branch
   // surfaces only what JobProvider actually holds, honestly labelled.
+  // consecutiveFailures is always the caller's freshly-known value
+  // (0 on the success path, a just-re-read value on the failure path)
+  // — never provider.consecutive_failures, which is this run's stale
+  // pre-write snapshot and would misreport both a just-reset streak
+  // (on recovery) and a just-incremented one (on failure).
   if (isRecovery) {
-    rows.push(`<tr><td style="padding:6px 12px;color:#64748b;">Consecutive failures</td><td style="padding:6px 12px;color:#1e293b;">${provider.consecutive_failures}</td></tr>`)
+    rows.push(`<tr><td style="padding:6px 12px;color:#64748b;">Consecutive failures</td><td style="padding:6px 12px;color:#1e293b;">${consecutiveFailures}</td></tr>`)
   } else if (newState === 'zero_fetch') {
     // health_status becomes 'degraded' only when a run fetched exactly
     // zero jobs (see updateProviderHealth) — so "0 jobs" is implied by
@@ -83,7 +96,7 @@ function buildAlertEmail(
   } else if (newState === 'poor_quality') {
     rows.push(`<tr><td style="padding:6px 12px;color:#64748b;">Relevance rate</td><td style="padding:6px 12px;color:#ef4444;font-weight:700;">${provider.last_relevance_rate === null ? 'Not measured' : `${provider.last_relevance_rate}%`}</td></tr>`)
   } else if (newState === 'failing') {
-    rows.push(`<tr><td style="padding:6px 12px;color:#64748b;">Consecutive failures</td><td style="padding:6px 12px;color:#ef4444;font-weight:700;">${provider.consecutive_failures}</td></tr>`)
+    rows.push(`<tr><td style="padding:6px 12px;color:#64748b;">Consecutive failures</td><td style="padding:6px 12px;color:#ef4444;font-weight:700;">${consecutiveFailures}</td></tr>`)
     if (provider.last_error_message) {
       rows.push(`<tr><td style="padding:6px 12px;color:#64748b;">Last error</td><td style="padding:6px 12px;color:#1e293b;">${provider.last_error_message}</td></tr>`)
     }
@@ -93,7 +106,7 @@ function buildAlertEmail(
 <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
   <div style="background:${isRecovery ? '#16a34a' : '#0C1A3D'};padding:24px 32px;">
     <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 6px;">Provider Alert</p>
-    <h1 style="color:#fff;font-size:20px;margin:0;">${isRecovery ? 'Provider recovered' : `Provider needs attention: ${stateLabel(newState)}`}</h1>
+    <h1 style="color:#fff;font-size:20px;margin:0;">${isRecovery ? 'Provider recovered' : justAutoPaused ? 'Provider auto-paused' : `Provider needs attention: ${stateLabel(newState)}`}</h1>
   </div>
   <div style="padding:24px 32px;">
     <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">${rows.join('')}</table>
@@ -112,24 +125,39 @@ function buildAlertEmail(
 // was sent, so the next run always has an accurate transition baseline
 // to diff against — that's what stops eight providers x 96 runs a day
 // from re-alerting on every single run while a problem persists.
+//
+// consecutiveFailures is the caller's freshly-known value (never taken
+// from provider.consecutive_failures, which is this run's stale
+// pre-write snapshot) — used for display only, deriveAlertState's own
+// threshold decision happens in the caller before this is invoked.
+//
+// justAutoPaused forces an email even when the label itself (e.g.
+// 'failing') didn't change from the last run — an auto-pause is a
+// materially new, more severe event than "still failing" and must
+// never be silently swallowed by the same-label suppression below.
 export async function maybeSendProviderAlert(
   provider: JobProvider,
-  newState: AlertState
+  newState: AlertState,
+  consecutiveFailures: number,
+  justAutoPaused = false
 ): Promise<void> {
-  // Defensive — the only current caller (app/api/ingest/[slug]/route.ts)
-  // already can't reach this function for a paused provider (it returns
-  // before creating a run at all), but this makes the guarantee hold
-  // even if a future caller doesn't have that same early exit.
-  if (provider.status === 'paused') return
+  // Defensive — the only current callers (app/api/ingest/[slug]/route.ts,
+  // both the success and failure paths) already can't reach this function
+  // for a paused provider on the SAME run that pauses it (justAutoPaused
+  // covers that), and can't reach it at all for a provider already paused
+  // from an earlier run (the route returns before creating a run at all).
+  // This makes the guarantee hold even if a future caller doesn't share
+  // either of those structural exits.
+  if (provider.status === 'paused' && !justAutoPaused) return
 
   const previousState = provider.last_alert_state
   const shouldAlert = newState !== previousState && newState !== 'ok'
   const isRecovery = newState === 'ok' && previousState !== null && previousState !== 'ok'
-  const shouldSend = shouldAlert || isRecovery
+  const shouldSend = shouldAlert || isRecovery || justAutoPaused
 
   if (shouldSend) {
     try {
-      const { subject, html } = buildAlertEmail(provider, newState, isRecovery)
+      const { subject, html } = buildAlertEmail(provider, newState, isRecovery, consecutiveFailures, justAutoPaused)
       const { error: sendError } = await getResend().emails.send({
         from: 'AccountingBody Alerts <noreply@accountingbody.com>',
         to: ALERT_RECIPIENT,

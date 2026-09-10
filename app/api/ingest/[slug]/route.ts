@@ -307,7 +307,7 @@ export async function POST(
       const freshHealthStatus = rawJobs.length === 0 ? 'degraded' : 'healthy'
       const freshDataQualityStatus = qualityMetrics?.status ?? null
       const newAlertState = deriveAlertState(freshHealthStatus, freshDataQualityStatus, 0)
-      await maybeSendProviderAlert(provider, newAlertState)
+      await maybeSendProviderAlert(provider, newAlertState, 0)
     } catch (alertErr: unknown) {
       const msg = alertErr instanceof Error ? alertErr.message : String(alertErr)
       console.error('[ingest] provider alert failed:', msg)
@@ -342,6 +342,55 @@ export async function POST(
       errorMessage: msg,
       errorCode:    'INGESTION_ERROR',
     })
+
+    // Transition-based email alert for the failure path — own try/catch,
+    // must never prevent the error response below from being returned.
+    //
+    // updateProviderHealth's failure branch computes consecutive_failures
+    // and health_status via its own internal read/write and, being
+    // Promise<void>, never hands them back — re-read rather than guess.
+    // This is one extra query on a path that already does several writes;
+    // correctness matters more than saving it.
+    try {
+      const supabase = getSupabase()
+      const { data: fresh } = await supabase
+        .from('job_providers')
+        .select('consecutive_failures, health_status, status, data_quality_status')
+        .eq('id', provider.id)
+        .single()
+
+      if (fresh) {
+        const freshConsecutiveFailures = fresh.consecutive_failures ?? 0
+        // This route already returned early (before creating a run) if
+        // provider.status !== 'active', so a 'paused' status here can only
+        // mean THIS failure just crossed updateProviderHealth's 5-failure
+        // auto-pause threshold — never a pre-existing pause from an
+        // earlier run. Auto-pause has never been surfaced anywhere until
+        // now (Phase A defect).
+        const justAutoPaused = fresh.status === 'paused'
+
+        // Guard against a single, first-ever failure: at
+        // consecutive_failures === 1, health_status also reads 'degraded'
+        // — the same string the success path uses for a zero-fetch run.
+        // Calling deriveAlertState with that value here would misreport
+        // an ordinary exception as "0 jobs fetched" via its second-
+        // priority branch. Only evaluate once failures are genuinely a
+        // pattern (>= 2) — also deriveAlertState's own 'failing'
+        // threshold, so a single blip correctly doesn't alert at all.
+        if (freshConsecutiveFailures >= 2) {
+          const newAlertState = deriveAlertState(
+            fresh.health_status,
+            fresh.data_quality_status,
+            freshConsecutiveFailures
+          )
+          await maybeSendProviderAlert(provider, newAlertState, freshConsecutiveFailures, justAutoPaused)
+        }
+      }
+    } catch (alertErr: unknown) {
+      const alertMsg = alertErr instanceof Error ? alertErr.message : String(alertErr)
+      console.error('[ingest] provider alert failed (failure path):', alertMsg)
+      // do NOT rethrow — the error response below must still return
+    }
 
     console.error(`[ingest/${slug}] Fatal error:`, err)
     return Response.json({ ok: false, error: msg, durationMs }, { status: 500 })
