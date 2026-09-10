@@ -16,6 +16,7 @@ import { normalise } from '@/lib/ingestion/normalise'
 import { deduplicate } from '@/lib/ingestion/deduplicate'
 import { validate } from '@/lib/ingestion/validate'
 import { computeQualityMetrics, type QualityMetrics } from '@/lib/ingestion/quality'
+import { deriveAlertState, maybeSendProviderAlert } from '@/lib/provider-alerts'
 
 export const maxDuration = 300
 
@@ -291,6 +292,27 @@ export async function POST(
       responseMs:   fetchMs,
       jobsFetched:  rawJobs.length,
     })
+
+    // Transition-based email alert — diagnostic only, must NEVER fail an
+    // otherwise-successful ingestion run. Same discipline as the metrics
+    // block above and the jobs_today counter above it.
+    //
+    // The fresh health/quality values are computed here rather than
+    // re-read from the DB: on this success path, updateProviderHealth
+    // just wrote health_status to exactly this and always reset
+    // consecutive_failures to 0 (a success breaks any failure streak),
+    // and qualityMetrics.status is the data-quality read from this same
+    // run, already computed above.
+    try {
+      const freshHealthStatus = rawJobs.length === 0 ? 'degraded' : 'healthy'
+      const freshDataQualityStatus = qualityMetrics?.status ?? null
+      const newAlertState = deriveAlertState(freshHealthStatus, freshDataQualityStatus, 0)
+      await maybeSendProviderAlert(provider, newAlertState)
+    } catch (alertErr: unknown) {
+      const msg = alertErr instanceof Error ? alertErr.message : String(alertErr)
+      console.error('[ingest] provider alert failed:', msg)
+      // do NOT rethrow — ingestion must proceed regardless
+    }
 
     // Cap the error list in the response payload only — logProviderError
     // above already logged every single one.

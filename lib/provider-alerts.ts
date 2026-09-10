@@ -1,0 +1,161 @@
+import { Resend } from 'resend'
+import { createClient } from '@supabase/supabase-js'
+import type { JobProvider } from './providers'
+
+// Every other Resend call site in this codebase instantiates the client
+// inline — grep across lib/ and app/ turns up 15+ separate
+// `new Resend(process.env.RESEND_API_KEY)` calls, no shared wrapper.
+// lib/jobEmails.ts is the one existing shared email module, but every
+// export in it is Job-listing-specific (branded HTML, manage-listing
+// links, the `Job` type) and none of it fits a provider-ops alert.
+// Following the established repo-wide convention here rather than
+// building a second, competing email abstraction.
+function getResend(): Resend {
+  return new Resend(process.env.RESEND_API_KEY)
+}
+
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!
+  )
+}
+
+const ALERT_RECIPIENT = 'acctn.body@gmail.com'
+const SITE_URL = 'https://accountingbody.com'
+
+export type AlertState = 'ok' | 'zero_fetch' | 'poor_quality' | 'failing'
+
+// Priority order matters: a zero-fetch run always also computes
+// relevanceRate as null -> data quality status 'poor' (see
+// lib/ingestion/quality.ts), so a dead provider would otherwise satisfy
+// both the health and quality conditions at once. Checking in this
+// order picks the single most actionable label instead of double-
+// alerting on what is really one underlying problem.
+export function deriveAlertState(
+  healthStatus: string,
+  dataQualityStatus: string | null,
+  consecutiveFailures: number
+): AlertState {
+  if (consecutiveFailures >= 2) return 'failing'
+  if (healthStatus === 'degraded') return 'zero_fetch'
+  if (dataQualityStatus === 'poor') return 'poor_quality'
+  return 'ok'
+}
+
+function stateLabel(state: AlertState): string {
+  switch (state) {
+    case 'failing': return 'repeated failures'
+    case 'zero_fetch': return '0 jobs fetched'
+    case 'poor_quality': return 'poor data quality'
+    case 'ok': return 'recovered'
+  }
+}
+
+function buildAlertEmail(
+  provider: JobProvider,
+  newState: AlertState,
+  isRecovery: boolean
+): { subject: string; html: string } {
+  const providerUrl = `${SITE_URL}/roodber8/providers/${provider.slug}`
+  const subject = isRecovery
+    ? `[AccountingBody] ${provider.slug}: recovered`
+    : `[AccountingBody] ${provider.slug}: ${stateLabel(newState)}`
+
+  const rows: string[] = [
+    `<tr><td style="padding:6px 12px;color:#64748b;">Provider</td><td style="padding:6px 12px;color:#1e293b;font-weight:700;">${provider.name}</td></tr>`,
+    `<tr><td style="padding:6px 12px;color:#64748b;">Slug</td><td style="padding:6px 12px;color:#1e293b;font-family:monospace;">${provider.slug}</td></tr>`,
+    `<tr><td style="padding:6px 12px;color:#64748b;">Changed</td><td style="padding:6px 12px;color:#1e293b;">${provider.last_alert_state ?? 'unrecorded'} &rarr; ${newState}</td></tr>`,
+  ]
+
+  // The relevant numbers per state — JobProvider carries no direct
+  // "jobs fetched this run" field (that lives on provider_runs, and
+  // this function's signature is JobProvider-only), so each branch
+  // surfaces only what JobProvider actually holds, honestly labelled.
+  if (isRecovery) {
+    rows.push(`<tr><td style="padding:6px 12px;color:#64748b;">Consecutive failures</td><td style="padding:6px 12px;color:#1e293b;">${provider.consecutive_failures}</td></tr>`)
+  } else if (newState === 'zero_fetch') {
+    // health_status becomes 'degraded' only when a run fetched exactly
+    // zero jobs (see updateProviderHealth) — so "0 jobs" is implied by
+    // this branch being reached, not a fabricated number.
+    rows.push(`<tr><td style="padding:6px 12px;color:#64748b;">Fetched</td><td style="padding:6px 12px;color:#ef4444;font-weight:700;">0 jobs</td></tr>`)
+    rows.push(`<tr><td style="padding:6px 12px;color:#64748b;">Health status</td><td style="padding:6px 12px;color:#1e293b;">${provider.health_status}</td></tr>`)
+  } else if (newState === 'poor_quality') {
+    rows.push(`<tr><td style="padding:6px 12px;color:#64748b;">Relevance rate</td><td style="padding:6px 12px;color:#ef4444;font-weight:700;">${provider.last_relevance_rate === null ? 'Not measured' : `${provider.last_relevance_rate}%`}</td></tr>`)
+  } else if (newState === 'failing') {
+    rows.push(`<tr><td style="padding:6px 12px;color:#64748b;">Consecutive failures</td><td style="padding:6px 12px;color:#ef4444;font-weight:700;">${provider.consecutive_failures}</td></tr>`)
+    if (provider.last_error_message) {
+      rows.push(`<tr><td style="padding:6px 12px;color:#64748b;">Last error</td><td style="padding:6px 12px;color:#1e293b;">${provider.last_error_message}</td></tr>`)
+    }
+  }
+
+  const html = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
+<div style="max-width:600px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
+  <div style="background:${isRecovery ? '#16a34a' : '#0C1A3D'};padding:24px 32px;">
+    <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 6px;">Provider Alert</p>
+    <h1 style="color:#fff;font-size:20px;margin:0;">${isRecovery ? 'Provider recovered' : `Provider needs attention: ${stateLabel(newState)}`}</h1>
+  </div>
+  <div style="padding:24px 32px;">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">${rows.join('')}</table>
+    <a href="${providerUrl}" style="display:inline-block;background:#0C1A3D;color:#fff;font-weight:700;font-size:13px;padding:10px 20px;border-radius:8px;text-decoration:none;">View provider &rarr;</a>
+  </div>
+</div>
+</body></html>`
+
+  return { subject, html }
+}
+
+// Alert on TRANSITIONS, not state — an email fires only when newState
+// differs from the provider's last recorded alert state (and isn't
+// 'ok'), plus one recovery email when it returns to 'ok' from anything
+// else. Every call writes last_alert_state, whether or not an email
+// was sent, so the next run always has an accurate transition baseline
+// to diff against — that's what stops eight providers x 96 runs a day
+// from re-alerting on every single run while a problem persists.
+export async function maybeSendProviderAlert(
+  provider: JobProvider,
+  newState: AlertState
+): Promise<void> {
+  // Defensive — the only current caller (app/api/ingest/[slug]/route.ts)
+  // already can't reach this function for a paused provider (it returns
+  // before creating a run at all), but this makes the guarantee hold
+  // even if a future caller doesn't have that same early exit.
+  if (provider.status === 'paused') return
+
+  const previousState = provider.last_alert_state
+  const shouldAlert = newState !== previousState && newState !== 'ok'
+  const isRecovery = newState === 'ok' && previousState !== null && previousState !== 'ok'
+  const shouldSend = shouldAlert || isRecovery
+
+  if (shouldSend) {
+    try {
+      const { subject, html } = buildAlertEmail(provider, newState, isRecovery)
+      const { error: sendError } = await getResend().emails.send({
+        from: 'AccountingBody Alerts <noreply@accountingbody.com>',
+        to: ALERT_RECIPIENT,
+        subject,
+        html,
+      })
+      // Rule 101 — Resend's SDK returns { data, error } rather than
+      // throwing on an API-level failure; check and log it explicitly,
+      // never assume the call succeeded just because it didn't throw.
+      if (sendError) {
+        console.error('[maybeSendProviderAlert] Resend error:', sendError)
+      }
+    } catch (err: unknown) {
+      console.error('[maybeSendProviderAlert] send threw:', err)
+    }
+  }
+
+  const supabase = getSupabase()
+  const { error: updateError } = await supabase
+    .from('job_providers')
+    .update({
+      last_alert_state: newState,
+      ...(shouldSend ? { last_alert_sent_at: new Date().toISOString() } : {}),
+    })
+    .eq('id', provider.id)
+  if (updateError) {
+    console.error('[maybeSendProviderAlert] failed to write last_alert_state:', updateError.message)
+  }
+}

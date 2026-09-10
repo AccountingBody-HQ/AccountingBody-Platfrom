@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { QualityMetrics } from './ingestion/quality'
+import type { AlertState } from './provider-alerts'
 
 function getSupabase() {
   return createClient(
@@ -60,6 +61,8 @@ export interface JobProvider {
   last_relevance_rate: number | null
   last_avg_description_length: number | null
   data_quality_checked_at: string | null
+  last_alert_state: AlertState | null
+  last_alert_sent_at: string | null
   created_at: string
   updated_at: string
 }
