@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { isAuthenticated } from '@/lib/admin-auth'
+import { REGISTERED_ADAPTER_KEYS, isRegisteredAdapterKey } from '@/lib/adapters'
 
 function getSupabase() {
   return createClient(
@@ -71,8 +72,11 @@ export async function POST(req: NextRequest) {
   }
 
   const adapterKey = b.adapter_key
-  if (adapterKey !== 'adzuna' && adapterKey !== 'generic-rest') {
-    return Response.json({ error: "adapter_key must be 'adzuna' or 'generic-rest'" }, { status: 400 })
+  if (!isRegisteredAdapterKey(adapterKey)) {
+    return Response.json(
+      { error: `adapter_key must be one of: ${REGISTERED_ADAPTER_KEYS.join(', ')}` },
+      { status: 400 }
+    )
   }
 
   const baseUrl = b.base_url

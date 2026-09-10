@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getProvider } from '@/lib/providers'
 import { isAuthenticated } from '@/lib/admin-auth'
+import { REGISTERED_ADAPTER_KEYS, isRegisteredAdapterKey } from '@/lib/adapters'
 
 function getSupabase() {
   return createClient(
@@ -85,6 +86,27 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   }
   if (!adapterKey) {
     return NextResponse.json({ ok: false, error: 'Adapter Key is required' }, { status: 400 })
+  }
+
+  // Parity with the create route — but only enforced on a value the request
+  // actually submits, so a partial PATCH that omits these fields still falls
+  // back to the (already-valid) existing row values.
+  if (
+    body.base_url !== undefined &&
+    (typeof body.base_url !== 'string' ||
+      !body.base_url.startsWith('https://') ||
+      body.base_url.length > 500)
+  ) {
+    return NextResponse.json(
+      { ok: false, error: 'base_url must start with https:// and be at most 500 characters' },
+      { status: 400 }
+    )
+  }
+  if (body.adapter_key !== undefined && !isRegisteredAdapterKey(body.adapter_key)) {
+    return NextResponse.json(
+      { ok: false, error: `adapter_key must be one of: ${REGISTERED_ADAPTER_KEYS.join(', ')}` },
+      { status: 400 }
+    )
   }
 
   const supabase = getSupabase()

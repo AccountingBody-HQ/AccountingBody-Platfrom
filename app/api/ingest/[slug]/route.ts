@@ -78,7 +78,13 @@ export async function POST(
     console.warn(`[ingest/${slug}] WARNING: field_mapping missing critical fields: ${missingMappings.join(', ')}. Jobs will likely be rejected.`)
   }
 
-  const run = await createProviderRun(provider.id, provider.slug, 'cron')
+  // 'manual' only when the admin trigger route asks for it via ?trigger=manual;
+  // the orchestrator (scheduled) calls this route with no query param and so
+  // keeps recording 'cron'.
+  const triggerSource = new URL(req.url).searchParams.get('trigger') === 'manual'
+    ? 'manual' as const
+    : 'cron' as const
+  const run = await createProviderRun(provider.id, provider.slug, triggerSource)
   if (!run) {
     return Response.json({ ok: false, error: 'Failed to create run record' }, { status: 500 })
   }

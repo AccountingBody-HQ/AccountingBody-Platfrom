@@ -23,7 +23,7 @@ export async function POST(
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accountingbody.com'
 
   try {
-    const res = await fetch(`${siteUrl}/api/ingest/${slug}`, {
+    const res = await fetch(`${siteUrl}/api/ingest/${slug}?trigger=manual`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${cronSecret}`,
