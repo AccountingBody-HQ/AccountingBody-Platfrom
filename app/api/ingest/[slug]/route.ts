@@ -289,6 +289,7 @@ export async function POST(
     await updateProviderHealth(provider.id, 'success', {
       jobsInserted: insertedCount,
       responseMs:   fetchMs,
+      jobsFetched:  rawJobs.length,
     })
 
     // Cap the error list in the response payload only — logProviderError

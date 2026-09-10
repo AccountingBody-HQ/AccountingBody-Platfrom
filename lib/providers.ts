@@ -225,6 +225,7 @@ export async function updateProviderHealth(
   outcome: 'success' | 'failure',
   extras: {
     jobsInserted?: number
+    jobsFetched?: number
     errorMessage?: string
     errorCode?: string
     responseMs?: number
@@ -243,18 +244,26 @@ export async function updateProviderHealth(
     const intervalMs = ((provider?.fetch_interval_minutes ?? 1440) * 60 * 1000)
     const nextFetch = new Date(Date.now() + intervalMs)
 
+    // A run that completes without throwing but fetches zero jobs is not
+    // a failure (nothing errored) — but zero fetched is the single
+    // strongest signal something is wrong upstream, so it must not read
+    // 'healthy'. Stays on the 'success' branch (never increments
+    // consecutive_failures, never risks the auto-pause at 5) — it's a
+    // warning, not a failure.
+    const isZeroFetch = extras.jobsFetched === 0
+
     await supabase
       .from('job_providers')
       .update({
-        health_status: 'healthy',
+        health_status: isZeroFetch ? 'degraded' : 'healthy',
         consecutive_failures: 0,
         last_success_at: new Date().toISOString(),
         last_fetched_at: new Date().toISOString(),
         next_fetch_at: nextFetch.toISOString(),
         jobs_last_run: extras.jobsInserted ?? 0,
         avg_response_ms: extras.responseMs ?? null,
-        last_error_message: null,
-        last_error_code: null,
+        last_error_message: isZeroFetch ? 'Run completed but fetched 0 jobs' : null,
+        last_error_code: isZeroFetch ? 'ZERO_FETCH' : null,
       })
       .eq('id', providerId)
 
