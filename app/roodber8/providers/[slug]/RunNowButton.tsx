@@ -26,7 +26,13 @@ export default function RunNowButton({ slug }: { slug: string }) {
       const res = await fetch(`/api/roodber8/providers/${slug}/trigger`, {
         method: 'POST',
       })
-      const data = (await res.json()) as TriggerResult
+      const text = await res.text()
+      let data: TriggerResult
+      try {
+        data = JSON.parse(text) as TriggerResult
+      } catch {
+        data = { ok: false, error: text.trim().slice(0, 200) || `Request failed (${res.status})` }
+      }
 
       if (!res.ok || data.ok === false) {
         setState('error')
