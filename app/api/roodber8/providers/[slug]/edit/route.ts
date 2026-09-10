@@ -44,13 +44,27 @@ function toArray(v: unknown): string[] {
 }
 
 function parseJsonField(v: unknown, fallback: Record<string, unknown> = {}): Record<string, unknown> {
-  if (typeof v !== 'string' || !v.trim()) return fallback
-  try {
-    const parsed = JSON.parse(v)
-    return isRecord(parsed) ? parsed : fallback
-  } catch {
-    return fallback
+  // Field omitted from a partial PATCH — keep the current row value.
+  if (v === undefined) return fallback
+  // Already-parsed plain object (not an array, not null): a caller that builds
+  // the value live and submits it as JSON rather than a typed-out string — the
+  // Add/Edit provider forms already do this, and the planned field-mapping UI
+  // will too. Without this branch an object submission returned {ok:true} while
+  // silently keeping the old value (Rule 122).
+  if (isRecord(v) && !Array.isArray(v)) return v
+  // String — unchanged: JSON.parse, then the isRecord check, falling back on a
+  // parse failure or a non-object result.
+  if (typeof v === 'string') {
+    if (!v.trim()) return fallback
+    try {
+      const parsed = JSON.parse(v)
+      return isRecord(parsed) ? parsed : fallback
+    } catch {
+      return fallback
+    }
   }
+  // number | boolean | array | explicit null — unchanged: keep the row value.
+  return fallback
 }
 
 type RouteParams = { params: { slug: string } }
