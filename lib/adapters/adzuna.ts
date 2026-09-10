@@ -20,8 +20,9 @@ const KEYWORDS_PER_RUN = 12
  *   - HTTP 200 with an empty results array is a legitimate end-of-results,
  *     not an error — it returns { jobs: [], pagesFetched: 1 }.
  *
- * The caller decides whether a throw from here is fatal (first keyword of the
- * run) or merely collected into AdapterResult.errors (keywords 2..N).
+ * The caller runs every keyword concurrently and catches a throw from here
+ * into AdapterResult.errors; only if EVERY keyword throws does the caller
+ * escalate to a run-level failure.
  */
 async function fetchKeyword(
   baseUrl: string,
@@ -120,33 +121,23 @@ export const adzunaAdapter: ProviderAdapter = {
     const allJobs: RawJob[] = []
     const errors: string[] = []
     let totalPagesFetched = 0
+    let succeededKeywords = 0
 
-    // The first keyword is the run's canary. If its first request can't be
-    // completed at all — a transport failure or a non-200 status — that is
-    // the endpoint being unreachable/broken, NOT a legitimately empty run,
-    // so the error is allowed to propagate. The ingest route's catch block
-    // then records the run as FAILED and increments consecutive_failures
-    // (Rule 120: an adapter must never swallow a network/transport error).
-    const [firstKeyword, ...restKeywords] = keywords
-
-    const firstResult = await fetchKeyword(
-      baseUrl, appId, appKey, firstKeyword, maxPages, provider.slug,
-    )
-    allJobs.push(...firstResult.jobs)
-    totalPagesFetched += firstResult.pagesFetched
-
-    // The first request already proved the endpoint reachable. From here a
-    // single keyword failing must NOT kill an otherwise-working run — its
-    // failure is collected into AdapterResult.errors instead of thrown,
-    // mirroring generic-rest's keyword fan-out.
+    // All keywords run concurrently — no keyword holds a privileged position.
+    // `fetchKeyword` throws on a transport failure or a non-200 on page 1;
+    // each keyword's failure is caught and collected here so one bad term
+    // (a rate limit on that word, a transient blip) can't fail a run the
+    // other keywords would have carried. A keyword that returns an empty
+    // HTTP 200 counts as a success — the endpoint was reachable.
     await Promise.allSettled(
-      restKeywords.map(async (keyword) => {
+      keywords.map(async (keyword) => {
         try {
           const r = await fetchKeyword(
             baseUrl, appId, appKey, keyword, maxPages, provider.slug,
           )
           allJobs.push(...r.jobs)
           totalPagesFetched += r.pagesFetched
+          succeededKeywords++
         } catch (err: unknown) {
           errors.push(
             `Adzuna ${provider.slug} keyword "${keyword}": ${err instanceof Error ? err.message : String(err)}`,
@@ -157,6 +148,19 @@ export const adzunaAdapter: ProviderAdapter = {
 
     if (errors.length > 0) {
       console.warn(`[adzuna-adapter] ${provider.slug} partial errors:`, errors)
+    }
+
+    // Total-outage signal: every keyword in the run failed. This is not tied
+    // to whichever keyword the cursor happened to place first — zero of N
+    // succeeding means the endpoint itself is unreachable or broken. Throw an
+    // aggregated error so the ingest route's catch block records the run as
+    // FAILED and increments consecutive_failures (Rule 120). If even one
+    // keyword succeeded, the run proceeds as a success and the failed
+    // keywords' messages are returned in AdapterResult.errors as before.
+    if (succeededKeywords === 0) {
+      throw new Error(
+        `Adzuna ${provider.slug}: all ${keywords.length} keyword(s) failed — ${errors.slice(0, 3).join(' | ')}`,
+      )
     }
 
     return {
