@@ -43,6 +43,14 @@ function toArray(v: unknown): string[] {
   return v.split(',').map(s => s.trim()).filter(Boolean)
 }
 
+// Same undefined-vs-omitted distinction numOrNull() already applies to the
+// numeric fields: a field left out of a partial PATCH keeps the existing row
+// value; an explicitly-sent array or comma-string is still parsed by toArray().
+function toArrayOr(v: unknown, fallback: string[]): string[] {
+  if (v === undefined) return fallback
+  return toArray(v)
+}
+
 function parseJsonField(v: unknown, fallback: Record<string, unknown> = {}): Record<string, unknown> {
   // Field omitted from a partial PATCH — keep the current row value.
   if (v === undefined) return fallback
@@ -132,10 +140,10 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       adapter_key:             adapterKey,
       status:                  str(body.status, existing.status),
       priority:                num(body.priority, existing.priority),
-      country_codes:           toArray(body.country_codes),
-      regions:                 toArray(body.regions),
-      platform_tags:           toArray(body.platform_tags),
-      keywords:                toArray(body.keywords),
+      country_codes:           toArrayOr(body.country_codes, existing.country_codes),
+      regions:                 toArrayOr(body.regions, existing.regions),
+      platform_tags:           toArrayOr(body.platform_tags, existing.platform_tags),
+      keywords:                toArrayOr(body.keywords, existing.keywords),
       source_score:            num(body.source_score, existing.source_score),
       source_name:             str(body.source_name, existing.source_name) || null,
       base_url:                baseUrl,
