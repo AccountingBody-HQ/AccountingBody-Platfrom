@@ -22,14 +22,12 @@ export default function AddProviderPage() {
     name: '',
     adapter_key: 'generic-rest',
     base_url: '',
-    status: 'active',
     source_name: '',
     provider_type: 'api_rest',
     auth_type: 'none',
     auth_config: '',
     request_config: '',
     response_path: 'jobs',
-    field_mapping: '',
     keywords: '',
     platform_tags: 'ab',
     country_codes: '',
@@ -122,20 +120,12 @@ export default function AddProviderPage() {
 
     // Parse JSON fields
     let parsedRequestConfig: Record<string, unknown> | null = null
-    let parsedFieldMapping: Record<string, unknown> | null = null
     let parsedAuthConfig: Record<string, unknown> | null = null
     if (formData.request_config.trim()) {
       try {
         parsedRequestConfig = JSON.parse(formData.request_config)
       } catch {
         errs.request_config = 'Invalid JSON'
-      }
-    }
-    if (formData.field_mapping.trim()) {
-      try {
-        parsedFieldMapping = JSON.parse(formData.field_mapping)
-      } catch {
-        errs.field_mapping = 'Invalid JSON'
       }
     }
     if (formData.auth_config.trim()) {
@@ -165,14 +155,16 @@ export default function AddProviderPage() {
           name: formData.name,
           adapter_key: formData.adapter_key,
           base_url: formData.base_url,
-          status: formData.status,
+          // New providers are always created paused — the operator activates
+          // them from the field-mapping page after verifying a live preview.
+          // Not read from formData: there is no status control on this form.
+          status: 'paused',
           source_name: formData.source_name || null,
           provider_type: formData.provider_type || null,
           auth_type: formData.auth_type,
           auth_config: parsedAuthConfig,
           request_config: parsedRequestConfig,
           response_path: formData.response_path || null,
-          field_mapping: parsedFieldMapping,
           keywords: parseTags(formData.keywords),
           platform_tags: parseTags(formData.platform_tags),
           country_codes: parseTags(formData.country_codes),
@@ -193,7 +185,7 @@ export default function AddProviderPage() {
       })
       const data = await res.json() as { ok?: boolean; slug?: string; error?: string }
       if (res.status === 201 && data.slug) {
-        router.push('/roodber8/providers/' + data.slug)
+        router.push('/roodber8/providers/' + data.slug + '/map')
       } else {
         setError(data.error ?? 'Unknown error')
       }
@@ -219,7 +211,8 @@ export default function AddProviderPage() {
         {/* Header */}
         <h1 style={{ color: ADMIN_COLORS.text, fontWeight: 700, fontSize: '28px', marginBottom: '4px' }}>Add Provider</h1>
         <p style={{ color: ADMIN_COLORS.textMuted, fontSize: '14px', marginBottom: '32px' }}>
-          Configure a new job ingestion source
+          Configure a new job ingestion source. It is created paused; the next step maps its response
+          fields and previews a live result before you activate it.
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -280,14 +273,11 @@ export default function AddProviderPage() {
 
               <div>
                 <label style={labelStyle}>Status</label>
-                <select
-                  value={formData.status}
-                  onChange={e => setFormData({ ...formData, status: e.target.value })}
-                  style={inputStyle}
-                >
-                  <option value="active">active</option>
-                  <option value="paused">paused</option>
-                </select>
+                <input type="text" value="Paused" readOnly disabled style={{ ...inputStyle, opacity: 0.6 }} />
+                <p style={helperStyle}>
+                  New providers always start paused so the cron orchestrator never fetches them before
+                  their field mapping is verified. Activate from the field-mapping page after previewing.
+                </p>
               </div>
 
               <div>
@@ -505,34 +495,6 @@ export default function AddProviderPage() {
                   </p>
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* Section 3 — Field Mapping */}
-          <div style={sectionStyle}>
-            <h2 style={sectionTitleStyle}>Field Mapping</h2>
-            <div>
-              <label style={labelStyle}>Field Mapping</label>
-              <textarea
-                rows={8}
-                value={formData.field_mapping}
-                onChange={e => setFormData({ ...formData, field_mapping: e.target.value })}
-                placeholder={`{
-  "title": "jobTitle",
-  "company_name": "companyName",
-  "location_text": "jobGeo",
-  "description": "jobDescription",
-  "application_url": "url",
-  "source_job_id": "id"
-}`}
-                style={{ ...inputStyle, fontFamily: 'monospace', resize: 'vertical' as const }}
-              />
-              <p style={helperStyle}>
-                Map canonical fields to source field names. Keys: title, company_name, location_text,
-                description, application_url, source_job_id, salary_min, salary_max, salary_currency,
-                salary_text, employment_type
-              </p>
-              {fieldErrors.field_mapping && <p style={errorTextStyle}>{fieldErrors.field_mapping}</p>}
             </div>
           </div>
 
