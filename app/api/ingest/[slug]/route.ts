@@ -6,6 +6,7 @@ import {
   completeProviderRun,
   failProviderRun,
   updateProviderHealth,
+  updateProviderDataQuality,
   logProviderError,
   incrementProviderJobsToday,
   updateProviderKeywordCursor,
@@ -14,6 +15,7 @@ import { getAdapter } from '@/lib/adapters'
 import { normalise } from '@/lib/ingestion/normalise'
 import { deduplicate } from '@/lib/ingestion/deduplicate'
 import { validate } from '@/lib/ingestion/validate'
+import { computeQualityMetrics, type QualityMetrics } from '@/lib/ingestion/quality'
 
 export const maxDuration = 300
 
@@ -102,6 +104,20 @@ export async function POST(
         `Job "${job.title}" at "${job.application_url}" failed validation`,
         job.raw_source_data as Record<string, unknown>
       )
+    }
+
+    // Data-quality metrics — diagnostic only, computed from data already
+    // in memory (no extra fetch, no extra DB read beyond the write below).
+    // Same discipline as the jobs_today counter further down: a metrics
+    // failure must NEVER fail an otherwise-successful ingestion run.
+    let qualityMetrics: QualityMetrics | undefined
+    try {
+      qualityMetrics = computeQualityMetrics(normalised, valid.length)
+      await updateProviderDataQuality(provider.id, qualityMetrics)
+    } catch (qualityErr: unknown) {
+      const msg = qualityErr instanceof Error ? qualityErr.message : String(qualityErr)
+      console.error('[ingest] quality metrics failed:', msg)
+      // do NOT rethrow — ingestion must proceed regardless
     }
 
     const { toInsert, duplicateCount: dedupedAtCheckTime } = await deduplicate(valid)
@@ -242,6 +258,9 @@ export async function POST(
       durationMs,
       responseMs:        fetchMs,
       rawResponseSample: rawJobs[0] as Record<string, unknown> | undefined,
+      relevanceRate:        qualityMetrics?.relevanceRate,
+      avgDescriptionLength: qualityMetrics?.avgDescriptionLength,
+      fieldCoverage:        qualityMetrics?.fieldCoverage,
     })
 
     if (typeof adapterResult.nextCursor === 'number') {

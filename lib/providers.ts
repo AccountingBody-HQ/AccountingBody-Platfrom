@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import type { QualityMetrics } from './ingestion/quality'
 
 function getSupabase() {
   return createClient(
@@ -55,6 +56,10 @@ export interface JobProvider {
   commercial_terms: string | null
   keyword_cursor: number | null
   enforce_relevance: boolean | null
+  data_quality_status: string | null
+  last_relevance_rate: number | null
+  last_avg_description_length: number | null
+  data_quality_checked_at: string | null
   created_at: string
   updated_at: string
 }
@@ -77,6 +82,9 @@ export interface ProviderRun {
   error_message: string | null
   error_code: string | null
   raw_response_sample: Record<string, unknown> | null
+  relevance_rate: number | null
+  avg_description_length: number | null
+  field_coverage: Record<string, number> | null
 }
 
 // Get a single provider by slug
@@ -167,6 +175,9 @@ export async function completeProviderRun(
     durationMs: number
     responseMs?: number
     rawResponseSample?: Record<string, unknown>
+    relevanceRate?: number | null
+    avgDescriptionLength?: number | null
+    fieldCoverage?: Record<string, number>
   }
 ): Promise<void> {
   const supabase = getSupabase()
@@ -183,6 +194,9 @@ export async function completeProviderRun(
       pages_fetched: metrics.pagesFetched,
       response_ms_avg: metrics.responseMs ?? null,
       raw_response_sample: metrics.rawResponseSample ?? null,
+      relevance_rate: metrics.relevanceRate ?? null,
+      avg_description_length: metrics.avgDescriptionLength ?? null,
+      field_coverage: metrics.fieldCoverage ?? null,
     })
     .eq('id', runId)
 }
@@ -268,6 +282,28 @@ export async function updateProviderHealth(
         ...(newStatus ? { status: newStatus } : {}),
       })
       .eq('id', providerId)
+  }
+}
+
+// Persist the latest data-quality read for a provider — diagnostic
+// state on job_providers, independent of the provider_runs history.
+// Rule 101: never assume success — check and log the returned error.
+export async function updateProviderDataQuality(
+  providerId: string,
+  metrics: QualityMetrics
+): Promise<void> {
+  const supabase = getSupabase()
+  const { error } = await supabase
+    .from('job_providers')
+    .update({
+      data_quality_status: metrics.status,
+      last_relevance_rate: metrics.relevanceRate,
+      last_avg_description_length: metrics.avgDescriptionLength,
+      data_quality_checked_at: new Date().toISOString(),
+    })
+    .eq('id', providerId)
+  if (error) {
+    console.error('[updateProviderDataQuality] failed:', error.message)
   }
 }
 

@@ -3,8 +3,9 @@ import { createClient } from '@supabase/supabase-js'
 import { getProvider } from '@/lib/providers'
 import { getAdapter } from '@/lib/adapters'
 import { normalise, type NormalisedJob } from '@/lib/ingestion/normalise'
-import { validate, isAccountingFinanceRelevant, explainRelevance } from '@/lib/ingestion/validate'
+import { validate, explainRelevance } from '@/lib/ingestion/validate'
 import { computeDedupHash } from '@/lib/ingestion/deduplicate'
+import { computeQualityMetrics } from '@/lib/ingestion/quality'
 import { isAuthenticated } from '@/lib/admin-auth'
 
 export const maxDuration = 60
@@ -17,30 +18,6 @@ function getSupabase() {
 }
 
 type Verdict = 'would_insert' | 'would_deduplicate' | 'would_reject'
-
-const COVERAGE_FIELDS = [
-  'title', 'company_name', 'location_text', 'location_city',
-  'location_country', 'salary_min', 'salary_max', 'salary_currency',
-  'description', 'application_url', 'employment_type', 'seniority_level',
-  'qualifications_required',
-] as const
-
-function hasValue(job: NormalisedJob, field: (typeof COVERAGE_FIELDS)[number]): boolean {
-  switch (field) {
-    case 'salary_min':
-    case 'salary_max':
-      return job[field] !== null
-    case 'qualifications_required':
-      return job.qualifications_required.length > 0
-    default:
-      return !!job[field]
-  }
-}
-
-function pct(count: number, total: number): number {
-  if (total === 0) return 0
-  return Math.round((count / total) * 10000) / 100
-}
 
 // ── POST /api/roodber8/providers/[slug]/preview ── runs the real pipeline
 // (fetch → normalise → validate → dedup existence check) and writes NOTHING:
@@ -129,18 +106,12 @@ export async function POST(
       })
     }
 
-    // ── Quality metrics — computed over every normalised (fetched) row ────
-    const relevantCount = normalised.filter(isAccountingFinanceRelevant).length
-    const avgDescriptionLength = normalised.length > 0
-      ? Math.round(normalised.reduce((sum, j) => sum + j.description.length, 0) / normalised.length)
-      : 0
-
-    const fieldCoverage = Object.fromEntries(
-      COVERAGE_FIELDS.map(field => [
-        field,
-        pct(normalised.filter(j => hasValue(j, field)).length, normalised.length),
-      ])
-    ) as Record<(typeof COVERAGE_FIELDS)[number], number>
+    // ── Quality metrics — single shared implementation (lib/ingestion/
+    // quality.ts), computed over every normalised (fetched) row plus the
+    // valid count from validate() already in scope above. Never persisted
+    // here — persistence only happens on the real ingest path
+    // (app/api/ingest/[slug]/route.ts).
+    const metrics = computeQualityMetrics(normalised, valid.length)
 
     // ── Samples — first `sampleSize` rows, in original fetch order ────────
     const sampleSlice = normalised.slice(0, sampleSize)
@@ -207,10 +178,10 @@ export async function POST(
         duration_ms: durationMs,
       },
       quality: {
-        relevance_rate: pct(relevantCount, normalised.length),
-        avg_description_length: avgDescriptionLength,
+        relevance_rate: metrics.relevanceRate,
+        avg_description_length: metrics.avgDescriptionLength,
         field_coverage: {
-          ...fieldCoverage,
+          ...metrics.fieldCoverage,
           // NormalisedJob (lib/ingestion/normalise.ts) has no `category`
           // field — nothing to measure coverage of. Kept in the response
           // to match the documented shape; always 0.
