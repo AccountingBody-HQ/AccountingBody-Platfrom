@@ -112,7 +112,7 @@ export async function POST(
     // failure must NEVER fail an otherwise-successful ingestion run.
     let qualityMetrics: QualityMetrics | undefined
     try {
-      qualityMetrics = computeQualityMetrics(normalised, valid.length)
+      qualityMetrics = computeQualityMetrics(normalised)
       await updateProviderDataQuality(provider.id, qualityMetrics)
     } catch (qualityErr: unknown) {
       const msg = qualityErr instanceof Error ? qualityErr.message : String(qualityErr)

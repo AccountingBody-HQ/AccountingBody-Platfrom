@@ -107,11 +107,11 @@ export async function POST(
     }
 
     // ── Quality metrics — single shared implementation (lib/ingestion/
-    // quality.ts), computed over every normalised (fetched) row plus the
-    // valid count from validate() already in scope above. Never persisted
-    // here — persistence only happens on the real ingest path
-    // (app/api/ingest/[slug]/route.ts).
-    const metrics = computeQualityMetrics(normalised, valid.length)
+    // quality.ts), computed over every normalised (fetched) row.
+    // relevanceRate is the taxonomy check, independent of validate()
+    // above. Never persisted here — persistence only happens on the
+    // real ingest path (app/api/ingest/[slug]/route.ts).
+    const metrics = computeQualityMetrics(normalised)
 
     // ── Samples — first `sampleSize` rows, in original fetch order ────────
     const sampleSlice = normalised.slice(0, sampleSize)
