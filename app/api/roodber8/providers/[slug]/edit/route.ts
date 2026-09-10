@@ -23,6 +23,19 @@ function num(v: unknown, fallback: number): number {
   return Number.isFinite(n) ? n : fallback
 }
 
+// Nullable number: an explicit null clears the column; a missing/invalid
+// value leaves the existing value untouched.
+function numOrNull(v: unknown, fallback: number | null): number | null {
+  if (v === null) return null
+  if (v === undefined) return fallback
+  const n = Number(v)
+  return Number.isFinite(n) ? n : fallback
+}
+
+function boolOr(v: unknown, fallback: boolean): boolean {
+  return typeof v === 'boolean' ? v : fallback
+}
+
 function toArray(v: unknown): string[] {
   if (Array.isArray(v)) return v.filter((x): x is string => typeof x === 'string')
   if (typeof v !== 'string') return []
@@ -101,6 +114,11 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       fetch_offset_minutes:    num(body.fetch_offset_minutes, existing.fetch_offset_minutes),
       commercial_terms:        str(body.commercial_terms, existing.commercial_terms) || null,
       notes:                   str(body.notes, existing.notes) || null,
+      enforce_relevance:       boolOr(body.enforce_relevance, existing.enforce_relevance ?? false),
+      keyword_cursor:          num(body.keyword_cursor, existing.keyword_cursor ?? 0),
+      rate_limit_rpm:          numOrNull(body.rate_limit_rpm, existing.rate_limit_rpm),
+      rate_limit_daily:        numOrNull(body.rate_limit_daily, existing.rate_limit_daily),
+      data_ownership:          str(body.data_ownership, existing.data_ownership) || null,
     })
     .eq('slug', slug)
 

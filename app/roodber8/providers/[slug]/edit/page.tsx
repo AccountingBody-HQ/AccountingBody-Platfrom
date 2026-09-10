@@ -4,6 +4,11 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ADMIN_COLORS } from '@/lib/admin-theme'
 import type { JobProvider } from '@/lib/providers'
+import {
+  AUTH_TYPE_OPTIONS,
+  PAGINATION_STYLE_OPTIONS,
+  buildSelectOptions,
+} from '../../provider-form-options'
 
 function jsonFieldToText(v: Record<string, unknown> | null | undefined): string {
   if (!v || Object.keys(v).length === 0) return ''
@@ -18,6 +23,7 @@ export default function EditProviderPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [resettingCursor, setResettingCursor] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
@@ -47,6 +53,11 @@ export default function EditProviderPage() {
     notes: '',
     max_pages_per_run: 1,
     pagination_style: 'none',
+    enforce_relevance: false,
+    keyword_cursor: 0,
+    rate_limit_rpm: null as number | null,
+    rate_limit_daily: null as number | null,
+    data_ownership: '',
   })
 
   useEffect(() => {
@@ -88,6 +99,11 @@ export default function EditProviderPage() {
           notes: provider.notes ?? '',
           max_pages_per_run: provider.max_pages_per_run,
           pagination_style: provider.pagination_style ?? 'none',
+          enforce_relevance: provider.enforce_relevance ?? false,
+          keyword_cursor: provider.keyword_cursor ?? 0,
+          rate_limit_rpm: provider.rate_limit_rpm,
+          rate_limit_daily: provider.rate_limit_daily,
+          data_ownership: provider.data_ownership ?? '',
         })
         setLoading(false)
       } catch {
@@ -148,8 +164,11 @@ export default function EditProviderPage() {
     marginTop: '4px',
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleSubmit(
+    e?: React.FormEvent,
+    cursorOverride?: number,
+  ): Promise<boolean> {
+    e?.preventDefault()
     setError(null)
     setFieldErrors({})
 
@@ -187,12 +206,14 @@ export default function EditProviderPage() {
 
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs)
-      return
+      return false
     }
 
     // Parse comma-separated strings to arrays
     const parseTags = (s: string) =>
       s.split(',').map(t => t.trim()).filter(Boolean)
+
+    const keywordCursor = cursorOverride ?? formData.keyword_cursor
 
     setSubmitting(true)
     try {
@@ -223,20 +244,37 @@ export default function EditProviderPage() {
           notes: formData.notes || null,
           max_pages_per_run: formData.max_pages_per_run,
           pagination_style: formData.pagination_style,
+          enforce_relevance: formData.enforce_relevance,
+          keyword_cursor: keywordCursor,
+          rate_limit_rpm: formData.rate_limit_rpm,
+          rate_limit_daily: formData.rate_limit_daily,
+          data_ownership: formData.data_ownership || null,
         }),
       })
       const data = await res.json() as { ok?: boolean; error?: string }
       if (res.ok && data.ok) {
         setSuccessMsg('Provider updated successfully.')
         setTimeout(() => setSuccessMsg(null), 3000)
-      } else {
-        setError(data.error ?? 'Unknown error')
+        return true
       }
+      setError(data.error ?? 'Unknown error')
+      return false
     } catch {
       setError('Network error — please try again')
+      return false
     } finally {
       setSubmitting(false)
     }
+  }
+
+  async function handleResetKeywordCursor() {
+    if (!window.confirm('Reset the keyword cursor to 0? The next Adzuna run will restart from the first keyword. This also saves any other pending changes on this form.')) return
+    setResettingCursor(true)
+    const ok = await handleSubmit(undefined, 0)
+    if (ok) {
+      setFormData(prev => ({ ...prev, keyword_cursor: 0 }))
+    }
+    setResettingCursor(false)
   }
 
   async function handleDelete() {
@@ -291,7 +329,7 @@ export default function EditProviderPage() {
           Update configuration for {providerName}
         </p>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={e => { void handleSubmit(e) }}>
           {/* Section 1 — Identity */}
           <div style={sectionStyle}>
             <h2 style={sectionTitleStyle}>Identity</h2>
@@ -399,11 +437,15 @@ export default function EditProviderPage() {
                   onChange={e => setFormData({ ...formData, auth_type: e.target.value })}
                   style={inputStyle}
                 >
-                  <option value="none">none</option>
-                  <option value="api_key">api_key</option>
-                  <option value="bearer">bearer</option>
-                  <option value="basic">basic</option>
+                  {buildSelectOptions(AUTH_TYPE_OPTIONS, formData.auth_type).map(opt => (
+                    <option key={opt.value} value={opt.value} disabled={opt.disabled}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
+                <p style={helperStyle}>
+                  api_key and api_key_query both send the key as a query param; api_key_header sends it as a header.
+                </p>
               </div>
 
               <div className="col-span-2">
@@ -437,11 +479,15 @@ export default function EditProviderPage() {
                   onChange={e => setFormData({ ...formData, pagination_style: e.target.value })}
                   style={inputStyle}
                 >
-                  <option value="none">none</option>
-                  <option value="page">page</option>
-                  <option value="offset">offset</option>
-                  <option value="cursor">cursor</option>
+                  {buildSelectOptions(PAGINATION_STYLE_OPTIONS, formData.pagination_style).map(opt => (
+                    <option key={opt.value} value={opt.value} disabled={opt.disabled}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
+                <p style={helperStyle}>
+                  page_number is used by the Adzuna adapter (which paginates on its own); generic-rest understands none/page/offset/cursor.
+                </p>
               </div>
 
               <div>
@@ -484,6 +530,101 @@ export default function EditProviderPage() {
                 </p>
                 {fieldErrors.auth_config && <p style={errorTextStyle}>{fieldErrors.auth_config}</p>}
               </div>
+            </div>
+          </div>
+
+          {/* Section 2b — Relevance & Rate Limits */}
+          <div style={sectionStyle}>
+            <h2 style={sectionTitleStyle}>Relevance &amp; Rate Limits</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'none', letterSpacing: 'normal', fontSize: '14px' }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.enforce_relevance}
+                    onChange={e => setFormData({ ...formData, enforce_relevance: e.target.checked })}
+                    style={{ width: '16px', height: '16px', accentColor: ADMIN_COLORS.gold }}
+                  />
+                  Enforce relevance (Rule 104)
+                </label>
+                <p style={helperStyle}>
+                  ON: any job that fails the relevance check is rejected outright. OFF: only choose this once the
+                  provider&rsquo;s own API filtering (category / tag) has been tested and confirmed via the preview
+                  endpoint — do not assume a new provider&rsquo;s filter is reliable without testing it first.
+                </p>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Rate Limit (req/min)</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={formData.rate_limit_rpm ?? ''}
+                  onChange={e => setFormData({ ...formData, rate_limit_rpm: e.target.value === '' ? null : Number(e.target.value) })}
+                  style={inputStyle}
+                />
+                <p style={helperStyle}>Optional. Blank = unlimited.</p>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Rate Limit (req/day)</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={formData.rate_limit_daily ?? ''}
+                  onChange={e => setFormData({ ...formData, rate_limit_daily: e.target.value === '' ? null : Number(e.target.value) })}
+                  style={inputStyle}
+                />
+                <p style={helperStyle}>Optional. Blank = unlimited. A run is skipped once requests today reaches this.</p>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Data Ownership</label>
+                <input
+                  type="text"
+                  value={formData.data_ownership}
+                  onChange={e => setFormData({ ...formData, data_ownership: e.target.value })}
+                  style={inputStyle}
+                />
+                <p style={helperStyle}>Free text: licensing / ownership basis for the ingested data (e.g. owned, licensed, affiliate-feed).</p>
+              </div>
+
+              {formData.adapter_key === 'adzuna' && (
+                <div>
+                  <label style={labelStyle}>Keyword Cursor</label>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      value={String(formData.keyword_cursor)}
+                      readOnly
+                      disabled
+                      style={{ ...inputStyle, opacity: 0.6 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleResetKeywordCursor}
+                      disabled={resettingCursor || submitting || deleting}
+                      style={{
+                        whiteSpace: 'nowrap',
+                        padding: '8px 12px',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: ADMIN_COLORS.textMuted,
+                        border: '1px solid ' + ADMIN_COLORS.border,
+                        background: ADMIN_COLORS.card,
+                        borderRadius: '6px',
+                        cursor: (resettingCursor || submitting || deleting) ? 'default' : 'pointer',
+                      }}
+                    >
+                      {resettingCursor ? 'Resetting…' : 'Reset to 0'}
+                    </button>
+                  </div>
+                  <p style={helperStyle}>
+                    Diagnostic only, not hand-editable. The Adzuna adapter advances this automatically as it rotates
+                    through its keyword list. Reset restarts the rotation from the first keyword (and saves the form).
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

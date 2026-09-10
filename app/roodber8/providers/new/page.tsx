@@ -3,6 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ADMIN_COLORS } from '@/lib/admin-theme'
+import {
+  AUTH_TYPE_OPTIONS,
+  PAGINATION_STYLE_OPTIONS,
+  buildSelectOptions,
+} from '../provider-form-options'
 
 export default function AddProviderPage() {
   const router = useRouter()
@@ -37,6 +42,10 @@ export default function AddProviderPage() {
     notes: '',
     max_pages_per_run: 1,
     pagination_style: 'none',
+    enforce_relevance: false,
+    rate_limit_rpm: null as number | null,
+    rate_limit_daily: null as number | null,
+    data_ownership: '',
   })
 
   const inputStyle = {
@@ -176,6 +185,10 @@ export default function AddProviderPage() {
           notes: formData.notes || null,
           max_pages_per_run: formData.max_pages_per_run,
           pagination_style: formData.pagination_style,
+          enforce_relevance: formData.enforce_relevance,
+          rate_limit_rpm: formData.rate_limit_rpm,
+          rate_limit_daily: formData.rate_limit_daily,
+          data_ownership: formData.data_ownership || null,
         }),
       })
       const data = await res.json() as { ok?: boolean; slug?: string; error?: string }
@@ -330,11 +343,15 @@ export default function AddProviderPage() {
                   onChange={e => setFormData({ ...formData, auth_type: e.target.value })}
                   style={inputStyle}
                 >
-                  <option value="none">none</option>
-                  <option value="api_key">api_key</option>
-                  <option value="bearer">bearer</option>
-                  <option value="basic">basic</option>
+                  {buildSelectOptions(AUTH_TYPE_OPTIONS, formData.auth_type).map(opt => (
+                    <option key={opt.value} value={opt.value} disabled={opt.disabled}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
+                <p style={helperStyle}>
+                  api_key and api_key_query both send the key as a query param; api_key_header sends it as a header.
+                </p>
               </div>
 
               <div className="col-span-2">
@@ -368,11 +385,15 @@ export default function AddProviderPage() {
                   onChange={e => setFormData({ ...formData, pagination_style: e.target.value })}
                   style={inputStyle}
                 >
-                  <option value="none">none</option>
-                  <option value="page">page</option>
-                  <option value="offset">offset</option>
-                  <option value="cursor">cursor</option>
+                  {buildSelectOptions(PAGINATION_STYLE_OPTIONS, formData.pagination_style).map(opt => (
+                    <option key={opt.value} value={opt.value} disabled={opt.disabled}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
+                <p style={helperStyle}>
+                  page_number is used by the Adzuna adapter (which paginates on its own); generic-rest understands none/page/offset/cursor.
+                </p>
               </div>
 
               <div>
@@ -415,6 +436,75 @@ export default function AddProviderPage() {
                 </p>
                 {fieldErrors.auth_config && <p style={errorTextStyle}>{fieldErrors.auth_config}</p>}
               </div>
+            </div>
+          </div>
+
+          {/* Section 2b — Relevance & Rate Limits */}
+          <div style={sectionStyle}>
+            <h2 style={sectionTitleStyle}>Relevance &amp; Rate Limits</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'none', letterSpacing: 'normal', fontSize: '14px' }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.enforce_relevance}
+                    onChange={e => setFormData({ ...formData, enforce_relevance: e.target.checked })}
+                    style={{ width: '16px', height: '16px', accentColor: ADMIN_COLORS.gold }}
+                  />
+                  Enforce relevance (Rule 104)
+                </label>
+                <p style={helperStyle}>
+                  ON: any job that fails the relevance check is rejected outright. OFF: only choose this once the
+                  provider&rsquo;s own API filtering (category / tag) has been tested and confirmed via the preview
+                  endpoint — do not assume a new provider&rsquo;s filter is reliable without testing it first.
+                </p>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Rate Limit (req/min)</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={formData.rate_limit_rpm ?? ''}
+                  onChange={e => setFormData({ ...formData, rate_limit_rpm: e.target.value === '' ? null : Number(e.target.value) })}
+                  style={inputStyle}
+                />
+                <p style={helperStyle}>Optional. Blank = unlimited.</p>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Rate Limit (req/day)</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={formData.rate_limit_daily ?? ''}
+                  onChange={e => setFormData({ ...formData, rate_limit_daily: e.target.value === '' ? null : Number(e.target.value) })}
+                  style={inputStyle}
+                />
+                <p style={helperStyle}>Optional. Blank = unlimited. A run is skipped once requests today reaches this.</p>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Data Ownership</label>
+                <input
+                  type="text"
+                  value={formData.data_ownership}
+                  onChange={e => setFormData({ ...formData, data_ownership: e.target.value })}
+                  style={inputStyle}
+                />
+                <p style={helperStyle}>Free text: licensing / ownership basis for the ingested data (e.g. owned, licensed, affiliate-feed).</p>
+              </div>
+
+              {formData.adapter_key === 'adzuna' && (
+                <div>
+                  <label style={labelStyle}>Keyword Cursor</label>
+                  <input type="text" value="0" readOnly disabled style={{ ...inputStyle, opacity: 0.6 }} />
+                  <p style={helperStyle}>
+                    Diagnostic only. Starts at 0 and advances automatically as the Adzuna adapter rotates through its
+                    keyword list. Editable from the provider&rsquo;s Edit page once it has been created.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

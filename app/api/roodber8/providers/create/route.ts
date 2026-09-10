@@ -30,6 +30,14 @@ function numberOr(v: unknown, fallback: number): number {
   return typeof v === 'number' && Number.isFinite(v) ? v : fallback
 }
 
+function numberOrNull(v: unknown): number | null {
+  return typeof v === 'number' && Number.isFinite(v) ? v : null
+}
+
+function booleanOr(v: unknown, fallback: boolean): boolean {
+  return typeof v === 'boolean' ? v : fallback
+}
+
 // ── POST /api/roodber8/providers/create ── insert a new job_providers row
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
@@ -100,6 +108,10 @@ export async function POST(req: NextRequest) {
   const notes = stringOrNull(b.notes)
   const maxPagesPerRun = numberOr(b.max_pages_per_run, 1)
   const paginationStyle = stringOr(b.pagination_style, 'none')
+  const enforceRelevance = booleanOr(b.enforce_relevance, false)
+  const rateLimitRpm = numberOrNull(b.rate_limit_rpm)
+  const rateLimitDaily = numberOrNull(b.rate_limit_daily)
+  const dataOwnership = stringOrNull(b.data_ownership)
 
   const supabase = getSupabase()
   const { error } = await supabase.from('job_providers').insert({
@@ -127,6 +139,10 @@ export async function POST(req: NextRequest) {
     notes,
     max_pages_per_run: maxPagesPerRun,
     pagination_style: paginationStyle,
+    enforce_relevance: enforceRelevance,
+    rate_limit_rpm: rateLimitRpm,
+    rate_limit_daily: rateLimitDaily,
+    data_ownership: dataOwnership,
   })
 
   if (error) {
