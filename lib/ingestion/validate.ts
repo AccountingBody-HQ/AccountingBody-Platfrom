@@ -43,9 +43,10 @@ function buildKeywordMatcher(keyword: string): RegExp {
 }
 
 // Precomputed once at module scope — the per-job loop must not rebuild
-// 437 regexes for every job.
-const KEYWORD_MATCHERS: RegExp[] = ACCOUNTING_FINANCE_KEYWORDS
-  .map(buildKeywordMatcher)
+// 437 regexes for every job. Carries the source keyword alongside its
+// matcher so callers (explainRelevance) can report which keyword hit.
+const KEYWORD_MATCHERS: { keyword: string; re: RegExp }[] = ACCOUNTING_FINANCE_KEYWORDS
+  .map(keyword => ({ keyword, re: buildKeywordMatcher(keyword) }))
 
 // A job is relevant if a taxonomy keyword appears as a whole word
 // in the TITLE, or if at least two distinct keywords appear as
@@ -59,12 +60,12 @@ const KEYWORD_MATCHERS: RegExp[] = ACCOUNTING_FINANCE_KEYWORDS
 // to fabricate a fake NormalisedJob just to reuse this logic.
 export function isRelevantByText(title: string, description: string): boolean {
   const t = normaliseForMatching(title)
-  for (const re of KEYWORD_MATCHERS) {
+  for (const { re } of KEYWORD_MATCHERS) {
     if (re.test(t)) return true
   }
   const d = normaliseForMatching(description)
   let hits = 0
-  for (const re of KEYWORD_MATCHERS) {
+  for (const { re } of KEYWORD_MATCHERS) {
     if (re.test(d)) {
       hits++
       if (hits >= 2) return true
@@ -75,6 +76,60 @@ export function isRelevantByText(title: string, description: string): boolean {
 
 export function isAccountingFinanceRelevant(job: NormalisedJob): boolean {
   return isRelevantByText(job.title, job.description)
+}
+
+// ── Relevance explanation ──────────────────────────────────────────────────
+
+export interface RelevanceExplanation {
+  relevant: boolean
+  titleMatches: string[]       // distinct keywords matched in the title
+  descriptionMatches: string[] // distinct keywords matched in the description
+  decidedBy: 'title' | 'description' | 'none'
+}
+
+// Reproduces isRelevantByText's decision EXACTLY — title decisive on one
+// match, description requiring two hits — but scans fully instead of
+// short-circuiting, so it can report every matching keyword.
+//
+// `relevant` mirrors isRelevantByText bit-for-bit, including its one
+// quirk: a handful of keywords appear in more than one taxonomy category
+// (e.g. "treasurer", "head of treasury"), so KEYWORD_MATCHERS contains
+// duplicate entries for them. isRelevantByText's description hit-count
+// is a raw count over KEYWORD_MATCHERS (duplicates included), so a
+// description containing only one such keyword can already reach the
+// 2-hit threshold. `rawDescriptionHits` below replicates that raw count
+// for the `relevant`/`decidedBy` decision, while `descriptionMatches`
+// (and `titleMatches`) are deduplicated for display, per this function's
+// documented contract.
+export function explainRelevance(
+  title: string,
+  description: string
+): RelevanceExplanation {
+  const t = normaliseForMatching(title)
+  const titleMatchSet = new Set<string>()
+  for (const { keyword, re } of KEYWORD_MATCHERS) {
+    if (re.test(t)) titleMatchSet.add(keyword)
+  }
+  const titleMatches = Array.from(titleMatchSet)
+
+  const d = normaliseForMatching(description)
+  const descriptionMatchSet = new Set<string>()
+  let rawDescriptionHits = 0
+  for (const { keyword, re } of KEYWORD_MATCHERS) {
+    if (re.test(d)) {
+      rawDescriptionHits++
+      descriptionMatchSet.add(keyword)
+    }
+  }
+  const descriptionMatches = Array.from(descriptionMatchSet)
+
+  const relevant = titleMatches.length > 0 || rawDescriptionHits >= 2
+  const decidedBy: RelevanceExplanation['decidedBy'] =
+    titleMatches.length > 0 ? 'title'
+      : rawDescriptionHits >= 2 ? 'description'
+      : 'none'
+
+  return { relevant, titleMatches, descriptionMatches, decidedBy }
 }
 
 // ── Quality flags ──────────────────────────────────────────────────────────

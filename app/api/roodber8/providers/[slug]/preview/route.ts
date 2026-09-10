@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { getProvider } from '@/lib/providers'
 import { getAdapter } from '@/lib/adapters'
 import { normalise, type NormalisedJob } from '@/lib/ingestion/normalise'
-import { validate, isAccountingFinanceRelevant } from '@/lib/ingestion/validate'
+import { validate, isAccountingFinanceRelevant, explainRelevance } from '@/lib/ingestion/validate'
 import { computeDedupHash } from '@/lib/ingestion/deduplicate'
 import { isAuthenticated } from '@/lib/admin-auth'
 
@@ -154,6 +154,9 @@ export async function POST(
         const dedup_hash = dedup?.dedup_hash
           ?? await computeDedupHash(job.title, job.company_name, job.location_text)
         const verdict: Verdict = rejectReason ? 'would_reject' : (dedup?.verdict ?? 'would_insert')
+        // Explained regardless of verdict — a rejected job shows why
+        // (empty matches), a kept job shows what saved it.
+        const relevance = explainRelevance(job.title, job.description)
         return {
           raw: sampleRaw[i],
           normalised: job,
@@ -162,6 +165,7 @@ export async function POST(
           quality_flags: job.quality_flags,
           dedup_hash,
           already_exists: dedup?.already_exists ?? false,
+          relevance,
         }
       })
     )
