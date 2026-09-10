@@ -1,4 +1,4 @@
-import type { ProviderAdapter, RawJob, AdapterResult } from './types'
+import type { ProviderAdapter, RawJob, AdapterResult, PreviewFetchOptions } from './types'
 import type { JobProvider } from '../providers'
 import { fetchWithRetry } from './fetch-with-retry'
 import { ADZUNA_QUERY_KEYWORDS } from '@/lib/ingestion/keywords'
@@ -8,7 +8,7 @@ import { ADZUNA_QUERY_KEYWORDS } from '@/lib/ingestion/keywords'
 const KEYWORDS_PER_RUN = 12
 
 export const adzunaAdapter: ProviderAdapter = {
-  async fetch(provider: JobProvider): Promise<AdapterResult> {
+  async fetch(provider: JobProvider, opts?: PreviewFetchOptions): Promise<AdapterResult> {
     const appId  = process.env.ADZUNA_APP_ID
     const appKey = process.env.ADZUNA_APP_KEY
 
@@ -22,13 +22,23 @@ export const adzunaAdapter: ProviderAdapter = {
     const cursor = provider.keyword_cursor ?? 0
     const total = ADZUNA_QUERY_KEYWORDS.length
     const start = ((cursor % total) + total) % total
-    const keywords: string[] = []
-    for (let i = 0; i < Math.min(KEYWORDS_PER_RUN, total); i++) {
-      keywords.push(ADZUNA_QUERY_KEYWORDS[(start + i) % total])
-    }
-    const nextCursor = (start + keywords.length) % total
 
-    const maxPages = provider.max_pages_per_run ?? 1
+    let keywords: string[]
+    if (opts?.keyword) {
+      keywords = [opts.keyword]
+    } else {
+      const count = Math.min(opts?.maxKeywords ?? KEYWORDS_PER_RUN, total)
+      keywords = []
+      for (let i = 0; i < count; i++) {
+        keywords.push(ADZUNA_QUERY_KEYWORDS[(start + i) % total])
+      }
+    }
+
+    // A preview call (opts present) must never advance or persist the
+    // cursor — only the real production path (no opts) computes one.
+    const nextCursor = opts ? undefined : (start + keywords.length) % total
+
+    const maxPages = opts?.maxPages ?? provider.max_pages_per_run ?? 1
     const allJobs: RawJob[] = []
     const errors: string[] = []
     let totalPagesFetched = 0

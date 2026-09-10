@@ -1,4 +1,4 @@
-import type { ProviderAdapter, RawJob, AdapterResult } from './types'
+import type { ProviderAdapter, RawJob, AdapterResult, PreviewFetchOptions } from './types'
 import type { JobProvider } from '../providers'
 import { fetchWithRetry } from './fetch-with-retry'
 
@@ -147,7 +147,7 @@ async function fetchAllPages(
 }
 
 export const genericRestAdapter: ProviderAdapter = {
-  async fetch(provider: JobProvider): Promise<AdapterResult> {
+  async fetch(provider: JobProvider, opts?: PreviewFetchOptions): Promise<AdapterResult> {
     const baseUrl = provider.base_url
     if (!baseUrl) throw new Error(`No base_url configured for provider ${provider.slug}`)
 
@@ -174,16 +174,24 @@ export const genericRestAdapter: ProviderAdapter = {
       headers
     )
 
-    const maxPages = provider.max_pages_per_run ?? 1
+    const maxPages = opts?.maxPages ?? provider.max_pages_per_run ?? 1
     const paginationStyle = provider.pagination_style ?? 'none'
 
-    // Keyword iteration — if keywords configured and keyword_param specified
+    // Keyword iteration — if keywords configured and keyword_param specified.
+    // opts.keyword overrides the provider's configured keyword list with a
+    // single keyword (used by the preview endpoint instead of the fan-out).
     const keywordParam = requestConfig.keyword_param as string | undefined
-    const keywords = Array.isArray(provider.keywords) ? provider.keywords : []
+    const keywords = opts?.keyword
+      ? [opts.keyword]
+      : (Array.isArray(provider.keywords) ? provider.keywords : [])
 
     if (keywordParam && keywords.length > 0) {
       const allJobs: RawJob[] = []
       let totalPagesFetched = 0
+      // Collected rather than discarded so a caller (the preview endpoint)
+      // can see which keywords failed — production behaviour (jobs
+      // returned, pages fetched) is unchanged; this only adds visibility.
+      const errors: string[] = []
 
       await Promise.allSettled(
         keywords.map(async (keyword) => {
@@ -195,13 +203,21 @@ export const genericRestAdapter: ProviderAdapter = {
             )
             allJobs.push(...result.jobs)
             totalPagesFetched += result.pagesFetched
-          } catch {
+          } catch (err: unknown) {
             // Individual keyword failure — continue with other keywords
+            errors.push(
+              `generic-rest ${provider.slug} keyword "${keyword}": ${err instanceof Error ? err.message : String(err)}`
+            )
           }
         })
       )
 
-      return { jobs: allJobs, pagesFetched: totalPagesFetched, totalAvailable: null }
+      return {
+        jobs: allJobs,
+        pagesFetched: totalPagesFetched,
+        totalAvailable: null,
+        ...(errors.length > 0 ? { errors } : {}),
+      }
     }
 
     // Single fetch with pagination

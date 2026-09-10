@@ -17,6 +17,19 @@ export interface AdapterResult {
   pagesFetched: number
   totalAvailable: number | null
   nextCursor?: number
+  /** Per-item failures an adapter would otherwise swallow (e.g. one keyword's
+   *  fetch failing inside a fan-out) — optional, existing callers ignore it. */
+  errors?: string[]
+}
+
+/**
+ * Options for a bounded, non-mutating preview fetch. Entirely optional —
+ * an adapter that ignores this parameter still satisfies the interface.
+ */
+export interface PreviewFetchOptions {
+  maxKeywords?: number
+  maxPages?: number
+  keyword?: string
 }
 
 /**
@@ -25,5 +38,5 @@ export interface AdapterResult {
  * Zero normalisation. Zero field mapping. Zero business logic.
  */
 export interface ProviderAdapter {
-  fetch(provider: JobProvider): Promise<AdapterResult>
+  fetch(provider: JobProvider, opts?: PreviewFetchOptions): Promise<AdapterResult>
 }
