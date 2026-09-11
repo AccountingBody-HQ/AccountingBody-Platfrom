@@ -506,7 +506,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                           const sitekey = isEthioTax
                             ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '')
                             : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? '')
-                          turnstileWidgetId.current = window.turnstile.render(el, { sitekey, size: 'invisible' })
+                          turnstileWidgetId.current = window.turnstile.render(el, { sitekey })
                         }
                       }} />
                       <div className="flex justify-between pt-2">

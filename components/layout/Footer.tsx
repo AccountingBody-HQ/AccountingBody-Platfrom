@@ -149,7 +149,6 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
       if (window.turnstile && turnstileContainerRef.current && !turnstileWidgetId.current) {
         turnstileWidgetId.current = window.turnstile.render(turnstileContainerRef.current, {
           sitekey: siteKey,
-          size: 'invisible',
           callback: (token: string) => { turnstileToken.current = token },
           'expired-callback': () => { turnstileToken.current = '' },
           'error-callback': () => { turnstileToken.current = '' },

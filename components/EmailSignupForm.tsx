@@ -83,7 +83,6 @@ export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: b
             if (el && window.turnstile && !turnstileWidgetId.current) {
               turnstileWidgetId.current = window.turnstile.render(el, {
                 sitekey: isEthioTax ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? ''),
-                size: 'invisible',
               })
             }
           }}

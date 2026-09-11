@@ -184,7 +184,6 @@ export default function ContactForm() {
                   if (el && window.turnstile && !contactWidgetId.current) {
                     contactWidgetId.current = window.turnstile.render(el, {
                       sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
-                      size: 'invisible',
                     })
                   }
                 }}
@@ -237,7 +236,6 @@ export default function ContactForm() {
                     if (el && window.turnstile && !subscribeWidgetId.current) {
                       subscribeWidgetId.current = window.turnstile.render(el, {
                         sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
-                        size: 'invisible',
                       })
                     }
                   }}

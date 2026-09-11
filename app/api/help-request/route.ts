@@ -39,12 +39,12 @@ export async function POST(req: NextRequest) {
     // Honeypot
     if (_h) return NextResponse.json({ success: true })
 
-    // Turnstile verification
+    // Turnstile verification — a failure is logged, not discarded: the
+    // submission still proceeds and is saved (silently dropping it would be
+    // data loss). Matches the firms-application route's behaviour.
     const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
-    if (turnstileToken) {
-      const turnstileValid = await verifyTurnstile(turnstileToken, ip)
-      if (!turnstileValid) return NextResponse.json({ success: true })
-    }
+    const turnstileValid = await verifyTurnstile(turnstileToken, ip)
+    if (turnstileToken && !turnstileValid) console.warn('Turnstile verification failed for:', email)
 
     // Spam filters
     const BLOCKED_DOMAINS = ['hardfer.com', 'mailinator.com', 'guerrillamail.com', 'trashmail.com', 'tempmail.com', 'yopmail.com', 'sharklasers.com', 'dispostable.com', 'maildrop.cc']

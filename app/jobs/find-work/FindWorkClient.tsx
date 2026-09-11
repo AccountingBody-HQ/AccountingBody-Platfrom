@@ -553,7 +553,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                               const sitekey = isEthioTax
                                 ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '')
                                 : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? '')
-                              turnstileWidgetId.current = window.turnstile.render(el, { sitekey, size: 'invisible' })
+                              turnstileWidgetId.current = window.turnstile.render(el, { sitekey })
                             }
                           }} />
                           <div className="flex items-center justify-between">
