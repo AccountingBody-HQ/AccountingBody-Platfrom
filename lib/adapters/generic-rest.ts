@@ -192,7 +192,11 @@ export const genericRestAdapter: ProviderAdapter = {
       // can see which keywords failed — production behaviour (jobs
       // returned, pages fetched) is unchanged; this only adds visibility.
       const errors: string[] = []
+      let succeededKeywords = 0
 
+      // All keywords run concurrently — no keyword holds a privileged
+      // position. A keyword that returns an empty HTTP 200 counts as a
+      // success — the endpoint was reachable.
       await Promise.allSettled(
         keywords.map(async (keyword) => {
           const kwUrl = new URL(url.toString())
@@ -203,6 +207,7 @@ export const genericRestAdapter: ProviderAdapter = {
             )
             allJobs.push(...result.jobs)
             totalPagesFetched += result.pagesFetched
+            succeededKeywords++
           } catch (err: unknown) {
             // Individual keyword failure — continue with other keywords
             errors.push(
@@ -211,6 +216,19 @@ export const genericRestAdapter: ProviderAdapter = {
           }
         })
       )
+
+      // Total-outage signal: every keyword in the run failed. Not tied to
+      // any particular keyword's position — zero of N succeeding means the
+      // endpoint itself is unreachable or broken. Throw an aggregated error
+      // so the ingest route's catch block records the run as FAILED and
+      // increments consecutive_failures (Rule 120). If even one keyword
+      // succeeded, the run proceeds as a success and the failed keywords'
+      // messages are returned in AdapterResult.errors as before.
+      if (succeededKeywords === 0) {
+        throw new Error(
+          `generic-rest ${provider.slug}: all ${keywords.length} keyword(s) failed — ${errors.slice(0, 3).join(' | ')}`
+        )
+      }
 
       return {
         jobs: allJobs,
