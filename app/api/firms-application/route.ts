@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
 
-async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
+async function verifyTurnstile(token: string, ip: string, isEthioTax: boolean): Promise<boolean> {
   if (!token) return false
+  const secret = isEthioTax ? process.env.TURNSTILE_SECRET_KEY : process.env.TURNSTILE_SECRET_KEY_AB
   const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      secret: process.env.TURNSTILE_SECRET_KEY,
+      secret,
       response: token,
       remoteip: ip,
     }),
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
     const { practice_name, contact_name, email, phone, website, practice_type, location, years_of_experience, languages, specialisms, about, _h } = body
     const turnstileToken = body['cf-turnstile-response'] ?? ''
     const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
-    const turnstileValid = await verifyTurnstile(turnstileToken, ip)
+    const turnstileValid = await verifyTurnstile(turnstileToken, ip, isEthioTax)
     if (turnstileToken && !turnstileValid) console.warn('Turnstile verification failed for:', email)
 
     // Honeypot — bots fill this, real users never do
