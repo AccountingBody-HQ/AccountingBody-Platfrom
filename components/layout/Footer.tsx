@@ -137,35 +137,23 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [honeypot, setHoneypot] = useState('')
   const turnstileWidgetId = React.useRef<string | null>(null)
-  const turnstileContainerRef = React.useRef<HTMLDivElement | null>(null)
   const turnstileToken = React.useRef<string>('')
   const siteKey = isEthioTax
     ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '')
     : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? '')
 
+  // Footer lives in the root layout and persists across client-side
+  // navigations — unlike every other Turnstile call site, which each live on
+  // a page that fully unmounts — so removing the widget on unmount is kept
+  // here to avoid leaking a registration for the life of the session.
   React.useEffect(() => {
-    if (!siteKey || !turnstileContainerRef.current) return
-    const render = () => {
-      if (window.turnstile && turnstileContainerRef.current && !turnstileWidgetId.current) {
-        turnstileWidgetId.current = window.turnstile.render(turnstileContainerRef.current, {
-          sitekey: siteKey,
-          callback: (token: string) => { turnstileToken.current = token },
-          'expired-callback': () => { turnstileToken.current = '' },
-          'error-callback': () => { turnstileToken.current = '' },
-        })
-      }
-    }
-    if (window.turnstile) { render() } else {
-      const script = document.getElementById('cf-turnstile-script')
-      if (script) script.addEventListener('load', render)
-    }
     return () => {
-      if (turnstileWidgetId.current && window.turnstile) {
-        if ('remove' in window.turnstile) (window.turnstile as unknown as { remove: (id: string) => void }).remove(turnstileWidgetId.current!)
+      if (turnstileWidgetId.current && window.turnstile && 'remove' in window.turnstile) {
+        (window.turnstile as unknown as { remove: (id: string) => void }).remove(turnstileWidgetId.current)
         turnstileWidgetId.current = null
       }
     }
-  }, [siteKey])
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -240,7 +228,18 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
               ) : 'Subscribe'}
             </button>
           </div>
-          <div ref={turnstileContainerRef} />
+          <div
+            ref={(el) => {
+              if (el && window.turnstile && siteKey && !turnstileWidgetId.current) {
+                turnstileWidgetId.current = window.turnstile.render(el, {
+                  sitekey: siteKey,
+                  callback: (token: string) => { turnstileToken.current = token },
+                  'expired-callback': () => { turnstileToken.current = '' },
+                  'error-callback': () => { turnstileToken.current = '' },
+                })
+              }
+            }}
+          />
           {status === 'error' && (
             <p className="text-xs text-red-400">Something went wrong. Please try again.</p>
           )}
