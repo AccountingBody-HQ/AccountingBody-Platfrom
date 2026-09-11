@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextRequest } from 'next/server'
 import { getProvidersDueForFetch, reapStaleRuns } from '@/lib/providers'
 
@@ -14,9 +15,20 @@ export async function GET(req: NextRequest) {
     reaped = await reapStaleRuns(10)
   } catch (reapErr: unknown) {
     console.error('[orchestrator] reaper failed:', reapErr)
+    Sentry.captureException(reapErr)
   }
 
-  const dueProviders = await getProvidersDueForFetch()
+  let dueProviders
+  try {
+    dueProviders = await getProvidersDueForFetch()
+  } catch (err: unknown) {
+    console.error('[orchestrator] getProvidersDueForFetch failed:', err)
+    Sentry.captureException(err)
+    return Response.json(
+      { ok: false, error: 'Failed to determine due providers', reaped },
+      { status: 500 },
+    )
+  }
 
   if (dueProviders.length === 0) {
     return Response.json({ ok: true, dispatched: [], reaped, message: 'No providers due' })

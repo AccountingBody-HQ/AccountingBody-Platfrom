@@ -113,7 +113,9 @@ export async function getProvidersDueForFetch(): Promise<JobProvider[]> {
     .from('provider_runs')
     .select('provider_id')
     .eq('status', 'running')
-  if (runningError) return []
+  if (runningError) {
+    throw new Error(`getProvidersDueForFetch: running-runs query failed: ${runningError.message}`)
+  }
 
   const runningProviderIds = Array.from(
     new Set((runningRuns ?? []).map(r => r.provider_id))
@@ -130,7 +132,12 @@ export async function getProvidersDueForFetch(): Promise<JobProvider[]> {
   }
 
   const { data, error } = await query.order('priority', { ascending: true })
-  if (error || !data) return []
+  if (error) {
+    throw new Error(`getProvidersDueForFetch: due-providers query failed: ${error.message}`)
+  }
+  if (!data) {
+    throw new Error('getProvidersDueForFetch: due-providers query returned no data')
+  }
   return data as JobProvider[]
 }
 
