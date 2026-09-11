@@ -43,8 +43,9 @@ function buildKeywordMatcher(keyword: string): RegExp {
 }
 
 // Precomputed once at module scope — the per-job loop must not rebuild
-// 437 regexes for every job. Carries the source keyword alongside its
-// matcher so callers (explainRelevance) can report which keyword hit.
+// the keyword regex list for every job. Carries the source keyword
+// alongside its matcher so callers (explainRelevance) can report which
+// keyword hit.
 const KEYWORD_MATCHERS: { keyword: string; re: RegExp }[] = ACCOUNTING_FINANCE_KEYWORDS
   .map(keyword => ({ keyword, re: buildKeywordMatcher(keyword) }))
 
