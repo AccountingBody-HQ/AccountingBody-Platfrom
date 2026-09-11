@@ -74,6 +74,10 @@ export default withSentryConfig(nextConfig, {
   project: 'javascript-accountingbody-website',
   silent: !process.env.CI,
   widenClientFileUpload: true,
-  disableLogger: true,
-  automaticVercelMonitors: true,
+  webpack: {
+    automaticVercelMonitors: true,
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
 })
