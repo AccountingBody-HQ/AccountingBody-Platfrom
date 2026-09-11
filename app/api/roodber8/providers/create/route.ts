@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
   const authConfig = recordOrNull(b.auth_config)
   const requestConfig = recordOrNull(b.request_config)
   const responsePath = stringOrNull(b.response_path)
-  const fieldMapping = recordOrNull(b.field_mapping)
+  const fieldMapping = recordOrNull(b.field_mapping) ?? {}
   const keywords = stringArray(b.keywords, [])
   const platformTags = stringArray(b.platform_tags, ['ab'])
   const countryCodes = stringArray(b.country_codes, [])
