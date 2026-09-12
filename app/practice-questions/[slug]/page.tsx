@@ -5,6 +5,7 @@ import { headers } from 'next/headers'
 import { getQuestionSetBySlug, getQuestionsBySetId, getCasesBySetId, getArticleBySlug } from '@/lib/db'
 import QuizRenderer from '@/components/QuizRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
+import { canonicalMetadata } from '@/lib/canonical'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title:       `${qset.title} | Accounting Body Practice Questions`,
     description: qset.excerpt,
+    ...(await canonicalMetadata(`/practice-questions/${slug}`)),
   }
 }
 

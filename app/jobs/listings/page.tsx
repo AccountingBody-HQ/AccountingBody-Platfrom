@@ -1,12 +1,17 @@
 import { Suspense } from 'react'
+import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import JobListingsClient from './JobListingsClient'
 import JobSearchHero from './JobSearchHero'
 import { JobListingsStructuredData } from './structured-data'
+import { canonicalMetadata } from '@/lib/canonical'
 
-export const metadata = {
-  title: 'Accounting & Finance Jobs | Accounting Body',
-  description: 'Find accounting and finance jobs globally. Search roles for ACCA, CIMA, ICAEW, CPA and AAT qualified professionals across UK, US, Australia, Canada, Singapore and Africa.',
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Accounting & Finance Jobs | Accounting Body',
+    description: 'Find accounting and finance jobs globally. Search roles for ACCA, CIMA, ICAEW, CPA and AAT qualified professionals across UK, US, Australia, Canada, Singapore and Africa.',
+    ...(await canonicalMetadata('/jobs/listings')),
+  }
 }
 
 export default async function JobListingsPage() {

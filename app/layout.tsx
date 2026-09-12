@@ -44,7 +44,6 @@ export async function generateMetadata(): Promise<Metadata> {
     authors: [{ name: isEthioTax ? 'EthioTax' : 'AccountingBody', url: SITE_URL }],
     creator: isEthioTax ? 'EthioTax' : 'AccountingBody',
     publisher: isEthioTax ? 'EthioTax Ltd' : 'AccountingBody Ltd',
-    alternates: { canonical: SITE_URL },
     openGraph: {
       type: 'website',
       locale: 'en_GB',

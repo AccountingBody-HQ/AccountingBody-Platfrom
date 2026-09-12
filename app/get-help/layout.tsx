@@ -1,18 +1,6 @@
-import type { Metadata } from 'next'
-
-export const metadata: Metadata = {
-  title: { absolute: 'Get Help | EthioTax Professional Services' },
-  description: 'Explore EthioTax professional services — tax filing, accounting, payroll, business consulting, company formation, audit and financial planning for the Ethiopian community.',
-  alternates: { canonical: 'https://ethiotax.com/get-help' },
-  openGraph: {
-    title: { absolute: 'Get Help | EthioTax Professional Services' },
-    description: 'Explore EthioTax professional services — tax filing, accounting, payroll, business consulting, company formation, audit and financial planning for the Ethiopian community.',
-    url: 'https://ethiotax.com/get-help',
-    siteName: 'EthioTax',
-    locale: 'en_GB',
-    type: 'website',
-  },
-}
+// Metadata for the /get-help index page moved to ./page.tsx — this layout
+// also wraps /get-help/[slug], and metadata defined here was cascading,
+// unchanged, to every dynamic slug under it too.
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return <>{children}</>

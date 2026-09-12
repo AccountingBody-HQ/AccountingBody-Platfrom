@@ -1,4 +1,28 @@
+import type { Metadata } from 'next'
 import { headers } from 'next/headers'
+import { canonicalMetadata } from '@/lib/canonical'
+
+// Moved here from ./layout.tsx: that layout also wraps /get-help/[slug], so a
+// canonical/openGraph.url defined at the layout level was being applied,
+// unchanged, to every dynamic slug under it too — not just this index page.
+// Title/description/openGraph sub-fields are carried over verbatim; only
+// alternates.canonical and openGraph.url are corrected.
+export async function generateMetadata(): Promise<Metadata> {
+  const { alternates, openGraph } = await canonicalMetadata('/get-help')
+  return {
+    title: { absolute: 'Get Help | EthioTax Professional Services' },
+    description: 'Explore EthioTax professional services — tax filing, accounting, payroll, business consulting, company formation, audit and financial planning for the Ethiopian community.',
+    alternates,
+    openGraph: {
+      title: { absolute: 'Get Help | EthioTax Professional Services' },
+      description: 'Explore EthioTax professional services — tax filing, accounting, payroll, business consulting, company formation, audit and financial planning for the Ethiopian community.',
+      siteName: 'EthioTax',
+      locale: 'en_GB',
+      type: 'website',
+      url: openGraph.url,
+    },
+  }
+}
 
 const etServices = [
   {
