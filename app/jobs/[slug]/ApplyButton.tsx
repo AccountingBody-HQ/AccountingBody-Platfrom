@@ -26,32 +26,8 @@ function trackApplyClick(jobId: string) {
   fetch(`/api/jobs/click/${jobId}`, { method: 'POST' }).catch(() => {})
 }
 
-// The three apply_method branches below and this copy must stay in lock
-// step — exported so page.tsx can render the matching helper line beneath
-// the button without re-deriving which branch fired from job.apply_method
-// itself (the same "one implementation, not two" reasoning as
-// getJobCanonicalUrl/getCompanyInitials elsewhere in this codebase).
-export function getApplyCopy(job: Job, brandName: string): { label: string; helper: string } {
-  if (job.apply_method === 'external' && job.application_url) {
-    return {
-      label: `Apply on ${job.company_name}`,
-      helper: "Opens the employer's own listing in a new tab",
-    }
-  }
-  if (job.apply_method === 'email' && job.application_email) {
-    return {
-      label: 'Email your application',
-      helper: 'Opens your email app to send your application',
-    }
-  }
-  return {
-    label: `Apply on ${brandName}`,
-    helper: 'Opens our application form in a new tab',
-  }
-}
-
-export function ApplyButton({ job, brandColor, brandName }: { job: Job; brandColor: string; brandName: string }) {
-  const { label } = getApplyCopy(job, brandName)
+export function ApplyButton({ job, brandColor }: { job: Job; brandColor: string }) {
+  const label = 'Apply Now →'
   const buttonClass = 'inline-flex w-full items-center justify-center h-14 rounded-xl text-sm font-bold transition-all active:scale-95'
 
   // Tracks every source (employer, adzuna, or any other ingestion
