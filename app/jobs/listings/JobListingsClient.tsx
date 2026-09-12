@@ -1,7 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import type { Job, EmploymentType, SeniorityLevel } from '@/lib/jobs'
 import {
   EMPLOYMENT_TYPE_LABELS,
@@ -11,14 +12,23 @@ import {
   formatSalary,
   formatRelativeDate,
 } from '@/lib/job-format'
+import {
+  parseListingsUrlState,
+  buildListingsSearchString,
+  EMPTY_FILTERS,
+  DEFAULT_SORT,
+  DEFAULT_PAGE,
+  POSTED_DAYS,
+  type Filters,
+  type PostedWithin,
+  type SortBy,
+  type ListingsUrlState,
+} from './urlState'
 
 interface DirectJobsResponse {
   jobs?: Job[]
   total?: number
 }
-
-type PostedWithin = 'all' | '24h' | '7d' | '30d'
-type SortBy = 'relevance' | 'recent' | 'salary_high' | 'salary_low'
 
 const PAGE_SIZE = 24
 
@@ -60,32 +70,6 @@ const POSTED_OPTIONS: { value: PostedWithin; label: string }[] = [
   { value: '7d',  label: 'Last 7 days' },
   { value: '30d', label: 'Last 30 days' },
 ]
-
-const POSTED_DAYS: Record<Exclude<PostedWithin, 'all'>, number> = {
-  '24h': 1, '7d': 7, '30d': 30,
-}
-
-interface Filters {
-  qualifications:  string[]
-  seniority:       SeniorityLevel[]
-  employmentTypes: EmploymentType[]
-  locationCountry: string
-  remoteOnly:      boolean
-  postedWithin:    PostedWithin
-  salaryMin:       string
-  salaryMax:       string
-}
-
-const EMPTY_FILTERS: Filters = {
-  qualifications:  [],
-  seniority:       [],
-  employmentTypes: [],
-  locationCountry: 'all',
-  remoteOnly:      false,
-  postedWithin:    'all',
-  salaryMin:       '',
-  salaryMax:       '',
-}
 
 // ── Saved jobs (localStorage) ─────────────────────────────────────────────
 
@@ -890,17 +874,27 @@ function DetailPanelContent({ job, onClose, saved, onSave }: {
 export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean }) {
   const platform = isEthioTax ? 'et' : 'ab'
 
-  const [activeSearch] = useState(() => {
-    if (typeof window === 'undefined') return ''
-    return new URLSearchParams(window.location.search).get('search') ?? ''
-  })
-  const [activeLocation] = useState(() => {
-    if (typeof window === 'undefined') return ''
-    return new URLSearchParams(window.location.search).get('location') ?? ''
-  })
-  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS)
-  const [sortBy, setSortBy] = useState<SortBy>('relevance')
-  const [page, setPage] = useState(1)
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  // Single source of truth, derived fresh from the URL on every render —
+  // never mirrored into useState. navigateToState() (below) is the only
+  // write path, via router.replace(); fetchJobs() is a pure reader of this
+  // value and never writes back to the URL itself — a one-way flow with
+  // nothing for the two to ping-pong through. useSearchParams() only
+  // changes identity when the URL actually changes, so this useMemo only
+  // recomputes then, not on every unrelated re-render (e.g. `loading`
+  // flipping) — that stability is what keeps fetchJobs's own dependency
+  // array (below) from re-firing when nothing about the requested view
+  // has changed.
+  const urlState = useMemo(() => parseListingsUrlState(searchParams), [searchParams])
+  const { search: activeSearch, location: activeLocation, filters, sortBy, page } = urlState
+
+  function navigateToState(next: ListingsUrlState) {
+    router.replace(pathname + buildListingsSearchString(next), { scroll: false })
+  }
+
   const [showAlert, setShowAlert] = useState(false)
   const [alertDismissed, setAlertDismissed] = useState(false)
 
@@ -979,6 +973,47 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
 
   useEffect(() => { fetchJobs(); return () => abortRef.current?.abort() }, [fetchJobs])
 
+  // ── Scroll restoration ──────────────────────────────────────────────
+  // Content is fetched client-side after mount, so the browser's own
+  // automatic restoration on Back/Forward (history.scrollRestoration =
+  // 'auto', the default) will very often fire before that fetch resolves —
+  // against a shorter, skeleton-only page than the one the user actually
+  // scrolled on. Take manual control instead: capture scroll position
+  // continuously, keyed by the full URL it belongs to, and restore it
+  // once per URL after real content has rendered. Reset back to 'auto' on
+  // unmount so this doesn't change scroll behaviour on the rest of the
+  // site for the remainder of the session.
+  useEffect(() => {
+    const original = window.history.scrollRestoration
+    window.history.scrollRestoration = 'manual'
+    return () => { window.history.scrollRestoration = original }
+  }, [])
+
+  const scrollKeyRef = useRef('')
+  const restoredKeyRef = useRef('')
+
+  useEffect(() => {
+    scrollKeyRef.current = `jobs-listings-scroll:${pathname}${buildListingsSearchString(urlState)}`
+  }, [pathname, urlState])
+
+  useEffect(() => {
+    function handleScroll() {
+      try { sessionStorage.setItem(scrollKeyRef.current, String(window.scrollY)) } catch {}
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  useEffect(() => {
+    if (loading) return
+    const key = scrollKeyRef.current
+    if (restoredKeyRef.current === key) return
+    restoredKeyRef.current = key
+    let saved: string | null = null
+    try { saved = sessionStorage.getItem(key) } catch {}
+    if (saved) window.scrollTo(0, parseInt(saved, 10))
+  }, [loading])
+
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   const activeFilterCount = countActiveFilters(filters)
   const isFirstLoad = loading && jobs.length === 0
@@ -987,9 +1022,9 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
     resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  function handleFiltersChange(next: Filters) { setFilters(next); setPage(1) }
-  function handleClearFilters() { setFilters(EMPTY_FILTERS); setSortBy('relevance'); setPage(1) }
-  function handlePageChange(next: number) { setPage(next); scrollToResults() }
+  function handleFiltersChange(next: Filters) { navigateToState({ ...urlState, filters: next, page: DEFAULT_PAGE }) }
+  function handleClearFilters() { navigateToState({ ...urlState, filters: EMPTY_FILTERS, sortBy: DEFAULT_SORT, page: DEFAULT_PAGE }) }
+  function handlePageChange(next: number) { navigateToState({ ...urlState, page: next }); scrollToResults() }
 
   const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
   const rangeEnd = Math.min(page * PAGE_SIZE, total)
@@ -1066,7 +1101,7 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
                       <div className="relative">
                         <select
                           value={sortBy}
-                          onChange={e => { setSortBy(e.target.value as SortBy); setPage(1) }}
+                          onChange={e => navigateToState({ ...urlState, sortBy: e.target.value as SortBy, page: DEFAULT_PAGE })}
                           className="h-9 pl-3 pr-8 rounded-lg border border-slate-200 text-sm font-medium text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white appearance-none cursor-pointer"
                         >
                           {SORT_OPTIONS.map(opt => (
@@ -1086,8 +1121,8 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
                   <ActiveFilterChips
                     filters={filters}
                     sortBy={sortBy}
-                    onRemoveFilter={next => { setFilters(next); setPage(1) }}
-                    onRemoveSort={() => { setSortBy('relevance'); setPage(1) }}
+                    onRemoveFilter={next => navigateToState({ ...urlState, filters: next, page: DEFAULT_PAGE })}
+                    onRemoveSort={() => navigateToState({ ...urlState, sortBy: DEFAULT_SORT, page: DEFAULT_PAGE })}
                   />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

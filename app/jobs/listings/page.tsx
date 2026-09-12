@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { headers } from 'next/headers'
 import JobListingsClient from './JobListingsClient'
 import JobSearchHero from './JobSearchHero'
@@ -46,7 +47,14 @@ export default async function JobListingsPage() {
         </div>
       </section>
       {/* LISTINGS */}
-      <JobListingsClient isEthioTax={isEthioTax} />
+      {/* JobListingsClient calls useSearchParams() (see urlState.ts) — Next
+          requires that inside a Suspense boundary, otherwise the whole
+          route de-opts to fully client-side rendering. Falling back to
+          nothing: the client component's own loading skeleton (isFirstLoad
+          in JobListingsClient) takes over within the same tick regardless. */}
+      <Suspense>
+        <JobListingsClient isEthioTax={isEthioTax} />
+      </Suspense>
     </>
   )
 }

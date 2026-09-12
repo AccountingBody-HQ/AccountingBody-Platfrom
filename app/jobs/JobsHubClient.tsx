@@ -25,7 +25,10 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
 
   function handleSearch() {
     const params = new URLSearchParams()
-    if (role.trim())     params.set('role', role.trim())
+    // Must match the param name JobListingsClient/urlState.ts actually
+    // reads ('search') — this used to say 'role', which the listings page
+    // never read, silently dropping whatever the user typed here.
+    if (role.trim())     params.set('search', role.trim())
     if (location.trim()) params.set('location', location.trim())
     router.push('/jobs/listings' + (params.toString() ? '?' + params.toString() : ''))
   }
