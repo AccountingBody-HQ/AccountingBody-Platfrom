@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next'
 import { createClient } from '@supabase/supabase-js'
 import { getJobSitemapEntries } from '@/lib/jobs'
+import { resolveArticleCanonicalUrl } from '@/lib/canonical'
 
 const AB_BASE_URL = 'https://accountingbody.com'
 
@@ -53,7 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const { data: articles } = await supabase
     .from('articles')
-    .select('slug, updated_at')
+    .select('slug, updated_at, exam_body, canonical_owner, show_on_sites')
     .eq('status', 'published')
     .eq('platform', 'ab')
 
@@ -68,7 +69,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...staticPages,
     ...(articles ?? []).map(a => ({
-      url:             `${AB_BASE_URL}/articles/${a.slug}`,
+      url:             resolveArticleCanonicalUrl(a, AB_BASE_URL),
       lastModified:    new Date(a.updated_at ?? Date.now()),
       changeFrequency: 'monthly' as const,
       priority:        0.75,

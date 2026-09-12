@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getJobSitemapEntries } from '@/lib/jobs'
+import { resolveArticleCanonicalUrl } from '@/lib/canonical'
 
 const ET_BASE_URL = 'https://ethiotax.com'
 
@@ -93,14 +94,14 @@ export async function GET() {
   )
   const { data: etArticles } = await supabase
     .from('articles')
-    .select('slug, updated_at')
+    .select('slug, updated_at, exam_body, canonical_owner, show_on_sites')
     .eq('status', 'published')
     .eq('canonical_owner', 'ethiotax')
     .order('updated_at', { ascending: false })
 
   const articleUrls = (etArticles ?? []).map(a =>
     `  <url>
-    <loc>${ET_BASE_URL}/articles/${a.slug}</loc>
+    <loc>${resolveArticleCanonicalUrl(a, ET_BASE_URL)}</loc>
     <lastmod>${new Date(a.updated_at).toISOString()}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>

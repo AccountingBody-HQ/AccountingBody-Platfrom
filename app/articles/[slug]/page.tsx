@@ -5,6 +5,7 @@ import { headers } from 'next/headers'
 import { getArticleBySlug } from '@/lib/db'
 import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
+import { resolveArticleCanonical } from '@/lib/canonical'
 
 export const revalidate = 0
 
@@ -12,15 +13,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const article = await getArticleBySlug(slug)
   if (!article) return {}
-  const canonicalUrl = null as string | null
+  const { alternates, openGraph } = await resolveArticleCanonical(article)
+  const canonicalUrl = openGraph.url
   const metaTitle = article.seo_title || article.title
   const metaDesc  = article.seo_description || article.excerpt
-  const brand     = canonicalUrl?.includes('ethiotax.com') ? 'EthioTax' : 'Accounting Body'
+  const brand     = canonicalUrl.includes('ethiotax.com') ? 'EthioTax' : 'Accounting Body'
   return {
     title:       `${metaTitle} | ${brand}`,
     description: metaDesc,
-    ...(canonicalUrl ? { alternates: { canonical: canonicalUrl } } : {}),
-    openGraph: { title: metaTitle, description: metaDesc, type: 'article' },
+    alternates,
+    openGraph: { title: metaTitle, description: metaDesc, type: 'article', url: canonicalUrl },
   }
 }
 

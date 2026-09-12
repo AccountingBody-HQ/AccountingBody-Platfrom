@@ -6,6 +6,7 @@ import { getArticleBySlug, getAllArticleSlugs } from '@/lib/db'
 import type { ArticleFull } from '@/lib/db'
 import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
+import { resolveArticleCanonical } from '@/lib/canonical'
 
 export async function generateStaticParams() {
   const slugs = await getAllArticleSlugs()
@@ -20,10 +21,12 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   const { slug } = await params
   const article = await getArticleBySlug(slug)
   if (!article) return {}
+  const { alternates, openGraph } = await resolveArticleCanonical(article)
   return {
     title:       `${article.title} | Accounting Body`,
     description: article.excerpt,
-    openGraph: { title: article.title, description: article.excerpt, type: 'article' },
+    alternates,
+    openGraph: { title: article.title, description: article.excerpt, type: 'article', url: openGraph.url },
   }
 }
 
