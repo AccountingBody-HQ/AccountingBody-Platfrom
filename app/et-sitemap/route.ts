@@ -94,7 +94,7 @@ export async function GET() {
   )
   const { data: etArticles } = await supabase
     .from('articles')
-    .select('slug, updated_at, exam_body, canonical_owner, show_on_sites')
+    .select('slug, updated_at, category, canonical_owner, show_on_sites')
     .eq('status', 'published')
     .eq('canonical_owner', 'ethiotax')
     .order('updated_at', { ascending: false })

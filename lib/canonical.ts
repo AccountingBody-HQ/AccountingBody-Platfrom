@@ -50,7 +50,7 @@ const OWNER_SITE_CODE: Record<string, string> = {
 }
 
 // getArticleBySlug's return type — the only fields this function reads.
-type CanonicalArticle = Pick<ArticleFull, 'slug' | 'exam_body' | 'canonical_owner' | 'show_on_sites'>
+type CanonicalArticle = Pick<ArticleFull, 'slug' | 'category' | 'canonical_owner' | 'show_on_sites'>
 
 // Pure URL resolution, shared by both article routes (which derive
 // `homeSiteUrl` from the live request via getSiteUrl()) and both sitemaps
@@ -73,15 +73,23 @@ export function resolveArticleCanonicalUrl(article: CanonicalArticle, homeSiteUr
     (article.show_on_sites ?? []).includes(ownerSiteCode)
   const siteUrl = ownerConfirmed ? ownerUrl : homeSiteUrl
 
-  // Prefer the study URL when the article has real qualification data —
-  // the same convention already live in app/articles/page.tsx,
-  // app/search/page.tsx and app/practice-questions/[slug]/page.tsx. Falls
-  // back to /articles/[slug] for anything without a usable exam_body
-  // (no current row lacks one, per the 2017-article Supabase check this
-  // was verified against, but new content can still land without one).
-  const firstExamBody = article.exam_body?.[0]?.toLowerCase().trim()
-  const path = firstExamBody
-    ? `/study/${firstExamBody}/${article.slug}`
+  // Prefer the study URL when the article has a real category — NOT
+  // exam_body[0], which every one of the 2017 published articles shares
+  // the same value for ('acca'), confirmed against production. Using it
+  // would have canonicalized every article to /study/acca/{slug}
+  // regardless of actual subject, telling Google the CIMA/AAT/ICAEW study
+  // sections contain no articles at all — worse than the duplication this
+  // was meant to fix. `category` is a real, evenly-distributed field
+  // (10 subjects across all 2017 rows, no nulls, confirmed against
+  // production) and is what the article page's own "Subject:" sidebar
+  // already displays. Falls back to /articles/[slug] for anything without
+  // a usable category (no current row lacks one, but new content can
+  // still land without one — study/[category]/[slug] never validates the
+  // URL's category segment against the article, so an empty category
+  // string would otherwise produce a malformed /study//{slug} path).
+  const category = article.category?.toLowerCase().trim()
+  const path = category
+    ? `/study/${category}/${article.slug}`
     : `/articles/${article.slug}`
 
   return `${siteUrl}${path}`
