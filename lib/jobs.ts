@@ -759,23 +759,66 @@ export interface JobSitemapEntry {
 // status='active' alone would silently drop every stale job from the
 // sitemap. 'archived' jobs are excluded here (not just left to the page's
 // own noindex) so the sitemap itself never contradicts what the page says.
+// Page size is deliberately 1,000 — the documented PostgREST default —
+// rather than whatever this Supabase project's "Max Rows" API setting
+// happens to be today (observed: 5,000, itself just a dashboard value
+// with no record in this repo). A page size above the server's actual
+// ceiling would silently truncate again, exactly the bug this pagination
+// exists to fix; 1,000 is correct regardless of what that setting is set
+// to, including if it's ever lowered back to its default.
+const JOB_SITEMAP_PAGE_SIZE = 1000
+
+// Hard stop so a pathological condition (a bug in the range/termination
+// logic, or the query somehow never returning a short page) cannot loop
+// forever. 100 pages * 1,000 rows = 100,000 rows — roughly 10x today's
+// real browsable job count (~9,870), comfortably beyond any plausible
+// near-term growth, but not the unbounded "keep going until the process
+// is killed" a much larger or absent bound would allow.
+const JOB_SITEMAP_MAX_PAGES = 100
+
 export async function getJobSitemapEntries(platform: string): Promise<JobSitemapEntry[]> {
   const supabase = getSupabase()
-  const { data, error } = await supabase
-    .from('jobs')
-    .select('slug, expires_at, published_at, created_at')
-    .in('status', ['active', 'expired'])
-    .contains('platform', [platform])
+  const allRows: { slug: string; expires_at: string | null; published_at: string | null; created_at: string }[] = []
 
-  if (error || !data) {
-    if (error) console.error('getJobSitemapEntries error:', error)
-    return []
+  for (let page = 0; page < JOB_SITEMAP_MAX_PAGES; page++) {
+    const from = page * JOB_SITEMAP_PAGE_SIZE
+    const to = from + JOB_SITEMAP_PAGE_SIZE - 1
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('slug, expires_at, published_at, created_at')
+      .in('status', ['active', 'expired'])
+      .contains('platform', [platform])
+      .range(from, to)
+
+    if (error || !data) {
+      // A failure on any page — not just the first — must not return
+      // whatever pages already succeeded as if it were the complete list.
+      // A silently partial sitemap is the same class of bug this
+      // pagination exists to fix, just caused by a query error instead of
+      // a row cap. Discard the accumulated pages and match the function's
+      // existing on-error contract: log (if there was an actual error,
+      // not just an empty page) and return [].
+      if (error) console.error('getJobSitemapEntries error:', error)
+      return []
+    }
+
+    allRows.push(...data)
+
+    if (data.length < JOB_SITEMAP_PAGE_SIZE) break
+
+    if (page === JOB_SITEMAP_MAX_PAGES - 1) {
+      console.error(
+        `getJobSitemapEntries: hit the ${JOB_SITEMAP_MAX_PAGES}-page safety bound ` +
+        `(${allRows.length} rows) with more still available — investigate before ` +
+        'raising it; this is not expected at any plausible current job count.'
+      )
+    }
   }
 
-  return data
+  return allRows
     .filter(job => getJobLifecycleState(job) !== 'archived')
     .map(job => ({
-      slug: job.slug as string,
+      slug: job.slug,
       lastModified: new Date(job.published_at ?? job.created_at),
     }))
 }
