@@ -48,16 +48,29 @@ export async function generateMetadata({
   const resolved = await resolveJob(slug)
   if (!resolved) return {}
   const { job, isEthioTax } = resolved
-  const brandName = isEthioTax ? 'EthioTax' : 'Accounting Body'
   const lifecycle = getJobLifecycleState(job)
 
-  const title = `${job.title} at ${job.company_name} | ${brandName} Jobs`
+  // No manual brand suffix here — the root layout's title.template ('%s |
+  // Accounting Body' / '%s | EthioTax') already appends it to whatever
+  // plain-string title a page returns. Appending our own suffix on top of
+  // that (as the initial version of this page did) produced a doubled
+  // brand in the rendered <title> ("... | Accounting Body Jobs |
+  // Accounting Body").
+  const title = `${job.title} at ${job.company_name}`
   const description = job.excerpt || job.description.slice(0, 300)
+
+  // This page's own canonical — without it, it inherits the root layout's
+  // sitewide default (alternates.canonical: the homepage), which tells
+  // Google every job page's authoritative version is the homepage. See the
+  // job-page-fixes report for how many other route types have the same gap.
+  const baseUrl = isEthioTax ? 'https://ethiotax.com' : 'https://accountingbody.com'
+  const canonicalUrl = `${baseUrl}/jobs/${job.slug}`
 
   return {
     title,
     description,
-    openGraph: { title, description, type: 'website' },
+    alternates: { canonical: canonicalUrl },
+    openGraph: { title, description, url: canonicalUrl, type: 'website' },
     // noindex only once a listing is old enough to be archived — active and
     // stale listings both stay indexable.
     robots: lifecycle === 'archived'
@@ -135,7 +148,11 @@ export default async function JobDetailPage({
   const empLabel = employmentTypeLabel(job.employment_type)
   const seniority = seniorityLabel(job.seniority_level)
   const postedDate = job.published_at ?? job.created_at
-  const paragraphs = job.description.split('\n').map(p => p.trim()).filter(Boolean)
+  // `description` is NOT NULL in the schema, so this fallback is currently
+  // unreachable in practice — kept defensively rather than assuming that
+  // constraint never changes.
+  const bodyText = job.description || job.excerpt || ''
+  const paragraphs = bodyText.split('\n').map(p => p.trim()).filter(Boolean)
 
   return (
     <main className="min-h-screen" style={{ background: '#F8F7F4' }}>

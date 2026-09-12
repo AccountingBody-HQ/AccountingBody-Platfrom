@@ -6,6 +6,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
+import { formatJobCountLabel } from '@/lib/job-format'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -115,16 +116,17 @@ const legalLinks = [
   { label: 'Accessibility',     href: '/accessibility' },
 ]
 
-const stats = [
-  { value: '250,000+', label: 'Jobs', sub: 'Live accounting & finance roles' },
+// Jobs stat is computed at render time from the real active count (see
+// Footer()) rather than hardcoded here — everything else in these arrays is
+// static copy.
+const statsRest = [
   { value: '3,000+',   label: 'Articles' },
   { value: '20,000+',  label: 'Practice Questions' },
   { value: 'Since 2018', label: 'Trusted Platform' },
   { value: 'Free',      label: 'To Start' },
 ]
 
-const etStats = [
-  { value: '1,000+',   label: 'Jobs', sub: 'Accounting & finance roles for the diaspora' },
+const etStatsRest = [
   { value: '3,000+',   label: 'Articles' },
   { value: '20,000+',  label: 'Practice Questions' },
   { value: 'Since 2018', label: 'Trusted Platform' },
@@ -263,9 +265,14 @@ function ExtIcon() {
 }
 
 // ── Main Footer ───────────────────────────────────────────────────────────────
-export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
+export function Footer({ isEthioTax = false, jobCount = 0 }: { isEthioTax?: boolean; jobCount?: number }) {
 
-  const activeStats = isEthioTax ? etStats : stats
+  const jobsStat = {
+    value: formatJobCountLabel(jobCount),
+    label: 'Jobs',
+    sub: isEthioTax ? 'Accounting & finance roles for the diaspora' : 'Live accounting & finance roles',
+  }
+  const activeStats = [jobsStat, ...(isEthioTax ? etStatsRest : statsRest)]
 
   const jobsColumn: FooterColumn = {
     title: 'Jobs',
@@ -391,8 +398,8 @@ export function Footer({ isEthioTax = false }: { isEthioTax?: boolean }) {
 
             <p className="text-sm text-white/55 leading-relaxed max-w-xs">
               {isEthioTax
-                ? 'Expert accounting and tax services, ETICPA and ACCA exam practice, and 1,000+ accounting and finance jobs — built for the Ethiopian community worldwide.'
-                : 'The dedicated platform for accounting and finance professionals. 250,000+ live jobs, managed placement service, and 20,000+ practice questions — all in one place.'}
+                ? `Expert accounting and tax services, ETICPA and ACCA exam practice, and ${jobsStat.value} accounting and finance jobs — built for the Ethiopian community worldwide.`
+                : `The dedicated platform for accounting and finance professionals. ${jobsStat.value} live jobs, managed placement service, and 20,000+ practice questions — all in one place.`}
             </p>
 
             {/* Email signup */}

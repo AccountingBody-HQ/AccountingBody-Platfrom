@@ -31,11 +31,27 @@ export function seniorityLabel(value: SeniorityLevel | null): string | null {
   return SENIORITY_LABELS[value] ?? value
 }
 
+// Only currencies with a single, unambiguous, widely-recognised symbol —
+// anything else falls back to its ISO code (e.g. "AUD 87,805") rather than
+// guessing a symbol that could be misread (several currencies share "$").
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  GBP: '£',
+  USD: '$',
+  EUR: '€',
+}
+
+function formatCurrencyAmount(currency: string, amount: number): string {
+  const code = currency.trim().toUpperCase()
+  const symbol = CURRENCY_SYMBOLS[code]
+  const rounded = Math.round(amount).toLocaleString('en-US')
+  return symbol ? `${symbol}${rounded}` : `${code} ${rounded}`.trim()
+}
+
 export function formatSalary(job: Pick<Job, 'salary_text' | 'salary_min' | 'salary_max' | 'salary_currency'>): string | null {
   if (job.salary_text) return job.salary_text
   if (job.salary_min == null && job.salary_max == null) return null
   const currency = job.salary_currency || ''
-  const fmt = (n: number) => `${currency} ${Math.round(n).toLocaleString('en-US')}`.trim()
+  const fmt = (n: number) => formatCurrencyAmount(currency, n)
   if (job.salary_min != null && job.salary_max != null && job.salary_min !== job.salary_max) {
     return `${fmt(job.salary_min)} – ${fmt(job.salary_max)}`
   }
@@ -63,4 +79,17 @@ export function formatRelativeDate(dateStr: string | null | undefined): string {
 export function formatAbsoluteDate(dateStr: string | null | undefined): string {
   if (!dateStr) return ''
   return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+// Rounds a real job count DOWN to a round display figure — never up, so the
+// displayed number is never a claim the true count doesn't back up (e.g. an
+// actual count of 9,870 reads as "9,000+", not "10,000+").
+export function formatJobCountLabel(count: number): string {
+  if (count <= 0) return '0'
+  const rounded =
+    count >= 1000 ? Math.floor(count / 1000) * 1000 :
+    count >= 100  ? Math.floor(count / 100) * 100 :
+    count >= 10   ? Math.floor(count / 10) * 10 :
+    count
+  return `${rounded.toLocaleString('en-US')}+`
 }

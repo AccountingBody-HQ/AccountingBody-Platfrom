@@ -6,7 +6,6 @@ import Link from 'next/link'
 
 export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: boolean }) {
   const brand    = isEthioTax ? '#0f2d1e' : '#0C1A3D'
-  const jobCount = isEthioTax ? '1,000+' : '250,000+'
 
   return (
     <section className="relative overflow-hidden" style={{ background: '#C9982A' }}>
@@ -38,8 +37,8 @@ export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: bo
             <p className="text-base leading-relaxed mb-8 max-w-lg"
               style={{ color: isEthioTax ? 'rgba(15,45,30,0.72)' : 'rgba(12,26,61,0.72)' }}>
               {isEthioTax
-                ? `Browse ${jobCount} accounting and finance jobs for the Ethiopian diaspora, or register as a candidate and let our team personally match you to the right role.`
-                : `Browse ${jobCount} live accounting and finance jobs yourself, or register as a candidate and let our team find the right match for you. Two paths. One platform.`}
+                ? 'Browse accounting and finance jobs for the Ethiopian diaspora, or register as a candidate and let our team personally match you to the right role.'
+                : 'Browse live accounting and finance jobs yourself, or register as a candidate and let our team find the right match for you. Two paths. One platform.'}
             </p>
 
             {/* Two path buttons */}
@@ -61,7 +60,7 @@ export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: bo
                     Search independently
                   </p>
                   <p className="text-sm font-semibold" style={{ color: brand }}>
-                    Browse {jobCount} live jobs
+                    Browse live jobs
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: isEthioTax ? 'rgba(15,45,30,0.5)' : 'rgba(12,26,61,0.5)' }}>
                     Filter by role, location and contract type
@@ -101,7 +100,7 @@ export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: bo
             {/* Trust pills */}
             <div className="flex flex-wrap gap-4">
               {[
-                `${jobCount} live roles`,
+                'Live roles updated daily',
                 '90-day placement guarantee',
                 'Accounting & finance only',
               ].map(pill => (
@@ -143,7 +142,7 @@ export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: bo
                   </p>
                   <p className="font-display text-white text-lg mb-2 leading-snug">Browse jobs</p>
                   <p className="text-xs text-white/45 leading-relaxed mb-4 flex-1">
-                    Search {jobCount} live vacancies. Filter by role, location and contract type. Apply directly.
+                    Search live vacancies. Filter by role, location and contract type. Apply directly.
                   </p>
                   <Link href="/jobs/listings"
                     className="flex items-center justify-center gap-1.5 h-9 rounded-lg text-xs font-semibold transition-opacity hover:opacity-90"
@@ -173,9 +172,9 @@ export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: bo
               {/* Stats row */}
               <div className="grid grid-cols-2" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                 <div className="p-5" style={{ borderRight: '1px solid rgba(255,255,255,0.08)' }}>
-                  <span className="font-display text-xl font-bold text-white block mb-0.5">{jobCount}</span>
-                  <span className="text-[10px] font-semibold block" style={{ color: '#C9982A' }}>Live roles</span>
-                  <span className="text-[10px] text-white/30">Updated daily</span>
+                  <span className="font-display text-xl font-bold text-white block mb-0.5">Daily</span>
+                  <span className="text-[10px] font-semibold block" style={{ color: '#C9982A' }}>New roles added</span>
+                  <span className="text-[10px] text-white/30">Direct & aggregated</span>
                 </div>
                 <div className="p-5">
                   <span className="font-display text-xl font-bold text-white block mb-0.5">90 Days</span>
@@ -211,7 +210,6 @@ export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: bo
 
 export function JobsRecruitmentBanner({ isEthioTax = false }: { isEthioTax?: boolean }) {
   const brand    = isEthioTax ? '#1A4731' : '#0C1A3D'
-  const jobCount = isEthioTax ? '1,000+' : '250,000+'
 
   return (
     <section className="border-t border-slate-200 bg-white py-12">
@@ -235,8 +233,8 @@ export function JobsRecruitmentBanner({ isEthioTax = false }: { isEthioTax?: boo
                 </h2>
                 <p className="text-sm leading-relaxed" style={{ color: 'rgba(12,26,61,0.65)' }}>
                   {isEthioTax
-                    ? `Browse ${jobCount} diaspora accounting and finance jobs, or register as a candidate and let our team find the right match for you.`
-                    : `Browse ${jobCount} live accounting and finance jobs yourself, or register as a candidate and let our team find the right match for you.`}
+                    ? 'Browse diaspora accounting and finance jobs, or register as a candidate and let our team find the right match for you.'
+                    : 'Browse live accounting and finance jobs yourself, or register as a candidate and let our team find the right match for you.'}
                 </p>
               </div>
 

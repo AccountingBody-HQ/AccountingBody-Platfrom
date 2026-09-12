@@ -281,7 +281,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                       Find jobs in this field
                     </p>
                     <p className="text-white/50 text-xs leading-relaxed mb-3">
-                      {isEthioTax ? '1,000+' : '250,000+'} live jobs — updated daily.
+                      Live jobs — updated daily.
                     </p>
                     <Link
                       href="/jobs/listings"

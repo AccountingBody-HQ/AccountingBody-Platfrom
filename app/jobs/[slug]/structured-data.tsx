@@ -47,7 +47,10 @@ function buildJobPostingSchema(job: Job, brandName: string): Record<string, unkn
     '@context': 'https://schema.org',
     '@type': 'JobPosting',
     title: job.title,
-    description: descriptionToHtml(job.description),
+    // `description` is NOT NULL in the schema, so the excerpt fallback is
+    // currently unreachable — kept defensively rather than assuming that
+    // constraint never changes.
+    description: descriptionToHtml(job.description || job.excerpt || ''),
     datePosted: new Date(job.published_at ?? job.created_at).toISOString(),
     hiringOrganization: {
       '@type': 'Organization',

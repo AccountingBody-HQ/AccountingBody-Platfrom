@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
 function getSupabase() {
@@ -534,12 +535,22 @@ export async function getJobBySlug(slug: string): Promise<Job | null> {
   return data as unknown as Job
 }
 
-// Up to `limit` other active, currently-live jobs (same platform, matching
-// the job's country or seniority) to surface below a job detail page.
-// Deliberately stricter than getJobBySlug's own fetch: suggestions must only
-// ever be genuinely live roles, never expired ones, so this uses the same
-// "status='active' AND not yet expired" condition as getActiveDirectJobs
-// rather than getJobBySlug's broadened active-or-expired filter.
+// Up to `limit` other active, currently-live jobs to surface below a job
+// detail page. Deliberately stricter than getJobBySlug's own fetch:
+// suggestions must only ever be genuinely live roles, never expired ones,
+// so this uses the same "status='active' AND not yet expired" condition as
+// getActiveDirectJobs rather than getJobBySlug's broadened
+// active-or-expired filter.
+//
+// Same country is strictly preferred over same seniority, and the two are
+// never mixed unless the country alone can't fill the list: a first pass
+// fetches only same-country matches; seniority-only matches (which can be
+// anywhere in the world) are fetched in a second pass purely to pad up to
+// `limit`, and only run at all if the first pass came up short. Country
+// results are never displaced by seniority ones. (An earlier version OR'd
+// both conditions in one query, which meant a same-seniority match on the
+// other side of the world could — and did — fill the entire list even when
+// same-country matches existed.)
 export interface GetSimilarJobsParams {
   excludeId: string
   platform: string
@@ -552,34 +563,52 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Job[
   const { excludeId, platform, locationCountry, seniorityLevel, limit = 6 } = params
   const nowIso = new Date().toISOString()
 
-  // Same defensive stripping as buildQualificationsOrFilter — these values
-  // originate from the job's own row rather than raw request input, but
-  // there's no cost to keeping the `.or()` filter string construction
-  // consistently safe against a stray '(' or ',' either way.
-  const orClauses: string[] = []
-  if (locationCountry) orClauses.push(`location_country.eq.${locationCountry.replace(/[(),]/g, '')}`)
-  if (seniorityLevel) orClauses.push(`seniority_level.eq.${seniorityLevel.replace(/[(),]/g, '')}`)
-  if (orClauses.length === 0) return []
-
-  const supabase = getSupabase()
-  const { data, error } = await supabase
-    .from('jobs')
-    .select(JOB_COLUMNS)
-    .eq('status', 'active')
-    .contains('platform', [platform])
-    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-    .neq('id', excludeId)
-    .or(orClauses.join(','))
-    .order('created_at', { ascending: false })
-    .limit(limit)
-
-  if (error || !data) {
-    if (error) console.error('getSimilarJobs error:', error)
-    return []
+  function baseQuery() {
+    return getSupabase()
+      .from('jobs')
+      .select(JOB_COLUMNS)
+      .eq('status', 'active')
+      .contains('platform', [platform])
+      .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+      .neq('id', excludeId)
   }
-  // See the comment on the JOB_COLUMNS cast in getActiveDirectJobs — same
-  // non-literal-string limitation applies here.
-  return data as unknown as Job[]
+
+  let sameCountry: Job[] = []
+  if (locationCountry) {
+    // Same defensive stripping as buildQualificationsOrFilter — this value
+    // originates from the job's own row rather than raw request input, but
+    // there's no cost to keeping the filter construction consistently safe.
+    const cleanCountry = locationCountry.replace(/[(),]/g, '')
+    const { data, error } = await baseQuery()
+      .eq('location_country', cleanCountry)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    if (error) console.error('getSimilarJobs (country) error:', error)
+    // See the comment on the JOB_COLUMNS cast in getActiveDirectJobs — same
+    // non-literal-string limitation applies here.
+    sameCountry = (data ?? []) as unknown as Job[]
+  }
+
+  if (sameCountry.length >= limit || !seniorityLevel) {
+    return sameCountry.slice(0, limit)
+  }
+
+  const remaining = limit - sameCountry.length
+  const cleanSeniority = seniorityLevel.replace(/[(),]/g, '')
+  const excludeIds = [excludeId, ...sameCountry.map(j => j.id)]
+
+  const { data: seniorityData, error: seniorityError } = await baseQuery()
+    .eq('seniority_level', cleanSeniority)
+    .not('id', 'in', `(${excludeIds.join(',')})`)
+    .order('created_at', { ascending: false })
+    .limit(remaining)
+
+  if (seniorityError) {
+    console.error('getSimilarJobs (seniority) error:', seniorityError)
+    return sameCountry
+  }
+
+  return [...sameCountry, ...((seniorityData ?? []) as unknown as Job[])]
 }
 
 // No status filter — an employer managing their own listing via its unique
@@ -673,6 +702,16 @@ export async function getActiveJobsCount(platform: string): Promise<number> {
     .contains('platform', [platform])
   return count ?? 0
 }
+
+// Request-deduped wrapper: the root layout (Footer) and the jobs hub page
+// (JobsHubClient) both need this count on the same page load. Without
+// memoisation each would run its own separate COUNT query; React's cache()
+// collapses repeated calls with the same platform argument into a single
+// Supabase round-trip per request (never across requests — this is not a
+// data cache). Deliberately not used more broadly than these two call
+// sites — see the job-count fix report for why the rest of the site's
+// "live jobs" copy was reworded instead of wired to a live count.
+export const getCachedActiveJobsCount = cache(getActiveJobsCount)
 
 export async function getExpiringJobs(daysFromNow: number): Promise<Job[]> {
   const supabase = getSupabase()

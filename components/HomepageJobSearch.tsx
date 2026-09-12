@@ -100,7 +100,7 @@ export default function HomepageJobSearch() {
 
       </div>
       <p className="text-white/40 text-xs mt-3">
-        250,000+ live accounting &amp; finance roles &mdash;{' '}
+        Live accounting &amp; finance roles &mdash;{' '}
         <a href="/jobs/listings" className="text-white/60 hover:text-white underline underline-offset-2 transition-colors">browse all</a>
       </p>
     </div>

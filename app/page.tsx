@@ -91,7 +91,7 @@ const howItWorks = [
   {
     step:  '01',
     title: 'Find your next role',
-    body:  'Browse 250,000+ live accounting and finance vacancies. Filter by role, location and contract type. New roles added every day.',
+    body:  'Browse live accounting and finance vacancies. Filter by role, location and contract type. New roles added every day.',
   },
   {
     step:  '02',
@@ -1160,7 +1160,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <HomepageJobSearch />
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-6 w-full max-w-2xl">
-              {['250,000+ live jobs', '20,000+ practice questions', 'Free to start'].map(label => (
+              {['Live job listings', '20,000+ practice questions', 'Free to start'].map(label => (
                 <span key={label} className="flex items-center gap-1.5 text-xs font-medium text-white/50">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
@@ -1293,7 +1293,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
             <div>
               <span className="eyebrow mb-2 block">Live Accounting &amp; Finance Jobs</span>
-              <h2 className="section-title">250,000+ roles updated daily</h2>
+              <h2 className="section-title">New roles updated daily</h2>
               <p className="text-slate-500 text-base mt-2 max-w-xl">
                 Permanent, contract and temporary roles across the UK and internationally. Filtered to accounting and finance only.
               </p>
@@ -1357,7 +1357,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               className="h-12 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white transition-colors w-full"
               style={{ background: '#0C1A3D' }}
             >
-              Browse 250,000+ live jobs →
+              Browse live jobs →
             </Link>
             <Link
               href="/jobs"
@@ -1506,7 +1506,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                       </p>
                       <p className="font-display text-white text-lg mb-2 leading-snug">Browse jobs</p>
                       <p className="text-xs leading-relaxed mb-4 flex-1" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                        Search {isEthioTax ? '1,000+' : '250,000+'} live vacancies. Filter by role, location and contract type.
+                        Search live vacancies. Filter by role, location and contract type.
                       </p>
                       <Link href="/jobs/listings"
                         className="flex items-center justify-center gap-1.5 h-9 rounded-lg text-xs font-semibold transition-opacity hover:opacity-90"
@@ -1537,10 +1537,10 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   <div className="grid grid-cols-2" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                     <div className="p-5" style={{ borderRight: '1px solid rgba(255,255,255,0.08)' }}>
                       <span className="font-display text-xl font-bold text-white block mb-0.5">
-                        {isEthioTax ? '1,000+' : '250,000+'}
+                        Daily
                       </span>
-                      <span className="text-[10px] font-semibold block" style={{ color: '#C9982A' }}>Live roles</span>
-                      <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>Updated daily</span>
+                      <span className="text-[10px] font-semibold block" style={{ color: '#C9982A' }}>New roles added</span>
+                      <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>Direct & aggregated</span>
                     </div>
                     <div className="p-5">
                       <span className="font-display text-xl font-bold text-white block mb-0.5">90 Days</span>
@@ -1767,7 +1767,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 <span className="eyebrow mb-3 block">The Full Platform</span>
                 <h2 className="section-title mb-4">Jobs, practice questions, and professional services — all in one place</h2>
                 <p className="text-slate-500 text-lg leading-relaxed">
-                  Accounting Body is built exclusively for accounting and finance professionals. Browse 250,000+ live jobs, practise with 20,000+ exam-standard questions, get matched to roles via our managed placement service, or engage our professional services team — everything you need, on one platform.
+                  Accounting Body is built exclusively for accounting and finance professionals. Browse live jobs, practise with 20,000+ exam-standard questions, get matched to roles via our managed placement service, or engage our professional services team — everything you need, on one platform.
                 </p>
               </div>
 
@@ -1929,7 +1929,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <div className="space-y-5">
         {[
           {
-            title: '250,000+ live accounting and finance jobs',
+            title: 'Live accounting and finance jobs',
             body: 'Updated daily. Filtered to accounting and finance only — no irrelevant roles, no noise. Search by role, location and contract type.',
             icon: (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
