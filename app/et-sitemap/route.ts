@@ -5,11 +5,24 @@ import { resolveArticleCanonicalUrl } from '@/lib/canonical'
 
 const ET_BASE_URL = 'https://ethiotax.com'
 
-// Same reasoning as app/sitemap.ts: jobs churn continuously, and this route
-// is about to query every eligible job row on top of its existing article
-// query — regenerate at most hourly rather than re-querying on every hit
-// (or going stale for a full deployment cycle).
-export const revalidate = 3600
+// Same underlying cause as app/sitemap.ts, see that file's comment for the
+// full mechanism: getJobSitemapEntries' internal pagination (commit
+// 6dda4b5, ~10 round trips for ~9,871 jobs) exceeded Next's 60s
+// static-generation budget against this project's Supabase NANO instance
+// and failed `next build` outright. `dynamic = 'force-dynamic'` keeps this
+// route out of the build's static-export worker pool entirely (Next only
+// adds a route there when `appConfig.revalidate !== 0`, and force-dynamic
+// unconditionally zeroes that — node_modules/next/dist/build/utils.js),
+// so it can no longer coexist with `revalidate = 3600`, which is removed.
+//
+// Unlike app/sitemap.ts, this is a plain custom Route Handler, not the
+// special `sitemap.ts` file convention — its own `Cache-Control` header,
+// set explicitly on the NextResponse below, is sent as-is with no
+// framework override. That header (public, max-age=3600) is what now
+// provides this route's only caching: with revalidate forced to 0, the
+// hourly cache lives entirely at the HTTP/CDN layer, not in Next's own
+// data cache.
+export const dynamic = 'force-dynamic'
 
 function url(path: string, priority: number, changefreq: string, lastmod?: Date): string {
   return `  <url>

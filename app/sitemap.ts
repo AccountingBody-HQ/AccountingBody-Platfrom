@@ -5,14 +5,44 @@ import { resolveArticleCanonicalUrl } from '@/lib/canonical'
 
 const AB_BASE_URL = 'https://accountingbody.com'
 
-// Jobs churn continuously (ingestion every 15 minutes, expiry daily — see
-// vercel.json), and this route is about to go from querying a couple of
-// small content tables to also querying every eligible job row. Without an
-// explicit revalidate window this either goes fully stale for a whole
-// deployment cycle (if Next statically caches it, since nothing here calls
-// headers()/cookies()) or re-runs that full query on every single crawl
-// hit — regenerate at most hourly instead.
-export const revalidate = 3600
+// getJobSitemapEntries (lib/jobs.ts) paginates internally at 1,000 rows/page
+// to stay under this project's PostgREST row cap (commit 6dda4b5) — for
+// ~9,871 active jobs that's ~10 sequential round trips, plus the articles/
+// question-sets queries above. Against this project's Supabase NANO
+// instance that exceeded Next's 60s static-generation budget and failed
+// `next build` outright (three retries, then a hard build failure) —
+// nothing below could ever ship while this file was eligible for
+// build-time prerendering.
+//
+// `dynamic = 'force-dynamic'` is what actually prevents that: Next's build
+// only adds a non-dynamic-params app route to its static-export worker
+// pool (the thing that was retrying and timing out) when
+// `appConfig.revalidate !== 0` (node_modules/next/dist/build/index.js,
+// the `if (appConfig.revalidate !== 0) { ... isStatic = true }` block for
+// app routes). Setting `dynamic = 'force-dynamic'` forces exactly that:
+// node_modules/next/dist/build/utils.js unconditionally sets
+// `appConfig.revalidate = 0` whenever `dynamic === 'force-dynamic'` (and
+// PPR, an experimental flag this project doesn't enable, is off) — so this
+// route is never added to the static-export set and getJobSitemapEntries
+// never runs during `next build`. The previous `revalidate = 3600` cannot
+// coexist with this: the same utils.js line overwrites it to 0 regardless
+// of what's written here, so it would be actively misleading to keep it.
+//
+// Caching consequence — this is a real trade-off, not a free fix: Next's
+// generated wrapper for the `sitemap.ts` file convention
+// (next/dist/build/webpack/loaders/next-metadata-route-loader.js,
+// getDynamicSiteMapRouteCode) hardcodes the response's Cache-Control to
+// `public, max-age=0, must-revalidate` — a fixed string in that loader,
+// not templated from anything exported here. That header cannot be
+// overridden from this file while it keeps the `sitemap.ts` convention,
+// so with revalidate forced to 0 as well, /sitemap.xml now has NO caching
+// at any layer: every crawler hit re-runs the full paginated query set.
+// See tmp-audit/sitemap-build-fix.md for the assessment and the follow-up
+// this implies (rewriting this as a plain app/sitemap.xml/route.ts route
+// handler, like app/et-sitemap/route.ts already is, to regain control of
+// this header) — deliberately not done in this commit, which is scoped to
+// unblocking the build only.
+export const dynamic = 'force-dynamic'
 
 async function getSupabaseClient() {
   return createClient(
