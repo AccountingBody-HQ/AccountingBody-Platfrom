@@ -12,6 +12,7 @@ import {
   formatAbsoluteDate,
 } from '@/lib/job-format'
 import { JobPostingStructuredData } from './structured-data'
+import { ApplyButton } from './ApplyButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -77,34 +78,6 @@ export async function generateMetadata({
       ? { index: false, follow: true }
       : { index: true, follow: true },
   }
-}
-
-function ApplyButton({ job, brandColor }: { job: Job; brandColor: string }) {
-  const label = 'Apply Now →'
-  const buttonClass = 'inline-flex w-full items-center justify-center h-14 rounded-xl text-sm font-bold transition-all active:scale-95'
-
-  if (job.apply_method === 'external' && job.application_url) {
-    return (
-      <a href={job.application_url} target="_blank" rel="noopener noreferrer"
-        className={buttonClass} style={{ background: '#D4A017', color: brandColor }}>
-        {label}
-      </a>
-    )
-  }
-  if (job.apply_method === 'email' && job.application_email) {
-    return (
-      <a href={`mailto:${job.application_email}?subject=${encodeURIComponent('Application: ' + job.title)}`}
-        className={buttonClass} style={{ background: '#D4A017', color: brandColor }}>
-        {label}
-      </a>
-    )
-  }
-  return (
-    <Link href={`/jobs/apply/${job.id}`} target="_blank" rel="noopener noreferrer"
-      className={buttonClass} style={{ background: '#D4A017', color: brandColor }}>
-      {label}
-    </Link>
-  )
 }
 
 function SkillList({ title, items }: { title: string; items: string[] }) {
