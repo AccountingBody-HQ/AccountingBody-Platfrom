@@ -1,11 +1,15 @@
 // app/contact/page.tsx
 import type { Metadata } from 'next'
 import ContactForm from './ContactForm'
+import { canonicalMetadata } from '@/lib/canonical'
 
-export const metadata: Metadata = {
-  title: 'Contact Accounting Body — Get in Touch',
-  description:
-    'Have a question about our study platform or professional services? Get in touch with the Accounting Body team — we reply within 2 business days.',
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Contact Accounting Body — Get in Touch',
+    description:
+      'Have a question about our study platform or professional services? Get in touch with the Accounting Body team — we reply within 2 business days.',
+    ...(await canonicalMetadata('/contact')),
+  }
 }
 
 const faqs = [

@@ -4,10 +4,14 @@ import { headers } from 'next/headers'
 import ComingSoonExamCard from '@/components/course/ComingSoonExamCard'
 import type { Metadata } from 'next'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
+import { canonicalMetadata } from '@/lib/canonical'
 
-export const metadata: Metadata = {
-  title: 'Mock Exams | ETICPA ATQ | EthioTax',
-  description: 'Free timed mock exams for the ETICPA ATQ qualification. 50 questions per attempt, drawn from a 3,000+ question bank. Unlimited attempts.',
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Mock Exams | ETICPA ATQ | EthioTax',
+    description: 'Free timed mock exams for the ETICPA ATQ qualification. 50 questions per attempt, drawn from a 3,000+ question bank. Unlimited attempts.',
+    ...(await canonicalMetadata('/study/mock-exams')),
+  }
 }
 
 export const dynamic = 'force-dynamic'

@@ -11,6 +11,7 @@ import CourseSidebar from '@/components/course/CourseSidebar'
 import MobileNavDrawer from '@/components/course/MobileNavDrawer'
 import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
+import { canonicalMetadata } from '@/lib/canonical'
 
 export async function generateStaticParams() {
   const courses = await getPublishedCourses()
@@ -33,6 +34,7 @@ export async function generateMetadata({ params }: { params: { slug: string; les
   return {
     title: `${data.lesson.title} — ${data.course.title} | Accounting Body`,
     description: data.lesson.articles?.[0]?.excerpt ?? data.course.description ?? '',
+    ...(await canonicalMetadata(`/free-courses/${params.slug}/learn/${params.lessonSlug}`)),
   }
 }
 

@@ -2,10 +2,14 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
+import { canonicalMetadata } from '@/lib/canonical'
 
-export const metadata: Metadata = {
-  title:       'Professional Network | Firms & Freelancers',
-  description: 'Join a carefully managed global network of verified accounting firms and independent professionals. Every client engagement overseen from brief to delivery.',
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title:       'Professional Network | Firms & Freelancers',
+    description: 'Join a carefully managed global network of verified accounting firms and independent professionals. Every client engagement overseen from brief to delivery.',
+    ...(await canonicalMetadata('/firms-freelancers')),
+  }
 }
 
 const standards = [

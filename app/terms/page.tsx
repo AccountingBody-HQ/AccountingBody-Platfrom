@@ -1,10 +1,14 @@
 // app/terms/page.tsx
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { canonicalMetadata } from '@/lib/canonical'
 
-export const metadata: Metadata = {
-  title: 'Terms of Service',
-  description: 'The terms and conditions governing your use of Accounting Body. Last updated March 2026.',
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Terms of Service',
+    description: 'The terms and conditions governing your use of Accounting Body. Last updated March 2026.',
+    ...(await canonicalMetadata('/terms')),
+  }
 }
 
 const sections = [

@@ -1,10 +1,14 @@
 // app/cookie-policy/page.tsx
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { canonicalMetadata } from '@/lib/canonical'
 
-export const metadata: Metadata = {
-  title: 'Cookie Policy',
-  description: 'How Accounting Body uses cookies and how to manage your preferences. Last updated March 2026.',
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Cookie Policy',
+    description: 'How Accounting Body uses cookies and how to manage your preferences. Last updated March 2026.',
+    ...(await canonicalMetadata('/cookie-policy')),
+  }
 }
 
 const cookies = [

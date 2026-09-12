@@ -3,11 +3,22 @@
 // Structure: Hero → Qualification Paths → How It Works → Platform Features → Stats → Articles → Trust → Email → CTA
 
 import React from 'react'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 import EmailSignupForm from '@/components/EmailSignupForm'
 import HomepageJobSearch from '@/components/HomepageJobSearch'
+import { canonicalMetadata } from '@/lib/canonical'
+
+// No static metadata existed here before — title/description/openGraph are
+// still inherited from the root layout. This restores only the canonical/
+// og:url that app/layout.tsx used to supply sitewide (and was deleted from
+// there deliberately) — the homepage is the one route where that inherited
+// value happened to be correct, so it still needs its own now.
+export async function generateMetadata(): Promise<Metadata> {
+  return { ...(await canonicalMetadata('/')) }
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

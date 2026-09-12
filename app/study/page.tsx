@@ -3,12 +3,16 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { getCategoryCounts, getQuestionSetCount } from '@/lib/db'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
+import { canonicalMetadata } from '@/lib/canonical'
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
-  title: 'Study Notes | Accounting Body',
-  description: 'Comprehensive study notes for ACCA, CIMA, AAT, and ICAEW — the four leading professional accounting qualifications.',
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Study Notes | Accounting Body',
+    description: 'Comprehensive study notes for ACCA, CIMA, AAT, and ICAEW — the four leading professional accounting qualifications.',
+    ...(await canonicalMetadata('/study')),
+  }
 }
 
 const EXAM_BODIES = [

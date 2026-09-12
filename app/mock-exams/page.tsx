@@ -4,10 +4,14 @@ import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
+import { canonicalMetadata } from '@/lib/canonical'
 
-export const metadata: Metadata = {
-  title: 'Mock Exams | Accounting Body',
-  description: 'Free timed mock exams organised by subject. 50 questions per attempt drawn from a live question bank. Unlimited attempts.',
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Mock Exams | Accounting Body',
+    description: 'Free timed mock exams organised by subject. 50 questions per attempt drawn from a live question bank. Unlimited attempts.',
+    ...(await canonicalMetadata('/mock-exams')),
+  }
 }
 
 export const dynamic = 'force-dynamic'

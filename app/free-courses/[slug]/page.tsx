@@ -5,6 +5,7 @@ import { getCourseBySlug, getPublishedCourses, levelBadge, capitalize } from '@/
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { canonicalMetadata } from '@/lib/canonical'
 
 export async function generateStaticParams() {
   const courses = await getPublishedCourses()
@@ -17,6 +18,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return {
     title: `${course.title} | Accounting Body`,
     description: course.metaDescription ?? course.description ?? '',
+    ...(await canonicalMetadata(`/free-courses/${params.slug}`)),
   }
 }
 

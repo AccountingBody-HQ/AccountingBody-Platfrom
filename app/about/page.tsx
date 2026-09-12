@@ -1,11 +1,15 @@
 // app/about/page.tsx
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { canonicalMetadata } from '@/lib/canonical'
 
-export const metadata: Metadata = {
-  title: 'About Accounting Body — Our Mission, Story & Values',
-  description:
-    'Accounting Body is a professional accounting education and managed services platform. Study for ACCA, CIMA, ICAEW and AAT — and access our global network of verified accounting professionals.',
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'About Accounting Body — Our Mission, Story & Values',
+    description:
+      'Accounting Body is a professional accounting education and managed services platform. Study for ACCA, CIMA, ICAEW and AAT — and access our global network of verified accounting professionals.',
+    ...(await canonicalMetadata('/about')),
+  }
 }
 
 const values = [

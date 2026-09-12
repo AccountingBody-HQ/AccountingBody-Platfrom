@@ -2,10 +2,14 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
+import { canonicalMetadata } from '@/lib/canonical'
 
-export const metadata: Metadata = {
-  title: 'Accessibility Statement',
-  description: 'Accounting Body is committed to making its website accessible to everyone. Read our accessibility statement.',
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Accessibility Statement',
+    description: 'Accounting Body is committed to making its website accessible to everyone. Read our accessibility statement.',
+    ...(await canonicalMetadata('/accessibility')),
+  }
 }
 
 const standards = [

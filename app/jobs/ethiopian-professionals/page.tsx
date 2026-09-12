@@ -2,10 +2,14 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { canonicalMetadata } from '@/lib/canonical'
 
-export const metadata: Metadata = {
-  title: 'Ethiopian Finance Professionals | EthioTax Recruitment',
-  description: 'EthioTax places qualified Ethiopian-origin finance professionals in permanent and contract roles across the UK, US, Canada and beyond.',
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Ethiopian Finance Professionals | EthioTax Recruitment',
+    description: 'EthioTax places qualified Ethiopian-origin finance professionals in permanent and contract roles across the UK, US, Canada and beyond.',
+    ...(await canonicalMetadata('/jobs/ethiopian-professionals')),
+  }
 }
 
 export default async function EthiopianProfessionalsPage() {

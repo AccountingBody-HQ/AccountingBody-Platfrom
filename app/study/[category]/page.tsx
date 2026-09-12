@@ -2,6 +2,7 @@ import Link from 'next/link'
 import ScrollToTop from '@/components/ScrollToTop'
 import type { Metadata } from 'next'
 import { getArticlesByCategory } from '@/lib/db'
+import { canonicalMetadata } from '@/lib/canonical'
 import type { ArticleSummary } from '@/lib/db'
 
 const EXAM_BODY_META: Record<string, { name: string; description: string; accent: string; badgeBg: string; badgeText: string }> = {
@@ -57,7 +58,11 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
   const { category } = await params
   const meta = getCategoryDisplay(category)
-  return { title: `${meta.name} Study Notes | Accounting Body`, description: meta.description }
+  return {
+    title: `${meta.name} Study Notes | Accounting Body`,
+    description: meta.description,
+    ...(await canonicalMetadata(`/study/${category}`)),
+  }
 }
 
 export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {

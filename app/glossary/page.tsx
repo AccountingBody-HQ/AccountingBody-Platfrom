@@ -5,13 +5,17 @@
 import React from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { canonicalMetadata } from '@/lib/canonical'
 
 export const revalidate = 3600
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
-export const metadata: Metadata = {
-  title: 'Accounting Glossary | Accounting Body',
-  description: 'Your complete reference for accounting and finance terminology. Browse 1,200+ terms by letter or topic — written and reviewed by qualified accountants.',
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Accounting Glossary | Accounting Body',
+    description: 'Your complete reference for accounting and finance terminology. Browse 1,200+ terms by letter or topic — written and reviewed by qualified accountants.',
+    ...(await canonicalMetadata('/glossary')),
+  }
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────

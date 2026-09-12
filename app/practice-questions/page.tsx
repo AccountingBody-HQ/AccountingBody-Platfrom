@@ -3,12 +3,16 @@ import type { Metadata } from 'next'
 import { getQuestionSets } from '@/lib/db'
 import { headers } from 'next/headers'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
+import { canonicalMetadata } from '@/lib/canonical'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title:       'Practice Questions | Accounting Body',
-  description: 'Exam-standard practice questions for accounting qualifications. Fresh random sets every session.',
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title:       'Practice Questions | Accounting Body',
+    description: 'Exam-standard practice questions for accounting qualifications. Fresh random sets every session.',
+    ...(await canonicalMetadata('/practice-questions')),
+  }
 }
 
 const DIFFICULTY_BADGE: Record<string, string> = {

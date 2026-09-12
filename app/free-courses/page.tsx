@@ -8,10 +8,14 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 import { getPublishedCourses } from '@/lib/coursesNew'
+import { canonicalMetadata } from '@/lib/canonical'
 
-export const metadata: Metadata = {
-  title: 'Free Accounting Courses | Accounting Body',
-  description: 'Free online accounting courses for accounting and finance students. Structured lessons, worked examples, and built-in practice questions. No signup required.',
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'Free Accounting Courses | Accounting Body',
+    description: 'Free online accounting courses for accounting and finance students. Structured lessons, worked examples, and built-in practice questions. No signup required.',
+    ...(await canonicalMetadata('/free-courses')),
+  }
 }
 
 const LEVEL_BADGE: Record<string, string> = {

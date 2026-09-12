@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import MockExamClient from '@/components/course/MockExamClient'
 import type { Metadata } from 'next'
+import { canonicalMetadata } from '@/lib/canonical'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,6 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   return {
     title: `${title} Mock Exam | Accounting Body`,
     description: `Free timed mock exam for ${title}. 50 questions, 75 minutes, 60% pass mark. Unlimited attempts.`,
+    ...(await canonicalMetadata(`/mock-exams/${category}`)),
   }
 }
 

@@ -1,10 +1,14 @@
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import type { Metadata } from 'next'
+import { canonicalMetadata } from '@/lib/canonical'
 
-export const metadata: Metadata = {
-  title: 'How It Works | Accounting Body Recruitment',
-  description: 'A fully managed recruitment service. We sit in the middle of every placement — candidates never deal with employers directly.',
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: 'How It Works | Accounting Body Recruitment',
+    description: 'A fully managed recruitment service. We sit in the middle of every placement — candidates never deal with employers directly.',
+    ...(await canonicalMetadata('/jobs/how-it-works')),
+  }
 }
 
 export default async function HowItWorksPage() {
