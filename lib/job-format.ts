@@ -97,6 +97,16 @@ export function formatAbsoluteDate(dateStr: string | null | undefined): string {
   return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
+// The single source for a job's canonical URL — app/jobs/[slug]/page.tsx
+// calls this from both generateMetadata (for <link rel="canonical"> /
+// openGraph.url) and the page body (to hand the exact same string to
+// ShareButton), rather than each computing its own copy of the
+// baseUrl+slug template and risking the two silently drifting apart.
+export function getJobCanonicalUrl(job: Pick<Job, 'slug'>, isEthioTax: boolean): string {
+  const baseUrl = isEthioTax ? 'https://ethiotax.com' : 'https://accountingbody.com'
+  return `${baseUrl}/jobs/${job.slug}`
+}
+
 // Rounds a real job count DOWN to a round display figure — never up, so the
 // displayed number is never a claim the true count doesn't back up (e.g. an
 // actual count of 9,870 reads as "9,000+", not "10,000+").

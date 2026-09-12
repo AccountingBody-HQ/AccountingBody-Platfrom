@@ -10,10 +10,12 @@ import {
   seniorityLabel,
   formatRelativeDate,
   formatAbsoluteDate,
+  getJobCanonicalUrl,
 } from '@/lib/job-format'
 import { JobPostingStructuredData } from './structured-data'
 import { ApplyButton } from './ApplyButton'
 import { BackToListingsLink } from './BackToListingsLink'
+import { ShareButton } from './ShareButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -65,8 +67,7 @@ export async function generateMetadata({
   // sitewide default (alternates.canonical: the homepage), which tells
   // Google every job page's authoritative version is the homepage. See the
   // job-page-fixes report for how many other route types have the same gap.
-  const baseUrl = isEthioTax ? 'https://ethiotax.com' : 'https://accountingbody.com'
-  const canonicalUrl = `${baseUrl}/jobs/${job.slug}`
+  const canonicalUrl = getJobCanonicalUrl(job, isEthioTax)
 
   return {
     title,
@@ -109,6 +110,7 @@ export default async function JobDetailPage({
   const brandName = isEthioTax ? 'EthioTax' : 'Accounting Body'
   const brandColor = isEthioTax ? '#1A4731' : '#0C1A3D'
   const lifecycle = getJobLifecycleState(job)
+  const canonicalUrl = getJobCanonicalUrl(job, isEthioTax)
 
   const similarJobs = await getSimilarJobs({
     excludeId: job.id,
@@ -136,19 +138,22 @@ export default async function JobDetailPage({
         <div className="container-site max-w-3xl mx-auto">
           <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-10">
             {/* Header */}
-            <div className="mb-6">
-              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: brandColor }}>
-                {job.source === 'employer' ? 'Hiring Direct' : brandName}
-              </span>
-              <h1 className="font-display text-navy-950 text-2xl md:text-3xl mt-2 mb-1" style={{ letterSpacing: '-0.02em' }}>
-                {job.title}
-              </h1>
-              <p className="text-slate-600 text-base font-semibold">{job.company_name}</p>
-              <p className="text-slate-500 text-sm mt-1">
-                {job.location_country && job.location_country !== job.location_text
-                  ? `${job.location_text} · ${job.location_country}`
-                  : job.location_text}
-              </p>
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: brandColor }}>
+                  {job.source === 'employer' ? 'Hiring Direct' : brandName}
+                </span>
+                <h1 className="font-display text-navy-950 text-2xl md:text-3xl mt-2 mb-1" style={{ letterSpacing: '-0.02em' }}>
+                  {job.title}
+                </h1>
+                <p className="text-slate-600 text-base font-semibold">{job.company_name}</p>
+                <p className="text-slate-500 text-sm mt-1">
+                  {job.location_country && job.location_country !== job.location_text
+                    ? `${job.location_text} · ${job.location_country}`
+                    : job.location_text}
+                </p>
+              </div>
+              <ShareButton url={canonicalUrl} jobTitle={job.title} brandColor={brandColor} />
             </div>
 
             {/* Badges */}
