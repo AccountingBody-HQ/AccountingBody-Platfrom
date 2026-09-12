@@ -1,5 +1,8 @@
 import { headers } from 'next/headers'
 import type { ArticleFull } from '@/lib/db'
+import { resolveArticlePath } from '@/lib/article-path'
+
+export { resolveArticlePath }
 
 const AB_URL = 'https://accountingbody.com'
 const ET_URL = 'https://ethiotax.com'
@@ -73,24 +76,11 @@ export function resolveArticleCanonicalUrl(article: CanonicalArticle, homeSiteUr
     (article.show_on_sites ?? []).includes(ownerSiteCode)
   const siteUrl = ownerConfirmed ? ownerUrl : homeSiteUrl
 
-  // Prefer the study URL when the article has a real category — NOT
-  // exam_body[0], which every one of the 2017 published articles shares
-  // the same value for ('acca'), confirmed against production. Using it
-  // would have canonicalized every article to /study/acca/{slug}
-  // regardless of actual subject, telling Google the CIMA/AAT/ICAEW study
-  // sections contain no articles at all — worse than the duplication this
-  // was meant to fix. `category` is a real, evenly-distributed field
-  // (10 subjects across all 2017 rows, no nulls, confirmed against
-  // production) and is what the article page's own "Subject:" sidebar
-  // already displays. Falls back to /articles/[slug] for anything without
-  // a usable category (no current row lacks one, but new content can
-  // still land without one — study/[category]/[slug] never validates the
-  // URL's category segment against the article, so an empty category
-  // string would otherwise produce a malformed /study//{slug} path).
-  const category = article.category?.toLowerCase().trim()
-  const path = category
-    ? `/study/${category}/${article.slug}`
-    : `/articles/${article.slug}`
+  // Path logic lives in lib/article-path.ts (re-exported above) so every
+  // internal link to an article and this canonical resolve the exact same
+  // way — that's the whole fix; see that file for why category, not
+  // exam_body[0].
+  const path = resolveArticlePath(article)
 
   return `${siteUrl}${path}`
 }

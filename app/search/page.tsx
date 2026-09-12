@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { resolveArticlePath } from '@/lib/article-path'
 
 type ContentType = 'all' | 'article' | 'practicePost' | 'course' | 'quiz' | 'dictionaryTerm'
 
@@ -41,12 +42,8 @@ const AB_POPULAR_SEARCHES = [
 
 function getUrl(r: SearchResult): string {
   switch (r._type) {
-    case 'article': {
-      const body = Array.isArray(r.examBody) ? r.examBody[0] : r.examBody
-      return body
-        ? `/study/${body.toLowerCase()}/${r.slug}`
-        : `/articles/${r.slug}`
-    }
+    case 'article':
+      return resolveArticlePath(r)
     case 'practicePost':   return `/practice-questions/${r.slug}`
     case 'course':         return `/courses/${r.slug}`
     case 'quiz':           return `/quiz/${r.slug}`

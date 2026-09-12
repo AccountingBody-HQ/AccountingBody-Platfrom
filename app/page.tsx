@@ -9,7 +9,7 @@ import { headers } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 import EmailSignupForm from '@/components/EmailSignupForm'
 import HomepageJobSearch from '@/components/HomepageJobSearch'
-import { canonicalMetadata } from '@/lib/canonical'
+import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
 
 // No static metadata existed here before — title/description/openGraph are
 // still inherited from the root layout. This restores only the canonical/
@@ -270,7 +270,7 @@ function ArticleCard({ article }: { article: FeaturedArticle }) {
             </span>
           )}
         </div>
-        <Link href={`/articles/${article.slug}`} className="block mb-2 flex-1">
+        <Link href={resolveArticlePath(article)} className="block mb-2 flex-1">
           <h3 className="font-display text-lg text-navy-950 leading-snug group-hover:text-navy-700 transition-colors">
             {article.title}
           </h3>

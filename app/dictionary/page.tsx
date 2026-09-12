@@ -6,7 +6,7 @@ import React from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { createClient } from '@supabase/supabase-js'
-import { canonicalMetadata } from '@/lib/canonical'
+import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
 
 interface ArticleSummary {
   id:              string
@@ -138,7 +138,7 @@ function ArticleRow({ article }: { article: ArticleSummary }) {
             <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">{article.category_title}</span>
           )}
         </div>
-        <Link href={`/articles/${article.slug}`} className="block mb-1.5">
+        <Link href={resolveArticlePath(article)} className="block mb-1.5">
           <h3 className="font-display text-base text-navy-950 group-hover:text-navy-600 transition-colors leading-snug">{article.title}</h3>
         </Link>
         {article.excerpt && (
@@ -146,7 +146,7 @@ function ArticleRow({ article }: { article: ArticleSummary }) {
         )}
       </div>
       <Link
-        href={`/articles/${article.slug}`}
+        href={resolveArticlePath(article)}
         className="shrink-0 self-start sm:self-center inline-flex items-center gap-1 text-xs font-semibold text-navy-700 hover:text-gold-500 transition-colors"
       >
         Read

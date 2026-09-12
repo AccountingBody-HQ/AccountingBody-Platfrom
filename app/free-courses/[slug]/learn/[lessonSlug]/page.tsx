@@ -11,7 +11,7 @@ import CourseSidebar from '@/components/course/CourseSidebar'
 import MobileNavDrawer from '@/components/course/MobileNavDrawer'
 import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
-import { canonicalMetadata } from '@/lib/canonical'
+import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
 
 export async function generateStaticParams() {
   const courses = await getPublishedCourses()
@@ -260,7 +260,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                             {article.title}
                           </h3>
                           <Link
-                            href={`/articles/${article.slug}`}
+                            href={resolveArticlePath(article)}
                             target="_blank"
                             className="inline-flex items-center gap-1.5 text-xs font-semibold transition-all hover:opacity-70"
                             style={{ color: '#94A3B8' }}

@@ -5,7 +5,7 @@ import { headers } from 'next/headers'
 import { getQuestionSetBySlug, getQuestionsBySetId, getCasesBySetId, getArticleBySlug } from '@/lib/db'
 import QuizRenderer from '@/components/QuizRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
-import { canonicalMetadata } from '@/lib/canonical'
+import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
 
 export const dynamic = 'force-dynamic'
 
@@ -72,9 +72,7 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
       ? {
           title: relatedArticleData.title,
           slug:  relatedArticleData.slug,
-          href:  relatedArticleData.exam_body?.[0]
-            ? `/study/${relatedArticleData.exam_body[0].toLowerCase()}/${relatedArticleData.slug}`
-            : `/articles/${relatedArticleData.slug}`,
+          href:  resolveArticlePath(relatedArticleData),
         }
       : null,
   }

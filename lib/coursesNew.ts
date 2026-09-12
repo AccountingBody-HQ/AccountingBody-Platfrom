@@ -12,6 +12,7 @@ export interface CourseArticle {
   title:      string
   slug:       string
   excerpt?:   string
+  category?:  string
   readTime?:  number
   contentId?: string
   wpId?:      string
@@ -76,7 +77,8 @@ interface RawArticleRow {
 }
 
 interface RawArticleFullRow extends RawArticleRow {
-  content: string | null
+  content:  string | null
+  category: string | null
 }
 
 interface RawCourseStageRow {
@@ -358,7 +360,7 @@ export async function getLessonData(courseSlug: string, lessonSlug: string): Pro
   if (articleIds.length > 0) {
     const { data: articleData } = await supabase
       .from('articles')
-      .select('id, title, slug, excerpt, content, read_time, content_id, wp_id')
+      .select('id, title, slug, excerpt, content, category, read_time, content_id, wp_id')
       .in('id', articleIds)
 
     const fullArticles = (articleData as unknown as RawArticleFullRow[] | null) ?? []
@@ -372,6 +374,7 @@ export async function getLessonData(courseSlug: string, lessonSlug: string): Pro
         slug:      full.slug,
         excerpt:   full.excerpt ?? undefined,
         content:   full.content ?? undefined,
+        category:  full.category ?? undefined,
         readTime:  full.read_time ?? undefined,
         contentId: full.content_id ?? undefined,
         wpId:      full.wp_id ?? undefined,

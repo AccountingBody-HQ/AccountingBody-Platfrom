@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolveArticleCanonicalUrl } from './canonical'
+import { resolveArticleCanonicalUrl, resolveArticlePath } from './canonical'
 
 // resolveArticleCanonicalUrl is pure and synchronous — it never calls
 // headers() itself (only getSiteUrl()/resolveArticleCanonical do, which
@@ -40,5 +40,29 @@ describe('resolveArticleCanonicalUrl', () => {
       AB
     )
     expect(url).toBe(`${AB}/articles/blank-category-article`)
+  })
+})
+
+// resolveArticlePath is the extracted path-only half — re-exported here
+// from lib/article-path.ts, which every internal link builder (including
+// the one 'use client' call site, app/search/page.tsx) imports directly
+// so links and canonicals cannot diverge again. resolveArticleCanonicalUrl
+// itself calls this same function rather than repeating the logic — the
+// tests above already exercise it indirectly; these exercise it directly,
+// as its own public contract.
+describe('resolveArticlePath', () => {
+  it('returns /study/{category}/{slug} when category is present', () => {
+    expect(resolveArticlePath({ slug: 'j-curve-guide', category: 'economics' }))
+      .toBe('/study/economics/j-curve-guide')
+  })
+
+  it('returns /articles/{slug} when category is null', () => {
+    expect(resolveArticlePath({ slug: 'no-category-article', category: null }))
+      .toBe('/articles/no-category-article')
+  })
+
+  it('returns /articles/{slug} when category is omitted entirely', () => {
+    expect(resolveArticlePath({ slug: 'no-category-article' }))
+      .toBe('/articles/no-category-article')
   })
 })

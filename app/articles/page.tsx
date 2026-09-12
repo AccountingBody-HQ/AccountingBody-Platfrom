@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
-import { canonicalMetadata } from '@/lib/canonical'
+import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,7 +15,7 @@ interface ArticleSummary {
   title:         string
   slug:          string
   excerpt?:      string
-  exam_body?:    string[]
+  category?:     string
   published_at?: string
 }
 
@@ -27,7 +27,7 @@ async function getArticles(siteCode: string): Promise<ArticleSummary[]> {
     )
     const { data, error } = await supabase
       .from('articles')
-      .select('id, title, slug, excerpt, exam_body, published_at')
+      .select('id, title, slug, excerpt, category, published_at')
       .eq('status', 'published')
       .contains('show_on_sites', [siteCode])
       .order('published_at', { ascending: false })
@@ -103,10 +103,7 @@ export default async function ArticlesPage() {
           ) : (
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
               {articles.map(article => {
-                const examBodyFirst = Array.isArray(article.exam_body) ? article.exam_body[0] : article.exam_body
-                const href = examBodyFirst
-                  ? `/study/${examBodyFirst.toLowerCase()}/${article.slug}`
-                  : `/articles/${article.slug}`
+                const href = resolveArticlePath(article)
                 const posted = article.published_at
                   ? new Date(article.published_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
                   : null
