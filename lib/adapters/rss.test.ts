@@ -20,4 +20,19 @@ describe('rssAdapter — Rule 120 total outage', () => {
       withFakeTimers(() => rssAdapter.fetch(provider))
     ).rejects.toThrow()
   })
+
+  it('rejects when the feed endpoint returns a persistent 5xx status', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response('Internal Server Error', { status: 500 }))
+    )
+    const provider = makeProvider({
+      adapter_key: 'rss',
+      base_url: 'https://example.com/jobs-feed.xml',
+    })
+
+    await expect(
+      withFakeTimers(() => rssAdapter.fetch(provider))
+    ).rejects.toThrow(/HTTP 500/)
+  })
 })

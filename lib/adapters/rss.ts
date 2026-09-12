@@ -65,6 +65,14 @@ function extractXmlField(xml: string, tag: string): string {
  * Uses string splitting rather than a single global regex over the whole
  * document — a lazy `[\s\S]*?` regex re-scanned across hundreds of large
  * <item> blocks risks pathological backtracking on some engines/inputs.
+ *
+ * A malformed individual <item> (missing closing tag, broken nesting) is
+ * not detected or skipped — it's still pushed to the output with whatever
+ * fields extractXmlField could find in its fragment, empty string for the
+ * rest. Downstream validate()'s hard-reject checks (missing title/company/
+ * application_url, description too short) are the actual safety net for a
+ * genuinely broken item, the same way an empty HTTP 200 is treated as a
+ * legitimate zero-results signal in adzuna.ts rather than an error.
  */
 function parseRssItems(xml: string): RawJob[] {
   const items: RawJob[] = []
@@ -238,6 +246,22 @@ export const rssAdapter: ProviderAdapter = {
     // Auto-detect RSS vs Atom
     const isAtom = xml.includes('<feed') && xml.includes('<entry')
     const jobs = isAtom ? parseAtomEntries(xml) : parseRssItems(xml)
+
+    // Rule 120: a response body that isn't RSS/Atom/XML at all (a truncated
+    // document, an HTML error page served with 200, a "coming soon"
+    // placeholder) parses to zero items via the lenient split-based parser
+    // above, indistinguishable from a feed that genuinely has zero jobs
+    // today. Only treat zero items as a real failure when the body also
+    // carries none of the standard feed root markers — a feed that legitimately
+    // has no current listings still declares itself as a feed.
+    if (
+      jobs.length === 0 &&
+      !xml.includes('<rss') &&
+      !xml.includes('<?xml') &&
+      !xml.includes('<feed')
+    ) {
+      throw new Error('rss adapter: response body does not look like a feed')
+    }
 
     return {
       jobs,
