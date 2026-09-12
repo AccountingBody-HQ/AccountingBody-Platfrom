@@ -148,12 +148,6 @@ const JOB_COLUMNS = [
   'expires_at',
 ].join(', ')
 
-// Columns needed only for the server-side relevance ranking inside
-// getActiveDirectJobs (see compositeScore). Selected in addition to
-// JOB_COLUMNS for that one query, then stripped from every row before it's
-// returned — they must never reach the client.
-const RANKING_COLUMNS = 'source_score, quality_score, ctr'
-
 // Full row — every other read/write path in this file needs fields
 // JOB_COLUMNS deliberately excludes (status, employer contact details,
 // manage_token, payment/moderation metadata, ranking internals, etc).
@@ -221,59 +215,6 @@ export const SOURCE_SCORE: Record<JobSource, number> = {
   scrape: 0.6,
   adzuna: 0.5,
   careerjet: 0.4,
-}
-
-// Phase 1 ranking note: true PostgreSQL ts_rank-based relevance scoring
-// requires a database function (RPC) that was not part of the authorised
-// Phase 1 migration. Instead, a search term is applied as a full-text MATCH
-// filter via `.textSearch()` (candidates must match to be returned at all),
-// and the "relevance" term of the composite score is a constant 1.0 across
-// all matched rows. Ranking differentiation within the matched set comes
-// from recency, source_score, quality_score and ctr — which are exactly the
-// signals these columns were pre-computed for. Phase 2 should replace this
-// with a Postgres RPC using ts_rank_cd() for true relevance-weighted order.
-const RANK_WEIGHTS = {
-  relevance: 0.40,
-  recency: 0.25,
-  source: 0.20,
-  quality: 0.10,
-  ctr: 0.05,
-}
-
-const RECENCY_HALF_LIFE_DAYS = 21
-
-function recencyDecay(publishedAt: string | null, createdAt: string): number {
-  const basis = publishedAt ?? createdAt
-  const ageMs = Date.now() - new Date(basis).getTime()
-  const ageDays = Math.max(0, ageMs / (1000 * 60 * 60 * 24))
-  return Math.exp((-Math.LN2 * ageDays) / RECENCY_HALF_LIFE_DAYS)
-}
-
-function compositeScore(job: Job): number {
-  const relevance = 1.0
-  const recency = recencyDecay(job.published_at, job.created_at)
-  return (
-    relevance * RANK_WEIGHTS.relevance +
-    recency * RANK_WEIGHTS.recency +
-    job.source_score * RANK_WEIGHTS.source +
-    job.quality_score * RANK_WEIGHTS.quality +
-    job.ctr * RANK_WEIGHTS.ctr
-  )
-}
-
-// Row shape returned by getActiveDirectJobs's query — JOB_COLUMNS plus the
-// RANKING_COLUMNS needed only to compute compositeScore server-side.
-type JobWithRanking = Job & { source_score: number; quality_score: number; ctr: number }
-
-// Removes the ranking-only columns before a row leaves getActiveDirectJobs.
-// The resulting object only actually has the JOB_COLUMNS fields at runtime;
-// casting it back to Job here matches the same accepted trade-off as the
-// existing `data as Job[]` casts elsewhere in this file — the public read
-// path never reads a field outside JOB_COLUMNS (see step29 report).
-function stripRankingColumns(job: JobWithRanking): Job {
-  const { source_score, quality_score, ctr, ...publicJob } = job
-  void source_score; void quality_score; void ctr
-  return publicJob as Job
 }
 
 // ── Public reads ──────────────────────────────────────────────────────────────
@@ -389,101 +330,43 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
     return count ?? 0
   }
 
-  // DB-level pre-sort of the 500-row candidate pool. The JS layer below
-  // (compositeScore for relevance, or an explicit sortBy branch for
-  // recent/salary) determines the final order — this only shapes which 500
-  // rows are pulled from a potentially much larger active set.
-  let query = supabase
-    .from('jobs')
-    .select(`${JOB_COLUMNS}, ${RANKING_COLUMNS}`)
-    .eq('status', 'active')
-    .contains('platform', [platform])
-    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-    .order('source_score', { ascending: false })
-    .order('created_at', { ascending: false })
-    .limit(500) // candidate pool — re-ranked and paginated in JS below
+  // Sorting and windowing both happen inside this RPC (migrations/
+  // 0003_search_jobs_ranked.sql) — it returns exactly the requested page,
+  // at any offset, against the true filtered set (no candidate-pool cap).
+  // See that migration for the relevance-scoring formula (real ts_rank_cd
+  // against search_vector, normalised to [0,1) and combined with recency/
+  // source_score/quality_score/ctr using the same weights the old
+  // in-memory compositeScore used) and for 'recent'/'salary_high'/
+  // 'salary_low', each a real ORDER BY inside the function.
+  const { data, error } = await supabase.rpc('search_jobs_ranked', {
+    p_platform: platform,
+    p_search: search && search.trim() ? search.trim() : null,
+    p_location: location && location.trim() ? location.trim() : null,
+    p_location_country: locationCountry ?? null,
+    p_employment_types: employmentTypes && employmentTypes.length > 0 ? employmentTypes : null,
+    p_seniority_levels: seniorityLevels && seniorityLevels.length > 0 ? seniorityLevels : null,
+    p_remote_only: remoteOnly ?? null,
+    p_salary_min: salaryMin ?? null,
+    p_salary_max: salaryMax ?? null,
+    p_posted_within_days: postedWithin ?? null,
+    p_qualifications: qualifications && qualifications.length > 0 ? qualifications : null,
+    p_sources: sources && sources.length > 0 ? sources : null,
+    p_sort_by: sortBy ?? 'relevance',
+    p_limit: limit,
+    p_offset: offset,
+  })
 
-  if (sources && sources.length > 0) {
-    query = query.in('source', sources)
-  }
-  if (search && search.trim()) {
-    query = query.textSearch('search_vector', search.trim(), { type: 'websearch' })
-  }
-  if (location && location.trim()) {
-    query = query.ilike('location_text', `%${location.trim()}%`)
-  }
-  if (locationCountry && locationCountry !== 'all') {
-    query = query.eq('location_country', locationCountry)
-  }
-  if (employmentTypes && employmentTypes.length > 0) {
-    query = query.in('employment_type', employmentTypes)
-  }
-  if (seniorityLevels && seniorityLevels.length > 0) {
-    query = query.in('seniority_level', seniorityLevels)
-  }
-  if (remoteOnly) {
-    query = query.eq('location_remote', true)
-  }
-  if (salaryMin != null) {
-    query = query.gte('salary_min', salaryMin)
-  }
-  if (salaryMax != null) {
-    query = query.lte('salary_max', salaryMax)
-  }
-  if (postedWithin != null) {
-    query = query.gte('created_at', new Date(Date.now() - postedWithin * 24 * 60 * 60 * 1000).toISOString())
-  }
-  if (qualificationsOrFilter) {
-    query = query.or(qualificationsOrFilter)
-  }
-
-  const { data, error } = await query
   if (error || !data) {
     if (error) console.error('getActiveDirectJobs error:', error)
     return []
   }
 
-  // JOB_COLUMNS is built with Array.prototype.join, so its type is a plain
-  // `string`, not a literal — Supabase's compile-time select-string parser
-  // can't statically infer columns from it and falls back to an internal
-  // error-placeholder type. Route through `unknown` (not `any`) to bridge
-  // that gap; the actual runtime shape is exactly JOB_COLUMNS + RANKING_COLUMNS.
-  const jobs = data as unknown as JobWithRanking[]
-  const ranked = jobs
-    .map(job => ({ job, score: compositeScore(job) }))
-    .sort((a, b) => b.score - a.score)
-    .map(r => r.job)
-
-  if (sortBy === 'salary_high') {
-    jobs.sort((a, b) => {
-      const aMax = a.salary_max ?? a.salary_min ?? 0
-      const bMax = b.salary_max ?? b.salary_min ?? 0
-      return bMax - aMax
-    })
-    return jobs.slice(offset, offset + limit).map(stripRankingColumns)
-  }
-  if (sortBy === 'salary_low') {
-    // Only sort jobs that have salary data; unsalaried jobs go to the end
-    const withSalary = jobs.filter(j => j.salary_min != null || j.salary_max != null)
-    const withoutSalary = jobs.filter(j => j.salary_min == null && j.salary_max == null)
-    withSalary.sort((a, b) => {
-      const aMin = a.salary_min ?? a.salary_max ?? 0
-      const bMin = b.salary_min ?? b.salary_max ?? 0
-      return aMin - bMin
-    })
-    return [...withSalary, ...withoutSalary].slice(offset, offset + limit).map(stripRankingColumns)
-  }
-  if (sortBy === 'recent') {
-    jobs.sort((a, b) => {
-      const aDate = new Date(a.created_at ?? 0).getTime()
-      const bDate = new Date(b.created_at ?? 0).getTime()
-      return bDate - aDate
-    })
-    return jobs.slice(offset, offset + limit).map(stripRankingColumns)
-  }
-
-  // Default: relevance composite score
-  return ranked.slice(offset, offset + limit).map(stripRankingColumns)
+  // The RPC's RETURNS TABLE columns are exactly JOB_COLUMNS, by
+  // construction — but without generated Supabase types, `.rpc()`'s return
+  // type can't be statically verified against that, so this cast carries
+  // the same accepted trade-off as the `data as Job[]` casts elsewhere in
+  // this file.
+  return data as Job[]
 }
 
 // Used by the admin dashboard (app/api/roodber8/jobs/[id]/route.ts, itself
