@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import type { Job, EmploymentType, SeniorityLevel } from '@/lib/jobs'
 import {
   EMPLOYMENT_TYPE_LABELS,
@@ -565,8 +566,14 @@ function JobCard({ job, onSelect, saved, onSave }: {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-display text-[15px] font-medium text-navy-950 leading-snug group-hover:text-navy-700 transition-colors line-clamp-2">
-              {job.title}
+            <h3 className="font-display text-[15px] font-medium text-navy-950 leading-snug line-clamp-2">
+              <Link
+                href={`/jobs/${job.slug}`}
+                onClick={e => e.stopPropagation()}
+                className="group-hover:text-navy-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded"
+              >
+                {job.title}
+              </Link>
             </h3>
             <button
               type="button"
@@ -756,7 +763,7 @@ function DetailPanelContent({ job, onClose, saved, onSave }: {
   const [copied, setCopied] = useState(false)
 
   function handleShare() {
-    const url = `${window.location.origin}/jobs/listings?job=${job.id}`
+    const url = `${window.location.origin}/jobs/${job.slug}`
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
@@ -867,6 +874,12 @@ function DetailPanelContent({ job, onClose, saved, onSave }: {
         <p className="text-xs text-center mt-2" style={{ color: '#94a3b8' }}>
           Opens the employer&apos;s application page
         </p>
+        <Link
+          href={`/jobs/${job.slug}`}
+          className="block text-center text-xs font-semibold text-navy-700 hover:text-navy-950 transition-colors"
+        >
+          View full page →
+        </Link>
       </div>
     </>
   )

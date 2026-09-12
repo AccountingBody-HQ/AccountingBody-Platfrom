@@ -1,7 +1,17 @@
 import { MetadataRoute } from 'next'
 import { createClient } from '@supabase/supabase-js'
+import { getJobSitemapEntries } from '@/lib/jobs'
 
 const AB_BASE_URL = 'https://accountingbody.com'
+
+// Jobs churn continuously (ingestion every 15 minutes, expiry daily — see
+// vercel.json), and this route is about to go from querying a couple of
+// small content tables to also querying every eligible job row. Without an
+// explicit revalidate window this either goes fully stale for a whole
+// deployment cycle (if Next statically caches it, since nothing here calls
+// headers()/cookies()) or re-runs that full query on every single crawl
+// hit — regenerate at most hourly instead.
+export const revalidate = 3600
 
 async function getSupabaseClient() {
   return createClient(
@@ -17,6 +27,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: AB_BASE_URL,                         lastModified: new Date(), changeFrequency: 'daily',   priority: 1.0 },
     { url: `${AB_BASE_URL}/study`,              lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.9 },
     { url: `${AB_BASE_URL}/practice-questions`, lastModified: new Date(), changeFrequency: 'daily',   priority: 0.9 },
+    { url: `${AB_BASE_URL}/jobs`,               lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.8 },
+    { url: `${AB_BASE_URL}/jobs/listings`,      lastModified: new Date(), changeFrequency: 'daily',   priority: 0.9 },
     { url: `${AB_BASE_URL}/articles`,           lastModified: new Date(), changeFrequency: 'daily',   priority: 0.8 },
     { url: `${AB_BASE_URL}/glossary`,           lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
     { url: `${AB_BASE_URL}/calculators`,        lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
@@ -51,6 +63,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .eq('status', 'published')
     .eq('platform', 'ab')
 
+  const jobs = await getJobSitemapEntries('ab')
+
   return [
     ...staticPages,
     ...(articles ?? []).map(a => ({
@@ -64,6 +78,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified:    new Date(p.updated_at ?? Date.now()),
       changeFrequency: 'monthly' as const,
       priority:        0.65,
+    })),
+    ...jobs.map(j => ({
+      url:             `${AB_BASE_URL}/jobs/${j.slug}`,
+      lastModified:    j.lastModified,
+      changeFrequency: 'daily' as const,
+      priority:        0.7,
     })),
   ]
 }

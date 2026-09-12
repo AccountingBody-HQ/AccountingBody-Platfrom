@@ -1,12 +1,19 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getJobSitemapEntries } from '@/lib/jobs'
 
 const ET_BASE_URL = 'https://ethiotax.com'
 
-function url(path: string, priority: number, changefreq: string): string {
+// Same reasoning as app/sitemap.ts: jobs churn continuously, and this route
+// is about to query every eligible job row on top of its existing article
+// query — regenerate at most hourly rather than re-querying on every hit
+// (or going stale for a full deployment cycle).
+export const revalidate = 3600
+
+function url(path: string, priority: number, changefreq: string, lastmod?: Date): string {
   return `  <url>
     <loc>${ET_BASE_URL}${path}</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
+    <lastmod>${(lastmod ?? new Date()).toISOString()}</lastmod>
     <changefreq>${changefreq}</changefreq>
     <priority>${priority}</priority>
   </url>`
@@ -25,6 +32,9 @@ export async function GET() {
     url('/get-help/company-formation',             0.9,  'weekly'),
     url('/get-help/audit-assurance',               0.9,  'weekly'),
     url('/get-help/financial-planning-advisory',   0.9,  'weekly'),
+    // Jobs
+    url('/jobs',                                   0.8,  'weekly'),
+    url('/jobs/listings',                          0.9,  'daily'),
     // About & info
     url('/how-it-works',                           0.8,  'monthly'),
     url('/about-ethiotax',                         0.7,  'monthly'),
@@ -97,9 +107,12 @@ export async function GET() {
   </url>`
   )
 
+  const jobEntries = await getJobSitemapEntries('et')
+  const jobUrls = jobEntries.map(j => url(`/jobs/${j.slug}`, 0.7, 'daily', j.lastModified))
+
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${[...staticUrls, ...articleUrls].join('\n')}
+${[...staticUrls, ...articleUrls, ...jobUrls].join('\n')}
 </urlset>`
 
   return new NextResponse(xml, {

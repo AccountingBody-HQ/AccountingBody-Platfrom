@@ -862,6 +862,41 @@ export function getJobLifecycleState(job: Pick<Job, 'expires_at'>): JobLifecycle
   return daysSinceExpiry > ARCHIVE_THRESHOLD_DAYS ? 'archived' : 'stale'
 }
 
+export interface JobSitemapEntry {
+  slug: string
+  lastModified: Date
+}
+
+// Shared by app/sitemap.ts (platform 'ab') and app/et-sitemap/route.ts
+// (platform 'et') — reused rather than duplicated so the two sitemaps can't
+// drift on the lifecycle rule. Same status-filter broadening as
+// getJobBySlug: the daily expire-jobs cron flips a job's status to
+// 'expired' once expires_at passes, so a 'stale' job (still meant to be
+// indexable) will very often already be status='expired' — filtering to
+// status='active' alone would silently drop every stale job from the
+// sitemap. 'archived' jobs are excluded here (not just left to the page's
+// own noindex) so the sitemap itself never contradicts what the page says.
+export async function getJobSitemapEntries(platform: string): Promise<JobSitemapEntry[]> {
+  const supabase = getSupabase()
+  const { data, error } = await supabase
+    .from('jobs')
+    .select('slug, expires_at, published_at, created_at')
+    .in('status', ['active', 'expired'])
+    .contains('platform', [platform])
+
+  if (error || !data) {
+    if (error) console.error('getJobSitemapEntries error:', error)
+    return []
+  }
+
+  return data
+    .filter(job => getJobLifecycleState(job) !== 'archived')
+    .map(job => ({
+      slug: job.slug as string,
+      lastModified: new Date(job.published_at ?? job.created_at),
+    }))
+}
+
 export async function approveJob(id: string, adminNotes?: string): Promise<Job> {
   const supabase = getSupabase()
   const nowIso = new Date().toISOString()
