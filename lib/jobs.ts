@@ -502,22 +502,84 @@ export async function getJobById(id: string): Promise<Job | null> {
   return data as Job
 }
 
-// Not currently called anywhere, but its shape (status='active' filter, no
-// other internal-only intent) matches a public single-listing-by-slug
-// lookup, so it's kept on the public allowlist rather than JOB_COLUMNS_ADMIN
-// — wiring it up later shouldn't silently resurrect the full-row leak.
+// Used by the public job detail page (app/jobs/[slug]/page.tsx). Kept on
+// the public allowlist (JOB_COLUMNS), never JOB_COLUMNS_ADMIN — same
+// full-row-leak concern as every other public read in this file.
+//
+// Status filter is intentionally 'active' OR 'expired', not just 'active':
+// the daily expire-jobs cron (app/api/cron/expire-jobs/route.ts) flips a
+// job's status to 'expired' once its expires_at passes, but the detail page
+// must keep serving a job for a long time after that (see
+// getJobLifecycleState below) — so a merely time-expired job must still be
+// fetchable here. This deliberately does NOT extend to 'draft',
+// 'pending_payment', 'pending_approval' (never reviewed/never went live) or
+// 'rejected' (explicitly rejected) — those must stay unreachable by slug,
+// same as today. 'closed' (employer self-withdrawal via
+// closeJobByManageToken) is also deliberately excluded: closing a job is
+// independent of expires_at, so a closed-but-not-yet-expired job would
+// otherwise read as lifecycle state 'active' — a live-looking page for a
+// listing the employer took down. Callers wanting that case handled need a
+// different fetch (out of scope here).
 export async function getJobBySlug(slug: string): Promise<Job | null> {
   const supabase = getSupabase()
   const { data, error } = await supabase
     .from('jobs')
     .select(JOB_COLUMNS)
     .eq('slug', slug)
-    .eq('status', 'active')
+    .in('status', ['active', 'expired'])
     .single()
   if (error || !data) return null
   // See the comment on the JOB_COLUMNS cast in getActiveDirectJobs — same
   // non-literal-string limitation applies here.
   return data as unknown as Job
+}
+
+// Up to `limit` other active, currently-live jobs (same platform, matching
+// the job's country or seniority) to surface below a job detail page.
+// Deliberately stricter than getJobBySlug's own fetch: suggestions must only
+// ever be genuinely live roles, never expired ones, so this uses the same
+// "status='active' AND not yet expired" condition as getActiveDirectJobs
+// rather than getJobBySlug's broadened active-or-expired filter.
+export interface GetSimilarJobsParams {
+  excludeId: string
+  platform: string
+  locationCountry?: string | null
+  seniorityLevel?: SeniorityLevel | null
+  limit?: number
+}
+
+export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Job[]> {
+  const { excludeId, platform, locationCountry, seniorityLevel, limit = 6 } = params
+  const nowIso = new Date().toISOString()
+
+  // Same defensive stripping as buildQualificationsOrFilter — these values
+  // originate from the job's own row rather than raw request input, but
+  // there's no cost to keeping the `.or()` filter string construction
+  // consistently safe against a stray '(' or ',' either way.
+  const orClauses: string[] = []
+  if (locationCountry) orClauses.push(`location_country.eq.${locationCountry.replace(/[(),]/g, '')}`)
+  if (seniorityLevel) orClauses.push(`seniority_level.eq.${seniorityLevel.replace(/[(),]/g, '')}`)
+  if (orClauses.length === 0) return []
+
+  const supabase = getSupabase()
+  const { data, error } = await supabase
+    .from('jobs')
+    .select(JOB_COLUMNS)
+    .eq('status', 'active')
+    .contains('platform', [platform])
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+    .neq('id', excludeId)
+    .or(orClauses.join(','))
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error || !data) {
+    if (error) console.error('getSimilarJobs error:', error)
+    return []
+  }
+  // See the comment on the JOB_COLUMNS cast in getActiveDirectJobs — same
+  // non-literal-string limitation applies here.
+  return data as unknown as Job[]
 }
 
 // No status filter — an employer managing their own listing via its unique
@@ -708,6 +770,30 @@ export async function createJob(data: JobInsert): Promise<Job> {
   }
 
   return inserted as Job
+}
+
+// ── Lifecycle state (derived, read-only — no cron, no stored state) ────────
+//
+// Distinct from the `status` column's own 'active'/'expired'/'closed'/etc
+// values (see JobStatus above) — this is purely a function of expires_at at
+// the moment it's called, for the public job detail page to decide what to
+// render. Named 'stale' rather than 'closed' specifically so it's never
+// confused with the DB status value 'closed' (employer self-withdrawal via
+// closeJobByManageToken), which this function does not look at at all. A
+// future provider re-verification feature that wants to change how state is
+// decided should edit only this function.
+
+export type JobLifecycleState = 'active' | 'stale' | 'archived'
+
+const ARCHIVE_THRESHOLD_DAYS = 365
+
+export function getJobLifecycleState(job: Pick<Job, 'expires_at'>): JobLifecycleState {
+  if (!job.expires_at) return 'active'
+  const expiryMs = new Date(job.expires_at).getTime()
+  const nowMs = Date.now()
+  if (expiryMs > nowMs) return 'active'
+  const daysSinceExpiry = (nowMs - expiryMs) / (1000 * 60 * 60 * 24)
+  return daysSinceExpiry > ARCHIVE_THRESHOLD_DAYS ? 'archived' : 'stale'
 }
 
 export async function approveJob(id: string, adminNotes?: string): Promise<Job> {

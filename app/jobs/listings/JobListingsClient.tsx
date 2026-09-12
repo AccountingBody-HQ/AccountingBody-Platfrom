@@ -2,6 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Job, EmploymentType, SeniorityLevel } from '@/lib/jobs'
+import {
+  EMPLOYMENT_TYPE_LABELS,
+  SENIORITY_LABELS,
+  employmentTypeLabel,
+  seniorityLabel,
+  formatSalary,
+  formatRelativeDate,
+} from '@/lib/job-format'
 
 interface DirectJobsResponse {
   jobs?: Job[]
@@ -15,21 +23,13 @@ const PAGE_SIZE = 24
 
 const QUALIFICATIONS = ['ACCA', 'CIMA', 'ICAEW', 'CPA', 'AAT', 'CFA'] as const
 
-const SENIORITY_OPTIONS: { value: SeniorityLevel; label: string }[] = [
-  { value: 'junior',    label: 'Junior' },
-  { value: 'mid',       label: 'Mid-level' },
-  { value: 'senior',    label: 'Senior' },
-  { value: 'director',  label: 'Director' },
-  { value: 'executive', label: 'Executive' },
-]
+const SENIORITY_OPTIONS: { value: SeniorityLevel; label: string }[] = (
+  Object.entries(SENIORITY_LABELS) as [SeniorityLevel, string][]
+).map(([value, label]) => ({ value, label }))
 
-const EMPLOYMENT_OPTIONS: { value: EmploymentType; label: string }[] = [
-  { value: 'permanent',  label: 'Permanent' },
-  { value: 'contract',   label: 'Contract' },
-  { value: 'temporary',  label: 'Temporary' },
-  { value: 'part_time',  label: 'Part-time' },
-  { value: 'internship', label: 'Internship' },
-]
+const EMPLOYMENT_OPTIONS: { value: EmploymentType; label: string }[] = (
+  Object.entries(EMPLOYMENT_TYPE_LABELS) as [EmploymentType, string][]
+).map(([value, label]) => ({ value, label }))
 
 const COUNTRY_OPTIONS = [
   { value: 'all',            label: 'All countries' },
@@ -146,46 +146,9 @@ function countActiveFilters(f: Filters): number {
   )
 }
 
-function formatRelativeDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return ''
-  const ageMs = Date.now() - new Date(dateStr).getTime()
-  const ageMins = Math.floor(ageMs / 60000)
-  if (ageMins < 60) return ageMins <= 1 ? 'Just now' : `${ageMins}m ago`
-  const ageHrs = Math.floor(ageMins / 60)
-  if (ageHrs < 24) return `${ageHrs}h ago`
-  const ageDays = Math.floor(ageHrs / 24)
-  if (ageDays === 1) return 'Yesterday'
-  if (ageDays < 7) return `${ageDays} days ago`
-  const weeks = Math.floor(ageDays / 7)
-  if (ageDays < 30) return `${weeks}w ago`
-  const months = Math.floor(ageDays / 30)
-  return `${months}mo ago`
-}
-
 function isNewJob(dateStr: string | null | undefined): boolean {
   if (!dateStr) return false
   return Date.now() - new Date(dateStr).getTime() < 24 * 60 * 60 * 1000
-}
-
-function formatSalary(job: Job): string | null {
-  if (job.salary_text) return job.salary_text
-  if (job.salary_min == null && job.salary_max == null) return null
-  const currency = job.salary_currency || ''
-  const fmt = (n: number) => `${currency} ${Math.round(n).toLocaleString('en-US')}`.trim()
-  if (job.salary_min != null && job.salary_max != null && job.salary_min !== job.salary_max) {
-    return `${fmt(job.salary_min)} – ${fmt(job.salary_max)}`
-  }
-  return fmt(job.salary_min ?? job.salary_max ?? 0)
-}
-
-function employmentTypeLabel(value: EmploymentType | null): string | null {
-  if (!value) return null
-  return EMPLOYMENT_OPTIONS.find(o => o.value === value)?.label ?? value.replace('_', ' ')
-}
-
-function seniorityLabel(value: SeniorityLevel | null): string | null {
-  if (!value) return null
-  return SENIORITY_OPTIONS.find(o => o.value === value)?.label ?? value
 }
 
 function getCompanyInitials(name: string): string {
