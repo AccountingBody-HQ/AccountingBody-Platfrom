@@ -98,20 +98,6 @@ function useSavedJobs() {
   return { savedIds, toggleSaved }
 }
 
-// ── Recent views (localStorage) ───────────────────────────────────────────
-
-function useRecentViews() {
-  function recordView(id: string) {
-    try {
-      const stored = localStorage.getItem('ab_recent_views')
-      const arr: string[] = stored ? (JSON.parse(stored) as string[]) : []
-      const updated = [id, ...arr.filter(i => i !== id)].slice(0, 10)
-      localStorage.setItem('ab_recent_views', JSON.stringify(updated))
-    } catch {}
-  }
-  return { recordView }
-}
-
 // ── Utilities ─────────────────────────────────────────────────────────────
 
 function toggleInArray<T>(arr: T[], value: T): T[] {
@@ -184,14 +170,6 @@ function BookmarkIcon({ saved }: { saved: boolean }) {
   return (
     <svg className="w-4 h-4" viewBox="0 0 24 24" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
       <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-    </svg>
-  )
-}
-
-function ShareIcon() {
-  return (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
     </svg>
   )
 }
@@ -514,9 +492,8 @@ function JobAlertBanner({ search, filters, onDismiss }: {
 
 // ── Job card ──────────────────────────────────────────────────────────────
 
-function JobCard({ job, onSelect, saved, onSave }: {
+function JobCard({ job, saved, onSave }: {
   job: Job
-  onSelect: (job: Job) => void
   saved: boolean
   onSave: (id: string) => void
 }) {
@@ -531,18 +508,28 @@ function JobCard({ job, onSelect, saved, onSave }: {
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={() => onSelect(job)}
-      onKeyDown={e => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(job) }
-      }}
       className={[
-        'group bg-white rounded-2xl p-5 flex flex-col cursor-pointer transition-all duration-200',
+        'group relative bg-white rounded-2xl p-5 flex flex-col transition-all duration-200',
         'border border-slate-100 shadow-sm',
         isEmployer ? 'hover:shadow-lg hover:border-gold-200' : 'hover:shadow-md hover:border-slate-200',
       ].join(' ')}
     >
+      {/*
+        Stretched-link overlay: this is the card's ONLY navigational
+        element, and the only element with an href. It's absolutely
+        positioned over the whole card (z-0, below the bookmark button's
+        z-10) so the entire surface — not just the title text — is the
+        tap target. It carries its own accessible name via aria-label
+        since the visible title text below it is now plain, unlinked
+        text; a screen reader on this element hears "Job Title at
+        Company", not the whole card's badges/excerpt/footer.
+      */}
+      <Link
+        href={`/jobs/${job.slug}`}
+        aria-label={`${job.title} at ${job.company_name}`}
+        className="absolute inset-0 z-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+      />
+
       {/* Header: avatar + title + bookmark */}
       <div className="flex items-start gap-3 mb-3">
         <div className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-sm font-bold ${avatarColor}`}>
@@ -550,20 +537,14 @@ function JobCard({ job, onSelect, saved, onSave }: {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-display text-[15px] font-medium text-navy-950 leading-snug line-clamp-2">
-              <Link
-                href={`/jobs/${job.slug}`}
-                onClick={e => e.stopPropagation()}
-                className="group-hover:text-navy-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded"
-              >
-                {job.title}
-              </Link>
+            <h3 className="font-display text-[15px] font-medium text-navy-950 leading-snug line-clamp-2 group-hover:text-navy-700 transition-colors">
+              {job.title}
             </h3>
             <button
               type="button"
-              onClick={e => { e.stopPropagation(); onSave(job.id) }}
+              onClick={() => onSave(job.id)}
               aria-label={saved ? 'Unsave job' : 'Save job'}
-              className={`shrink-0 p-1.5 rounded-lg transition-colors mt-0.5 ${saved ? 'text-gold-500 bg-gold-50' : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50'}`}
+              className={`relative z-10 shrink-0 p-1.5 rounded-lg transition-colors mt-0.5 ${saved ? 'text-gold-500 bg-gold-50' : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50'}`}
             >
               <BookmarkIcon saved={saved} />
             </button>
@@ -720,155 +701,6 @@ function Pagination({ page, totalPages, onChange }: {
   )
 }
 
-function applyJob(job: Job) {
-  if (job.source === 'employer') {
-    fetch(`/api/jobs/click/${job.id}`, { method: 'POST' }).catch(() => {})
-  }
-  if (job.apply_method === 'external' && job.application_url) {
-    window.open(job.application_url, '_blank', 'noopener,noreferrer')
-  } else if (job.apply_method === 'email' && job.application_email) {
-    window.location.href = `mailto:${job.application_email}?subject=${encodeURIComponent('Application: ' + job.title)}`
-  } else {
-    window.open(`/jobs/apply/${job.id}`, '_blank', 'noopener,noreferrer')
-  }
-}
-
-// ── Detail panel ──────────────────────────────────────────────────────────
-
-function DetailPanelContent({ job, onClose, saved, onSave }: {
-  job: Job
-  onClose: () => void
-  saved: boolean
-  onSave: (id: string) => void
-}) {
-  const salary = formatSalary(job)
-  const empLabel = employmentTypeLabel(job.employment_type)
-  const seniority = seniorityLabel(job.seniority_level)
-  const [copied, setCopied] = useState(false)
-
-  function handleShare() {
-    const url = `${window.location.origin}/jobs/${job.slug}`
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }).catch(() => {})
-  }
-
-  const paragraphs = job.description
-    .split('\n')
-    .map(p => p.trim())
-    .filter(Boolean)
-
-  return (
-    <>
-      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Job details</span>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => onSave(job.id)}
-            aria-label={saved ? 'Unsave job' : 'Save job'}
-            className={`p-2 rounded-lg transition-colors ${saved ? 'text-gold-500 bg-gold-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
-          >
-            <BookmarkIcon saved={saved} />
-          </button>
-          <button
-            type="button"
-            onClick={handleShare}
-            aria-label="Share job"
-            className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors"
-          >
-            {copied ? <span className="text-xs font-semibold text-green-600 px-1">Copied!</span> : <ShareIcon />}
-          </button>
-          <button type="button" onClick={onClose} aria-label="Close"
-            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors" style={{ color: '#475569' }}>
-            <CloseIcon />
-          </button>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-6 py-6">
-        {/* Company avatar + title */}
-        <div className="flex items-start gap-4 mb-4">
-          <div className={`w-16 h-16 rounded-2xl shrink-0 flex items-center justify-center text-xl font-bold ${getCompanyColor(job.company_name)}`}>
-            {getCompanyInitials(job.company_name)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="font-display text-xl text-navy-950 leading-snug mb-1">{job.title}</h2>
-            <p className="text-base font-semibold text-gray-800">{job.company_name}</p>
-          </div>
-        </div>
-
-        {/* Location + salary */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4 text-sm" style={{ color: '#475569' }}>
-          <span className="flex items-center gap-1.5">
-            <LocationIcon className="w-4 h-4" />
-            {job.location_text}
-            {job.location_country && job.location_country !== job.location_text && (
-              <span className="text-slate-400">· {job.location_country}</span>
-            )}
-          </span>
-          {salary && <span className="font-semibold text-gold-700">{salary}</span>}
-        </div>
-
-        {/* Badges */}
-        <div className="flex flex-wrap items-center gap-1.5 mb-6">
-          {empLabel && (
-            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold" style={{ color: '#334155' }}>{empLabel}</span>
-          )}
-          {seniority && (
-            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold" style={{ color: '#334155' }}>{seniority}</span>
-          )}
-          {job.location_remote && (
-            <span className="inline-flex items-center rounded-full bg-teal-50 text-teal-700 border border-teal-200 px-2.5 py-1 text-xs font-bold uppercase tracking-wide">Remote</span>
-          )}
-          {job.source === 'employer' && (
-            <span className="inline-flex items-center rounded-full bg-gold-50 text-gold-700 border border-gold-200 px-2.5 py-1 text-xs font-bold uppercase tracking-wide">Direct Employer</span>
-          )}
-          {isNewJob(job.published_at ?? job.created_at) && (
-            <span className="inline-flex items-center rounded-full bg-green-50 text-green-700 border border-green-200 px-2.5 py-1 text-xs font-bold uppercase tracking-wide">New</span>
-          )}
-          {job.is_featured && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-gold-50 text-gold-700 border border-gold-200 px-2.5 py-1 text-xs font-bold uppercase tracking-wide">
-              <StarIcon className="w-3 h-3" />Featured
-            </span>
-          )}
-        </div>
-
-        {/* Posted date */}
-        <p className="text-xs text-slate-400 mb-6">{formatRelativeDate(job.published_at ?? job.created_at)}</p>
-
-        {/* Description */}
-        <div className="space-y-3">
-          {paragraphs.map((para, i) => (
-            <p key={i} className="text-sm leading-relaxed" style={{ color: '#334155' }}>{para}</p>
-          ))}
-        </div>
-      </div>
-
-      <div className="px-6 py-5 border-t border-slate-100 shrink-0 space-y-3">
-        <button
-          type="button"
-          onClick={() => applyJob(job)}
-          className="w-full h-14 rounded-xl text-sm font-bold transition-all active:scale-95"
-          style={{ background: '#D4A017', color: '#0C1A3D' }}
-        >
-          Apply Now →
-        </button>
-        <p className="text-xs text-center mt-2" style={{ color: '#94a3b8' }}>
-          Opens the employer&apos;s application page
-        </p>
-        <Link
-          href={`/jobs/${job.slug}`}
-          className="block text-center text-xs font-semibold text-navy-700 hover:text-navy-950 transition-colors"
-        >
-          View full page →
-        </Link>
-      </div>
-    </>
-  )
-}
-
 // ── Main component ────────────────────────────────────────────────────────
 
 export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean }) {
@@ -904,11 +736,8 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
   const [error, setError] = useState<string | null>(null)
 
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null)
-  const [displayedJob, setDisplayedJob] = useState<Job | null>(null)
 
   const { savedIds, toggleSaved } = useSavedJobs()
-  const { recordView } = useRecentViews()
 
   const abortRef = useRef<AbortController | null>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
@@ -926,17 +755,15 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
   // for a same-tab SPA transition (see BackToListingsLink.tsx).
   useEffect(() => { try { sessionStorage.setItem('ab_visited_listings', '1') } catch {} }, [])
 
-  useEffect(() => { if (selectedJob) { setDisplayedJob(selectedJob); recordView(selectedJob.id) } }, [selectedJob, recordView])
-  useEffect(() => { document.body.style.overflow = selectedJob || drawerOpen ? 'hidden' : ''; return () => { document.body.style.overflow = '' } }, [selectedJob, drawerOpen])
+  useEffect(() => { document.body.style.overflow = drawerOpen ? 'hidden' : ''; return () => { document.body.style.overflow = '' } }, [drawerOpen])
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key !== 'Escape') return
-      if (selectedJob) setSelectedJob(null)
-      else if (drawerOpen) setDrawerOpen(false)
+      if (drawerOpen) setDrawerOpen(false)
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedJob, drawerOpen])
+  }, [drawerOpen])
 
   // Show job alert banner after 10 seconds if user has an active search
   useEffect(() => {
@@ -1146,7 +973,6 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
                       <JobCard
                         key={job.id}
                         job={job}
-                        onSelect={setSelectedJob}
                         saved={savedIds.has(job.id)}
                         onSave={toggleSaved}
                       />
@@ -1180,27 +1006,6 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
           <div className="px-5 pb-6">
             <FiltersPanel filters={filters} onChange={handleFiltersChange} onClear={handleClearFilters} />
           </div>
-        </div>
-      </div>
-
-      {/* JOB DETAIL SLIDE-OVER */}
-      <div className={`fixed inset-0 z-modal ${selectedJob ? '' : 'pointer-events-none'}`}>
-        <div onClick={() => setSelectedJob(null)}
-          className={`absolute inset-0 bg-navy-950/40 transition-opacity duration-300 ${selectedJob ? 'opacity-100' : 'opacity-0'}`}
-        />
-        <div className={[
-          'absolute top-0 right-0 h-full w-full md:w-[560px] bg-white shadow-2xl flex flex-col',
-          'transition-transform duration-300 ease-out',
-          selectedJob ? 'translate-x-0' : 'translate-x-full',
-        ].join(' ')}>
-          {displayedJob && (
-            <DetailPanelContent
-              job={displayedJob}
-              onClose={() => setSelectedJob(null)}
-              saved={savedIds.has(displayedJob.id)}
-              onSave={toggleSaved}
-            />
-          )}
         </div>
       </div>
     </main>
