@@ -38,6 +38,7 @@ export interface Job {
   salary_min: number | null
   salary_max: number | null
   salary_currency: string
+  salary_is_predicted: boolean | null
   employment_type: EmploymentType | null
   seniority_level: SeniorityLevel | null
   category: string | null
@@ -130,6 +131,7 @@ const JOB_COLUMNS = [
   'salary_min',
   'salary_max',
   'salary_currency',
+  'salary_is_predicted',
   'employment_type',
   'seniority_level',
   'category',
