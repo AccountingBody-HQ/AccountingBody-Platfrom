@@ -3,6 +3,10 @@ import ManageListingClient from './ManageListingClient'
 
 export const metadata = {
   title: 'Manage Your Job Listing | AccountingBody',
+  // Private, token-gated self-service page. Its own content links out to
+  // /jobs/listings (already indexable on its own) — keep follow so that
+  // link equity still flows, even though this page itself shouldn't rank.
+  robots: { index: false, follow: true },
 }
 
 export default async function ManageListingPage({

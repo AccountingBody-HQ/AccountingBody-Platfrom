@@ -1,9 +1,19 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import { getJobById } from '@/lib/jobs'
 
 export const dynamic = 'force-dynamic'
+
+// Transactional apply-instructions stub for apply_method='platform' listings
+// — reachable live from /jobs/listings and /jobs/[slug]'s ApplyButton, but
+// its content (job title/description/company) duplicates the job's own
+// /jobs/[slug] page, which is the one that should rank. Its own link back to
+// /jobs/listings is already indexable on its own — keep follow.
+export const metadata: Metadata = {
+  robots: { index: false, follow: true },
+}
 
 // Phase 1 stub: the in-platform application pipeline (job_applications
 // table + submission UI + CV upload) is built in Phase 2. Until then, a

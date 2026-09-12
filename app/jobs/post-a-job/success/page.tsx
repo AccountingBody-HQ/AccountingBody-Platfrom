@@ -1,6 +1,15 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import { CheckCircle2 } from 'lucide-react'
+
+// Post-payment confirmation screen — no unique content of its own, reached
+// only right after checkout. Its own links out to /jobs/listings and
+// /jobs/post-a-job are already indexable on their own — keep follow so link
+// equity still flows.
+export const metadata: Metadata = {
+  robots: { index: false, follow: true },
+}
 
 // Lemon Squeezy's redirect does not include a session/order identifier by
 // default, and the webhook (not this page) is the source of truth for
