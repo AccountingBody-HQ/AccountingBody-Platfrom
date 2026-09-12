@@ -49,10 +49,23 @@ export async function GET(req: NextRequest) {
           signal: AbortSignal.timeout(10000),
         }
       )
+      // Capture the sub-route's own error message on failure so a
+      // total-failure Sentry alert (below) is actionable, not just a bare
+      // status code. A body-parse failure must not itself throw here.
+      let error: string | undefined
+      if (!res.ok) {
+        try {
+          const body = await res.json()
+          if (typeof body?.error === 'string') error = body.error
+        } catch {
+          // Non-JSON or empty body — status/ok still tell the story
+        }
+      }
       return {
         slug:   provider.slug,
         status: res.status,
         ok:     res.ok,
+        error,
       }
     })
   )
@@ -64,6 +77,18 @@ export async function GET(req: NextRequest) {
       ? r.value
       : { ok: false, error: String((r as PromiseRejectedResult).reason) },
   }))
+
+  // Every dispatched provider failing is a signal the dispatch mechanism
+  // itself is broken (misconfigured NEXT_PUBLIC_SITE_URL/CRON_SECRET, the
+  // deployment down) — not ordinary per-provider noise, which is already
+  // tracked by each provider's own consecutive_failures/health_status.
+  const failedCount = summary.filter(s => !s.result.ok).length
+  if (dueProviders.length > 0 && failedCount === dueProviders.length) {
+    Sentry.captureMessage(
+      `[orchestrator] All ${dueProviders.length} dispatched providers failed this run`,
+      { level: 'error', extra: { summary } }
+    )
+  }
 
   console.log(`[orchestrator] Dispatched ${dispatched.length} providers:`, dispatched)
 
