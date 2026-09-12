@@ -13,6 +13,7 @@ import {
 } from '@/lib/job-format'
 import { JobPostingStructuredData } from './structured-data'
 import { ApplyButton } from './ApplyButton'
+import { BackToListingsLink } from './BackToListingsLink'
 
 export const dynamic = 'force-dynamic'
 
@@ -228,9 +229,7 @@ export default async function JobDetailPage({
           )}
 
           <div className="mt-8">
-            <Link href="/jobs/listings" className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: brandColor }}>
-              ← Back to all jobs
-            </Link>
+            <BackToListingsLink brandColor={brandColor} />
           </div>
         </div>
       </section>

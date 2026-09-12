@@ -912,6 +912,19 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
 
   const abortRef = useRef<AbortController | null>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
+  // The page `total`/`jobs` actually belong to — not `page` itself, which is
+  // read fresh from the URL every render and updates as soon as
+  // router.replace() takes effect, before the fetch for it resolves. Using
+  // the URL-fresh `page` to compute "Showing X-Y of Z" against a `total`
+  // that still belongs to the previous fetch mixes two points in time in
+  // one line; this ref keeps the count math pinned to whichever fetch
+  // `total`/`jobs` last actually completed.
+  const confirmedPageRef = useRef(page)
+
+  // Lets /jobs/[slug]'s "Back to all jobs" link tell whether router.back()
+  // has a listings page to land on — document.referrer can't answer that
+  // for a same-tab SPA transition (see BackToListingsLink.tsx).
+  useEffect(() => { try { sessionStorage.setItem('ab_visited_listings', '1') } catch {} }, [])
 
   useEffect(() => { if (selectedJob) { setDisplayedJob(selectedJob); recordView(selectedJob.id) } }, [selectedJob, recordView])
   useEffect(() => { document.body.style.overflow = selectedJob || drawerOpen ? 'hidden' : ''; return () => { document.body.style.overflow = '' } }, [selectedJob, drawerOpen])
@@ -961,11 +974,13 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
       const data: DirectJobsResponse = await res.json()
       setJobs(Array.isArray(data.jobs) ? data.jobs : [])
       setTotal(typeof data.total === 'number' ? data.total : 0)
+      confirmedPageRef.current = page
     } catch (err) {
       if ((err as Error).name === 'AbortError') return
       setError('Could not load jobs right now. Please try again.')
       setJobs([])
       setTotal(0)
+      confirmedPageRef.current = page
     } finally {
       if (abortRef.current === controller) setLoading(false)
     }
@@ -1026,8 +1041,9 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
   function handleClearFilters() { navigateToState({ ...urlState, filters: EMPTY_FILTERS, sortBy: DEFAULT_SORT, page: DEFAULT_PAGE }) }
   function handlePageChange(next: number) { navigateToState({ ...urlState, page: next }); scrollToResults() }
 
-  const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
-  const rangeEnd = Math.min(page * PAGE_SIZE, total)
+  const displayedPage = confirmedPageRef.current
+  const rangeStart = total === 0 ? 0 : (displayedPage - 1) * PAGE_SIZE + 1
+  const rangeEnd = Math.min(displayedPage * PAGE_SIZE, total)
 
   return (
     <main className="min-h-screen bg-slate-50">
