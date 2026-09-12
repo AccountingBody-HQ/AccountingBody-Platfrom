@@ -67,7 +67,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
             Find your next accounting or finance role
           </h1>
           <p className="text-white/60 text-xl leading-relaxed mb-10 max-w-2xl">
-            Browse {jobCount} live accounting, tax, audit and finance vacancies. Updated daily, accounting and finance only.
+            Browse {jobCount ? `${jobCount} ` : ''}live accounting, tax, audit and finance vacancies. Updated daily, accounting and finance only.
           </p>
 
           <div className="bg-white rounded-2xl max-w-2xl overflow-hidden flex flex-col sm:flex-row">
@@ -110,7 +110,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
           {/* STAT PILLS */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-2xl mt-8">
             {[
-              `${jobCount} live jobs`,
+              jobCount ? `${jobCount} live jobs` : 'Live jobs',
               'Updated daily',
               'Accounting & finance only',
             ].map((pill) => (
@@ -138,7 +138,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
               <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: gold }}>Live Vacancies</p>
               <h2 className="font-display text-white text-2xl mb-3 leading-snug">Browse live jobs</h2>
               <p className="text-white/50 text-sm leading-relaxed mb-6">
-                Search {jobCount} live accounting and finance vacancies from employers across the UK and beyond. New roles posted daily.
+                Search {jobCount ? `${jobCount} ` : ''}live accounting and finance vacancies from employers across the UK and beyond. New roles posted daily.
               </p>
               <ul className="space-y-3 mb-8 flex-1">
                 {[

@@ -267,8 +267,12 @@ function ExtIcon() {
 // ── Main Footer ───────────────────────────────────────────────────────────────
 export function Footer({ isEthioTax = false, jobCount = 0 }: { isEthioTax?: boolean; jobCount?: number }) {
 
+  // formatJobCountLabel returns null for a zero or failed count — a bare
+  // "0" must never render as a stat, so the tile falls back to a
+  // non-numeric value rather than a fabricated or literal-zero one.
+  const jobCountLabel = formatJobCountLabel(jobCount)
   const jobsStat = {
-    value: formatJobCountLabel(jobCount),
+    value: jobCountLabel ?? 'Live',
     label: 'Jobs',
     sub: isEthioTax ? 'Accounting & finance roles for the diaspora' : 'Live accounting & finance roles',
   }
@@ -398,8 +402,12 @@ export function Footer({ isEthioTax = false, jobCount = 0 }: { isEthioTax?: bool
 
             <p className="text-sm text-white/55 leading-relaxed max-w-xs">
               {isEthioTax
-                ? `Expert accounting and tax services, ETICPA and ACCA exam practice, and ${jobsStat.value} accounting and finance jobs — built for the Ethiopian community worldwide.`
-                : `The dedicated platform for accounting and finance professionals. ${jobsStat.value} live jobs, managed placement service, and 20,000+ practice questions — all in one place.`}
+                ? (jobCountLabel
+                    ? `Expert accounting and tax services, ETICPA and ACCA exam practice, and ${jobCountLabel} accounting and finance jobs — built for the Ethiopian community worldwide.`
+                    : 'Expert accounting and tax services, ETICPA and ACCA exam practice, and live accounting and finance roles — built for the Ethiopian community worldwide.')
+                : (jobCountLabel
+                    ? `The dedicated platform for accounting and finance professionals. ${jobCountLabel} live jobs, managed placement service, and 20,000+ practice questions — all in one place.`
+                    : 'The dedicated platform for accounting and finance professionals. Live accounting and finance roles, managed placement service, and 20,000+ practice questions — all in one place.')}
             </p>
 
             {/* Email signup */}

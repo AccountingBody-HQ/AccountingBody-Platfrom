@@ -9,7 +9,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { NavigationWrapper } from '@/components/layout/NavigationWrapper'
 import { Footer } from '@/components/layout/Footer'
-import { getCachedActiveJobsCount } from '@/lib/jobs'
+import { getCachedBrowsableJobsCount } from '@/lib/jobs'
 import CookieConsent from '@/components/CookieConsent'
 import ScrollToTop from '@/components/ScrollToTop'
 import RouteProgressBar from '@/components/RouteProgressBar'
@@ -87,7 +87,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
-  const jobCount = await getCachedActiveJobsCount(isEthioTax ? 'et' : 'ab')
+  const jobCount = await getCachedBrowsableJobsCount(isEthioTax ? 'et' : 'ab')
 
   return (
       <html lang="en-GB" className="scroll-smooth">

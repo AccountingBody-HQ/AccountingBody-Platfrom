@@ -692,6 +692,12 @@ export async function getPendingJobsCount(): Promise<number> {
   return count ?? 0
 }
 
+// Employer-paid active listings only — a narrower business metric than
+// "how many jobs can a visitor browse" (most active rows today are
+// Adzuna-sourced, not employer-posted, so this can legitimately read much
+// lower than the site's real browsable job count). Not currently used by
+// any public page — see getBrowsableJobsCount below for the footer/hub-page
+// stat, which counts what /jobs/listings itself would actually return.
 export async function getActiveJobsCount(platform: string): Promise<number> {
   const supabase = getSupabase()
   const { count } = await supabase
@@ -703,6 +709,27 @@ export async function getActiveJobsCount(platform: string): Promise<number> {
   return count ?? 0
 }
 
+// The real "how many jobs can a visitor currently browse" count — same
+// status/platform/not-yet-expired filters as getActiveDirectJobs's own
+// countOnly path (lib/jobs.ts, the `if (countOnly)` branch above),
+// deliberately with NO source restriction, so this agrees with what
+// /jobs/listings itself would show for an unfiltered search.
+export async function getBrowsableJobsCount(platform: string): Promise<number> {
+  const supabase = getSupabase()
+  const nowIso = new Date().toISOString()
+  const { count, error } = await supabase
+    .from('jobs')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'active')
+    .contains('platform', [platform])
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+  if (error) {
+    console.error('getBrowsableJobsCount error:', error)
+    return 0
+  }
+  return count ?? 0
+}
+
 // Request-deduped wrapper: the root layout (Footer) and the jobs hub page
 // (JobsHubClient) both need this count on the same page load. Without
 // memoisation each would run its own separate COUNT query; React's cache()
@@ -711,7 +738,7 @@ export async function getActiveJobsCount(platform: string): Promise<number> {
 // data cache). Deliberately not used more broadly than these two call
 // sites — see the job-count fix report for why the rest of the site's
 // "live jobs" copy was reworded instead of wired to a live count.
-export const getCachedActiveJobsCount = cache(getActiveJobsCount)
+export const getCachedBrowsableJobsCount = cache(getBrowsableJobsCount)
 
 export async function getExpiringJobs(daysFromNow: number): Promise<Job[]> {
   const supabase = getSupabase()

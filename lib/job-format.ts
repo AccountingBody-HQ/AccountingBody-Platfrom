@@ -47,9 +47,25 @@ function formatCurrencyAmount(currency: string, amount: number): string {
   return symbol ? `${symbol}${rounded}` : `${code} ${rounded}`.trim()
 }
 
+// Matches ONLY the exact string the ingestion pipeline auto-generates when a
+// source supplies numeric salary_min/max/currency but no text of its own
+// (lib/ingestion/normalise.ts, "Generate display salary_text from numeric
+// values if not already set": `${salaryCurrency} ${salaryMin.toLocaleString()}`,
+// optionally `– ${salaryMax.toLocaleString()}`) — e.g. "USD 87,805". That
+// string is stored verbatim in salary_text at ingestion time, before this
+// formatter's currency-symbol logic exists to apply to it. Genuinely
+// free-form salary text (an employer's own wording, or a source's own
+// string, e.g. "Competitive, DOE") never matches this narrow machine-shape
+// and is still shown exactly as stored.
+const MACHINE_GENERATED_SALARY_TEXT = /^[a-z]{3}\s[\d,]+(\s[-–—]\s[\d,]+)?$/i
+
 export function formatSalary(job: Pick<Job, 'salary_text' | 'salary_min' | 'salary_max' | 'salary_currency'>): string | null {
-  if (job.salary_text) return job.salary_text
-  if (job.salary_min == null && job.salary_max == null) return null
+  const hasNumericAmount = job.salary_min != null || job.salary_max != null
+  const isMachineGenerated = !!job.salary_text && hasNumericAmount && MACHINE_GENERATED_SALARY_TEXT.test(job.salary_text)
+
+  if (job.salary_text && !isMachineGenerated) return job.salary_text
+  if (!hasNumericAmount) return null
+
   const currency = job.salary_currency || ''
   const fmt = (n: number) => formatCurrencyAmount(currency, n)
   if (job.salary_min != null && job.salary_max != null && job.salary_min !== job.salary_max) {
@@ -84,8 +100,14 @@ export function formatAbsoluteDate(dateStr: string | null | undefined): string {
 // Rounds a real job count DOWN to a round display figure — never up, so the
 // displayed number is never a claim the true count doesn't back up (e.g. an
 // actual count of 9,870 reads as "9,000+", not "10,000+").
-export function formatJobCountLabel(count: number): string {
-  if (count <= 0) return '0'
+//
+// Returns null (never the literal string "0") when there's no honest
+// positive number to show — a zero count (or a failed count, which the
+// underlying query functions already normalise to 0) must never be
+// displayed as a stat; callers should fall back to non-numeric copy
+// instead (e.g. "Live accounting and finance roles").
+export function formatJobCountLabel(count: number): string | null {
+  if (count <= 0) return null
   const rounded =
     count >= 1000 ? Math.floor(count / 1000) * 1000 :
     count >= 100  ? Math.floor(count / 100) * 100 :
