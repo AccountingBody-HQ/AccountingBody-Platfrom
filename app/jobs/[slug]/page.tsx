@@ -11,6 +11,8 @@ import {
   formatRelativeDate,
   formatAbsoluteDate,
   getJobCanonicalUrl,
+  getCompanyInitials,
+  getCompanyColor,
 } from '@/lib/job-format'
 import { JobPostingStructuredData } from './structured-data'
 import { ApplyButton } from './ApplyButton'
@@ -135,74 +137,133 @@ export default async function JobDetailPage({
       <JobPostingStructuredData job={job} brandName={brandName} />
 
       <section className="py-12 md:py-16">
-        <div className="container-site max-w-3xl mx-auto">
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-10">
-            {/* Header */}
-            <div className="mb-6 flex items-start justify-between gap-4">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: brandColor }}>
-                  {job.source === 'employer' ? 'Hiring Direct' : brandName}
-                </span>
-                <h1 className="font-display text-navy-950 text-2xl md:text-3xl mt-2 mb-1" style={{ letterSpacing: '-0.02em' }}>
-                  {job.title}
-                </h1>
-                <p className="text-slate-600 text-base font-semibold">{job.company_name}</p>
-                <p className="text-slate-500 text-sm mt-1">
-                  {job.location_country && job.location_country !== job.location_text
-                    ? `${job.location_text} · ${job.location_country}`
-                    : job.location_text}
-                </p>
+        <div className="container-site max-w-5xl mx-auto">
+          {/* Header — always fully populated: title/company_name/location_text are
+              NOT NULL, so unlike everything below it this block can never render
+              thin. It sits above both columns so a mobile visitor always sees what
+              role this is before the apply-rail (see below) is promoted above it. */}
+          <div className="mb-6 md:mb-8 flex items-start gap-4">
+            <div className={`w-14 h-14 rounded-2xl shrink-0 flex items-center justify-center text-lg font-bold ${getCompanyColor(job.company_name)}`}>
+              {getCompanyInitials(job.company_name)}
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: brandColor }}>
+                {job.source === 'employer' ? 'Hiring Direct' : brandName}
+              </span>
+              <h1 className="font-display text-navy-950 text-2xl md:text-3xl mt-1 mb-1" style={{ letterSpacing: '-0.02em' }}>
+                {job.title}
+              </h1>
+              <p className="text-slate-600 text-base font-semibold">{job.company_name}</p>
+              <p className="text-slate-500 text-sm mt-1">
+                {job.location_country && job.location_country !== job.location_text
+                  ? `${job.location_text} · ${job.location_country}`
+                  : job.location_text}
+              </p>
+            </div>
+          </div>
+
+          {/*
+            flex-col-reverse on mobile puts the apply rail ABOVE this main
+            content block in the single-column stack (promoting Apply above
+            "About this role", per the redesign brief) without changing
+            which element is visually the sidebar on desktop, where
+            lg:flex-row restores normal left-to-right DOM order.
+          */}
+          <div className="flex flex-col-reverse lg:flex-row lg:items-start gap-6 lg:gap-8">
+            {/* LEFT — main content. Ordered by the reliability tiers from the
+                job-count data: seniority (always present) first, salary
+                (63%) next, employment type (33%) after that, then the
+                free-text description, then qualifications (1.8% — kept
+                last and visually minor so its near-total absence never
+                reads as something missing). */}
+            <div className="flex-1 min-w-0 bg-white rounded-2xl border border-slate-200 p-6 md:p-10">
+              {/* Key facts strip */}
+              <div className="flex flex-wrap items-center gap-1.5 mb-6">
+                {seniority && (
+                  <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-navy-700">{seniority}</span>
+                )}
+                {salary ? (
+                  <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: '#fdf9ec', color: '#b87d10', border: '1px solid #f5e095' }}>
+                    {salary}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-400">Salary not listed</span>
+                )}
+                {empLabel && (
+                  <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-navy-700">{empLabel}</span>
+                )}
+                {job.location_remote && (
+                  <span className="inline-flex items-center rounded-full bg-teal-50 text-teal-700 border border-teal-200 px-2.5 py-1 text-xs font-bold uppercase tracking-wide">Remote</span>
+                )}
+                {job.is_featured && (
+                  <span className="inline-flex items-center rounded-full bg-gold-50 text-gold-700 border border-gold-200 px-2.5 py-1 text-xs font-bold uppercase tracking-wide">Featured</span>
+                )}
               </div>
-              <ShareButton url={canonicalUrl} jobTitle={job.title} brandColor={brandColor} />
-            </div>
 
-            {/* Badges */}
-            <div className="flex flex-wrap items-center gap-1.5 mb-6">
-              {empLabel && (
-                <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-navy-700">{empLabel}</span>
+              {/* Stale / archived notice */}
+              {lifecycle !== 'active' && (
+                <div className="rounded-xl p-5 mb-8" style={{ background: 'rgba(12,26,61,0.04)' }}>
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    This listing was posted on {formatAbsoluteDate(postedDate)} and is no longer being updated.
+                    Please check directly with the employer to confirm whether the role is still available, or
+                    explore similar current roles below.
+                  </p>
+                </div>
               )}
-              {seniority && (
-                <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-navy-700">{seniority}</span>
-              )}
-              {job.location_remote && (
-                <span className="inline-flex items-center rounded-full bg-teal-50 text-teal-700 border border-teal-200 px-2.5 py-1 text-xs font-bold uppercase tracking-wide">Remote</span>
-              )}
-              {job.is_featured && (
-                <span className="inline-flex items-center rounded-full bg-gold-50 text-gold-700 border border-gold-200 px-2.5 py-1 text-xs font-bold uppercase tracking-wide">Featured</span>
-              )}
-              {salary && (
-                <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: '#fdf9ec', color: '#b87d10', border: '1px solid #f5e095' }}>
-                  {salary}
-                </span>
-              )}
-            </div>
 
-            <p className="text-xs text-slate-400 mb-8">Posted {formatRelativeDate(postedDate)}</p>
-
-            {/* Stale / archived notice */}
-            {lifecycle !== 'active' && (
-              <div className="rounded-xl p-5 mb-8" style={{ background: 'rgba(12,26,61,0.04)' }}>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  This listing was posted on {formatAbsoluteDate(postedDate)} and is no longer being updated.
-                  Please check directly with the employer to confirm whether the role is still available, or
-                  explore similar current roles below.
-                </p>
+              {/* About this role — capped at a readable measure so a short
+                  (99% of jobs are under 500 characters) description doesn't
+                  stretch thin across the widened container. */}
+              <div className="mb-2">
+                <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">About this role</h2>
+                <div className="max-w-[65ch] space-y-3">
+                  {paragraphs.map((para, i) => (
+                    <p key={i} className="text-sm leading-relaxed text-slate-700">{para}</p>
+                  ))}
+                </div>
               </div>
-            )}
 
-            {/* Description */}
-            <div className="space-y-3 mb-8">
-              {paragraphs.map((para, i) => (
-                <p key={i} className="text-sm leading-relaxed text-slate-700">{para}</p>
-              ))}
+              {/* Qualifications — 1.8% of jobs have any. Kept conditional
+                  exactly as SkillList already renders (null when empty), and
+                  deliberately last with no extra visual weight, so its
+                  near-total absence is never load-bearing for whether the
+                  page looks complete. */}
+              <div className="mt-8">
+                <SkillList title="Qualifications" items={job.qualifications_required ?? []} />
+              </div>
             </div>
 
-            <SkillList title="Qualifications" items={job.qualifications_required ?? []} />
-            <SkillList title="Skills required" items={job.skills_required ?? []} />
-            <SkillList title="Skills, nice to have" items={job.skills_nice_to_have ?? []} />
+            {/* RIGHT — sticky apply rail. Every element here is either
+                unconditional (company name/monogram/location, the Apply and
+                Share buttons, the posted date) or has an explicit non-empty
+                fallback (salary). Nothing in this column can be absent, by
+                design — this is what keeps the page from reading as
+                unfinished when "About this role" is one short paragraph. */}
+            <div className="lg:w-[360px] lg:shrink-0 lg:sticky lg:top-24 bg-white rounded-2xl border border-slate-200 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-sm font-bold ${getCompanyColor(job.company_name)}`}>
+                  {getCompanyInitials(job.company_name)}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-navy-950 truncate">{job.company_name}</p>
+                  <p className="text-xs text-slate-500 truncate">{job.location_text}</p>
+                </div>
+              </div>
 
-            <div className="mt-4">
+              <div className="mb-4">
+                {salary ? (
+                  <p className="text-lg font-bold" style={{ color: '#b87d10' }}>{salary}</p>
+                ) : (
+                  <p className="text-sm text-slate-400">Salary not listed</p>
+                )}
+              </div>
+
               <ApplyButton job={job} brandColor={brandColor} />
+
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <ShareButton url={canonicalUrl} jobTitle={job.title} brandColor={brandColor} />
+                <p className="text-xs text-slate-400 whitespace-nowrap">Posted {formatRelativeDate(postedDate)}</p>
+              </div>
             </div>
           </div>
 

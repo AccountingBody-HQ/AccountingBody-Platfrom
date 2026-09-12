@@ -97,6 +97,37 @@ export function formatAbsoluteDate(dateStr: string | null | undefined): string {
   return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
+// Shared company-avatar helpers — moved out of JobListingsClient.tsx so the
+// listings page's card and the detail page's header/apply-rail render the
+// exact same initials and colour for the same company_name, rather than
+// two hand-written copies of this logic drifting apart.
+
+export function getCompanyInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(w => w[0].toUpperCase())
+    .join('')
+}
+
+const COMPANY_AVATAR_COLORS = [
+  'bg-blue-100 text-blue-700',
+  'bg-purple-100 text-purple-700',
+  'bg-green-100 text-green-700',
+  'bg-orange-100 text-orange-700',
+  'bg-pink-100 text-pink-700',
+  'bg-teal-100 text-teal-700',
+  'bg-indigo-100 text-indigo-700',
+  'bg-red-100 text-red-700',
+]
+
+export function getCompanyColor(name: string): string {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  return COMPANY_AVATAR_COLORS[Math.abs(hash) % COMPANY_AVATAR_COLORS.length]
+}
+
 // The single source for a job's canonical URL — app/jobs/[slug]/page.tsx
 // calls this from both generateMetadata (for <link rel="canonical"> /
 // openGraph.url) and the page body (to hand the exact same string to
