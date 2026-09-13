@@ -202,8 +202,21 @@ function NavButton({
   )
 }
 
+// inline-flex items-center justify-center: without it, the digit sat high
+// in the box on /practice-questions (rendered as a real <a> in hrefFor
+// mode) while looking fine on /jobs/listings (rendered as a <button> in
+// onChange mode) — same shared class, same markup, different element.
+// Native <button>s get browser-default content centring that a plain <a>
+// never does; once that <a> becomes a flex child of the row above it, it's
+// blockified and takes the full h-11 height, but the text inside still
+// stacks from the top of its own inherited line-height (1.7, from this
+// project's `body` rule) rather than being centred in that box — nothing
+// there overrides it. NAV_BUTTON_CLASS already had this; PAGE_BUTTON_BASE
+// just never did. Explicit flexbox centring here doesn't depend on which
+// element ends up rendering it, so it's correct in both modes rather than
+// a coincidence of one browser's default <button> rendering.
 const PAGE_BUTTON_BASE =
-  'min-w-[44px] h-11 px-2 rounded-lg text-sm transition-colors ' +
+  'inline-flex items-center justify-center min-w-[44px] h-11 px-2 rounded-lg text-sm transition-colors ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gold-500'
 
 // The current page is never marked by colour alone: it also gets a solid
