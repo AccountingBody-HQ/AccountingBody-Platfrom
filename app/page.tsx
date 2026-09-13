@@ -1793,17 +1793,21 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           ════════════════════════════════════════════════════════════════ */}
         <section className="bg-slate-50 border-y border-slate-200">
           <div className="container-site py-10">
-            {/* flex+justify-center+wrap, not a fixed-column grid — the
-                tile count varies (3 to 5) depending on which counts are
-                available, and a grid sized for the maximum leaves ragged,
-                left-aligned empty cells whenever fewer tiles render. */}
-            <div className="flex flex-wrap justify-center gap-x-10 gap-y-8">
-              {stats.map(stat => (
-                <div key={stat.label} className="flex flex-col items-center text-center max-w-[220px]">
+            {/* P7 centred this (flex+justify-center) — reverted in P8:
+                reviewed live, centring left dead space either side and made
+                "Since 2018" wrap onto two lines, breaking the row's rhythm.
+                Back to the original left-aligned grid with its per-item
+                divider; whitespace-nowrap on the value stops that wrap. */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+              {stats.map((stat, i) => (
+                <div
+                  key={stat.label}
+                  className={`flex flex-col items-start ${i < stats.length - 1 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}`}
+                >
                   <div className="w-9 h-9 rounded-lg bg-navy-50 flex items-center justify-center text-navy-600 mb-3">
                     {stat.icon}
                   </div>
-                  <span className="stat-number mb-1"><span translate="no">{stat.value}</span></span>
+                  <span className="stat-number mb-1 whitespace-nowrap"><span translate="no">{stat.value}</span></span>
                   <span className="text-sm font-semibold text-navy-950">{stat.label}</span>
                   <span className="text-xs text-slate-400 mt-0.5">{stat.sublabel}</span>
                 </div>

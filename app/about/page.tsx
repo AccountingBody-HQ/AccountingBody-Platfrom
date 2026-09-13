@@ -140,18 +140,19 @@ export default async function AboutPage() {
                 One platform. Two pillars. The same uncompromising commitment to quality across both.
               </p>
             </div>
-            {/* flex+justify-center+wrap, not a fixed 2x2 grid — looks
-                right at 3 or 4 tiles rather than leaving an empty cell
-                whenever a count is unavailable. */}
-            <div className="flex flex-wrap justify-center gap-4">
+            {/* P7 centred this (flex+justify-center) — reverted in P8:
+                reviewed live, centring left dead space either side and made
+                "Since 2018" wrap onto two lines. Back to the original 2x2
+                grid; whitespace-nowrap on the value stops that wrap. */}
+            <div className="grid grid-cols-2 gap-4">
               {[
                 ...(articleCountLabel ? [{ value: articleCountLabel, label: 'Articles', sub: 'Written by qualified accountants' }] : []),
                 ...(questionCountLabel ? [{ value: questionCountLabel, label: 'Practice Questions', sub: 'MCQ, written & scenario' }] : []),
                 { value: 'Since 2018', label: 'Trusted Platform',       sub: 'Helping students pass exams' },
                 { value: 'Free',     label: 'To Start',                 sub: 'No credit card required' },
               ].map(stat => (
-                <div key={stat.label} className="bg-slate-50 rounded-xl border border-slate-200 p-6 w-[calc(50%-0.5rem)] min-w-[160px]">
-                  <span className="stat-number block mb-1"><span translate="no">{stat.value}</span></span>
+                <div key={stat.label} className="bg-slate-50 rounded-xl border border-slate-200 p-6">
+                  <span className="stat-number block mb-1 whitespace-nowrap"><span translate="no">{stat.value}</span></span>
                   <span className="text-sm font-semibold text-navy-950 block">{stat.label}</span>
                   <span className="text-xs text-slate-400">{stat.sub}</span>
                 </div>

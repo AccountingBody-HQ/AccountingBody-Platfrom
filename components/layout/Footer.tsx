@@ -383,17 +383,18 @@ export function Footer({
     <footer className="bg-navy-950 text-white" aria-label="Site footer">
 
       {/* ── Stats bar ──────────────────────────────────────────────────────── */}
-      {/* flex+justify-center+wrap, not a fixed-column grid — the tile count
-          varies (3 to 5, depending on which counts are available) and a
-          grid sized for the maximum count leaves ragged, left-aligned empty
-          cells whenever fewer tiles render. Centring and letting the row
-          wrap keeps it looking deliberate at any count and every width. */}
+      {/* P7 centred this (flex+justify-center) reasoning that a fixed grid
+          looked sparse whenever a tile was omitted — reverted in P8: reviewed
+          live, centring left dead space either side and made "Since 2018"
+          wrap onto two lines, breaking the row's rhythm. Back to the
+          original left-aligned grid; whitespace-nowrap on the value below
+          stops that specific wrap regardless of alignment. */}
       <div className="border-b border-white/10">
         <div className="container-wide py-6">
-          <div className="flex flex-wrap justify-center gap-x-10 gap-y-6 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
             {activeStats.map(stat => (
-              <div key={stat.label} className="flex flex-col items-center">
-                <span className="font-display text-2xl text-white leading-none mb-1">
+              <div key={stat.label} className="flex flex-col items-start">
+                <span className="font-display text-2xl text-white leading-none mb-1 whitespace-nowrap">
                   {stat.value}
                 </span>
                 <span className="text-xs text-white/50 font-medium">
