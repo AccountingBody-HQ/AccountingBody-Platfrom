@@ -31,7 +31,26 @@ function canGoBackInApp(): boolean {
   }
 }
 
-export function BackToListingsLink({ brandColor }: { brandColor: string }) {
+function ArrowLeftIcon() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="shrink-0"
+    >
+      <path d="M19 12H5M12 19l-7-7 7-7" />
+    </svg>
+  )
+}
+
+export function BackToListingsLink() {
   const router = useRouter()
 
   function handleClick(e: React.MouseEvent) {
@@ -44,10 +63,10 @@ export function BackToListingsLink({ brandColor }: { brandColor: string }) {
     <a
       href="/jobs/listings"
       onClick={handleClick}
-      className="inline-flex items-center gap-2 text-sm font-semibold"
-      style={{ color: brandColor }}
+      className="inline-flex items-center gap-2 -mx-1 -my-1 px-1 py-1 rounded text-[14px] text-slate-500 no-underline transition-colors hover:text-[#0C1A3D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0C1A3D]"
     >
-      ← Back to all jobs
+      <ArrowLeftIcon />
+      All jobs
     </a>
   )
 }

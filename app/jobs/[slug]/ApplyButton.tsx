@@ -26,9 +26,30 @@ function trackApplyClick(jobId: string) {
   fetch(`/api/jobs/click/${jobId}`, { method: 'POST' }).catch(() => {})
 }
 
-export function ApplyButton({ job, brandColor }: { job: Job; brandColor: string }) {
-  const label = 'Apply Now →'
-  const buttonClass = 'inline-flex w-full items-center justify-center h-14 rounded-xl text-sm font-bold transition-all active:scale-95'
+// Label states the outcome, not the action — mirrors the branch below it
+// is used in exactly, so a label change here can never drift out of sync
+// with which branch actually renders.
+function getApplyLabel(job: Job): string {
+  if (job.apply_method === 'external' && job.application_url) {
+    const companyName = job.company_name?.trim()
+    return companyName ? `Apply on ${companyName}` : "Apply on the employer's site"
+  }
+  if (job.apply_method === 'email' && job.application_email) {
+    return 'Email your application'
+  }
+  return 'Apply on Accounting Body'
+}
+
+const sizeClasses = {
+  default: 'py-4 px-5',
+  // Slightly tighter vertical padding for the sticky mobile bar, which
+  // already has its own container padding — same colours/type/behaviour.
+  compact: 'py-3 px-5',
+} as const
+
+export function ApplyButton({ job, size = 'default' }: { job: Job; size?: keyof typeof sizeClasses }) {
+  const label = getApplyLabel(job)
+  const buttonClass = `flex w-full items-center justify-center rounded-xl ${sizeClasses[size]} text-base font-semibold transition-colors bg-[#C9982A] text-[#231A02] hover:bg-[#A87C16] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0C1A3D]`
 
   // Tracks every source (employer, adzuna, or any other ingestion
   // provider) — not employer-only. An employer-only restriction would mean
@@ -38,8 +59,8 @@ export function ApplyButton({ job, brandColor }: { job: Job; brandColor: string 
     return (
       <a href={job.application_url} target="_blank" rel="noopener noreferrer"
         onClick={() => trackApplyClick(job.id)}
-        className={buttonClass} style={{ background: '#D4A017', color: brandColor }}>
-        {label}
+        className={buttonClass}>
+        <span className="min-w-0 truncate">{label}</span>
       </a>
     )
   }
@@ -47,16 +68,16 @@ export function ApplyButton({ job, brandColor }: { job: Job; brandColor: string 
     return (
       <a href={`mailto:${job.application_email}?subject=${encodeURIComponent('Application: ' + job.title)}`}
         onClick={() => trackApplyClick(job.id)}
-        className={buttonClass} style={{ background: '#D4A017', color: brandColor }}>
-        {label}
+        className={buttonClass}>
+        <span className="min-w-0 truncate">{label}</span>
       </a>
     )
   }
   return (
     <Link href={`/jobs/apply/${job.id}`} target="_blank" rel="noopener noreferrer"
       onClick={() => trackApplyClick(job.id)}
-      className={buttonClass} style={{ background: '#D4A017', color: brandColor }}>
-      {label}
+      className={buttonClass}>
+      <span className="min-w-0 truncate">{label}</span>
     </Link>
   )
 }

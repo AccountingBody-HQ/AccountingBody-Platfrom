@@ -163,7 +163,7 @@ export default async function JobDetailPage({
         <div className="max-w-[760px] mx-auto px-4 sm:px-6">
           {/* 1. Top bar */}
           <div className="flex items-center justify-between pb-[26px]">
-            <BackToListingsLink brandColor={brandColor} />
+            <BackToListingsLink />
             <ShareButton url={canonicalUrl} jobTitle={job.title} brandColor={brandColor} />
           </div>
 
@@ -259,7 +259,7 @@ export default async function JobDetailPage({
               (operator's explicit decision, a change from the original
               mockup position). */}
           <div className="mt-10 max-w-[62ch]">
-            <ApplyButton job={job} brandColor={brandColor} />
+            <ApplyButton job={job} />
             {opensEmployerListing && (
               <p className="mt-3 text-center text-[13px] text-slate-500">Opens the employer&apos;s own listing in a new tab</p>
             )}
@@ -272,7 +272,7 @@ export default async function JobDetailPage({
             className="md:hidden fixed inset-x-0 bottom-0 z-50 bg-white border-t border-[#E6E3DC] p-3 shadow-[0_-6px_20px_-4px_rgba(12,26,61,0.12)]"
             style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
           >
-            <ApplyButton job={job} brandColor={brandColor} />
+            <ApplyButton job={job} size="compact" />
           </div>
 
           {/* 7. Qualifications — 1.8% of jobs have any; kept quiet and last
