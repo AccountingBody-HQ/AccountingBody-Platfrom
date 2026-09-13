@@ -177,7 +177,7 @@ export default async function FreeCoursesPage({ searchParams }: { searchParams: 
             Test what you have learned.
           </h2>
           <p className="text-white/65 text-lg mb-8 max-w-xl mx-auto leading-relaxed">
-            50,000+ practice questions and full mock exams — all exam standard, all free to start.
+            Exam-standard practice questions and full mock exams — all free to start.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link href="/practice-questions"

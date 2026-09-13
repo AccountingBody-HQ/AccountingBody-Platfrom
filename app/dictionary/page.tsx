@@ -46,7 +46,7 @@ export async function generateMetadata({
       : 'Accounting Dictionary & Glossary | Accounting Body',
     description: letter
       ? `Browse accounting terms starting with ${letter} — definitions, study notes, and exam guides.`
-      : 'Browse our complete accounting dictionary — 1,200+ terms explained clearly for students and professionals.',
+      : 'Browse our complete accounting dictionary — terms explained clearly for students and professionals.',
     ...(await canonicalMetadata('/dictionary')),
   }
 }
@@ -193,7 +193,7 @@ export default async function DictionaryPage({
               Accounting Dictionary
             </h1>
             <p className="text-white/60 text-lg leading-relaxed">
-              Browse 1,200+ accounting and finance terms — clearly defined for students and professionals.
+              Browse accounting and finance terms — clearly defined for students and professionals.
               Select a letter or topic to get started.
             </p>
           </div>

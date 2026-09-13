@@ -6,6 +6,8 @@ import React from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { canonicalMetadata } from '@/lib/canonical'
+import { getCachedPublishedArticleCount } from '@/lib/db'
+import { formatCountLabel } from '@/lib/job-format'
 
 export const revalidate = 3600
 
@@ -13,7 +15,7 @@ export const revalidate = 3600
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Accounting Glossary | Accounting Body',
-    description: 'Your complete reference for accounting and finance terminology. Browse 1,200+ terms by letter or topic — written and reviewed by qualified accountants.',
+    description: 'Your complete reference for accounting and finance terminology. Browse accounting and finance terms by letter or topic — written and reviewed by qualified accountants.',
     ...(await canonicalMetadata('/glossary')),
   }
 }
@@ -37,6 +39,13 @@ const CATEGORY_COLOURS = [
 
 // ── PAGE ──────────────────────────────────────────────────────────────────────
 export default async function GlossaryPage() {
+  // No host detection anywhere else on this page — it's unconditional,
+  // shared content — so this stays AB-scoped to match. Same cache()-
+  // wrapped function the root layout already calls once per request for
+  // the Footer, so this is a free, deduped read; this route is also ISR
+  // (revalidate above), so even a fresh read only happens once an hour.
+  const articleCount = await getCachedPublishedArticleCount('ab')
+  const articleCountLabel = formatCountLabel(articleCount)
   const categories = [
     { slug: 'financial-accounting',  title: 'Financial Accounting',  count: 714 },
     { slug: 'financial-management',  title: 'Financial Management',  count: 742 },
@@ -112,8 +121,7 @@ export default async function GlossaryPage() {
         <div className="container-site">
           <div className="flex flex-wrap items-center gap-x-10 gap-y-3">
             {[
-              { value:'1,200+', label:'Terms defined' },
-              { value:'3,000+', label:'Study articles' },
+              ...(articleCountLabel ? [{ value: articleCountLabel, label: 'Study articles' }] : []),
               { value:'4',      label:'Qualifications covered' },
               { value:'Free',   label:'Always' },
             ].map(stat => (
@@ -159,7 +167,7 @@ export default async function GlossaryPage() {
             <p className="text-xs text-slate-400">
               Can&apos;t find what you&apos;re looking for?{' '}
               <Link href="/articles" className="text-navy-700 font-medium hover:text-gold-500 transition-colors">
-                Search all 2,015+ articles
+                Search {articleCountLabel ? `all ${articleCountLabel}` : 'our'} articles
               </Link>.
             </p>
           </div>
@@ -226,18 +234,15 @@ export default async function GlossaryPage() {
                     The internet is full of accounting content written by people who
                     have never sat an exam. Every term on Accounting Body is written or
                     reviewed by a qualified accountant.
-                    We have been trusted by students since 2018.
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 md:items-end shrink-0">
-                  <div className="flex items-center gap-3 bg-white/8 border border-white/10 rounded-xl px-4 py-3">
-                    <span className="font-display text-2xl text-white">3,000+</span>
-                    <span className="text-white/50 text-xs">study articles</span>
-                  </div>
-                  <div className="flex items-center gap-3 bg-white/8 border border-white/10 rounded-xl px-4 py-3">
-                    <span className="font-display text-2xl text-white">Since 2018</span>
-                    <span className="text-white/50 text-xs">trusted by educators</span>
-                  </div>
+                  {articleCountLabel && (
+                    <div className="flex items-center gap-3 bg-white/8 border border-white/10 rounded-xl px-4 py-3">
+                      <span className="font-display text-2xl text-white">{articleCountLabel}</span>
+                      <span className="text-white/50 text-xs">study articles</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

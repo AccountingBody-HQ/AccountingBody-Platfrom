@@ -57,7 +57,7 @@ export default function SignInPage() {
 
       <div className="bg-white border-t border-slate-200 py-6 text-center">
         <p className="text-xs text-slate-400">
-          Trusted by 250,000+ accounting students worldwide ·{' '}
+          Trusted by accounting students worldwide ·{' '}
           <Link href="/privacy" className="hover:text-navy-700 transition-colors">Privacy Policy</Link>
           {' · '}
           <Link href="/terms" className="hover:text-navy-700 transition-colors">Terms</Link>

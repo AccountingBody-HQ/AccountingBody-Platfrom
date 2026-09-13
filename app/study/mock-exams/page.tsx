@@ -9,7 +9,7 @@ import { canonicalMetadata } from '@/lib/canonical'
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Mock Exams | ETICPA ATQ | EthioTax',
-    description: 'Free timed mock exams for the ETICPA ATQ qualification. 50 questions per attempt, drawn from a 3,000+ question bank. Unlimited attempts.',
+    description: 'Free timed mock exams for the ETICPA ATQ qualification. 50 questions per attempt, drawn from a large question bank. Unlimited attempts.',
     ...(await canonicalMetadata('/study/mock-exams')),
   }
 }
@@ -68,7 +68,7 @@ export default async function MockExamsPage() {
               </span>
             </h1>
             <p className="text-white/70 text-xl leading-relaxed max-w-2xl mb-10">
-              Free timed mock exams for every <span translate="no">ETICPA ATQ</span> module — 50 questions per attempt, drawn from a 3,000+ question bank. Balanced across all topics. Unlimited attempts.
+              Free timed mock exams for every <span translate="no">ETICPA ATQ</span> module — 50 questions per attempt, drawn from a large question bank. Balanced across all topics. Unlimited attempts.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/study/eticpa"
@@ -86,7 +86,6 @@ export default async function MockExamsPage() {
         <div className="container-site py-8">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
             {[
-              { value: '3,000+', label: 'Questions in pool' },
               { value: '50',     label: 'Questions per exam' },
               { value: '∞',      label: 'Unlimited attempts' },
               { value: '5',      label: 'Live exams now' },
@@ -135,11 +134,6 @@ export default async function MockExamsPage() {
                   </div>
                   <h3 className="font-display text-base text-navy-950 group-hover:text-[#1A4731] transition-colors leading-snug mb-2">{exam.name}</h3>
                   <div className="flex items-center gap-4 mb-5">
-                    <div>
-                      <p className="font-display text-xl font-bold" style={{ color: '#1A4731' }}>3,000+</p>
-                      <p className="text-xs text-slate-400">questions in pool</p>
-                    </div>
-                    <div className="w-px h-8 bg-slate-100" />
                     <div>
                       <p className="font-display text-xl font-bold" style={{ color: '#1A4731' }}>50</p>
                       <p className="text-xs text-slate-400">per attempt</p>

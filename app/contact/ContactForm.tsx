@@ -217,7 +217,7 @@ export default function ContactForm() {
             <h2 className="font-display text-2xl text-white mb-2 leading-tight">Free exam tips, straight to your inbox</h2>
             <p className="text-white/60 text-sm leading-relaxed mb-6 max-w-lg">
               Weekly study tips and new question releases — written by qualified accountants.
-              Join 12,000+ accounting students and professionals.
+              Join accounting students and professionals.
             </p>
             {subscribeState === 'success' ? (
               <div className="flex items-center gap-3 bg-white/10 rounded-lg px-5 py-4 border border-white/20 max-w-sm">

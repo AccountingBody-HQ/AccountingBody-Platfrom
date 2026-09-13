@@ -2,6 +2,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { canonicalMetadata } from '@/lib/canonical'
+import { getCachedPublishedArticleCount, getCachedQuestionSetCount } from '@/lib/db'
+import { formatCountLabel } from '@/lib/job-format'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -66,7 +68,19 @@ const qualifications = [
   { name: 'ICAEW', detail: 'ACA pathway',         accent: 'border-navy-600  text-navy-700',  bg: 'bg-navy-50' },
 ]
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  // /about is Accounting Body's own page (EthioTax has its own separate
+  // /about-ethiotax, linked from the footer) — no host detection needed,
+  // this content is unconditionally AB-branded already. Both counts are
+  // the same cache()-wrapped functions the root layout calls once per
+  // request for the Footer, so calling them again here is a free,
+  // deduped read, not a second database round trip.
+  const [articleCount, questionSetCount] = await Promise.all([
+    getCachedPublishedArticleCount('ab'),
+    getCachedQuestionSetCount(),
+  ])
+  const articleCountLabel = formatCountLabel(articleCount)
+  const questionSetCountLabel = formatCountLabel(questionSetCount)
   return (
     <>
       {/* HERO */}
@@ -126,9 +140,8 @@ export default function AboutPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { value: '3,000+',   label: 'Articles',                sub: 'Written by qualified accountants' },
-                { value: '20,000+',  label: 'Practice Questions',       sub: 'MCQ, written & scenario' },
-                { value: 'Since 2018', label: 'Trusted Platform',       sub: 'Helping students pass exams' },
+                ...(articleCountLabel ? [{ value: articleCountLabel, label: 'Articles', sub: 'Written by qualified accountants' }] : []),
+                ...(questionSetCountLabel ? [{ value: questionSetCountLabel, label: 'Practice Questions', sub: 'MCQ, written & scenario' }] : []),
                 { value: 'Free',     label: 'To Start',                 sub: 'No credit card required' },
               ].map(stat => (
                 <div key={stat.label} className="bg-slate-50 rounded-xl border border-slate-200 p-6">

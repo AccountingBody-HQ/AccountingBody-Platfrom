@@ -87,7 +87,6 @@ export default async function MockExamsPage() {
         <div className="container-site py-8">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
             {[
-              { value: '3,000+',    label: 'Questions in bank' },
               { value: '50',        label: 'Per exam' },
               { value: '75 mins',   label: 'Time allowed' },
               { value: '60%',       label: 'Pass mark' },
@@ -145,7 +144,7 @@ export default async function MockExamsPage() {
                       <h3 className="font-display text-base text-navy-950 group-hover:text-gold-600 transition-colors leading-snug mb-1">
                         {cat.title}
                       </h3>
-                      <p className="text-xs text-slate-400 mb-3">From 3,000+ question bank</p>
+                      <p className="text-xs text-slate-400 mb-3">Exam-standard question bank</p>
                       <div className="flex items-center gap-4 mb-5">
                         <div>
                           <p className="font-display text-xl font-bold text-navy-950">50</p>

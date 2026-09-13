@@ -10,6 +10,9 @@ import { createClient } from '@supabase/supabase-js'
 import EmailSignupForm from '@/components/EmailSignupForm'
 import HomepageJobSearch from '@/components/HomepageJobSearch'
 import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
+import { getCachedBrowsableJobsCount } from '@/lib/jobs'
+import { getCachedPublishedArticleCount, getCachedQuestionSetCount } from '@/lib/db'
+import { formatJobCountLabel, formatCountLabel } from '@/lib/job-format'
 
 // No static metadata existed here before — title/description/openGraph are
 // still inherited from the root layout. This restores only the canonical/
@@ -107,7 +110,7 @@ const howItWorks = [
   {
     step:  '02',
     title: 'Test and build your skills',
-    body:  '20,000+ practice questions across ACCA, CIMA, AAT and ICAEW. Exam-standard MCQs with instant marking and detailed explanations.',
+    body:  'Exam-standard practice questions across ACCA, CIMA, AAT and ICAEW, with instant marking and detailed explanations.',
   },
   {
     step:  '03',
@@ -143,7 +146,7 @@ const pillars = [
         <path strokeLinecap="round" strokeWidth="1.75" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
       </svg>
     ),
-    highlights:  ['20,000+ questions', 'Full mock exams', 'Instant marking', 'Detailed solutions'],
+    highlights:  ['Exam-standard questions', 'Full mock exams', 'Instant marking', 'Detailed solutions'],
     iconBg:      'bg-gold-500',
     iconColor:   'text-navy-950',
     accentText:  'text-gold-600',
@@ -180,48 +183,12 @@ const pillars = [
   },
 ]
 
-const stats = [
-  {
-    value:    '3,000+',
-    label:    'Articles',
-    sublabel: 'Guides, briefs and technical resources',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-      </svg>
-    ),
-  },
-  {
-    value:    '20,000+',
-    label:    'Practice Questions',
-    sublabel: 'ACCA, CIMA, AAT and ICAEW',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  },
-  {
-    value:    'Since 2018',
-    label:    'Trusted Platform',
-    sublabel: 'Built for accounting and finance professionals',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
-      </svg>
-    ),
-  },
-  {
-    value:    'Free',
-    label:    'To Start',
-    sublabel: 'No credit card required',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  },
-]
+// The stats-bar tile data used to be a module-level constant with three
+// fabricated values in it ("3,000+ Articles", "20,000+ Practice
+// Questions", "Since 2018") — moved inside HomePage() below, where real
+// counts are available, so every tile is either real or gone. See the P5
+// report for why "Since 2018" isn't replaced with anything: there is no
+// true founding date to put there instead.
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -326,6 +293,68 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const confirmedStatus = sp.confirmed
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  const platform = isEthioTax ? 'et' : 'ab'
+  // All three are the same cache()-wrapped functions the root layout
+  // already calls once per request for the Footer (see app/layout.tsx) —
+  // React's cache() dedupes a repeated call with the same arguments within
+  // one request, so calling them again here costs zero additional database
+  // round trips, not three more.
+  const [jobCount, articleCount, questionSetCount] = await Promise.all([
+    getCachedBrowsableJobsCount(platform),
+    getCachedPublishedArticleCount(platform),
+    getCachedQuestionSetCount(),
+  ])
+  const jobCountLabel = formatJobCountLabel(jobCount)
+  const articleCountLabel = formatCountLabel(articleCount)
+  const questionSetCountLabel = formatCountLabel(questionSetCount)
+  // Real stats only. Jobs and "Free To Start" always show (Jobs falls back
+  // to non-numeric "Live" copy, same as the footer); Articles and Practice
+  // Questions are simply omitted if their count is zero or failed, rather
+  // than showing a placeholder word for what would otherwise be a fabricated
+  // claim — this is the same tile-count-varies-and-that's-fine pattern the
+  // footer already uses.
+  const stats = [
+    {
+      value:    jobCountLabel ?? 'Live',
+      label:    'Jobs',
+      sublabel: isEthioTax ? 'For the Ethiopian diaspora' : 'Live accounting & finance roles',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeWidth="2" d="M20 7h-3V5a2 2 0 00-2-2h-6a2 2 0 00-2 2v2H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2zM9 5h6v2H9V5z" />
+        </svg>
+      ),
+    },
+    ...(articleCountLabel ? [{
+      value:    articleCountLabel,
+      label:    'Articles',
+      sublabel: 'Guides, briefs and technical resources',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      ),
+    }] : []),
+    ...(questionSetCountLabel ? [{
+      value:    questionSetCountLabel,
+      label:    'Practice Questions',
+      sublabel: 'ACCA, CIMA, AAT and ICAEW',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+    }] : []),
+    {
+      value:    'Free',
+      label:    'To Start',
+      sublabel: 'No credit card required',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+    },
+  ]
   const etTrustPoints = [
     {
       number: '01',
@@ -449,7 +478,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       </h1>
 
       <p className="text-white/60 text-lg leading-relaxed mb-10 max-w-xl">
-        1,000+ accounting and finance jobs for the Ethiopian diaspora. Expert professional services across tax, accounting and consulting. ETICPA, ACCA, CIMA and AAT exam practice — all in one place.
+        {jobCountLabel ? `${jobCountLabel} accounting` : 'Accounting'} and finance jobs for the Ethiopian diaspora. Expert professional services across tax, accounting and consulting. ETICPA, ACCA, CIMA and AAT exam practice — all in one place.
       </p>
 
       <div className="flex flex-col gap-3 mb-8 w-full max-w-2xl">
@@ -491,7 +520,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-2xl">
         {[
-          '1,000+ diaspora accounting jobs',
+          jobCountLabel ? `${jobCountLabel} diaspora accounting jobs` : 'Live diaspora accounting jobs',
           'ETICPA · ACCA · CIMA · AAT',
           'UK · USA · Canada · UAE · Ethiopia',
         ].map(label => (
@@ -573,7 +602,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         >
           <div className="px-6 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>Exam Practice</p>
-            <h3 className="font-display text-white text-lg mt-1 leading-snug">20,000+ exam-standard questions — free to start</h3>
+            <h3 className="font-display text-white text-lg mt-1 leading-snug">Exam-standard questions — free to start</h3>
           </div>
 
           <div className="flex flex-col gap-2 p-5 flex-1">
@@ -774,7 +803,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       {/* LEFT — content */}
       <div>
         <span className="eyebrow mb-3 block">Exam Practice Questions</span>
-        <h2 className="section-title mb-4">20,000+ exam-standard questions — free to start</h2>
+        <h2 className="section-title mb-4">Exam-standard questions — free to start</h2>
         <p className="text-slate-500 text-lg leading-relaxed mb-8">
           ETICPA, ACCA, CIMA and AAT question banks. Exam-standard MCQs with instant marking and detailed explanations. Track your progress and walk into the exam room ready.
         </p>
@@ -840,7 +869,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
           <div className="px-7 pt-7 pb-6" style={{ background: '#1A4731' }}>
             <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#C9982A' }}>Question bank</p>
-            <p className="font-display text-white text-2xl">20,000+ questions</p>
+            <p className="font-display text-white text-2xl">Exam-standard questions</p>
             <p className="text-white/50 text-sm mt-1">ETICPA · ACCA · CIMA · AAT — all in one place</p>
           </div>
 
@@ -1171,7 +1200,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <HomepageJobSearch />
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-6 w-full max-w-2xl">
-              {['Live job listings', '20,000+ practice questions', 'Free to start'].map(label => (
+              {['Live job listings', 'Exam-standard practice questions', 'Free to start'].map(label => (
                 <span key={label} className="flex items-center gap-1.5 text-xs font-medium text-white/50">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
@@ -1212,7 +1241,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               >
                 <div className="px-6 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                   <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>Practice Questions</p>
-                  <h3 className="font-display text-white text-lg mt-1 leading-snug">20,000+ exam-standard questions</h3>
+                  <h3 className="font-display text-white text-lg mt-1 leading-snug">Exam-standard questions</h3>
                 </div>
 
                 <div className="flex flex-col gap-2 p-5 flex-1">
@@ -1594,7 +1623,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             {/* LEFT COLUMN */}
             <div>
               <span className="eyebrow mb-3 block">Practice Questions</span>
-              <h2 className="section-title mb-4">20,000+ exam-standard questions</h2>
+              <h2 className="section-title mb-4">Exam-standard questions</h2>
               <p className="text-slate-500 text-lg leading-relaxed mb-8">
                 MCQs, written tasks and full mock exams for ACCA, CIMA, AAT and ICAEW. Instant marking with detailed explanations. Track your progress and walk into the exam room ready.
               </p>
@@ -1660,7 +1689,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
                 <div className="bg-navy-950 px-7 pt-7 pb-6">
                   <p className="text-xs font-bold uppercase tracking-widest text-gold-400 mb-2">Question bank</p>
-                  <p className="font-display text-white text-2xl">20,000+ questions</p>
+                  <p className="font-display text-white text-2xl">Exam-standard questions</p>
                   <p className="text-white/50 text-sm mt-1">ACCA · CIMA · AAT · ICAEW — all in one place</p>
                 </div>
 
@@ -1778,7 +1807,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 <span className="eyebrow mb-3 block">The Full Platform</span>
                 <h2 className="section-title mb-4">Jobs, practice questions, and professional services — all in one place</h2>
                 <p className="text-slate-500 text-lg leading-relaxed">
-                  Accounting Body is built exclusively for accounting and finance professionals. Browse live jobs, practise with 20,000+ exam-standard questions, get matched to roles via our managed placement service, or engage our professional services team — everything you need, on one platform.
+                  Accounting Body is built exclusively for accounting and finance professionals. Browse live jobs, practise with exam-standard questions, get matched to roles via our managed placement service, or engage our professional services team — everything you need, on one platform.
                 </p>
               </div>
 
@@ -1935,7 +1964,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <span className="eyebrow mb-3 block">Why Accounting Body</span>
       <h2 className="section-title mb-6">Jobs, placement and practice — built for accounting professionals</h2>
       <p className="text-slate-500 text-lg leading-relaxed mb-8">
-        Accounting Body is the only platform combining a live job board, a fully managed placement service, and 20,000+ exam-standard practice questions — all built specifically for accounting and finance professionals.
+        Accounting Body is the only platform combining a live job board, a fully managed placement service, and exam-standard practice questions — all built specifically for accounting and finance professionals.
       </p>
       <div className="space-y-5">
         {[
@@ -1958,20 +1987,11 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             ),
           },
           {
-            title: '20,000+ exam-standard practice questions',
+            title: 'Exam-standard practice questions',
             body: 'ACCA, CIMA, AAT and ICAEW question banks. Instant marking with full worked explanations. Free to start — no credit card required.',
             icon: (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-              </svg>
-            ),
-          },
-          {
-            title: 'Trusted since 2018',
-            body: 'Built for accounting and finance professionals from day one. Every job, every question, every placement — specific to the profession.',
-            icon: (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
               </svg>
             ),
           },

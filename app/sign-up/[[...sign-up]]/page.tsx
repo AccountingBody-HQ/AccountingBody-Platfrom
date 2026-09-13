@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 export const metadata = {
   title: 'Create Free Account — Accounting Body',
-  description: 'Join 250,000+ ACCA, CIMA, ICAEW and AAT students. Free access to study notes and practice questions.',
+  description: 'Join ACCA, CIMA, ICAEW and AAT students. Free access to study notes and practice questions.',
 }
 
 export default function SignUpPage() {
@@ -38,7 +38,7 @@ export default function SignUpPage() {
           </div>
 
           <div className="flex flex-wrap justify-center gap-2 mb-8">
-            {['3,000+ articles', '50,000+ questions', 'Free forever', 'No spam'].map(item => (
+            {['Study articles', 'Practice questions', 'Free forever', 'No spam'].map(item => (
               <span
                 key={item}
                 className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 text-xs font-medium text-slate-600"
