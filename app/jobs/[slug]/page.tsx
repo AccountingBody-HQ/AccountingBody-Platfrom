@@ -253,12 +253,18 @@ export default async function JobDetailPage({
           <SkillList title="Qualifications" items={job.qualifications_required ?? []} />
 
           {/* 9. Similar roles — a single bordered list with hairline
-              dividers (the gap-px-over-a-coloured-background technique),
-              not a grid of cards. */}
+              dividers, not a grid of cards. Real per-row `border-top`
+              (Tailwind's divide-y), not the earlier gap-over-a-coloured-
+              -background simulation — see the divider-diagnosis note in
+              tmp-audit/p4b-consistency.md for why that technique wasn't
+              reliable at every width, and why this one is: the exact same
+              #E6E3DC hairline colour already renders correctly everywhere
+              ELSE on this page (the decision card's border, the facts-row
+              divider) via a real `border`, never via a simulated gap. */}
           {similarJobs.length > 0 && (
             <div className="mt-[52px] pt-[52px] border-t border-[#E6E3DC]">
               <h2 className="font-display font-medium text-[21px] text-navy-950 mb-4">Similar current roles</h2>
-              <div className="grid grid-cols-1 gap-px bg-[#E6E3DC] rounded-[14px] border border-[#E6E3DC] overflow-hidden">
+              <div className="rounded-[14px] border border-[#E6E3DC] overflow-hidden divide-y divide-[#E6E3DC]">
                 {similarJobs.map(similar => {
                   const similarSalary = formatSalary(similar)
                   const similarLocation = similar.location_country && similar.location_country !== similar.location_text
