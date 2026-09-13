@@ -117,20 +117,24 @@ const legalLinks = [
 ]
 
 // Jobs stat is computed at render time from the real active count (see
-// Footer()) rather than hardcoded here — everything else in these arrays is
-// static copy.
-const statsRest = [
-  { value: '3,000+',   label: 'Articles' },
-  { value: '20,000+',  label: 'Practice Questions' },
-  { value: 'Since 2018', label: 'Trusted Platform' },
-  { value: 'Free',      label: 'To Start' },
-]
-
-const etStatsRest = [
-  { value: '3,000+',   label: 'Articles' },
-  { value: '20,000+',  label: 'Practice Questions' },
-  { value: 'Since 2018', label: 'Trusted Platform' },
-  { value: 'Free',      label: 'To Start' },
+// Footer()). The other three stat tiles that used to sit alongside it here
+// — "3,000+ Articles", "20,000+ Practice Questions", "Since 2018" — were
+// fabricated: the real article count is 2,017, not 3,000+; there's no
+// "Since 2018" to tell, since ingestion only began 2026-09-06; and neither
+// number was ever wired to anything, so it was equally wrong (or
+// coincidentally right) on both hosts regardless of their actual, and
+// different, real counts. The footer renders on every page on a nano
+// instance with no caching, and no cheap, already-available count exists
+// for either Articles or Practice Questions the way jobCount already does
+// for Jobs (checked: no equivalent of getCachedBrowsableJobsCount exists
+// for either) — adding a fresh database query per page load to compute one
+// wasn't an option here, and a hardcoded snapshot number would just be a
+// new false claim the moment it drifted. Deleted rather than replaced with
+// an invented number — a footer with fewer stat tiles is better than one
+// that lies. "Free To Start" stays: it's a true claim about the product,
+// not a count.
+const remainingStats = [
+  { value: 'Free', label: 'To Start' },
 ]
 
 // ── Email Signup Widget ───────────────────────────────────────────────────────
@@ -276,7 +280,7 @@ export function Footer({ isEthioTax = false, jobCount = 0 }: { isEthioTax?: bool
     label: 'Jobs',
     sub: isEthioTax ? 'Accounting & finance roles for the diaspora' : 'Live accounting & finance roles',
   }
-  const activeStats = [jobsStat, ...(isEthioTax ? etStatsRest : statsRest)]
+  const activeStats = [jobsStat, ...remainingStats]
 
   const jobsColumn: FooterColumn = {
     title: 'Jobs',
@@ -406,8 +410,8 @@ export function Footer({ isEthioTax = false, jobCount = 0 }: { isEthioTax?: bool
                     ? `Expert accounting and tax services, ETICPA and ACCA exam practice, and ${jobCountLabel} accounting and finance jobs — built for the Ethiopian community worldwide.`
                     : 'Expert accounting and tax services, ETICPA and ACCA exam practice, and live accounting and finance roles — built for the Ethiopian community worldwide.')
                 : (jobCountLabel
-                    ? `The dedicated platform for accounting and finance professionals. ${jobCountLabel} live jobs, managed placement service, and 20,000+ practice questions — all in one place.`
-                    : 'The dedicated platform for accounting and finance professionals. Live accounting and finance roles, managed placement service, and 20,000+ practice questions — all in one place.')}
+                    ? `The dedicated platform for accounting and finance professionals. ${jobCountLabel} live jobs, managed placement service, and exam-standard practice questions — all in one place.`
+                    : 'The dedicated platform for accounting and finance professionals. Live accounting and finance roles, managed placement service, and exam-standard practice questions — all in one place.')}
             </p>
 
             {/* Email signup */}
