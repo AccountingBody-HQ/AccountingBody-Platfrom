@@ -26,6 +26,7 @@ import {
   type SortBy,
   type ListingsUrlState,
 } from './urlState'
+import { Pagination } from './Pagination'
 
 interface DirectJobsResponse {
   jobs?: Job[]
@@ -641,43 +642,6 @@ function EmptyState({ onClear }: { onClear: () => void }) {
   )
 }
 
-function Pagination({ page, totalPages, onChange }: {
-  page: number
-  totalPages: number
-  onChange: (page: number) => void
-}) {
-  if (totalPages <= 1) return null
-  const pages = new Set<number>([1, totalPages, page, page - 1, page + 1].filter(p => p >= 1 && p <= totalPages))
-  const sorted = Array.from(pages).sort((a, b) => a - b)
-  const items: (number | 'ellipsis')[] = []
-  sorted.forEach((p, i) => {
-    if (i > 0 && p - sorted[i - 1] > 1) items.push('ellipsis')
-    items.push(p)
-  })
-  return (
-    <nav className="flex items-center justify-center gap-2 mt-10 flex-wrap">
-      <button type="button" onClick={() => onChange(Math.max(1, page - 1))} disabled={page <= 1}
-        className="h-10 px-4 rounded-lg text-sm font-medium border border-navy-950 text-navy-950 disabled:opacity-40 disabled:pointer-events-none hover:bg-navy-950 hover:text-white transition-colors">
-        Previous
-      </button>
-      {items.map((item, i) =>
-        item === 'ellipsis' ? (
-          <span key={`e${i}`} className="w-8 text-center text-slate-400 text-sm">…</span>
-        ) : (
-          <button key={item} type="button" onClick={() => onChange(item)}
-            className={`w-10 h-10 rounded-lg text-sm font-semibold transition-colors ${item === page ? 'bg-gold-500 text-navy-950' : 'text-navy-700 hover:bg-slate-100'}`}>
-            {item}
-          </button>
-        )
-      )}
-      <button type="button" onClick={() => onChange(Math.min(totalPages, page + 1))} disabled={page >= totalPages}
-        className="h-10 px-4 rounded-lg text-sm font-medium border border-navy-950 text-navy-950 disabled:opacity-40 disabled:pointer-events-none hover:bg-navy-950 hover:text-white transition-colors">
-        Next
-      </button>
-    </nav>
-  )
-}
-
 // ── Main component ────────────────────────────────────────────────────────
 
 export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean }) {
@@ -955,7 +919,7 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
                       />
                     ))}
                   </div>
-                  <Pagination page={page} totalPages={totalPages} onChange={handlePageChange} />
+                  <Pagination page={page} totalPages={totalPages} total={total} onChange={handlePageChange} />
                 </div>
               </div>
             )}
