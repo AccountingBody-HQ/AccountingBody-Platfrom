@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { computePageItems, parseJumpToPage } from './pagination'
+import { computePageItems, nextPageTarget, parseJumpToPage, prevPageTarget } from './pagination'
 
 describe('computePageItems', () => {
   it('returns just the one page when there is only one', () => {
@@ -65,5 +65,34 @@ describe('parseJumpToPage', () => {
   it('never returns a page below 1 even when totalPages is 0', () => {
     expect(parseJumpToPage('5', 0)).toBe(1)
     expect(parseJumpToPage('0', 0)).toBe(1)
+  })
+})
+
+// These two back the href-builder navigation mode: hrefFor(target) is only
+// ever called with a real target, so a null here is what tells <Pagination>
+// to render a non-link placeholder instead of an <a> pointing nowhere.
+describe('prevPageTarget', () => {
+  it('is one page back when not on the first page', () => {
+    expect(prevPageTarget(5)).toBe(4)
+    expect(prevPageTarget(2)).toBe(1)
+  })
+
+  it('is null on the first page', () => {
+    expect(prevPageTarget(1)).toBeNull()
+  })
+})
+
+describe('nextPageTarget', () => {
+  it('is one page forward when not on the last page', () => {
+    expect(nextPageTarget(1, 10)).toBe(2)
+    expect(nextPageTarget(9, 10)).toBe(10)
+  })
+
+  it('is null on the last page', () => {
+    expect(nextPageTarget(10, 10)).toBeNull()
+  })
+
+  it('is null when there is only one page total', () => {
+    expect(nextPageTarget(1, 1)).toBeNull()
   })
 })

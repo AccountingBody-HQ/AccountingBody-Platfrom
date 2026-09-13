@@ -26,7 +26,7 @@ import {
   type SortBy,
   type ListingsUrlState,
 } from './urlState'
-import { Pagination } from './Pagination'
+import { Pagination } from '@/components/Pagination'
 
 interface DirectJobsResponse {
   jobs?: Job[]
@@ -919,7 +919,14 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
                       />
                     ))}
                   </div>
-                  <Pagination page={page} totalPages={totalPages} total={total} onChange={handlePageChange} />
+                  <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    total={total}
+                    navLabel="Job results pages"
+                    itemLabel="job"
+                    onChange={handlePageChange}
+                  />
                 </div>
               </div>
             )}

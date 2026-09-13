@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { getQuestionSets } from '@/lib/db'
 import { headers } from 'next/headers'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
+import { Pagination } from '@/components/Pagination'
 import { canonicalMetadata } from '@/lib/canonical'
 
 export const dynamic = 'force-dynamic'
@@ -256,50 +257,20 @@ export default async function PracticeQuestionsPage({
                     })}
                   </div>
 
-                  {/* PAGINATION */}
-                  {totalPages > 1 && (
-                    <div className="mt-10 flex items-center justify-center gap-2 flex-wrap">
-                      {page > 1 && (
-                        <Link
-                          href={buildUrl({ page: page - 1 })}
-                          className="h-9 px-4 rounded-lg border border-slate-200 bg-white text-sm text-slate-600 hover:border-navy-300 transition-colors flex items-center gap-1"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" /></svg>
-                          Previous
-                        </Link>
-                      )}
-                      {Array.from({ length: totalPages }, (_, i) => i + 1)
-                        .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
-                        .reduce<(number | string)[]>((acc, p, idx, arr) => {
-                          if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) acc.push('...')
-                          acc.push(p)
-                          return acc
-                        }, [])
-                        .map((p, i) =>
-                          p === '...' ? (
-                            <span key={`ellipsis-${i}`} className="px-2 text-slate-400 text-sm">…</span>
-                          ) : (
-                            <Link
-                              key={p}
-                              href={buildUrl({ page: p as number })}
-                              translate="no"
-                              className={`w-9 h-9 rounded-lg text-sm font-medium flex items-center justify-center transition-colors ${page === p ? 'bg-navy-950 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-navy-300'}`}
-                            >
-                              {p}
-                            </Link>
-                          )
-                        )}
-                      {page < totalPages && (
-                        <Link
-                          href={buildUrl({ page: page + 1 })}
-                          className="h-9 px-4 rounded-lg border border-slate-200 bg-white text-sm text-slate-600 hover:border-navy-300 transition-colors flex items-center gap-1"
-                        >
-                          Next
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                        </Link>
-                      )}
-                    </div>
-                  )}
+                  {/* PAGINATION — the same shared component /jobs/listings
+                      uses, in its href-builder mode: every control renders
+                      as a real, crawlable <Link>, never a button, and
+                      buildUrl() (above) is the one place that knows how to
+                      carry this page's other filters (search/difficulty/
+                      letter/sort/category) into the target URL. */}
+                  <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    total={total}
+                    navLabel="Practice question sets pages"
+                    itemLabel="question set"
+                    hrefFor={p => buildUrl({ page: p })}
+                  />
                 </>
               )}
             </div>

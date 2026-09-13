@@ -41,3 +41,16 @@ export function parseJumpToPage(raw: string, totalPages: number): number | null 
   const max = Math.max(totalPages, 1)
   return Math.min(Math.max(n, 1), max)
 }
+
+// The target page for Previous/Next, or null at a boundary. Shared by both
+// of <Pagination>'s navigation modes: in onChange mode, null drives the
+// button's `disabled` attribute; in hrefFor mode, null means there is no
+// real destination to link to, so that control renders as a non-link
+// placeholder instead of an <a> pointing nowhere.
+export function prevPageTarget(page: number): number | null {
+  return page > 1 ? page - 1 : null
+}
+
+export function nextPageTarget(page: number, totalPages: number): number | null {
+  return page < totalPages ? page + 1 : null
+}

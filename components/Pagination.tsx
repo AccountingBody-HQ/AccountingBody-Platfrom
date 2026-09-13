@@ -1,19 +1,34 @@
 'use client'
 
-import { useState } from 'react'
-import { computePageItems, parseJumpToPage } from './pagination'
+import { useId, useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { computePageItems, nextPageTarget, parseJumpToPage, prevPageTarget } from './pagination'
 
-// The one pagination control for /jobs/listings, shared by both hosts (AB
-// and ET serve this same component through the same build) so the two
-// cannot drift into two different implementations again.
+// The one pagination control for every public paginated list on the site
+// (currently /jobs/listings and /practice-questions — both AB and ET serve
+// the same build) so none of them can drift into separately-coded
+// implementations again.
 //
-// State stays URL-derived, same contract as the rest of this page:
-// `onChange` is the only way this component ever changes the current page,
-// and it's the caller's job (JobListingsClient.navigateToState) to turn
-// that into a URL change that the fetch then reads back. This component
-// holds no page state of its own — only the transient, never-navigated-yet
-// text of the jump-to-page input, and (see below) the transient hover flag
-// used for label-colour protection on ET.
+// Two navigation modes, chosen by which prop the caller passes:
+//   - `onChange(page)`: for a client-fetched list (jobs/listings) that
+//     changes the URL itself and re-fetches — this component holds no page
+//     state of its own, `onChange` is the only way it ever asks for a
+//     different page, and it's the caller's job to turn that into a URL
+//     change (see JobListingsClient.navigateToState).
+//   - `hrefFor(page) => string`: for a server-rendered list (practice
+//     questions) where each page is a real, crawlable URL. Previous, Next
+//     and every page number render as real <Link> anchors built from that
+//     function — never a button pretending to navigate — and the
+//     jump-to-page input performs a client-side `router.push(hrefFor(n))`
+//     on submit, since typing a target page isn't knowable in advance as a
+//     plain href the way Previous/Next/page-numbers are.
+// Exactly one of the two must be passed; only that one mode's rendering
+// path is used, so the two can't get out of sync with each other.
+//
+// Local state stays limited to two purely transient, never-navigated-yet
+// things: the jump-to-page input's text, and (see below) the hover flag
+// used for ET's label-colour protection.
 
 // ── ET label-visibility defence (Previous / Next / Go only) ────────────────
 // The operator inspected ethiotax.com/jobs/listings in DevTools after the
@@ -21,15 +36,15 @@ import { computePageItems, parseJumpToPage } from './pagination'
 // correctly, and every OTHER piece of text on the same nav — the context
 // line, the compact "Page X of Y", and the ZAR salaries elsewhere on the
 // page — renders fine. Only the label text inside these three specific
-// <button> elements is invisible; they show up as solid dark-green blocks.
-// That rules out a broad text-rewriting or layout failure. It leaves two
+// controls is invisible; they show up as solid dark-green blocks. That
+// rules out a broad text-rewriting or layout failure. It leaves two
 // candidate causes in the ethiotax-worker (a separate, unreadable repo):
 // either an injected rule sets `button { color }` to the same value as the
 // background it also injects, or the worker's text-node rewrite empties
 // text nodes that are direct children of a <button>. We can't read that
 // worker to find out which, so this defends against both at once:
 //   1. every visible label lives in its own <span>, never a bare text node
-//      inside the <button> — a `button { color }` rule only reaches a bare
+//      inside the control — a `button { color }` rule only reaches a bare
 //      child by inheritance; a span with its own colour breaks that chain.
 //   2. that span's colour is set via inline `style`, not a Tailwind class.
 //      Inline styles win over any injected stylesheet rule that doesn't
@@ -84,19 +99,19 @@ function GoIcon({ color }: { color: string }) {
   )
 }
 
-// Previous and Next share this exact class string — the only difference
-// between the two buttons is which side the chevron sits on and their
-// label/aria-label text — so their footprint is identical by construction
-// rather than by eyeballing two separately-tuned widths. min-w-[44px] is
-// the icon-only footprint below 640px; sm:min-w-[124px] is the
-// with-label footprint above it. Height is 44px (h-11) at every breakpoint,
-// meeting the 44x44 touch-target minimum on its own.
+// Previous and Next share this exact class string in both navigation modes
+// — the only difference between the two is which side the chevron sits on
+// and their label/aria-label text — so their footprint is identical by
+// construction rather than by eyeballing two separately-tuned widths.
+// min-w-[44px] is the icon-only footprint below 640px; sm:min-w-[124px] is
+// the with-label footprint above it. Height is 44px (h-11) at every
+// breakpoint, meeting the 44x44 touch-target minimum on its own.
 //
 // No text-colour classes here on purpose — colour for anything that reads
-// as a label now lives on that label's own inline style (see above), not
-// on the button. Background/border are unaffected by the ET investigation
-// (the operator's screenshot shows those apply correctly) and stay as
-// ordinary Tailwind classes.
+// as a label lives on that label's own inline style (see above), not on
+// the control itself. Background/border are unaffected by the ET
+// investigation (the operator's screenshot shows those apply correctly)
+// and stay as ordinary Tailwind classes.
 const NAV_BUTTON_CLASS =
   'inline-flex items-center justify-center gap-1.5 min-w-[44px] sm:min-w-[124px] h-11 px-3 rounded-lg ' +
   'border-2 border-navy-950 bg-white text-sm font-semibold transition-colors ' +
@@ -104,34 +119,59 @@ const NAV_BUTTON_CLASS =
   'disabled:pointer-events-none disabled:border-slate-200 disabled:bg-slate-50 ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gold-500'
 
+// `target` is the page Previous/Next would go to, or null at a boundary
+// (see prevPageTarget/nextPageTarget). In onChange mode that null just
+// disables the button. In hrefFor mode there is no real destination to
+// link to, so a null target renders a plain, non-interactive placeholder
+// with the exact same classes rather than an <a> pointing nowhere — links
+// must always be real, crawlable destinations, never decorative.
 function NavButton({
   direction,
-  disabled,
-  onClick,
+  target,
+  onChange,
+  hrefFor,
 }: {
   direction: 'prev' | 'next'
-  disabled: boolean
-  onClick: () => void
+  target: number | null
+  onChange?: (page: number) => void
+  hrefFor?: (page: number) => string
 }) {
   const [hovered, setHovered] = useState(false)
+  const disabled = target === null
   const color = controlLabelColor(hovered, disabled)
   const label = direction === 'prev' ? 'Previous' : 'Next'
   const icon = direction === 'prev' ? <ChevronLeftIcon color={color} /> : <ChevronRightIcon color={color} />
+  const hoverProps = { onMouseEnter: () => setHovered(true), onMouseLeave: () => setHovered(false) }
+  const content = (
+    <>
+      {direction === 'prev' && icon}
+      <span className="hidden sm:inline" style={{ color }}>{label}</span>
+      {direction === 'next' && icon}
+    </>
+  )
+
+  if (hrefFor) {
+    if (disabled) {
+      return <span aria-disabled="true" className={NAV_BUTTON_CLASS}>{content}</span>
+    }
+    return (
+      <Link href={hrefFor(target)} aria-label={`${label} page`} className={NAV_BUTTON_CLASS} {...hoverProps}>
+        {content}
+      </Link>
+    )
+  }
 
   return (
     <button
       type="button"
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onClick={() => target !== null && onChange?.(target)}
       disabled={disabled}
       aria-disabled={disabled}
       aria-label={`${label} page`}
       className={NAV_BUTTON_CLASS}
+      {...hoverProps}
     >
-      {direction === 'prev' && icon}
-      <span className="hidden sm:inline" style={{ color }}>{label}</span>
-      {direction === 'next' && icon}
+      {content}
     </button>
   )
 }
@@ -157,6 +197,39 @@ function pageButtonClass(isCurrent: boolean): string {
     : `${PAGE_BUTTON_BASE} bg-white border border-slate-200 text-navy-700 font-medium hover:bg-slate-100`
 }
 
+// The current page number is still a real link in hrefFor mode (a
+// self-link) rather than a bare span — harmless, and it's what the
+// practice-questions page already did for every page number before this
+// component existed.
+function PageNumberControl({
+  pageNumber,
+  isCurrent,
+  onChange,
+  hrefFor,
+}: {
+  pageNumber: number
+  isCurrent: boolean
+  onChange?: (page: number) => void
+  hrefFor?: (page: number) => string
+}) {
+  const className = pageButtonClass(isCurrent)
+  const ariaCurrent = isCurrent ? 'page' : undefined
+  const ariaLabel = `Page ${pageNumber}`
+
+  if (hrefFor) {
+    return (
+      <Link href={hrefFor(pageNumber)} aria-current={ariaCurrent} aria-label={ariaLabel} className={className}>
+        {pageNumber}
+      </Link>
+    )
+  }
+  return (
+    <button type="button" onClick={() => onChange?.(pageNumber)} aria-current={ariaCurrent} aria-label={ariaLabel} className={className}>
+      {pageNumber}
+    </button>
+  )
+}
+
 function GoButton() {
   const [hovered, setHovered] = useState(false)
   const color = controlLabelColor(hovered, false)
@@ -174,47 +247,64 @@ function GoButton() {
   )
 }
 
+type PaginationBaseProps = {
+  page: number
+  totalPages: number
+  total: number
+  /** aria-label for the <nav> — describe what's being paginated. */
+  navLabel?: string
+  /** Singular noun for the context line ("job" -> "1 job" / "2 jobs"). */
+  itemLabel?: string
+}
+
+type PaginationProps = PaginationBaseProps &
+  (
+    | { onChange: (page: number) => void; hrefFor?: undefined }
+    | { hrefFor: (page: number) => string; onChange?: undefined }
+  )
+
 export function Pagination({
   page,
   totalPages,
   total,
+  navLabel = 'Results pages',
+  itemLabel = 'result',
   onChange,
-}: {
-  page: number
-  totalPages: number
-  total: number
-  onChange: (page: number) => void
-}) {
+  hrefFor,
+}: PaginationProps) {
   const [jumpValue, setJumpValue] = useState('')
+  const router = useRouter()
+  const jumpInputId = useId()
 
   if (totalPages <= 1) return null
 
   const items = computePageItems(page, totalPages)
-  const atFirst = page <= 1
-  const atLast = page >= totalPages
+  const prevTarget = prevPageTarget(page)
+  const nextTarget = nextPageTarget(page, totalPages)
 
   function submitJump() {
     const target = parseJumpToPage(jumpValue, totalPages)
     // Garbage input (letters, decimals, empty) is silently ignored rather
     // than treated as "go to page 1" — see pagination.ts. A real
     // out-of-range integer is never ignored; parseJumpToPage has already
-    // clamped it into [1, totalPages] by the time it gets here, so onChange
-    // is never called with an out-of-range page.
+    // clamped it into [1, totalPages] by the time it gets here, so this
+    // never navigates outside that range.
     if (target === null) return
-    onChange(target)
+    if (onChange) onChange(target)
+    else if (hrefFor) router.push(hrefFor(target))
     setJumpValue('')
   }
 
   return (
-    <nav aria-label="Job results pages" className="mt-10">
+    <nav aria-label={navLabel} className="mt-10">
       {/* Context line — what makes a few hundred pages feel navigable
           rather than endless. Always visible, at every breakpoint. */}
       <p className="text-center text-xs text-slate-400 mb-3">
-        Page {page.toLocaleString()} of {totalPages.toLocaleString()} · {total.toLocaleString()} job{total === 1 ? '' : 's'}
+        Page {page.toLocaleString()} of {totalPages.toLocaleString()} · {total.toLocaleString()} {itemLabel}{total === 1 ? '' : 's'}
       </p>
 
       <div className="flex items-center justify-center gap-2">
-        <NavButton direction="prev" disabled={atFirst} onClick={() => onChange(Math.max(1, page - 1))} />
+        <NavButton direction="prev" target={prevTarget} onChange={onChange} hrefFor={hrefFor} />
 
         {/* Below 640px: a compact, non-interactive "Page X of Y" fills the
             middle slot instead of the full number row, which has no room
@@ -231,36 +321,36 @@ export function Pagination({
                 …
               </span>
             ) : (
-              <button
+              <PageNumberControl
                 key={item}
-                type="button"
-                onClick={() => onChange(item)}
-                aria-current={item === page ? 'page' : undefined}
-                aria-label={`Page ${item}`}
-                className={pageButtonClass(item === page)}
-              >
-                {item}
-              </button>
+                pageNumber={item}
+                isCurrent={item === page}
+                onChange={onChange}
+                hrefFor={hrefFor}
+              />
             )
           )}
         </div>
 
-        <NavButton direction="next" disabled={atLast} onClick={() => onChange(Math.min(totalPages, page + 1))} />
+        <NavButton direction="next" target={nextTarget} onChange={onChange} hrefFor={hrefFor} />
       </div>
 
-      {/* Jump to page. A real <form> — this file already uses <form> for
-          the job-alert email capture, so that's the established pattern
-          here rather than a bare onClick/onKeyDown pairing. Submits on
-          Enter (native form behaviour) as well as via the Go button. */}
+      {/* Jump to page. A real <form> — jobs/listings already uses <form>
+          for its job-alert email capture, so that's the established
+          pattern here rather than a bare onClick/onKeyDown pairing.
+          Submits on Enter (native form behaviour) as well as via the Go
+          button. In hrefFor mode this is the one control that can't be a
+          plain <a> — the target page isn't known until the user types it —
+          so it does a client-side router.push(hrefFor(n)) instead. */}
       <form
         onSubmit={e => { e.preventDefault(); submitJump() }}
         className="flex items-center justify-center gap-2 mt-4"
       >
-        <label htmlFor="jobs-page-jump" className="text-xs font-medium text-slate-500">
+        <label htmlFor={jumpInputId} className="text-xs font-medium text-slate-500">
           Jump to page
         </label>
         <input
-          id="jobs-page-jump"
+          id={jumpInputId}
           type="number"
           inputMode="numeric"
           min={1}
