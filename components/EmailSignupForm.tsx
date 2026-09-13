@@ -1,6 +1,5 @@
 'use client'
 import { useState, useRef } from 'react'
-import Script from 'next/script'
 
 declare global {
   interface Window {
@@ -54,43 +53,49 @@ export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: b
   }
 
   return (
-    <>
-      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3 w-full max-w-md mx-auto">
-        <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '2px' }}>
-          <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="your@email.com"
-            required
-            className="w-full h-13 px-4 rounded-lg text-base text-navy-950 placeholder:text-slate-400 focus:outline-none transition-all"
-            style={{ backgroundColor: 'white', fontSize: '16px', WebkitAppearance: 'none', appearance: 'none', display: 'block' }}
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={status === 'loading'}
-          className="w-full h-14 px-6 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold disabled:opacity-60"
-        >
-          {status === 'loading' ? 'Subscribing...' : 'Subscribe free'}
-        </button>
-        {/* Honeypot */}
-        <input type="text" value={honeypot} onChange={e => setHoneypot(e.target.value)} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
-        {/* Turnstile invisible widget */}
-        <div
-          ref={(el) => {
-            if (el && window.turnstile && !turnstileWidgetId.current) {
-              turnstileWidgetId.current = window.turnstile.render(el, {
-                sitekey: isEthioTax ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? ''),
-              })
-            }
-          }}
+    // No <Script> tag here — app/layout.tsx already loads the Turnstile
+    // API script once, globally, for every page (id="cf-turnstile-script").
+    // This component used to load its own second, undeduplicated copy of
+    // the same script on top of that; see the P8 report for why that's a
+    // real redundancy worth removing even though Next.js's own script
+    // loader likely already prevents it from being fetched twice over the
+    // network — a widget SDK should never be initialised from two
+    // independent <Script> instances if a single sitewide one already
+    // covers it.
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3 w-full max-w-md mx-auto">
+      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '2px' }}>
+        <input
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder="your@email.com"
+          required
+          className="w-full h-13 px-4 rounded-lg text-base text-navy-950 placeholder:text-slate-400 focus:outline-none transition-all"
+          style={{ backgroundColor: 'white', fontSize: '16px', WebkitAppearance: 'none', appearance: 'none', display: 'block' }}
         />
-        {status === 'error' && (
-          <p className="text-red-400 text-xs text-center">Something went wrong. Please try again.</p>
-        )}
-      </form>
-    </>
+      </div>
+      <button
+        type="submit"
+        disabled={status === 'loading'}
+        className="w-full h-14 px-6 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold disabled:opacity-60"
+      >
+        {status === 'loading' ? 'Subscribing...' : 'Subscribe free'}
+      </button>
+      {/* Honeypot */}
+      <input type="text" value={honeypot} onChange={e => setHoneypot(e.target.value)} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
+      {/* Turnstile invisible widget */}
+      <div
+        ref={(el) => {
+          if (el && window.turnstile && !turnstileWidgetId.current) {
+            turnstileWidgetId.current = window.turnstile.render(el, {
+              sitekey: isEthioTax ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? ''),
+            })
+          }
+        }}
+      />
+      {status === 'error' && (
+        <p className="text-red-400 text-xs text-center">Something went wrong. Please try again.</p>
+      )}
+    </form>
   )
 }
