@@ -47,9 +47,35 @@ const sizeClasses = {
   compact: 'py-3 px-5',
 } as const
 
+// Standard box-with-outbound-arrow glyph. Only rendered on the 'external'
+// branch — the branch that actually opens a new tab to a site other than
+// this one. aria-hidden because the new-tab signal it carries visually is
+// also spelled out in text for screen readers (see the sr-only span below),
+// so the icon itself has nothing to announce.
+function ExternalLinkIcon() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="shrink-0"
+    >
+      <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+  )
+}
+
 export function ApplyButton({ job, size = 'default' }: { job: Job; size?: keyof typeof sizeClasses }) {
   const label = getApplyLabel(job)
-  const buttonClass = `flex w-full items-center justify-center rounded-xl ${sizeClasses[size]} text-base font-semibold transition-colors bg-[#C9982A] text-[#231A02] hover:bg-[#A87C16] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0C1A3D]`
+  const buttonClass = `flex w-full items-center justify-center gap-2 rounded-xl ${sizeClasses[size]} text-base font-semibold transition-colors bg-[#C9982A] text-[#231A02] hover:bg-[#A87C16] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0C1A3D]`
 
   // Tracks every source (employer, adzuna, or any other ingestion
   // provider) — not employer-only. An employer-only restriction would mean
@@ -61,6 +87,12 @@ export function ApplyButton({ job, size = 'default' }: { job: Job; size?: keyof 
         onClick={() => trackApplyClick(job.id)}
         className={buttonClass}>
         <span className="min-w-0 truncate">{label}</span>
+        <ExternalLinkIcon />
+        {/* Visually hidden, not aria-hidden — this is what carries the
+            new-tab signal to screen readers now that the visible caption
+            below the button (which used to say this) is gone. The icon
+            above stays aria-hidden so the two don't double-announce. */}
+        <span className="sr-only"> (opens in a new tab)</span>
       </a>
     )
   }

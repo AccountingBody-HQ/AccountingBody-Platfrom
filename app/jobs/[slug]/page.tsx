@@ -14,7 +14,7 @@ import {
   getCompanyInitials,
 } from '@/lib/job-format'
 import { JobPostingStructuredData } from './structured-data'
-import { ApplyButton } from './ApplyButton'
+import { ApplyBarWithSticky } from './ApplyBarWithSticky'
 import { BackToListingsLink } from './BackToListingsLink'
 import { ShareButton } from './ShareButton'
 
@@ -99,13 +99,6 @@ function SkillList({ title, items }: { title: string; items: string[] }) {
   )
 }
 
-// Capitalises a job.source value for the closing line ('adzuna' -> 'Adzuna').
-// Local to this file rather than lib/job-format.ts — a single-use display
-// tweak for one line on one page, not a shared formatter.
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1)
-}
-
 export default async function JobDetailPage({
   params,
 }: {
@@ -142,15 +135,7 @@ export default async function JobDetailPage({
     ? `${job.location_text} · ${job.location_country}`
     : job.location_text
 
-  // ApplyButton's own branch condition (see ApplyButton.tsx) — the caption
-  // below the apply control is only true when that exact branch is the one
-  // that actually renders: an 'external' job missing application_url falls
-  // through to ApplyButton's own internal apply-flow branch instead, which
-  // does not open the employer's own listing.
-  const opensEmployerListing = job.apply_method === 'external' && !!job.application_url
-
   const closingLineParts = [
-    `Via ${capitalize(job.source)}`,
     `Posted ${formatAbsoluteDate(postedDate)}`,
     job.expires_at ? `Expires ${formatAbsoluteDate(job.expires_at)}` : null,
   ].filter((part): part is string => part !== null)
@@ -254,26 +239,13 @@ export default async function JobDetailPage({
             )}
           </div>
 
-          {/* 5. Apply block — deliberately after the description and
-              immediately before similar roles, not in the decision card
-              (operator's explicit decision, a change from the original
-              mockup position). */}
-          <div className="mt-10 max-w-[62ch]">
-            <ApplyButton job={job} />
-            {opensEmployerListing && (
-              <p className="mt-3 text-center text-[13px] text-slate-500">Opens the employer&apos;s own listing in a new tab</p>
-            )}
-          </div>
-
-          {/* 6. Sticky mobile apply bar — below 768px only. Reuses
-              ApplyButton exactly as rendered above rather than duplicating
-              its click-tracking/branching logic. */}
-          <div
-            className="md:hidden fixed inset-x-0 bottom-0 z-50 bg-white border-t border-[#E6E3DC] p-3 shadow-[0_-6px_20px_-4px_rgba(12,26,61,0.12)]"
-            style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
-          >
-            <ApplyButton job={job} size="compact" />
-          </div>
+          {/* 5/6. Apply block, deliberately after the description and
+              immediately before similar roles (operator's explicit
+              decision, a change from the original mockup position), plus
+              the sticky mobile apply bar below 768px. Both live inside one
+              client component so the bar can watch the inline button's own
+              viewport visibility and the two are never on screen together. */}
+          <ApplyBarWithSticky job={job} />
 
           {/* 7. Qualifications — 1.8% of jobs have any; kept quiet and last
               so its near-total absence is never load-bearing for whether
@@ -296,13 +268,17 @@ export default async function JobDetailPage({
                     <Link
                       key={similar.id}
                       href={`/jobs/${similar.slug}`}
-                      className="flex items-center justify-between gap-4 bg-white px-[18px] py-[14px] hover:bg-slate-50 transition-colors max-[520px]:flex-col max-[520px]:items-start max-[520px]:gap-[5px]"
+                      className="flex items-center justify-between gap-4 bg-white px-[18px] py-[14px] min-h-[64px] hover:bg-slate-50 transition-colors max-[520px]:flex-col max-[520px]:items-start max-[520px]:gap-[5px] max-[520px]:min-h-0"
                     >
                       <div className="min-w-0">
                         <p className="text-[15.5px] font-medium text-navy-950 truncate">{similar.title}</p>
                         <p className="text-[13.5px] text-slate-500 truncate">{similar.company_name} · {similarLocation}</p>
                       </div>
-                      <p className="text-[14px] font-medium text-gold-700 whitespace-nowrap shrink-0">
+                      <p
+                        className={`text-[14px] font-medium whitespace-nowrap shrink-0 tabular-nums w-[110px] text-right max-[520px]:w-auto max-[520px]:text-left ${
+                          similarSalary ? 'text-gold-700' : 'text-slate-400'
+                        }`}
+                      >
                         {similarSalary ?? 'Salary not listed'}
                       </p>
                     </Link>
