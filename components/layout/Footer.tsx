@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { formatJobCountLabel } from '@/lib/job-format'
+import { formatJobCountLabel, formatCountLabel } from '@/lib/job-format'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -116,26 +116,17 @@ const legalLinks = [
   { label: 'Accessibility',     href: '/accessibility' },
 ]
 
-// Jobs stat is computed at render time from the real active count (see
-// Footer()). The other three stat tiles that used to sit alongside it here
-// — "3,000+ Articles", "20,000+ Practice Questions", "Since 2018" — were
-// fabricated: the real article count is 2,017, not 3,000+; there's no
-// "Since 2018" to tell, since ingestion only began 2026-09-06; and neither
-// number was ever wired to anything, so it was equally wrong (or
-// coincidentally right) on both hosts regardless of their actual, and
-// different, real counts. The footer renders on every page on a nano
-// instance with no caching, and no cheap, already-available count exists
-// for either Articles or Practice Questions the way jobCount already does
-// for Jobs (checked: no equivalent of getCachedBrowsableJobsCount exists
-// for either) — adding a fresh database query per page load to compute one
-// wasn't an option here, and a hardcoded snapshot number would just be a
-// new false claim the moment it drifted. Deleted rather than replaced with
-// an invented number — a footer with fewer stat tiles is better than one
-// that lies. "Free To Start" stays: it's a true claim about the product,
-// not a count.
-const remainingStats = [
-  { value: 'Free', label: 'To Start' },
-]
+// P4c deleted the Articles/Practice-Questions tiles and "Since 2018"
+// outright — they were fabricated, and at the time no cheap per-host count
+// existed for either. P5 restores them with real counts (see
+// getCachedPublishedArticleCount / getCachedQuestionSetCount in lib/db.ts,
+// wired in via app/layout.tsx), following exactly the same request-deduped
+// pattern as the pre-existing Jobs count. "Since 2018" is NOT coming back
+// in any form — there is no true founding date, and P4c's reasoning that a
+// frozen/invented number is the same defect with a slower fuse still
+// applies to it specifically. "Free To Start" is the one tile that was
+// never a count and needed no fixing.
+const FREE_TO_START_STAT = { value: 'Free', label: 'To Start' }
 
 // ── Email Signup Widget ───────────────────────────────────────────────────────
 function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
@@ -269,18 +260,39 @@ function ExtIcon() {
 }
 
 // ── Main Footer ───────────────────────────────────────────────────────────────
-export function Footer({ isEthioTax = false, jobCount = 0 }: { isEthioTax?: boolean; jobCount?: number }) {
+export function Footer({
+  isEthioTax = false,
+  jobCount = 0,
+  articleCount = 0,
+  questionSetCount = 0,
+}: {
+  isEthioTax?: boolean
+  jobCount?: number
+  articleCount?: number
+  questionSetCount?: number
+}) {
 
-  // formatJobCountLabel returns null for a zero or failed count — a bare
-  // "0" must never render as a stat, so the tile falls back to a
-  // non-numeric value rather than a fabricated or literal-zero one.
+  // formatJobCountLabel/formatCountLabel return null for a zero or failed
+  // count — a bare "0" must never render as a stat. Jobs falls back to
+  // non-numeric copy, same as before; Articles and Practice Questions fall
+  // back to being OMITTED entirely (see activeStats below) rather than
+  // showing a placeholder word for a count that failed or is genuinely
+  // zero on a host — a missing tile is honest, "Live" for an article count
+  // would not be.
   const jobCountLabel = formatJobCountLabel(jobCount)
   const jobsStat = {
     value: jobCountLabel ?? 'Live',
     label: 'Jobs',
     sub: isEthioTax ? 'Accounting & finance roles for the diaspora' : 'Live accounting & finance roles',
   }
-  const activeStats = [jobsStat, ...remainingStats]
+  const articleCountLabel = formatCountLabel(articleCount)
+  const questionSetCountLabel = formatCountLabel(questionSetCount)
+  const activeStats = [
+    jobsStat,
+    ...(articleCountLabel ? [{ value: articleCountLabel, label: 'Articles' }] : []),
+    ...(questionSetCountLabel ? [{ value: questionSetCountLabel, label: 'Practice Questions' }] : []),
+    FREE_TO_START_STAT,
+  ]
 
   const jobsColumn: FooterColumn = {
     title: 'Jobs',

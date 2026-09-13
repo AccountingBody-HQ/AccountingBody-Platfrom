@@ -1,4 +1,5 @@
 // Session 41 — private repo deploy test
+import { cache } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
 function getSupabase() {
@@ -243,6 +244,45 @@ export async function getQuestionSetCount(): Promise<number> {
     .contains('show_on_sites', ['ab'])
   return count ?? 0
 }
+
+// Request-deduped wrapper for the footer stat — same pattern as
+// getCachedBrowsableJobsCount in lib/jobs.ts (React's cache() collapses
+// repeated same-argument calls into one Supabase round trip per request;
+// it is not a cross-request cache and has no TTL). getQuestionSetCount()
+// already queries exactly what the footer needs — published, show_on_sites
+// contains 'ab' — since /practice-questions itself (getQuestionSets above)
+// applies that same fixed 'ab' filter unconditionally, for both hosts:
+// there is no per-host question-set distinction to make here, so this
+// counts the real, same number /practice-questions already shows on ET
+// today, rather than inventing a host split the feature doesn't have.
+export const getCachedQuestionSetCount = cache(getQuestionSetCount)
+
+// Real per-host article count for the footer stat. Deliberately mirrors
+// getArticles()'s own filter in app/articles/page.tsx — status='published'
+// AND show_on_sites contains the requesting host's code — NOT
+// canonical_owner, which is a different, narrower concept (which site
+// originally authored a piece, used by app/et-sitemap/route.ts) that
+// currently returns zero rows for EthioTax. show_on_sites is what actually
+// decides whether an article is reachable on a given host — it's the same
+// column /articles itself filters on — so a count built from it agrees
+// with what a visitor to that host's /articles page would actually see,
+// including EthioTax showing shared-library articles that were authored
+// on Accounting Body but tagged reachable on both.
+export async function getPublishedArticleCount(siteCode: string): Promise<number> {
+  const supabase = getSupabase()
+  const { count, error } = await supabase
+    .from('articles')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'published')
+    .contains('show_on_sites', [siteCode])
+  if (error) {
+    console.error('getPublishedArticleCount error:', error)
+    return 0
+  }
+  return count ?? 0
+}
+
+export const getCachedPublishedArticleCount = cache(getPublishedArticleCount)
 
 export async function getETICPAModuleArticles(level: string, module: string): Promise<ArticleSummary[]> {
   const supabase = getSupabase()

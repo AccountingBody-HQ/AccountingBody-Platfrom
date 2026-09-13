@@ -156,3 +156,9 @@ export function formatJobCountLabel(count: number): string | null {
     count
   return `${rounded.toLocaleString('en-US')}+`
 }
+
+// The rounding logic above has nothing job-specific in it — it's a generic
+// "don't overclaim precision" count formatter. Re-exported under a neutral
+// name for the footer's Article/Practice-Question stats (see Footer.tsx),
+// which need byte-identical rounding to the Jobs stat but aren't jobs.
+export const formatCountLabel = formatJobCountLabel
