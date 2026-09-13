@@ -11,7 +11,7 @@ import EmailSignupForm from '@/components/EmailSignupForm'
 import HomepageJobSearch from '@/components/HomepageJobSearch'
 import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
 import { getCachedBrowsableJobsCount } from '@/lib/jobs'
-import { getCachedPublishedArticleCount, getCachedQuestionSetCount } from '@/lib/db'
+import { getCachedPublishedArticleCount, getCachedPublishedQuestionCount } from '@/lib/db'
 import { formatJobCountLabel, formatCountLabel } from '@/lib/job-format'
 
 // No static metadata existed here before — title/description/openGraph are
@@ -299,14 +299,17 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   // React's cache() dedupes a repeated call with the same arguments within
   // one request, so calling them again here costs zero additional database
   // round trips, not three more.
-  const [jobCount, articleCount, questionSetCount] = await Promise.all([
+  const [jobCount, articleCount, questionCount] = await Promise.all([
     getCachedBrowsableJobsCount(platform),
     getCachedPublishedArticleCount(platform),
-    getCachedQuestionSetCount(),
+    getCachedPublishedQuestionCount(),
   ])
   const jobCountLabel = formatJobCountLabel(jobCount)
   const articleCountLabel = formatCountLabel(articleCount)
-  const questionSetCountLabel = formatCountLabel(questionSetCount)
+  // Individual questions, not question sets — see getPublishedQuestionCount
+  // in lib/db.ts. P7 caught the "Practice Questions" label everywhere on
+  // the site claiming individual questions while actually counting sets.
+  const questionCountLabel = formatCountLabel(questionCount)
   // Real stats only. Jobs and "Free To Start" always show (Jobs falls back
   // to non-numeric "Live" copy, same as the footer); Articles and Practice
   // Questions are simply omitted if their count is zero or failed, rather
@@ -334,8 +337,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </svg>
       ),
     }] : []),
-    ...(questionSetCountLabel ? [{
-      value:    questionSetCountLabel,
+    ...(questionCountLabel ? [{
+      value:    questionCountLabel,
       label:    'Practice Questions',
       sublabel: 'ACCA, CIMA, AAT and ICAEW',
       icon: (
@@ -344,6 +347,16 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </svg>
       ),
     }] : []),
+    {
+      value:    'Since 2018',
+      label:    'Trusted Platform',
+      sublabel: 'Built for accounting and finance professionals',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
+        </svg>
+      ),
+    },
     {
       value:    'Free',
       label:    'To Start',
@@ -1780,12 +1793,13 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           ════════════════════════════════════════════════════════════════ */}
         <section className="bg-slate-50 border-y border-slate-200">
           <div className="container-site py-10">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-              {stats.map((stat, i) => (
-                <div
-                  key={stat.label}
-                  className={`flex flex-col items-start ${i < stats.length - 1 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}`}
-                >
+            {/* flex+justify-center+wrap, not a fixed-column grid — the
+                tile count varies (3 to 5) depending on which counts are
+                available, and a grid sized for the maximum leaves ragged,
+                left-aligned empty cells whenever fewer tiles render. */}
+            <div className="flex flex-wrap justify-center gap-x-10 gap-y-8">
+              {stats.map(stat => (
+                <div key={stat.label} className="flex flex-col items-center text-center max-w-[220px]">
                   <div className="w-9 h-9 rounded-lg bg-navy-50 flex items-center justify-center text-navy-600 mb-3">
                     {stat.icon}
                   </div>
@@ -1992,6 +2006,15 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             icon: (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            ),
+          },
+          {
+            title: 'Trusted since 2018',
+            body: 'Built for accounting and finance professionals from day one. Every job, every question, every placement — specific to the profession.',
+            icon: (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
               </svg>
             ),
           },

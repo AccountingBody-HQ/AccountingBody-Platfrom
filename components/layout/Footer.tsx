@@ -118,15 +118,16 @@ const legalLinks = [
 
 // P4c deleted the Articles/Practice-Questions tiles and "Since 2018"
 // outright — they were fabricated, and at the time no cheap per-host count
-// existed for either. P5 restores them with real counts (see
-// getCachedPublishedArticleCount / getCachedQuestionSetCount in lib/db.ts,
-// wired in via app/layout.tsx), following exactly the same request-deduped
-// pattern as the pre-existing Jobs count. "Since 2018" is NOT coming back
-// in any form — there is no true founding date, and P4c's reasoning that a
-// frozen/invented number is the same defect with a slower fuse still
-// applies to it specifically. "Free To Start" is the one tile that was
-// never a count and needed no fixing.
+// existed for either. P5 restored Articles/Practice Questions with real
+// counts (see getCachedPublishedArticleCount / getCachedPublishedQuestionCount
+// in lib/db.ts, wired in via app/layout.tsx), following exactly the same
+// request-deduped pattern as the pre-existing Jobs count, but P4c's call on
+// "Since 2018" was wrong: the operator has since confirmed 2018 is the
+// company's real founding year, so it's a true claim, not a fabricated
+// one — P7 restores it, in its original wording and position. "Free To
+// Start" is the one tile that was never a count and never needed fixing.
 const FREE_TO_START_STAT = { value: 'Free', label: 'To Start' }
+const SINCE_2018_STAT = { value: 'Since 2018', label: 'Trusted Platform' }
 
 // ── Email Signup Widget ───────────────────────────────────────────────────────
 function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
@@ -264,12 +265,12 @@ export function Footer({
   isEthioTax = false,
   jobCount = 0,
   articleCount = 0,
-  questionSetCount = 0,
+  questionCount = 0,
 }: {
   isEthioTax?: boolean
   jobCount?: number
   articleCount?: number
-  questionSetCount?: number
+  questionCount?: number
 }) {
 
   // formatJobCountLabel/formatCountLabel return null for a zero or failed
@@ -286,11 +287,17 @@ export function Footer({
     sub: isEthioTax ? 'Accounting & finance roles for the diaspora' : 'Live accounting & finance roles',
   }
   const articleCountLabel = formatCountLabel(articleCount)
-  const questionSetCountLabel = formatCountLabel(questionSetCount)
+  // Individual questions (their own table, counted through the parent
+  // set — see getPublishedQuestionCount in lib/db.ts), not question sets.
+  // The tile is labelled "Practice Questions" and claims individual
+  // questions, so it must count individual questions — P7 caught this
+  // showing the (much smaller) set count instead.
+  const questionCountLabel = formatCountLabel(questionCount)
   const activeStats = [
     jobsStat,
     ...(articleCountLabel ? [{ value: articleCountLabel, label: 'Articles' }] : []),
-    ...(questionSetCountLabel ? [{ value: questionSetCountLabel, label: 'Practice Questions' }] : []),
+    ...(questionCountLabel ? [{ value: questionCountLabel, label: 'Practice Questions' }] : []),
+    SINCE_2018_STAT,
     FREE_TO_START_STAT,
   ]
 
@@ -376,11 +383,16 @@ export function Footer({
     <footer className="bg-navy-950 text-white" aria-label="Site footer">
 
       {/* ── Stats bar ──────────────────────────────────────────────────────── */}
+      {/* flex+justify-center+wrap, not a fixed-column grid — the tile count
+          varies (3 to 5, depending on which counts are available) and a
+          grid sized for the maximum count leaves ragged, left-aligned empty
+          cells whenever fewer tiles render. Centring and letting the row
+          wrap keeps it looking deliberate at any count and every width. */}
       <div className="border-b border-white/10">
         <div className="container-wide py-6">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+          <div className="flex flex-wrap justify-center gap-x-10 gap-y-6 text-center">
             {activeStats.map(stat => (
-              <div key={stat.label} className="flex flex-col items-start">
+              <div key={stat.label} className="flex flex-col items-center">
                 <span className="font-display text-2xl text-white leading-none mb-1">
                   {stat.value}
                 </span>

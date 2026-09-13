@@ -10,7 +10,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import { NavigationWrapper } from '@/components/layout/NavigationWrapper'
 import { Footer } from '@/components/layout/Footer'
 import { getCachedBrowsableJobsCount } from '@/lib/jobs'
-import { getCachedPublishedArticleCount, getCachedQuestionSetCount } from '@/lib/db'
+import { getCachedPublishedArticleCount, getCachedPublishedQuestionCount } from '@/lib/db'
 import CookieConsent from '@/components/CookieConsent'
 import ScrollToTop from '@/components/ScrollToTop'
 import RouteProgressBar from '@/components/RouteProgressBar'
@@ -92,11 +92,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // not sequentially — so this stays roughly the same wall-clock latency
   // as the single jobCount query alone; see the P5 report for the actual
   // round-trip accounting (footer report: 1 round trip before this change,
-  // 3 after, all in parallel).
-  const [jobCount, articleCount, questionSetCount] = await Promise.all([
+  // 3 after, all in parallel). questionCount is individual questions (its
+  // own table, counted through the parent set for status/host — see
+  // getPublishedQuestionCount in lib/db.ts), not question SETS — P7
+  // corrected this after the footer was found showing the set count
+  // (181, "100+") under a "Practice Questions" label that actually claims
+  // individual questions.
+  const [jobCount, articleCount, questionCount] = await Promise.all([
     getCachedBrowsableJobsCount(platform),
     getCachedPublishedArticleCount(platform),
-    getCachedQuestionSetCount(),
+    getCachedPublishedQuestionCount(),
   ])
 
   return (
@@ -146,7 +151,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             isEthioTax={isEthioTax}
             jobCount={jobCount}
             articleCount={articleCount}
-            questionSetCount={questionSetCount}
+            questionCount={questionCount}
           />
           <CookieConsent gtmId={GTM_ID ?? ''} />
           <ScrollToTop />

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
-import { getPublishedArticleCount, getQuestionSetCount } from './db'
+import { getPublishedArticleCount, getPublishedQuestionCount, getQuestionSetCount } from './db'
 
 vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn(),
@@ -79,5 +79,40 @@ describe('getQuestionSetCount', () => {
     expect(result).toBe(181)
     const containsCall = calls.find(c => c.method === 'contains')
     expect(containsCall?.args).toEqual(['show_on_sites', ['ab']])
+  })
+})
+
+describe('getPublishedQuestionCount', () => {
+  it('returns the real individual-question count', async () => {
+    const { client } = fakeCountClient({ count: 24531, error: null })
+    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+
+    expect(await getPublishedQuestionCount()).toBe(24531)
+  })
+
+  it('filters through the parent question_sets row, not a status/show_on_sites column on questions itself', async () => {
+    const { client, calls } = fakeCountClient({ count: 0, error: null })
+    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+
+    await getPublishedQuestionCount()
+
+    const eqCall = calls.find(c => c.method === 'eq')
+    const containsCall = calls.find(c => c.method === 'contains')
+    expect(eqCall?.args).toEqual(['question_sets.status', 'published'])
+    expect(containsCall?.args).toEqual(['question_sets.show_on_sites', ['ab']])
+  })
+
+  it('returns 0 on a query error rather than throwing', async () => {
+    const { client } = fakeCountClient({ count: null, error: new Error('connection refused') })
+    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+
+    expect(await getPublishedQuestionCount()).toBe(0)
+  })
+
+  it('returns 0 rather than null when the query succeeds with no count', async () => {
+    const { client } = fakeCountClient({ count: null, error: null })
+    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+
+    expect(await getPublishedQuestionCount()).toBe(0)
   })
 })

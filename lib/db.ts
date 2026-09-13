@@ -245,17 +245,38 @@ export async function getQuestionSetCount(): Promise<number> {
   return count ?? 0
 }
 
-// Request-deduped wrapper for the footer stat — same pattern as
-// getCachedBrowsableJobsCount in lib/jobs.ts (React's cache() collapses
-// repeated same-argument calls into one Supabase round trip per request;
-// it is not a cross-request cache and has no TTL). getQuestionSetCount()
-// already queries exactly what the footer needs — published, show_on_sites
-// contains 'ab' — since /practice-questions itself (getQuestionSets above)
-// applies that same fixed 'ab' filter unconditionally, for both hosts:
-// there is no per-host question-set distinction to make here, so this
-// counts the real, same number /practice-questions already shows on ET
-// today, rather than inventing a host split the feature doesn't have.
-export const getCachedQuestionSetCount = cache(getQuestionSetCount)
+// The footer's "Practice Questions" tile was showing the SET count
+// (question_sets rows — 181), not the individual QUESTION count the label
+// actually claims. Individual questions live in their own `questions`
+// table (see the Question interface above and getQuestionsBySetId below),
+// each with a `set_id` foreign key back to question_sets — not a JSON
+// array embedded on the set row — so counting them is a normal indexed
+// COUNT, not a read of every set's contents. `questions` itself carries no
+// status/show_on_sites of its own; "published" and host-reachability are
+// properties of the parent set, so this filters through an embedded
+// `question_sets!inner(...)` join (PostgREST/Supabase's standard way to
+// filter a count on a related table) rather than fetching sets first and
+// counting client-side — still exactly one HEAD-only round trip, same cost
+// class as every other count here. Deliberately no siteCode parameter, for
+// the same reason getQuestionSetCount() has none: /practice-questions
+// itself has no per-host split for question sets yet (fixed 'ab' filter,
+// see getQuestionSets above), so a question living in an 'ab'-only set is
+// what both hosts already see — matching, not inventing, that reality.
+export async function getPublishedQuestionCount(): Promise<number> {
+  const supabase = getSupabase()
+  const { count, error } = await supabase
+    .from('questions')
+    .select('*, question_sets!inner(status, show_on_sites)', { count: 'exact', head: true })
+    .eq('question_sets.status', 'published')
+    .contains('question_sets.show_on_sites', ['ab'])
+  if (error) {
+    console.error('getPublishedQuestionCount error:', error)
+    return 0
+  }
+  return count ?? 0
+}
+
+export const getCachedPublishedQuestionCount = cache(getPublishedQuestionCount)
 
 // Real per-host article count for the footer stat. Deliberately mirrors
 // getArticles()'s own filter in app/articles/page.tsx — status='published'

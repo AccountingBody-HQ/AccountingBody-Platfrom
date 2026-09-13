@@ -2,7 +2,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { canonicalMetadata } from '@/lib/canonical'
-import { getCachedPublishedArticleCount, getCachedQuestionSetCount } from '@/lib/db'
+import { getCachedPublishedArticleCount, getCachedPublishedQuestionCount } from '@/lib/db'
 import { formatCountLabel } from '@/lib/job-format'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -75,12 +75,14 @@ export default async function AboutPage() {
   // the same cache()-wrapped functions the root layout calls once per
   // request for the Footer, so calling them again here is a free,
   // deduped read, not a second database round trip.
-  const [articleCount, questionSetCount] = await Promise.all([
+  const [articleCount, questionCount] = await Promise.all([
     getCachedPublishedArticleCount('ab'),
-    getCachedQuestionSetCount(),
+    getCachedPublishedQuestionCount(),
   ])
   const articleCountLabel = formatCountLabel(articleCount)
-  const questionSetCountLabel = formatCountLabel(questionSetCount)
+  // Individual questions, not question sets — see getPublishedQuestionCount
+  // in lib/db.ts.
+  const questionCountLabel = formatCountLabel(questionCount)
   return (
     <>
       {/* HERO */}
@@ -138,13 +140,17 @@ export default async function AboutPage() {
                 One platform. Two pillars. The same uncompromising commitment to quality across both.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            {/* flex+justify-center+wrap, not a fixed 2x2 grid — looks
+                right at 3 or 4 tiles rather than leaving an empty cell
+                whenever a count is unavailable. */}
+            <div className="flex flex-wrap justify-center gap-4">
               {[
                 ...(articleCountLabel ? [{ value: articleCountLabel, label: 'Articles', sub: 'Written by qualified accountants' }] : []),
-                ...(questionSetCountLabel ? [{ value: questionSetCountLabel, label: 'Practice Questions', sub: 'MCQ, written & scenario' }] : []),
+                ...(questionCountLabel ? [{ value: questionCountLabel, label: 'Practice Questions', sub: 'MCQ, written & scenario' }] : []),
+                { value: 'Since 2018', label: 'Trusted Platform',       sub: 'Helping students pass exams' },
                 { value: 'Free',     label: 'To Start',                 sub: 'No credit card required' },
               ].map(stat => (
-                <div key={stat.label} className="bg-slate-50 rounded-xl border border-slate-200 p-6">
+                <div key={stat.label} className="bg-slate-50 rounded-xl border border-slate-200 p-6 w-[calc(50%-0.5rem)] min-w-[160px]">
                   <span className="stat-number block mb-1"><span translate="no">{stat.value}</span></span>
                   <span className="text-sm font-semibold text-navy-950 block">{stat.label}</span>
                   <span className="text-xs text-slate-400">{stat.sub}</span>
