@@ -117,6 +117,7 @@ export default async function JobDetailPage({
   const similarJobs = await getSimilarJobs({
     excludeId: job.id,
     platform: isEthioTax ? 'et' : 'ab',
+    title: job.title,
     locationCountry: job.location_country,
     seniorityLevel: job.seniority_level,
     limit: 6,

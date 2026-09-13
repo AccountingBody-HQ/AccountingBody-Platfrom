@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
-import { getJobSitemapEntries } from './jobs'
+import { getJobSitemapEntries, getSimilarJobs, buildSimilarQuery, type Job } from './jobs'
 
 const PAGE_SIZE = 1000
 
@@ -95,6 +95,116 @@ describe('getJobSitemapEntries — internal pagination', () => {
     vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
 
     const result = await getJobSitemapEntries('ab')
+
+    expect(result).toEqual([])
+  })
+})
+
+describe('buildSimilarQuery', () => {
+  it('turns a multi-word title into an OR-joined tsquery string', () => {
+    expect(buildSimilarQuery('Senior Practice Accountant'))
+      .toBe('senior OR practice OR accountant')
+  })
+
+  it('strips websearch_to_tsquery operator characters (&, quotes) before joining', () => {
+    expect(buildSimilarQuery('Senior Accountant ("Practice & Audit")'))
+      .toBe('senior OR accountant OR practice OR audit')
+  })
+
+  it('returns null when every token is job-board noise', () => {
+    expect(buildSimilarQuery('Remote Full Time UK Job')).toBeNull()
+  })
+
+  it('produces a single term with no OR for a single-word title', () => {
+    expect(buildSimilarQuery('Bookkeeper')).toBe('bookkeeper')
+  })
+})
+
+// Minimal fake client covering both call shapes getSimilarJobs uses:
+// .rpc() for the two ranked phases (queued responses, consumed in call
+// order) and the plain .from() chain for the phase C fallback (a single
+// scripted response, since no test here needs more than one fallback call).
+function fakeSimilarJobsClient(
+  rpcQueue: Array<{ data: unknown[] | null; error: unknown }>,
+  fallbackData: unknown[] = []
+) {
+  const rpcCalls: unknown[] = []
+  const rpc = vi.fn((_name: string, params: unknown) => {
+    rpcCalls.push(params)
+    const next = rpcQueue.shift() ?? { data: [], error: null }
+    return Promise.resolve(next)
+  })
+  const builder = {
+    from: () => builder,
+    select: () => builder,
+    eq: () => builder,
+    contains: () => builder,
+    or: () => builder,
+    neq: () => builder,
+    order: () => builder,
+    limit: () => Promise.resolve({ data: fallbackData, error: null }),
+  }
+  return { client: { rpc, from: builder.from }, rpcCalls }
+}
+
+function row(id: string): Job {
+  return { id } as unknown as Job
+}
+
+describe('getSimilarJobs', () => {
+  it('excludes excludeId when the ranked RPC returns the current job first', async () => {
+    const { client } = fakeSimilarJobsClient([
+      {
+        data: [row('self'), row('a'), row('b'), row('c'), row('d'), row('e'), row('f')],
+        error: null,
+      },
+    ])
+    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+
+    const result = await getSimilarJobs({
+      excludeId: 'self',
+      platform: 'ab',
+      title: 'Senior Practice Accountant',
+      locationCountry: 'United Kingdom',
+    })
+
+    expect(result.map(j => j.id)).not.toContain('self')
+    expect(result).toHaveLength(6)
+    expect(result.map(j => j.id)).toEqual(['a', 'b', 'c', 'd', 'e', 'f'])
+  })
+
+  it('never returns more than limit rows, even if the RPC returns more', async () => {
+    const { client } = fakeSimilarJobsClient([
+      {
+        data: Array.from({ length: 10 }, (_, i) => row(`job-${i}`)),
+        error: null,
+      },
+    ])
+    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+
+    const result = await getSimilarJobs({
+      excludeId: 'self',
+      platform: 'ab',
+      title: 'Senior Practice Accountant',
+      locationCountry: 'United Kingdom',
+      limit: 6,
+    })
+
+    expect(result).toHaveLength(6)
+  })
+
+  it('returns [] rather than throwing when the ranked RPC errors', async () => {
+    const { client } = fakeSimilarJobsClient([
+      { data: null, error: new Error('connection refused') },
+    ])
+    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+
+    const result = await getSimilarJobs({
+      excludeId: 'self',
+      platform: 'ab',
+      title: 'Senior Practice Accountant',
+      locationCountry: null,
+    })
 
     expect(result).toEqual([])
   })

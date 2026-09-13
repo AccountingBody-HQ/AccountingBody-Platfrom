@@ -425,73 +425,182 @@ export async function getJobBySlug(slug: string): Promise<Job | null> {
 // getActiveDirectJobs rather than getJobBySlug's broadened
 // active-or-expired filter.
 //
-// Same country is strictly preferred over same seniority, and the two are
-// never mixed unless the country alone can't fill the list: a first pass
-// fetches only same-country matches; seniority-only matches (which can be
-// anywhere in the world) are fetched in a second pass purely to pad up to
-// `limit`, and only run at all if the first pass came up short. Country
-// results are never displaced by seniority ones. (An earlier version OR'd
-// both conditions in one query, which meant a same-seniority match on the
-// other side of the world could — and did — fill the entire list even when
-// same-country matches existed.)
+// Relevance comes from search_jobs_ranked's ts_rank_cd against the job's
+// own title (migrations/0003, then 0004) via buildSimilarQuery below —
+// country is a preference, applied by running the ranked query twice
+// (same-country first, worldwide second to pad an underfilled list) rather
+// than a hard filter that could exclude an otherwise-relevant match. A
+// plain country + recency query is kept as a last-resort fallback for when
+// the title yields no usable search term, or both ranked calls still come
+// up short — strictly better than an empty section, but deliberately never
+// seniority-only: seniority alone (an earlier version's second pass) let a
+// same-bucket match on the other side of the world fill the entire list
+// even when it had nothing to do with the job being viewed, which is what
+// produced the cross-country contamination this replaces.
+
+// Job-board boilerplate that carries no topical signal for similarity
+// matching — left in, it only widens the candidate set without narrowing
+// toward anything meaningful. Exported so the list is reviewable and
+// testable on its own.
+export const SIMILAR_QUERY_NOISE_TOKENS = new Set([
+  'ltd', 'limited', 'plc', 'llp', 'inc', 'uk', 'gb',
+  'hybrid', 'remote', 'permanent', 'temporary', 'contract',
+  'fulltime', 'parttime', 'full', 'part', 'time',
+  'job', 'role', 'vacancy', 'urgent', 'new', 'hiring', 'wanted',
+  'required', 'needed', 'month', 'year', 'salary', 'benefits',
+  'bonus', 'plus', 'per', 'annum', 'pa', 'k',
+])
+
+// Turns a job title into a websearch_to_tsquery-safe OR string, e.g.
+// "Senior Practice Accountant" -> "senior OR practice OR accountant".
+// websearch_to_tsquery treats bare words as AND, and gives operator
+// meaning to &, |, !, :, (, ), <-> and " — an unsanitised title containing
+// any of those (e.g. `Accounts & Audit Senior`) could parse unpredictably,
+// and combined with the @@ WHERE filter search_jobs_ranked applies, could
+// silently return zero rows. Stripping to [a-z0-9 -] and rejoining with
+// the literal word "OR" (which websearch_to_tsquery parses as a real
+// disjunction, not a bare term) avoids both problems without touching the
+// RPC itself.
+export function buildSimilarQuery(title: string): string | null {
+  const tokens = title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+
+  const seen = new Set<string>()
+  const kept: string[] = []
+  for (const token of tokens) {
+    if (kept.length >= 6) break
+    if (token.length <= 1) continue
+    if (token === 'or' || token === 'and' || token === 'not') continue
+    if (SIMILAR_QUERY_NOISE_TOKENS.has(token)) continue
+    if (seen.has(token)) continue
+    seen.add(token)
+    kept.push(token)
+  }
+
+  return kept.length > 0 ? kept.join(' OR ') : null
+}
+
 export interface GetSimilarJobsParams {
   excludeId: string
   platform: string
+  title: string
   locationCountry?: string | null
   seniorityLevel?: SeniorityLevel | null
   limit?: number
 }
 
+// seniorityLevel stays part of the public contract (callers already pass
+// it) but is intentionally not read here — see the module comment above
+// for why seniority no longer backfills this list.
 export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Job[]> {
-  const { excludeId, platform, locationCountry, seniorityLevel, limit = 6 } = params
-  const nowIso = new Date().toISOString()
+  const { excludeId, platform, title, locationCountry, limit = 6 } = params
 
-  function baseQuery() {
-    return getSupabase()
-      .from('jobs')
-      .select(JOB_COLUMNS)
-      .eq('status', 'active')
-      .contains('platform', [platform])
-      .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-      .neq('id', excludeId)
+  const picked: Job[] = []
+  const pickedIds = new Set<string>([excludeId])
+
+  function addRows(rows: Job[]) {
+    for (const row of rows) {
+      if (picked.length >= limit) break
+      if (pickedIds.has(row.id)) continue
+      pickedIds.add(row.id)
+      picked.push(row)
+    }
   }
 
-  let sameCountry: Job[] = []
-  if (locationCountry) {
-    // Same defensive stripping as buildQualificationsOrFilter — this value
-    // originates from the job's own row rather than raw request input, but
-    // there's no cost to keeping the filter construction consistently safe.
-    const cleanCountry = locationCountry.replace(/[(),]/g, '')
-    const { data, error } = await baseQuery()
-      .eq('location_country', cleanCountry)
-      .order('created_at', { ascending: false })
-      .limit(limit)
-    if (error) console.error('getSimilarJobs (country) error:', error)
+  // Both ranked phases use this identical 15-key shape — the same one
+  // getActiveDirectJobs calls (lib/jobs.ts:341) — so there is exactly one
+  // place in this file that knows search_jobs_ranked's parameter contract.
+  async function rankedPhase(searchTerm: string, country: string | null): Promise<Job[]> {
+    const { data, error } = await getSupabase().rpc('search_jobs_ranked', {
+      p_platform: platform,
+      p_search: searchTerm,
+      p_location: null,
+      p_location_country: country,
+      p_employment_types: null,
+      p_seniority_levels: null,
+      p_remote_only: null,
+      p_salary_min: null,
+      p_salary_max: null,
+      p_posted_within_days: null,
+      p_qualifications: null,
+      p_sources: null,
+      p_sort_by: 'relevance',
+      // +1, not `limit`: the RPC has no exclude-id parameter, so the job
+      // being viewed matches its own title perfectly and ranks first in
+      // its own results. The extra slot keeps the list at full strength
+      // once that row is filtered out by addRows below.
+      p_limit: limit + 1,
+      p_offset: 0,
+    })
+    if (error) throw error
     // See the comment on the JOB_COLUMNS cast in getActiveDirectJobs — same
     // non-literal-string limitation applies here.
-    sameCountry = (data ?? []) as unknown as Job[]
+    return (data ?? []) as unknown as Job[]
   }
 
-  if (sameCountry.length >= limit || !seniorityLevel) {
-    return sameCountry.slice(0, limit)
+  let searchTerm: string | null = null
+  try {
+    searchTerm = buildSimilarQuery(title)
+  } catch (error) {
+    console.error('getSimilarJobs (buildSimilarQuery) error:', error)
   }
 
-  const remaining = limit - sameCountry.length
-  const cleanSeniority = seniorityLevel.replace(/[(),]/g, '')
-  const excludeIds = [excludeId, ...sameCountry.map(j => j.id)]
+  if (searchTerm) {
+    // Phase A — relevance within the job's own country.
+    try {
+      addRows(await rankedPhase(searchTerm, locationCountry ?? null))
+    } catch (error) {
+      console.error('getSimilarJobs (ranked, same country) error:', error)
+    }
 
-  const { data: seniorityData, error: seniorityError } = await baseQuery()
-    .eq('seniority_level', cleanSeniority)
-    .not('id', 'in', `(${excludeIds.join(',')})`)
-    .order('created_at', { ascending: false })
-    .limit(remaining)
-
-  if (seniorityError) {
-    console.error('getSimilarJobs (seniority) error:', seniorityError)
-    return sameCountry
+    // Phase B — relevance worldwide, only to pad an underfilled list, and
+    // only when country was an actual constraint phase A applied (if the
+    // job has no known country, phase A already searched worldwide, so
+    // re-running the identical call here would just repeat it).
+    if (picked.length < limit && locationCountry) {
+      try {
+        addRows(await rankedPhase(searchTerm, null))
+      } catch (error) {
+        console.error('getSimilarJobs (ranked, worldwide) error:', error)
+      }
+    }
   }
 
-  return [...sameCountry, ...((seniorityData ?? []) as unknown as Job[])]
+  // Phase C — last resort: plain country + recency, unchanged from the
+  // pre-ranking behaviour. Runs whenever A and B (or the absence of a
+  // usable search term) leave the list short. Deliberately country-only —
+  // never seniority-only worldwide; see the module comment above.
+  if (picked.length < limit && locationCountry) {
+    try {
+      const nowIso = new Date().toISOString()
+      // Same defensive stripping as buildQualificationsOrFilter — this
+      // value originates from the job's own row rather than raw request
+      // input, but there's no cost to keeping the filter construction
+      // consistently safe.
+      const cleanCountry = locationCountry.replace(/[(),]/g, '')
+      const { data, error } = await getSupabase()
+        .from('jobs')
+        .select(JOB_COLUMNS)
+        .eq('status', 'active')
+        .contains('platform', [platform])
+        .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+        .neq('id', excludeId)
+        .eq('location_country', cleanCountry)
+        .order('created_at', { ascending: false })
+        .limit(limit)
+      if (error) throw error
+      // See the comment on the JOB_COLUMNS cast in getActiveDirectJobs —
+      // same non-literal-string limitation applies here.
+      addRows((data ?? []) as unknown as Job[])
+    } catch (error) {
+      console.error('getSimilarJobs (fallback) error:', error)
+    }
+  }
+
+  return picked.slice(0, limit)
 }
 
 // No status filter — an employer managing their own listing via its unique
