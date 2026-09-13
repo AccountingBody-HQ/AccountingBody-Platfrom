@@ -12,7 +12,6 @@ import {
   formatAbsoluteDate,
   getJobCanonicalUrl,
   getCompanyInitials,
-  getCompanyColor,
 } from '@/lib/job-format'
 import { JobPostingStructuredData } from './structured-data'
 import { ApplyButton } from './ApplyButton'
@@ -87,7 +86,7 @@ export async function generateMetadata({
 function SkillList({ title, items }: { title: string; items: string[] }) {
   if (items.length === 0) return null
   return (
-    <div className="mb-6">
+    <div className="mt-10">
       <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">{title}</h2>
       <div className="flex flex-wrap gap-2">
         {items.map(item => (
@@ -98,6 +97,13 @@ function SkillList({ title, items }: { title: string; items: string[] }) {
       </div>
     </div>
   )
+}
+
+// Capitalises a job.source value for the closing line ('adzuna' -> 'Adzuna').
+// Local to this file rather than lib/job-format.ts — a single-use display
+// tweak for one line on one page, not a shared formatter.
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
 export default async function JobDetailPage({
@@ -132,162 +138,173 @@ export default async function JobDetailPage({
   // constraint never changes.
   const bodyText = job.description || job.excerpt || ''
   const paragraphs = bodyText.split('\n').map(p => p.trim()).filter(Boolean)
+  const locationDisplay = job.location_country && job.location_country !== job.location_text
+    ? `${job.location_text} · ${job.location_country}`
+    : job.location_text
+
+  // ApplyButton's own branch condition (see ApplyButton.tsx) — the caption
+  // below the apply control is only true when that exact branch is the one
+  // that actually renders: an 'external' job missing application_url falls
+  // through to ApplyButton's own internal apply-flow branch instead, which
+  // does not open the employer's own listing.
+  const opensEmployerListing = job.apply_method === 'external' && !!job.application_url
+
+  const closingLineParts = [
+    `Via ${capitalize(job.source)}`,
+    `Posted ${formatAbsoluteDate(postedDate)}`,
+    job.expires_at ? `Expires ${formatAbsoluteDate(job.expires_at)}` : null,
+  ].filter((part): part is string => part !== null)
 
   return (
     <main className="min-h-screen" style={{ background: '#F8F7F4' }}>
       <JobPostingStructuredData job={job} brandName={brandName} />
 
-      <section className="py-12 md:py-16">
-        <div className="container-site max-w-5xl mx-auto">
-          {/* Header — always fully populated: title/company_name/location_text are
-              NOT NULL, so unlike everything below it this block can never render
-              thin. It sits above both columns so a mobile visitor always sees what
-              role this is before the apply-rail (see below) is promoted above it. */}
-          <div className="mb-6 md:mb-8 flex items-start gap-4">
-            <div className={`w-14 h-14 rounded-2xl shrink-0 flex items-center justify-center text-lg font-bold ${getCompanyColor(job.company_name)}`}>
-              {getCompanyInitials(job.company_name)}
+      <section className="py-12 md:py-16 pb-[96px] md:pb-16">
+        <div className="max-w-[760px] mx-auto px-4 sm:px-6">
+          {/* 1. Top bar */}
+          <div className="flex items-center justify-between pb-[26px]">
+            <BackToListingsLink brandColor={brandColor} />
+            <ShareButton url={canonicalUrl} jobTitle={job.title} brandColor={brandColor} />
+          </div>
+
+          {/* 2. Identity block */}
+          <div className="flex items-start gap-4">
+            <div className="w-[52px] h-[52px] rounded-[13px] shrink-0 flex items-center justify-center bg-navy-950">
+              <span className="font-display text-[19px] text-[#F3D68A]">
+                {getCompanyInitials(job.company_name)}
+              </span>
             </div>
             <div className="min-w-0 flex-1">
-              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: brandColor }}>
-                {job.source === 'employer' ? 'Hiring Direct' : brandName}
-              </span>
-              <h1 className="font-display text-navy-950 text-2xl md:text-3xl mt-1 mb-1" style={{ letterSpacing: '-0.02em' }}>
+              <h1
+                className="font-display text-navy-950 text-[clamp(30px,5.4vw,41px)] leading-[1.12] tracking-[-0.015em]"
+              >
                 {job.title}
               </h1>
-              <p className="text-slate-600 text-base font-semibold">{job.company_name}</p>
-              <p className="text-slate-500 text-sm mt-1">
-                {job.location_country && job.location_country !== job.location_text
-                  ? `${job.location_text} · ${job.location_country}`
-                  : job.location_text}
-              </p>
+              <p className="text-[16.5px] font-medium text-slate-700 mt-1.5">{job.company_name}</p>
+              <p className="text-[15px] text-slate-500 mt-0.5">{locationDisplay}</p>
             </div>
           </div>
 
-          {/*
-            flex-col-reverse on mobile puts the apply rail ABOVE this main
-            content block in the single-column stack (promoting Apply above
-            "About this role", per the redesign brief) without changing
-            which element is visually the sidebar on desktop, where
-            lg:flex-row restores normal left-to-right DOM order.
-          */}
-          <div className="flex flex-col-reverse lg:flex-row lg:items-start gap-6 lg:gap-8">
-            {/* LEFT — main content. Ordered by the reliability tiers from the
-                job-count data: seniority (always present) first, salary
-                (63%) next, employment type (33%) after that, then the
-                free-text description, then qualifications (1.8% — kept
-                last and visually minor so its near-total absence never
-                reads as something missing). */}
-            <div className="flex-1 min-w-0 bg-white rounded-2xl border border-slate-200 p-6 md:p-10">
-              {/* Key facts strip */}
-              <div className="flex flex-wrap items-center gap-1.5 mb-6">
-                {seniority && (
-                  <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-navy-700">{seniority}</span>
-                )}
-                {salary ? (
-                  <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold" style={{ background: '#fdf9ec', color: '#b87d10', border: '1px solid #f5e095' }}>
-                    {salary}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-400">Salary not listed</span>
-                )}
-                {empLabel && (
-                  <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-navy-700">{empLabel}</span>
-                )}
-                {job.location_remote && (
-                  <span className="inline-flex items-center rounded-full bg-teal-50 text-teal-700 border border-teal-200 px-2.5 py-1 text-xs font-bold uppercase tracking-wide">Remote</span>
-                )}
-                {job.is_featured && (
-                  <span className="inline-flex items-center rounded-full bg-gold-50 text-gold-700 border border-gold-200 px-2.5 py-1 text-xs font-bold uppercase tracking-wide">Featured</span>
-                )}
-              </div>
+          {/* 3. Decision card */}
+          <div className="bg-white border border-[#E6E3DC] rounded-xl p-[26px] mt-[30px]">
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <span
+                className="font-display text-[clamp(34px,6.4vw,44px)] leading-none tracking-[-0.02em]"
+                style={{ color: salary ? '#b87d10' : '#928e80' }}
+              >
+                {salary ?? 'Salary not listed'}
+              </span>
+              {salary && <span className="text-[14.5px] text-slate-500">a year</span>}
+            </div>
 
-              {/* Stale / archived notice */}
-              {lifecycle !== 'active' && (
-                <div className="rounded-xl p-5 mb-8" style={{ background: 'rgba(12,26,61,0.04)' }}>
-                  <p className="text-sm text-slate-600 leading-relaxed">
-                    This listing was posted on {formatAbsoluteDate(postedDate)} and is no longer being updated.
-                    Please check directly with the employer to confirm whether the role is still available, or
-                    explore similar current roles below.
-                  </p>
+            {/* Each fact is independently conditional and omitted entirely
+                when absent — employment_type in particular is only 32.6%
+                populated, so this row is frequently partial by design. */}
+            <dl className="border-t border-[#E6E3DC] mt-5 pt-5 flex flex-wrap gap-x-[30px] gap-y-3">
+              {seniority && (
+                <div>
+                  <dt className="text-[12.5px] text-slate-400">Level</dt>
+                  <dd className="text-[15px] font-medium text-navy-950">{seniority}</dd>
                 </div>
               )}
-
-              {/* About this role — capped at a readable measure so a short
-                  (99% of jobs are under 500 characters) description doesn't
-                  stretch thin across the widened container. */}
-              <div className="mb-2">
-                <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">About this role</h2>
-                <div className="max-w-[65ch] space-y-3">
-                  {paragraphs.map((para, i) => (
-                    <p key={i} className="text-sm leading-relaxed text-slate-700">{para}</p>
-                  ))}
+              {empLabel && (
+                <div>
+                  <dt className="text-[12.5px] text-slate-400">Contract</dt>
+                  <dd className="text-[15px] font-medium text-navy-950">{empLabel}</dd>
                 </div>
+              )}
+              <div>
+                <dt className="text-[12.5px] text-slate-400">On site or Remote</dt>
+                <dd className="text-[15px] font-medium text-navy-950">{job.location_remote ? 'Remote' : 'On-site'}</dd>
               </div>
-
-              {/* Qualifications — 1.8% of jobs have any. Kept conditional
-                  exactly as SkillList already renders (null when empty), and
-                  deliberately last with no extra visual weight, so its
-                  near-total absence is never load-bearing for whether the
-                  page looks complete. */}
-              <div className="mt-8">
-                <SkillList title="Qualifications" items={job.qualifications_required ?? []} />
+              <div>
+                <dt className="text-[12.5px] text-slate-400">Posted</dt>
+                <dd className="text-[15px] font-medium text-navy-950">{formatRelativeDate(postedDate)}</dd>
               </div>
-            </div>
-
-            {/* RIGHT — sticky apply rail. Every element here is either
-                unconditional (company name/monogram/location, the Apply and
-                Share buttons, the posted date) or has an explicit non-empty
-                fallback (salary). Nothing in this column can be absent, by
-                design — this is what keeps the page from reading as
-                unfinished when "About this role" is one short paragraph. */}
-            <div className="lg:w-[360px] lg:shrink-0 lg:sticky lg:top-24 bg-white rounded-2xl border border-slate-200 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-sm font-bold ${getCompanyColor(job.company_name)}`}>
-                  {getCompanyInitials(job.company_name)}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-navy-950 truncate">{job.company_name}</p>
-                  <p className="text-xs text-slate-500 truncate">{job.location_text}</p>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                {salary ? (
-                  <p className="text-lg font-bold" style={{ color: '#b87d10' }}>{salary}</p>
-                ) : (
-                  <p className="text-sm text-slate-400">Salary not listed</p>
-                )}
-              </div>
-
-              <ApplyButton job={job} brandColor={brandColor} />
-
-              <div className="mt-4 flex items-center justify-between gap-3">
-                <ShareButton url={canonicalUrl} jobTitle={job.title} brandColor={brandColor} />
-                <p className="text-xs text-slate-400 whitespace-nowrap">Posted {formatRelativeDate(postedDate)}</p>
-              </div>
-            </div>
+            </dl>
           </div>
 
-          {/* Similar jobs */}
+          {/* Stale / archived notice — unchanged copy, positioned above the
+              description. */}
+          {lifecycle !== 'active' && (
+            <div className="rounded-xl p-5 mt-8" style={{ background: 'rgba(12,26,61,0.04)' }}>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                This listing was posted on {formatAbsoluteDate(postedDate)} and is no longer being updated.
+                Please check directly with the employer to confirm whether the role is still available, or
+                explore similar current roles below.
+              </p>
+            </div>
+          )}
+
+          {/* 4. About this role */}
+          <div className="mt-10">
+            <h2 className="font-display font-medium text-[21px] text-navy-950 mb-3">About this role</h2>
+            <div className="max-w-[62ch] space-y-4">
+              {paragraphs.map((para, i) => (
+                <p key={i} className="text-[16.5px] leading-[1.72] text-slate-700">{para}</p>
+              ))}
+            </div>
+            {/* Only true for employer-posted jobs' own routed apply flow —
+                an 'external' listing's description is a summary of the
+                employer's own posting, not the whole thing. */}
+            {job.apply_method === 'external' && (
+              <p className="mt-4 pl-4 border-l-2 border-[#E6E3DC] text-[14px] text-slate-500 max-w-[62ch]">
+                This is a summary. The employer&apos;s full description, including requirements and benefits, is on their own listing.
+              </p>
+            )}
+          </div>
+
+          {/* 5. Apply block — deliberately after the description and
+              immediately before similar roles, not in the decision card
+              (operator's explicit decision, a change from the original
+              mockup position). */}
+          <div className="mt-10 max-w-[62ch]">
+            <ApplyButton job={job} brandColor={brandColor} />
+            {opensEmployerListing && (
+              <p className="mt-3 text-center text-[13px] text-slate-500">Opens the employer&apos;s own listing in a new tab</p>
+            )}
+          </div>
+
+          {/* 6. Sticky mobile apply bar — below 768px only. Reuses
+              ApplyButton exactly as rendered above rather than duplicating
+              its click-tracking/branching logic. */}
+          <div
+            className="md:hidden fixed inset-x-0 bottom-0 z-50 bg-white border-t border-[#E6E3DC] p-3 shadow-[0_-6px_20px_-4px_rgba(12,26,61,0.12)]"
+            style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
+          >
+            <ApplyButton job={job} brandColor={brandColor} />
+          </div>
+
+          {/* 7. Qualifications — 1.8% of jobs have any; kept quiet and last
+              so its near-total absence is never load-bearing for whether
+              the page looks complete. */}
+          <SkillList title="Qualifications" items={job.qualifications_required ?? []} />
+
+          {/* 9. Similar roles — a single bordered list with hairline
+              dividers (the gap-px-over-a-coloured-background technique),
+              not a grid of cards. */}
           {similarJobs.length > 0 && (
-            <div className="mt-10">
-              <h2 className="font-display text-lg text-navy-950 mb-4">Similar current roles</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="mt-[52px] pt-[52px] border-t border-[#E6E3DC]">
+              <h2 className="font-display font-medium text-[21px] text-navy-950 mb-4">Similar current roles</h2>
+              <div className="grid grid-cols-1 gap-px bg-[#E6E3DC] rounded-[14px] border border-[#E6E3DC] overflow-hidden">
                 {similarJobs.map(similar => {
                   const similarSalary = formatSalary(similar)
+                  const similarLocation = similar.location_country && similar.location_country !== similar.location_text
+                    ? similar.location_country
+                    : similar.location_text
                   return (
-                    <Link key={similar.id} href={`/jobs/${similar.slug}`}
-                      className="block bg-white rounded-xl border border-slate-200 p-4 hover:border-slate-300 hover:shadow-sm transition-all">
-                      <p className="font-display text-sm font-medium text-navy-950 leading-snug line-clamp-2 mb-1">{similar.title}</p>
-                      <p className="text-xs font-semibold text-slate-600 mb-1">{similar.company_name}</p>
-                      <p className="text-xs text-slate-400">
-                        {similar.location_country && similar.location_country !== similar.location_text
-                          ? similar.location_country
-                          : similar.location_text}
+                    <Link
+                      key={similar.id}
+                      href={`/jobs/${similar.slug}`}
+                      className="flex items-center justify-between gap-4 bg-white px-[18px] py-[14px] hover:bg-slate-50 transition-colors max-[520px]:flex-col max-[520px]:items-start max-[520px]:gap-[5px]"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-[15.5px] font-medium text-navy-950 truncate">{similar.title}</p>
+                        <p className="text-[13.5px] text-slate-500 truncate">{similar.company_name} · {similarLocation}</p>
+                      </div>
+                      <p className="text-[14px] font-medium text-gold-700 whitespace-nowrap shrink-0">
+                        {similarSalary ?? 'Salary not listed'}
                       </p>
-                      {similarSalary && (
-                        <p className="text-xs font-bold mt-2" style={{ color: '#b87d10' }}>{similarSalary}</p>
-                      )}
                     </Link>
                   )
                 })}
@@ -295,9 +312,10 @@ export default async function JobDetailPage({
             </div>
           )}
 
-          <div className="mt-8">
-            <BackToListingsLink brandColor={brandColor} />
-          </div>
+          {/* 10. Closing line */}
+          <p className="mt-[30px] text-[13.5px] text-slate-400">
+            {closingLineParts.join(' · ')}
+          </p>
         </div>
       </section>
     </main>
