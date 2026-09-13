@@ -270,12 +270,12 @@ export default async function JobDetailPage({
                       href={`/jobs/${similar.slug}`}
                       className="flex items-center justify-between gap-4 bg-white px-[18px] py-[14px] min-h-[64px] hover:bg-slate-50 transition-colors max-[520px]:flex-col max-[520px]:items-start max-[520px]:gap-[5px] max-[520px]:min-h-0"
                     >
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="text-[15.5px] font-medium text-navy-950 truncate">{similar.title}</p>
                         <p className="text-[13.5px] text-slate-500 truncate">{similar.company_name} · {similarLocation}</p>
                       </div>
                       <p
-                        className={`text-[14px] font-medium whitespace-nowrap shrink-0 tabular-nums w-[110px] text-right max-[520px]:w-auto max-[520px]:text-left ${
+                        className={`text-[14px] font-medium whitespace-nowrap shrink-0 tabular-nums min-w-[90px] text-right max-[520px]:min-w-0 max-[520px]:text-left ${
                           similarSalary ? 'text-gold-700' : 'text-slate-400'
                         }`}
                       >
