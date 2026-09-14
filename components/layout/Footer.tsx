@@ -401,6 +401,7 @@ export function Footer({
       { label: 'Firms & Freelancers',       href: '/firms-freelancers' },
       { label: 'Global Payroll',            href: '/global-payroll' },
       { label: 'About Us',                  href: '/about' },
+      { label: 'Contact',                   href: '/contact' },
     ],
   }
 
