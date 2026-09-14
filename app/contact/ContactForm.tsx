@@ -3,8 +3,7 @@
 // Saves contact submissions and email subscribers to Supabase via /api/contact
 // No third-party email service required.
 
-import { useState, useRef } from 'react'
-import Script from 'next/script'
+import { useState, useRef, useEffect } from 'react'
 
 declare global {
   interface Window {
@@ -33,8 +32,77 @@ export default function ContactForm() {
   const [errorMsg, setErrorMsg]       = useState('')
   const [subscribeState, setSubState] = useState<FormState>('idle')
   const [subAlreadySent, setSubAlreadySent] = useState(false)
+  const contactContainer              = useRef<HTMLDivElement | null>(null)
   const contactWidgetId               = useRef<string | null>(null)
+  const subscribeContainer            = useRef<HTMLDivElement | null>(null)
   const subscribeWidgetId             = useRef<string | null>(null)
+
+  function sitekeyForThisPlatform(): string {
+    return (typeof document !== 'undefined' && document.cookie.includes('x-et-platform=ethiotax'))
+      ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '')
+      : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? '')
+  }
+
+  // Renders each widget at most once per mount. The guard is our own ref
+  // flag (widgetId.current), checked before every attempt — never the
+  // container's live DOM state, which a third-party script on
+  // ethiotax.com repeatedly rewrites (see the 400020 investigation
+  // report). A one-shot effect with a stable object ref can't be
+  // re-triggered by that external mutation the way the previous inline
+  // ref callbacks could. Retries on a short interval only until
+  // window.turnstile becomes available (the sitewide script tag in
+  // app/layout.tsx loads asynchronously), giving up after ~10s.
+  useEffect(() => {
+    let attempts = 0
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+
+    const tryRender = () => {
+      if (contactWidgetId.current !== null) return
+      if (contactContainer.current && window.turnstile) {
+        contactWidgetId.current = window.turnstile.render(contactContainer.current, {
+          sitekey: sitekeyForThisPlatform(),
+        })
+        return
+      }
+      attempts += 1
+      if (attempts < 100) timeoutId = setTimeout(tryRender, 100)
+    }
+    tryRender()
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId)
+      if (contactWidgetId.current && window.turnstile && 'remove' in window.turnstile) {
+        (window.turnstile as unknown as { remove: (id: string) => void }).remove(contactWidgetId.current)
+      }
+      contactWidgetId.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    let attempts = 0
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+
+    const tryRender = () => {
+      if (subscribeWidgetId.current !== null) return
+      if (subscribeContainer.current && window.turnstile) {
+        subscribeWidgetId.current = window.turnstile.render(subscribeContainer.current, {
+          sitekey: sitekeyForThisPlatform(),
+        })
+        return
+      }
+      attempts += 1
+      if (attempts < 100) timeoutId = setTimeout(tryRender, 100)
+    }
+    tryRender()
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId)
+      if (subscribeWidgetId.current && window.turnstile && 'remove' in window.turnstile) {
+        (window.turnstile as unknown as { remove: (id: string) => void }).remove(subscribeWidgetId.current)
+      }
+      subscribeWidgetId.current = null
+    }
+  }, [])
 
   async function handleContactSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -96,10 +164,11 @@ export default function ContactForm() {
 
   return (
     <>
-      <Script
-        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-        strategy="afterInteractive"
-      />
+      {/* No <Script> tag here — app/layout.tsx already loads the Turnstile
+          API script once, globally, for every page (id="cf-turnstile-script").
+          This component used to load its own second, undeduplicated copy;
+          see the P8 report and components/EmailSignupForm.tsx for the same
+          fix applied there. */}
       <div className="space-y-10">
 
         {/* CONTACT FORM */}
@@ -177,20 +246,13 @@ export default function ContactForm() {
               )}
               {/* Honeypot */}
               <input type="text" name="_h" defaultValue="" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
-              {/* Turnstile invisible widget */}
-              <div
-                className="cf-turnstile"
-                data-sitekey={(typeof document !== 'undefined' && document.cookie.includes('x-et-platform=ethiotax')) ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? '')}
-                data-callback="onTurnstileSuccess"
-                data-size="invisible"
-                ref={(el) => {
-                  if (el && window.turnstile && !contactWidgetId.current) {
-                    contactWidgetId.current = window.turnstile.render(el, {
-                      sitekey: (typeof document !== 'undefined' && document.cookie.includes('x-et-platform=ethiotax')) ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? ''),
-                    })
-                  }
-                }}
-              />
+              {/* Turnstile invisible widget — explicit render only (see the
+                  useEffect above); no className="cf-turnstile"/data-sitekey
+                  here, since that would make api.js's own implicit
+                  auto-render race the explicit render() call below against
+                  the same container, which throws Cloudflare error 400020
+                  on the second attempt regardless of any external script. */}
+              <div ref={contactContainer} />
               <button type="submit" disabled={formState === 'loading'}
                 className="w-full h-12 rounded-lg bg-navy-950 text-white text-sm font-semibold hover:bg-navy-900 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 shadow-sm">
                 {formState === 'loading' ? (
@@ -238,15 +300,7 @@ export default function ContactForm() {
                 <input name="sub-email" type="email" required placeholder="your@email.com"
                   className="flex-1 w-full h-12 px-4 rounded-lg text-sm bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" />
                 {/* Turnstile invisible widget for subscribe */}
-                <div
-                  ref={(el) => {
-                    if (el && window.turnstile && !subscribeWidgetId.current) {
-                      subscribeWidgetId.current = window.turnstile.render(el, {
-                        sitekey: (typeof document !== 'undefined' && document.cookie.includes('x-et-platform=ethiotax')) ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? ''),
-                      })
-                    }
-                  }}
-                />
+                <div ref={subscribeContainer} />
                 <button type="submit" disabled={subscribeState === 'loading'}
                   className="h-12 px-6 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 disabled:opacity-60 transition-colors whitespace-nowrap">
                   {subscribeState === 'loading' ? 'Subscribing…' : 'Subscribe free'}

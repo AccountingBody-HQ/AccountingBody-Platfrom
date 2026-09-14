@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 declare global {
   interface Window {
@@ -15,7 +15,43 @@ export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: b
   const [alreadySent, setAlreadySent] = useState(false)
   const [email, setEmail] = useState('')
   const [honeypot, setHoneypot] = useState('')
+  const turnstileContainer = useRef<HTMLDivElement | null>(null)
   const turnstileWidgetId = useRef<string | null>(null)
+
+  // Renders the widget at most once per mount. The guard is our own ref
+  // flag (turnstileWidgetId.current), checked before every attempt — never
+  // the container's live DOM state, which a third-party script on
+  // ethiotax.com repeatedly rewrites (see the 400020 investigation report).
+  // A one-shot effect with a stable object ref can't be re-triggered by
+  // that external mutation the way a re-created inline ref callback can.
+  // Retries on a short interval only until window.turnstile becomes
+  // available (the sitewide script tag in app/layout.tsx loads
+  // asynchronously), and gives up after ~10s so it can't poll forever.
+  useEffect(() => {
+    let attempts = 0
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+
+    const tryRender = () => {
+      if (turnstileWidgetId.current !== null) return
+      if (turnstileContainer.current && window.turnstile) {
+        turnstileWidgetId.current = window.turnstile.render(turnstileContainer.current, {
+          sitekey: isEthioTax ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? ''),
+        })
+        return
+      }
+      attempts += 1
+      if (attempts < 100) timeoutId = setTimeout(tryRender, 100)
+    }
+    tryRender()
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId)
+      if (turnstileWidgetId.current && window.turnstile && 'remove' in window.turnstile) {
+        (window.turnstile as unknown as { remove: (id: string) => void }).remove(turnstileWidgetId.current)
+      }
+      turnstileWidgetId.current = null
+    }
+  }, [isEthioTax])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -91,15 +127,7 @@ export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: b
       {/* Honeypot */}
       <input type="text" value={honeypot} onChange={e => setHoneypot(e.target.value)} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
       {/* Turnstile invisible widget */}
-      <div
-        ref={(el) => {
-          if (el && window.turnstile && !turnstileWidgetId.current) {
-            turnstileWidgetId.current = window.turnstile.render(el, {
-              sitekey: isEthioTax ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? ''),
-            })
-          }
-        }}
-      />
+      <div ref={turnstileContainer} />
       {status === 'error' && (
         <p className="text-red-400 text-xs text-center">Something went wrong. Please try again.</p>
       )}

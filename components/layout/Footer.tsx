@@ -135,24 +135,54 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [alreadySent, setAlreadySent] = useState(false)
   const [honeypot, setHoneypot] = useState('')
+  const turnstileContainer = React.useRef<HTMLDivElement | null>(null)
   const turnstileWidgetId = React.useRef<string | null>(null)
   const turnstileToken = React.useRef<string>('')
   const siteKey = isEthioTax
     ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '')
     : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? '')
 
-  // Footer lives in the root layout and persists across client-side
-  // navigations — unlike every other Turnstile call site, which each live on
-  // a page that fully unmounts — so removing the widget on unmount is kept
-  // here to avoid leaking a registration for the life of the session.
+  // Renders the widget at most once per mount. The guard is our own ref
+  // flag (turnstileWidgetId.current), checked before every attempt — never
+  // the container's live DOM state, which a third-party script on
+  // ethiotax.com repeatedly rewrites (see the 400020 investigation report).
+  // A one-shot effect with a stable object ref can't be re-triggered by
+  // that external mutation the way the previous inline ref callback could.
+  // Retries on a short interval only until window.turnstile becomes
+  // available, giving up after ~10s.
+  //
+  // Footer also lives in the root layout and persists across client-side
+  // navigations — unlike every other Turnstile call site, which each live
+  // on a page that fully unmounts — so removing the widget on unmount is
+  // kept here to avoid leaking a registration for the life of the session.
   React.useEffect(() => {
+    let attempts = 0
+    let timeoutId: ReturnType<typeof setTimeout> | undefined
+
+    const tryRender = () => {
+      if (turnstileWidgetId.current !== null) return
+      if (turnstileContainer.current && window.turnstile && siteKey) {
+        turnstileWidgetId.current = window.turnstile.render(turnstileContainer.current, {
+          sitekey: siteKey,
+          callback: (token: string) => { turnstileToken.current = token },
+          'expired-callback': () => { turnstileToken.current = '' },
+          'error-callback': () => { turnstileToken.current = '' },
+        })
+        return
+      }
+      attempts += 1
+      if (attempts < 100) timeoutId = setTimeout(tryRender, 100)
+    }
+    tryRender()
+
     return () => {
+      if (timeoutId) clearTimeout(timeoutId)
       if (turnstileWidgetId.current && window.turnstile && 'remove' in window.turnstile) {
         (window.turnstile as unknown as { remove: (id: string) => void }).remove(turnstileWidgetId.current)
-        turnstileWidgetId.current = null
       }
+      turnstileWidgetId.current = null
     }
-  }, [])
+  }, [siteKey])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -232,18 +262,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
               ) : 'Subscribe'}
             </button>
           </div>
-          <div
-            ref={(el) => {
-              if (el && window.turnstile && siteKey && !turnstileWidgetId.current) {
-                turnstileWidgetId.current = window.turnstile.render(el, {
-                  sitekey: siteKey,
-                  callback: (token: string) => { turnstileToken.current = token },
-                  'expired-callback': () => { turnstileToken.current = '' },
-                  'error-callback': () => { turnstileToken.current = '' },
-                })
-              }
-            }}
-          />
+          <div ref={turnstileContainer} />
           {status === 'error' && (
             <p className="text-xs text-red-400">Something went wrong. Please try again.</p>
           )}
