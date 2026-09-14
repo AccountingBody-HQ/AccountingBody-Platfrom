@@ -177,13 +177,13 @@ export default function ContactForm() {
               {/* Turnstile invisible widget */}
               <div
                 className="cf-turnstile"
-                data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                data-sitekey={(typeof document !== 'undefined' && document.cookie.includes('x-et-platform=ethiotax')) ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? '')}
                 data-callback="onTurnstileSuccess"
                 data-size="invisible"
                 ref={(el) => {
                   if (el && window.turnstile && !contactWidgetId.current) {
                     contactWidgetId.current = window.turnstile.render(el, {
-                      sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+                      sitekey: (typeof document !== 'undefined' && document.cookie.includes('x-et-platform=ethiotax')) ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? ''),
                     })
                   }
                 }}
@@ -235,7 +235,7 @@ export default function ContactForm() {
                   ref={(el) => {
                     if (el && window.turnstile && !subscribeWidgetId.current) {
                       subscribeWidgetId.current = window.turnstile.render(el, {
-                        sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+                        sitekey: (typeof document !== 'undefined' && document.cookie.includes('x-et-platform=ethiotax')) ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? ''),
                       })
                     }
                   }}

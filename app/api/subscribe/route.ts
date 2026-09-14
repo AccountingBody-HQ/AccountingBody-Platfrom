@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const { email, _h } = body
-    const turnstileToken = body["cf-turnstile-response"] ?? ""
+    const turnstileToken = typeof body["cf-turnstile-response"] === "string" ? body["cf-turnstile-response"] : ""
     const isET = req.headers.get("x-et-platform") === "ethiotax"
     const brand = isET
       ? { name: "EthioTax", domain: "ethiotax.com", color: "#1A4731" }
@@ -30,10 +30,8 @@ export async function POST(req: NextRequest) {
 
     const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for") ?? ""
 
-    if (turnstileToken) {
-      const valid = await verifyTurnstile(turnstileToken, ip, isET)
-      if (!valid) return NextResponse.json({ success: true })
-    }
+    const valid = await verifyTurnstile(turnstileToken, ip, isET)
+    if (!valid) return NextResponse.json({ success: true })
 
     const BLOCKED = [
       "mailinator.com", "guerrillamail.com", "trashmail.com", "tempmail.com",
