@@ -12,6 +12,7 @@ declare global {
 
 export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: boolean }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [alreadySent, setAlreadySent] = useState(false)
   const [email, setEmail] = useState('')
   const [honeypot, setHoneypot] = useState('')
   const turnstileWidgetId = useRef<string | null>(null)
@@ -27,6 +28,8 @@ export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: b
         body: JSON.stringify({ email, _h: honeypot, 'cf-turnstile-response': token }),
       })
       if (!res.ok) throw new Error()
+      const data = await res.json()
+      setAlreadySent(Boolean(data.alreadySent))
       setStatus('success')
       setEmail('')
       if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
@@ -43,7 +46,11 @@ export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: b
           <svg className="w-5 h-5 text-gold-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" />
           </svg>
-          <p className="text-white text-sm font-medium">Check your inbox to confirm</p>
+          <p className="text-white text-sm font-medium">
+            {alreadySent
+              ? "We already sent you a confirmation link. Check your inbox and your spam folder. If it hasn't arrived, try again in an hour."
+              : 'Check your inbox to confirm'}
+          </p>
         </div>
         <button onClick={() => setStatus('idle')} className="text-xs text-white/50 hover:text-white/80 transition-colors">
           Subscribe another email

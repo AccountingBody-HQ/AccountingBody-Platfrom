@@ -133,6 +133,7 @@ const SINCE_2018_STAT = { value: 'Since 2018', label: 'Trusted Platform' }
 function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
   const [email,  setEmail]  = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [alreadySent, setAlreadySent] = useState(false)
   const [honeypot, setHoneypot] = useState('')
   const turnstileWidgetId = React.useRef<string | null>(null)
   const turnstileToken = React.useRef<string>('')
@@ -166,6 +167,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
       if (!res.ok) throw new Error('subscribe failed')
       const data = await res.json()
       if (!data.success) throw new Error('subscribe failed')
+      setAlreadySent(Boolean(data.alreadySent))
       setStatus('success')
       setEmail('')
       turnstileToken.current = ''
@@ -195,7 +197,11 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
           <svg className="w-4 h-4 text-teal-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
           </svg>
-          <span className="text-sm text-teal-300 font-medium">Check your inbox to confirm</span>
+          <span className="text-sm text-teal-300 font-medium">
+            {alreadySent
+              ? "We already sent you a confirmation link. Check your inbox and your spam folder. If it hasn't arrived, try again in an hour."
+              : 'Check your inbox to confirm'}
+          </span>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-2" noValidate>

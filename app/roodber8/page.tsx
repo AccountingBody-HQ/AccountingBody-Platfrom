@@ -39,7 +39,7 @@ async function getStats() {
     { count: totalCoursesCount },
   ] = await Promise.all([
     supabase.from("contact_submissions").select("*", { count: "exact", head: true }).eq("platform", "ab"),
-    supabase.from("email_subscribers").select("*", { count: "exact", head: true }).eq("platform", "ab"),
+    supabase.from("email_subscribers").select("*", { count: "exact", head: true }).eq("platform", "ab").neq("status", "pending"),
     supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("platform", "ab"),
     supabase.from("firms_applications").select("*", { count: "exact", head: true }).eq("platform", "ab"),
     supabase.from("jobs").select("*", { count: "exact", head: true }).eq("source", "employer").eq("status", "active").contains("platform", ["ab"]),
@@ -50,7 +50,7 @@ async function getStats() {
     supabase.from("firms_applications").select("*", { count: "exact", head: true }).eq("platform", "ab").in("status", ["pending", "under_review"]),
     // EthioTax stats
     supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("platform", "et"),
-    supabase.from("email_subscribers").select("*", { count: "exact", head: true }).eq("platform", "et"),
+    supabase.from("email_subscribers").select("*", { count: "exact", head: true }).eq("platform", "et").neq("status", "pending"),
     supabase.from("help_requests").select("*", { count: "exact", head: true }).eq("platform", "et").eq("status", "open"),
     supabase.from("articles").select("*", { count: "exact", head: true }).contains("show_on_sites", ["ab"]),
     supabase.from("articles").select("*", { count: "exact", head: true }).contains("show_on_sites", ["et"]),
@@ -71,6 +71,7 @@ async function getStats() {
     .from("email_subscribers")
     .select("id, email, subscribed_at")
     .eq("platform", "ab")
+    .neq("status", "pending")
     .order("subscribed_at", { ascending: false })
     .limit(5)
 

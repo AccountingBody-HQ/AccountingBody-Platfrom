@@ -32,6 +32,7 @@ export default function ContactForm() {
   const [formState, setFormState]     = useState<FormState>('idle')
   const [errorMsg, setErrorMsg]       = useState('')
   const [subscribeState, setSubState] = useState<FormState>('idle')
+  const [subAlreadySent, setSubAlreadySent] = useState(false)
   const contactWidgetId               = useRef<string | null>(null)
   const subscribeWidgetId             = useRef<string | null>(null)
 
@@ -82,6 +83,8 @@ export default function ContactForm() {
         body: JSON.stringify({ email, _h: '', 'cf-turnstile-response': token }),
       })
       if (!res.ok) throw new Error()
+      const data = await res.json()
+      setSubAlreadySent(Boolean(data.alreadySent))
       setSubState('success')
       form.reset()
       if (subscribeWidgetId.current) window.turnstile?.reset(subscribeWidgetId.current)
@@ -224,7 +227,11 @@ export default function ContactForm() {
                 <svg className="w-5 h-5 text-gold-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <p className="text-white text-sm font-medium">Check your inbox to confirm</p>
+                <p className="text-white text-sm font-medium">
+                  {subAlreadySent
+                    ? "We already sent you a confirmation link. Check your inbox and your spam folder. If it hasn't arrived, try again in an hour."
+                    : 'Check your inbox to confirm'}
+                </p>
               </div>
             ) : (
               <form onSubmit={handleSubscribeSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md">
