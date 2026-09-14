@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import { unstable_cache } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
 
 function getSupabase() {
@@ -724,15 +725,29 @@ export async function getBrowsableJobsCount(platform: string): Promise<number> {
   return count ?? 0
 }
 
-// Request-deduped wrapper: the root layout (Footer) and the jobs hub page
-// (JobsHubClient) both need this count on the same page load. Without
-// memoisation each would run its own separate COUNT query; React's cache()
-// collapses repeated calls with the same platform argument into a single
-// Supabase round-trip per request (never across requests — this is not a
-// data cache). Deliberately not used more broadly than these two call
-// sites — see the job-count fix report for why the rest of the site's
-// "live jobs" copy was reworded instead of wired to a live count.
-export const getCachedBrowsableJobsCount = cache(getBrowsableJobsCount)
+// Two layers, each solving a different problem:
+//   - unstable_cache persists the result across requests/instances (Vercel
+//     backs this with its own shared Data Cache, not per-instance memory)
+//     for 15 minutes — matched to how often ingestion actually runs, so a
+//     shorter TTL couldn't surface fresher data anyway. `platform` is
+//     passed as the wrapped function's own argument, and per Next.js's
+//     documented unstable_cache behaviour the arguments passed to the
+//     returned function are always part of the cache key (in addition to
+//     the keyParts array) — so 'ab' and 'et' calls are genuinely separate
+//     cache entries; this is NOT a single shared count.
+//   - react's cache() stays on the outside for the reason it was added
+//     originally: the root layout (Footer) and the jobs hub page
+//     (JobsHubClient) both need this count on the same page load, and
+//     without it each would still run its own separate call within one
+//     request even with unstable_cache underneath (cache() memoises the
+//     in-flight promise itself for genuinely concurrent same-argument
+//     calls in one render; unstable_cache alone doesn't guarantee that).
+// Deliberately not used more broadly than these two call sites — see the
+// job-count fix report for why the rest of the site's "live jobs" copy was
+// reworded instead of wired to a live count.
+export const getCachedBrowsableJobsCount = cache(
+  unstable_cache(getBrowsableJobsCount, ['browsable-jobs-count'], { revalidate: 900 })
+)
 
 export async function getExpiringJobs(daysFromNow: number): Promise<Job[]> {
   const supabase = getSupabase()

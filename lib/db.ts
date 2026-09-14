@@ -1,5 +1,6 @@
 // Session 41 — private repo deploy test
 import { cache } from 'react'
+import { unstable_cache } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
 
 function getSupabase() {
@@ -276,7 +277,16 @@ export async function getPublishedQuestionCount(): Promise<number> {
   return count ?? 0
 }
 
-export const getCachedPublishedQuestionCount = cache(getPublishedQuestionCount)
+// unstable_cache persists this across requests for 15 minutes (matched to
+// the ingestion cadence — see the equivalent comment on
+// getCachedBrowsableJobsCount in lib/jobs.ts for the full reasoning,
+// including why react's cache() stays on the outside). No platform
+// argument here to key on: getPublishedQuestionCount() is deliberately
+// fixed to 'ab' for both hosts already (see its own comment above), so one
+// cache entry serving both platforms matches, not changes, that.
+export const getCachedPublishedQuestionCount = cache(
+  unstable_cache(getPublishedQuestionCount, ['published-question-count'], { revalidate: 900 })
+)
 
 // Real per-host article count for the footer stat. Deliberately mirrors
 // getArticles()'s own filter in app/articles/page.tsx — status='published'
@@ -303,7 +313,14 @@ export async function getPublishedArticleCount(siteCode: string): Promise<number
   return count ?? 0
 }
 
-export const getCachedPublishedArticleCount = cache(getPublishedArticleCount)
+// unstable_cache persists this across requests for 15 minutes; siteCode is
+// the wrapped function's own argument, so 'ab' and 'et' are genuinely
+// separate cache entries (see the fuller reasoning on
+// getCachedBrowsableJobsCount in lib/jobs.ts — same two-layer approach,
+// same platform-keying guarantee).
+export const getCachedPublishedArticleCount = cache(
+  unstable_cache(getPublishedArticleCount, ['published-article-count'], { revalidate: 900 })
+)
 
 export async function getETICPAModuleArticles(level: string, module: string): Promise<ArticleSummary[]> {
   const supabase = getSupabase()
