@@ -180,6 +180,11 @@ export default async function JobDetailPage({
                 {salary ?? 'Salary not listed'}
               </span>
               {salary && <span className="text-[14.5px] text-slate-500">a year</span>}
+              {salary && job.salary_is_predicted && (
+                <span className="text-2xs font-semibold px-2 py-0.5 rounded-full bg-gold-50 text-gold-600 border border-gold-200">
+                  Estimated, not confirmed by the employer
+                </span>
+              )}
             </div>
 
             {/* Each fact is independently conditional and omitted entirely
