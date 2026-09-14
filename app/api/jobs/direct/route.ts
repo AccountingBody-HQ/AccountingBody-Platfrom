@@ -103,7 +103,13 @@ export async function GET(req: NextRequest) {
       getActiveDirectJobs({ ...baseParams, limit, offset }),
       getActiveDirectJobs({ ...baseParams, countOnly: true }),
     ])
-    return NextResponse.json({ jobs, total }, { headers: NO_CACHE_HEADERS })
+    // Cards render `excerpt`, never `description` (measured: ~26% of this
+    // endpoint's response body for a field JobListingsClient.tsx never
+    // reads) — stripped here, not from JOB_COLUMNS or the RPC, so
+    // getJobBySlug's separate detail-page path keeps the full description.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const listingJobs = jobs.map(({ description, ...rest }) => rest)
+    return NextResponse.json({ jobs: listingJobs, total }, { headers: NO_CACHE_HEADERS })
   } catch (err: unknown) {
     console.error('api/jobs/direct error:', err)
     return NextResponse.json({ jobs: [], total: 0 }, { headers: NO_CACHE_HEADERS })
