@@ -98,3 +98,22 @@ describe('normalise — salary parsing', () => {
     expect(job.quality_flags).not.toContain('salary_converted_from_hourly')
   })
 })
+
+describe('normalise — description HTML stripping', () => {
+  it('inline tags abutting words are separated by a space, not fused, with no double spaces', () => {
+    const provider = makeProvider({ field_mapping: BASE_MAPPING })
+    const rawJob: RawJob = {
+      title: 'Finance Manager',
+      company_name: 'Acme Corp',
+      location_text: 'London, UK',
+      description: 'within the<strong>FMCG</strong>sector and <em>finance</em> teams',
+      application_url: 'https://example.com/apply/5',
+    }
+
+    const job = normalise(rawJob, provider)
+
+    expect(job.description).not.toMatch(/theFMCG|FMCGsector/)
+    expect(job.description).not.toMatch(/ {2,}/)
+    expect(job.description).toBe('within the FMCG sector and finance teams')
+  })
+})
