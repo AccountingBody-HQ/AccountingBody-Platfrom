@@ -232,16 +232,21 @@ function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
   return (
     <div>
       <FilterSection title="Country">
-        <select
-          value={filters.locationCountry}
-          onChange={e => onChange({ ...filters, locationCountry: e.target.value })}
-          aria-label="Country"
-          className="w-full h-10 rounded-lg border border-slate-200 text-sm font-medium text-navy-950 px-3 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white"
-        >
-          {countryOptions.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
+        <div className="relative">
+          <select
+            value={filters.locationCountry}
+            onChange={e => onChange({ ...filters, locationCountry: e.target.value })}
+            aria-label="Country"
+            className="w-full h-10 pl-3 pr-8 rounded-lg border border-slate-200 text-sm font-medium text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white appearance-none cursor-pointer"
+          >
+            {countryOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+            <ChevronDownIcon />
+          </div>
+        </div>
       </FilterSection>
 
       <FilterSection title="Qualification">
@@ -917,7 +922,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                           value={sortBy}
                           onChange={e => navigateToState({ ...urlState, sortBy: e.target.value as SortBy, page: DEFAULT_PAGE })}
                           aria-label="Sort by"
-                          className="h-9 pl-3 pr-8 rounded-lg border border-slate-200 text-sm font-medium text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white appearance-none cursor-pointer"
+                          className="h-10 pl-3 pr-8 rounded-lg border border-slate-200 text-sm font-medium text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white appearance-none cursor-pointer"
                         >
                           {SORT_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
