@@ -538,9 +538,9 @@ function JobCard({ job, saved, onSave }: {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-display text-[15px] font-medium text-navy-950 leading-snug line-clamp-2 group-hover:text-navy-700 transition-colors">
+            <h2 className="font-display text-[15px] font-medium text-navy-950 leading-snug line-clamp-2 group-hover:text-navy-700 transition-colors">
               {job.title}
-            </h3>
+            </h2>
             <button
               type="button"
               onClick={() => onSave(job.id)}
@@ -611,7 +611,7 @@ function JobCard({ job, saved, onSave }: {
               {salary}
             </span>
           ) : (
-            <span className="text-xs text-slate-400">Salary not specified</span>
+            <span className="text-xs text-slate-400">Salary not listed</span>
           )}
           <p className="text-[11px] text-slate-400 mt-1.5">{formatRelativeDate(dateStr)}</p>
         </div>
