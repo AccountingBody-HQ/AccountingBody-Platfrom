@@ -1,5 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import * as Sentry from '@sentry/nextjs'
+import { getActiveDirectJobs, buildSimilarQuery, type Job } from '@/lib/jobs'
+
+const JOB_PANEL_LIMIT = 5
+
+// A slow or hung job query must never hold up content results — race it
+// against a deadline and fall back rather than let /search inherit the
+// unexplained keyword-search spikes seen on /api/jobs/direct. This only
+// stops the search route from waiting on the underlying Supabase call, not
+// the call itself, which has no cancellation hook here.
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>(resolve => setTimeout(() => resolve(fallback), ms)),
+  ])
+}
+
+interface JobsForSearch {
+  jobs: Job[]
+  jobsTotal: number
+}
+
+const NO_JOBS: JobsForSearch = { jobs: [], jobsTotal: 0 }
+
+// Platform-scoped, fails soft: any error here must never break content
+// search. `search_jobs_ranked` parses its search term with
+// websearch_to_tsquery, which ANDs bare multi-word input — buildSimilarQuery
+// already solves exactly this problem for job titles by OR-joining tokens,
+// and the same transformation is what a multi-word header search term needs
+// (measured live: "ratio analysis" as a raw AND query matches 2 jobs;
+// OR-joined, 1096 — see tmp-audit/session16-search-jobs.md Phase 1(3)).
+async function fetchJobsForSearch(rawQuery: string, platform: string): Promise<JobsForSearch> {
+  const searchTerm = buildSimilarQuery(rawQuery)
+  // buildSimilarQuery returns null when every token was noise/stopwords —
+  // passing null through would mean "no search filter" to the RPC, which
+  // would return arbitrary platform jobs unrelated to the query. Show none
+  // instead of guessing.
+  if (!searchTerm) return NO_JOBS
+
+  try {
+    const [jobs, jobsTotal] = await Promise.all([
+      getActiveDirectJobs({ platform, search: searchTerm, limit: JOB_PANEL_LIMIT }),
+      getActiveDirectJobs({ platform, search: searchTerm, countOnly: true }),
+    ])
+    return { jobs, jobsTotal }
+  } catch (err: unknown) {
+    console.error('[search] job query failed:', err)
+    Sentry.captureException(err)
+    return NO_JOBS
+  }
+}
 
 function getSupabase() {
   return createClient(
@@ -39,8 +90,15 @@ export async function GET(req: NextRequest) {
 
   const q = req.nextUrl.searchParams.get('q') ?? ''
   if (q.trim().length < 2) {
-    return NextResponse.json([], { headers: { 'Cache-Control': 'no-store' } })
+    return NextResponse.json({ results: [], jobs: [], jobsTotal: 0 }, { headers: { 'Cache-Control': 'no-store' } })
   }
+
+  // Same platform mechanism as every other server-side read in this app —
+  // middleware.ts sets this request header from the host, never a query
+  // param or client-supplied value, so it can't be spoofed into showing one
+  // brand's jobs on the other's domain.
+  const isEthioTax = req.headers.get('x-et-platform') === 'ethiotax'
+  const platform = isEthioTax ? 'et' : 'ab'
 
   // Sanitise the raw query: lowercase, strip PostgREST special chars,
   // split into individual words, deduplicate, drop empty/single-char tokens.
@@ -57,8 +115,13 @@ export async function GET(req: NextRequest) {
   // If sanitising stripped everything (e.g. query was only punctuation),
   // return empty rather than sending a malformed or unbounded query.
   if (words.length === 0) {
-    return NextResponse.json([], { headers: { 'Cache-Control': 'no-store' } })
+    return NextResponse.json({ results: [], jobs: [], jobsTotal: 0 }, { headers: { 'Cache-Control': 'no-store' } })
   }
+
+  // Runs alongside the content queries below via the Promise.all further
+  // down — started here so it's in flight for the same duration as
+  // article/PQ fetching, not after it.
+  const jobsPromise = withTimeout(fetchJobsForSearch(rawSearch, platform), 3000, NO_JOBS)
 
   // Build article query.
   // Strategy: chain one .or() per word so ALL words must appear somewhere
@@ -93,9 +156,10 @@ export async function GET(req: NextRequest) {
     .order('published_at', { ascending: false, nullsFirst: false })
     .limit(20)
 
-  const [articleResults, pqResults] = await Promise.all([
+  const [articleResults, pqResults, jobsResult] = await Promise.all([
     articleQuery,
     pqQuery,
+    jobsPromise,
   ])
 
   // Relevance scoring — multi-tier (higher = more relevant).
@@ -164,7 +228,7 @@ export async function GET(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const results = combined.map(({ _score, ...r }) => r)
 
-  return NextResponse.json(results, {
+  return NextResponse.json({ results, jobs: jobsResult.jobs, jobsTotal: jobsResult.jobsTotal }, {
     headers: { 'Cache-Control': 'no-store' },
   })
 }

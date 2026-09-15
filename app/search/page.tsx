@@ -174,7 +174,10 @@ function SearchInner() {
       try {
         const res  = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
         const data = await res.json()
-        setResults(data)
+        // /api/search now returns { results, jobs, jobsTotal } rather than a
+        // bare array — jobs/jobsTotal aren't consumed here yet (data path
+        // only; the panel that reads them lands in the next commit).
+        setResults(data.results ?? [])
       } catch {
         setResults([])
       }
