@@ -42,9 +42,23 @@ const SENIORITY_OPTIONS: { value: SeniorityLevel; label: string }[] = (
   Object.entries(SENIORITY_LABELS) as [SeniorityLevel, string][]
 ).map(([value, label]) => ({ value, label }))
 
-const EMPLOYMENT_OPTIONS: { value: EmploymentType; label: string }[] = (
-  Object.entries(EMPLOYMENT_TYPE_LABELS) as [EmploymentType, string][]
-).map(([value, label]) => ({ value, label }))
+// Only these three currently return any active jobs — measured 2026-09-15
+// against /api/jobs/direct: permanent 2,889, contract 1,361, part_time 34,
+// temporary 0, internship 0 (see tmp-audit/session14-employment-type-
+// options.md). Hidden here, not removed anywhere else: EMPLOYMENT_TYPE_LABELS
+// (lib/job-format.ts), the jobs table's CHECK constraint, VALID_EMPLOYMENT_TYPES
+// (lib/ingestion/normalise.ts / lib/ingestion/validate.ts) and the
+// employer post-a-job form all still recognise all five values, so a
+// temporary/internship job still stores and displays correctly, and a URL
+// carrying employment_types=temporary still parses and filters correctly
+// (urlState.ts's VALID_EMPLOYMENT_TYPES is built from the untouched
+// EMPLOYMENT_TYPE_LABELS, not from this list). Only this dropdown is
+// narrower. Single source of truth — this feeds both the desktop sidebar
+// and the mobile drawer, since both render the same <FiltersPanel/>.
+const PUBLIC_EMPLOYMENT_TYPES: EmploymentType[] = ['permanent', 'contract', 'part_time']
+
+const EMPLOYMENT_OPTIONS: { value: EmploymentType; label: string }[] =
+  PUBLIC_EMPLOYMENT_TYPES.map(value => ({ value, label: EMPLOYMENT_TYPE_LABELS[value] }))
 
 const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: 'relevance',   label: 'Most relevant' },
@@ -340,7 +354,11 @@ function ActiveFilterChips({ filters, sortBy, onRemoveFilter, onRemoveSort, coun
     chips.push({ label, onRemove: () => onRemoveFilter({ ...filters, seniority: filters.seniority.filter(x => x !== s) }) })
   })
   filters.employmentTypes.forEach(e => {
-    const label = EMPLOYMENT_OPTIONS.find(o => o.value === e)?.label ?? e
+    // employmentTypeLabel (lib/job-format.ts), not EMPLOYMENT_OPTIONS: a URL
+    // can still carry a hidden value (e.g. employment_types=temporary) per
+    // the URL-state contract, and the chip should show "Temporary", not the
+    // raw value, even though it's no longer a selectable dropdown option.
+    const label = employmentTypeLabel(e) ?? e
     chips.push({ label, onRemove: () => onRemoveFilter({ ...filters, employmentTypes: filters.employmentTypes.filter(x => x !== e) }) })
   })
   if (filters.remoteOnly) chips.push({ label: 'Remote only', onRemove: () => onRemoveFilter({ ...filters, remoteOnly: false }) })
