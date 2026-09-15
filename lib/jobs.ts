@@ -749,6 +749,52 @@ export const getCachedBrowsableJobsCount = cache(
   unstable_cache(getBrowsableJobsCount, ['browsable-jobs-count'], { revalidate: 900 })
 )
 
+export interface ActiveJobCountry {
+  country: string
+  count: number
+}
+
+// Real distinct location_country values for a platform, each with its own
+// job count, restricted to the same "reachable" definition
+// getActiveDirectJobs's own countOnly path uses (status='active', platform
+// contains, not yet expired) — via the get_active_job_countries RPC
+// (migrations/0006_active_job_countries.sql), so the counts this returns
+// agree with what an unfiltered/single-country /api/jobs/direct request
+// would actually show. Ordered by count descending server-side, so
+// callers don't need to re-sort. Rows with a null location_country are
+// excluded by the RPC's own WHERE clause, not filtered out here.
+//
+// Returns [] on any RPC error — including "the migration hasn't been run
+// yet" (a real possibility: this Codespace has no database credentials
+// and cannot apply migrations/0006 itself, see migrations/README.md) —
+// rather than throwing, so callers can treat "no data" and "the function
+// doesn't exist yet" identically and fall back to a hardcoded list.
+export async function getActiveJobCountries(platform: string): Promise<ActiveJobCountry[]> {
+  const supabase = getSupabase()
+  const { data, error } = await supabase.rpc('get_active_job_countries', { p_platform: platform })
+  if (error || !data) {
+    if (error) console.error('getActiveJobCountries error:', error)
+    return []
+  }
+  return (data as { country: string; job_count: number }[]).map(row => ({
+    country: row.country,
+    count: row.job_count,
+  }))
+}
+
+// Two layers, same composition and same reasoning as
+// getCachedBrowsableJobsCount above: unstable_cache persists across
+// requests/instances (platform folded into the cache key automatically,
+// so 'ab' and 'et' are separate entries), cache() collapses duplicate
+// calls within one render. TTL is 6 hours, not 15 minutes — deliberately
+// longer than the footer counts, because the set of countries with active
+// jobs changes far more slowly than the job count itself; a new country
+// appearing up to 6 hours late is an acceptable trade for a much cheaper
+// steady-state query volume against a GROUP BY aggregate.
+export const getCachedActiveJobCountries = cache(
+  unstable_cache(getActiveJobCountries, ['active-job-countries'], { revalidate: 21600 })
+)
+
 export async function getExpiringJobs(daysFromNow: number): Promise<Job[]> {
   const supabase = getSupabase()
   const threshold = new Date(Date.now() + daysFromNow * 24 * 60 * 60 * 1000).toISOString()

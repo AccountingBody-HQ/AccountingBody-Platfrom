@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import type { Job, EmploymentType, SeniorityLevel } from '@/lib/jobs'
+import type { Job, EmploymentType, SeniorityLevel, ActiveJobCountry } from '@/lib/jobs'
+import { buildCountryOptions, type CountryOption } from './countryOptions'
 import {
   EMPLOYMENT_TYPE_LABELS,
   SENIORITY_LABELS,
@@ -44,21 +45,6 @@ const SENIORITY_OPTIONS: { value: SeniorityLevel; label: string }[] = (
 const EMPLOYMENT_OPTIONS: { value: EmploymentType; label: string }[] = (
   Object.entries(EMPLOYMENT_TYPE_LABELS) as [EmploymentType, string][]
 ).map(([value, label]) => ({ value, label }))
-
-const COUNTRY_OPTIONS = [
-  { value: 'all',            label: 'All countries' },
-  { value: 'United Kingdom', label: 'United Kingdom' },
-  { value: 'United States',  label: 'United States' },
-  { value: 'Australia',      label: 'Australia' },
-  { value: 'Canada',         label: 'Canada' },
-  { value: 'Singapore',      label: 'Singapore' },
-  { value: 'South Africa',   label: 'South Africa' },
-  { value: 'Worldwide',      label: 'Worldwide / Remote' },
-  { value: 'Philippines',    label: 'Philippines' },
-  { value: 'Turkey',         label: 'Turkey' },
-  { value: 'Mexico',         label: 'Mexico' },
-  { value: 'Bulgaria',       label: 'Bulgaria' },
-]
 
 const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: 'relevance',   label: 'Most relevant' },
@@ -210,10 +196,11 @@ function FilterSection({ title, children }: { title: string; children: React.Rea
   )
 }
 
-function FiltersPanel({ filters, onChange, onClear }: {
+function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
   filters: Filters
   onChange: (next: Filters) => void
   onClear: () => void
+  countryOptions: CountryOption[]
 }) {
   return (
     <div>
@@ -223,7 +210,7 @@ function FiltersPanel({ filters, onChange, onClear }: {
           onChange={e => onChange({ ...filters, locationCountry: e.target.value })}
           className="w-full h-10 rounded-lg border border-slate-200 text-sm font-medium text-navy-950 px-3 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white"
         >
-          {COUNTRY_OPTIONS.map(opt => (
+          {countryOptions.map(opt => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
@@ -331,16 +318,17 @@ function FiltersPanel({ filters, onChange, onClear }: {
 
 // ── Active filter chips ───────────────────────────────────────────────────
 
-function ActiveFilterChips({ filters, sortBy, onRemoveFilter, onRemoveSort }: {
+function ActiveFilterChips({ filters, sortBy, onRemoveFilter, onRemoveSort, countryOptions }: {
   filters: Filters
   sortBy: SortBy
   onRemoveFilter: (next: Filters) => void
   onRemoveSort: () => void
+  countryOptions: CountryOption[]
 }) {
   const chips: { label: string; onRemove: () => void }[] = []
 
   if (filters.locationCountry !== 'all') {
-    const label = COUNTRY_OPTIONS.find(o => o.value === filters.locationCountry)?.label ?? filters.locationCountry
+    const label = countryOptions.find(o => o.value === filters.locationCountry)?.label ?? filters.locationCountry
     chips.push({ label, onRemove: () => onRemoveFilter({ ...filters, locationCountry: 'all' }) })
   }
   filters.qualifications.forEach(q => chips.push({
@@ -644,8 +632,17 @@ function EmptyState({ onClear }: { onClear: () => void }) {
 
 // ── Main component ────────────────────────────────────────────────────────
 
-export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean }) {
+export default function JobListingsClient({ isEthioTax, countryOptions: derivedCountryOptions }: {
+  isEthioTax: boolean
+  countryOptions: ActiveJobCountry[]
+}) {
   const platform = isEthioTax ? 'et' : 'ab'
+  // Computed once per render from the server-fetched derived list (see
+  // JobListingsPage) — never refetched client-side, so there is no
+  // loading gap for this specific data: it's present from first paint.
+  // Falls back to the hardcoded list when the derived list is empty (RPC
+  // error, or migrations/0006 not yet applied) — see buildCountryOptions.
+  const countryOptions = useMemo(() => buildCountryOptions(derivedCountryOptions), [derivedCountryOptions])
 
   const router = useRouter()
   const pathname = usePathname()
@@ -835,7 +832,7 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
         <div className="flex gap-8 items-start">
           {/* DESKTOP SIDEBAR */}
           <aside className="hidden lg:block w-[280px] shrink-0 bg-white rounded-2xl border border-slate-100 p-5 sticky top-24">
-            <FiltersPanel filters={filters} onChange={handleFiltersChange} onClear={handleClearFilters} />
+            <FiltersPanel filters={filters} onChange={handleFiltersChange} onClear={handleClearFilters} countryOptions={countryOptions} />
           </aside>
 
           {/* MAIN CONTENT */}
@@ -907,6 +904,7 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
                     sortBy={sortBy}
                     onRemoveFilter={next => navigateToState({ ...urlState, filters: next, page: DEFAULT_PAGE })}
                     onRemoveSort={() => navigateToState({ ...urlState, sortBy: DEFAULT_SORT, page: DEFAULT_PAGE })}
+                    countryOptions={countryOptions}
                   />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -952,7 +950,7 @@ export default function JobListingsClient({ isEthioTax }: { isEthioTax: boolean 
             </button>
           </div>
           <div className="px-5 pb-6">
-            <FiltersPanel filters={filters} onChange={handleFiltersChange} onClear={handleClearFilters} />
+            <FiltersPanel filters={filters} onChange={handleFiltersChange} onClear={handleClearFilters} countryOptions={countryOptions} />
           </div>
         </div>
       </div>

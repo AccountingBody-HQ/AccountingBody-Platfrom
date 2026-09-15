@@ -5,6 +5,7 @@ import JobListingsClient from './JobListingsClient'
 import JobSearchHero from './JobSearchHero'
 import { JobListingsStructuredData } from './structured-data'
 import { canonicalMetadata } from '@/lib/canonical'
+import { getCachedActiveJobCountries } from '@/lib/jobs'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -17,6 +18,13 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function JobListingsPage() {
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  // Fetched here, not inside the client component, so the derived country
+  // list is present on first paint rather than arriving after a
+  // post-mount client fetch — the <select> never has to render with an
+  // empty or momentarily-wrong option set. platform must match
+  // JobListingsClient's own derivation (isEthioTax ? 'et' : 'ab') exactly,
+  // since get_active_job_countries is platform-scoped.
+  const countryOptions = await getCachedActiveJobCountries(isEthioTax ? 'et' : 'ab')
   return (
     <>
       <JobListingsStructuredData />
@@ -58,7 +66,7 @@ export default async function JobListingsPage() {
           nothing: the client component's own loading skeleton (isFirstLoad
           in JobListingsClient) takes over within the same tick regardless. */}
       <Suspense>
-        <JobListingsClient isEthioTax={isEthioTax} />
+        <JobListingsClient isEthioTax={isEthioTax} countryOptions={countryOptions} />
       </Suspense>
     </>
   )
