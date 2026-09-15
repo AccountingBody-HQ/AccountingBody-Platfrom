@@ -37,6 +37,12 @@ interface DirectJobsResponse {
 
 const PAGE_SIZE = 24
 
+// Must match Tailwind's `md` breakpoint (tailwind.config.ts screens.md).
+// The mobile filter drawer's container is `md:hidden`, so at this width CSS
+// hides it outright regardless of React state — the drawer must close in
+// state at the same width, or its body-scroll lock can outlive it.
+const TABLET_BREAKPOINT_PX = 768
+
 // Job alerts have no backend: the email is written to localStorage and
 // nothing ever sends it. Re-enable only when a paid transactional email
 // plan exists AND the alerts backend is built.
@@ -735,7 +741,42 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   // for a same-tab SPA transition (see BackToListingsLink.tsx).
   useEffect(() => { try { sessionStorage.setItem('ab_visited_listings', '1') } catch {} }, [])
 
-  useEffect(() => { document.body.style.overflow = drawerOpen ? 'hidden' : ''; return () => { document.body.style.overflow = '' } }, [drawerOpen])
+  // Only touches body.style.overflow while the drawer is actually open, and
+  // restores whatever was there before rather than assuming '' — Navigation.tsx
+  // locks body scroll the same way for its own mobile menu, and this must not
+  // clobber that lock if both happen to be set at once.
+  useEffect(() => {
+    if (!drawerOpen) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previousOverflow }
+  }, [drawerOpen])
+
+  // The drawer's own container is `md:hidden`, so crossing into tablet width
+  // hides it via CSS regardless of state. Without this, `drawerOpen` (and so
+  // the scroll lock above) could stay true after the drawer is no longer on
+  // screen or reachable. matchMedia's change event fires once on the actual
+  // crossing, unlike a resize listener which fires continuously during a drag.
+  useEffect(() => {
+    const mql = window.matchMedia(`(min-width: ${TABLET_BREAKPOINT_PX}px)`)
+    function handleChange(e: MediaQueryListEvent) {
+      if (e.matches) setDrawerOpen(false)
+    }
+    if (mql.addEventListener) {
+      mql.addEventListener('change', handleChange)
+    } else {
+      // Safari < 14 only exposes the deprecated addListener/removeListener pair.
+      mql.addListener(handleChange)
+    }
+    return () => {
+      if (mql.removeEventListener) {
+        mql.removeEventListener('change', handleChange)
+      } else {
+        mql.removeListener(handleChange)
+      }
+    }
+  }, [])
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key !== 'Escape') return
