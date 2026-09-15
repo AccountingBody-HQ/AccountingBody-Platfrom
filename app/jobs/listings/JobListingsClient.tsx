@@ -590,12 +590,22 @@ function JobCard({ job, saved, onSave }: {
         )}
       </div>
 
-      {/* Excerpt (hidden on mobile to keep cards compact) */}
-      {job.excerpt && (
-        <div className="hidden md:block">
+      {/* Excerpt (hidden on mobile to keep cards compact). Always rendered
+          — even when job.excerpt is empty — and flex-1, so it's the one
+          block that grows to fill whatever space is left between the
+          badges and the footer. Every card in a row is stretched to the
+          same height by the grid's items-stretch; this is what makes the
+          salary pill / "View Job" row land at the same position across a
+          row regardless of how many lines the title or badges took, and
+          regardless of whether this particular job has an excerpt at all —
+          without it, a card with no excerpt would leave that job entirely
+          to the footer's own mt-auto margin instead of a predictable,
+          always-present flexible slot. */}
+      <div className="hidden md:block md:flex-1">
+        {job.excerpt && (
           <p className="text-sm leading-relaxed line-clamp-2 mb-3" style={{ color: '#64748b' }}>{job.excerpt}</p>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Footer: salary + date + CTA */}
       <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
@@ -885,7 +895,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
             )}
 
             {!error && isFirstLoad && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch">
                 {Array.from({ length: 6 }).map((_, i) => <JobCardSkeleton key={i} />)}
               </div>
             )}
@@ -935,7 +945,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                     countryOptions={countryOptions}
                   />
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch">
                     {jobs.map(job => (
                       <JobCard
                         key={job.id}
