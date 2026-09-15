@@ -125,6 +125,19 @@ function isNewJob(dateStr: string | null | undefined): boolean {
   return Date.now() - new Date(dateStr).getTime() < 24 * 60 * 60 * 1000
 }
 
+// Mirrors app/jobs/[slug]/page.tsx's own `locationDisplay` (same "·"
+// separator) — but that pattern alone regresses on real data: some rows'
+// location_text already names the country on its own (e.g. "Central,
+// Singapore" + location_country "Singapore" would render "Central,
+// Singapore · Singapore"). Skip the join whenever location_text already
+// contains location_country, case-insensitively, so the card never shows
+// the country twice.
+function formatCardLocation(job: Pick<Job, 'location_text' | 'location_country'>): string {
+  if (!job.location_country || job.location_country === job.location_text) return job.location_text
+  if (job.location_text.toLowerCase().includes(job.location_country.toLowerCase())) return job.location_text
+  return `${job.location_text} · ${job.location_country}`
+}
+
 // ── Icons ─────────────────────────────────────────────────────────────────
 
 function LocationIcon({ className = 'w-3.5 h-3.5 shrink-0' }: { className?: string }) {
@@ -545,9 +558,7 @@ function JobCard({ job, saved, onSave }: {
       <div className="flex items-center gap-1.5 mb-2 text-xs" style={{ color: '#64748b' }}>
         <LocationIcon />
         <span>
-          {job.location_country && job.location_country !== job.location_text
-            ? job.location_country
-            : job.location_text}
+          {formatCardLocation(job)}
         </span>
       </div>
 
