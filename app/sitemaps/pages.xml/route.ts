@@ -1,64 +1,31 @@
-import { MetadataRoute } from 'next'
+import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { getJobSitemapEntries } from '@/lib/jobs'
 import { resolveArticleCanonicalUrl } from '@/lib/canonical'
+import { buildUrlset, type UrlsetEntry } from '@/lib/sitemap-chunks'
 
 const AB_BASE_URL = 'https://accountingbody.com'
 
-// getJobSitemapEntries (lib/jobs.ts) paginates internally at 1,000 rows/page
-// to stay under this project's PostgREST row cap (commit 6dda4b5) — for
-// ~9,871 active jobs that's ~10 sequential round trips, plus the articles/
-// question-sets queries above. Against this project's Supabase NANO
-// instance that exceeded Next's 60s static-generation budget and failed
-// `next build` outright (three retries, then a hard build failure) —
-// nothing below could ever ship while this file was eligible for
-// build-time prerendering.
-//
-// `dynamic = 'force-dynamic'` is what actually prevents that: Next's build
-// only adds a non-dynamic-params app route to its static-export worker
-// pool (the thing that was retrying and timing out) when
-// `appConfig.revalidate !== 0` (node_modules/next/dist/build/index.js,
-// the `if (appConfig.revalidate !== 0) { ... isStatic = true }` block for
-// app routes). Setting `dynamic = 'force-dynamic'` forces exactly that:
-// node_modules/next/dist/build/utils.js unconditionally sets
-// `appConfig.revalidate = 0` whenever `dynamic === 'force-dynamic'` (and
-// PPR, an experimental flag this project doesn't enable, is off) — so this
-// route is never added to the static-export set and getJobSitemapEntries
-// never runs during `next build`. The previous `revalidate = 3600` cannot
-// coexist with this: the same utils.js line overwrites it to 0 regardless
-// of what's written here, so it would be actively misleading to keep it.
-//
-// Caching consequence — this is a real trade-off, not a free fix: Next's
-// generated wrapper for the `sitemap.ts` file convention
-// (next/dist/build/webpack/loaders/next-metadata-route-loader.js,
-// getDynamicSiteMapRouteCode) hardcodes the response's Cache-Control to
-// `public, max-age=0, must-revalidate` — a fixed string in that loader,
-// not templated from anything exported here. That header cannot be
-// overridden from this file while it keeps the `sitemap.ts` convention,
-// so with revalidate forced to 0 as well, /sitemap.xml now has NO caching
-// at any layer: every crawler hit re-runs the full paginated query set.
-// See tmp-audit/sitemap-build-fix.md for the assessment and the follow-up
-// this implies (rewriting this as a plain app/sitemap.xml/route.ts route
-// handler, like app/et-sitemap/route.ts already is, to regain control of
-// this header) — deliberately not done in this commit, which is scoped to
-// unblocking the build only.
 export const dynamic = 'force-dynamic'
 // force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
 // handlers (Data Cache, up to 1 year, survives deploys). This froze the sitemap
 // at 13 Sept 2026. Do not remove. See Session 15 handover.
 export const fetchCache = 'force-no-store'
 
-async function getSupabaseClient() {
+function getSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SECRET_KEY!
   )
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = await getSupabaseClient()
+// Static pages, articles and practice-question sets — moved verbatim from
+// the old app/sitemap.ts (same URLs, priorities, changeFrequency values,
+// and the same silent-empty-array-on-error behaviour for the two Supabase
+// queries below). Jobs live in app/sitemaps/jobs/[file]/route.ts instead.
+export async function GET() {
+  const supabase = getSupabase()
 
-  const staticPages: MetadataRoute.Sitemap = [
+  const staticPages: UrlsetEntry[] = [
     { url: AB_BASE_URL,                         lastModified: new Date(), changeFrequency: 'daily',   priority: 1.0 },
     { url: `${AB_BASE_URL}/study`,              lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.9 },
     { url: `${AB_BASE_URL}/practice-questions`, lastModified: new Date(), changeFrequency: 'daily',   priority: 0.9 },
@@ -81,7 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...['acca', 'cima', 'aat', 'icaew'].map(body => ({
       url:             `${AB_BASE_URL}/study/${body}`,
       lastModified:    new Date(),
-      changeFrequency: 'weekly'  as const,
+      changeFrequency: 'weekly' as const,
       priority:        0.85,
     })),
   ]
@@ -98,9 +65,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .eq('status', 'published')
     .eq('platform', 'ab')
 
-  const jobs = await getJobSitemapEntries('ab')
-
-  return [
+  const entries: UrlsetEntry[] = [
     ...staticPages,
     ...(articles ?? []).map(a => ({
       url:             resolveArticleCanonicalUrl(a, AB_BASE_URL),
@@ -114,11 +79,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly' as const,
       priority:        0.65,
     })),
-    ...jobs.map(j => ({
-      url:             `${AB_BASE_URL}/jobs/${j.slug}`,
-      lastModified:    j.lastModified,
-      changeFrequency: 'daily' as const,
-      priority:        0.7,
-    })),
   ]
+
+  const xml = buildUrlset(entries)
+
+  return new NextResponse(xml, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/xml',
+      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+    },
+  })
 }

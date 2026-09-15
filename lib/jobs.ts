@@ -1,6 +1,7 @@
 import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
+import { bucketBounds } from '@/lib/sitemap-chunks'
 
 function getSupabase() {
   return createClient(
@@ -995,6 +996,82 @@ export async function getJobSitemapEntries(platform: string): Promise<JobSitemap
       slug: job.slug,
       lastModified: new Date(job.published_at ?? job.created_at),
     }))
+}
+
+// Session 16 — the split-sitemap counterpart to getJobSitemapEntries above,
+// scoped to one uuid leading-byte bucket (lib/sitemap-chunks.ts's
+// bucketBounds) instead of the whole table. Paginates by keyset
+// (.gt('id', lastId)) rather than OFFSET/.range(): unlike the table-wide
+// scan above, a page's logical position here is defined by the last id
+// actually seen on the previous page, not by a row count, so it can't
+// shift under concurrent inserts. Same status/platform filters and
+// lifecycle rule as getJobSitemapEntries — kept unchanged, alongside this,
+// since app/et-sitemap/route.ts still calls it directly and is out of
+// scope for this split. On any page error the whole chunk is discarded
+// (ok: false) rather than served as a silently partial file, mirroring
+// getJobSitemapEntries's own "no partial results" contract, but returned
+// as a typed result so the route can respond 500 instead of guessing from
+// an empty array.
+const JOB_CHUNK_PAGE_SIZE = 1000
+const JOB_CHUNK_MAX_PAGES = 100
+
+export async function getJobSitemapChunk(
+  platform: string,
+  bucket: number
+): Promise<{ ok: true; entries: JobSitemapEntry[] } | { ok: false }> {
+  const supabase = getSupabase()
+  const { lower, upper } = bucketBounds(bucket)
+  const allRows: { id: string; slug: string; expires_at: string | null; published_at: string | null; created_at: string }[] = []
+  let lastId: string | null = null
+
+  for (let page = 0; page < JOB_CHUNK_MAX_PAGES; page++) {
+    let query = supabase
+      .from('jobs')
+      .select('id, slug, expires_at, published_at, created_at')
+      .in('status', ['active', 'expired'])
+      .contains('platform', [platform])
+      .gte('id', lower)
+
+    if (upper !== null) {
+      query = query.lt('id', upper)
+    }
+    if (lastId !== null) {
+      query = query.gt('id', lastId)
+    }
+
+    const { data, error } = await query
+      .order('id', { ascending: true })
+      .limit(JOB_CHUNK_PAGE_SIZE)
+
+    if (error || !data) {
+      if (error) console.error(`getJobSitemapChunk(bucket=${bucket}) error:`, error)
+      return { ok: false }
+    }
+
+    allRows.push(...data)
+
+    if (data.length < JOB_CHUNK_PAGE_SIZE) break
+
+    lastId = data[data.length - 1].id
+
+    if (page === JOB_CHUNK_MAX_PAGES - 1) {
+      console.error(
+        `getJobSitemapChunk(bucket=${bucket}): hit the ${JOB_CHUNK_MAX_PAGES}-page safety ` +
+        `bound (${allRows.length} rows) with more still available — investigate before ` +
+        'raising it; this is not expected at any plausible current per-bucket job count.'
+      )
+    }
+  }
+
+  return {
+    ok: true,
+    entries: allRows
+      .filter(job => getJobLifecycleState(job) !== 'archived')
+      .map(job => ({
+        slug: job.slug,
+        lastModified: new Date(job.published_at ?? job.created_at),
+      })),
+  }
 }
 
 export async function approveJob(id: string, adminNotes?: string): Promise<Job> {

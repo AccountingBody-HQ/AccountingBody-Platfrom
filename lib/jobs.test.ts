@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
-import { getJobSitemapEntries, getSimilarJobs, buildSimilarQuery, type Job } from './jobs'
+import { getJobSitemapEntries, getJobSitemapChunk, getSimilarJobs, buildSimilarQuery, type Job } from './jobs'
 
 const PAGE_SIZE = 1000
 
@@ -98,6 +98,118 @@ describe('getJobSitemapEntries — internal pagination', () => {
     const result = await getJobSitemapEntries('ab')
 
     expect(result).toEqual([])
+  })
+})
+
+function makeChunkJobs(n: number, startIndex = 0) {
+  // Same expires_at: null convention as makeJobs — keeps every row 'active'
+  // so the archived-filter never drops any of these test rows.
+  return Array.from({ length: n }, (_, i) => ({
+    id: `id-${String(startIndex + i).padStart(6, '0')}`,
+    slug: `job-${startIndex + i}`,
+    expires_at: null,
+    published_at: '2024-01-01T00:00:00.000Z',
+    created_at: '2024-01-01T00:00:00.000Z',
+  }))
+}
+
+// Minimal fake query builder for getJobSitemapChunk's keyset shape:
+// .gte/.lt/.gt are recorded (not just passed through) so a test can assert
+// exactly which bound each page's query carried; .limit() is the call that
+// resolves, returning the next scripted page — mirroring how
+// getJobSitemapChunk calls .limit() once per loop iteration.
+function fakeChunkSupabaseClient(pages: Array<{ data: unknown[] | null; error: unknown }>) {
+  const gteCalls: string[] = []
+  const ltCalls: string[] = []
+  const gtCalls: string[] = []
+  let call = 0
+  const builder = {
+    from: () => builder,
+    select: () => builder,
+    in: () => builder,
+    contains: () => builder,
+    gte: (_col: string, val: string) => {
+      gteCalls.push(val)
+      return builder
+    },
+    lt: (_col: string, val: string) => {
+      ltCalls.push(val)
+      return builder
+    },
+    gt: (_col: string, val: string) => {
+      gtCalls.push(val)
+      return builder
+    },
+    order: () => builder,
+    limit: () => {
+      const page = pages[call] ?? { data: [], error: null }
+      call += 1
+      return Promise.resolve(page)
+    },
+  }
+  return { client: builder, gteCalls, ltCalls, gtCalls }
+}
+
+describe('getJobSitemapChunk — keyset pagination', () => {
+  it('continues to a second page using gt(lastId) from the first page', async () => {
+    const { client, gtCalls } = fakeChunkSupabaseClient([
+      { data: makeChunkJobs(1000, 0), error: null },
+      { data: makeChunkJobs(300, 1000), error: null },
+    ])
+    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+
+    const result = await getJobSitemapChunk('ab', 0)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.entries).toHaveLength(1300)
+    expect(gtCalls).toEqual(['id-000999'])
+  })
+
+  it('stops after a short page without an extra call', async () => {
+    const { client, gtCalls } = fakeChunkSupabaseClient([
+      { data: makeChunkJobs(5, 0), error: null },
+    ])
+    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+
+    const result = await getJobSitemapChunk('ab', 0)
+
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.entries).toHaveLength(5)
+    expect(gtCalls).toHaveLength(0)
+  })
+
+  it('the last bucket (63) never calls .lt() — it has no upper bound', async () => {
+    const { client, ltCalls } = fakeChunkSupabaseClient([
+      { data: makeChunkJobs(5, 0), error: null },
+    ])
+    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+
+    await getJobSitemapChunk('ab', 63)
+
+    expect(ltCalls).toHaveLength(0)
+  })
+
+  it('a non-last bucket calls .lt() with its upper bound', async () => {
+    const { client, ltCalls } = fakeChunkSupabaseClient([
+      { data: makeChunkJobs(5, 0), error: null },
+    ])
+    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+
+    await getJobSitemapChunk('ab', 0)
+
+    expect(ltCalls).toHaveLength(1)
+  })
+
+  it('returns ok:false rather than a partial chunk when a later page errors', async () => {
+    const { client } = fakeChunkSupabaseClient([
+      { data: makeChunkJobs(1000, 0), error: null },
+      { data: null, error: new Error('connection refused') },
+    ])
+    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+
+    const result = await getJobSitemapChunk('ab', 0)
+
+    expect(result).toEqual({ ok: false })
   })
 })
 
