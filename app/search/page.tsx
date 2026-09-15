@@ -10,6 +10,14 @@ import { formatJobLocation } from '@/app/jobs/listings/jobLocation'
 
 type ContentType = 'all' | 'article' | 'practicePost' | 'course'
 
+// The filter row's own selection space is wider than ContentType: 'jobs'
+// selects the jobs panel, which is a completely separate result set
+// (JobResult[], not SearchResult[]) and was never a SearchResult._type.
+// Kept distinct from ContentType rather than folding 'jobs' into it, since
+// SearchResult._type must stay exactly the set of values /api/search can
+// actually tag a content result with.
+type ActiveFilter = ContentType | 'jobs'
+
 // Deliberately hand-rolled, not imported from lib/jobs.ts's Job — same
 // reasoning as SearchResult below: this client component only needs the
 // fields the jobs panel renders, not the full server-side row shape.
@@ -210,7 +218,7 @@ function SearchInner() {
   const searchParams = useSearchParams()
 
   const [query,      setQuery]      = useState(searchParams.get('q') ?? '')
-  const [activeType, setActiveType] = useState<ContentType>('all')
+  const [activeType, setActiveType] = useState<ActiveFilter>('all')
   const [results,    setResults]    = useState<SearchResult[]>([])
   const [jobs,       setJobs]       = useState<JobResult[]>([])
   const [jobsTotal,  setJobsTotal]  = useState(0)
@@ -238,13 +246,20 @@ function SearchInner() {
       try {
         const res  = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
         const data = await res.json()
+        const newJobs: JobResult[] = data.jobs ?? []
         setResults(data.results ?? [])
-        setJobs(data.jobs ?? [])
+        setJobs(newJobs)
         setJobsTotal(data.jobsTotal ?? 0)
+        // The Jobs pill only renders while jobs exist (requirement: never a
+        // "Jobs 0" pill) — if it was selected and this new search has none,
+        // there would be nothing left on screen and no visible pill to
+        // recover with. Fall back to "All" rather than leave a blank page.
+        if (activeType === 'jobs' && newJobs.length === 0) setActiveType('all')
       } catch {
         setResults([])
         setJobs([])
         setJobsTotal(0)
+        if (activeType === 'jobs') setActiveType('all')
       }
       setSearched(true)
       setLoading(false)
@@ -255,7 +270,7 @@ function SearchInner() {
   const countFor = (type: ContentType) =>
     type === 'all' ? results.length : results.filter(r => r._type === type).length
 
-  const displayed = activeType === 'all'
+  const displayed = activeType === 'all' || activeType === 'jobs'
     ? results
     : results.filter(r => r._type === activeType)
 
@@ -341,75 +356,110 @@ function SearchInner() {
           )}
 
           {query.trim().length >= 2 && (
-            <div className="flex flex-col lg:flex-row lg:items-start gap-8">
-
-              {searched && !loading && jobs.length > 0 && (
-                <JobsPanel jobs={jobs} jobsTotal={jobsTotal} query={query} />
-              )}
-
-              <div className="flex-1 min-w-0 order-2 lg:order-1">
-
-                {searched && results.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-8">
-                    {FILTERS.map(f => (
-                      <button key={f.id} onClick={() => setActiveType(f.id)}
-                        className={`flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-medium border transition-all ${
-                          activeType === f.id
-                            ? 'bg-navy-950 text-white border-navy-950'
-                            : 'bg-white text-slate-600 border-slate-200 hover:border-navy-300 hover:text-navy-700'
-                        }`}>
-                        {f.label}
+            <>
+              {/* Filter row sits directly under the search box (previous
+                  section) and above everything below, at every breakpoint —
+                  operator decision: controls immediately under the search
+                  field read as "narrow my search"; halfway down the page
+                  they read as a second, disconnected feature. */}
+              {searched && (results.length > 0 || jobs.length > 0) && (
+                <div className="flex flex-wrap gap-2 mb-8" role="group" aria-label="Filter search results by type">
+                  {FILTERS.map(f => (
+                    <button key={f.id} type="button" onClick={() => setActiveType(f.id)}
+                      aria-pressed={activeType === f.id}
+                      className={`flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-medium border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 ${
+                        activeType === f.id
+                          ? 'bg-navy-950 text-white border-navy-950'
+                          : 'bg-white text-slate-600 border-slate-200 hover:border-navy-300 hover:text-navy-700'
+                      }`}>
+                      {f.label}
+                      {/* "All" deliberately carries no number: it shows both
+                          content and jobs at once, and content counts in the
+                          single digits beside a job count in the thousands
+                          has no honest single number to display without
+                          either summing to something meaningless or picking
+                          one side and misrepresenting the other. */}
+                      {f.id !== 'all' && (
                         <span className={`text-xs px-1.5 py-0.5 rounded-full ${
                           activeType === f.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
                         }`}>{countFor(f.id)}</span>
-                      </button>
-                    ))}
+                      )}
+                    </button>
+                  ))}
+                  {/* Only rendered while jobs exist — a "Jobs 0" pill is
+                      exactly the dead-pill defect this same change removes
+                      Quizzes/Glossary for. */}
+                  {jobs.length > 0 && (
+                    <button type="button" onClick={() => setActiveType('jobs')}
+                      aria-pressed={activeType === 'jobs'}
+                      className={`flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-medium border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 ${
+                        activeType === 'jobs'
+                          ? 'bg-navy-950 text-white border-navy-950'
+                          : 'bg-white text-slate-600 border-slate-200 hover:border-navy-300 hover:text-navy-700'
+                      }`}>
+                      Jobs
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                        activeType === 'jobs' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+                      }`}>{jobsTotal.toLocaleString()}</span>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <div className="flex flex-col lg:flex-row lg:items-start gap-8">
+
+                {(activeType === 'all' || activeType === 'jobs') && searched && !loading && jobs.length > 0 && (
+                  <JobsPanel jobs={jobs} jobsTotal={jobsTotal} query={query} />
+                )}
+
+                {activeType !== 'jobs' && (
+                  <div className="flex-1 min-w-0 order-2 lg:order-1">
+
+                    {loading && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
+                      </div>
+                    )}
+
+                    {searched && !loading && displayed.length === 0 && (
+                      <div className="text-center py-20">
+                        <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                          <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeWidth="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <h2 className="font-display text-xl text-navy-950 mb-2">No results for &ldquo;{query}&rdquo;</h2>
+                        <p className="text-slate-500 text-sm max-w-sm mx-auto mb-6">
+                          Try a shorter term, check your spelling, or browse by qualification.
+                        </p>
+                        <div className="flex flex-wrap justify-center gap-2">
+                          {['ACCA', 'CIMA', 'AAT', 'ICAEW'].map(body => (
+                            <Link key={body} href={`/study/${body.toLowerCase()}`}
+                              className="h-9 px-4 rounded-lg text-sm font-medium bg-white text-navy-950 border border-slate-200 hover:border-navy-300 transition-all">
+                              Browse {body}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {searched && !loading && displayed.length > 0 && (
+                      <>
+                        <p className="text-sm text-slate-500 mb-5">
+                          <span className="font-semibold text-navy-950">{displayed.length}</span>{' '}
+                          result{displayed.length !== 1 ? 's' : ''} for{' '}
+                          <span className="font-semibold text-navy-950">&ldquo;{query}&rdquo;</span>
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {displayed.map(r => <ResultCard key={r._id} result={r} />)}
+                        </div>
+                      </>
+                    )}
+
                   </div>
                 )}
-
-                {loading && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
-                  </div>
-                )}
-
-                {searched && !loading && displayed.length === 0 && (
-                  <div className="text-center py-20">
-                    <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeWidth="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <h2 className="font-display text-xl text-navy-950 mb-2">No results for &ldquo;{query}&rdquo;</h2>
-                    <p className="text-slate-500 text-sm max-w-sm mx-auto mb-6">
-                      Try a shorter term, check your spelling, or browse by qualification.
-                    </p>
-                    <div className="flex flex-wrap justify-center gap-2">
-                      {['ACCA', 'CIMA', 'AAT', 'ICAEW'].map(body => (
-                        <Link key={body} href={`/study/${body.toLowerCase()}`}
-                          className="h-9 px-4 rounded-lg text-sm font-medium bg-white text-navy-950 border border-slate-200 hover:border-navy-300 transition-all">
-                          Browse {body}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {searched && !loading && displayed.length > 0 && (
-                  <>
-                    <p className="text-sm text-slate-500 mb-5">
-                      <span className="font-semibold text-navy-950">{displayed.length}</span>{' '}
-                      result{displayed.length !== 1 ? 's' : ''} for{' '}
-                      <span className="font-semibold text-navy-950">&ldquo;{query}&rdquo;</span>
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {displayed.map(r => <ResultCard key={r._id} result={r} />)}
-                    </div>
-                  </>
-                )}
-
               </div>
-            </div>
+            </>
           )}
 
         </div>
