@@ -50,7 +50,7 @@ export function ApplyBarWithSticky({ job }: { job: Job }) {
           screen at once. */}
       <div
         aria-hidden={!showSticky}
-        className={`md:hidden fixed inset-x-0 bottom-0 z-50 bg-white border-t border-[#E6E3DC] p-3 shadow-[0_-6px_20px_-4px_rgba(12,26,61,0.12)] transition-[opacity,transform] duration-150 motion-reduce:transition-none ${
+        className={`md:hidden fixed inset-x-0 bottom-0 z-50 bg-white border-t border-slate-200 p-3 shadow-[0_-6px_20px_-4px_rgba(12,26,61,0.12)] transition-[opacity,transform] duration-150 motion-reduce:transition-none ${
           showSticky
             ? 'opacity-100 translate-y-0'
             : 'opacity-0 translate-y-full pointer-events-none'

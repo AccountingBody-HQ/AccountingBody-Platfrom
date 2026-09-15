@@ -26,10 +26,8 @@ export default function JobSearchHero() {
   }
 
   const inputStyle: React.CSSProperties = {
-    color: '#0C1A3D',
     fontSize: '16px',
     fontWeight: 500,
-    caretColor: '#D4A017',
   }
 
   const clearBtn = (fn: () => void, label: string) => (
@@ -37,8 +35,7 @@ export default function JobSearchHero() {
       type="button"
       onClick={fn}
       aria-label={label}
-      className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center"
-      style={{ background: '#f1f0ec', color: '#94a3b8' }}
+      className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center bg-slate-100 text-slate-400"
     >
       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
@@ -57,32 +54,30 @@ export default function JobSearchHero() {
         style={{ boxShadow: '0 20px 50px rgba(0,0,0,0.35), 0 4px 16px rgba(0,0,0,0.2)', height: '72px' }}
       >
         {/* Role */}
-        <div className="flex-1 flex items-center gap-3 bg-white px-6"
-          style={{ borderRight: '1px solid #e4e2db' }}>
-          <svg className="w-5 h-5 shrink-0" style={{ color: '#94a3b8' }} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.75">
+        <div className="flex-1 flex items-center gap-3 bg-white px-6 border-r border-r-slate-200">
+          <svg className="w-5 h-5 shrink-0 text-slate-400" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.75">
             <circle cx="8.5" cy="8.5" r="6" /><line x1="13" y1="13" x2="18" y2="18" strokeLinecap="round" />
           </svg>
           <input type="text" value={role} onChange={e => setRole(e.target.value)}
             placeholder="Job title, skills, keywords" autoComplete="off"
-            className="flex-1 min-w-0 bg-transparent outline-none" style={inputStyle} />
+            className="flex-1 min-w-0 bg-transparent outline-none text-navy-950 caret-gold-500" style={inputStyle} />
           {role && clearBtn(() => setRole(''), 'Clear role')}
         </div>
         {/* Location */}
-        <div className="flex-1 flex items-center gap-3 bg-white px-6"
-          style={{ borderRight: '1px solid #e4e2db' }}>
-          <svg className="w-5 h-5 shrink-0" style={{ color: '#94a3b8' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="flex-1 flex items-center gap-3 bg-white px-6 border-r border-r-slate-200">
+          <svg className="w-5 h-5 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeWidth="1.75" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
             <path strokeLinecap="round" strokeWidth="1.75" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
           <input type="text" value={location} onChange={e => setLocation(e.target.value)}
             placeholder="Location or remote" autoComplete="off"
-            className="flex-1 min-w-0 bg-transparent outline-none" style={inputStyle} />
+            className="flex-1 min-w-0 bg-transparent outline-none text-navy-950 caret-gold-500" style={inputStyle} />
           {location && clearBtn(() => setLocation(''), 'Clear location')}
         </div>
         {/* Button */}
         <button type="submit"
-          className="flex items-center justify-center gap-2 font-bold transition-all active:scale-[0.98] shrink-0 px-10"
-          style={{ background: 'linear-gradient(135deg, #D4A017 0%, #c8950e 100%)', color: '#0C1A3D', fontSize: '15px', letterSpacing: '0.02em', minWidth: '180px' }}>
+          className="flex items-center justify-center gap-2 font-bold transition-all active:scale-[0.98] shrink-0 px-10 text-navy-950"
+          style={{ background: 'linear-gradient(135deg, #D4A017 0%, #c8950e 100%)', fontSize: '15px', letterSpacing: '0.02em', minWidth: '180px' }}>
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="8.5" cy="8.5" r="6" /><line x1="13" y1="13" x2="18" y2="18" strokeLinecap="round" />
           </svg>
@@ -98,32 +93,32 @@ export default function JobSearchHero() {
         style={{ boxShadow: '0 16px 48px rgba(0,0,0,0.35), 0 4px 16px rgba(0,0,0,0.2)' }}
       >
         {/* Role */}
-        <div className="flex items-center gap-3 bg-white px-5"
-          style={{ height: '60px', borderBottom: '1px solid #e4e2db' }}>
-          <svg className="w-5 h-5 shrink-0" style={{ color: '#94a3b8' }} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.75">
+        <div className="flex items-center gap-3 bg-white px-5 border-b border-b-slate-200"
+          style={{ height: '60px' }}>
+          <svg className="w-5 h-5 shrink-0 text-slate-400" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.75">
             <circle cx="8.5" cy="8.5" r="6" /><line x1="13" y1="13" x2="18" y2="18" strokeLinecap="round" />
           </svg>
           <input type="text" value={role} onChange={e => setRole(e.target.value)}
             placeholder="Job title, skills, keywords" autoComplete="off"
-            className="flex-1 min-w-0 bg-transparent outline-none" style={{ ...inputStyle, fontSize: '15px' }} />
+            className="flex-1 min-w-0 bg-transparent outline-none text-navy-950 caret-gold-500" style={{ ...inputStyle, fontSize: '15px' }} />
           {role && clearBtn(() => setRole(''), 'Clear role')}
         </div>
         {/* Location */}
-        <div className="flex items-center gap-3 bg-white px-5"
-          style={{ height: '60px', borderBottom: '1px solid #e4e2db' }}>
-          <svg className="w-5 h-5 shrink-0" style={{ color: '#94a3b8' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="flex items-center gap-3 bg-white px-5 border-b border-b-slate-200"
+          style={{ height: '60px' }}>
+          <svg className="w-5 h-5 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeWidth="1.75" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
             <path strokeLinecap="round" strokeWidth="1.75" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
           <input type="text" value={location} onChange={e => setLocation(e.target.value)}
             placeholder="Location or remote" autoComplete="off"
-            className="flex-1 min-w-0 bg-transparent outline-none" style={{ ...inputStyle, fontSize: '15px' }} />
+            className="flex-1 min-w-0 bg-transparent outline-none text-navy-950 caret-gold-500" style={{ ...inputStyle, fontSize: '15px' }} />
           {location && clearBtn(() => setLocation(''), 'Clear location')}
         </div>
         {/* Button */}
         <button type="submit"
-          className="flex items-center justify-center gap-2.5 font-bold transition-all active:scale-[0.99]"
-          style={{ height: '60px', background: 'linear-gradient(135deg, #D4A017 0%, #c8950e 100%)', color: '#0C1A3D', fontSize: '16px', letterSpacing: '0.02em' }}>
+          className="flex items-center justify-center gap-2.5 font-bold transition-all active:scale-[0.99] text-navy-950"
+          style={{ height: '60px', background: 'linear-gradient(135deg, #D4A017 0%, #c8950e 100%)', fontSize: '16px', letterSpacing: '0.02em' }}>
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="8.5" cy="8.5" r="6" /><line x1="13" y1="13" x2="18" y2="18" strokeLinecap="round" />
           </svg>
