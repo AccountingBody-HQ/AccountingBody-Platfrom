@@ -5,8 +5,26 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { resolveArticlePath } from '@/lib/article-path'
+import { formatSalary } from '@/lib/job-format'
+import { formatJobLocation } from '@/app/jobs/listings/jobLocation'
 
 type ContentType = 'all' | 'article' | 'practicePost' | 'course' | 'quiz' | 'dictionaryTerm'
+
+// Deliberately hand-rolled, not imported from lib/jobs.ts's Job — same
+// reasoning as SearchResult below: this client component only needs the
+// fields the jobs panel renders, not the full server-side row shape.
+interface JobResult {
+  id:               string
+  slug:             string
+  title:            string
+  company_name:     string
+  location_text:    string | null
+  location_country: string | null
+  salary_text:      string | null
+  salary_min:       number | null
+  salary_max:       number | null
+  salary_currency:  string
+}
 
 interface SearchResult {
   _id:          string
@@ -126,6 +144,55 @@ function ResultCard({ result }: { result: SearchResult }) {
   )
 }
 
+// Only the last 2 of the 5 fetched jobs are ever hidden (index >= 3), never
+// re-shown by anything else — so rendering all 5 and hiding two below `lg`
+// is a plain utility-class toggle, not a second data-fetching path. Simpler
+// than trying to express "5 at this breakpoint, 3 below" as a fetch-time
+// count, and the panel never requests more than JOB_PANEL_LIMIT (5) jobs in
+// the first place, so there's nothing wasted by fetching what mobile hides.
+function JobPanelEntry({ job, hiddenBelowLg }: { job: JobResult; hiddenBelowLg: boolean }) {
+  const salary = formatSalary(job)
+  const location = formatJobLocation(job.location_text, job.location_country)
+
+  return (
+    <Link
+      href={`/jobs/${job.slug}`}
+      className={`group block rounded-lg border border-slate-100 p-3 hover:border-slate-200 hover:bg-slate-50 transition-colors ${hiddenBelowLg ? 'hidden lg:block' : ''}`}
+    >
+      <h3 className="font-display text-navy-950 text-sm leading-snug mb-1 line-clamp-2 group-hover:text-navy-700 transition-colors">
+        {job.title}
+      </h3>
+      <p className="text-xs text-slate-500 truncate mb-2">
+        {job.company_name}{location ? ` · ${location}` : ''}
+      </p>
+      {salary && (
+        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold whitespace-nowrap bg-gold-50 text-gold-600 border border-gold-200">
+          {salary}
+        </span>
+      )}
+    </Link>
+  )
+}
+
+function JobsPanel({ jobs, jobsTotal, query }: { jobs: JobResult[]; jobsTotal: number; query: string }) {
+  return (
+    <aside aria-labelledby="matching-jobs-heading" className="lg:w-[310px] lg:shrink-0 order-1 lg:order-2 bg-white rounded-2xl border border-slate-100 p-5">
+      <h2 id="matching-jobs-heading" className="font-display text-navy-950 text-lg mb-4">Matching jobs</h2>
+      <div className="flex flex-col gap-2 mb-4">
+        {jobs.map((job, i) => (
+          <JobPanelEntry key={job.id} job={job} hiddenBelowLg={i >= 3} />
+        ))}
+      </div>
+      <Link
+        href={`/jobs/listings?search=${encodeURIComponent(query)}`}
+        className="flex items-center justify-center h-10 px-4 rounded-lg bg-navy-950 text-white text-sm font-semibold hover:bg-navy-900 transition-colors"
+      >
+        See all {jobsTotal.toLocaleString()} matching job{jobsTotal === 1 ? '' : 's'}
+      </Link>
+    </aside>
+  )
+}
+
 function SkeletonCard() {
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-5 animate-pulse">
@@ -152,6 +219,8 @@ function SearchInner() {
   const [query,      setQuery]      = useState(searchParams.get('q') ?? '')
   const [activeType, setActiveType] = useState<ContentType>('all')
   const [results,    setResults]    = useState<SearchResult[]>([])
+  const [jobs,       setJobs]       = useState<JobResult[]>([])
+  const [jobsTotal,  setJobsTotal]  = useState(0)
   const [loading,    setLoading]    = useState(false)
   const [searched,   setSearched]   = useState(false)
   const POPULAR_SEARCHES = isEthioTax ? ET_POPULAR_SEARCHES : AB_POPULAR_SEARCHES
@@ -163,6 +232,8 @@ function SearchInner() {
   useEffect(() => {
     if (query.trim().length < 2) {
       setResults([])
+      setJobs([])
+      setJobsTotal(0)
       setSearched(false)
       setLoading(false)
       return
@@ -174,12 +245,13 @@ function SearchInner() {
       try {
         const res  = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
         const data = await res.json()
-        // /api/search now returns { results, jobs, jobsTotal } rather than a
-        // bare array — jobs/jobsTotal aren't consumed here yet (data path
-        // only; the panel that reads them lands in the next commit).
         setResults(data.results ?? [])
+        setJobs(data.jobs ?? [])
+        setJobsTotal(data.jobsTotal ?? 0)
       } catch {
         setResults([])
+        setJobs([])
+        setJobsTotal(0)
       }
       setSearched(true)
       setLoading(false)
@@ -252,24 +324,6 @@ function SearchInner() {
       <section className="section bg-slate-50 min-h-[55vh]">
         <div className="container-site">
 
-          {searched && results.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-8">
-              {FILTERS.map(f => (
-                <button key={f.id} onClick={() => setActiveType(f.id)}
-                  className={`flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-medium border transition-all ${
-                    activeType === f.id
-                      ? 'bg-navy-950 text-white border-navy-950'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-navy-300 hover:text-navy-700'
-                  }`}>
-                  {f.label}
-                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                    activeType === f.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
-                  }`}>{countFor(f.id)}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
           {(!query || query.trim().length < 2) && (
             <div className="text-center py-20">
               <div className="w-16 h-16 rounded-2xl bg-navy-50 flex items-center justify-center mx-auto mb-4">
@@ -293,45 +347,76 @@ function SearchInner() {
             </div>
           )}
 
-          {loading && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
-            </div>
-          )}
+          {query.trim().length >= 2 && (
+            <div className="flex flex-col lg:flex-row lg:items-start gap-8">
 
-          {searched && !loading && displayed.length === 0 && query.trim().length >= 2 && (
-            <div className="text-center py-20">
-              <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeWidth="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h2 className="font-display text-xl text-navy-950 mb-2">No results for &ldquo;{query}&rdquo;</h2>
-              <p className="text-slate-500 text-sm max-w-sm mx-auto mb-6">
-                Try a shorter term, check your spelling, or browse by qualification.
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                {['ACCA', 'CIMA', 'AAT', 'ICAEW'].map(body => (
-                  <Link key={body} href={`/study/${body.toLowerCase()}`}
-                    className="h-9 px-4 rounded-lg text-sm font-medium bg-white text-navy-950 border border-slate-200 hover:border-navy-300 transition-all">
-                    Browse {body}
-                  </Link>
-                ))}
+              {searched && !loading && jobs.length > 0 && (
+                <JobsPanel jobs={jobs} jobsTotal={jobsTotal} query={query} />
+              )}
+
+              <div className="flex-1 min-w-0 order-2 lg:order-1">
+
+                {searched && results.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-8">
+                    {FILTERS.map(f => (
+                      <button key={f.id} onClick={() => setActiveType(f.id)}
+                        className={`flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-medium border transition-all ${
+                          activeType === f.id
+                            ? 'bg-navy-950 text-white border-navy-950'
+                            : 'bg-white text-slate-600 border-slate-200 hover:border-navy-300 hover:text-navy-700'
+                        }`}>
+                        {f.label}
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                          activeType === f.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+                        }`}>{countFor(f.id)}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {loading && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
+                  </div>
+                )}
+
+                {searched && !loading && displayed.length === 0 && (
+                  <div className="text-center py-20">
+                    <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeWidth="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h2 className="font-display text-xl text-navy-950 mb-2">No results for &ldquo;{query}&rdquo;</h2>
+                    <p className="text-slate-500 text-sm max-w-sm mx-auto mb-6">
+                      Try a shorter term, check your spelling, or browse by qualification.
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {['ACCA', 'CIMA', 'AAT', 'ICAEW'].map(body => (
+                        <Link key={body} href={`/study/${body.toLowerCase()}`}
+                          className="h-9 px-4 rounded-lg text-sm font-medium bg-white text-navy-950 border border-slate-200 hover:border-navy-300 transition-all">
+                          Browse {body}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {searched && !loading && displayed.length > 0 && (
+                  <>
+                    <p className="text-sm text-slate-500 mb-5">
+                      <span className="font-semibold text-navy-950">{displayed.length}</span>{' '}
+                      result{displayed.length !== 1 ? 's' : ''} for{' '}
+                      <span className="font-semibold text-navy-950">&ldquo;{query}&rdquo;</span>
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {displayed.map(r => <ResultCard key={r._id} result={r} />)}
+                    </div>
+                  </>
+                )}
+
               </div>
             </div>
-          )}
-
-          {searched && !loading && displayed.length > 0 && (
-            <>
-              <p className="text-sm text-slate-500 mb-5">
-                <span className="font-semibold text-navy-950">{displayed.length}</span>{' '}
-                result{displayed.length !== 1 ? 's' : ''} for{' '}
-                <span className="font-semibold text-navy-950">&ldquo;{query}&rdquo;</span>
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {displayed.map(r => <ResultCard key={r._id} result={r} />)}
-              </div>
-            </>
           )}
 
         </div>
