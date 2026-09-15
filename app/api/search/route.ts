@@ -250,9 +250,35 @@ export async function GET(req: NextRequest) {
     .order('published_at', { ascending: false, nullsFirst: false })
     .limit(20)
 
-  const [articleResults, pqResults, jobsResult] = await Promise.all([
+  // Build course query. Matches getPublishedCourses's own filtering
+  // (lib/coursesNew.ts) exactly: status='published', and — since courses
+  // carry show_on_sites and getPublishedCourses itself filters by it for
+  // /free-courses — platform-scoped the same way jobs already are in this
+  // route, so an AB course can never show up in an ET search result.
+  // Deliberately NOT extending this platform filter to articles/
+  // question_sets in this change — that's an existing, separate asymmetry
+  // with its own risk, out of scope here.
+  // Word-matching follows the articles pattern (title OR description),
+  // not question_sets' title-only pattern — a course description is loose
+  // descriptive prose like an article's excerpt, not a terse title-only
+  // row like a question set.
+  let courseQuery = supabase
+    .from('courses')
+    .select('id, title, slug, description')
+    .eq('status', 'published')
+    .contains('show_on_sites', [platform])
+
+  for (const word of words) {
+    courseQuery = courseQuery.or(
+      `title.ilike.%${word}%,description.ilike.%${word}%`
+    )
+  }
+  courseQuery = courseQuery.limit(20)
+
+  const [articleResults, pqResults, courseResults, jobsResult] = await Promise.all([
     articleQuery,
     pqQuery,
+    courseQuery,
     jobsPromise,
   ])
 
@@ -309,13 +335,27 @@ export async function GET(req: NextRequest) {
     _score:      scorePQ(p.title ?? ''),
   }))
 
+  // Courses have no publish date or category column (see the select above,
+  // matching getPublishedCourses's own field list) — publishedAt/category
+  // are simply omitted, same as any other result type that lacks them;
+  // ResultCard already renders both conditionally.
+  const courses = (courseResults.data ?? []).map(c => ({
+    _id:     c.id,
+    _type:   'course' as const,
+    title:   c.title,
+    slug:    c.slug,
+    excerpt: c.description,
+    _score:  scoreText(c.title ?? '', c.description ?? ''),
+  }))
+
   // Sort by score descending.
-  // Tie-break: articles before PQs (study content takes priority).
-  const combined = [...articles, ...pqs]
+  // Tie-break: articles, then courses, then PQs (study content before
+  // structured courses before quick assessments).
+  const TYPE_PRIORITY: Record<string, number> = { article: 0, course: 1, practicePost: 2 }
+  const combined = [...articles, ...courses, ...pqs]
   combined.sort((a, b) => {
     if (b._score !== a._score) return b._score - a._score
-    if (a._type !== b._type) return a._type === 'article' ? -1 : 1
-    return 0
+    return TYPE_PRIORITY[a._type] - TYPE_PRIORITY[b._type]
   })
 
   // Remove internal scoring field before returning.

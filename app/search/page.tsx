@@ -8,7 +8,7 @@ import { resolveArticlePath } from '@/lib/article-path'
 import { formatSalary } from '@/lib/job-format'
 import { formatJobLocation } from '@/app/jobs/listings/jobLocation'
 
-type ContentType = 'all' | 'article' | 'practicePost' | 'course' | 'quiz' | 'dictionaryTerm'
+type ContentType = 'all' | 'article' | 'practicePost' | 'course'
 
 // Deliberately hand-rolled, not imported from lib/jobs.ts's Job — same
 // reasoning as SearchResult below: this client component only needs the
@@ -45,8 +45,6 @@ const FILTERS: { id: ContentType; label: string }[] = [
   { id: 'article',        label: 'Articles'           },
   { id: 'practicePost',   label: 'Practice Questions' },
   { id: 'course',         label: 'Courses'            },
-  { id: 'quiz',           label: 'Quizzes'            },
-  { id: 'dictionaryTerm', label: 'Glossary'           },
 ]
 
 const ET_POPULAR_SEARCHES = [
@@ -63,9 +61,7 @@ function getUrl(r: SearchResult): string {
     case 'article':
       return resolveArticlePath(r)
     case 'practicePost':   return `/practice-questions/${r.slug}`
-    case 'course':         return `/courses/${r.slug}`
-    case 'quiz':           return `/quiz/${r.slug}`
-    case 'dictionaryTerm': return `/glossary/${r.slug}`
+    case 'course':         return `/free-courses/${r.slug}`
     default:               return `/${r.slug}`
   }
 }
@@ -73,7 +69,7 @@ function getUrl(r: SearchResult): string {
 function getTypeLabel(type: ContentType): string {
   const map: Record<ContentType, string> = {
     all: 'All', article: 'Article', practicePost: 'Practice Question',
-    course: 'Course', quiz: 'Quiz', dictionaryTerm: 'Glossary',
+    course: 'Course',
   }
   return map[type]
 }
@@ -84,8 +80,6 @@ function getTypeBadgeClass(type: ContentType): string {
     article:        'bg-navy-50 text-navy-700 border-navy-200',
     practicePost:   'bg-gold-50 text-gold-700 border-gold-200',
     course:         'bg-teal-50 text-teal-700 border-teal-200',
-    quiz:           'bg-amber-50 text-amber-700 border-amber-200',
-    dictionaryTerm: 'bg-slate-50 text-slate-700 border-slate-200',
   }
   return map[type]
 }
@@ -133,8 +127,7 @@ function ResultCard({ result }: { result: SearchResult }) {
             : ''}
         </span>
         <span className="flex items-center gap-1 text-xs font-semibold text-navy-700 group-hover:text-gold-600 transition-colors">
-          {result._type === 'dictionaryTerm' ? 'View definition' :
-           result._type === 'practicePost'   ? 'Try question'   : 'Read more'}
+          {result._type === 'practicePost' ? 'Try question' : 'Read more'}
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
           </svg>
@@ -282,7 +275,7 @@ function SearchInner() {
               Find what you need
             </h1>
             <p className="text-white/55 text-lg">
-              Search across articles, practice questions, courses, and glossary terms.
+              Search across articles, practice questions, and courses.
             </p>
           </div>
           <div className="max-w-2xl mx-auto">
@@ -333,7 +326,7 @@ function SearchInner() {
               </div>
               <h2 className="font-display text-2xl text-navy-950 mb-2">Start typing to search</h2>
               <p className="text-slate-500 text-sm max-w-sm mx-auto mb-8">
-                Search across articles, practice questions, courses, quizzes, and glossary terms.
+                Search across articles, practice questions, and courses.
               </p>
               <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-3">Popular searches</p>
               <div className="flex flex-wrap justify-center gap-2 max-w-lg mx-auto">
