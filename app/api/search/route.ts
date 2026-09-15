@@ -2,19 +2,60 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import * as Sentry from '@sentry/nextjs'
 import { getActiveDirectJobs, buildSimilarQuery, type Job } from '@/lib/jobs'
+import { buildPhraseQuery, buildAndQuery, pickJobSearchTier } from '@/app/search/jobSearchTiers'
 
 const JOB_PANEL_LIMIT = 5
+
+// Post-incident value (see tmp-audit/session16-search-cascade-fix.md):
+// unchanged from the 9057937 attempt — 2500ms is not itself implicated in
+// that incident's root cause (excess concurrency was); left as-is per that
+// report's own conclusion that this number needed diagnosability, not
+// retuning.
+const JOB_QUERY_TIMEOUT_MS = 2500
 
 // A slow or hung job query must never hold up content results — race it
 // against a deadline and fall back rather than let /search inherit the
 // unexplained keyword-search spikes seen on /api/jobs/direct. This only
 // stops the search route from waiting on the underlying Supabase call, not
 // the call itself, which has no cancellation hook here.
-function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>(resolve => setTimeout(() => resolve(fallback), ms)),
-  ])
+//
+// `onTimeout` fires exactly once, only when the deadline genuinely wins the
+// race — never when `promise` settles first. This exists because of a
+// production incident (commit 9057937): the previous version of this
+// helper had no way to tell "the job query returned zero results" apart
+// from "the job query never got a chance to answer" — both looked
+// identical from the response alone, and a timeout firing on every request
+// would have been invisible in Sentry. It is not enough to fail soft;
+// failing soft SILENTLY is what turned a slow query into an undiagnosable
+// all-zeros production incident.
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T, onTimeout: () => void): Promise<T> {
+  return new Promise<T>(resolve => {
+    let settled = false
+    const timer = setTimeout(() => {
+      if (settled) return
+      settled = true
+      onTimeout()
+      resolve(fallback)
+    }, ms)
+    promise.then(
+      value => {
+        if (settled) return
+        settled = true
+        clearTimeout(timer)
+        resolve(value)
+      },
+      () => {
+        // fetchJobsForSearch below never actually rejects (its own
+        // try/catch always resolves to NO_JOBS) — this branch only exists
+        // so a genuinely unexpected rejection can't leave this Promise
+        // permanently pending.
+        if (settled) return
+        settled = true
+        clearTimeout(timer)
+        resolve(fallback)
+      },
+    )
+  })
 }
 
 interface JobsForSearch {
@@ -25,26 +66,67 @@ interface JobsForSearch {
 const NO_JOBS: JobsForSearch = { jobs: [], jobsTotal: 0 }
 
 // Platform-scoped, fails soft: any error here must never break content
-// search. `search_jobs_ranked` parses its search term with
-// websearch_to_tsquery, which ANDs bare multi-word input — buildSimilarQuery
-// already solves exactly this problem for job titles by OR-joining tokens,
-// and the same transformation is what a multi-word header search term needs
-// (measured live: "ratio analysis" as a raw AND query matches 2 jobs;
-// OR-joined, 1096 — see tmp-audit/session16-search-jobs.md Phase 1(3)).
+// search. Tries three query tiers, most precise first, each strictly
+// broader than the last — see app/search/jobSearchTiers.ts for the full
+// reasoning and tmp-audit/session16-search-relevance.md Phase 1 for the
+// live measurements this is based on:
+//   1. phrase (quoted, adjacency-constrained) — tried first, most precise
+//   2. and (bare term, both words present anywhere) — falls back here if
+//      phrase is too sparse
+//   3. or (every token OR-joined, via buildSimilarQuery) — last resort for
+//      genuinely under-covered terms
+//
+// Root-cause fix for the 9057937 incident (tmp-audit/session16-search-
+// cascade-fix.md): that version fetched ROWS for both phrase and and in
+// parallel (4 concurrent Supabase calls, 2 of them the expensive ranked
+// RPC) before knowing which tier would even be used, on top of the 2
+// content queries already running alongside this in route.ts's own
+// Promise.all — 6 concurrent Supabase-bound calls per search request,
+// against a 2500ms deadline that had just been tightened in the same
+// commit. This version fetches only the two CHEAP counts in parallel
+// first (countOnly never invokes the ranked RPC — see
+// getActiveDirectJobs's countOnly branch, a plain PostgREST count), decides
+// the tier from those, and only then fetches ROWS — a single ranked-RPC
+// call, for the winning tier alone. Worst case (falls through to or) is 4
+// total Supabase calls, never more than 2 concurrent at once; the common
+// case (phrase or and wins) is 3 calls, only 1 of them the expensive kind.
 async function fetchJobsForSearch(rawQuery: string, platform: string): Promise<JobsForSearch> {
-  const searchTerm = buildSimilarQuery(rawQuery)
-  // buildSimilarQuery returns null when every token was noise/stopwords —
-  // passing null through would mean "no search filter" to the RPC, which
-  // would return arbitrary platform jobs unrelated to the query. Show none
-  // instead of guessing.
-  if (!searchTerm) return NO_JOBS
+  const phraseTerm = buildPhraseQuery(rawQuery)
+  const andTerm = buildAndQuery(rawQuery)
+  if (!phraseTerm && !andTerm) return NO_JOBS
 
   try {
-    const [jobs, jobsTotal] = await Promise.all([
-      getActiveDirectJobs({ platform, search: searchTerm, limit: JOB_PANEL_LIMIT }),
-      getActiveDirectJobs({ platform, search: searchTerm, countOnly: true }),
+    const [phraseTotal, andTotal] = await Promise.all([
+      phraseTerm ? getActiveDirectJobs({ platform, search: phraseTerm, countOnly: true }) : Promise.resolve(0),
+      andTerm ? getActiveDirectJobs({ platform, search: andTerm, countOnly: true }) : Promise.resolve(0),
     ])
-    return { jobs, jobsTotal }
+
+    const tier = pickJobSearchTier({ phraseTotal, andTotal })
+
+    // phraseTerm/andTerm are guaranteed non-null whenever their own tier
+    // wins: pickJobSearchTier can only return 'phrase' if phraseTotal met
+    // the threshold, and phraseTotal is 0 (never >= a positive threshold)
+    // whenever phraseTerm was null above — same reasoning for 'and'.
+    if (tier === 'phrase') {
+      const jobs = await getActiveDirectJobs({ platform, search: phraseTerm!, limit: JOB_PANEL_LIMIT })
+      return { jobs, jobsTotal: phraseTotal }
+    }
+    if (tier === 'and') {
+      const jobs = await getActiveDirectJobs({ platform, search: andTerm!, limit: JOB_PANEL_LIMIT })
+      return { jobs, jobsTotal: andTotal }
+    }
+
+    // tier === 'or': neither phrase nor and cleared the threshold.
+    // buildSimilarQuery returns null when every token was noise/stopwords —
+    // passing null through would mean "no search filter" to the RPC, which
+    // would return arbitrary platform jobs unrelated to the query.
+    const orTerm = buildSimilarQuery(rawQuery)
+    if (!orTerm) return NO_JOBS
+    const [orJobs, orTotal] = await Promise.all([
+      getActiveDirectJobs({ platform, search: orTerm, limit: JOB_PANEL_LIMIT }),
+      getActiveDirectJobs({ platform, search: orTerm, countOnly: true }),
+    ])
+    return { jobs: orJobs, jobsTotal: orTotal }
   } catch (err: unknown) {
     console.error('[search] job query failed:', err)
     Sentry.captureException(err)
@@ -121,7 +203,19 @@ export async function GET(req: NextRequest) {
   // Runs alongside the content queries below via the Promise.all further
   // down — started here so it's in flight for the same duration as
   // article/PQ fetching, not after it.
-  const jobsPromise = withTimeout(fetchJobsForSearch(rawSearch, platform), 3000, NO_JOBS)
+  const jobsPromise = withTimeout(
+    fetchJobsForSearch(rawSearch, platform),
+    JOB_QUERY_TIMEOUT_MS,
+    NO_JOBS,
+    () => {
+      console.error('[search] job query timed out', { rawSearch, platform })
+      Sentry.captureMessage('[search] job query timed out', {
+        level: 'warning',
+        tags: { platform },
+        extra: { rawSearch },
+      })
+    },
+  )
 
   // Build article query.
   // Strategy: chain one .or() per word so ALL words must appear somewhere
