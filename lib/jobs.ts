@@ -960,6 +960,8 @@ export async function getJobSitemapEntries(platform: string): Promise<JobSitemap
       .select('slug, expires_at, published_at, created_at')
       .in('status', ['active', 'expired'])
       .contains('platform', [platform])
+      // stable order is required for OFFSET pagination on a live table
+      .order('id', { ascending: true })
       .range(from, to)
 
     if (error || !data) {

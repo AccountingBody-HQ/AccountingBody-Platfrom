@@ -45,6 +45,7 @@ function fakeSupabaseClient(pages: Array<{ data: unknown[] | null; error: unknow
     select: () => builder,
     in: () => builder,
     contains: () => builder,
+    order: () => builder,
     range: (from: number, to: number) => {
       rangeCalls.push([from, to])
       const page = pages[call] ?? { data: [], error: null }

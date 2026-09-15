@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
+// force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
+// handlers (Data Cache, up to 1 year, survives deploys). This froze the sitemap
+// at 13 Sept 2026. Do not remove. See Session 15 handover.
+export const fetchCache = 'force-no-store'
 export const maxDuration = 60
 
 function getSupabase() {
