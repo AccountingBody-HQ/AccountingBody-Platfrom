@@ -141,7 +141,7 @@ export default async function JobDetailPage({
   ].filter((part): part is string => part !== null)
 
   return (
-    <main className="min-h-screen" style={{ background: '#F8F7F4' }}>
+    <main className="min-h-screen bg-slate-50">
       <JobPostingStructuredData job={job} brandName={brandName} />
 
       <section className="py-12 md:py-16 pb-[96px] md:pb-16">
@@ -174,8 +174,7 @@ export default async function JobDetailPage({
           <div className="bg-white border border-[#E6E3DC] rounded-xl p-[26px] mt-[30px]">
             <div className="flex items-baseline gap-2 flex-wrap">
               <span
-                className="font-display text-[clamp(34px,6.4vw,44px)] leading-none tracking-[-0.02em]"
-                style={{ color: salary ? '#b87d10' : '#928e80' }}
+                className={`font-display text-[clamp(34px,6.4vw,44px)] leading-none tracking-[-0.02em] ${salary ? 'text-gold-600' : 'text-slate-500'}`}
               >
                 {salary ?? 'Salary not listed'}
               </span>

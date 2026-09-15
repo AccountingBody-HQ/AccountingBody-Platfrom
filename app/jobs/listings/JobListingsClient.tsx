@@ -570,12 +570,12 @@ function JobCard({ job, saved, onSave }: {
           </span>
         )}
         {isEmployer && (
-          <span className="inline-flex items-center rounded-full bg-gold-50 border border-gold-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ color: '#b87d10' }}>
+          <span className="inline-flex items-center rounded-full bg-gold-50 border border-gold-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-gold-600">
             Direct
           </span>
         )}
         {job.is_featured && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-gold-50 border border-gold-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ color: '#b87d10' }}>
+          <span className="inline-flex items-center gap-1 rounded-full bg-gold-50 border border-gold-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-gold-600">
             <StarIcon className="w-3 h-3" />Featured
           </span>
         )}
@@ -592,7 +592,7 @@ function JobCard({ job, saved, onSave }: {
       <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
         <div className="min-w-0">
           {salary ? (
-            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold whitespace-nowrap" style={{ background: '#fdf9ec', color: '#b87d10', border: '1px solid #f5e095' }}>
+            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold whitespace-nowrap bg-gold-50 text-gold-600 border border-gold-200">
               {salary}
             </span>
           ) : (
@@ -600,7 +600,7 @@ function JobCard({ job, saved, onSave }: {
           )}
           <p className="text-[11px] text-slate-400 mt-1.5">{formatRelativeDate(dateStr)}</p>
         </div>
-        <span className="shrink-0 inline-flex items-center justify-center h-9 px-4 rounded-lg text-xs font-bold transition-all" style={{ background: '#0C1A3D', color: '#ffffff' }}>
+        <span className="shrink-0 inline-flex items-center justify-center h-9 px-4 rounded-lg text-xs font-bold transition-all bg-navy-950 text-white">
           View Job →
         </span>
       </div>
@@ -833,13 +833,13 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
       {/* MOBILE FILTER TRIGGER */}
       <div className="lg:hidden container-wide pt-5">
         <button type="button" onClick={() => setDrawerOpen(true)}
-          className="w-full h-12 rounded-xl border-2 border-slate-200 bg-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-transform" style={{ color: '#0C1A3D' }}>
+          className="w-full h-12 rounded-xl border-2 border-slate-200 bg-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-transform text-navy-950">
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="4" y1="6" x2="20" y2="6" /><line x1="8" y1="12" x2="16" y2="12" /><line x1="10" y1="18" x2="14" y2="18" />
           </svg>
           Filters
           {activeFilterCount > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold" style={{ background: '#D4A017', color: '#0C1A3D' }}>
+            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold bg-gold-500 text-navy-950">
               {activeFilterCount}
             </span>
           )}
