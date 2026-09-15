@@ -857,7 +857,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   return (
     <main className="min-h-screen bg-slate-50">
       {/* MOBILE FILTER TRIGGER */}
-      <div className="lg:hidden container-wide pt-5">
+      <div className="md:hidden container-wide pt-5">
         <button type="button" onClick={() => setDrawerOpen(true)}
           className="w-full h-12 rounded-xl border-2 border-slate-200 bg-white text-sm font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-transform text-navy-950">
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -875,7 +875,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
       <div className="container-wide pt-4 pb-12" ref={resultsRef} style={{ scrollMarginTop: '2rem' }}>
         <div className="flex gap-8 items-start">
           {/* DESKTOP SIDEBAR */}
-          <aside className="hidden lg:block w-[280px] shrink-0 bg-white rounded-2xl border border-slate-100 p-5 sticky top-24">
+          <aside className="hidden md:block w-[240px] lg:w-[280px] shrink-0 bg-white rounded-2xl border border-slate-100 p-5 sticky top-24">
             <FiltersPanel filters={filters} onChange={handleFiltersChange} onClear={handleClearFilters} countryOptions={countryOptions} />
           </aside>
 
@@ -905,7 +905,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
             )}
 
             {!error && isFirstLoad && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
                 {Array.from({ length: 6 }).map((_, i) => <JobCardSkeleton key={i} />)}
               </div>
             )}
@@ -955,7 +955,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                     countryOptions={countryOptions}
                   />
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
                     {jobs.map(job => (
                       <JobCard
                         key={job.id}
@@ -981,7 +981,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
       </div>
 
       {/* MOBILE FILTER DRAWER */}
-      <div className={`fixed inset-0 z-overlay lg:hidden ${drawerOpen ? '' : 'pointer-events-none'}`}>
+      <div className={`fixed inset-0 z-overlay md:hidden ${drawerOpen ? '' : 'pointer-events-none'}`}>
         <div onClick={() => setDrawerOpen(false)}
           className={`absolute inset-0 bg-navy-950/40 transition-opacity duration-300 ${drawerOpen ? 'opacity-100' : 'opacity-0'}`}
         />
