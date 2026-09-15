@@ -37,6 +37,11 @@ interface DirectJobsResponse {
 
 const PAGE_SIZE = 24
 
+// Job alerts have no backend: the email is written to localStorage and
+// nothing ever sends it. Re-enable only when a paid transactional email
+// plan exists AND the alerts backend is built.
+const JOB_ALERTS_ENABLED = false
+
 const QUALIFICATIONS = ['ACCA', 'CIMA', 'ICAEW', 'CPA', 'AAT', 'CFA'] as const
 
 const SENIORITY_OPTIONS: { value: SeniorityLevel; label: string }[] = (
@@ -740,9 +745,11 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [drawerOpen])
 
-  // Show job alert banner after 10 seconds if user has an active search
+  // Show job alert banner after 10 seconds if user has an active search.
+  // No-op entirely while JOB_ALERTS_ENABLED is false — no timer is ever
+  // scheduled, so there's nothing to leak or clean up.
   useEffect(() => {
-    if (alertDismissed || !activeSearch) return
+    if (!JOB_ALERTS_ENABLED || alertDismissed || !activeSearch) return
     const timer = setTimeout(() => setShowAlert(true), 10000)
     return () => clearTimeout(timer)
   }, [activeSearch, alertDismissed])
@@ -874,8 +881,11 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
 
           {/* MAIN CONTENT */}
           <div className="flex-1 min-w-0">
-            {/* Job alert banner */}
-            {showAlert && !alertDismissed && (
+            {/* Job alert banner — gated behind JOB_ALERTS_ENABLED (see top
+                of file); the effect above never sets showAlert while it's
+                false, but this render-site check is a second, explicit
+                guard rather than relying on that alone. */}
+            {JOB_ALERTS_ENABLED && showAlert && !alertDismissed && (
               <JobAlertBanner
                 search={activeSearch}
                 filters={filters}
