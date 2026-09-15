@@ -13,6 +13,7 @@ import {
   getJobCanonicalUrl,
   getCompanyInitials,
 } from '@/lib/job-format'
+import { formatJobLocation } from '@/app/jobs/listings/jobLocation'
 import { JobPostingStructuredData } from './structured-data'
 import { ApplyBarWithSticky } from './ApplyBarWithSticky'
 import { BackToListingsLink } from './BackToListingsLink'
@@ -131,9 +132,7 @@ export default async function JobDetailPage({
   // constraint never changes.
   const bodyText = job.description || job.excerpt || ''
   const paragraphs = bodyText.split('\n').map(p => p.trim()).filter(Boolean)
-  const locationDisplay = job.location_country && job.location_country !== job.location_text
-    ? `${job.location_text} · ${job.location_country}`
-    : job.location_text
+  const locationDisplay = formatJobLocation(job.location_text, job.location_country)
 
   const closingLineParts = [
     `Posted ${formatAbsoluteDate(postedDate)}`,
@@ -271,9 +270,12 @@ export default async function JobDetailPage({
               <div className="rounded-[14px] border border-[#E6E3DC] overflow-hidden divide-y divide-[#E6E3DC]">
                 {similarJobs.map(similar => {
                   const similarSalary = formatSalary(similar)
-                  const similarLocation = similar.location_country && similar.location_country !== similar.location_text
-                    ? similar.location_country
-                    : similar.location_text
+                  // Same helper as the main job above and as the listings
+                  // card — this list previously showed the country alone
+                  // (dropping the city) instead of combining both, the
+                  // exact defect fixed for the card in 2eecf05; using the
+                  // shared helper here closes that same gap on this page.
+                  const similarLocation = formatJobLocation(similar.location_text, similar.location_country)
                   return (
                     <Link
                       key={similar.id}
