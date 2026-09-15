@@ -222,6 +222,7 @@ function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
         <select
           value={filters.locationCountry}
           onChange={e => onChange({ ...filters, locationCountry: e.target.value })}
+          aria-label="Country"
           className="w-full h-10 rounded-lg border border-slate-200 text-sm font-medium text-navy-950 px-3 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white"
         >
           {countryOptions.map(opt => (
@@ -269,6 +270,7 @@ function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
             type="number"
             inputMode="numeric"
             placeholder="Min"
+            aria-label="Minimum salary"
             value={filters.salaryMin}
             onChange={e => onChange({ ...filters, salaryMin: e.target.value })}
             className="w-full min-w-0 h-10 px-3 rounded-lg border border-slate-200 text-sm text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-400"
@@ -278,6 +280,7 @@ function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
             type="number"
             inputMode="numeric"
             placeholder="Max"
+            aria-label="Maximum salary"
             value={filters.salaryMax}
             onChange={e => onChange({ ...filters, salaryMax: e.target.value })}
             className="w-full min-w-0 h-10 px-3 rounded-lg border border-slate-200 text-sm text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-400"
@@ -385,7 +388,7 @@ function ActiveFilterChips({ filters, sortBy, onRemoveFilter, onRemoveSort, coun
           className="inline-flex items-center gap-1.5 h-7 pl-3 pr-2 rounded-full bg-navy-950 text-white text-xs font-semibold hover:bg-navy-800 transition-colors"
         >
           {chip.label}
-          <span className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[10px]">✕</span>
+          <span aria-hidden="true" className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[10px]">✕</span>
         </button>
       ))}
     </div>
@@ -428,7 +431,7 @@ function JobAlertBanner({ search, filters, onDismiss }: {
           </div>
           <p className="text-sm font-semibold text-green-800">Alert set! We will notify you when new matching jobs are posted.</p>
         </div>
-        <button type="button" onClick={onDismiss} className="text-green-600 hover:text-green-800 shrink-0">
+        <button type="button" onClick={onDismiss} aria-label="Dismiss" className="text-green-600 hover:text-green-800 shrink-0">
           <CloseIcon />
         </button>
       </div>
@@ -449,7 +452,7 @@ function JobAlertBanner({ search, filters, onDismiss }: {
             </p>
           </div>
         </div>
-        <button type="button" onClick={onDismiss} className="text-white/40 hover:text-white/70 shrink-0 mt-0.5">
+        <button type="button" onClick={onDismiss} aria-label="Dismiss" className="text-white/40 hover:text-white/70 shrink-0 mt-0.5">
           <CloseIcon />
         </button>
       </div>
@@ -458,6 +461,7 @@ function JobAlertBanner({ search, filters, onDismiss }: {
           type="email"
           required
           placeholder="your@email.com"
+          aria-label="Email address"
           value={email}
           onChange={e => setEmail(e.target.value)}
           className="flex-1 min-w-0 h-10 px-3 rounded-lg bg-white/10 border border-white/20 text-white text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-gold-400"
@@ -901,6 +905,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                         <select
                           value={sortBy}
                           onChange={e => navigateToState({ ...urlState, sortBy: e.target.value as SortBy, page: DEFAULT_PAGE })}
+                          aria-label="Sort by"
                           className="h-9 pl-3 pr-8 rounded-lg border border-slate-200 text-sm font-medium text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white appearance-none cursor-pointer"
                         >
                           {SORT_OPTIONS.map(opt => (
