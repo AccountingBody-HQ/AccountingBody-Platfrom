@@ -211,7 +211,7 @@ function CheckboxRow({ label, checked, onChange }: { label: string; checked: boo
 function FilterSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="py-4 border-b border-slate-100 last:border-b-0">
-      <h3 className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: '#94a3b8', letterSpacing: '0.08em' }}>{title}</h3>
+      <h3 className="text-[10px] font-bold uppercase tracking-widest mb-3 text-slate-400" style={{ letterSpacing: '0.08em' }}>{title}</h3>
       {children}
     </div>
   )
@@ -302,7 +302,7 @@ function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
 
       <FilterSection title="Remote">
         <label className="flex items-center justify-between cursor-pointer">
-          <span className="text-sm" style={{ color: '#334155' }}>Remote only</span>
+          <span className="text-sm text-slate-700">Remote only</span>
           <button
             type="button"
             role="switch"
@@ -554,7 +554,7 @@ function JobCard({ job, saved, onSave }: {
       </div>
 
       {/* Location */}
-      <div className="flex items-center gap-1.5 mb-2 text-xs" style={{ color: '#64748b' }}>
+      <div className="flex items-center gap-1.5 mb-2 text-xs text-slate-500">
         <LocationIcon />
         <span>
           {formatJobLocation(job.location_text, job.location_country)}
@@ -564,22 +564,22 @@ function JobCard({ job, saved, onSave }: {
       {/* Badges */}
       <div className="flex flex-wrap items-center gap-1.5 mb-3">
         {empLabel && (
-          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold" style={{ color: '#334155' }}>
+          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
             {empLabel}
           </span>
         )}
         {seniority && (
-          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold" style={{ color: '#334155' }}>
+          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
             {seniority}
           </span>
         )}
         {job.location_remote && (
-          <span className="inline-flex items-center rounded-full bg-teal-50 border border-teal-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ color: '#0d9185' }}>
+          <span className="inline-flex items-center rounded-full bg-teal-50 border border-teal-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-teal-600">
             Remote
           </span>
         )}
         {isNew && (
-          <span className="inline-flex items-center rounded-full bg-green-50 border border-green-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ color: '#16a34a' }}>
+          <span className="inline-flex items-center rounded-full bg-green-50 border border-green-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-green-600">
             New
           </span>
         )}
@@ -608,7 +608,7 @@ function JobCard({ job, saved, onSave }: {
           always-present flexible slot. */}
       <div className="hidden md:block md:flex-1">
         {job.excerpt && (
-          <p className="text-sm leading-relaxed line-clamp-2 mb-3" style={{ color: '#64748b' }}>{job.excerpt}</p>
+          <p className="text-sm leading-relaxed line-clamp-2 mb-3 text-slate-500">{job.excerpt}</p>
         )}
       </div>
 
@@ -653,7 +653,7 @@ function JobCardSkeleton() {
 function EmptyState({ onClear }: { onClear: () => void }) {
   return (
     <div className="text-center py-20 border border-slate-200 rounded-2xl bg-white">
-      <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5" style={{ background: '#f8f7f4' }}>
+      <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5 bg-slate-50">
         <svg className="w-8 h-8" style={{ color: '#cbd5e1' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <circle cx="11" cy="11" r="8" />
           <path strokeLinecap="round" d="m21 21-4.35-4.35" />

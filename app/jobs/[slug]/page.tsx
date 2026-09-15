@@ -170,7 +170,7 @@ export default async function JobDetailPage({
           </div>
 
           {/* 3. Decision card */}
-          <div className="bg-white border border-[#E6E3DC] rounded-xl p-[26px] mt-[30px]">
+          <div className="bg-white border border-slate-200 rounded-xl p-[26px] mt-[30px]">
             <div className="flex items-baseline gap-2 flex-wrap">
               <span
                 className={`font-display text-[clamp(34px,6.4vw,44px)] leading-none tracking-[-0.02em] ${salary ? 'text-gold-600' : 'text-slate-500'}`}
@@ -188,7 +188,7 @@ export default async function JobDetailPage({
             {/* Each fact is independently conditional and omitted entirely
                 when absent — employment_type in particular is only 32.6%
                 populated, so this row is frequently partial by design. */}
-            <dl className="border-t border-[#E6E3DC] mt-5 pt-5 flex flex-wrap gap-x-[30px] gap-y-3">
+            <dl className="border-t border-slate-200 mt-5 pt-5 flex flex-wrap gap-x-[30px] gap-y-3">
               {seniority && (
                 <div>
                   <dt className="text-[12.5px] text-slate-400">Level</dt>
@@ -236,7 +236,7 @@ export default async function JobDetailPage({
                 an 'external' listing's description is a summary of the
                 employer's own posting, not the whole thing. */}
             {job.apply_method === 'external' && (
-              <p className="mt-4 pl-4 border-l-2 border-[#E6E3DC] text-[14px] text-slate-500 max-w-[62ch]">
+              <p className="mt-4 pl-4 border-l-2 border-slate-200 text-[14px] text-slate-500 max-w-[62ch]">
                 This is a summary. The employer&apos;s full description, including requirements and benefits, is on their own listing.
               </p>
             )}
@@ -261,13 +261,13 @@ export default async function JobDetailPage({
               -background simulation — see the divider-diagnosis note in
               tmp-audit/p4b-consistency.md for why that technique wasn't
               reliable at every width, and why this one is: the exact same
-              #E6E3DC hairline colour already renders correctly everywhere
+              slate-200 hairline colour already renders correctly everywhere
               ELSE on this page (the decision card's border, the facts-row
               divider) via a real `border`, never via a simulated gap. */}
           {similarJobs.length > 0 && (
-            <div className="mt-[52px] pt-[52px] border-t border-[#E6E3DC]">
+            <div className="mt-[52px] pt-[52px] border-t border-slate-200">
               <h2 className="font-display font-medium text-[21px] text-navy-950 mb-4">Similar current roles</h2>
-              <div className="rounded-[14px] border border-[#E6E3DC] overflow-hidden divide-y divide-[#E6E3DC]">
+              <div className="rounded-[14px] border border-slate-200 overflow-hidden divide-y divide-slate-200">
                 {similarJobs.map(similar => {
                   const similarSalary = formatSalary(similar)
                   // Same helper as the main job above and as the listings
