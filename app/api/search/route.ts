@@ -2,8 +2,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import * as Sentry from '@sentry/nextjs'
 import { getActiveDirectJobs, buildSimilarQuery, type Job } from '@/lib/jobs'
+import { buildPhraseQuery, buildAndQuery, pickJobSearchTier } from '@/app/search/jobSearchTiers'
 
 const JOB_PANEL_LIMIT = 5
+
+// Common case (phrase and/or and tier resolves — the vast majority of real
+// search terms, per tmp-audit/session16-search-relevance.md Phase 1)
+// measured consistently under 1s. The rare full cascade to the OR tier adds
+// one more sequential round trip, whose own NORMAL (non-spiking) latency
+// measured up to ~2s — so 2500ms leaves headroom for a legitimately sparse
+// term to complete its full cascade without being cut off, while still
+// bounding the pathological case (search_jobs_ranked has spiked to 9-20s on
+// wide OR queries) to well under a tenth of its worst observed time. A
+// shorter timeout would show "no jobs" more often on slow-but-working
+// cascades; this is chosen to almost never do that for normal traffic while
+// still capping the true pathological case hard.
+const JOB_QUERY_TIMEOUT_MS = 2500
 
 // A slow or hung job query must never hold up content results — race it
 // against a deadline and fall back rather than let /search inherit the
@@ -25,26 +39,48 @@ interface JobsForSearch {
 const NO_JOBS: JobsForSearch = { jobs: [], jobsTotal: 0 }
 
 // Platform-scoped, fails soft: any error here must never break content
-// search. `search_jobs_ranked` parses its search term with
-// websearch_to_tsquery, which ANDs bare multi-word input — buildSimilarQuery
-// already solves exactly this problem for job titles by OR-joining tokens,
-// and the same transformation is what a multi-word header search term needs
-// (measured live: "ratio analysis" as a raw AND query matches 2 jobs;
-// OR-joined, 1096 — see tmp-audit/session16-search-jobs.md Phase 1(3)).
+// search. Tries three query tiers, most precise first, each strictly
+// broader than the last — see app/search/jobSearchTiers.ts for the full
+// reasoning and tmp-audit/session16-search-relevance.md Phase 1 for the
+// live measurements this is based on:
+//   1. phrase (quoted, adjacency-constrained) — tried first, most precise
+//   2. and (bare term, both words present anywhere) — falls back here if
+//      phrase is too sparse
+//   3. or (every token OR-joined, via buildSimilarQuery) — last resort for
+//      genuinely under-covered terms; deliberately NOT run in parallel with
+//      the other two, since it's the wide/slow query shape and only needed
+//      rarely — paying its cost only when it's actually used beats paying
+//      it on every search.
+// Whichever tier is used, its own count travels with its own rows — never
+// a count from one tier shown beside rows from another.
 async function fetchJobsForSearch(rawQuery: string, platform: string): Promise<JobsForSearch> {
-  const searchTerm = buildSimilarQuery(rawQuery)
-  // buildSimilarQuery returns null when every token was noise/stopwords —
-  // passing null through would mean "no search filter" to the RPC, which
-  // would return arbitrary platform jobs unrelated to the query. Show none
-  // instead of guessing.
-  if (!searchTerm) return NO_JOBS
+  const phraseTerm = buildPhraseQuery(rawQuery)
+  const andTerm = buildAndQuery(rawQuery)
+  if (!phraseTerm && !andTerm) return NO_JOBS
 
   try {
-    const [jobs, jobsTotal] = await Promise.all([
-      getActiveDirectJobs({ platform, search: searchTerm, limit: JOB_PANEL_LIMIT }),
-      getActiveDirectJobs({ platform, search: searchTerm, countOnly: true }),
+    const [phraseJobs, phraseTotal, andJobs, andTotal] = await Promise.all([
+      phraseTerm ? getActiveDirectJobs({ platform, search: phraseTerm, limit: JOB_PANEL_LIMIT }) : Promise.resolve([]),
+      phraseTerm ? getActiveDirectJobs({ platform, search: phraseTerm, countOnly: true }) : Promise.resolve(0),
+      andTerm ? getActiveDirectJobs({ platform, search: andTerm, limit: JOB_PANEL_LIMIT }) : Promise.resolve([]),
+      andTerm ? getActiveDirectJobs({ platform, search: andTerm, countOnly: true }) : Promise.resolve(0),
     ])
-    return { jobs, jobsTotal }
+
+    const tier = pickJobSearchTier({ phraseTotal, andTotal })
+    if (tier === 'phrase') return { jobs: phraseJobs, jobsTotal: phraseTotal }
+    if (tier === 'and')    return { jobs: andJobs, jobsTotal: andTotal }
+
+    // tier === 'or': neither phrase nor and cleared the threshold.
+    // buildSimilarQuery returns null when every token was noise/stopwords —
+    // passing null through would mean "no search filter" to the RPC, which
+    // would return arbitrary platform jobs unrelated to the query.
+    const orTerm = buildSimilarQuery(rawQuery)
+    if (!orTerm) return NO_JOBS
+    const [orJobs, orTotal] = await Promise.all([
+      getActiveDirectJobs({ platform, search: orTerm, limit: JOB_PANEL_LIMIT }),
+      getActiveDirectJobs({ platform, search: orTerm, countOnly: true }),
+    ])
+    return { jobs: orJobs, jobsTotal: orTotal }
   } catch (err: unknown) {
     console.error('[search] job query failed:', err)
     Sentry.captureException(err)
@@ -121,7 +157,7 @@ export async function GET(req: NextRequest) {
   // Runs alongside the content queries below via the Promise.all further
   // down — started here so it's in flight for the same duration as
   // article/PQ fetching, not after it.
-  const jobsPromise = withTimeout(fetchJobsForSearch(rawSearch, platform), 3000, NO_JOBS)
+  const jobsPromise = withTimeout(fetchJobsForSearch(rawSearch, platform), JOB_QUERY_TIMEOUT_MS, NO_JOBS)
 
   // Build article query.
   // Strategy: chain one .or() per word so ALL words must appear somewhere
