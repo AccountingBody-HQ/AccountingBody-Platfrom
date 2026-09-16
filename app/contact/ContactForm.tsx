@@ -32,6 +32,7 @@ export default function ContactForm() {
   const [errorMsg, setErrorMsg]       = useState('')
   const [subscribeState, setSubState] = useState<FormState>('idle')
   const [subAlreadySent, setSubAlreadySent] = useState(false)
+  const [subErrorMsg, setSubErrorMsg] = useState('')
   const contactContainer              = useRef<HTMLDivElement | null>(null)
   const contactWidgetId               = useRef<string | null>(null)
   const subscribeContainer            = useRef<HTMLDivElement | null>(null)
@@ -150,14 +151,15 @@ export default function ContactForm() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, _h: '', 'cf-turnstile-response': token }),
       })
-      if (!res.ok) throw new Error()
       const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || 'Something went wrong. Please try again.')
       setSubAlreadySent(Boolean(data.alreadySent))
       setSubState('success')
       form.reset()
       if (subscribeWidgetId.current) window.turnstile?.reset(subscribeWidgetId.current)
-    } catch {
+    } catch (err) {
       setSubState('error')
+      setSubErrorMsg(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
       if (subscribeWidgetId.current) window.turnstile?.reset(subscribeWidgetId.current)
     }
   }
@@ -308,7 +310,7 @@ export default function ContactForm() {
               </form>
             )}
             {subscribeState === 'error' && (
-              <p className="text-red-400 text-xs mt-2">Something went wrong. Please try again.</p>
+              <p role="alert" className="text-red-400 text-xs mt-2">{subErrorMsg || 'Something went wrong. Please try again.'}</p>
             )}
             <p className="text-white/30 text-xs mt-4">No spam, ever. Unsubscribe any time.</p>
           </div>

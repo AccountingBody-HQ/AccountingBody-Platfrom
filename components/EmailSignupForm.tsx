@@ -13,6 +13,7 @@ declare global {
 export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: boolean }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [alreadySent, setAlreadySent] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
   const [email, setEmail] = useState('')
   const [honeypot, setHoneypot] = useState('')
   const turnstileContainer = useRef<HTMLDivElement | null>(null)
@@ -63,14 +64,17 @@ export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: b
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, _h: honeypot, 'cf-turnstile-response': token }),
       })
-      if (!res.ok) throw new Error()
       const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || 'Something went wrong. Please try again.')
       setAlreadySent(Boolean(data.alreadySent))
       setStatus('success')
       setEmail('')
       if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
-    } catch {
+    } catch (err) {
       setStatus('error')
+      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      // Reset so a retry gets a fresh token — without this, a visitor who
+      // fails once can never succeed again without reloading the page.
       if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
     }
   }
@@ -129,7 +133,7 @@ export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: b
       {/* Turnstile invisible widget */}
       <div ref={turnstileContainer} />
       {status === 'error' && (
-        <p className="text-red-400 text-xs text-center">Something went wrong. Please try again.</p>
+        <p role="alert" className="text-red-400 text-xs text-center">{errorMsg || 'Something went wrong. Please try again.'}</p>
       )}
     </form>
   )

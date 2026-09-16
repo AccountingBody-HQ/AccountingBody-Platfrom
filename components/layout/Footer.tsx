@@ -134,6 +134,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
   const [email,  setEmail]  = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [alreadySent, setAlreadySent] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
   const [honeypot, setHoneypot] = useState('')
   const turnstileContainer = React.useRef<HTMLDivElement | null>(null)
   const turnstileWidgetId = React.useRef<string | null>(null)
@@ -194,16 +195,21 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ email, _h: honeypot, 'cf-turnstile-response': turnstileToken.current }),
       })
-      if (!res.ok) throw new Error('subscribe failed')
       const data = await res.json()
-      if (!data.success) throw new Error('subscribe failed')
+      if (!res.ok || !data.success) throw new Error(data.error || 'Something went wrong. Please try again.')
       setAlreadySent(Boolean(data.alreadySent))
       setStatus('success')
       setEmail('')
       turnstileToken.current = ''
       if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
-    } catch {
+    } catch (err) {
       setStatus('error')
+      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      // Previously missing here: without a reset, a failed token is never
+      // replaced, so a retry after a failure could never succeed until the
+      // visitor reloaded the page.
+      turnstileToken.current = ''
+      if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
     }
   }
 
@@ -264,7 +270,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
           </div>
           <div ref={turnstileContainer} />
           {status === 'error' && (
-            <p className="text-xs text-red-400">Something went wrong. Please try again.</p>
+            <p role="alert" className="text-xs text-red-400">{errorMsg || 'Something went wrong. Please try again.'}</p>
           )}
           <p className="text-xs text-white/35">
             By subscribing you agree to our{' '}

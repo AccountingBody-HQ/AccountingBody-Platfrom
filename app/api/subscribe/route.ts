@@ -2,19 +2,34 @@ import { NextRequest, NextResponse } from "next/server"
 import { Resend } from "resend"
 import { SignJWT } from "jose"
 import { createClient } from "@supabase/supabase-js"
+import * as Sentry from "@sentry/nextjs"
 import { shouldSendConfirmationEmail } from "@/lib/subscribe-dedup"
 
-async function verifyTurnstile(token: string, ip: string, isET: boolean): Promise<boolean> {
-  if (!token) return false
+// Unlike help-request/firms-application/contact, this route fails CLOSED on
+// a bad Turnstile result: no subscription is created. That means the caller
+// must be able to tell success from failure, so this returns a reason
+// instead of a bare boolean. "unreachable" covers both a network failure
+// talking to Cloudflare and a missing/misconfigured secret — neither is
+// something the visitor did wrong, so both get the same user-facing copy.
+type TurnstileResult =
+  | { ok: true }
+  | { ok: false; reason: "missing_token" | "invalid_token" | "unreachable" }
+
+async function verifyTurnstile(token: string, ip: string, isET: boolean): Promise<TurnstileResult> {
+  if (!token) return { ok: false, reason: "missing_token" }
   const secret = isET ? process.env.TURNSTILE_SECRET_KEY : process.env.TURNSTILE_SECRET_KEY_AB
-  if (!secret) return false
-  const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ secret, response: token, remoteip: ip }),
-  })
-  const data = await res.json()
-  return data.success === true
+  if (!secret) return { ok: false, reason: "unreachable" }
+  try {
+    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ secret, response: token, remoteip: ip }),
+    })
+    const data = await res.json()
+    return data.success === true ? { ok: true } : { ok: false, reason: "invalid_token" }
+  } catch {
+    return { ok: false, reason: "unreachable" }
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -32,8 +47,24 @@ export async function POST(req: NextRequest) {
 
     const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for") ?? ""
 
-    const valid = await verifyTurnstile(turnstileToken, ip, isET)
-    if (!valid) return NextResponse.json({ success: true })
+    const turnstileResult = await verifyTurnstile(turnstileToken, ip, isET)
+    if (!turnstileResult.ok) {
+      const platform = isET ? "et" : "ab"
+      Sentry.captureMessage("[subscribe] Turnstile verification failed", {
+        level: "warning",
+        tags: { platform, reason: turnstileResult.reason },
+      })
+      const unreachable = turnstileResult.reason === "unreachable"
+      return NextResponse.json(
+        {
+          error: unreachable
+            ? "We couldn't verify your request right now. Please try again in a moment."
+            : "We couldn't verify your request. If you're using an ad blocker or privacy extension, please disable it for this page and try again.",
+          code: unreachable ? "turnstile_unreachable" : "turnstile_failed",
+        },
+        { status: unreachable ? 503 : 400 }
+      )
+    }
 
     const BLOCKED = [
       "mailinator.com", "guerrillamail.com", "trashmail.com", "tempmail.com",
