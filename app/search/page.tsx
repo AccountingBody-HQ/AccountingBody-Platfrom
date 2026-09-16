@@ -175,7 +175,19 @@ function JobPanelEntry({ job, hiddenBelowLg }: { job: JobResult; hiddenBelowLg: 
   )
 }
 
-function JobsPanel({ jobs, jobsTotal, query }: { jobs: JobResult[]; jobsTotal: number; query: string }) {
+function JobsPanel({ jobs, jobsTotal, query, jobsSearchQuery }: {
+  jobs: JobResult[]; jobsTotal: number; query: string; jobsSearchQuery: string | null
+}) {
+  // /jobs/listings runs the identical websearch_to_tsquery machinery this
+  // panel's own tier cascade does (see jobsSearchQuery's definition in
+  // app/api/search/route.ts) — linking with the WINNING TIER'S string,
+  // not the raw query, is what makes its count match jobsTotal instead of
+  // silently re-resolving to a broader (usually much larger) AND match on
+  // the raw term. Falls back to the raw query only if the field is
+  // somehow missing (older cached response shape) — that reproduces
+  // today's mismatch rather than crashing, since jobsTotal came from
+  // upstream either way.
+  const linkQuery = jobsSearchQuery ?? query
   return (
     <aside aria-labelledby="matching-jobs-heading" className="lg:w-[310px] lg:shrink-0 order-1 lg:order-2 bg-white rounded-2xl border border-slate-100 p-5">
       <h2 id="matching-jobs-heading" className="font-display text-navy-950 text-lg mb-4">Matching jobs</h2>
@@ -185,7 +197,7 @@ function JobsPanel({ jobs, jobsTotal, query }: { jobs: JobResult[]; jobsTotal: n
         ))}
       </div>
       <Link
-        href={`/jobs/listings?search=${encodeURIComponent(query)}`}
+        href={`/jobs/listings?search=${encodeURIComponent(linkQuery)}`}
         className="flex items-center justify-center h-10 px-4 rounded-lg bg-navy-950 text-white text-sm font-semibold hover:bg-navy-900 transition-colors"
       >
         See all {jobsTotal.toLocaleString()} matching job{jobsTotal === 1 ? '' : 's'}
@@ -222,6 +234,7 @@ function SearchInner() {
   const [results,    setResults]    = useState<SearchResult[]>([])
   const [jobs,       setJobs]       = useState<JobResult[]>([])
   const [jobsTotal,  setJobsTotal]  = useState(0)
+  const [jobsSearchQuery, setJobsSearchQuery] = useState<string | null>(null)
   const [loading,    setLoading]    = useState(false)
   const [searched,   setSearched]   = useState(false)
   const POPULAR_SEARCHES = isEthioTax ? ET_POPULAR_SEARCHES : AB_POPULAR_SEARCHES
@@ -235,6 +248,7 @@ function SearchInner() {
       setResults([])
       setJobs([])
       setJobsTotal(0)
+      setJobsSearchQuery(null)
       setSearched(false)
       setLoading(false)
       return
@@ -250,6 +264,7 @@ function SearchInner() {
         setResults(data.results ?? [])
         setJobs(newJobs)
         setJobsTotal(data.jobsTotal ?? 0)
+        setJobsSearchQuery(data.jobsSearchQuery ?? null)
         // The Jobs pill only renders while jobs exist (requirement: never a
         // "Jobs 0" pill) — if it was selected and this new search has none,
         // there would be nothing left on screen and no visible pill to
@@ -259,6 +274,7 @@ function SearchInner() {
         setResults([])
         setJobs([])
         setJobsTotal(0)
+        setJobsSearchQuery(null)
         if (activeType === 'jobs') setActiveType('all')
       }
       setSearched(true)
@@ -409,7 +425,7 @@ function SearchInner() {
               <div className="flex flex-col lg:flex-row lg:items-start gap-8">
 
                 {(activeType === 'all' || activeType === 'jobs') && searched && !loading && jobs.length > 0 && (
-                  <JobsPanel jobs={jobs} jobsTotal={jobsTotal} query={query} />
+                  <JobsPanel jobs={jobs} jobsTotal={jobsTotal} query={query} jobsSearchQuery={jobsSearchQuery} />
                 )}
 
                 {activeType !== 'jobs' && (

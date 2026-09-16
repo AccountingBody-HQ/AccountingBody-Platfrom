@@ -61,9 +61,23 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T, onTimeout:
 interface JobsForSearch {
   jobs: Job[]
   jobsTotal: number
+  // The exact string that produced jobsTotal — whichever of phraseTerm/
+  // andTerm/orTerm actually won the tier cascade below. /search's "See all
+  // N matching jobs" button (app/search/page.tsx) links to /jobs/listings
+  // with this as its `search` param, not the raw user-typed query: passing
+  // the raw query there would return whatever /jobs/listings' own
+  // websearch_to_tsquery parsing makes of it (its own AND-only tier),
+  // which is a different, usually much larger, number than N. Since both
+  // this route and /jobs/listings run the identical `search_jobs_ranked` /
+  // `textSearch(..., {type:'websearch'})` machinery on whatever string
+  // they're given, handing across the winning tier's own string (phrase,
+  // and, or or-joined) is what makes the destination page's own count
+  // match N — without /jobs/listings' parsing needing to know anything
+  // about tiers at all.
+  jobsSearchQuery: string | null
 }
 
-const NO_JOBS: JobsForSearch = { jobs: [], jobsTotal: 0 }
+const NO_JOBS: JobsForSearch = { jobs: [], jobsTotal: 0, jobsSearchQuery: null }
 
 // Platform-scoped, fails soft: any error here must never break content
 // search. Tries three query tiers, most precise first, each strictly
@@ -109,11 +123,11 @@ async function fetchJobsForSearch(rawQuery: string, platform: string): Promise<J
     // whenever phraseTerm was null above — same reasoning for 'and'.
     if (tier === 'phrase') {
       const jobs = await getActiveDirectJobs({ platform, search: phraseTerm!, limit: JOB_PANEL_LIMIT })
-      return { jobs, jobsTotal: phraseTotal }
+      return { jobs, jobsTotal: phraseTotal, jobsSearchQuery: phraseTerm }
     }
     if (tier === 'and') {
       const jobs = await getActiveDirectJobs({ platform, search: andTerm!, limit: JOB_PANEL_LIMIT })
-      return { jobs, jobsTotal: andTotal }
+      return { jobs, jobsTotal: andTotal, jobsSearchQuery: andTerm }
     }
 
     // tier === 'or': neither phrase nor and cleared the threshold.
@@ -126,7 +140,7 @@ async function fetchJobsForSearch(rawQuery: string, platform: string): Promise<J
       getActiveDirectJobs({ platform, search: orTerm, limit: JOB_PANEL_LIMIT }),
       getActiveDirectJobs({ platform, search: orTerm, countOnly: true }),
     ])
-    return { jobs: orJobs, jobsTotal: orTotal }
+    return { jobs: orJobs, jobsTotal: orTotal, jobsSearchQuery: orTerm }
   } catch (err: unknown) {
     console.error('[search] job query failed:', err)
     Sentry.captureException(err)
@@ -362,7 +376,12 @@ export async function GET(req: NextRequest) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const results = combined.map(({ _score, ...r }) => r)
 
-  return NextResponse.json({ results, jobs: jobsResult.jobs, jobsTotal: jobsResult.jobsTotal }, {
+  return NextResponse.json({
+    results,
+    jobs: jobsResult.jobs,
+    jobsTotal: jobsResult.jobsTotal,
+    jobsSearchQuery: jobsResult.jobsSearchQuery,
+  }, {
     headers: { 'Cache-Control': 'no-store' },
   })
 }
