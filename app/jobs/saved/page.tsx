@@ -21,7 +21,7 @@ export default function SavedJobsPage() {
       <div className="container-wide pt-8 pb-16 max-w-2xl">
         <h1 className="font-display text-2xl md:text-3xl font-medium text-navy-950 mb-1">Saved jobs</h1>
         <p className="text-sm text-slate-500 mb-6">
-          Saved on this device. Your list is cleared after {SAVED_JOBS_RETENTION_DAYS} days without a visit.
+          Saved jobs are kept for {SAVED_JOBS_RETENTION_DAYS} days after your last visit.
         </p>
         <SavedJobsClient />
       </div>
