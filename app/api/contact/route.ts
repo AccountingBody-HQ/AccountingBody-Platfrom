@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
+import { getContactBrand, contactPlatformValue } from '@/lib/contact-brand'
 
 async function verifyTurnstile(token: string, ip: string, isEthioTax: boolean): Promise<boolean> {
   if (!token) return false
@@ -33,9 +34,7 @@ export async function POST(req: NextRequest) {
 
     // Detect platform from Referer header
     const isEthioTax = req.headers.get('x-et-platform') === 'ethiotax'
-    const brand = isEthioTax
-      ? { name: 'EthioTax', domain: 'ethiotax.com', email: 'info@accountingbody.com', color: '#1A4731', textColor: '#fff' }
-      : { name: 'Accounting Body', domain: 'accountingbody.com', email: 'info@accountingbody.com', color: '#0C1A3D', textColor: '#fff' }
+    const brand = getContactBrand(isEthioTax)
 
     // Honeypot — bots fill this, real users never do
     if (_h) return NextResponse.json({ success: true })
@@ -80,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     const { error: dbError } = await supabase
       .from('contact_submissions')
-      .insert({ name, email, subject: subject ?? 'General Enquiry', message, platform: 'ab' })
+      .insert({ name, email, subject: subject ?? 'General Enquiry', message, platform: contactPlatformValue(isEthioTax) })
 
     if (dbError) {
       console.error('Contact insert error:', dbError)

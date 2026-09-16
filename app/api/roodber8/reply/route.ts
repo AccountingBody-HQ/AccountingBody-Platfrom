@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { getContactBrand, isEthioTaxPlatformValue } from '@/lib/contact-brand'
 
 async function sha256Hex(message: string): Promise<string> {
   const msgBuffer = new TextEncoder().encode(message)
@@ -30,13 +31,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
     }
 
-    const effectivePlatform = (platform === 'et' || platform === 'ethiotax') ? 'et' : 'ab'
-    const isET = effectivePlatform === 'et'
+    // platform here is whatever the stored contact_submissions/help_requests
+    // row's own platform column held at page-render time (see ReplyButton in
+    // components/roodber8/AdminActions.tsx, which forwards item.platform) —
+    // not an independent client choice. isEthioTaxPlatformValue also accepts
+    // the header's 'ethiotax' spelling defensively, though this caller only
+    // ever sends 'ab' or 'et'.
+    const isET = isEthioTaxPlatformValue(platform)
+    const brand = getContactBrand(isET)
 
-    const fromAddress    = isET ? 'EthioTax <info@ethiotax.com>' : 'Accounting Body <info@accountingbody.com>'
-    const replyToAddress = isET ? 'info@ethiotax.com' : 'info@accountingbody.com'
-    const brandName      = isET ? 'EthioTax' : 'Accounting Body'
-    const primaryColour  = isET ? '#1A4731' : '#0C1A3D'
+    // Resend's free plan has exactly one verified sending domain
+    // (accountingbody.com) — an EthioTax From/Reply-To on ethiotax.com
+    // would silently fail to send. brand.email is always the verified
+    // domain; only the display name changes. Matches the proven-good
+    // pattern already used by the ET acknowledgement email in
+    // app/api/contact/route.ts, which also sets no custom Reply-To.
+    const fromAddress    = `${brand.name} <${brand.email}>`
+    const replyToAddress = isET ? undefined : 'info@accountingbody.com'
+    const brandName      = brand.name
+    const primaryColour  = brand.color
     const accentColour   = isET ? '#C9982A' : '#D4A017'
     const disclaimer     = isET
       ? 'EthioTax is an independent accounting, tax and business consulting platform serving the Ethiopian community in Ethiopia and worldwide. We are not affiliated with any government tax authority.'
@@ -46,7 +59,7 @@ export async function POST(req: NextRequest) {
       from: fromAddress,
       to,
       subject,
-      replyTo: replyToAddress,
+      ...(replyToAddress ? { replyTo: replyToAddress } : {}),
       html: `
         <!DOCTYPE html>
         <html>
