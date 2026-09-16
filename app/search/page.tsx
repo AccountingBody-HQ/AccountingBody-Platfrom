@@ -175,8 +175,8 @@ function JobPanelEntry({ job, hiddenBelowLg }: { job: JobResult; hiddenBelowLg: 
   )
 }
 
-function JobsPanel({ jobs, jobsTotal, query, jobsSearchQuery }: {
-  jobs: JobResult[]; jobsTotal: number; query: string; jobsSearchQuery: string | null
+function JobsPanel({ jobs, jobsTotal, query, jobsSearchQuery, isJobsOnly }: {
+  jobs: JobResult[]; jobsTotal: number; query: string; jobsSearchQuery: string | null; isJobsOnly: boolean
 }) {
   // /jobs/listings runs the identical websearch_to_tsquery machinery this
   // panel's own tier cascade does (see jobsSearchQuery's definition in
@@ -188,10 +188,21 @@ function JobsPanel({ jobs, jobsTotal, query, jobsSearchQuery }: {
   // today's mismatch rather than crashing, since jobsTotal came from
   // upstream either way.
   const linkQuery = jobsSearchQuery ?? query
+
+  // Below `lg` the panel is already full width regardless of isJobsOnly
+  // (no lg:-prefixed class touches it there) — only >=1024px needs a
+  // second layout: side-by-side with content (fixed sidebar width) vs.
+  // jobs-only (full width, entries reflowed into a grid instead of the
+  // single narrow column that width was sized for).
+  const asideWidthClass = isJobsOnly ? 'lg:w-full' : 'lg:w-[310px] lg:shrink-0 order-1 lg:order-2'
+  const jobListClass = isJobsOnly
+    ? 'flex flex-col gap-2 mb-4 lg:grid lg:grid-cols-3 lg:gap-3'
+    : 'flex flex-col gap-2 mb-4'
+
   return (
-    <aside aria-labelledby="matching-jobs-heading" className="lg:w-[310px] lg:shrink-0 order-1 lg:order-2 bg-white rounded-2xl border border-slate-100 p-5">
+    <aside aria-labelledby="matching-jobs-heading" className={`${asideWidthClass} bg-white rounded-2xl border border-slate-100 p-5`}>
       <h2 id="matching-jobs-heading" className="font-display text-navy-950 text-lg mb-4">Matching jobs</h2>
-      <div className="flex flex-col gap-2 mb-4">
+      <div className={jobListClass}>
         {jobs.map((job, i) => (
           <JobPanelEntry key={job.id} job={job} hiddenBelowLg={i >= 3} />
         ))}
@@ -425,7 +436,13 @@ function SearchInner() {
               <div className="flex flex-col lg:flex-row lg:items-start gap-8">
 
                 {(activeType === 'all' || activeType === 'jobs') && searched && !loading && jobs.length > 0 && (
-                  <JobsPanel jobs={jobs} jobsTotal={jobsTotal} query={query} jobsSearchQuery={jobsSearchQuery} />
+                  <JobsPanel
+                    jobs={jobs}
+                    jobsTotal={jobsTotal}
+                    query={query}
+                    jobsSearchQuery={jobsSearchQuery}
+                    isJobsOnly={activeType === 'jobs'}
+                  />
                 )}
 
                 {activeType !== 'jobs' && (
