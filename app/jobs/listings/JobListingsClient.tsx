@@ -353,15 +353,29 @@ function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
 
 // ── Active filter chips ───────────────────────────────────────────────────
 
-function ActiveFilterChips({ filters, sortBy, onRemoveFilter, onRemoveSort, countryOptions }: {
+// The keyword `search` state can carry a websearch_to_tsquery phrase
+// wrapper (e.g. `"fund manager"`, arriving via /search's jobs panel link —
+// see app/api/search/route.ts's jobsSearchQuery) — those quote characters
+// are matching syntax, not something the user typed or should see echoed
+// back at them in a chip label.
+function displaySearchTerm(raw: string): string {
+  return raw.replace(/^"+|"+$/g, '')
+}
+
+function ActiveFilterChips({ search, filters, sortBy, onRemoveSearch, onRemoveFilter, onRemoveSort, countryOptions }: {
+  search: string
   filters: Filters
   sortBy: SortBy
+  onRemoveSearch: () => void
   onRemoveFilter: (next: Filters) => void
   onRemoveSort: () => void
   countryOptions: CountryOption[]
 }) {
   const chips: { label: string; onRemove: () => void }[] = []
 
+  if (search.trim()) {
+    chips.push({ label: `Search: "${displaySearchTerm(search.trim())}"`, onRemove: onRemoveSearch })
+  }
   if (filters.locationCountry !== 'all') {
     const label = countryOptions.find(o => o.value === filters.locationCountry)?.label ?? filters.locationCountry
     chips.push({ label, onRemove: () => onRemoveFilter({ ...filters, locationCountry: 'all' }) })
@@ -888,7 +902,12 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   }
 
   function handleFiltersChange(next: Filters) { navigateToState({ ...urlState, filters: next, page: DEFAULT_PAGE }) }
-  function handleClearFilters() { navigateToState({ ...urlState, filters: EMPTY_FILTERS, sortBy: DEFAULT_SORT, page: DEFAULT_PAGE }) }
+  function handleRemoveSearch() { navigateToState({ ...urlState, search: '', page: DEFAULT_PAGE }) }
+  // Clears the keyword too, not just the sidebar filters — "Clear all
+  // filters" promises exactly that, and a keyword left behind after
+  // clicking it is the same "can't get back to an unfiltered board" defect
+  // this chip fixes, just reached by a different button.
+  function handleClearFilters() { navigateToState({ ...urlState, search: '', filters: EMPTY_FILTERS, sortBy: DEFAULT_SORT, page: DEFAULT_PAGE }) }
   function handlePageChange(next: number) { navigateToState({ ...urlState, page: next }); scrollToResults() }
 
   const displayedPage = confirmedPageRef.current
@@ -989,8 +1008,10 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                   </div>
 
                   <ActiveFilterChips
+                    search={activeSearch}
                     filters={filters}
                     sortBy={sortBy}
+                    onRemoveSearch={handleRemoveSearch}
                     onRemoveFilter={next => navigateToState({ ...urlState, filters: next, page: DEFAULT_PAGE })}
                     onRemoveSort={() => navigateToState({ ...urlState, sortBy: DEFAULT_SORT, page: DEFAULT_PAGE })}
                     countryOptions={countryOptions}
