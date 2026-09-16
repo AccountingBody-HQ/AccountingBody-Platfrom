@@ -64,7 +64,8 @@
   "crons": [
     { "path": "/api/cron/expire-jobs", "schedule": "0 6 * * *" },
     { "path": "/api/ingest/orchestrator", "schedule": "*/15 * * * *" },
-    { "path": "/api/cron/prune-pending-subscribers", "schedule": "30 6 * * *" }
+    { "path": "/api/cron/prune-pending-subscribers", "schedule": "30 6 * * *" },
+    { "path": "/api/cron/prune-saved-jobs", "schedule": "0 7 * * *" }
   ],
   "headers": [
     {
