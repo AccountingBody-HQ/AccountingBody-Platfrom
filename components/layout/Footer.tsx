@@ -7,6 +7,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { formatJobCountLabel, formatCountLabel } from '@/lib/job-format'
+import { safeUserFacingErrorMessage } from '@/lib/turnstile-error'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -143,14 +144,67 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
     ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '')
     : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? '')
 
-  // Renders the widget at most once per mount. The guard is our own ref
-  // flag (turnstileWidgetId.current), checked before every attempt — never
-  // the container's live DOM state, which a third-party script on
-  // ethiotax.com repeatedly rewrites (see the 400020 investigation report).
-  // A one-shot effect with a stable object ref can't be re-triggered by
-  // that external mutation the way the previous inline ref callback could.
+  // Renders into the container only if no widget id is currently tracked —
+  // re-armable (see the status-keyed effect below), not just run once for
+  // the component's whole lifetime. Never throws: a render() failure
+  // (window.turnstile not ready yet, or a genuine Cloudflare error) is
+  // logged and left for the next opportunity to retry — never surfaced to
+  // the visitor.
+  function renderWidgetIfNeeded() {
+    if (turnstileWidgetId.current !== null) return
+    if (!turnstileContainer.current || !window.turnstile || !siteKey) return
+    try {
+      turnstileWidgetId.current = window.turnstile.render(turnstileContainer.current, {
+        sitekey: siteKey,
+        callback: (token: string) => { turnstileToken.current = token },
+        'expired-callback': () => { turnstileToken.current = '' },
+        'error-callback': () => { turnstileToken.current = '' },
+      })
+    } catch (err) {
+      console.warn('[turnstile] render failed:', err)
+    }
+  }
+
+  // A submit that succeeds swaps the form out for a "confirm your email"
+  // view — the widget is being thrown away, not reused, so there is
+  // nothing to reset in place. Best-effort remove(), then clear the id.
+  function discardWidget() {
+    const id = turnstileWidgetId.current
+    turnstileWidgetId.current = null
+    if (id && window.turnstile && 'remove' in window.turnstile) {
+      try {
+        (window.turnstile as unknown as { remove: (id: string) => void }).remove(id)
+      } catch (err) {
+        console.warn('[turnstile] remove failed (non-fatal):', err)
+      }
+    }
+  }
+
+  // A submit that fails keeps the same form (and container) mounted —
+  // reset it in place for a fresh token. If reset() itself throws (the
+  // exact "Nothing to reset found for provided container" failure this
+  // fixes — e.g. a stale id left over from an earlier discard), fall back
+  // to rendering a brand-new widget into the still-mounted container
+  // immediately.
+  function resetWidgetInPlace() {
+    const id = turnstileWidgetId.current
+    if (!id || !window.turnstile) {
+      turnstileWidgetId.current = null
+      renderWidgetIfNeeded()
+      return
+    }
+    try {
+      window.turnstile.reset(id)
+    } catch (err) {
+      console.warn('[turnstile] reset failed; re-rendering:', err)
+      turnstileWidgetId.current = null
+      renderWidgetIfNeeded()
+    }
+  }
+
   // Retries on a short interval only until window.turnstile becomes
-  // available, giving up after ~10s.
+  // available, giving up after ~10s. Runs once per mount; true unmount is
+  // the only time the widget is actually removed here.
   //
   // Footer also lives in the root layout and persists across client-side
   // navigations — unlike every other Turnstile call site, which each live
@@ -159,16 +213,13 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
   React.useEffect(() => {
     let attempts = 0
     let timeoutId: ReturnType<typeof setTimeout> | undefined
+    let cancelled = false
 
     const tryRender = () => {
+      if (cancelled) return
       if (turnstileWidgetId.current !== null) return
       if (turnstileContainer.current && window.turnstile && siteKey) {
-        turnstileWidgetId.current = window.turnstile.render(turnstileContainer.current, {
-          sitekey: siteKey,
-          callback: (token: string) => { turnstileToken.current = token },
-          'expired-callback': () => { turnstileToken.current = '' },
-          'error-callback': () => { turnstileToken.current = '' },
-        })
+        renderWidgetIfNeeded()
         return
       }
       attempts += 1
@@ -177,13 +228,25 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
     tryRender()
 
     return () => {
+      cancelled = true
       if (timeoutId) clearTimeout(timeoutId)
       if (turnstileWidgetId.current && window.turnstile && 'remove' in window.turnstile) {
-        (window.turnstile as unknown as { remove: (id: string) => void }).remove(turnstileWidgetId.current)
+        try {
+          (window.turnstile as unknown as { remove: (id: string) => void }).remove(turnstileWidgetId.current)
+        } catch (err) {
+          console.warn('[turnstile] remove on unmount failed:', err)
+        }
       }
       turnstileWidgetId.current = null
     }
   }, [siteKey])
+
+  // Re-arms rendering whenever status changes — a no-op unless the widget
+  // id was cleared (by discardWidget/resetWidgetInPlace above) AND the
+  // container is currently mounted with nothing rendered into it yet.
+  React.useEffect(() => {
+    renderWidgetIfNeeded()
+  }, [status])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -201,15 +264,15 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
       setStatus('success')
       setEmail('')
       turnstileToken.current = ''
-      if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
+      discardWidget()
     } catch (err) {
       setStatus('error')
-      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setErrorMsg(safeUserFacingErrorMessage(err instanceof Error ? err.message : undefined))
       // Previously missing here: without a reset, a failed token is never
       // replaced, so a retry after a failure could never succeed until the
       // visitor reloaded the page.
       turnstileToken.current = ''
-      if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
+      resetWidgetInPlace()
     }
   }
 
