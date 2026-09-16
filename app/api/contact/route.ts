@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       if (BLOCKED_DOMAINS_SUB.includes(subEmailDomain)) return NextResponse.json({ success: true })
       const { error: subError } = await supabase
         .from('email_subscribers')
-        .upsert({ email, platform: 'ab', status: 'subscribed', source: 'contact_form' }, { onConflict: 'email' })
+        .upsert({ email, platform: contactPlatformValue(isEthioTax), status: 'subscribed', source: 'contact_form' }, { onConflict: 'email,platform' })
       if (subError) {
         console.error('Subscribe error:', subError)
         return NextResponse.json({ error: subError.message }, { status: 500 })
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
     if (subscribe) {
       const { error: subError } = await supabase
         .from('email_subscribers')
-        .upsert({ email, platform: 'ab', status: 'subscribed', source: 'contact_form' }, { onConflict: 'email' })
+        .upsert({ email, platform: contactPlatformValue(isEthioTax), status: 'subscribed', source: 'contact_form' }, { onConflict: 'email,platform' })
       if (subError) {
         console.error('Subscribe error (non-fatal):', subError)
       }
