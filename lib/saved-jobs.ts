@@ -76,3 +76,30 @@ export function checkSavedJobsRateLimit(key: string, now: number = Date.now()): 
   entry.count++
   return true
 }
+
+// Parses the legacy localStorage-saved-jobs value (a JSON array of job
+// uuid strings) into a de-duplicated list of valid ids, or [] for anything
+// malformed/empty/absent. The caller (app/jobs/saved/useSavedJobs.ts) owns
+// reading the raw string from localStorage and knows the key name — this
+// stays pure so it can be unit-tested without a DOM.
+export function parseStoredSavedJobIds(raw: string | null): string[] {
+  if (!raw) return []
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    return []
+  }
+  if (!Array.isArray(parsed)) return []
+  return Array.from(new Set(parsed.filter(isValidUuid)))
+}
+
+// Maps a saved-jobs API error status to the plain-English copy the UI shows
+// after an optimistic save/unsave is rejected or fails outright (status 0 —
+// no HTTP response at all, e.g. a network error).
+export function savedJobsErrorMessage(status: number): string {
+  if (status === 409) return `You can save up to ${SAVED_JOBS_LIMIT} jobs. Remove one to save another.`
+  if (status === 429) return 'Too many changes at once. Please wait a moment and try again.'
+  if (status === 404) return 'This job is no longer available to save.'
+  return "We couldn't update your saved jobs. Please try again."
+}

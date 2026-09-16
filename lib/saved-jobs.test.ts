@@ -6,6 +6,8 @@ import {
   savedJobsCookieOptions,
   isJobAvailable,
   checkSavedJobsRateLimit,
+  parseStoredSavedJobIds,
+  savedJobsErrorMessage,
   SAVED_JOBS_LIMIT,
   SAVED_JOBS_MAX_AGE_SECONDS,
 } from './saved-jobs'
@@ -166,5 +168,58 @@ describe('checkSavedJobsRateLimit', () => {
     for (let i = 0; i < 30; i++) checkSavedJobsRateLimit(keyA, 2_000)
     expect(checkSavedJobsRateLimit(keyA, 2_100)).toBe(false)
     expect(checkSavedJobsRateLimit(keyB, 2_100)).toBe(true)
+  })
+})
+
+describe('parseStoredSavedJobIds', () => {
+  it('returns [] for null or empty input', () => {
+    expect(parseStoredSavedJobIds(null)).toEqual([])
+    expect(parseStoredSavedJobIds('')).toEqual([])
+  })
+
+  it('returns [] for malformed JSON', () => {
+    expect(parseStoredSavedJobIds('not json')).toEqual([])
+    expect(parseStoredSavedJobIds('{broken')).toEqual([])
+  })
+
+  it('returns [] when the parsed value is not an array', () => {
+    expect(parseStoredSavedJobIds('{"a":1}')).toEqual([])
+    expect(parseStoredSavedJobIds('"just a string"')).toEqual([])
+    expect(parseStoredSavedJobIds('42')).toEqual([])
+  })
+
+  it('parses a valid array of uuids', () => {
+    expect(parseStoredSavedJobIds(JSON.stringify([VALID_UUID, VALID_UUID_2]))).toEqual([VALID_UUID, VALID_UUID_2])
+  })
+
+  it('filters out invalid entries and de-duplicates', () => {
+    const raw = JSON.stringify([VALID_UUID, 'garbage', VALID_UUID, 123, VALID_UUID_2])
+    expect(parseStoredSavedJobIds(raw)).toEqual([VALID_UUID, VALID_UUID_2])
+  })
+
+  it('returns [] for an empty array', () => {
+    expect(parseStoredSavedJobIds('[]')).toEqual([])
+  })
+})
+
+describe('savedJobsErrorMessage', () => {
+  it('describes the 200-job limit for 409', () => {
+    expect(savedJobsErrorMessage(409)).toBe(
+      `You can save up to ${SAVED_JOBS_LIMIT} jobs. Remove one to save another.`
+    )
+  })
+
+  it('describes rate limiting for 429', () => {
+    expect(savedJobsErrorMessage(429)).toBe('Too many changes at once. Please wait a moment and try again.')
+  })
+
+  it('describes an unavailable job for 404', () => {
+    expect(savedJobsErrorMessage(404)).toBe('This job is no longer available to save.')
+  })
+
+  it('falls back to a generic message for any other status, including network failure (0)', () => {
+    expect(savedJobsErrorMessage(500)).toBe("We couldn't update your saved jobs. Please try again.")
+    expect(savedJobsErrorMessage(400)).toBe("We couldn't update your saved jobs. Please try again.")
+    expect(savedJobsErrorMessage(0)).toBe("We couldn't update your saved jobs. Please try again.")
   })
 })

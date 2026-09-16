@@ -29,6 +29,7 @@ import {
   type ListingsUrlState,
 } from './urlState'
 import { Pagination } from '@/components/Pagination'
+import { useSavedJobs } from '@/app/jobs/saved/useSavedJobs'
 
 interface DirectJobsResponse {
   jobs?: Job[]
@@ -85,33 +86,6 @@ const POSTED_OPTIONS: { value: PostedWithin; label: string }[] = [
   { value: '7d',  label: 'Last 7 days' },
   { value: '30d', label: 'Last 30 days' },
 ]
-
-// ── Saved jobs (localStorage) ─────────────────────────────────────────────
-
-function useSavedJobs() {
-  const [savedIds, setSavedIds] = useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem('ab_saved_jobs')
-      return new Set(stored ? (JSON.parse(stored) as string[]) : [])
-    } catch {
-      return new Set<string>()
-    }
-  })
-
-  function toggleSaved(id: string) {
-    setSavedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      try {
-        localStorage.setItem('ab_saved_jobs', JSON.stringify(Array.from(next)))
-      } catch {}
-      return next
-    })
-  }
-
-  return { savedIds, toggleSaved }
-}
 
 // ── Utilities ─────────────────────────────────────────────────────────────
 
@@ -512,9 +486,10 @@ function JobAlertBanner({ search, filters, onDismiss }: {
 
 // ── Job card ──────────────────────────────────────────────────────────────
 
-function JobCard({ job, saved, onSave }: {
+function JobCard({ job, saved, pending, onSave }: {
   job: Job
   saved: boolean
+  pending: boolean
   onSave: (id: string) => void
 }) {
   const salary = formatSalary(job)
@@ -563,8 +538,11 @@ function JobCard({ job, saved, onSave }: {
             <button
               type="button"
               onClick={() => onSave(job.id)}
-              aria-label={saved ? 'Unsave job' : 'Save job'}
-              className={`relative z-10 shrink-0 p-1.5 rounded-lg transition-colors mt-0.5 ${saved ? 'text-gold-500 bg-gold-50' : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50'}`}
+              disabled={pending}
+              aria-pressed={saved}
+              aria-busy={pending}
+              aria-label={saved ? 'Remove from saved jobs' : 'Save job'}
+              className={`relative z-10 shrink-0 p-1.5 rounded-lg transition-colors mt-0.5 disabled:opacity-50 disabled:cursor-not-allowed ${saved ? 'text-gold-500 bg-gold-50' : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50'}`}
             >
               <BookmarkIcon saved={saved} />
             </button>
@@ -737,7 +715,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
 
   const [drawerOpen, setDrawerOpen] = useState(false)
 
-  const { savedIds, toggleSaved } = useSavedJobs()
+  const { savedIds, pending: savedPending, error: savedJobsError, toggle: toggleSaved } = useSavedJobs()
 
   const abortRef = useRef<AbortController | null>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
@@ -953,6 +931,12 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
               />
             )}
 
+            {savedJobsError && (
+              <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+                {savedJobsError}
+              </p>
+            )}
+
             {error && (
               <div className="text-center py-16 border border-slate-200 rounded-2xl bg-white">
                 <p className="text-navy-950 font-semibold mb-1">Something went wrong</p>
@@ -986,19 +970,28 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                       <p className="text-sm text-slate-500 font-medium">
                         {total.toLocaleString()} job{total === 1 ? '' : 's'} found
                       </p>
-                      <div className="relative">
-                        <select
-                          value={sortBy}
-                          onChange={e => navigateToState({ ...urlState, sortBy: e.target.value as SortBy, page: DEFAULT_PAGE })}
-                          aria-label="Sort by"
-                          className="h-10 pl-3 pr-8 rounded-lg border border-slate-200 text-sm font-medium text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white appearance-none cursor-pointer"
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <Link
+                          href="/jobs/saved"
+                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-950 hover:text-navy-700 transition-colors"
                         >
-                          {SORT_OPTIONS.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                        <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
-                          <ChevronDownIcon />
+                          <BookmarkIcon saved={false} />
+                          Saved jobs{savedIds.size > 0 ? ` (${savedIds.size})` : ''}
+                        </Link>
+                        <div className="relative">
+                          <select
+                            value={sortBy}
+                            onChange={e => navigateToState({ ...urlState, sortBy: e.target.value as SortBy, page: DEFAULT_PAGE })}
+                            aria-label="Sort by"
+                            className="h-10 pl-3 pr-8 rounded-lg border border-slate-200 text-sm font-medium text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white appearance-none cursor-pointer"
+                          >
+                            {SORT_OPTIONS.map(opt => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                          <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+                            <ChevronDownIcon />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1023,6 +1016,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                         key={job.id}
                         job={job}
                         saved={savedIds.has(job.id)}
+                        pending={savedPending.has(job.id)}
                         onSave={toggleSaved}
                       />
                     ))}

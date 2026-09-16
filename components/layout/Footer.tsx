@@ -336,11 +336,13 @@ export function Footer({
     title: 'Jobs',
     links: isEthioTax ? [
       { label: 'Browse Jobs',               href: '/jobs/listings' },
+      { label: 'Saved jobs',                href: '/jobs/saved' },
       { label: 'Register as a Candidate',   href: '/jobs/find-work' },
       { label: 'Hire Talent',               href: '/jobs/hire-talent' },
       { label: 'Ethiopian Professionals',   href: '/jobs/ethiopian-professionals' },
     ] : [
       { label: 'Browse Jobs',               href: '/jobs/listings' },
+      { label: 'Saved jobs',                href: '/jobs/saved' },
       { label: 'Managed Recruitment',       href: '/jobs' },
       { label: 'Register as a Candidate',   href: '/jobs/find-work' },
       { label: 'Hire Talent',               href: '/jobs/hire-talent' },
