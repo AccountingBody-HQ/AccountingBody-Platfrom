@@ -75,17 +75,49 @@ export interface Question {
 
 // ── Articles ──────────────────────────────────────────────────────────────────
 
-export async function getArticleBySlug(slug: string): Promise<ArticleFull | null> {
+// The uncached query behind getArticleBySlug. unstable_cache stores whatever
+// this RETURNS (null included) for the full revalidate window, but stores
+// nothing when it THROWS — so only a genuine "no such published article"
+// may return null here. .single() reports zero rows as HTTP 406 with
+// PostgREST code PGRST116; anything else (a 503/504 from the gateway, a
+// timeout, a network failure — status 0) is transient and is thrown, so it
+// can never be cached for an hour as "article not found".
+async function fetchPublishedArticleBySlug(slug: string): Promise<ArticleFull | null> {
   const supabase = getSupabase()
-  const { data, error } = await supabase
+  const { data, error, status } = await supabase
     .from('articles')
     .select('*')
     .eq('slug', slug)
     .eq('status', 'published')
     .single()
-  if (error || !data) return null
+  if (error && status === 406 && error.code === 'PGRST116') return null
+  if (error) throw error
+  if (!data) throw new Error(`getArticleBySlug: empty response for "${slug}"`)
   return data as ArticleFull
 }
+
+// Same two-layer approach as getCachedPublishedQuestionCount below:
+// unstable_cache persists across requests for an hour, react's cache() on
+// the outside dedupes generateMetadata and the page component within one
+// render. The unstable_cache wrapper is built per call only so each entry
+// can carry its own `article:<slug>` tag (tags are fixed at construction);
+// the cache key itself is keyParts + JSON.stringify([slug]), so one slug can
+// never return another's row. No platform in the key because none is in the
+// query: the row is identical for both hosts, and every host-specific
+// decision (canonical, branding) is made by the caller from headers(). The
+// publish routes revalidateTag('articles') and `article:<slug>`.
+// A thrown (uncached) error still resolves to null here, exactly as before.
+export const getArticleBySlug = cache(async (slug: string): Promise<ArticleFull | null> => {
+  try {
+    return await unstable_cache(fetchPublishedArticleBySlug, ['article-by-slug', 'published'], {
+      revalidate: 3600,
+      tags: ['articles', `article:${slug}`],
+    })(slug)
+  } catch (error) {
+    console.error('getArticleBySlug error:', error)
+    return null
+  }
+})
 
 const QUALIFICATION_SLUGS = ['acca', 'cima', 'aat', 'icaew', 'eticpa', 'eticpa-atq', 'eticpa-cpa']
 

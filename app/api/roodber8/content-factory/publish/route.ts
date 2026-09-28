@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
 import { marked } from 'marked'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
@@ -163,6 +164,10 @@ export async function POST(req: NextRequest) {
       console.error('content-factory/publish insert error:', error)
       return NextResponse.json({ error: error?.message ?? 'Failed to insert article' }, { status: 500 })
     }
+
+    // Drop getArticleBySlug's cached entry (lib/db.ts), including a cached
+    // "not found" from before this insert.
+    revalidateTag(`article:${slug}`)
 
     return NextResponse.json({
       success:        true,

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 import type { NormalisedArticle } from '@/lib/article-normaliser'
@@ -162,6 +163,11 @@ export async function POST(req: NextRequest) {
       console.error('articles/publish insert error:', insertError)
       return NextResponse.json({ error: insertError?.message ?? 'Failed to insert article' }, { status: 500 })
     }
+
+    // Drop getArticleBySlug's cached entry (lib/db.ts), including a cached
+    // "not found" from before this insert. inserted.slug, not initialSlug —
+    // the slug-conflict retry above may have changed it.
+    revalidateTag(`article:${inserted.slug}`)
 
     return NextResponse.json({
       success:    true,
