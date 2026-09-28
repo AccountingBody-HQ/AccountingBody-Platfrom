@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCachedListingJobs, getCachedListingJobsCount, type SeniorityLevel, type EmploymentType } from '@/lib/jobs'
+import { parseLimit, parseOffset } from './pagination'
 
 export const dynamic = 'force-dynamic'
 // force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
@@ -17,17 +18,10 @@ const NO_CACHE_HEADERS = {
   'Cache-Control': 'no-store, no-cache, must-revalidate',
 }
 
-const DEFAULT_LIMIT = 24
-
 const SENIORITY_VALUES: SeniorityLevel[] = ['junior', 'mid', 'senior', 'executive', 'director']
 const EMPLOYMENT_TYPE_VALUES: EmploymentType[] = ['permanent', 'contract', 'temporary', 'part_time', 'internship']
 const SORT_BY_VALUES = ['relevance', 'recent', 'salary_high', 'salary_low'] as const
 type SortBy = (typeof SORT_BY_VALUES)[number]
-
-function parsePositiveInt(value: string | null, fallback: number): number {
-  const n = value ? parseInt(value, 10) : NaN
-  return Number.isFinite(n) && n >= 0 ? n : fallback
-}
 
 function parseOptionalNumber(value: string | null): number | undefined {
   if (!value) return undefined
@@ -72,8 +66,10 @@ export async function GET(req: NextRequest) {
   const location = searchParams.get('location')?.trim() || undefined
   const locationCountry = searchParams.get('location_country')?.trim() || undefined
   const platform = searchParams.get('platform')?.trim() || 'ab'
-  const limit = parsePositiveInt(searchParams.get('limit'), DEFAULT_LIMIT)
-  const offset = parsePositiveInt(searchParams.get('offset'), 0)
+  // Clamped (1-50, 0-10000) before either reaches the cache key or the
+  // ranked search RPC; see ./pagination.ts.
+  const limit = parseLimit(searchParams.get('limit'))
+  const offset = parseOffset(searchParams.get('offset'))
   const countOnly = searchParams.get('count') === 'true'
 
   const employmentTypes = parseEmploymentTypes(searchParams.get('employment_types'))

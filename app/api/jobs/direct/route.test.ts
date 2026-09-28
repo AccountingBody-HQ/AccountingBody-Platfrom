@@ -65,6 +65,17 @@ describe('/api/jobs/direct GET — a database failure is never an empty 200', ()
     expect(res.headers.get('cache-control')).toContain('no-store')
   })
 
+  it('clamps limit and offset before they reach the cached lookup', async () => {
+    const { GET } = await import('./route')
+    const jobs = await import('@/lib/jobs')
+    vi.mocked(jobs.getCachedListingJobs).mockResolvedValue([])
+    vi.mocked(jobs.getCachedListingJobsCount).mockResolvedValue(0)
+
+    await GET(new NextRequest('http://localhost/api/jobs/direct?platform=ab&limit=100000&offset=999999'))
+
+    expect(vi.mocked(jobs.getCachedListingJobs).mock.calls[0][0]).toMatchObject({ limit: 50, offset: 10000 })
+  })
+
   it('passes the platform through to both cached lookups', async () => {
     const { GET } = await import('./route')
     const jobs = await import('@/lib/jobs')
