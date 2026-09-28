@@ -813,6 +813,9 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
 
     try {
       const res = await fetch(`/api/jobs/direct?${params.toString()}`, { signal: controller.signal })
+      // A non-2xx means the jobs query failed: show the error state below,
+      // never "No jobs found".
+      if (!res.ok) throw new Error(`jobs request failed: ${res.status}`)
       const data: DirectJobsResponse = await res.json()
       setJobs(Array.isArray(data.jobs) ? data.jobs : [])
       setTotal(typeof data.total === 'number' ? data.total : 0)

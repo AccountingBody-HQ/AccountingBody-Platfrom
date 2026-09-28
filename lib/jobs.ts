@@ -326,11 +326,11 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
       countQuery = countQuery.or(qualificationsOrFilter)
     }
 
+    // Thrown, not returned as 0: a failed count must never read as "no jobs".
+    // Callers decide how to surface it (/api/jobs/direct returns a 503;
+    // /api/search's fetchJobsForSearch catches and hides its jobs panel).
     const { count, error } = await countQuery
-    if (error) {
-      console.error('getActiveDirectJobs count error:', error)
-      return 0
-    }
+    if (error) throw new Error(`getActiveDirectJobs: count query failed: ${error.message}`)
     return count ?? 0
   }
 
@@ -360,10 +360,9 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
     p_offset: offset,
   })
 
-  if (error || !data) {
-    if (error) console.error('getActiveDirectJobs error:', error)
-    return []
-  }
+  // Same as the count path above: an error is thrown, never returned as [].
+  if (error) throw new Error(`getActiveDirectJobs: search_jobs_ranked failed: ${error.message}`)
+  if (!data) return []
 
   // The RPC's RETURNS TABLE columns are exactly JOB_COLUMNS, by
   // construction — but without generated Supabase types, `.rpc()`'s return

@@ -91,7 +91,9 @@ async function fetchPublishedArticleBySlug(slug: string): Promise<ArticleFull | 
     .eq('status', 'published')
     .single()
   if (error && status === 406 && error.code === 'PGRST116') return null
-  if (error) throw error
+  // A real Error, not the plain PostgREST error object, so the page's error
+  // boundary and Sentry get a message and a stack.
+  if (error) throw new Error(`getArticleBySlug: articles query failed (status ${status}): ${error.message}`)
   if (!data) throw new Error(`getArticleBySlug: empty response for "${slug}"`)
   return data as ArticleFull
 }
@@ -105,8 +107,11 @@ async function fetchPublishedArticleBySlug(slug: string): Promise<ArticleFull | 
 // never return another's row. No platform in the key because none is in the
 // query: the row is identical for both hosts, and every host-specific
 // decision (canonical, branding) is made by the caller from headers(). The
-// publish routes revalidateTag('articles') and `article:<slug>`.
-// A thrown (uncached) error still resolves to null here, exactly as before.
+// publish routes revalidateTag only `article:<slug>`; the shared `articles`
+// tag is kept on every entry for future bulk tools.
+// Returns null only for a genuine not-found. Any other failure is logged and
+// re-thrown, so an article page renders its error boundary with a 500
+// instead of a 404 that tells crawlers the article doesn't exist.
 export const getArticleBySlug = cache(async (slug: string): Promise<ArticleFull | null> => {
   try {
     return await unstable_cache(fetchPublishedArticleBySlug, ['article-by-slug', 'published'], {
@@ -115,7 +120,7 @@ export const getArticleBySlug = cache(async (slug: string): Promise<ArticleFull 
     })(slug)
   } catch (error) {
     console.error('getArticleBySlug error:', error)
-    return null
+    throw error
   }
 })
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
-import { getJobSitemapEntries, getJobSitemapChunk, getSimilarJobs, buildSimilarQuery, type Job } from './jobs'
+import { getActiveDirectJobs, getJobSitemapEntries, getJobSitemapChunk, getSimilarJobs, buildSimilarQuery, type Job } from './jobs'
 
 const PAGE_SIZE = 1000
 
@@ -320,5 +320,53 @@ describe('getSimilarJobs', () => {
     })
 
     expect(result).toEqual([])
+  })
+})
+
+// getActiveDirectJobs's count path is a chain that is itself awaited (the
+// real query builder is a thenable); its row path is a single .rpc() call.
+function fakeDirectJobsClient(opts: {
+  count?: { count: number | null; error: unknown }
+  rpc?: { data: unknown; error: unknown }
+}) {
+  const builder = {
+    from:       () => builder,
+    select:     () => builder,
+    eq:         () => builder,
+    contains:   () => builder,
+    or:         () => builder,
+    in:         () => builder,
+    textSearch: () => builder,
+    then: (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) =>
+      Promise.resolve(opts.count ?? { count: 0, error: null }).then(resolve, reject),
+    rpc: () => Promise.resolve(opts.rpc ?? { data: [], error: null }),
+  }
+  return builder
+}
+
+describe('getActiveDirectJobs — errors are thrown, never returned as empty', () => {
+  it('throws when the count query errors', async () => {
+    vi.mocked(createClient).mockReturnValue(
+      fakeDirectJobsClient({ count: { count: null, error: { message: 'upstream request timeout' } } }) as unknown as ReturnType<typeof createClient>
+    )
+
+    await expect(getActiveDirectJobs({ platform: 'ab', countOnly: true })).rejects.toThrow('count query failed')
+  })
+
+  it('throws when the ranked search RPC errors', async () => {
+    vi.mocked(createClient).mockReturnValue(
+      fakeDirectJobsClient({ rpc: { data: null, error: { message: 'canceling statement due to statement timeout' } } }) as unknown as ReturnType<typeof createClient>
+    )
+
+    await expect(getActiveDirectJobs({ platform: 'ab' })).rejects.toThrow('search_jobs_ranked failed')
+  })
+
+  it('returns 0 and [] for a genuine empty result', async () => {
+    vi.mocked(createClient).mockReturnValue(
+      fakeDirectJobsClient({ count: { count: 0, error: null }, rpc: { data: [], error: null } }) as unknown as ReturnType<typeof createClient>
+    )
+
+    expect(await getActiveDirectJobs({ platform: 'ab', countOnly: true })).toBe(0)
+    expect(await getActiveDirectJobs({ platform: 'ab' })).toEqual([])
   })
 })

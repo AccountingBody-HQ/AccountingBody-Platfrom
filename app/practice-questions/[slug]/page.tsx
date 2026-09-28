@@ -35,7 +35,10 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
   const [questions, cases, relatedArticleData] = await Promise.all([
     getQuestionsBySetId(qset.id),
     getCasesBySetId(qset.id),
-    qset.article_slug ? getArticleBySlug(qset.article_slug) : Promise.resolve(null),
+    // The related-article link is secondary here, so a failed article lookup
+    // (already logged by getArticleBySlug) just hides the link rather than
+    // failing the whole question page.
+    qset.article_slug ? getArticleBySlug(qset.article_slug).catch(() => null) : Promise.resolve(null),
   ])
   const quizJson = JSON.stringify({
     question_type: qset.question_type ?? 'multiple-choice',

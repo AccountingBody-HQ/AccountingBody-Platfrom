@@ -115,7 +115,13 @@ export async function GET(req: NextRequest) {
     const listingJobs = jobs.map(({ description, ...rest }) => rest)
     return NextResponse.json({ jobs: listingJobs, total }, { headers: NO_CACHE_HEADERS })
   } catch (err: unknown) {
+    // 503, never a 200 with an empty list: JobListingsClient shows its error
+    // state and Retry button on a non-2xx, and "No jobs found" only for a
+    // genuine empty result.
     console.error('api/jobs/direct error:', err)
-    return NextResponse.json({ jobs: [], total: 0 }, { headers: NO_CACHE_HEADERS })
+    return NextResponse.json(
+      { error: 'Could not load jobs right now.' },
+      { status: 503, headers: NO_CACHE_HEADERS }
+    )
   }
 }
