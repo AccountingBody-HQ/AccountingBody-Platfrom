@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
-import { getActiveDirectJobs, getJobSitemapEntries, getJobSitemapChunk, getSimilarJobs, buildSimilarQuery, type Job } from './jobs'
+import {
+  getActiveDirectJobs, getCachedListingJobs, getCachedListingJobsCount,
+  normaliseListingFilters, normaliseListingPage,
+  getJobSitemapEntries, getJobSitemapChunk, getSimilarJobs, buildSimilarQuery, type Job,
+} from './jobs'
 
 const PAGE_SIZE = 1000
 
@@ -18,6 +22,16 @@ vi.mock('@supabase/supabase-js', () => ({
 vi.mock('react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('react')>()),
   cache: <T extends (...args: never[]) => unknown>(fn: T): T => fn,
+}))
+
+// unstable_cache needs Next's incremental cache, which only exists inside a
+// real Next server. Identity is enough here: these tests cover the cache
+// keys (via the normalisers, whose JSON is exactly what unstable_cache
+// keys on) and what the wrappers return or throw. That a thrown result is
+// never stored is Next's own behaviour (unstable-cache.js; see
+// tmp-audit/jobs-perf-option1-cache.md).
+vi.mock('next/cache', () => ({
+  unstable_cache: <T extends (...args: never[]) => unknown>(fn: T): T => fn,
 }))
 
 function makeJobs(n: number, startIndex = 0) {
@@ -368,5 +382,151 @@ describe('getActiveDirectJobs — errors are thrown, never returned as empty', (
 
     expect(await getActiveDirectJobs({ platform: 'ab', countOnly: true })).toBe(0)
     expect(await getActiveDirectJobs({ platform: 'ab' })).toEqual([])
+  })
+})
+
+// unstable_cache's key is the wrapper's fixed parts plus
+// JSON.stringify(args), so two calls share an entry exactly when these
+// strings are equal.
+const pageKey = (p: Parameters<typeof normaliseListingPage>[0]) => JSON.stringify(normaliseListingPage(p))
+const countKey = (p: Parameters<typeof normaliseListingFilters>[0]) => JSON.stringify(normaliseListingFilters(p))
+
+describe('listings cache keys', () => {
+  it('ignores array order, case and surrounding whitespace', () => {
+    const a = pageKey({
+      platform: 'ab',
+      search: '  Senior Accountant ',
+      location: 'London',
+      employmentTypes: ['permanent', 'contract'],
+      seniorityLevels: ['senior', 'mid'],
+      qualifications: ['ACCA', 'cima'],
+      sortBy: 'recent', limit: 24, offset: 0,
+    })
+    const b = pageKey({
+      platform: 'ab',
+      search: 'senior accountant',
+      location: '  LONDON',
+      employmentTypes: ['contract', 'permanent', 'contract'],
+      seniorityLevels: ['mid', 'senior'],
+      qualifications: [' cima', 'acca'],
+      sortBy: 'recent', limit: 24, offset: 0,
+    })
+    expect(a).toBe(b)
+  })
+
+  it('treats empty strings, empty arrays, "all", remoteOnly=false and undefined identically', () => {
+    const bare = pageKey({ platform: 'ab', limit: 24, offset: 0 })
+    const empty = pageKey({
+      platform: 'ab',
+      search: '   ', location: '', locationCountry: 'all',
+      employmentTypes: [], seniorityLevels: [], qualifications: [], sources: [],
+      remoteOnly: false,
+      sortBy: 'relevance', limit: 24, offset: 0,
+    })
+    expect(empty).toBe(bare)
+  })
+
+  it('does not lowercase platform or country, which are exact matches in the query', () => {
+    expect(countKey({ platform: 'ab', locationCountry: 'United Kingdom' }))
+      .not.toBe(countKey({ platform: 'ab', locationCountry: 'united kingdom' }))
+  })
+
+  it('gives a different key for a different platform, sort, offset, limit or any filter', () => {
+    const base = { platform: 'ab', sortBy: 'relevance' as const, limit: 24, offset: 0 }
+    const baseKey = pageKey(base)
+    const variants: Array<Parameters<typeof normaliseListingPage>[0]> = [
+      { ...base, platform: 'et' },
+      { ...base, sortBy: 'recent' },
+      { ...base, offset: 24 },
+      { ...base, limit: 48 },
+      { ...base, search: 'tax' },
+      { ...base, location: 'london' },
+      { ...base, locationCountry: 'United Kingdom' },
+      { ...base, employmentTypes: ['permanent'] },
+      { ...base, seniorityLevels: ['senior'] },
+      { ...base, remoteOnly: true },
+      { ...base, salaryMin: 30000 },
+      { ...base, salaryMax: 90000 },
+      { ...base, postedWithin: 7 },
+      { ...base, qualifications: ['acca'] },
+      { ...base, sources: ['employer'] },
+    ]
+    const keys = variants.map(pageKey)
+    for (const key of keys) expect(key).not.toBe(baseKey)
+    expect(new Set(keys).size).toBe(keys.length)
+  })
+
+  it('count key ignores sort, limit and offset but not filters or platform', () => {
+    const filters = { platform: 'ab', search: 'tax', employmentTypes: ['permanent' as const] }
+    expect(countKey({ ...filters, sortBy: 'salary_high', limit: 48, offset: 96 })).toBe(countKey(filters))
+    expect(countKey({ ...filters, platform: 'et' })).not.toBe(countKey(filters))
+    expect(countKey({ ...filters, search: 'audit' })).not.toBe(countKey(filters))
+  })
+})
+
+describe('cached listings wrappers', () => {
+  it('throws through the cached rows wrapper on a DB error, so nothing is cached', async () => {
+    vi.mocked(createClient).mockReturnValue(
+      fakeDirectJobsClient({ rpc: { data: null, error: { message: 'upstream request timeout' } } }) as unknown as ReturnType<typeof createClient>
+    )
+
+    await expect(getCachedListingJobs({ platform: 'ab', limit: 24, offset: 0 })).rejects.toThrow('search_jobs_ranked failed')
+  })
+
+  it('throws through the cached count wrapper on a DB error', async () => {
+    vi.mocked(createClient).mockReturnValue(
+      fakeDirectJobsClient({ count: { count: null, error: { message: 'upstream request timeout' } } }) as unknown as ReturnType<typeof createClient>
+    )
+
+    await expect(getCachedListingJobsCount({ platform: 'ab' })).rejects.toThrow('count query failed')
+  })
+
+  it('returns [] and 0 for a genuine empty result', async () => {
+    vi.mocked(createClient).mockReturnValue(
+      fakeDirectJobsClient({ count: { count: 0, error: null }, rpc: { data: [], error: null } }) as unknown as ReturnType<typeof createClient>
+    )
+
+    expect(await getCachedListingJobs({ platform: 'ab', limit: 24, offset: 0 })).toEqual([])
+    expect(await getCachedListingJobsCount({ platform: 'ab' })).toBe(0)
+  })
+
+  it('never caches or returns description on listing rows', async () => {
+    vi.mocked(createClient).mockReturnValue(
+      fakeDirectJobsClient({ rpc: { data: [{ id: 'a', title: 'T', description: 'x'.repeat(50_000) }], error: null } }) as unknown as ReturnType<typeof createClient>
+    )
+
+    const rows = await getCachedListingJobs({ platform: 'ab', limit: 24, offset: 0 })
+    expect(rows).toEqual([{ id: 'a', title: 'T' }])
+  })
+})
+
+describe('getSimilarJobs — cached ranked calls', () => {
+  it('calls the ranked RPC with only platform, search term, country and limit+1 varying', async () => {
+    const { client, rpcCalls } = fakeSimilarJobsClient([{ data: [], error: null }, { data: [], error: null }])
+    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+
+    await getSimilarJobs({ excludeId: 'self', platform: 'et', title: 'Senior Tax Accountant', locationCountry: null, limit: 6 })
+
+    expect(rpcCalls[0]).toMatchObject({
+      p_platform: 'et',
+      p_search: buildSimilarQuery('Senior Tax Accountant'),
+      p_location_country: null,
+      p_limit: 7,
+      p_offset: 0,
+      p_sort_by: 'relevance',
+    })
+  })
+
+  it('returns only the fields the similar-jobs list renders (no description)', async () => {
+    const { client } = fakeSimilarJobsClient([
+      { data: [{ ...row('a'), slug: 'a', title: 'A', company_name: 'Co', description: 'x'.repeat(50_000) }], error: null },
+    ])
+    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+
+    const result = await getSimilarJobs({ excludeId: 'self', platform: 'ab', title: 'Senior Practice Accountant', locationCountry: null })
+
+    expect(result).toHaveLength(1)
+    expect(result[0]).not.toHaveProperty('description')
+    expect(result[0]).toMatchObject({ id: 'a', slug: 'a', title: 'A', company_name: 'Co' })
   })
 })

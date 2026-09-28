@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getActiveDirectJobs, type SeniorityLevel, type EmploymentType } from '@/lib/jobs'
+import { getCachedListingJobs, getCachedListingJobsCount, type SeniorityLevel, type EmploymentType } from '@/lib/jobs'
 
 export const dynamic = 'force-dynamic'
 // force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
 // handlers (Data Cache, up to 1 year, survives deploys). This froze the sitemap
 // at 13 Sept 2026. Do not remove. See Session 15 handover.
-export const fetchCache = 'force-no-store'
+// 'default-no-store', not 'force-no-store': it still makes every Supabase
+// fetch here uncached (they set no cache/revalidate option, so patch-fetch
+// gives them revalidate 0), but 'force-no-store' would also stop
+// unstable_cache from ever READING its entries (unstable-cache.js checks
+// store.fetchCache !== 'force-no-store'), silently disabling the 5-minute
+// listings cache in lib/jobs.ts. Do not change back.
+export const fetchCache = 'default-no-store'
 
 const NO_CACHE_HEADERS = {
   'Cache-Control': 'no-store, no-cache, must-revalidate',
@@ -99,21 +105,22 @@ export async function GET(req: NextRequest) {
 
   try {
     if (countOnly) {
-      const total = await getActiveDirectJobs({ ...baseParams, countOnly: true })
+      const total = await getCachedListingJobsCount(baseParams)
       return NextResponse.json({ jobs: [], total }, { headers: NO_CACHE_HEADERS })
     }
 
+    // Both cached for 5 minutes in lib/jobs.ts; the count is keyed on the
+    // filters only, so paging and re-sorting reuse it. Cards render
+    // `excerpt`, never `description` (measured: ~26% of this endpoint's
+    // response body), so getCachedListingJobs already returns rows without
+    // it; getJobBySlug's separate detail-page path keeps the full text.
+    // The HTTP response itself stays no-store (NO_CACHE_HEADERS): only the
+    // data layer is cached, never the browser or CDN copy.
     const [jobs, total] = await Promise.all([
-      getActiveDirectJobs({ ...baseParams, limit, offset }),
-      getActiveDirectJobs({ ...baseParams, countOnly: true }),
+      getCachedListingJobs({ ...baseParams, limit, offset }),
+      getCachedListingJobsCount(baseParams),
     ])
-    // Cards render `excerpt`, never `description` (measured: ~26% of this
-    // endpoint's response body for a field JobListingsClient.tsx never
-    // reads) — stripped here, not from JOB_COLUMNS or the RPC, so
-    // getJobBySlug's separate detail-page path keeps the full description.
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const listingJobs = jobs.map(({ description, ...rest }) => rest)
-    return NextResponse.json({ jobs: listingJobs, total }, { headers: NO_CACHE_HEADERS })
+    return NextResponse.json({ jobs, total }, { headers: NO_CACHE_HEADERS })
   } catch (err: unknown) {
     // 503, never a 200 with an empty list: JobListingsClient shows its error
     // state and Retry button on a non-2xx, and "No jobs found" only for a

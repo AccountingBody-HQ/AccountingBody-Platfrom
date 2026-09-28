@@ -372,6 +372,133 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
   return data as Job[]
 }
 
+// ── Cached listings search (/api/jobs/direct) ────────────────────────────────
+//
+// unstable_cache keys on JSON.stringify of the arguments, so the listings
+// cache is keyed on a normalised copy of the request: every value that
+// changes the result, and nothing that doesn't. Free text and qualifications
+// are lowercased because every place they reach the database is
+// case-insensitive (websearch_to_tsquery, ILIKE). location_country and
+// platform are NOT lowercased: both are exact, case-sensitive matches.
+// Array filters are de-duplicated and sorted (they're ANY()/IN filters, so
+// order never matters); empty strings, empty arrays, 'all' countries and
+// remoteOnly=false all mean "no filter" in both query paths, so they're
+// omitted, and JSON.stringify drops undefined properties, making them
+// identical to absent. The cached functions run the query with this same
+// normalised object, so a key can never describe a different query than
+// the one whose result it stores.
+
+type ListingQuery = Omit<GetActiveDirectJobsParams, 'countOnly'>
+
+export interface ListingFilters {
+  platform: string
+  search?: string
+  location?: string
+  locationCountry?: string
+  employmentTypes?: EmploymentType[]
+  seniorityLevels?: SeniorityLevel[]
+  remoteOnly?: true
+  salaryMin?: number
+  salaryMax?: number
+  postedWithin?: number
+  qualifications?: string[]
+  sources?: JobSource[]
+}
+
+export interface ListingPage extends ListingFilters {
+  sortBy: NonNullable<GetActiveDirectJobsParams['sortBy']>
+  limit: number
+  offset: number
+}
+
+function normaliseText(value: string | undefined, lowercase: boolean): string | undefined {
+  const trimmed = value?.trim()
+  if (!trimmed) return undefined
+  return lowercase ? trimmed.toLowerCase() : trimmed
+}
+
+function normaliseList<T extends string>(values: T[] | undefined, lowercase = false): T[] | undefined {
+  if (!values) return undefined
+  const cleaned = values
+    .map(v => v.trim())
+    .filter(Boolean)
+    .map(v => (lowercase ? v.toLowerCase() : v) as T)
+  const unique = Array.from(new Set(cleaned)).sort()
+  return unique.length > 0 ? unique : undefined
+}
+
+function normaliseNumber(value: number | undefined): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined
+}
+
+// Key and query for the exact count: filters and platform only. Sort,
+// limit and offset don't change a count, so paging and re-sorting reuse it.
+// The object literal fixes the property order, so the JSON is stable.
+export function normaliseListingFilters(params: ListingQuery): ListingFilters {
+  const locationCountry = normaliseText(params.locationCountry, false)
+  return {
+    platform:        params.platform.trim(),
+    search:          normaliseText(params.search, true),
+    location:        normaliseText(params.location, true),
+    locationCountry: locationCountry === 'all' ? undefined : locationCountry,
+    employmentTypes: normaliseList(params.employmentTypes),
+    seniorityLevels: normaliseList(params.seniorityLevels),
+    remoteOnly:      params.remoteOnly ? true : undefined,
+    salaryMin:       normaliseNumber(params.salaryMin),
+    salaryMax:       normaliseNumber(params.salaryMax),
+    postedWithin:    normaliseNumber(params.postedWithin),
+    qualifications:  normaliseList(params.qualifications, true),
+    sources:         normaliseList(params.sources),
+  }
+}
+
+// Key and query for one page of rows: the filters plus sort, limit and
+// offset, defaulted exactly as getActiveDirectJobs defaults them.
+export function normaliseListingPage(params: ListingQuery): ListingPage {
+  return {
+    ...normaliseListingFilters(params),
+    sortBy: params.sortBy ?? 'relevance',
+    limit:  params.limit ?? 20,
+    offset: params.offset ?? 0,
+  }
+}
+
+// What the listings card needs: everything except `description`, which it
+// never renders. Stripping it here (it used to happen in the route) keeps
+// each cached page small. description has no length limit anywhere, and
+// Vercel's data cache refuses entries over 2 MB.
+export type ListingJob = Omit<Job, 'description'>
+
+// DB errors throw out of getActiveDirectJobs (see its count and RPC paths),
+// so unstable_cache stores nothing for them; only real results, including
+// a genuine empty page, are cached.
+async function fetchListingJobs(page: ListingPage): Promise<ListingJob[]> {
+  const jobs = await getActiveDirectJobs({ ...page, countOnly: false })
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  return jobs.map(({ description, ...rest }) => rest)
+}
+
+async function fetchListingJobsCount(filters: ListingFilters): Promise<number> {
+  return getActiveDirectJobs({ ...filters, countOnly: true })
+}
+
+const cachedListingJobs = cache(
+  unstable_cache(fetchListingJobs, ['listing-jobs'], { revalidate: 300, tags: ['jobs', 'jobs:listings'] })
+)
+const cachedListingJobsCount = cache(
+  unstable_cache(fetchListingJobsCount, ['listing-jobs-count'], { revalidate: 300, tags: ['jobs', 'jobs:listings'] })
+)
+
+// Normalising inside these wrappers (not at the call site) means no caller
+// can reach the cache with an un-normalised key.
+export function getCachedListingJobs(params: ListingQuery): Promise<ListingJob[]> {
+  return cachedListingJobs(normaliseListingPage(params))
+}
+
+export function getCachedListingJobsCount(params: ListingQuery): Promise<number> {
+  return cachedListingJobsCount(normaliseListingFilters(params))
+}
+
 // Used by the admin dashboard (app/api/roodber8/jobs/[id]/route.ts, itself
 // cookie-gated) and by app/jobs/apply/[id]/page.tsx (a public Server
 // Component that only ever interpolates title/company_name/location_text/
@@ -495,16 +622,82 @@ export interface GetSimilarJobsParams {
   limit?: number
 }
 
+// Only what the "Similar current roles" list on /jobs/[slug] renders:
+// title, company, location and salary. Caching full rows would include
+// `description`, which has no length limit, against Vercel's 2 MB
+// data-cache entry cap.
+export type SimilarJob = Pick<
+  Job,
+  'id' | 'slug' | 'title' | 'company_name' | 'location_text' | 'location_country'
+  | 'salary_text' | 'salary_min' | 'salary_max' | 'salary_currency'
+>
+
+function toSimilarJob(job: Job): SimilarJob {
+  return {
+    id:               job.id,
+    slug:             job.slug,
+    title:            job.title,
+    company_name:     job.company_name,
+    location_text:    job.location_text,
+    location_country: job.location_country,
+    salary_text:      job.salary_text,
+    salary_min:       job.salary_min,
+    salary_max:       job.salary_max,
+    salary_currency:  job.salary_currency,
+  }
+}
+
+// Both ranked phases use this identical 15-key shape — the same one
+// getActiveDirectJobs calls — so there is exactly one place in this file
+// that knows search_jobs_ranked's parameter contract. Its arguments are
+// exactly the values that vary between calls, so they are also the whole
+// cache key below: jobs whose titles reduce to the same search term share
+// one entry, and the viewed job is removed afterwards by getSimilarJobs's
+// addRows, never baked into the shared entry. Errors throw, so they are
+// never cached.
+async function fetchRankedSimilarJobs(
+  platform: string,
+  searchTerm: string,
+  country: string | null,
+  limit: number
+): Promise<SimilarJob[]> {
+  const { data, error } = await getSupabase().rpc('search_jobs_ranked', {
+    p_platform: platform,
+    p_search: searchTerm,
+    p_location: null,
+    p_location_country: country,
+    p_employment_types: null,
+    p_seniority_levels: null,
+    p_remote_only: null,
+    p_salary_min: null,
+    p_salary_max: null,
+    p_posted_within_days: null,
+    p_qualifications: null,
+    p_sources: null,
+    p_sort_by: 'relevance',
+    p_limit: limit,
+    p_offset: 0,
+  })
+  if (error) throw error
+  // See the comment on the JOB_COLUMNS cast in getActiveDirectJobs — same
+  // non-literal-string limitation applies here.
+  return ((data ?? []) as unknown as Job[]).map(toSimilarJob)
+}
+
+const getCachedRankedSimilarJobs = cache(
+  unstable_cache(fetchRankedSimilarJobs, ['similar-jobs-ranked'], { revalidate: 3600, tags: ['jobs', 'jobs:similar'] })
+)
+
 // seniorityLevel stays part of the public contract (callers already pass
 // it) but is intentionally not read here — see the module comment above
 // for why seniority no longer backfills this list.
-export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Job[]> {
+export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<SimilarJob[]> {
   const { excludeId, platform, title, locationCountry, limit = 6 } = params
 
-  const picked: Job[] = []
+  const picked: SimilarJob[] = []
   const pickedIds = new Set<string>([excludeId])
 
-  function addRows(rows: Job[]) {
+  function addRows(rows: SimilarJob[]) {
     for (const row of rows) {
       if (picked.length >= limit) break
       if (pickedIds.has(row.id)) continue
@@ -513,35 +706,12 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Job[
     }
   }
 
-  // Both ranked phases use this identical 15-key shape — the same one
-  // getActiveDirectJobs calls (lib/jobs.ts:341) — so there is exactly one
-  // place in this file that knows search_jobs_ranked's parameter contract.
-  async function rankedPhase(searchTerm: string, country: string | null): Promise<Job[]> {
-    const { data, error } = await getSupabase().rpc('search_jobs_ranked', {
-      p_platform: platform,
-      p_search: searchTerm,
-      p_location: null,
-      p_location_country: country,
-      p_employment_types: null,
-      p_seniority_levels: null,
-      p_remote_only: null,
-      p_salary_min: null,
-      p_salary_max: null,
-      p_posted_within_days: null,
-      p_qualifications: null,
-      p_sources: null,
-      p_sort_by: 'relevance',
-      // +1, not `limit`: the RPC has no exclude-id parameter, so the job
-      // being viewed matches its own title perfectly and ranks first in
-      // its own results. The extra slot keeps the list at full strength
-      // once that row is filtered out by addRows below.
-      p_limit: limit + 1,
-      p_offset: 0,
-    })
-    if (error) throw error
-    // See the comment on the JOB_COLUMNS cast in getActiveDirectJobs — same
-    // non-literal-string limitation applies here.
-    return (data ?? []) as unknown as Job[]
+  // +1, not `limit`: the RPC has no exclude-id parameter, so the job
+  // being viewed matches its own title perfectly and ranks first in
+  // its own results. The extra slot keeps the list at full strength
+  // once that row is filtered out by addRows above.
+  function rankedPhase(searchTerm: string, country: string | null): Promise<SimilarJob[]> {
+    return getCachedRankedSimilarJobs(platform, searchTerm, country, limit + 1)
   }
 
   let searchTerm: string | null = null
