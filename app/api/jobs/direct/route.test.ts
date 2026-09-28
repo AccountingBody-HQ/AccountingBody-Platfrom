@@ -73,7 +73,7 @@ describe('/api/jobs/direct GET — a database failure is never an empty 200', ()
 
     await GET(new NextRequest('http://localhost/api/jobs/direct?platform=ab&limit=100000&offset=999999'))
 
-    expect(vi.mocked(jobs.getCachedListingJobs).mock.calls[0][0]).toMatchObject({ limit: 50, offset: 10000 })
+    expect(vi.mocked(jobs.getCachedListingJobs).mock.calls[0][0]).toMatchObject({ limit: 50, offset: 100000 })
   })
 
   it('passes the platform through to both cached lookups', async () => {

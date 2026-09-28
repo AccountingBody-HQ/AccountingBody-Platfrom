@@ -11,10 +11,12 @@ export const DEFAULT_LIMIT = 24
 // JobListingsClient always asks for 24 (its PAGE_SIZE); nothing else calls
 // this route.
 export const MAX_LIMIT = 50
-// ~9,870 browsable jobs on the last recorded count means a last page at
-// offset ~9,864. Past this cap the deepest pages would get the page at
-// offset 10000 instead: raise it if the browsable count nears 10,000.
-export const MAX_OFFSET = 10000
+// Generous on purpose: search_jobs_ranked ranks every matching row before
+// LIMIT/OFFSET, so a large offset adds almost no database cost (an
+// oversized limit was the real risk, capped above). 100,000 is well past
+// public.jobs's ~22,500 rows, so the client's uncapped pagination keeps
+// working on its deepest pages.
+export const MAX_OFFSET = 100000
 
 // Whole non-negative integers only. "2.7", "-5", "1e3", "abc" and "" are
 // all rejected. An oversized digit string is still valid and clamps below.

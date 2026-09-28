@@ -34,12 +34,14 @@ describe('parseOffset', () => {
 
   it('caps an oversized offset at the maximum', () => {
     expect(parseOffset('999999')).toBe(MAX_OFFSET)
-    expect(parseOffset('10001')).toBe(10000)
+    expect(parseOffset('999999')).toBe(100000)
+    expect(parseOffset('100001')).toBe(100000)
   })
 
   it('leaves normal values unchanged', () => {
     expect(parseOffset('0')).toBe(0)
     expect(parseOffset('24')).toBe(24)
-    expect(parseOffset('10000')).toBe(10000)
+    expect(parseOffset('10001')).toBe(10001)
+    expect(parseOffset('100000')).toBe(100000)
   })
 })
