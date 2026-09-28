@@ -2,6 +2,7 @@ import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
 import { bucketBounds } from '@/lib/sitemap-chunks'
+import { SINGLE_WORD_COUNTRY_NAMES } from '@/lib/ingestion/normalise'
 
 function getSupabase() {
   return createClient(
@@ -555,14 +556,17 @@ export async function getJobBySlug(slug: string): Promise<Job | null> {
 // getActiveDirectJobs rather than getJobBySlug's broadened
 // active-or-expired filter.
 //
-// Relevance comes from search_jobs_ranked's ts_rank_cd against the job's
-// own title (migrations/0003, then 0004) via buildSimilarQuery below —
-// country is a preference, applied by running the ranked query twice
-// (same-country first, worldwide second to pad an underfilled list) rather
-// than a hard filter that could exclude an otherwise-relevant match. A
-// plain country + recency query is kept as a last-resort fallback for when
-// the title yields no usable search term, or both ranked calls still come
-// up short — strictly better than an empty section, but deliberately never
+// Similarity comes from the job's own title words (similarTitleTokens
+// below), matched against search_vector with cheap newest-first indexed
+// queries rather than search_jobs_ranked, whose ts_rank_cd over every
+// match cost ~4 s per call: jobs sharing every title word first, then the
+// newest jobs sharing any, re-ranked in the app by shared title words.
+// Country is a preference, applied by searching the same country first and
+// worldwide second to pad an underfilled list, rather than a hard filter
+// that could exclude an otherwise-relevant match. A plain country +
+// recency query is kept as a last-resort fallback for when the title
+// yields no usable search term, or the title steps still come up short —
+// strictly better than an empty section, but deliberately never
 // seniority-only: seniority alone (an earlier version's second pass) let a
 // same-bucket match on the other side of the world fill the entire list
 // even when it had nothing to do with the job being viewed, which is what
@@ -581,35 +585,48 @@ export const SIMILAR_QUERY_NOISE_TOKENS = new Set([
   'bonus', 'plus', 'per', 'annum', 'pa', 'k',
 ])
 
-// Turns a job title into a websearch_to_tsquery-safe OR string, e.g.
-// "Senior Practice Accountant" -> "senior OR practice OR accountant".
-// websearch_to_tsquery treats bare words as AND, and gives operator
-// meaning to &, |, !, :, (, ), <-> and " — an unsanitised title containing
-// any of those (e.g. `Accounts & Audit Senior`) could parse unpredictably,
-// and combined with the @@ WHERE filter search_jobs_ranked applies, could
-// silently return zero rows. Stripping to [a-z0-9 -] and rejoining with
-// the literal word "OR" (which websearch_to_tsquery parses as a real
-// disjunction, not a bare term) avoids both problems without touching the
-// RPC itself.
-export function buildSimilarQuery(title: string): string | null {
+// Pure salary figures ("28k", "30000", "45,000", "28k-32k" once £ is
+// stripped) carry no topical signal.
+const SALARY_TOKEN = /^\d[\d,.]*k?(-\d[\d,.]*k?)?$/
+
+// The meaningful words of a job title, in order, lowercased and
+// de-duplicated. websearch_to_tsquery gives operator meaning to &, |, !,
+// :, (, ), <-> and " and treats a leading "-" as NOT, so tokens are
+// stripped to [a-z0-9-] with no leading or trailing hyphen: an
+// unsanitised title (e.g. `Accounts & Audit Senior`) could otherwise parse
+// unpredictably and silently match nothing. Also dropped: 1-character
+// tokens, the words or/and/not, job-board noise, salary figures, and
+// single-word country names (the similar-jobs queries already filter by
+// country; there is no city list in the codebase, so cities stay).
+export function similarTitleTokens(title: string, maxTokens = Infinity): string[] {
   const tokens = title
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, ' ')
     .split(/\s+/)
+    .map(token => token.replace(/^-+|-+$/g, ''))
     .filter(Boolean)
 
   const seen = new Set<string>()
   const kept: string[] = []
   for (const token of tokens) {
-    if (kept.length >= 6) break
+    if (kept.length >= maxTokens) break
     if (token.length <= 1) continue
     if (token === 'or' || token === 'and' || token === 'not') continue
     if (SIMILAR_QUERY_NOISE_TOKENS.has(token)) continue
+    if (SALARY_TOKEN.test(token)) continue
+    if (SINGLE_WORD_COUNTRY_NAMES.has(token)) continue
     if (seen.has(token)) continue
     seen.add(token)
     kept.push(token)
   }
+  return kept
+}
 
+// Up to 6 title tokens joined with the literal word "OR", which
+// websearch_to_tsquery parses as a real disjunction, e.g.
+// "Senior Practice Accountant" -> "senior OR practice OR accountant".
+export function buildSimilarQuery(title: string): string | null {
+  const kept = similarTitleTokens(title, 6)
   return kept.length > 0 ? kept.join(' OR ') : null
 }
 
@@ -622,71 +639,80 @@ export interface GetSimilarJobsParams {
   limit?: number
 }
 
-// Only what the "Similar current roles" list on /jobs/[slug] renders:
-// title, company, location and salary. Caching full rows would include
-// `description`, which has no length limit, against Vercel's 2 MB
-// data-cache entry cap.
+// Only what the "Similar current roles" list on /jobs/[slug] renders
+// (title, company, location, salary), plus published_at for the recency
+// tie-break. Never search_vector, description or raw_source_data: those
+// are the large, TOASTed columns that made the old ranked lookup cost
+// ~110k buffers per call, and description has no length limit against
+// Vercel's 2 MB data-cache entry cap.
 export type SimilarJob = Pick<
   Job,
   'id' | 'slug' | 'title' | 'company_name' | 'location_text' | 'location_country'
-  | 'salary_text' | 'salary_min' | 'salary_max' | 'salary_currency'
+  | 'salary_text' | 'salary_min' | 'salary_max' | 'salary_currency' | 'published_at'
 >
 
-function toSimilarJob(job: Job): SimilarJob {
-  return {
-    id:               job.id,
-    slug:             job.slug,
-    title:            job.title,
-    company_name:     job.company_name,
-    location_text:    job.location_text,
-    location_country: job.location_country,
-    salary_text:      job.salary_text,
-    salary_min:       job.salary_min,
-    salary_max:       job.salary_max,
-    salary_currency:  job.salary_currency,
-  }
-}
+export const SIMILAR_JOB_COLUMNS =
+  'id,slug,title,company_name,location_text,location_country,salary_text,salary_min,salary_max,salary_currency,published_at'
 
-// Both ranked phases use this identical 15-key shape — the same one
-// getActiveDirectJobs calls — so there is exactly one place in this file
-// that knows search_jobs_ranked's parameter contract. Its arguments are
-// exactly the values that vary between calls, so they are also the whole
-// cache key below: jobs whose titles reduce to the same search term share
-// one entry, and the viewed job is removed afterwards by getSimilarJobs's
-// addRows, never baked into the shared entry. Errors throw, so they are
-// never cached.
-async function fetchRankedSimilarJobs(
+// How many newest OR-matching candidates to re-rank in the app.
+const SIMILAR_CANDIDATE_POOL = 40
+
+type SimilarMode = 'and' | 'or'
+
+// One newest-first, index-friendly lookup: live jobs on this platform whose
+// search_vector matches the term, optionally in one country. The @@ match
+// runs against the GIN index or during a walk of idx_jobs_active_platform
+// (status, published_at DESC) that stops at `limit` rows; nothing is
+// ranked, so no row's search_vector has to be read out of TOAST.
+// `published_at IS NOT NULL` keeps that walk newest-first: DESC puts NULLs
+// first, and only rows dated at ingestion or approval (see
+// lib/ingestion/normalise.ts) have one; older undated rows age out within
+// their 30-day expiry and the country fallback covers short lists.
+// Its arguments are the whole cache key below — never the viewed job's
+// id, so jobs whose titles reduce to the same term share an entry; the
+// viewed job is removed afterwards by getSimilarJobs. Errors throw, so
+// they are never cached.
+async function fetchSimilarCandidates(
   platform: string,
-  searchTerm: string,
+  mode: SimilarMode,
+  term: string,
   country: string | null,
   limit: number
 ): Promise<SimilarJob[]> {
-  const { data, error } = await getSupabase().rpc('search_jobs_ranked', {
-    p_platform: platform,
-    p_search: searchTerm,
-    p_location: null,
-    p_location_country: country,
-    p_employment_types: null,
-    p_seniority_levels: null,
-    p_remote_only: null,
-    p_salary_min: null,
-    p_salary_max: null,
-    p_posted_within_days: null,
-    p_qualifications: null,
-    p_sources: null,
-    p_sort_by: 'relevance',
-    p_limit: limit,
-    p_offset: 0,
-  })
-  if (error) throw error
-  // See the comment on the JOB_COLUMNS cast in getActiveDirectJobs — same
-  // non-literal-string limitation applies here.
-  return ((data ?? []) as unknown as Job[]).map(toSimilarJob)
+  const nowIso = new Date().toISOString()
+  let query = getSupabase()
+    .from('jobs')
+    .select(SIMILAR_JOB_COLUMNS)
+    .eq('status', 'active')
+    .contains('platform', [platform])
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+    .not('published_at', 'is', null)
+    // 'english' matches search_jobs_ranked's websearch_to_tsquery config.
+    .textSearch('search_vector', term, { type: 'websearch', config: 'english' })
+  if (country) query = query.eq('location_country', country)
+
+  const { data, error } = await query.order('published_at', { ascending: false }).limit(limit)
+  if (error) throw new Error(`getSimilarJobs: ${mode} query failed: ${error.message}`)
+  return (data ?? []) as unknown as SimilarJob[]
 }
 
-const getCachedRankedSimilarJobs = cache(
-  unstable_cache(fetchRankedSimilarJobs, ['similar-jobs-ranked'], { revalidate: 3600, tags: ['jobs', 'jobs:similar'] })
+const getCachedSimilarCandidates = cache(
+  unstable_cache(fetchSimilarCandidates, ['similar-jobs-candidates'], { revalidate: 3600, tags: ['jobs', 'jobs:similar'] })
 )
+
+// Most shared title words first; ties keep the candidates' newest-first
+// order (Array.prototype.sort is stable).
+function rankByTitleOverlap(candidates: SimilarJob[], titleTokens: string[]): SimilarJob[] {
+  const wanted = new Set(titleTokens)
+  return candidates
+    .map((job, index) => ({
+      job,
+      index,
+      overlap: similarTitleTokens(job.title).filter(token => wanted.has(token)).length,
+    }))
+    .sort((a, b) => b.overlap - a.overlap || a.index - b.index)
+    .map(entry => entry.job)
+}
 
 // seniorityLevel stays part of the public contract (callers already pass
 // it) but is intentionally not read here — see the module comment above
@@ -706,44 +732,54 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Simi
     }
   }
 
-  // +1, not `limit`: the RPC has no exclude-id parameter, so the job
-  // being viewed matches its own title perfectly and ranks first in
-  // its own results. The extra slot keeps the list at full strength
-  // once that row is filtered out by addRows above.
-  function rankedPhase(searchTerm: string, country: string | null): Promise<SimilarJob[]> {
-    return getCachedRankedSimilarJobs(platform, searchTerm, country, limit + 1)
-  }
-
-  let searchTerm: string | null = null
+  let tokens: string[] = []
   try {
-    searchTerm = buildSimilarQuery(title)
+    tokens = similarTitleTokens(title, 6)
   } catch (error) {
-    console.error('getSimilarJobs (buildSimilarQuery) error:', error)
+    console.error('getSimilarJobs (similarTitleTokens) error:', error)
   }
 
-  if (searchTerm) {
-    // Phase A — relevance within the job's own country.
-    try {
-      addRows(await rankedPhase(searchTerm, locationCountry ?? null))
-    } catch (error) {
-      console.error('getSimilarJobs (ranked, same country) error:', error)
+  if (tokens.length > 0) {
+    const country = locationCountry ?? null
+    const orTerm = tokens.join(' OR ')
+
+    // Step 1 — strong matches: every title word (bare words are AND in
+    // websearch), same country, newest first. +1 because the viewed job
+    // matches its own title and is removed by addRows. Skipped for a
+    // one-word title, where it would match exactly the same rows as step 2.
+    if (tokens.length > 1) {
+      try {
+        addRows(await getCachedSimilarCandidates(platform, 'and', tokens.join(' '), country, limit + 1))
+      } catch (error) {
+        console.error('getSimilarJobs (and, same country) error:', error)
+      }
     }
 
-    // Phase B — relevance worldwide, only to pad an underfilled list, and
-    // only when country was an actual constraint phase A applied (if the
-    // job has no known country, phase A already searched worldwide, so
-    // re-running the identical call here would just repeat it).
+    // Step 2 — padding: any title word, same country, the 40 newest
+    // candidates re-ranked by shared title words.
+    if (picked.length < limit) {
+      try {
+        const candidates = await getCachedSimilarCandidates(platform, 'or', orTerm, country, SIMILAR_CANDIDATE_POOL)
+        addRows(rankByTitleOverlap(candidates, tokens))
+      } catch (error) {
+        console.error('getSimilarJobs (or, same country) error:', error)
+      }
+    }
+
+    // Step 3 — the same worldwide, only when country was a real constraint
+    // above (with no known country, step 2 already searched worldwide).
     if (picked.length < limit && locationCountry) {
       try {
-        addRows(await rankedPhase(searchTerm, null))
+        const candidates = await getCachedSimilarCandidates(platform, 'or', orTerm, null, SIMILAR_CANDIDATE_POOL)
+        addRows(rankByTitleOverlap(candidates, tokens))
       } catch (error) {
-        console.error('getSimilarJobs (ranked, worldwide) error:', error)
+        console.error('getSimilarJobs (or, worldwide) error:', error)
       }
     }
   }
 
   // Phase C — last resort: plain country + recency, unchanged from the
-  // pre-ranking behaviour. Runs whenever A and B (or the absence of a
+  // pre-ranking behaviour. Runs whenever steps 1-3 (or the absence of a
   // usable search term) leave the list short. Deliberately country-only —
   // never seniority-only worldwide; see the module comment above.
   if (picked.length < limit && locationCountry) {

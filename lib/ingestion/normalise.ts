@@ -436,6 +436,9 @@ export interface NormalisedJob {
   platform: string[]
   status: 'active'
   expires_at: string
+  // The provider's own posting date when field_mapping.published_at names
+  // one; otherwise the moment this job was normalised (i.e. inserted).
+  published_at: string
   provider_id: string
   data_completeness: number
   quality_flags: string[]
@@ -473,6 +476,14 @@ const KNOWN_COUNTRIES: Record<string, string> = {
   'india': 'India',
   'new zealand': 'New Zealand',
 }
+
+// Single-word country names from the list above (e.g. "ireland", "uk").
+// Used by lib/jobs.ts to drop country words from similar-jobs title
+// tokens: the similar-jobs queries already filter by country, so these
+// words only widen the match.
+export const SINGLE_WORD_COUNTRY_NAMES: ReadonlySet<string> = new Set(
+  Object.keys(KNOWN_COUNTRIES).filter(name => !name.includes(' '))
+)
 
 // Split a human-readable location string into city and country.
 // "Hoddesdon, Hertfordshire"  -> city Hoddesdon,  country null
@@ -551,6 +562,19 @@ function extractQualifications(
     if (matchers.some(re => re.test(text))) found.push(label)
   }
   return found
+}
+
+// A provider posting date as an ISO string, or null when it isn't usable:
+// only non-empty strings that parse to a real date no later than a few
+// minutes from now (a future "posted" date would sort above every real
+// job). Numbers are rejected rather than guessed as seconds vs millis.
+const MAX_POSTING_DATE_SKEW_MS = 5 * 60 * 1000
+
+export function parseProviderDate(value: unknown): string | null {
+  if (typeof value !== 'string' || !value.trim()) return null
+  const ms = Date.parse(value.trim())
+  if (!Number.isFinite(ms) || ms > Date.now() + MAX_POSTING_DATE_SKEW_MS) return null
+  return new Date(ms).toISOString()
 }
 
 // ── Main normalise function ────────────────────────────────────────────────
@@ -715,6 +739,17 @@ export function normalise(rawJob: RawJob, provider: JobProvider): NormalisedJob 
   // ── Expiry ────────────────────────────────────────────────────────────────
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
+  // ── Posting date ──────────────────────────────────────────────────────────
+  // Like every other field, the provider's date field is named only in
+  // job_providers.field_mapping (key `published_at`, e.g. "created" for
+  // Adzuna, "pubDate" for RSS), never here. Without that mapping, or when
+  // the value isn't a usable date, the job is dated now — the same moment
+  // the database stamps created_at — so display, sitemaps and ranking,
+  // which all read published_at ?? created_at, are unchanged.
+  const publishedAt =
+    (mapping.published_at ? parseProviderDate(resolvePath(rawJob, mapping.published_at)) : null)
+    ?? new Date().toISOString()
+
   const partial: NormalisedJob = {
     title,
     company_name: companyName,
@@ -741,6 +776,7 @@ export function normalise(rawJob: RawJob, provider: JobProvider): NormalisedJob 
     platform: provider.platform_tags,
     status: 'active',
     expires_at: expiresAt,
+    published_at: publishedAt,
     provider_id: provider.id,
     data_completeness: 0,
     quality_flags: qualityFlags,

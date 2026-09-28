@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalise } from '@/lib/ingestion/normalise'
+import { normalise, parseProviderDate } from '@/lib/ingestion/normalise'
 import type { RawJob } from '@/lib/adapters/types'
 import { makeProvider } from '@/lib/test-helpers/provider-fixture'
 
@@ -115,5 +115,53 @@ describe('normalise — description HTML stripping', () => {
     expect(job.description).not.toMatch(/theFMCG|FMCGsector/)
     expect(job.description).not.toMatch(/ {2,}/)
     expect(job.description).toBe('within the FMCG sector and finance teams')
+  })
+})
+
+describe('normalise — published_at', () => {
+  const rawJob: RawJob = {
+    title: 'Group Accountant',
+    company_name: 'Acme Corp',
+    location_text: 'London, UK',
+    description: 'A great opportunity for an experienced group accountant to join our finance team.',
+    application_url: 'https://example.com/apply/1',
+    created: '2026-09-20T08:15:00Z',
+    pubDate: 'Mon, 21 Sep 2026 09:30:00 GMT',
+  }
+
+  it('uses the provider date named by field_mapping.published_at (Adzuna-style ISO "created")', () => {
+    const provider = makeProvider({ field_mapping: { ...BASE_MAPPING, published_at: 'created' } })
+    expect(normalise(rawJob, provider).published_at).toBe('2026-09-20T08:15:00.000Z')
+  })
+
+  it('parses an RSS-style RFC 822 pubDate', () => {
+    const provider = makeProvider({ field_mapping: { ...BASE_MAPPING, published_at: 'pubDate' } })
+    expect(normalise(rawJob, provider).published_at).toBe('2026-09-21T09:30:00.000Z')
+  })
+
+  it('falls back to now when the provider has no published_at mapping', () => {
+    const provider = makeProvider({ field_mapping: BASE_MAPPING })
+    const before = Date.now()
+    const publishedAt = Date.parse(normalise(rawJob, provider).published_at)
+    expect(publishedAt).toBeGreaterThanOrEqual(before)
+    expect(publishedAt).toBeLessThanOrEqual(Date.now())
+  })
+
+  it('falls back to now when the mapped value is missing or unusable', () => {
+    const provider = makeProvider({ field_mapping: { ...BASE_MAPPING, published_at: 'no_such_field' } })
+    const before = Date.now()
+    expect(Date.parse(normalise(rawJob, provider).published_at)).toBeGreaterThanOrEqual(before)
+  })
+
+  it('rejects unusable dates: empty, garbage, numbers and the future', () => {
+    expect(parseProviderDate('')).toBeNull()
+    expect(parseProviderDate('not a date')).toBeNull()
+    expect(parseProviderDate(1726822500)).toBeNull()
+    expect(parseProviderDate(null)).toBeNull()
+    expect(parseProviderDate(new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString())).toBeNull()
+  })
+
+  it('accepts a past ISO date unchanged', () => {
+    expect(parseProviderDate('2026-01-02T03:04:05Z')).toBe('2026-01-02T03:04:05.000Z')
   })
 })

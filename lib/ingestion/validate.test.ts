@@ -67,6 +67,7 @@ function makeJob(overrides: Partial<NormalisedJob> = {}): NormalisedJob {
     platform: [],
     status: 'active',
     expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    published_at: new Date().toISOString(),
     provider_id: 'provider-1',
     data_completeness: 1,
     quality_flags: [],
