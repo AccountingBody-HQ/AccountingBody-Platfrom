@@ -13,10 +13,10 @@ export const DEFAULT_LIMIT = 24
 export const MAX_LIMIT = 50
 // Generous on purpose: search_jobs_ranked ranks every matching row before
 // LIMIT/OFFSET, so a large offset adds almost no database cost (an
-// oversized limit was the real risk, capped above). 100,000 is well past
-// public.jobs's ~22,500 rows, so the client's uncapped pagination keeps
-// working on its deepest pages.
-export const MAX_OFFSET = 100000
+// oversized limit was the real risk, capped above). 1,000,000 leaves room
+// for growth far past public.jobs's ~22,500 rows today, so the client's
+// uncapped pagination keeps working on its deepest pages.
+export const MAX_OFFSET = 1000000
 
 // Whole non-negative integers only. "2.7", "-5", "1e3", "abc" and "" are
 // all rejected. An oversized digit string is still valid and clamps below.
