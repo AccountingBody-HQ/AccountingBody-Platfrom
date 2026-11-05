@@ -4,7 +4,7 @@
 
 AccountingBody runs on Supabase's Free plan, which keeps **no backups for you**. This backup is the safety net.
 
-**Status: built; first run and restore rehearsal not yet done.** Nothing here has run against the real database yet. The scripts have only been tested against stand-ins, so their database commands are unproven. **A backup is not proven until it has been restored.** Update this line after the first run and after the first rehearsal.
+**Status: built; first run and restore rehearsal not yet done.** Nothing here has run against the real database yet. The scripts have been proven on throwaway local copies of Supabase's Postgres, with made-up data only: backup and restore both worked, and a restored copy matched exactly. That did not test the Session pooler, the real Storage service, GitHub, or the real data. **This backup is not proven until a real one has been restored.** Update this line after the first run and after the first rehearsal.
 
 One backup is **one encrypted file**. It holds:
 

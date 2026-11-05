@@ -519,6 +519,25 @@ describe('the restore', () => {
     expect(list).not.toContain('supabase_storage_admin')
     expect(list).toContain('DEFAULT ACL hrlake DEFAULT PRIVILEGES FOR TABLES postgres')
   }, SLOW)
+  it('AB-P0-5c: old automatic grants are cleared in EVERY restored area, inside the same transaction as the tables', () => {
+    const box = restoreBox()
+    expect(restore(box, emptyTarget).status).toBe(0)
+    const call = log(box, 'psql.log').split('\nARGS ').find((c) => c.includes('alter default privileges for role current_user in schema %I')) ?? ''
+    expect(call).toContain('--single-transaction')
+    expect(call).toContain("-f -")
+    expect(call).toContain('revoke all on schema %I')
+    for (const s of KNOWN) expect(call).toContain(`'${s}'`)
+    // Tables come after the reset, on the same psql call.
+    expect(call.indexOf('-- the tables')).toBeGreaterThan(call.indexOf('revoke all on schema %I'))
+  }, SLOW)
+  it('AB-P0-5c: end of input at a phrase prompt refuses with the plain message', () => {
+    const box = restoreBox()
+    writeFileSync(join(box, 'target-existing'), '42')
+    const r = restore(box, emptyTarget)
+    expect(r.status).toBe(1)
+    expect(r.output).toContain('the phrase was not typed exactly, so nothing was changed.')
+    expect(log(box, 'psql.log')).not.toContain('delete from auth.users')
+  }, SLOW)
   it('restores the areas before comparing every row count; an empty auth is skipped', () => {
     const box = restoreBox()
     const r = restore(box, emptyTarget)

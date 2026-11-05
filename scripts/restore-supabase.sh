@@ -134,7 +134,7 @@ if [[ "$DB_URL" == *"$LIVE_REF"* || "$API_URL" == *"$LIVE_REF"* ]]; then
   echo "Everything added since this backup was taken would be lost."
   echo "Only do this after talking it through (docs/RUNBOOK.md section 1). To go ahead, type exactly:"
   echo "  $LIVE_PHRASE"
-  read -r answer
+  read -r answer || answer=""
   [ "$answer" = "$LIVE_PHRASE" ] || fail "the phrase was not typed exactly, so nothing was changed."
 fi
 
@@ -166,7 +166,7 @@ if [ "$EXISTING" != 0 ]; then
   echo "The target already holds tables or sign-in records in these areas: ${SCHEMAS[*]} (and auth.users)."
   echo "They will be DELETED and replaced by the backup."
   echo "To go ahead, type exactly:  $REPLACE_PHRASE"
-  read -r answer
+  read -r answer || answer=""
   [ "$answer" = "$REPLACE_PHRASE" ] || fail "the phrase was not typed exactly, so nothing was changed."
 fi
 
@@ -253,15 +253,35 @@ fi
 # file so that pg_dump's order holds across areas. Left out: each area's schema entry (created above); the public area's
 # comment and permissions (the target already has them); default permissions owned by a Supabase role.
 "$PG_BIN/pg_restore" --list "$TMP/db/schemas.dump" | grep -vE ' SCHEMA - [^ ]+ | (COMMENT - SCHEMA public|ACL - SCHEMA public) |DEFAULT ACL .* supabase_[a-z_]+$' >"$TMP/restore.list"
-# In ONE transaction: first switch off the target's automatic grants for new objects in public (Supabase grants
-# everything to anon, authenticated and service_role by default), so each table, sequence and function gets exactly
-# the permissions it had in the backup; the backup's own default-permission entries then put the defaults back.
+# In ONE transaction: first switch off the target's automatic grants for new objects in every restored area (Supabase
+# grants everything to anon, authenticated and service_role in public by default, and an area kept from an earlier
+# restore keeps its own), and remove old grants on the areas themselves, so everything gets exactly the permissions it
+# had in the backup, never more. The backup's own permission entries then put the right ones back.
+read -r -d '' RESET_PERMISSIONS_SQL <<'SQL' || true
+do $$
+declare r record;
+begin
+  for r in
+    select format('alter default privileges for role current_user in schema %I revoke all on %s from %s',
+                  n.nspname,
+                  case d.defaclobjtype when 'r' then 'tables' when 'S' then 'sequences' when 'f' then 'functions' when 'T' then 'types' end,
+                  case when a.grantee = 0 then 'public' else quote_ident(pg_get_userbyid(a.grantee)) end) as stmt
+    from pg_default_acl d
+    join pg_namespace n on n.oid = d.defaclnamespace
+    cross join lateral aclexplode(d.defaclacl) a
+    where n.nspname = any(__SCHEMAS__) and d.defaclrole = (select oid from pg_roles where rolname = current_user) and a.grantee <> d.defaclrole
+    union all
+    select format('revoke all on schema %I from %s', n.nspname, case when a.grantee = 0 then 'public' else quote_ident(pg_get_userbyid(a.grantee)) end)
+    from pg_namespace n
+    cross join lateral aclexplode(n.nspacl) a
+    where n.nspname = any(__SCHEMAS__) and n.nspname <> 'public' and a.grantee <> n.nspowner
+  loop
+    execute r.stmt;
+  end loop;
+end $$;
+SQL
 "$PG_BIN/pg_restore" --no-owner --use-list="$TMP/restore.list" --file=- "$TMP/db/schemas.dump" |
-  sql --single-transaction \
-    -c "alter default privileges for role current_user in schema public revoke all on tables from anon, authenticated, service_role" \
-    -c "alter default privileges for role current_user in schema public revoke all on sequences from anon, authenticated, service_role" \
-    -c "alter default privileges for role current_user in schema public revoke all on functions from anon, authenticated, service_role" \
-    -f - >/dev/null
+  sql --single-transaction -c "${RESET_PERMISSIONS_SQL//__SCHEMAS__/$SCHEMAS_SQL}" -f - >/dev/null
 # The project's own trigger on auth.users (it lives outside the restored areas).
 [ ! -s "$TMP/db/auth-triggers.sql" ] || sql --single-transaction -f "$TMP/db/auth-triggers.sql" >/dev/null
 sql -c "notify pgrst, 'reload schema'" >/dev/null
