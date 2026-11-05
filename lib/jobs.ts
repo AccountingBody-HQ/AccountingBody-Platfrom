@@ -696,8 +696,37 @@ async function fetchSimilarCandidates(
   return (data ?? []) as unknown as SimilarJob[]
 }
 
+// 6 hours: similar jobs are crawled far more than they change, and this runs
+// on every /jobs/[slug] render.
 const getCachedSimilarCandidates = cache(
-  unstable_cache(fetchSimilarCandidates, ['similar-jobs-candidates'], { revalidate: 3600, tags: ['jobs', 'jobs:similar'] })
+  unstable_cache(fetchSimilarCandidates, ['similar-jobs-candidates'], { revalidate: 21600, tags: ['jobs', 'related-jobs'] })
+)
+
+// The last-resort list: newest live jobs in one country. Same sharing rule as
+// fetchSimilarCandidates: the viewed job's id is not an input, so every job in
+// a country shares one entry and getSimilarJobs removes the viewed job
+// afterwards. Errors throw, so they are never cached.
+async function fetchSimilarCountryFallback(
+  platform: string,
+  country: string,
+  limit: number
+): Promise<SimilarJob[]> {
+  const nowIso = new Date().toISOString()
+  const { data, error } = await getSupabase()
+    .from('jobs')
+    .select(SIMILAR_JOB_COLUMNS)
+    .eq('status', 'active')
+    .contains('platform', [platform])
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+    .eq('location_country', country)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (error) throw new Error(`getSimilarJobs: fallback query failed: ${error.message}`)
+  return (data ?? []) as unknown as SimilarJob[]
+}
+
+const getCachedSimilarCountryFallback = cache(
+  unstable_cache(fetchSimilarCountryFallback, ['similar-jobs-country-fallback'], { revalidate: 21600, tags: ['jobs', 'related-jobs'] })
 )
 
 // Most shared title words first; ties keep the candidates' newest-first
@@ -741,7 +770,11 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Simi
 
   if (tokens.length > 0) {
     const country = locationCountry ?? null
-    const orTerm = tokens.join(' OR ')
+    // Sorted because these terms are the cache key, and word order doesn't
+    // change which rows AND or OR match: "Senior Tax Accountant" and "Tax
+    // Accountant Senior" share one entry.
+    const sortedTokens = [...tokens].sort()
+    const orTerm = sortedTokens.join(' OR ')
 
     // Step 1 — strong matches: every title word (bare words are AND in
     // websearch), same country, newest first. +1 because the viewed job
@@ -749,7 +782,7 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Simi
     // one-word title, where it would match exactly the same rows as step 2.
     if (tokens.length > 1) {
       try {
-        addRows(await getCachedSimilarCandidates(platform, 'and', tokens.join(' '), country, limit + 1))
+        addRows(await getCachedSimilarCandidates(platform, 'and', sortedTokens.join(' '), country, limit + 1))
       } catch (error) {
         console.error('getSimilarJobs (and, same country) error:', error)
       }
@@ -784,26 +817,13 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Simi
   // never seniority-only worldwide; see the module comment above.
   if (picked.length < limit && locationCountry) {
     try {
-      const nowIso = new Date().toISOString()
       // Same defensive stripping as buildQualificationsOrFilter — this
       // value originates from the job's own row rather than raw request
       // input, but there's no cost to keeping the filter construction
       // consistently safe.
       const cleanCountry = locationCountry.replace(/[(),]/g, '')
-      const { data, error } = await getSupabase()
-        .from('jobs')
-        .select(JOB_COLUMNS)
-        .eq('status', 'active')
-        .contains('platform', [platform])
-        .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-        .neq('id', excludeId)
-        .eq('location_country', cleanCountry)
-        .order('created_at', { ascending: false })
-        .limit(limit)
-      if (error) throw error
-      // See the comment on the JOB_COLUMNS cast in getActiveDirectJobs —
-      // same non-literal-string limitation applies here.
-      addRows((data ?? []) as unknown as Job[])
+      // +1 because the viewed job may be in the shared list; addRows removes it.
+      addRows(await getCachedSimilarCountryFallback(platform, cleanCountry, limit + 1))
     } catch (error) {
       console.error('getSimilarJobs (fallback) error:', error)
     }
@@ -915,32 +935,50 @@ export async function getActiveJobsCount(platform: string): Promise<number> {
 // countOnly path (lib/jobs.ts, the `if (countOnly)` branch above),
 // deliberately with NO source restriction, so this agrees with what
 // /jobs/listings itself would show for an unfiltered search.
-export async function getBrowsableJobsCount(platform: string): Promise<number> {
+//
+// Failures throw inside the cached function, because unstable_cache stores
+// whatever it returns (a fallback 0 would be served for the whole TTL) and
+// nothing when it throws. A missing count with no error counts as a failure
+// too. The exported function catches outside the cache and returns the 0.
+async function fetchBrowsableJobsCount(platform: string): Promise<number> {
   const supabase = getSupabase()
   const nowIso = new Date().toISOString()
-  const { count, error } = await supabase
+  const { count, error, status } = await supabase
     .from('jobs')
     .select('*', { count: 'exact', head: true })
     .eq('status', 'active')
     .contains('platform', [platform])
     .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-  if (error) {
+  if (error) throw new Error(`jobs count query failed (status ${status}): ${error.message}`)
+  if (count === null) throw new Error(`jobs count query returned no count (status ${status})`)
+  return count
+}
+
+const cachedBrowsableJobsCount = unstable_cache(fetchBrowsableJobsCount, ['getBrowsableJobsCount'], {
+  revalidate: 3600,
+  tags: ['counts', 'jobs'],
+})
+
+export async function getBrowsableJobsCount(platform: string): Promise<number> {
+  try {
+    return await cachedBrowsableJobsCount(platform)
+  } catch (error) {
     console.error('getBrowsableJobsCount error:', error)
     return 0
   }
-  return count ?? 0
 }
 
 // Two layers, each solving a different problem:
-//   - unstable_cache persists the result across requests/instances (Vercel
-//     backs this with its own shared Data Cache, not per-instance memory)
-//     for 15 minutes — matched to how often ingestion actually runs, so a
-//     shorter TTL couldn't surface fresher data anyway. `platform` is
-//     passed as the wrapped function's own argument, and per Next.js's
-//     documented unstable_cache behaviour the arguments passed to the
-//     returned function are always part of the cache key (in addition to
-//     the keyParts array) — so 'ab' and 'et' calls are genuinely separate
-//     cache entries; this is NOT a single shared count.
+//   - unstable_cache (inside getBrowsableJobsCount) persists the result
+//     across requests/instances (Vercel backs this with its own shared Data
+//     Cache, not per-instance memory) for 1 hour — this exact count is
+//     expensive and runs in the footer of nearly every page, so it's
+//     deliberately slower than ingestion. `platform` is passed as the
+//     wrapped function's own argument, and per Next.js's documented
+//     unstable_cache behaviour the arguments passed to the returned function
+//     are always part of the cache key (in addition to the keyParts array) —
+//     so 'ab' and 'et' calls are genuinely separate cache entries; this is
+//     NOT a single shared count.
 //   - react's cache() stays on the outside for the reason it was added
 //     originally: the root layout (Footer) and the jobs hub page
 //     (JobsHubClient) both need this count on the same page load, and
@@ -951,9 +989,7 @@ export async function getBrowsableJobsCount(platform: string): Promise<number> {
 // Deliberately not used more broadly than these two call sites — see the
 // job-count fix report for why the rest of the site's "live jobs" copy was
 // reworded instead of wired to a live count.
-export const getCachedBrowsableJobsCount = cache(
-  unstable_cache(getBrowsableJobsCount, ['browsable-jobs-count'], { revalidate: 900 })
-)
+export const getCachedBrowsableJobsCount = cache(getBrowsableJobsCount)
 
 export interface ActiveJobCountry {
   country: string
@@ -992,7 +1028,7 @@ export async function getActiveJobCountries(platform: string): Promise<ActiveJob
 // getCachedBrowsableJobsCount above: unstable_cache persists across
 // requests/instances (platform folded into the cache key automatically,
 // so 'ab' and 'et' are separate entries), cache() collapses duplicate
-// calls within one render. TTL is 6 hours, not 15 minutes — deliberately
+// calls within one render. TTL is 6 hours, not 1 hour — deliberately
 // longer than the footer counts, because the set of countries with active
 // jobs changes far more slowly than the job count itself; a new country
 // appearing up to 6 hours late is an acceptable trade for a much cheaper

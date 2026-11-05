@@ -158,22 +158,44 @@ export async function getAllArticleSlugs(): Promise<string[]> {
   return data.map((r: { slug: string }) => r.slug)
 }
 
+// Count functions below all follow the same shape. unstable_cache stores
+// whatever it's given (a fallback 0 would be served for the whole TTL) and
+// nothing when the function throws, so failures, including a missing count
+// with no error, throw inside the cached function. The exported function
+// catches outside the cache and returns the 0.
+async function fetchCategoryCount(category: string): Promise<number> {
+  const { count, error, status } = await getSupabase()
+    .from('articles')
+    .select('*', { count: 'exact', head: true })
+    .eq('category', category)
+    .eq('status', 'published')
+    .contains('show_on_sites', ['ab'])
+  if (error) throw new Error(`category count query failed (status ${status}): ${error.message}`)
+  if (count === null) throw new Error(`category count query returned no count (status ${status})`)
+  return count
+}
+
+const cachedCategoryCount = unstable_cache(fetchCategoryCount, ['getCategoryCounts'], {
+  revalidate: 3600,
+  tags: ['counts', 'articles'],
+})
+
+// Cached per category, so one failed count reads as 0 for that category only
+// and the others keep their real values, as they did before caching.
 export async function getCategoryCounts(): Promise<Record<string, number>> {
   const categories = [
     'financial-accounting', 'financial-management', 'management-accounting',
     'financial-market', 'business-management', 'audit-assurance',
     'taxation', 'economics', 'cryptocurrency', 'tools-templates',
   ]
-  const supabase = getSupabase()
   const counts: Record<string, number> = {}
   for (const cat of categories) {
-    const { count } = await supabase
-      .from('articles')
-      .select('*', { count: 'exact', head: true })
-      .eq('category', cat)
-      .eq('status', 'published')
-      .contains('show_on_sites', ['ab'])
-    counts[cat] = count ?? 0
+    try {
+      counts[cat] = await cachedCategoryCount(cat)
+    } catch (error) {
+      console.error('getCategoryCounts error:', error)
+      counts[cat] = 0
+    }
   }
   return counts
 }
@@ -273,14 +295,30 @@ export async function getQuestionSets(params: {
   return { sets: data as QuestionSet[], total: count ?? 0 }
 }
 
-export async function getQuestionSetCount(): Promise<number> {
+async function fetchQuestionSetCount(): Promise<number> {
   const supabase = getSupabase()
-  const { count } = await supabase
+  const { count, error, status } = await supabase
     .from('question_sets')
     .select('*', { count: 'exact', head: true })
     .eq('status', 'published')
     .contains('show_on_sites', ['ab'])
-  return count ?? 0
+  if (error) throw new Error(`question set count query failed (status ${status}): ${error.message}`)
+  if (count === null) throw new Error(`question set count query returned no count (status ${status})`)
+  return count
+}
+
+const cachedQuestionSetCount = unstable_cache(fetchQuestionSetCount, ['getQuestionSetCount'], {
+  revalidate: 3600,
+  tags: ['counts', 'questions'],
+})
+
+export async function getQuestionSetCount(): Promise<number> {
+  try {
+    return await cachedQuestionSetCount()
+  } catch (error) {
+    console.error('getQuestionSetCount error:', error)
+    return 0
+  }
 }
 
 // The footer's "Practice Questions" tile was showing the SET count
@@ -300,30 +338,40 @@ export async function getQuestionSetCount(): Promise<number> {
 // itself has no per-host split for question sets yet (fixed 'ab' filter,
 // see getQuestionSets above), so a question living in an 'ab'-only set is
 // what both hosts already see — matching, not inventing, that reality.
-export async function getPublishedQuestionCount(): Promise<number> {
+async function fetchPublishedQuestionCount(): Promise<number> {
   const supabase = getSupabase()
-  const { count, error } = await supabase
+  const { count, error, status } = await supabase
     .from('questions')
     .select('*, question_sets!inner(status, show_on_sites)', { count: 'exact', head: true })
     .eq('question_sets.status', 'published')
     .contains('question_sets.show_on_sites', ['ab'])
-  if (error) {
+  if (error) throw new Error(`question count query failed (status ${status}): ${error.message}`)
+  if (count === null) throw new Error(`question count query returned no count (status ${status})`)
+  return count
+}
+
+const cachedPublishedQuestionCount = unstable_cache(fetchPublishedQuestionCount, ['getPublishedQuestionCount'], {
+  revalidate: 3600,
+  tags: ['counts', 'questions'],
+})
+
+export async function getPublishedQuestionCount(): Promise<number> {
+  try {
+    return await cachedPublishedQuestionCount()
+  } catch (error) {
     console.error('getPublishedQuestionCount error:', error)
     return 0
   }
-  return count ?? 0
 }
 
-// unstable_cache persists this across requests for 15 minutes (matched to
-// the ingestion cadence — see the equivalent comment on
+// unstable_cache (inside getPublishedQuestionCount) persists this across
+// requests for 1 hour — see the equivalent comment on
 // getCachedBrowsableJobsCount in lib/jobs.ts for the full reasoning,
-// including why react's cache() stays on the outside). No platform
+// including why react's cache() stays on the outside. No platform
 // argument here to key on: getPublishedQuestionCount() is deliberately
 // fixed to 'ab' for both hosts already (see its own comment above), so one
 // cache entry serving both platforms matches, not changes, that.
-export const getCachedPublishedQuestionCount = cache(
-  unstable_cache(getPublishedQuestionCount, ['published-question-count'], { revalidate: 900 })
-)
+export const getCachedPublishedQuestionCount = cache(getPublishedQuestionCount)
 
 // Real per-host article count for the footer stat. Deliberately mirrors
 // getArticles()'s own filter in app/articles/page.tsx — status='published'
@@ -336,28 +384,38 @@ export const getCachedPublishedQuestionCount = cache(
 // with what a visitor to that host's /articles page would actually see,
 // including EthioTax showing shared-library articles that were authored
 // on Accounting Body but tagged reachable on both.
-export async function getPublishedArticleCount(siteCode: string): Promise<number> {
+async function fetchPublishedArticleCount(siteCode: string): Promise<number> {
   const supabase = getSupabase()
-  const { count, error } = await supabase
+  const { count, error, status } = await supabase
     .from('articles')
     .select('*', { count: 'exact', head: true })
     .eq('status', 'published')
     .contains('show_on_sites', [siteCode])
-  if (error) {
+  if (error) throw new Error(`article count query failed (status ${status}): ${error.message}`)
+  if (count === null) throw new Error(`article count query returned no count (status ${status})`)
+  return count
+}
+
+const cachedPublishedArticleCount = unstable_cache(fetchPublishedArticleCount, ['getPublishedArticleCount'], {
+  revalidate: 3600,
+  tags: ['counts', 'articles'],
+})
+
+export async function getPublishedArticleCount(siteCode: string): Promise<number> {
+  try {
+    return await cachedPublishedArticleCount(siteCode)
+  } catch (error) {
     console.error('getPublishedArticleCount error:', error)
     return 0
   }
-  return count ?? 0
 }
 
-// unstable_cache persists this across requests for 15 minutes; siteCode is
-// the wrapped function's own argument, so 'ab' and 'et' are genuinely
-// separate cache entries (see the fuller reasoning on
-// getCachedBrowsableJobsCount in lib/jobs.ts — same two-layer approach,
-// same platform-keying guarantee).
-export const getCachedPublishedArticleCount = cache(
-  unstable_cache(getPublishedArticleCount, ['published-article-count'], { revalidate: 900 })
-)
+// unstable_cache (inside getPublishedArticleCount) persists this across
+// requests for 1 hour; siteCode is the wrapped function's own argument, so
+// 'ab' and 'et' are genuinely separate cache entries (see the fuller
+// reasoning on getCachedBrowsableJobsCount in lib/jobs.ts — same two-layer
+// approach, same platform-keying guarantee).
+export const getCachedPublishedArticleCount = cache(getPublishedArticleCount)
 
 export async function getETICPAModuleArticles(level: string, module: string): Promise<ArticleSummary[]> {
   const supabase = getSupabase()

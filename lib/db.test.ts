@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
-import { getArticleBySlug, getPublishedArticleCount, getPublishedQuestionCount, getQuestionSetCount } from './db'
+import { getArticleBySlug, getCategoryCounts, getPublishedArticleCount, getPublishedQuestionCount, getQuestionSetCount } from './db'
 
 vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn(),
@@ -20,8 +20,16 @@ vi.mock('react', async (importOriginal) => ({
 // real Next server. Identity is enough here: these tests cover what
 // getArticleBySlug returns or throws, and Next itself guarantees a thrown
 // result is never stored (see tmp-audit/incident-step1-article-cache.md).
+// Each call is recorded, so the count tests can assert on the cache options
+// and on whether the cached function itself rejected.
+const cacheCalls = vi.hoisted(() => [] as Array<{ keyParts: string[]; options: unknown; args: unknown[]; result: unknown }>)
 vi.mock('next/cache', () => ({
-  unstable_cache: <T extends (...args: never[]) => unknown>(fn: T): T => fn,
+  unstable_cache: (fn: (...args: unknown[]) => unknown, keyParts: string[], options: unknown) =>
+    (...args: unknown[]) => {
+      const result = fn(...args)
+      cacheCalls.push({ keyParts, options, args, result })
+      return result
+    },
 }))
 
 // Minimal fake query builder: every chained call before the final one
@@ -122,6 +130,62 @@ describe('getPublishedQuestionCount', () => {
     vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
 
     expect(await getPublishedQuestionCount()).toBe(0)
+  })
+})
+
+describe('count caching', () => {
+  const cases: Array<[string, () => Promise<number>, unknown[], string]> = [
+    ['getPublishedArticleCount', () => getPublishedArticleCount('et'), ['et'], 'articles'],
+    ['getPublishedQuestionCount', () => getPublishedQuestionCount(), [], 'questions'],
+    ['getQuestionSetCount', () => getQuestionSetCount(), [], 'questions'],
+  ]
+
+  it.each(cases)('%s caches a real count for an hour, keyed on its inputs', async (name, run, args, domain) => {
+    cacheCalls.length = 0
+    const { client } = fakeCountClient({ count: 42, error: null })
+    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+
+    expect(await run()).toBe(42)
+    expect(cacheCalls[0].keyParts).toEqual([name])
+    expect(cacheCalls[0].args).toEqual(args)
+    expect(cacheCalls[0].options).toEqual({ revalidate: 3600, tags: ['counts', domain] })
+  })
+
+  // Rejecting inside the cached function is what keeps the result out of the
+  // cache; the caller still gets today's fallback of 0.
+  it.each(cases)('%s throws inside the cache and returns 0 outside it', async (_name, run) => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    for (const result of [{ count: null, error: { message: '' } }, { count: null, error: null }]) {
+      cacheCalls.length = 0
+      const { client } = fakeCountClient(result)
+      vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+
+      expect(await run()).toBe(0)
+      await expect(cacheCalls[0].result).rejects.toThrow()
+    }
+  })
+
+  it('getCategoryCounts keys each category separately, so one failure stays 0 for that category only', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    cacheCalls.length = 0
+    let call = 0
+    const builder = {
+      from: () => builder,
+      select: () => builder,
+      eq: () => builder,
+      contains: () => Promise.resolve(++call === 2 ? { count: null, error: { message: '' } } : { count: 7, error: null }),
+    }
+    vi.mocked(createClient).mockReturnValue(builder as unknown as ReturnType<typeof createClient>)
+
+    const counts = await getCategoryCounts()
+
+    expect(counts['financial-accounting']).toBe(7)
+    expect(counts['financial-management']).toBe(0)
+    expect(counts['tools-templates']).toBe(7)
+    expect(cacheCalls.map(c => c.args[0])).toContain('taxation')
+    expect(cacheCalls[0].keyParts).toEqual(['getCategoryCounts'])
+    expect(cacheCalls[0].options).toEqual({ revalidate: 3600, tags: ['counts', 'articles'] })
+    await expect(cacheCalls[1].result).rejects.toThrow()
   })
 })
 

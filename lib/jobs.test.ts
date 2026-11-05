@@ -4,7 +4,7 @@ import {
   getActiveDirectJobs, getCachedListingJobs, getCachedListingJobsCount,
   normaliseListingFilters, normaliseListingPage,
   getJobSitemapEntries, getJobSitemapChunk, getSimilarJobs, buildSimilarQuery,
-  similarTitleTokens, SIMILAR_JOB_COLUMNS,
+  similarTitleTokens, SIMILAR_JOB_COLUMNS, getBrowsableJobsCount,
 } from './jobs'
 
 const PAGE_SIZE = 1000
@@ -34,12 +34,13 @@ vi.mock('react', async (importOriginal) => ({
 // Records every cached call (key parts, options, arguments) and then just
 // runs the function, so tests can assert on exactly what unstable_cache
 // would key on: keyParts plus JSON.stringify(args).
-const cacheCalls = vi.hoisted(() => [] as Array<{ keyParts: string[]; options: unknown; args: unknown[] }>)
+const cacheCalls = vi.hoisted(() => [] as Array<{ keyParts: string[]; options: unknown; args: unknown[]; result: unknown }>)
 vi.mock('next/cache', () => ({
   unstable_cache: (fn: (...args: unknown[]) => unknown, keyParts: string[], options: unknown) =>
     (...args: unknown[]) => {
-      cacheCalls.push({ keyParts, options, args })
-      return fn(...args)
+      const result = fn(...args)
+      cacheCalls.push({ keyParts, options, args, result })
+      return result
     },
 }))
 
@@ -491,7 +492,7 @@ describe('getSimilarJobs — indexed steps', () => {
 
     expect(result.map(j => j.id)).toEqual(['a', 'b', 'c', 'd', 'e', 'f'])
     expect(queries).toHaveLength(1)
-    expect(searchTermOf(queries[0])).toBe('senior practice accountant')
+    expect(searchTermOf(queries[0])).toBe('accountant practice senior')
     expect(queries[0].textSearch[0][2]).toEqual({ type: 'websearch', config: 'english' })
     expect(countryOf(queries[0])).toBe('United Kingdom')
     expect(queries[0].not).toEqual([['published_at', 'is', null]])
@@ -522,7 +523,7 @@ describe('getSimilarJobs — indexed steps', () => {
     })
 
     expect(result.map(j => j.id)).toEqual(['a', 'c', 'b', 'e', 'd'])
-    expect(searchTermOf(queries[1])).toBe('senior OR practice OR accountant')
+    expect(searchTermOf(queries[1])).toBe('accountant OR practice OR senior')
     expect(countryOf(queries[1])).toBe('United Kingdom')
     expect(queries[1].limit).toEqual([[40]])
   })
@@ -540,7 +541,7 @@ describe('getSimilarJobs — indexed steps', () => {
     })
 
     expect(result.map(j => j.id)).toEqual(['uk-1', 'us-1', 'us-2'])
-    expect(searchTermOf(queries[2])).toBe('senior OR practice OR accountant')
+    expect(searchTermOf(queries[2])).toBe('accountant OR practice OR senior')
     expect(countryOf(queries[2])).toBeNull()
   })
 
@@ -554,7 +555,8 @@ describe('getSimilarJobs — indexed steps', () => {
     expect(result.map(j => j.id)).toEqual(['x'])
     expect(queries).toHaveLength(1)
     expect(queries[0].textSearch).toBeUndefined()
-    expect(queries[0].neq).toEqual([['id', 'self']])
+    expect(queries[0].neq).toBeUndefined()
+    expect(queries[0].limit).toEqual([[7]])
   })
 
   it('logs a failed step (thrown, so never cached) and carries on with the next', async () => {
@@ -612,13 +614,13 @@ describe('getSimilarJobs — cache keys', () => {
     await getSimilarJobs({ excludeId: 'viewed-123', platform: 'et', title: 'Senior Practice Accountant', locationCountry: 'Ethiopia' })
 
     expect(similarCacheArgs()).toEqual([
-      ['et', 'and', 'senior practice accountant', 'Ethiopia', 7],
-      ['et', 'or', 'senior OR practice OR accountant', 'Ethiopia', 40],
-      ['et', 'or', 'senior OR practice OR accountant', null, 40],
+      ['et', 'and', 'accountant practice senior', 'Ethiopia', 7],
+      ['et', 'or', 'accountant OR practice OR senior', 'Ethiopia', 40],
+      ['et', 'or', 'accountant OR practice OR senior', null, 40],
     ])
     expect(JSON.stringify(similarCacheArgs())).not.toContain('viewed-123')
     const call = cacheCalls.find(c => c.keyParts[0] === 'similar-jobs-candidates')
-    expect(call?.options).toEqual({ revalidate: 3600, tags: ['jobs', 'jobs:similar'] })
+    expect(call?.options).toEqual({ revalidate: 21600, tags: ['jobs', 'related-jobs'] })
   })
 
   it('shares entries between different viewed jobs with the same title', async () => {
@@ -634,6 +636,31 @@ describe('getSimilarJobs — cache keys', () => {
     expect(similarCacheArgs()).toEqual(first)
   })
 
+  it('shares entries between titles with the same words in a different order', async () => {
+    cacheCalls.length = 0
+    mockSimilarClient([{ data: [], error: null }, { data: [], error: null }])
+    await getSimilarJobs({ excludeId: 'job-1', platform: 'ab', title: 'Senior Practice Accountant', locationCountry: null })
+    const first = similarCacheArgs()
+
+    cacheCalls.length = 0
+    mockSimilarClient([{ data: [], error: null }, { data: [], error: null }])
+    await getSimilarJobs({ excludeId: 'job-2', platform: 'ab', title: 'Practice Accountant, Senior', locationCountry: null })
+
+    expect(similarCacheArgs()).toEqual(first)
+  })
+
+  it('keys the country fallback without the viewed job, and removes that job from the shared list', async () => {
+    cacheCalls.length = 0
+    mockSimilarClient([{ data: [job('viewed-123', 'Anything'), job('x', 'Anything')], error: null }])
+
+    const result = await getSimilarJobs({ excludeId: 'viewed-123', platform: 'ab', title: 'Remote Job', locationCountry: 'United Kingdom' })
+
+    expect(result.map(j => j.id)).toEqual(['x'])
+    const call = cacheCalls.find(c => c.keyParts[0] === 'similar-jobs-country-fallback')
+    expect(call?.args).toEqual(['ab', 'United Kingdom', 7])
+    expect(call?.options).toEqual({ revalidate: 21600, tags: ['jobs', 'related-jobs'] })
+  })
+
   it('gives different keys for a different platform, country or title', async () => {
     const keysFor = async (platform: string, country: string | null, title: string, limit = 6) => {
       cacheCalls.length = 0
@@ -647,5 +674,51 @@ describe('getSimilarJobs — cache keys', () => {
     expect(await keysFor('ab', 'Ireland', 'Senior Practice Accountant')).not.toBe(base)
     expect(await keysFor('ab', 'United Kingdom', 'Senior Audit Accountant')).not.toBe(base)
     expect(await keysFor('ab', 'United Kingdom', 'Senior Practice Accountant', 3)).not.toBe(base)
+  })
+})
+
+describe('getBrowsableJobsCount', () => {
+  // The chain ends in .or(), which resolves the scripted result.
+  function mockCountClient(result: { count: number | null; error: unknown; status?: number }) {
+    const builder = {
+      from: () => builder,
+      select: () => builder,
+      eq: () => builder,
+      contains: () => builder,
+      or: () => Promise.resolve(result),
+    }
+    vi.mocked(createClient).mockReturnValue(builder as unknown as ReturnType<typeof createClient>)
+  }
+  const countCall = () => cacheCalls.find(c => c.keyParts[0] === 'getBrowsableJobsCount')
+
+  it('caches a real count for an hour, keyed on the platform', async () => {
+    cacheCalls.length = 0
+    mockCountClient({ count: 13456, error: null })
+
+    expect(await getBrowsableJobsCount('et')).toBe(13456)
+    expect(countCall()?.args).toEqual(['et'])
+    expect(countCall()?.options).toEqual({ revalidate: 3600, tags: ['counts', 'jobs'] })
+  })
+
+  it('caches a genuine zero', async () => {
+    cacheCalls.length = 0
+    mockCountClient({ count: 0, error: null })
+
+    expect(await getBrowsableJobsCount('ab')).toBe(0)
+    await expect(countCall()?.result).resolves.toBe(0)
+  })
+
+  // Rejecting inside the cached function is what keeps the result out of the
+  // cache; the caller still gets today's fallback of 0.
+  it.each([
+    ['a query error with an empty message', { count: null, error: { message: '' }, status: 504 }],
+    ['a missing count with no error', { count: null, error: null, status: 200 }],
+  ])('throws inside the cache and returns 0 outside it on %s', async (_label, result) => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    cacheCalls.length = 0
+    mockCountClient(result)
+
+    expect(await getBrowsableJobsCount('ab')).toBe(0)
+    await expect(countCall()?.result).rejects.toThrow('status')
   })
 })
