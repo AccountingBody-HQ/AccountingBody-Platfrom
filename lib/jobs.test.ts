@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
 import {
   getActiveDirectJobs, getCachedListingJobs, getCachedListingJobsCount,
@@ -80,8 +80,16 @@ function fakeSupabaseClient(pages: Array<{ data: unknown[] | null; error: unknow
   return { client: builder, rangeCalls }
 }
 
+const originalSimilarJobsEnabled = process.env.SIMILAR_JOBS_ENABLED
+
+function setSimilarJobsEnabled(value: string | undefined) {
+  if (value === undefined) delete process.env.SIMILAR_JOBS_ENABLED
+  else process.env.SIMILAR_JOBS_ENABLED = value
+}
+
 afterEach(() => {
   vi.clearAllMocks()
+  setSimilarJobsEnabled(originalSimilarJobsEnabled)
 })
 
 describe('getJobSitemapEntries — internal pagination', () => {
@@ -480,7 +488,42 @@ const searchTermOf = (q: QueryRecord) => (q.textSearch?.[0]?.[1] as string | und
 const countryOf = (q: QueryRecord) =>
   (q.eq?.find(args => args[0] === 'location_country')?.[1] as string | undefined) ?? null
 
+describe('getSimilarJobs — kill switch', () => {
+  const params = { excludeId: 'self', platform: 'ab', title: 'Senior Practice Accountant', locationCountry: 'United Kingdom' }
+
+  it.each([[undefined], ['false'], [''], ['TRUE'], ['1']])(
+    'returns [] with no cache, database or log call when SIMILAR_JOBS_ENABLED is %j',
+    async value => {
+      setSimilarJobsEnabled(value)
+      cacheCalls.length = 0
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const { queries } = mockSimilarClient([{ data: [job('a')], error: null }])
+
+      expect(await getSimilarJobs(params)).toEqual([])
+
+      expect(vi.mocked(createClient)).not.toHaveBeenCalled()
+      expect(queries).toHaveLength(0)
+      expect(cacheCalls).toHaveLength(0)
+      expect(consoleError).not.toHaveBeenCalled()
+    }
+  )
+
+  it('runs the normal lookup when SIMILAR_JOBS_ENABLED is exactly "true"', async () => {
+    setSimilarJobsEnabled('true')
+    const { queries } = mockSimilarClient([
+      { data: [job('self'), ...['a', 'b', 'c', 'd', 'e', 'f'].map(id => job(id))], error: null },
+    ])
+
+    const result = await getSimilarJobs(params)
+
+    expect(result.map(j => j.id)).toEqual(['a', 'b', 'c', 'd', 'e', 'f'])
+    expect(queries).toHaveLength(1)
+  })
+})
+
 describe('getSimilarJobs — indexed steps', () => {
+  beforeEach(() => setSimilarJobsEnabled('true'))
+
   it('stops after step 1 when the AND match fills the list (no OR query)', async () => {
     const { queries } = mockSimilarClient([
       { data: [job('self'), ...['a', 'b', 'c', 'd', 'e', 'f'].map(id => job(id))], error: null },
@@ -604,6 +647,8 @@ describe('getSimilarJobs — indexed steps', () => {
 })
 
 describe('getSimilarJobs — cache keys', () => {
+  beforeEach(() => setSimilarJobsEnabled('true'))
+
   const similarCacheArgs = () =>
     cacheCalls.filter(c => c.keyParts[0] === 'similar-jobs-candidates').map(c => c.args)
 

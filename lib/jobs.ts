@@ -747,6 +747,10 @@ function rankByTitleOverlap(candidates: SimilarJob[], titleTokens: string[]): Si
 // it) but is intentionally not read here — see the module comment above
 // for why seniority no longer backfills this list.
 export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<SimilarJob[]> {
+  // Emergency kill switch (incident 2026-11-05): off unless explicitly "true".
+  // Returns before any cache or database call, and logs nothing per request.
+  if (process.env.SIMILAR_JOBS_ENABLED !== 'true') return []
+
   const { excludeId, platform, title, locationCountry, limit = 6 } = params
 
   const picked: SimilarJob[] = []
