@@ -1,8 +1,9 @@
-import { sha256Hex } from './admin-auth'
-
 // Decision logic for middleware.ts. Everything here works from plain inputs and
 // returns a plain answer: middleware.ts reads the request and environment, then
-// turns the answer into a response.
+// turns the answer into a response. This file stays free of request-scoped
+// imports because it runs in the edge middleware as well as on the server.
+
+const MAX_DECODE_PASSES = 5
 
 const STATIC_REDIRECTS: Record<string, string> = {
   "/course": "/free-courses",
@@ -29,6 +30,17 @@ export type RequestDecision =
   | { action: 'redirect-admin-login'; pathname: string }
   | { action: 'continue'; platform: SitePlatform }
 
+export function getAdminPath(): string {
+  return process.env.ADMIN_PATH ?? "roodber8"
+}
+
+export async function sha256Hex(message: string): Promise<string> {
+  const msgBuffer = new TextEncoder().encode(message)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
 // The account and login system is not in use and is kept for future use only.
 export function isRetiredAccountPath(pathname: string): boolean {
   return (
@@ -52,6 +64,53 @@ export function isAdminApiPath(pathname: string, adminPath: string): boolean {
     pathname.startsWith("/api/" + adminPath) &&
     pathname !== "/api/" + adminPath + "-auth" &&
     pathname !== "/api/" + adminPath + "-logout"
+  )
+}
+
+// An address read as far as it can be: the address as written, then each layer
+// of decoding in turn. Returns null when the first reading fails, or when the
+// address has not settled within the pass limit.
+export function readAddressLayers(pathname: string): string[] | null {
+  const layers = [pathname]
+  for (let pass = 0; pass < MAX_DECODE_PASSES; pass++) {
+    const current = layers[layers.length - 1]
+    let next: string
+    try {
+      next = decodeURIComponent(current)
+    } catch {
+      return pass === 0 ? null : layers
+    }
+    if (next === current) return layers
+    layers.push(next)
+  }
+  return null
+}
+
+// One tidy spelling of a path, the way the router reads it: backslashes as
+// slashes, repeated slashes collapsed, "." and ".." resolved, no trailing slash.
+function tidyPathname(pathname: string): string {
+  const segments: string[] = []
+  for (const segment of pathname.replace(/\\/g, "/").split("/")) {
+    if (segment === "" || segment === ".") continue
+    if (segment === "..") segments.pop()
+    else segments.push(segment)
+  }
+  return "/" + segments.join("/")
+}
+
+// The tidy spelling of an address at its last readable layer, or null when the
+// address cannot be read.
+export function normaliseAdminPathname(pathname: string): string | null {
+  const layers = readAddressLayers(pathname)
+  return layers === null ? null : tidyPathname(layers[layers.length - 1])
+}
+
+// An address is checked at every layer it can be read, as written and tidied.
+export function isAdminAddress(pathname: string, adminPath: string): boolean {
+  const layers = readAddressLayers(pathname)
+  if (layers === null) return true
+  return [...layers, ...layers.map(tidyPathname)].some(
+    (path) => isAdminPagePath(path, adminPath) || isAdminApiPath(path, adminPath),
   )
 }
 
@@ -92,7 +151,7 @@ export async function decideRequest(facts: RequestFacts): Promise<RequestDecisio
     return { action: 'redirect-permanent', pathname: redirectTarget }
   }
 
-  if (isAdminPagePath(pathname, adminPath) || isAdminApiPath(pathname, adminPath)) {
+  if (isAdminAddress(pathname, adminPath)) {
     const authenticated = await isAdminSessionValid(adminToken, adminSecret)
     if (!authenticated) {
       return { action: 'redirect-admin-login', pathname: "/" + adminPath + "-login" }

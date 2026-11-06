@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { unstable_noStore as noStore } from 'next/cache'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
 import { createClient } from '@supabase/supabase-js'
+import { requireAdmin } from '@/lib/admin-auth'
 import { FileText, Sparkles, ExternalLink, FileJson, Search } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -105,6 +106,7 @@ export default async function ArticlesLibraryPage({
 }: {
   searchParams?: { search?: string; letter?: string; page?: string; pqFilter?: string }
 }) {
+  await requireAdmin()
   const search = searchParams?.search ?? ''
   const letter = searchParams?.letter ?? ''
   const safeSearch = search.replace(/[,()%]/g, '')

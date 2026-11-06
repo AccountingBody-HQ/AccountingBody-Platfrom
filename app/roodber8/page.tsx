@@ -3,6 +3,7 @@ import { unstable_noStore as noStore } from "next/cache"
 import Link from "next/link"
 import AutoRefresh from "@/components/roodber8/AutoRefresh"
 import { getAllProviders } from "@/lib/providers"
+import { requireAdmin } from "@/lib/admin-auth"
 import {
   Mail, Users, HelpCircle, Building2, Briefcase,
   ArrowRight, TrendingUp, Factory, Inbox, BookOpen, FileText, Sparkles, Server
@@ -134,6 +135,7 @@ async function getStats() {
 }
 
 export default async function AdminCommandCentre() {
+  await requireAdmin()
   const stats = await getStats()
 
   const STAT_CARDS = [

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { unstable_noStore as noStore } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
+import { requireAdmin } from '@/lib/admin-auth'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
 import {
   BookOpen, Plus, ExternalLink, CheckCircle2, FileText,
@@ -96,6 +97,7 @@ export default async function QuestionsLibraryPage({
 }: {
   searchParams?: { search?: string; letter?: string; page?: string }
 }) {
+  await requireAdmin()
   noStore()
   const search = searchParams?.search ?? ''
   const letter = searchParams?.letter ?? ''

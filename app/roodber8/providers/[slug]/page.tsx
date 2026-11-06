@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
+import { requireAdmin } from '@/lib/admin-auth'
 import { unstable_noStore as noStore } from 'next/cache'
 import { notFound } from 'next/navigation'
 import { getProvider, type JobProvider, type ProviderRun } from '@/lib/providers'
@@ -286,6 +287,7 @@ export default async function ProviderDetailPage({
 }: {
   params: Promise<{ slug: string }>
 }) {
+  await requireAdmin()
   const { slug } = await params
   const detail = await getProviderDetail(slug)
   if (!detail) notFound()

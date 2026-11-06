@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from '@supabase/supabase-js'
+import { requireAdmin } from '@/lib/admin-auth'
 import { unstable_noStore as noStore } from 'next/cache'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
 import { StatusBadge, DeleteButton, ReplyButton, NotesField } from '@/components/roodber8/AdminActions'
@@ -44,6 +45,7 @@ export default async function SubmissionsPage({
 }: {
   searchParams: Promise<{ search?: string; service?: string; status?: string; platform?: string }>
 }) {
+  await requireAdmin()
   const sp          = await searchParams
   const safeSearch  = (sp.search ?? '').replace(/[,()]/g, '')
   const serviceType = sp.service ?? ''

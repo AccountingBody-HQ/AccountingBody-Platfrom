@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from '@supabase/supabase-js'
+import { requireAdmin } from '@/lib/admin-auth'
 import { unstable_noStore as noStore } from 'next/cache'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
 import { StatusBadge, DeleteButton } from '@/components/roodber8/AdminActions'
@@ -33,6 +34,7 @@ export default async function SubscribersPage({
 }: {
   searchParams: Promise<{ status?: string; source?: string; platform?: string }>
 }) {
+  await requireAdmin()
   const sp     = await searchParams
   const status = sp.status ?? ''
   const source = sp.source ?? ''

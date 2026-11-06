@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 import type { NextFetchEvent } from 'next/server'
+import { getMiddlewareMatchers } from 'next/dist/build/analysis/get-page-static-info'
+import { getMiddlewareRouteMatcher } from 'next/dist/shared/lib/router/utils/middleware-route-matcher'
 import { sha256Hex } from '@/lib/admin-auth'
-import middleware from './middleware'
+import middleware, { config } from './middleware'
 
 // The wrapper hands the request straight to the inner handler, the same way
 // the real wrapper calls it, so these tests cover the site's own routing.
@@ -201,5 +203,138 @@ describe('site platform', () => {
   it('signed-in admin on EthioTax passes through as EthioTax', async () => {
     const headers = { ...(await signedInHeaders()), 'x-forwarded-host': 'ethiotax.com' }
     expectPassThrough(await run(`/${ADMIN}/jobs`, headers), 'ethiotax')
+  })
+})
+
+describe('admin addresses are recognised however they are written', () => {
+  const loginUrl = `${ORIGIN}/${ADMIN}-login`
+  const firstLetter = `%${ADMIN.charCodeAt(0).toString(16)}`
+  const rest = ADMIN.slice(1)
+
+  const spellings: [string, string][] = [
+    ['encoded letter', `/${firstLetter}${rest}/jobs`],
+    ['encoded twice', `/${firstLetter.replace('%', '%25')}${rest}/jobs`],
+    ['encoded slash', `/${ADMIN}%2Fjobs`],
+    ['encoded backslash', `/%5C${ADMIN}/jobs`],
+    ['double slash', `//${ADMIN}/jobs`],
+    ['parent segment', `/public/../${ADMIN}/jobs`],
+    ['encoded parent segment', `/public%2F..%2F${ADMIN}%2Fjobs`],
+    ['API with encoded letter', `/api/${firstLetter}${rest}/jobs`],
+    ['API with double slash', `//api//${ADMIN}/jobs`],
+  ]
+
+  it('trailing slash goes to the login page without a session', async () => {
+    expectRedirect(await run(`/${ADMIN}/`), 307, `${loginUrl}/`)
+  })
+
+  it.each(spellings)('%s goes to the login page without a session', async (_label, path) => {
+    expectRedirect(await run(path), 307, loginUrl)
+  })
+
+  it.each(spellings)('%s continues for a signed-in admin', async (_label, path) => {
+    expectPassThrough(await run(path, await signedInHeaders()))
+  })
+
+  it('keeps the query string when going to the login page', async () => {
+    expectRedirect(await run(`/${firstLetter}${rest}/jobs?page=2`), 307, `${loginUrl}?page=2`)
+  })
+
+  it('leaves the encoded login page reachable', async () => {
+    expectPassThrough(await run(`/${firstLetter}${rest}-login`))
+  })
+
+  it('leaves a public page with an encoded name alone', async () => {
+    expectPassThrough(await run('/jobs/caf%C3%A9'))
+  })
+
+  it('still applies permanent redirects to the address as written', async () => {
+    expectRedirect(await run('/about-us'), 301, ORIGIN + '/about')
+    expectPassThrough(await run('/%61bout-us'))
+  })
+})
+
+describe('an address that cannot be read is treated as an admin address', () => {
+  const loginUrl = `${ORIGIN}/${ADMIN}-login`
+
+  it.each(['/%E9', '/jobs/100%', '/%zz'])('%s goes to the login page without a session', async (path) => {
+    expectRedirect(await run(path), 307, loginUrl)
+  })
+
+  it('continues for a signed-in admin', async () => {
+    expectPassThrough(await run('/%E9', await signedInHeaders()))
+  })
+})
+
+describe('an address is checked at every layer it can be read', () => {
+  const loginUrl = `${ORIGIN}/${ADMIN}-login`
+  const firstLetter = `%${ADMIN.charCodeAt(0).toString(16)}`
+  const rest = ADMIN.slice(1)
+  const encoded = `${firstLetter}${rest}`
+
+  it('an address with an encoded percent sign is read once and handled normally', async () => {
+    expectPassThrough(await run('/jobs/50%25-off'))
+  })
+
+  it.each([
+    ['last layer unreadable', `/${encoded}/jobs%25`],
+    ['parent segment at a later layer', `/${encoded}/%252e%252e/x`],
+    ['parent segment, last layer unreadable', `/${encoded}/%252e%252e/x%2525`],
+    ['API with parent segments at a later layer', `/api/${encoded}/jobs/..%252F..%252F..%252Fx`],
+    ['parent segment after a double slash', `//${ADMIN}/..%2Fx`],
+  ])('an admin address is recognised at every layer of encoding: %s', async (_label, path) => {
+    expectRedirect(await run(path), 307, loginUrl)
+  })
+
+  it.each([
+    ['public', '/%2525252561'],
+    ['admin', `/%${'25'.repeat(5)}${firstLetter.slice(1)}${rest}`],
+  ])('an address with too many layers of encoding is treated as an admin address: %s', async (_label, path) => {
+    expectRedirect(await run(path), 307, loginUrl)
+  })
+
+  it('continues for a signed-in admin', async () => {
+    expectPassThrough(await run(`/${encoded}/%252e%252e/x`, await signedInHeaders()))
+  })
+})
+
+describe('real files skip middleware; pages always reach it', () => {
+  const reachesMiddleware = getMiddlewareRouteMatcher(
+    getMiddlewareMatchers(config.matcher, { basePath: '', i18n: null } as never),
+  )
+  const reaches = (path: string) => reachesMiddleware(path, {} as never, {})
+
+  it.each([
+    '/favicon.ico',
+    '/image.png',
+    '/photo.jpeg',
+    '/site.webmanifest',
+    '/robots.txt',
+    '/books/guide.docx',
+    '/_next/static/x.js',
+    '/_next/image',
+  ])('%s skips middleware', (path) => {
+    expect(reaches(path)).toBe(false)
+  })
+
+  it.each([
+    '/',
+    '/jobs',
+    '/sitemap.xml',
+    '/manifest.json',
+    '/study/ico-guide',
+    '/jobs/mexico-accountant',
+    '/jobs/doctor-of-accounting',
+    '/study/gift-aid-gif',
+    '/study/html-reports',
+    '/study/css-basics',
+    '/study/txt-files',
+    `/${ADMIN}`,
+    `/${ADMIN}/providers/x-doc`,
+    `/${ADMIN}/providers/x-ico`,
+    `/${ADMIN}/css-editor`,
+    `/api/${ADMIN}/docs`,
+    '/api/report.csv',
+  ])('%s reaches middleware', (path) => {
+    expect(reaches(path)).toBe(true)
   })
 })

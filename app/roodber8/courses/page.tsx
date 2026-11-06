@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { unstable_noStore as noStore } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
+import { requireAdmin } from '@/lib/admin-auth'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
 import { BookOpen, Plus, ExternalLink } from 'lucide-react'
 
@@ -112,6 +113,7 @@ async function getCourses(): Promise<CourseRow[]> {
 }
 
 export default async function CourseLibraryPage() {
+  await requireAdmin()
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SECRET_KEY!

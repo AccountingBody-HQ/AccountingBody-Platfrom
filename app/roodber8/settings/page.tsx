@@ -1,6 +1,8 @@
 import { CheckCircle, Circle, HelpCircle, Server } from "lucide-react"
+import { requireAdmin } from "@/lib/admin-auth"
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  await requireAdmin()
   const envVars = [
     { name: "NEXT_PUBLIC_SUPABASE_URL", required: true, description: "Supabase project URL" },
     { name: "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", required: true, description: "Supabase anon key" },
