@@ -14,6 +14,11 @@ const MIN_SESSION_SECRET_LENGTH = 32
 const SESSION_ID_BYTES = 16
 const ADMIN_SECRET_LABEL = 'admin-session-binding:v1:'
 
+// The one answer to an admin API request without a valid session. Middleware
+// and the route handlers both send it.
+export const ADMIN_SIGNED_OUT_BODY = { error: 'Signed out' }
+export const ADMIN_SIGNED_OUT_INIT = { status: 401, headers: { 'Cache-Control': 'no-store' } }
+
 const STATIC_REDIRECTS: Record<string, string> = {
   "/course": "/free-courses",
   "/courses": "/free-courses",
@@ -38,6 +43,7 @@ export type RequestDecision =
   | { action: 'redirect-home' }
   | { action: 'redirect-permanent'; pathname: string }
   | { action: 'redirect-admin-login'; pathname: string }
+  | { action: 'admin-api-signed-out' }
   | { action: 'continue'; platform: SitePlatform }
 
 export function getAdminPath(): string {
@@ -122,6 +128,13 @@ export function isAdminAddress(pathname: string, adminPath: string): boolean {
   return [...layers, ...layers.map(tidyPathname)].some(
     (path) => isAdminPagePath(path, adminPath) || isAdminApiPath(path, adminPath),
   )
+}
+
+// An admin address that reads as an API route at any layer. An address that
+// cannot be decoded is judged as written.
+export function isAdminApiAddress(pathname: string, adminPath: string): boolean {
+  const layers = readAddressLayers(pathname) ?? [pathname]
+  return [...layers, ...layers.map(tidyPathname)].some((path) => isAdminApiPath(path, adminPath))
 }
 
 // Compares every character, so the time taken does not depend on where two
@@ -234,6 +247,9 @@ export async function decideRequest(facts: RequestFacts): Promise<RequestDecisio
   if (isAdminAddress(pathname, adminPath)) {
     const authenticated = await isAdminSessionValid(adminToken, adminSessionSecret, adminSecret)
     if (!authenticated) {
+      if (isAdminApiAddress(pathname, adminPath)) {
+        return { action: 'admin-api-signed-out' }
+      }
       return { action: 'redirect-admin-login', pathname: "/" + adminPath + "-login" }
     }
   }

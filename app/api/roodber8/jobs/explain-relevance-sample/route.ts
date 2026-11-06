@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getProvider } from '@/lib/providers'
 import { explainRelevance } from '@/lib/ingestion/validate'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 
 function getSupabase() {
   return createClient(
@@ -44,7 +44,7 @@ interface SampledJobRow {
 //                  'description' or 'none' (applied after explainRelevance)
 export async function GET(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
-    return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    return signedOutResponse()
   }
 
   const { searchParams } = new URL(req.url)

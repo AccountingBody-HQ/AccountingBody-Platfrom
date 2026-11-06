@@ -4,7 +4,7 @@
 // Replaces Sanity GROQ fetch — Session 35
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { createClient } from '@supabase/supabase-js'
 import { getCourseBySlug } from '@/lib/coursesNew'
 import { filterForPublication, getPublicationWarnings } from '@/lib/publication-filter'
@@ -18,7 +18,7 @@ function getSupabase() {
 
 export async function GET(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
   }
   try {
     const supabase = getSupabase()

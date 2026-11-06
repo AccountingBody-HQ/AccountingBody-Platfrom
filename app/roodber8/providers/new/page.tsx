@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import { useRouter } from 'next/navigation'
 import { ADMIN_COLORS } from '@/lib/admin-theme'
 import {
@@ -147,7 +148,7 @@ export default function AddProviderPage() {
 
     setSubmitting(true)
     try {
-      const res = await fetch('/api/roodber8/providers/create', {
+      const res = await adminFetch('/api/roodber8/providers/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

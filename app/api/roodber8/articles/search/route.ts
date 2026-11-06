@@ -2,14 +2,14 @@
 // Admin-only article search, used by the Course Editor's article picker.
 
 import { NextRequest, NextResponse } from 'next/server'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { createClient } from '@supabase/supabase-js'
 
 export const runtime = 'nodejs'
 
 export async function GET(req: NextRequest) {
   if (!(await isAuthenticated(req)))
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
 
   const q = req.nextUrl.searchParams.get('q')?.trim() ?? ''
   if (!q) return NextResponse.json({ articles: [] })

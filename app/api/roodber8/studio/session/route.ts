@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { createClient } from '@supabase/supabase-js'
 
 export const runtime = 'nodejs'
@@ -25,7 +25,7 @@ const DEFAULT_SOCIAL_TASK = {
 
 export async function GET(req: NextRequest) {
   if (!(await isAuthenticated(req)))
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   if (!(await isAuthenticated(req)))
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
 
   const body: unknown = await req.json()
   const { pq_tasks, article_task, social_task } = (body ?? {}) as {

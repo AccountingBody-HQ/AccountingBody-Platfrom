@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getProvider } from '@/lib/providers'
 import { isRelevantByText } from '@/lib/ingestion/validate'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 
 function getSupabase() {
   return createClient(
@@ -41,7 +41,7 @@ interface QualityFlagsRow {
 // permanently useful: any future taxonomy change needs a way to re-sweep.
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
-    return new Response('Unauthorized', { status: 401 })
+    return signedOutResponse()
   }
 
   const rawBody: unknown = await req.json().catch(() => ({}))

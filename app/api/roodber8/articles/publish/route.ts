@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { revalidateTag } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
@@ -18,7 +18,7 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 // Supabase articles table. Does NOT re-normalise.
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
   }
 
   try {

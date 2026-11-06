@@ -6,6 +6,7 @@ import { getAdminPath } from './middleware-logic'
 
 const HTTP_METHODS = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 const SHARED_CHECK = 'isAuthenticated'
+const SHARED_ANSWER = 'signedOutResponse'
 const SHARED_MODULE = '@/lib/admin-auth'
 
 function parse(source: string): ts.SourceFile {
@@ -22,7 +23,9 @@ function importsSharedCheck(file: ts.SourceFile): boolean {
     if (!ts.isStringLiteral(statement.moduleSpecifier)) return false
     if (statement.moduleSpecifier.text !== SHARED_MODULE) return false
     const named = statement.importClause?.namedBindings
-    return !!named && ts.isNamedImports(named) && named.elements.some((item) => item.name.text === SHARED_CHECK)
+    if (!named || !ts.isNamedImports(named)) return false
+    const names = named.elements.map((item) => item.name.text)
+    return names.includes(SHARED_CHECK) && names.includes(SHARED_ANSWER)
   })
 }
 
@@ -54,12 +57,15 @@ function exportsHandlerAsVariable(file: ts.SourceFile): boolean {
   )
 }
 
-// if (!(await isAuthenticated(<the handler's request>))) ...
+// if (!(await isAuthenticated(<the handler's request>))) return signedOutResponse()
 function checksSessionFirst(handler: ts.FunctionDeclaration): boolean {
   const first = handler.body?.statements[0]
   if (!first || !ts.isIfStatement(first)) return false
   const request = handler.parameters[0]?.name.getText()
-  return first.expression.getText() === `!(await ${SHARED_CHECK}(${request}))`
+  if (first.expression.getText() !== `!(await ${SHARED_CHECK}(${request}))`) return false
+  const then = first.thenStatement
+  const answer = ts.isBlock(then) ? then.statements[0] : then
+  return !!answer && ts.isReturnStatement(answer) && answer.expression?.getText() === `${SHARED_ANSWER}()`
 }
 
 // The folder comes from the app's own default, so its name is not repeated here.
@@ -101,8 +107,27 @@ describe('every admin API route uses the shared session check', () => {
     expect(checksSessionFirst(exportedHandlers(file)[0])).toBe(false)
   })
 
+  it('does not count a handler with a different signed-out answer', () => {
+    const file = parse(
+      "export async function GET(req) { if (!(await isAuthenticated(req))) return NextResponse.json({ error: 'No' }, { status: 401 }); return ok() }",
+    )
+    expect(checksSessionFirst(exportedHandlers(file)[0])).toBe(false)
+  })
+
+  it('counts the shared answer with or without braces', () => {
+    const withBraces = parse(
+      'export async function GET(req) { if (!(await isAuthenticated(req))) { return signedOutResponse() } return ok() }',
+    )
+    const withoutBraces = parse(
+      'export async function GET(req) { if (!(await isAuthenticated(req))) return signedOutResponse(); return ok() }',
+    )
+    expect(checksSessionFirst(exportedHandlers(withBraces)[0])).toBe(true)
+    expect(checksSessionFirst(exportedHandlers(withoutBraces)[0])).toBe(true)
+  })
+
   it('does not count a route without the import', () => {
-    expect(importsSharedCheck(parse("import { isAuthenticated } from './local'"))).toBe(false)
+    expect(importsSharedCheck(parse("import { isAuthenticated, signedOutResponse } from './local'"))).toBe(false)
+    expect(importsSharedCheck(parse("import { isAuthenticated } from '@/lib/admin-auth'"))).toBe(false)
     expect(importsSharedCheck(parse("import { other } from '@/lib/admin-auth'"))).toBe(false)
   })
 

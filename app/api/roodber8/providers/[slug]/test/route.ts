@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { getProvider } from '@/lib/providers'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null
@@ -17,7 +17,7 @@ export async function POST(
   { params }: { params: { slug: string } }
 ) {
   if (!(await isAuthenticated(req))) {
-    return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    return signedOutResponse()
   }
 
   const provider = await getProvider(params.slug)

@@ -2,6 +2,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -138,17 +139,21 @@ function ArticleSearchPanel({ onSelect }: { onSelect: (article: ArticleSearchRes
   const [query, setQuery]       = useState('')
   const [results, setResults]   = useState<ArticleSearchResult[]>([])
   const [searching, setSearching] = useState(false)
+  const [searchError, setSearchError] = useState('')
 
   useEffect(() => {
+    setSearchError('')
     if (!query.trim()) { setResults([]); return }
     const timer = setTimeout(async () => {
       setSearching(true)
       try {
-        const res = await fetch(`/api/roodber8/articles/search?q=${encodeURIComponent(query)}`)
+        const res = await adminFetch(`/api/roodber8/articles/search?q=${encodeURIComponent(query)}`)
         const data = await res.json()
+        if (!res.ok) throw new Error(data.error)
         setResults(data.articles ?? [])
-      } catch {
+      } catch (e: unknown) {
         setResults([])
+        setSearchError(e instanceof Error ? e.message : 'Search failed')
       } finally {
         setSearching(false)
       }
@@ -170,7 +175,7 @@ function ArticleSearchPanel({ onSelect }: { onSelect: (article: ArticleSearchRes
       </div>
 
       {query.trim() && !searching && results.length === 0 && (
-        <p className="text-xs mt-2 px-1" style={{ color: '#475569' }}>No results.</p>
+        <p className="text-xs mt-2 px-1" style={{ color: '#475569' }}>{searchError || 'No results.'}</p>
       )}
 
       {results.length > 0 && (
@@ -435,7 +440,7 @@ export default function CourseEditorPage() {
   const fetchCourse = useCallback(async () => {
     setLoading(true); setLoadError('')
     try {
-      const res = await fetch(`/api/roodber8/courses/${courseId}`)
+      const res = await adminFetch(`/api/roodber8/courses/${courseId}`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to load')
       setCourse(data.course)
@@ -459,7 +464,7 @@ export default function CourseEditorPage() {
   }, [actionError])
 
   async function patchAction(action: string, extra: Record<string, unknown> = {}) {
-    const res = await fetch(`/api/roodber8/courses/${courseId}`, {
+    const res = await adminFetch(`/api/roodber8/courses/${courseId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, ...extra }),
@@ -641,7 +646,7 @@ export default function CourseEditorPage() {
   async function handleDeleteCourse() {
     setDeletingCourse(true); setDeleteCourseError('')
     try {
-      const res = await fetch(`/api/roodber8/courses/${courseId}`, { method: 'DELETE' })
+      const res = await adminFetch(`/api/roodber8/courses/${courseId}`, { method: 'DELETE' })
       const data = await res.json()
       if (!res.ok || !data.success) throw new Error(data.error || 'Delete failed')
       router.push('/roodber8/courses')

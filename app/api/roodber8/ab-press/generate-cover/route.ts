@@ -5,7 +5,7 @@
 // step of the client-orchestrated chapter-by-chapter generation flow.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server"
-import { isAuthenticated } from "@/lib/admin-auth"
+import { isAuthenticated, signedOutResponse } from "@/lib/admin-auth"
 import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { FullCoverTemplate } from "@/components/book/FullCoverTemplate"
@@ -14,7 +14,7 @@ export const maxDuration = 30
 
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
-    return NextResponse.json({ error: "Unauthorised" }, { status: 401 })
+    return signedOutResponse()
   }
   try {
     const body = await req.json()

@@ -2,6 +2,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -195,7 +196,7 @@ function QuestionRow({
         fields.writing_explanation  = draft.writing_explanation ?? ''
       }
 
-      const res = await fetch(`/api/roodber8/questions/${setId}`, {
+      const res = await adminFetch(`/api/roodber8/questions/${setId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update_question', questionId: question.id, fields }),
@@ -214,7 +215,7 @@ function QuestionRow({
   async function handleDelete() {
     setDeleting(true); setError('')
     try {
-      const res = await fetch(`/api/roodber8/questions/${setId}`, {
+      const res = await adminFetch(`/api/roodber8/questions/${setId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'delete_question', questionId: question.id }),
@@ -493,7 +494,7 @@ function AddQuestionForm({
     if (!questionText.trim()) { setError('Question stem is required'); return }
     setSaving(true); setError('')
     try {
-      const res = await fetch(`/api/roodber8/questions/${setId}`, {
+      const res = await adminFetch(`/api/roodber8/questions/${setId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -639,7 +640,7 @@ function SetMetadataEditor({
   async function handleSave() {
     setSaving(true); setError('')
     try {
-      const res = await fetch(`/api/roodber8/questions/${setId}`, {
+      const res = await adminFetch(`/api/roodber8/questions/${setId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -737,7 +738,7 @@ export default function QuestionSetManagerPage() {
   const fetchSet = useCallback(async () => {
     setLoading(true); setError('')
     try {
-      const res = await fetch(`/api/roodber8/questions/${setId}`)
+      const res = await adminFetch(`/api/roodber8/questions/${setId}`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to load')
       setSet(data.set)
@@ -754,7 +755,7 @@ export default function QuestionSetManagerPage() {
   async function handleDeleteSet() {
     setDeletingSet(true); setDeleteSetError('')
     try {
-      const res = await fetch(`/api/roodber8/questions/${setId}`, {
+      const res = await adminFetch(`/api/roodber8/questions/${setId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'delete_set' }),

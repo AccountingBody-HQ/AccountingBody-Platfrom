@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import { useParams, useRouter } from 'next/navigation'
 import { ADMIN_COLORS } from '@/lib/admin-theme'
 import type { JobProvider } from '@/lib/providers'
@@ -65,7 +66,7 @@ export default function EditProviderPage() {
 
     async function load() {
       try {
-        const res = await fetch(`/api/roodber8/providers/${slug}`)
+        const res = await adminFetch(`/api/roodber8/providers/${slug}`)
         const data = await res.json() as { provider?: JobProvider; error?: string }
         if (cancelled) return
         if (!res.ok || !data.provider) {
@@ -217,7 +218,7 @@ export default function EditProviderPage() {
 
     setSubmitting(true)
     try {
-      const res = await fetch(`/api/roodber8/providers/${slug}/edit`, {
+      const res = await adminFetch(`/api/roodber8/providers/${slug}/edit`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -283,7 +284,7 @@ export default function EditProviderPage() {
     setDeleting(true)
     setError(null)
     try {
-      const res = await fetch(`/api/roodber8/providers/${slug}/edit`, { method: 'DELETE' })
+      const res = await adminFetch(`/api/roodber8/providers/${slug}/edit`, { method: 'DELETE' })
       const data = await res.json() as { ok?: boolean; error?: string }
       if (res.ok && data.ok) {
         router.push('/roodber8/providers')

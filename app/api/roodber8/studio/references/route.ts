@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { createClient } from '@supabase/supabase-js'
 
 export const runtime = 'nodejs'
 
 export async function GET(req: NextRequest) {
   if (!(await isAuthenticated(req)))
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req)))
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
 
   const body: unknown = await req.json()
   const { label, url, category } = (body ?? {}) as { label?: string; url?: string; category?: string }
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   if (!(await isAuthenticated(req)))
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
 
   const id = req.nextUrl.searchParams.get('id')
   if (!id)

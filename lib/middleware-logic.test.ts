@@ -5,6 +5,7 @@ import {
   findStaticRedirect,
   getAdminPath,
   isAdminAddress,
+  isAdminApiAddress,
   isAdminApiPath,
   isAdminPagePath,
   isAdminSessionValid,
@@ -188,14 +189,39 @@ describe('an address is checked at every layer it can be read', () => {
   it.each([
     ['parent segment at a later layer', `/${encoded}/%252e%252e/x`],
     ['parent segment, last layer unreadable', `/${encoded}/%252e%252e/x%2525`],
-    ['API with parent segments at a later layer', `/api/${encoded}/jobs/..%252F..%252F..%252Fx`],
-    ['API, last layer unreadable', `/api/${encoded}/jobs/..%252F..%252F..%252Fx%2525`],
     ['parent segment after a double slash', `//${ADMIN}/..%2Fx`],
     ['trailing slash on the encoded login page', `/${encoded}-login/`],
   ])('an admin address is recognised at every layer of encoding: %s', async (_label, path) => {
     expect(isAdminAddress(path, ADMIN)).toBe(true)
+    expect(isAdminApiAddress(path, ADMIN)).toBe(false)
     expect(await decideRequest(facts({ pathname: path }))).toEqual(loginPage)
   })
+
+  it.each([
+    ['as written', `/api/${ADMIN}/jobs`],
+    ['encoded', `/api/${encoded}/jobs`],
+    ['parent segments at a later layer', `/api/${encoded}/jobs/..%252F..%252F..%252Fx`],
+    ['last layer unreadable', `/api/${encoded}/jobs/..%252F..%252F..%252Fx%2525`],
+    ['first reading fails', `/api/${ADMIN}/%E9`],
+    ['too many layers of encoding', `/api/${ADMIN}/%2525252525252561`],
+    ['double slashes', `//api//${ADMIN}/jobs`],
+  ])('an admin API address is answered signed out at every layer: %s', async (_label, path) => {
+    expect(isAdminAddress(path, ADMIN)).toBe(true)
+    expect(isAdminApiAddress(path, ADMIN)).toBe(true)
+    expect(await decideRequest(facts({ pathname: path }))).toEqual({ action: 'admin-api-signed-out' })
+  })
+
+  it.each([`/api/${ADMIN}-auth`, `/api/${ADMIN}-logout`, `/api/${encoded}-auth`, `/api/${encoded}-logout`])(
+    'the sign-in and sign-out routes are not admin API addresses: %s',
+    async (path) => {
+      expect(isAdminAddress(path, ADMIN)).toBe(false)
+      expect(isAdminApiAddress(path, ADMIN)).toBe(false)
+      expect(await decideRequest(facts({ pathname: path }))).toEqual({
+        action: 'continue',
+        platform: 'accountingbody',
+      })
+    },
+  )
 
   it.each([
     ['public, one layer past the limit', '/%2525252561'],
@@ -345,10 +371,9 @@ describe('decideRequest', () => {
     })
   })
 
-  it('sends an admin API route without a session to the login page', async () => {
+  it('answers an admin API route without a session signed out', async () => {
     expect(await decideRequest(facts({ pathname: `/api/${ADMIN}/jobs` }))).toEqual({
-      action: 'redirect-admin-login',
-      pathname: `/${ADMIN}-login`,
+      action: 'admin-api-signed-out',
     })
   })
 

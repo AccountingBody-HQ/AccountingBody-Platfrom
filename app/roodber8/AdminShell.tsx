@@ -1,5 +1,6 @@
 'use client'
-import { Suspense } from 'react'
+import { Suspense, useState } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -82,9 +83,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname()
   const router = useRouter()
   const crumb = getBreadcrumb(pathname)
+  const [logoutFailed, setLogoutFailed] = useState(false)
 
   async function handleLogout() {
-    await fetch('/api/roodber8-logout', { method: 'POST' })
+    setLogoutFailed(false)
+    const res = await adminFetch('/api/roodber8-logout', { method: 'POST' }).catch(() => null)
+    if (!res || (!res.ok && !res.signedOut)) {
+      setLogoutFailed(true)
+      return
+    }
     router.push('/roodber8-login')
   }
 
@@ -161,6 +168,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <LogOut size={14} style={{ color: '#ef4444' }} />
             <span className="text-xs font-semibold" style={{ color: '#ef4444' }}>Log out</span>
           </button>
+          {logoutFailed && (
+            <p role="alert" className="px-3 text-xs" style={{ color: '#f87171' }}>
+              Could not log out. Please try again.
+            </p>
+          )}
         </div>
       </aside>
 

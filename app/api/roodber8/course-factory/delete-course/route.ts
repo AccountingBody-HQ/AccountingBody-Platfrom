@@ -3,7 +3,7 @@
 // CASCADE on course_chapters → course_lessons → course_lesson_articles handles everything
 
 import { NextRequest, NextResponse } from 'next/server'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { createClient } from '@supabase/supabase-js'
 
 function getSupabase() {
@@ -15,7 +15,7 @@ function getSupabase() {
 
 export async function DELETE(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
   }
   try {
     const supabase = getSupabase()

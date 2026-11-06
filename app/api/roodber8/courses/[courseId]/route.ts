@@ -3,7 +3,7 @@
 // Separate from lib/coursesNew.ts (the public-facing data layer, untouched).
 
 import { NextRequest, NextResponse } from 'next/server'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { createClient } from '@supabase/supabase-js'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 
@@ -65,7 +65,7 @@ export async function GET(
   { params }: { params: { courseId: string } }
 ) {
   if (!(await isAuthenticated(req)))
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
 
   const { courseId } = params
   const supabase = getClient()
@@ -186,7 +186,7 @@ export async function PATCH(
   { params }: { params: { courseId: string } }
 ) {
   if (!(await isAuthenticated(req)))
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
 
   const { courseId } = params
   const supabase = getClient()
@@ -530,7 +530,7 @@ export async function DELETE(
   { params }: { params: { courseId: string } }
 ) {
   if (!(await isAuthenticated(req)))
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
 
   const { courseId } = params
   const supabase = getClient()

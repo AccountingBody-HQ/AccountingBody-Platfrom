@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server'
 import type { NextFetchEvent } from 'next/server'
 import { getMiddlewareMatchers } from 'next/dist/build/analysis/get-page-static-info'
 import { getMiddlewareRouteMatcher } from 'next/dist/shared/lib/router/utils/middleware-route-matcher'
+import { signedOutResponse } from '@/lib/admin-auth'
 import { signTestSession, TEST_ADMIN_SECRET, TEST_SESSION_SECRET } from '@/lib/admin-session-fixtures'
 import middleware, { config } from './middleware'
 
@@ -40,6 +41,16 @@ function expectRedirect(res: Response, status: number, location: string) {
   expect(res.headers.get('location')).toBe(location)
   expect(res.headers.get('x-middleware-next')).toBeNull()
   expect(res.headers.getSetCookie()).toEqual([])
+}
+
+async function expectSignedOut(res: Response) {
+  expect(res.status).toBe(401)
+  expect(res.headers.get('location')).toBeNull()
+  expect(res.headers.get('x-middleware-next')).toBeNull()
+  expect(res.headers.get('cache-control')).toBe('no-store')
+  expect(res.headers.get('content-type')).toContain('application/json')
+  expect(res.headers.getSetCookie()).toEqual([])
+  expect(await res.json()).toEqual({ error: 'Signed out' })
 }
 
 beforeEach(() => {
@@ -162,15 +173,35 @@ describe('admin pages', () => {
 })
 
 describe('admin API routes', () => {
-  const loginUrl = `${ORIGIN}/${ADMIN}-login`
+  it.each([`/api/${ADMIN}`, `/api/${ADMIN}/jobs`, `/api/${ADMIN}/jobs?page=2`, `/api/${ADMIN}/`])(
+    '%s without a session is answered signed out',
+    async (path) => {
+      await expectSignedOut(await run(path))
+    },
+  )
 
-  it.each([`/api/${ADMIN}`, `/api/${ADMIN}/jobs`])('%s without a session goes to the login page', async (path) => {
-    expectRedirect(await run(path), 307, loginUrl)
+  it('an unrecognised session is answered signed out', async () => {
+    await expectSignedOut(await run(`/api/${ADMIN}/jobs`, { cookie: 'admin_token=not-a-session' }))
   })
 
-  it('an unrecognised session goes to the login page', async () => {
-    const res = await run(`/api/${ADMIN}/jobs`, { cookie: 'admin_token=not-a-session' })
-    expectRedirect(res, 307, loginUrl)
+  it('every method without a session is answered signed out', async () => {
+    for (const method of ['POST', 'PATCH', 'DELETE']) {
+      const res = await middleware(new NextRequest(`${ORIGIN}/api/${ADMIN}/jobs`, { method }), {} as NextFetchEvent)
+      await expectSignedOut(res as Response)
+    }
+  })
+
+  it('an address that cannot be read is answered signed out', async () => {
+    await expectSignedOut(await run(`/api/${ADMIN}/%E9`))
+  })
+
+  it('the answer matches the one route handlers give', async () => {
+    const fromMiddleware = await run(`/api/${ADMIN}/jobs`)
+    const fromRoute = signedOutResponse()
+    expect(fromRoute.status).toBe(fromMiddleware.status)
+    expect(fromRoute.headers.get('cache-control')).toBe(fromMiddleware.headers.get('cache-control'))
+    expect(fromRoute.headers.get('content-type')).toBe(fromMiddleware.headers.get('content-type'))
+    expect(await fromRoute.text()).toBe(await fromMiddleware.text())
   })
 
   it('signed-in admin reaches an admin API route', async () => {
@@ -232,6 +263,9 @@ describe('admin addresses are recognised however they are written', () => {
     ['double slash', `//${ADMIN}/jobs`],
     ['parent segment', `/public/../${ADMIN}/jobs`],
     ['encoded parent segment', `/public%2F..%2F${ADMIN}%2Fjobs`],
+  ]
+
+  const apiSpellings: [string, string][] = [
     ['API with encoded letter', `/api/${firstLetter}${rest}/jobs`],
     ['API with double slash', `//api//${ADMIN}/jobs`],
   ]
@@ -244,7 +278,11 @@ describe('admin addresses are recognised however they are written', () => {
     expectRedirect(await run(path), 307, loginUrl)
   })
 
-  it.each(spellings)('%s continues for a signed-in admin', async (_label, path) => {
+  it.each(apiSpellings)('%s is answered signed out without a session', async (_label, path) => {
+    await expectSignedOut(await run(path))
+  })
+
+  it.each([...spellings, ...apiSpellings])('%s continues for a signed-in admin', async (_label, path) => {
     expectPassThrough(await run(path, await signedInHeaders()))
   })
 
@@ -292,10 +330,13 @@ describe('an address is checked at every layer it can be read', () => {
     ['last layer unreadable', `/${encoded}/jobs%25`],
     ['parent segment at a later layer', `/${encoded}/%252e%252e/x`],
     ['parent segment, last layer unreadable', `/${encoded}/%252e%252e/x%2525`],
-    ['API with parent segments at a later layer', `/api/${encoded}/jobs/..%252F..%252F..%252Fx`],
     ['parent segment after a double slash', `//${ADMIN}/..%2Fx`],
   ])('an admin address is recognised at every layer of encoding: %s', async (_label, path) => {
     expectRedirect(await run(path), 307, loginUrl)
+  })
+
+  it('an admin API address is recognised at every layer of encoding', async () => {
+    await expectSignedOut(await run(`/api/${encoded}/jobs/..%252F..%252F..%252Fx`))
   })
 
   it.each([

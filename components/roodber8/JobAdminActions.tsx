@@ -1,11 +1,12 @@
 'use client'
 import { useState } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import { useRouter } from 'next/navigation'
 import { Loader2, Check, X, Star, Trash2, StickyNote } from 'lucide-react'
 
 async function postJobAction(id: string, payload: Record<string, unknown>): Promise<boolean> {
   try {
-    const res = await fetch(`/api/roodber8/jobs/${id}`, {
+    const res = await adminFetch(`/api/roodber8/jobs/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -208,7 +209,7 @@ export function DeleteJobButton({ id }: { id: string }) {
   async function handleDelete() {
     setDeleting(true)
     try {
-      const res = await fetch(`/api/roodber8/jobs/${id}`, { method: 'DELETE' })
+      const res = await adminFetch(`/api/roodber8/jobs/${id}`, { method: 'DELETE' })
       if (res.ok) {
         router.refresh()
       } else {

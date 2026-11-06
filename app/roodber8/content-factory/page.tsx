@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { useState, useEffect } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import Link from 'next/link'
 import {
   Sparkles, ChevronRight, BookOpen, Edit3, Check, Loader2, AlertCircle, Send,
@@ -166,9 +167,12 @@ export default function ContentFactoryPage() {
 
   function fetchCategories() {
     setCategoriesError(false)
-    fetch('/api/roodber8/categories')
-      .then(r => r.json())
-      .then(d => setCategories(d.categories ?? []))
+    adminFetch('/api/roodber8/categories')
+      .then(async r => {
+        const d = await r.json()
+        if (!r.ok) throw new Error(d.error)
+        setCategories(d.categories ?? [])
+      })
       .catch(() => setCategoriesError(true))
   }
 
@@ -234,7 +238,7 @@ export default function ContentFactoryPage() {
     try {
       const controller = new AbortController()
       const tid = setTimeout(() => controller.abort(), 180000)
-      const res = await fetch('/api/roodber8/content-factory/generate', {
+      const res = await adminFetch('/api/roodber8/content-factory/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config),
@@ -261,7 +265,7 @@ export default function ContentFactoryPage() {
     if (publishing) return
     setPublishing(true); setError('')
     try {
-      const res = await fetch('/api/roodber8/content-factory/publish', {
+      const res = await adminFetch('/api/roodber8/content-factory/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -294,7 +298,7 @@ export default function ContentFactoryPage() {
     if (!importRawJson.trim()) { setImportParseError('Paste your JSON first'); return }
     setImportParsing(true); setImportParseError('')
     try {
-      const res = await fetch('/api/roodber8/articles/import', {
+      const res = await adminFetch('/api/roodber8/articles/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rawJson: importRawJson }),
@@ -330,7 +334,7 @@ export default function ContentFactoryPage() {
     setImportPublishing(true); setImportPublishError('')
     const selectedCategory = KNOWN_CATEGORIES.find(c => c.slug === impCategory)
     try {
-      const res = await fetch('/api/roodber8/articles/publish', {
+      const res = await adminFetch('/api/roodber8/articles/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

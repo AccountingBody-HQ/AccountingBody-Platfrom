@@ -2,6 +2,7 @@
 'use client'
 
 import { useState } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import Link from 'next/link'
 import {
   ArrowLeft, Upload, CheckCircle2, AlertTriangle,
@@ -227,7 +228,7 @@ export default function ImportQuestionsPage() {
     if (!trimmed.startsWith('AB-ART-')) return
     setArticleFetchStatus('loading')
     try {
-      const res = await fetch(`/api/roodber8/articles/lookup?id=${encodeURIComponent(trimmed)}`)
+      const res = await adminFetch(`/api/roodber8/articles/lookup?id=${encodeURIComponent(trimmed)}`)
       if (!res.ok) { setArticleFetchStatus('not_found'); return }
       const data = await res.json()
       if (!data.article) { setArticleFetchStatus('not_found'); return }
@@ -251,7 +252,7 @@ export default function ImportQuestionsPage() {
     if (!rawJson.trim()) { setParseError('Paste your JSON first'); return }
     setParsing(true); setParseError('')
     try {
-      const res = await fetch('/api/roodber8/questions/import', {
+      const res = await adminFetch('/api/roodber8/questions/import', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ rawJson }),
@@ -287,7 +288,7 @@ export default function ImportQuestionsPage() {
     }
 
     try {
-      const res = await fetch('/api/roodber8/questions/publish', {
+      const res = await adminFetch('/api/roodber8/questions/publish', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({

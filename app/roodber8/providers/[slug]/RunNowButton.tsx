@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import { useRouter } from 'next/navigation'
 import { Play, Loader2 } from 'lucide-react'
 
@@ -23,16 +24,10 @@ export default function RunNowButton({ slug }: { slug: string }) {
     setMessage('')
 
     try {
-      const res = await fetch(`/api/roodber8/providers/${slug}/trigger`, {
+      const res = await adminFetch(`/api/roodber8/providers/${slug}/trigger`, {
         method: 'POST',
       })
-      const text = await res.text()
-      let data: TriggerResult
-      try {
-        data = JSON.parse(text) as TriggerResult
-      } catch {
-        data = { ok: false, error: text.trim().slice(0, 200) || `Request failed (${res.status})` }
-      }
+      const data = await res.json() as TriggerResult
 
       if (!res.ok || data.ok === false) {
         setState('error')

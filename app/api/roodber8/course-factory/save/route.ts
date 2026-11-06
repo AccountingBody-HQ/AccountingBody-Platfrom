@@ -4,7 +4,7 @@
 // Replaces Sanity mutations API — Session 35
 
 import { NextRequest, NextResponse } from 'next/server'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { createClient } from '@supabase/supabase-js'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 
@@ -17,7 +17,7 @@ function getSupabase() {
 
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
   }
   let body: any
   try {

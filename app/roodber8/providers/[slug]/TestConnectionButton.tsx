@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import { Zap } from 'lucide-react'
 
 interface TestResult {
@@ -19,15 +20,9 @@ export default function TestConnectionButton({ slug }: { slug: string }) {
     setLoading(true)
     setResult(null)
     try {
-      const res = await fetch(`/api/roodber8/providers/${slug}/test`, { method: 'POST' })
-      const text = await res.text()
-      let data: TestResult
-      try {
-        data = JSON.parse(text) as TestResult
-      } catch {
-        data = { ok: false, error: text.trim().slice(0, 200) || `Request failed (${res.status})` }
-      }
-      setResult(data)
+      const res = await adminFetch(`/api/roodber8/providers/${slug}/test`, { method: 'POST' })
+      const data = await res.json() as TestResult
+      setResult(res.ok ? data : { ...data, ok: false })
     } catch {
       setResult({ ok: false, error: 'Network error' })
     } finally {

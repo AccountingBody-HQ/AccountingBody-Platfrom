@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getAllProviders, type ProviderRun } from '@/lib/providers'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 
 function getSupabase() {
   return createClient(
@@ -13,7 +13,7 @@ function getSupabase() {
 // ── GET /api/roodber8/providers ── all providers with their latest run
 export async function GET(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
-    return new Response('Unauthorized', { status: 401 })
+    return signedOutResponse()
   }
 
   const providers = await getAllProviders()
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
 // ── PATCH /api/roodber8/providers ── body: { slug, status } — active/paused toggle
 export async function PATCH(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
-    return new Response('Unauthorized', { status: 401 })
+    return signedOutResponse()
   }
 
   const body = await req.json() as { slug: string; status: string }

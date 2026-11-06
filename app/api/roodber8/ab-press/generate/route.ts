@@ -4,7 +4,7 @@
 // Replaces Sanity GROQ fetch — Session 35
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server"
-import { isAuthenticated } from "@/lib/admin-auth"
+import { isAuthenticated, signedOutResponse } from "@/lib/admin-auth"
 import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { BookTemplate } from "@/components/book/BookTemplate"
@@ -240,7 +240,7 @@ async function sha256Hex(message: string): Promise<string> {
 
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
-    return NextResponse.json({ error: "Unauthorised" }, { status: 401 })
+    return signedOutResponse()
   }
   try {
     const body = await req.json()

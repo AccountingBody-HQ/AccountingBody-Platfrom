@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { normaliseArticle, validateNormalisedArticle } from '@/lib/article-normaliser'
 
 export const runtime = 'nodejs'
@@ -12,7 +12,7 @@ export const maxDuration = 30
 // /api/roodber8/articles/publish.
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
   }
 
   const body: unknown = await req.json()

@@ -18,7 +18,7 @@
 // and FrontmatterTemplate.tsx, just not exported for reuse elsewhere.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server"
-import { isAuthenticated } from "@/lib/admin-auth"
+import { isAuthenticated, signedOutResponse } from "@/lib/admin-auth"
 import { Document, Page, Text, View, StyleSheet, Font, renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { getCourseBySlug } from "@/lib/coursesNew"
@@ -234,7 +234,7 @@ function AnswersDocument({ course, subtitle, chapterIndexOffset = 0, startNumber
 
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
-    return NextResponse.json({ error: "Unauthorised" }, { status: 401 })
+    return signedOutResponse()
   }
   try {
     const body = await req.json()

@@ -1,5 +1,6 @@
 'use client'
 import { useState, useRef } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import { Trash2, Loader2, ChevronDown, Globe } from 'lucide-react'
 
 // ── Status Update Dropdown ────────────────────────────────────────────────────
@@ -53,7 +54,7 @@ export function StatusBadge({ id, table, currentStatus }: StatusBadgeProps) {
     if (newStatus === status) { setOpen(false); return }
     setSaving(true); setOpen(false); setError(false)
     try {
-      const res = await fetch('/api/roodber8/actions', {
+      const res = await adminFetch('/api/roodber8/actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update_status', table, id, payload: { status: newStatus } }),
@@ -65,7 +66,7 @@ export function StatusBadge({ id, table, currentStatus }: StatusBadgeProps) {
         setStatus(newStatus)
         if (table === 'firms_applications' && (newStatus === 'approved' || newStatus === 'rejected')) {
           try {
-            const notifyRes = await fetch('/api/roodber8/notify-firm', {
+            const notifyRes = await adminFetch('/api/roodber8/notify-firm', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ id, status: newStatus }),
@@ -151,7 +152,7 @@ export function DeleteButton({ id, table, label = 'Delete', onDeleted }: DeleteB
   async function handleDelete() {
     setDeleting(true); setError(false)
     try {
-      const res = await fetch('/api/roodber8/actions', {
+      const res = await adminFetch('/api/roodber8/actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'delete', table, id }),
@@ -221,7 +222,7 @@ export function NotesField({ id, table, initialNotes }: NotesFieldProps) {
     if (notes === (initialNotes ?? '')) return
     setSaving(true); setSaved(false); setError(false)
     try {
-      const res = await fetch('/api/roodber8/actions', {
+      const res = await adminFetch('/api/roodber8/actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update_notes', table, id, payload: { notes } }),
@@ -293,7 +294,7 @@ export function ReplyButton({ email, subject, name, platform }: ReplyButtonProps
     if (!message.trim()) return
     setStatus('loading')
     try {
-      const res = await fetch('/api/roodber8/reply', {
+      const res = await adminFetch('/api/roodber8/reply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ to: email, name, subject: defaultSubject, message, platform: platform ?? 'ab' }),

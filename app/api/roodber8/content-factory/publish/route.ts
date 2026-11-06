@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { revalidateTag } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
 import { marked } from 'marked'
@@ -41,7 +41,7 @@ function extractTitle(content: string, fallback: string): string {
 
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
   }
   try {
     const body = await req.json()

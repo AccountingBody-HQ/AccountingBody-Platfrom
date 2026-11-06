@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { normalise, validateNormalisedBundle } from '@/lib/question-normaliser'
 
 export const runtime = 'nodejs'
@@ -12,7 +12,7 @@ export const maxDuration = 30
 // the client reviews and then calls /api/roodber8/questions/publish.
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req)))
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
 
   try {
     const body = await req.json()

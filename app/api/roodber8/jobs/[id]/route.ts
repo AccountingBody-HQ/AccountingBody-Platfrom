@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getJobById, approveJob, rejectJob, expireJob } from '@/lib/jobs'
 import { sendJobApprovalEmail, sendJobRejectionEmail } from '@/lib/jobEmails'
 import { createClient } from '@supabase/supabase-js'
@@ -22,7 +22,7 @@ type RouteParams = { params: Promise<{ id: string }> }
 // ── GET /api/roodber8/jobs/[id] ── returns job by ID, any status
 export async function GET(req: NextRequest, { params }: RouteParams) {
   if (!(await isAuthenticated(req))) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 403 })
+    return signedOutResponse()
   }
 
   const { id } = await params
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 // ── PATCH /api/roodber8/jobs/[id] ── body: { action, ...payload }
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
   if (!(await isAuthenticated(req))) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 403 })
+    return signedOutResponse()
   }
 
   const { id } = await params
@@ -118,7 +118,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 // ── DELETE /api/roodber8/jobs/[id] ── soft delete: sets status='closed'
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   if (!(await isAuthenticated(req))) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 403 })
+    return signedOutResponse()
   }
 
   const { id } = await params

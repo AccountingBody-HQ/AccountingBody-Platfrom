@@ -1,7 +1,13 @@
 import { clerkMiddleware } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { ADMIN_SESSION_COOKIE, decideRequest, getAdminPath } from "./lib/middleware-logic"
+import {
+  ADMIN_SESSION_COOKIE,
+  ADMIN_SIGNED_OUT_BODY,
+  ADMIN_SIGNED_OUT_INIT,
+  decideRequest,
+  getAdminPath,
+} from "./lib/middleware-logic"
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {
   const { pathname } = req.nextUrl
@@ -30,6 +36,10 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     const loginUrl = req.nextUrl.clone()
     loginUrl.pathname = decision.pathname
     return NextResponse.redirect(loginUrl)
+  }
+
+  if (decision.action === "admin-api-signed-out") {
+    return NextResponse.json(ADMIN_SIGNED_OUT_BODY, ADMIN_SIGNED_OUT_INIT)
   }
 
   const requestHeaders = new Headers(req.headers)

@@ -1,6 +1,7 @@
 'use client'
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 
 const BOOK_TYPES = [
   { value: 'combined', label: 'Combined', desc: 'Study notes + practice questions per chapter' },
@@ -154,7 +155,7 @@ export default function AbPressPage() {
     setShowEmptyList(false)
     setShowWebWarnings(false)
     setDownloadUrl('')
-    fetch('/api/roodber8/course-factory/load-course?action=list')
+    adminFetch('/api/roodber8/course-factory/load-course?action=list')
       .then(r => r.json())
       .then(d => setCourses(d.courses || []))
       .catch(() => setCourses([]))
@@ -174,7 +175,7 @@ export default function AbPressPage() {
     setShowEmptyList(false); setShowWebWarnings(false)
     setDownloadUrl(''); setGenError('')
     try {
-      const res  = await fetch('/api/roodber8/ab-press/preview?slug=' + encodeURIComponent(slug.trim()))
+      const res  = await adminFetch('/api/roodber8/ab-press/preview?slug=' + encodeURIComponent(slug.trim()))
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Preview failed'); return }
       setPreview(data)
@@ -192,11 +193,11 @@ export default function AbPressPage() {
     if (!preview) return
     setExportingWord(true); setWordError(''); setWordUrl('')
     try {
-      const res = await fetch('/api/roodber8/ab-press/export-word', {
+      const res = await adminFetch('/api/roodber8/ab-press/export-word', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ slug: slug.trim(), bookType, edition, subtitle }),
-      })
+      }, { expect: 'file' })
       if (!res.ok) {
         const data = await res.json()
         setWordError(data.error || 'Word export failed')
@@ -217,11 +218,11 @@ export default function AbPressPage() {
     if (!preview) return
     setGenerating(true); setGenError(''); setDownloadUrl('')
     try {
-      const res = await fetch('/api/roodber8/ab-press/generate', {
+      const res = await adminFetch('/api/roodber8/ab-press/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ slug: slug.trim(), bookType, edition, subtitle }),
-      })
+      }, { expect: 'file' })
       if (!res.ok) {
         const data = await res.json()
         setGenError(data.error || 'Generation failed')
@@ -263,7 +264,7 @@ export default function AbPressPage() {
 
         chapterQuestionOffsets.push(questionNumberOffset)
 
-        const res = await fetch('/api/roodber8/ab-press/generate-chapter', {
+        const res = await adminFetch('/api/roodber8/ab-press/generate-chapter', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -289,7 +290,7 @@ export default function AbPressPage() {
       if (bookType === 'combined' || bookType === 'practice') {
         for (let i = 0; i < chapterCount; i++) {
           setGenerationPhase(`Rendering answers ${i + 1} of ${chapterCount}...`)
-          const res = await fetch('/api/roodber8/ab-press/generate-answers', {
+          const res = await adminFetch('/api/roodber8/ab-press/generate-answers', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -316,7 +317,7 @@ export default function AbPressPage() {
 
       // 4. Render frontmatter (title + copyright + TOC with real page numbers)
       setGenerationPhase('Rendering frontmatter and TOC...')
-      const fmRes = await fetch('/api/roodber8/ab-press/generate-frontmatter', {
+      const fmRes = await adminFetch('/api/roodber8/ab-press/generate-frontmatter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -368,7 +369,7 @@ export default function AbPressPage() {
 
       // 6. Render cover
       setGenerationPhase('Rendering cover...')
-      const coverRes = await fetch('/api/roodber8/ab-press/generate-cover', {
+      const coverRes = await adminFetch('/api/roodber8/ab-press/generate-cover', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -405,11 +406,11 @@ export default function AbPressPage() {
     setGenerating(true); setGenError(''); setDownloadUrl('')
     setGenerationPhase('Generating Practice Kit...')
     try {
-      const res = await fetch('/api/roodber8/ab-press/generate-pq', {
+      const res = await adminFetch('/api/roodber8/ab-press/generate-pq', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ slug: slug.trim(), edition, subtitle })
-      })
+      }, { expect: 'file' })
       if (!res.ok) {
         const data = await res.json()
         setGenError(data.error || 'Generation failed')

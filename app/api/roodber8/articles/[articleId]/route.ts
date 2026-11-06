@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { createClient } from '@supabase/supabase-js'
 
 export const runtime = 'nodejs'
@@ -32,7 +32,7 @@ type RouteParams = { params: Promise<{ articleId: string }> }
 // Load one article for the editor.
 export async function GET(req: NextRequest, { params }: RouteParams) {
   if (!(await isAuthenticated(req))) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
   }
 
   const { articleId } = await params
@@ -55,7 +55,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 // body: { fields: Record<string, unknown> } — field-whitelisted update.
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
   if (!(await isAuthenticated(req))) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
   }
 
   const { articleId } = await params
@@ -90,7 +90,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 // ── DELETE /api/roodber8/articles/[articleId]
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   if (!(await isAuthenticated(req))) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+    return signedOutResponse()
   }
 
   const { articleId } = await params

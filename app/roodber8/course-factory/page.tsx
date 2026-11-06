@@ -7,6 +7,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import { Factory } from 'lucide-react'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
 
@@ -55,7 +56,7 @@ function uid() {
 
 async function fetchArticleById(id: string): Promise<FetchedArticle | null> {
   try {
-    const res = await fetch(`/api/roodber8/course-factory/fetch-article?id=${encodeURIComponent(id.trim())}`, {
+    const res = await adminFetch(`/api/roodber8/course-factory/fetch-article?id=${encodeURIComponent(id.trim())}`, {
       cache: 'no-store',
     })
     if (!res.ok) return null
@@ -83,7 +84,7 @@ async function fetchArticlesBulk(ids: string[]): Promise<{ found: FetchedArticle
 
 async function saveCourse(payload: any): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
-    const res = await fetch('/api/roodber8/course-factory/save', {
+    const res = await adminFetch('/api/roodber8/course-factory/save', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(payload),
@@ -285,7 +286,7 @@ This will permanently delete the course and all its chapters and lessons. This c
     setDeleteError('')
     setDeleteMsg('')
     try {
-      const res = await fetch('/api/roodber8/course-factory/delete-course', {
+      const res = await adminFetch('/api/roodber8/course-factory/delete-course', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ slug: loadedSlug }),
@@ -319,8 +320,9 @@ This will permanently delete the course and all its chapters and lessons. This c
     setLoadingList(true)
     setLoadError('')
     try {
-      const res = await fetch('/api/roodber8/course-factory/load-course?action=list')
+      const res = await adminFetch('/api/roodber8/course-factory/load-course?action=list')
       const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
       setCourseList(data.courses ?? [])
     } catch {
       setLoadError('Failed to fetch course list.')
@@ -333,9 +335,9 @@ This will permanently delete the course and all its chapters and lessons. This c
     setLoadingCourse(true)
     setLoadError('')
     try {
-      const res = await fetch(`/api/roodber8/course-factory/load-course?action=load&slug=${encodeURIComponent(slug)}`)
+      const res = await adminFetch(`/api/roodber8/course-factory/load-course?action=load&slug=${encodeURIComponent(slug)}`)
       const data = await res.json()
-      if (data.error) { setLoadError(data.error); setLoadingCourse(false); return }
+      if (!res.ok || data.error) { setLoadError(data.error); setLoadingCourse(false); return }
       const c = data.course
       setTitle(c.title ?? '')
       setDescription(c.description ?? '')
