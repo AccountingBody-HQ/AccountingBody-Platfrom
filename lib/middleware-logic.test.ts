@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { sha256Hex } from './admin-auth'
+import { signTestSession, TEST_ADMIN_SECRET, TEST_SESSION_SECRET } from './admin-session-fixtures'
 import {
   decideRequest,
   findStaticRedirect,
@@ -12,18 +12,19 @@ import {
   normaliseAdminPathname,
   readAddressLayers,
   resolvePlatform,
+  sha256Hex,
 } from './middleware-logic'
 import type { RequestFacts } from './middleware-logic'
 
 const ADMIN = 'test-admin-area'
-const KEY = 'test-session-key'
 
 function facts(overrides: Partial<RequestFacts> = {}): RequestFacts {
   return {
     pathname: '/',
     adminPath: ADMIN,
     adminToken: undefined,
-    adminSecret: KEY,
+    adminSessionSecret: TEST_SESSION_SECRET,
+    adminSecret: TEST_ADMIN_SECRET,
     headers: new Headers(),
     ...overrides,
   }
@@ -276,7 +277,7 @@ describe('an address that cannot be read is treated as an admin address', () => 
   })
 
   it('lets a signed-in admin continue', async () => {
-    const adminToken = await sha256Hex(KEY)
+    const adminToken = await signTestSession()
     expect(await decideRequest(facts({ pathname: '/%E9', adminToken }))).toEqual({
       action: 'continue',
       platform: 'accountingbody',
@@ -285,22 +286,25 @@ describe('an address that cannot be read is treated as an admin address', () => 
 })
 
 describe('isAdminSessionValid', () => {
+  const check = (token: string | undefined) =>
+    isAdminSessionValid(token, TEST_SESSION_SECRET, TEST_ADMIN_SECRET)
+
   it('accepts a signed-in session', async () => {
-    expect(await isAdminSessionValid(await sha256Hex(KEY), KEY)).toBe(true)
+    expect(await check(await signTestSession())).toBe(true)
   })
 
   it('declines a request without a session', async () => {
-    expect(await isAdminSessionValid(undefined, KEY)).toBe(false)
+    expect(await check(undefined)).toBe(false)
   })
 
   it('declines an unrecognised session', async () => {
-    expect(await isAdminSessionValid('not-a-session', KEY)).toBe(false)
+    expect(await check('not-a-session')).toBe(false)
   })
 
   it('declines an altered session', async () => {
-    const value = await sha256Hex(KEY)
+    const value = await signTestSession()
     const altered = value.slice(0, -1) + (value.endsWith('0') ? '1' : '0')
-    expect(await isAdminSessionValid(altered, KEY)).toBe(false)
+    expect(await check(altered)).toBe(false)
   })
 })
 
@@ -349,11 +353,19 @@ describe('decideRequest', () => {
   })
 
   it('lets a signed-in admin continue', async () => {
-    const adminToken = await sha256Hex(KEY)
+    const adminToken = await signTestSession()
     expect(await decideRequest(facts({ pathname: `/${ADMIN}/jobs`, adminToken }))).toEqual({
       action: 'continue',
       platform: 'accountingbody',
     })
+  })
+
+  it('sends a signed-in admin to the login page when no session secret is set', async () => {
+    const adminToken = await signTestSession()
+    const decision = await decideRequest(
+      facts({ pathname: `/${ADMIN}/jobs`, adminToken, adminSessionSecret: undefined }),
+    )
+    expect(decision).toEqual({ action: 'redirect-admin-login', pathname: `/${ADMIN}-login` })
   })
 
   it('lets the admin login page continue without a session', async () => {

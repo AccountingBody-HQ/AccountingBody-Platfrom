@@ -1,7 +1,7 @@
 import { clerkMiddleware } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { decideRequest, getAdminPath } from "./lib/middleware-logic"
+import { ADMIN_SESSION_COOKIE, decideRequest, getAdminPath } from "./lib/middleware-logic"
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {
   const { pathname } = req.nextUrl
@@ -10,7 +10,8 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   const decision = await decideRequest({
     pathname,
     adminPath,
-    adminToken: req.cookies.get("admin_token")?.value,
+    adminToken: req.cookies.get(ADMIN_SESSION_COOKIE)?.value,
+    adminSessionSecret: process.env.ADMIN_SESSION_SECRET,
     adminSecret: process.env.ADMIN_SECRET,
     headers: req.headers,
   })

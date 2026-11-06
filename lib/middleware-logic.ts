@@ -5,6 +5,15 @@
 
 const MAX_DECODE_PASSES = 5
 
+export const ADMIN_SESSION_COOKIE = 'admin_token'
+export const ADMIN_SESSION_LIFETIME_SECONDS = 12 * 60 * 60
+
+const SESSION_VERSION = 'v1'
+const SESSION_PATTERN = /^v1\.(\d{10})\.(\d{10})\.([0-9a-f]{32})\.([0-9a-f]{64})$/
+const MIN_SESSION_SECRET_LENGTH = 32
+const SESSION_ID_BYTES = 16
+const ADMIN_SECRET_LABEL = 'admin-session-binding:v1:'
+
 const STATIC_REDIRECTS: Record<string, string> = {
   "/course": "/free-courses",
   "/courses": "/free-courses",
@@ -20,6 +29,7 @@ export type RequestFacts = {
   pathname: string
   adminPath: string
   adminToken: string | undefined
+  adminSessionSecret: string | undefined
   adminSecret: string | undefined
   headers: Headers
 }
@@ -114,19 +124,89 @@ export function isAdminAddress(pathname: string, adminPath: string): boolean {
   )
 }
 
-export async function isAdminSessionValid(
-  token: string | undefined,
-  secret: string | undefined,
-): Promise<boolean> {
-  if (!token) return false
-  if (!secret) return false
-  const expected = await sha256Hex(secret)
-  if (token.length !== expected.length) return false
+// Compares every character, so the time taken does not depend on where two
+// values of the same length differ.
+export function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
   let diff = 0
-  for (let i = 0; i < token.length; i++) {
-    diff |= token.charCodeAt(i) ^ expected.charCodeAt(i)
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
   }
   return diff === 0
+}
+
+function isUsableSessionSecret(sessionSecret: string | undefined): sessionSecret is string {
+  return (sessionSecret?.length ?? 0) >= MIN_SESSION_SECRET_LENGTH
+}
+
+function importSessionKey(sessionSecret: string): Promise<CryptoKey> {
+  return crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(sessionSecret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign', 'verify'],
+  )
+}
+
+// What the signature covers: the visible claims and a fingerprint of the admin
+// password. The fingerprint is signed but never placed in the cookie, so a new
+// admin password ends every session.
+async function sessionSignedBytes(claims: string, adminSecret: string) {
+  const fingerprint = await sha256Hex(ADMIN_SECRET_LABEL + adminSecret)
+  return new TextEncoder().encode(claims + '\n' + fingerprint)
+}
+
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+function hexToBytes(hex: string) {
+  return Uint8Array.from(hex.match(/../g) ?? [], pair => parseInt(pair, 16))
+}
+
+// Returns null when the two secrets are not set up, so no session is issued.
+export async function createAdminSession(
+  sessionSecret: string | undefined,
+  adminSecret: string | undefined,
+): Promise<string | null> {
+  if (!adminSecret || !isUsableSessionSecret(sessionSecret)) return null
+  const issuedAt = Math.floor(Date.now() / 1000)
+  const expiresAt = issuedAt + ADMIN_SESSION_LIFETIME_SECONDS
+  const id = bytesToHex(crypto.getRandomValues(new Uint8Array(SESSION_ID_BYTES)))
+  const claims = `${SESSION_VERSION}.${issuedAt}.${expiresAt}.${id}`
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    await importSessionKey(sessionSecret),
+    await sessionSignedBytes(claims, adminSecret),
+  )
+  return `${claims}.${bytesToHex(new Uint8Array(signature))}`
+}
+
+// The one session check, used by middleware, requireAdmin() and every admin API
+// route. A value is accepted only if it has the session format, has not expired
+// and carries a signature made with the current secrets.
+export async function isAdminSessionValid(
+  token: string | undefined,
+  sessionSecret: string | undefined,
+  adminSecret: string | undefined,
+): Promise<boolean> {
+  if (!token || !adminSecret || !isUsableSessionSecret(sessionSecret)) return false
+
+  const match = SESSION_PATTERN.exec(token)
+  if (!match) return false
+  const [, issuedAt, expiresAt, id, signature] = match
+
+  const lifetime = Number(expiresAt) - Number(issuedAt)
+  if (lifetime <= 0 || lifetime > ADMIN_SESSION_LIFETIME_SECONDS) return false
+  if (Math.floor(Date.now() / 1000) >= Number(expiresAt)) return false
+
+  return crypto.subtle.verify(
+    'HMAC',
+    await importSessionKey(sessionSecret),
+    hexToBytes(signature),
+    await sessionSignedBytes(`${SESSION_VERSION}.${issuedAt}.${expiresAt}.${id}`, adminSecret),
+  )
 }
 
 export function resolvePlatform(headers: Headers): SitePlatform {
@@ -140,7 +220,7 @@ export function resolvePlatform(headers: Headers): SitePlatform {
 }
 
 export async function decideRequest(facts: RequestFacts): Promise<RequestDecision> {
-  const { pathname, adminPath, adminToken, adminSecret, headers } = facts
+  const { pathname, adminPath, adminToken, adminSessionSecret, adminSecret, headers } = facts
 
   if (isRetiredAccountPath(pathname)) {
     return { action: 'redirect-home' }
@@ -152,7 +232,7 @@ export async function decideRequest(facts: RequestFacts): Promise<RequestDecisio
   }
 
   if (isAdminAddress(pathname, adminPath)) {
-    const authenticated = await isAdminSessionValid(adminToken, adminSecret)
+    const authenticated = await isAdminSessionValid(adminToken, adminSessionSecret, adminSecret)
     if (!authenticated) {
       return { action: 'redirect-admin-login', pathname: "/" + adminPath + "-login" }
     }

@@ -4,6 +4,7 @@
 // Replaces Sanity GROQ fetch — Session 35
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server"
+import { isAuthenticated } from "@/lib/admin-auth"
 import {
   Document, Packer, Paragraph, TextRun, HeadingLevel,
   AlignmentType, PageBreak, convertInchesToTwip,
@@ -95,22 +96,6 @@ function blocksToParagraphs(blocks: any[]): Paragraph[] {
 }
 
 const LETTERS = ["A", "B", "C", "D", "E"]
-
-async function sha256Hex(message: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(message)
-  const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
-}
-
-async function isAuthenticated(req: NextRequest): Promise<boolean> {
-  const token = req.cookies.get("admin_token")?.value
-  if (!token) return false
-  const secret = process.env.ADMIN_SECRET
-  if (!secret) return false
-  const expectedHash = await sha256Hex(secret)
-  return token === expectedHash
-}
 
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {

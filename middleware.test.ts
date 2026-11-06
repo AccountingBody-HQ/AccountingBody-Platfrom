@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 import type { NextFetchEvent } from 'next/server'
 import { getMiddlewareMatchers } from 'next/dist/build/analysis/get-page-static-info'
 import { getMiddlewareRouteMatcher } from 'next/dist/shared/lib/router/utils/middleware-route-matcher'
-import { sha256Hex } from '@/lib/admin-auth'
+import { signTestSession, TEST_ADMIN_SECRET, TEST_SESSION_SECRET } from '@/lib/admin-session-fixtures'
 import middleware, { config } from './middleware'
 
 // The wrapper hands the request straight to the inner handler, the same way
@@ -25,7 +25,7 @@ async function run(path: string, headers: Record<string, string> = {}): Promise<
 }
 
 async function signedInHeaders(): Promise<Record<string, string>> {
-  return { cookie: `admin_token=${await sha256Hex('test-session-key')}` }
+  return { cookie: `admin_token=${await signTestSession()}` }
 }
 
 function expectPassThrough(res: Response, platform = 'accountingbody') {
@@ -44,7 +44,8 @@ function expectRedirect(res: Response, status: number, location: string) {
 
 beforeEach(() => {
   vi.stubEnv('ADMIN_PATH', ADMIN)
-  vi.stubEnv('ADMIN_SECRET', 'test-session-key')
+  vi.stubEnv('ADMIN_SECRET', TEST_ADMIN_SECRET)
+  vi.stubEnv('ADMIN_SESSION_SECRET', TEST_SESSION_SECRET)
 })
 
 afterEach(() => {
@@ -145,6 +146,18 @@ describe('admin pages', () => {
 
   it('signed-in admin reaches the login page', async () => {
     expectPassThrough(await run(`/${ADMIN}-login`, await signedInHeaders()))
+  })
+
+  it('a session goes to the login page when no session secret is set', async () => {
+    const headers = await signedInHeaders()
+    vi.stubEnv('ADMIN_SESSION_SECRET', '')
+    expectRedirect(await run(`/${ADMIN}/jobs`, headers), 307, loginUrl)
+  })
+
+  it('a session goes to the login page after the admin password changes', async () => {
+    const headers = await signedInHeaders()
+    vi.stubEnv('ADMIN_SECRET', 'another-admin-password')
+    expectRedirect(await run(`/${ADMIN}/jobs`, headers), 307, loginUrl)
   })
 })
 

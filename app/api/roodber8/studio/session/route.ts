@@ -1,23 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { isAuthenticated } from '@/lib/admin-auth'
 import { createClient } from '@supabase/supabase-js'
 
 export const runtime = 'nodejs'
-
-async function sha256Hex(message: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(message)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
-}
-
-async function isAuthenticated(req: NextRequest): Promise<boolean> {
-  const token = req.cookies.get('admin_token')?.value
-  if (!token) return false
-  const secret = process.env.ADMIN_SECRET
-  if (!secret) return false
-  const expected = await sha256Hex(secret)
-  return token === expected
-}
 
 function todayDate(): string {
   return new Date().toISOString().slice(0, 10)

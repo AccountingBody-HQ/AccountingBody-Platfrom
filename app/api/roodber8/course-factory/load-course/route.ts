@@ -2,6 +2,7 @@
 // Replaces Sanity GROQ fetch — Session 35
 
 import { NextRequest, NextResponse } from 'next/server'
+import { isAuthenticated } from '@/lib/admin-auth'
 import { createClient } from '@supabase/supabase-js'
 import { getCourseBySlug } from '@/lib/coursesNew'
 
@@ -15,22 +16,6 @@ function getSupabase() {
 // GET /api/roodber8/course-factory/load-course
 // ?action=list  → returns all courses (id, title, slug, status, level, chapterCount)
 // ?action=load&slug=xxx → returns full course structure with chapters, lessons, articles
-
-async function sha256Hex(message: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(message)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
-}
-
-async function isAuthenticated(req: NextRequest): Promise<boolean> {
-  const token = req.cookies.get('admin_token')?.value
-  if (!token) return false
-  const secret = process.env.ADMIN_SECRET
-  if (!secret) return false
-  const expectedHash = await sha256Hex(secret)
-  return token === expectedHash
-}
 
 export async function GET(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
