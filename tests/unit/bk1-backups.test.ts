@@ -7,7 +7,7 @@ const wf = readFileSync('.github/workflows/backup.yml', 'utf8')
 const code = wf.replace(/^\s*#.*$/gm, '')
 const script = readFileSync('scripts/backup-supabase.sh', 'utf8')
 const SECRETS = ['AB_BACKUP_DB_URL', 'AB_BACKUP_SERVICE_ROLE_KEY', 'AB_BACKUP_PASSPHRASE']
-const NOT_SET_UP = 'Backup not set up: add the secrets AB_BACKUP_DB_URL, AB_BACKUP_SERVICE_ROLE_KEY and AB_BACKUP_PASSPHRASE in GitHub (Settings → Secrets and variables → Actions).'
+const NOT_SET_UP = 'Backup not set up: add the secrets AB_BACKUP_DB_URL, AB_BACKUP_SERVICE_ROLE_KEY and AB_BACKUP_PASSPHRASE in GitHub (Settings → Environments → backup → Environment secrets).'
 
 describe('the "AccountingBody backup" workflow', () => {
   it('starts only on the 1st-and-15th schedule or the "Run workflow" button, never on a push or pull request', () => {
@@ -24,6 +24,7 @@ describe('the "AccountingBody backup" workflow', () => {
     expect(code).toContain('timeout-minutes: 60')
     expect(code).toContain('runs-on: ubuntu-latest')
     expect(code).toContain("if: github.repository == 'AccountingBody-HQ/AccountingBody-Platfrom' && github.ref == 'refs/heads/main'")
+    expect(code).toMatch(/^ {4}environment: backup$/m)
   })
   it('uses only the official checkout and upload actions, pinned to a full commit', () => {
     const uses = Array.from(code.matchAll(/uses: (\S+)(?: # (\S+))?/g)).map((m) => [m[1], m[2]])

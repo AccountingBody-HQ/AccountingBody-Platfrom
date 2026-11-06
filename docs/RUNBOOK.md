@@ -26,7 +26,7 @@ It contains personal data, so it is locked with a passphrase. The backup only **
 
 ### 1b. The three secrets (set up once)
 
-They live in GitHub: the repository → **Settings → Secrets and variables → Actions → New repository secret**. GitHub never shows a secret again after you save it, and the workflow never prints them.
+They live in GitHub: the code repository → **Settings → Environments → backup → Environment secrets → Add environment secret**. GitHub never shows a secret again after you save it, and the workflow never prints them.
 
 | Name (exactly) | What goes in it |
 |---|---|
@@ -135,3 +135,40 @@ Restoring over live replaces ALL of AccountingBody's and EthioTax's data and eve
 The script refuses the live project unless you type `RESTORE OVER LIVE ACCOUNTINGBODY` exactly. Any target already holding data also needs `REPLACE ALL DATA IN TARGET` typed exactly.
 
 **What the restore empties on the target:** every area it is about to restore, and `auth.users`. Nothing else. If emptying would also remove anything outside those areas, it stops with nothing changed.
+
+### 1h. Switch-on checklist (AB-P0-5d)
+
+Do this once, in this order, in one sitting if you can. Never paste a password, key or passphrase into a chat, a file or a commit.
+
+0. **Look first; change nothing.** In Supabase, confirm all three: the usage page shows the new billing cycle (after the 8th); Disk IO is healthy; at least 2.5 GB of the month's egress is left (a cycle can hold three runs — the manual run plus two scheduled — at up to 0.7 GB each). One backup run uses about 0.16 to 0.33 GB, and you should plan for up to 0.7 GB. If any of the three is not true, stop and pick another day.
+1. **Put the backup on `main`.** At a quiet time, push the branch, wait for CI to go green, then merge to `main`. The schedule goes live at the merge: the next automatic run is the next 1st or 15th at 02:17 UTC. A run that starts before the secrets are in place stops at its first step ("Backup not set up") and touches nothing.
+2. **Create the GitHub Environment.** The code repository → **Settings → Environments → New environment** → name it `backup` exactly. Under **Deployment branches and tags**, choose **Selected branches and tags**, add the rule `main`, and save. Add no required reviewers: they would hold up the scheduled runs. If `backup` is already listed, open it and set the same rule.
+3. **Reset the database password.** Supabase → **Project Settings → Database → Reset database password**. Use letters and numbers only, and save it in your private password store first. Wait 5 minutes before step 9.
+4. **Build the connection line.** Get `<POOLER-HOST>` from Supabase → **Connect** → **Session pooler**, then replace each placeholder, including its `<` and `>`. A password of only letters and numbers needs no encoding.
+   ```
+   postgresql://postgres.sydiwnburwxutuuvkcjt:<PASSWORD-URL-ENCODED>@<POOLER-HOST>:5432/postgres?sslmode=require
+   ```
+5. **Create the passphrase.** Follow 1i.
+6. **Choose the secret API key.** Use the legacy **service_role** key for now. A secret key (it starts `sb_secret_`) is the long-term choice: swap to one before the end of 2026 by updating `AB_BACKUP_SERVICE_ROLE_KEY` in the `backup` Environment.
+7. **Add the three secrets to the `backup` Environment.** The code repository → **Settings → Environments → backup → Environment secrets**. Use the names in 1b, and the key from step 6. These must be **Environment secrets, not repository secrets**.
+8. **Check Network restrictions.** Supabase → **Database → Settings → Network restrictions** must allow all addresses, because GitHub's machines change address.
+9. **Run it once by hand.** GitHub → **Actions → AccountingBody backup → Run workflow** (see 1c), **once**. Check it succeeded, and note how long it took and the size of the encrypted file. The next day, note Supabase's egress and Disk IO.
+10. **Record the result** in the control documents.
+
+### 1i. Creating and storing the passphrase
+
+1. Open a separate terminal tab.
+2. Run `openssl rand -hex 32`. It prints 64 hex characters: that is your passphrase.
+3. Save it in **two** private places, for example your private password store and a private offline note.
+4. Run `clear`.
+5. Close the tab.
+
+Never reuse it anywhere, and never paste it into a chat, a file or a commit. **Why so strict (A2-18):** the repository is public, so any signed-in GitHub user can download the encrypted files, and only this passphrase protects them. **If you lose it, the backups can never be opened.**
+
+### 1j. Confirming backups keep running
+
+1. Add calendar reminders for the **2nd and 16th of each month**.
+2. On each reminder, open GitHub → **Actions → AccountingBody backup** and check the last run succeeded.
+3. GitHub pauses scheduled workflows after 60 days with no repository activity (A3-11). If it has paused this one, re-enable it from the Actions tab.
+
+A heartbeat service could automate this check later. None is set up.

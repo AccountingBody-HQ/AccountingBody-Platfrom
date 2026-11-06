@@ -42,7 +42,7 @@ CHECK_DIR=""
 AUTO=0
 CHECK_FILE=""
 if [ "${1:-}" = "--check" ]; then CHECK_FILE="${2:-}"; fi
-NOT_SET_UP="Backup not set up: add the secrets AB_BACKUP_DB_URL, AB_BACKUP_SERVICE_ROLE_KEY and AB_BACKUP_PASSPHRASE in GitHub (Settings → Secrets and variables → Actions)."
+NOT_SET_UP="Backup not set up: add the secrets AB_BACKUP_DB_URL, AB_BACKUP_SERVICE_ROLE_KEY and AB_BACKUP_PASSPHRASE in GitHub (Settings → Environments → backup → Environment secrets)."
 
 say() { printf '\n%s\n' "$*"; }
 fail() { printf '\nThe backup STOPPED: %s\n' "$*" >&2; exit 1; }

@@ -28,6 +28,7 @@ jobs:
     # The default branch (main) of this repository only: never a fork, never another branch. (A scheduled run's event
     # carries no repository details, so the branch is named here.)
     if: github.repository == 'AccountingBody-HQ/AccountingBody-Platfrom' && github.ref == 'refs/heads/main'
+    environment: backup
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -38,7 +39,7 @@ jobs:
           AB_BACKUP_PASSPHRASE: ${{ secrets.AB_BACKUP_PASSPHRASE }}
         run: |
           if [ -z "$AB_BACKUP_DB_URL" ] || [ -z "$AB_BACKUP_SERVICE_ROLE_KEY" ] || [ -z "$AB_BACKUP_PASSPHRASE" ]; then
-            echo "::error::Backup not set up: add the secrets AB_BACKUP_DB_URL, AB_BACKUP_SERVICE_ROLE_KEY and AB_BACKUP_PASSPHRASE in GitHub (Settings → Secrets and variables → Actions)."
+            echo "::error::Backup not set up: add the secrets AB_BACKUP_DB_URL, AB_BACKUP_SERVICE_ROLE_KEY and AB_BACKUP_PASSPHRASE in GitHub (Settings → Environments → backup → Environment secrets)."
             exit 1
           fi
           echo "::add-mask::$AB_BACKUP_DB_URL"
