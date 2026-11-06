@@ -131,7 +131,7 @@ Do not run these in the Codespace:
 
 vitest is configured not to load local environment files (`vitest.config.ts`).
 
-Use the Node version in `.nvmrc` or `package.json` `engines` when present.
+Use Node.js 24 everywhere: local work, CI and hosting. The version is defined in `.nvmrc` and `package.json` `engines`; change both together.
 
 ### After a release
 

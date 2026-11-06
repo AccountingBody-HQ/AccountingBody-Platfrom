@@ -16,7 +16,7 @@ The codebase behind [accountingbody.com](https://accountingbody.com) and [ethiot
 
 ## Prerequisites
 
-- Node.js: use the version in `.nvmrc` or `package.json` `engines` when present. CI runs Node 20.
+- Node.js 24, the single version for local work, CI and hosting. It is defined in `.nvmrc` and `package.json` `engines`; CI reads `.nvmrc`.
 - npm
 - Access to the project's service accounts for real values
 
