@@ -40,6 +40,7 @@ dist/
 *.xml
 scripts/__pycache__/
 .env*
+!.env.example
 
 # Claude Code audit and scratch files
 tmp-audit/
