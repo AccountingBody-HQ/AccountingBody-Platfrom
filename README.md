@@ -39,7 +39,7 @@ Then fill in `.env.local` privately. It is git-ignored; never commit real values
 | `npm run lint` | Runs `next lint` |
 | `npm test` | Runs the tests once with vitest |
 
-**Codespace warning:** the project's Codespace has too little memory for `npm run build`, which runs out of memory there. Use Vercel's preview build as the build check. See `CLAUDE.md` for the exact checks to run in the Codespace.
+**Codespace warning:** the project's Codespace has too little memory for `npm run build`, which runs out of memory there. CI runs the production build, and Vercel builds a preview of each pushed branch. See `CLAUDE.md` for the exact checks to run in the Codespace.
 
 ## Tests
 
@@ -49,7 +49,7 @@ Tests sit beside the code they cover, as `*.test.ts`, and run without network ac
 npm test
 ```
 
-CI runs the type check, lint and tests on every push and pull request (`.github/workflows/ci.yml`).
+CI runs lint, the type check, the tests and the production build on every push and pull request (`.github/workflows/ci.yml`). It uses placeholder configuration only, with no real secrets and no live services.
 
 ## Deployment
 

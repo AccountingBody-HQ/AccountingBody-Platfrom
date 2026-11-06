@@ -51,7 +51,7 @@ A change here can reach both sites, and markup changes can affect the Worker eve
 | `vercel.json` | Redirects, cron schedules, response headers |
 | `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`, `instrumentation.ts` | Error reporting set-up |
 | `tailwind.config.ts` | Design tokens |
-| `.github/workflows/ci.yml` | CI: type check, lint, tests |
+| `.github/workflows/ci.yml` | CI: lint, type check, tests, production build (placeholder configuration only) |
 | `docs/RULES.md` | Numbered legacy rules |
 | `.env.example` | Every environment variable name, no values |
 | `reports/` | Git-ignored job reports (section 7) |
@@ -125,7 +125,7 @@ Do not run these in the Codespace:
 
 | Command | Why not |
 |---|---|
-| `npm run build` | Runs out of memory. Vercel's preview build is the build check |
+| `npm run build` | Runs out of memory. CI runs the production build, and Vercel builds a preview of each pushed branch |
 | `npm run dev` | Not part of the check process here |
 | `npm run lint` | `next lint` loads local environment files at start-up. Run ESLint directly as above; CI runs `npm run lint` in a clean environment |
 
