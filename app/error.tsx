@@ -25,7 +25,7 @@ export default function Error({
           Something went wrong
         </h1>
         <p className="text-slate-500 text-lg leading-relaxed mb-8">
-          This page didn&apos;t load properly. Try again, or head back to the homepage.
+          This is a temporary problem on our side, and the page should be back shortly. Please try again in a moment, or head back to the homepage.
         </p>
         <div className="flex flex-wrap justify-center gap-4">
           <button

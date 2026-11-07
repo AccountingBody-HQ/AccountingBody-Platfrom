@@ -225,15 +225,21 @@ export async function searchArticles(query: string): Promise<ArticleSummary[]> {
 
 // ── Question Sets ─────────────────────────────────────────────────────────────
 
+// Returns null only for a genuine "no such published set": .single() reports
+// zero rows as HTTP 406 with PostgREST code PGRST116 (same rule as
+// fetchPublishedArticleBySlug above). Any other failure is thrown, so the
+// page renders its error page with a 500 instead of a 404.
 export async function getQuestionSetBySlug(slug: string): Promise<QuestionSet | null> {
   const supabase = getSupabase()
-  const { data, error } = await supabase
+  const { data, error, status } = await supabase
     .from('question_sets')
     .select('*')
     .eq('slug', slug)
     .eq('status', 'published')
     .single()
-  if (error || !data) return null
+  if (error && status === 406 && error.code === 'PGRST116') return null
+  if (error) throw new Error(`getQuestionSetBySlug: question_sets query failed (status ${status}): ${error.message}`)
+  if (!data) throw new Error(`getQuestionSetBySlug: empty response for "${slug}"`)
   return data as QuestionSet
 }
 

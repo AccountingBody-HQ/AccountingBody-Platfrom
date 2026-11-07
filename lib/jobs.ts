@@ -507,14 +507,23 @@ export function getCachedListingJobsCount(params: ListingQuery): Promise<number>
 // description/status into rendered HTML — it never passes the fetched job
 // object to a client component, so the wider row here never reaches the
 // browser as raw JSON the way /api/jobs/direct's response does).
+//
+// Returns null only when no such job exists: .single() reports zero rows as
+// HTTP 406 with PostgREST code PGRST116, and an id that is not a valid uuid
+// (jobs.id is uuid) is refused with code 22P02, so it can match no row
+// either. Any other failure is thrown, so the page renders its error page
+// with a 500 instead of a 404.
 export async function getJobById(id: string): Promise<Job | null> {
   const supabase = getSupabase()
-  const { data, error } = await supabase
+  const { data, error, status } = await supabase
     .from('jobs')
     .select(JOB_COLUMNS_ADMIN)
     .eq('id', id)
     .single()
-  if (error || !data) return null
+  if (error && status === 406 && error.code === 'PGRST116') return null
+  if (error && error.code === '22P02') return null
+  if (error) throw new Error(`getJobById: jobs query failed (status ${status}): ${error.message}`)
+  if (!data) throw new Error('getJobById: empty response')
   return data as Job
 }
 
@@ -538,13 +547,17 @@ export async function getJobById(id: string): Promise<Job | null> {
 // different fetch (out of scope here).
 export async function getJobBySlug(slug: string): Promise<Job | null> {
   const supabase = getSupabase()
-  const { data, error } = await supabase
+  const { data, error, status } = await supabase
     .from('jobs')
     .select(JOB_COLUMNS)
     .eq('slug', slug)
     .in('status', ['active', 'expired'])
     .single()
-  if (error || !data) return null
+  // null only for zero rows (HTTP 406, PostgREST code PGRST116); any other
+  // failure is thrown, so the page shows its error page (500), not a 404.
+  if (error && status === 406 && error.code === 'PGRST116') return null
+  if (error) throw new Error(`getJobBySlug: jobs query failed (status ${status}): ${error.message}`)
+  if (!data) throw new Error(`getJobBySlug: empty response for "${slug}"`)
   // See the comment on the JOB_COLUMNS cast in getActiveDirectJobs — same
   // non-literal-string limitation applies here.
   return data as unknown as Job
