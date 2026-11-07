@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Script from 'next/script'
+import { LINK_RETRY_HEADING, MANAGE_LINK_RETRY_TEXT, manageLinkStatus } from '@/lib/message-rules'
 
 const employmentStatusOptions = ['Employed','Self-employed','Between roles','Student']
 const roleTypeOptions = ['Permanent','Contract / Freelance','Remote only','Open to relocation']
@@ -16,7 +17,7 @@ export default function FindWorkManageClient({ isEthioTax: isEthioTaxProp }: { i
 
   const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [status, setStatus] = useState<'idle'|'loading'|'success'|'error'|'invalid'>('idle')
+  const [status, setStatus] = useState<'idle'|'loading'|'success'|'error'|'invalid'|'linkRetry'>('idle')
   const [referenceNumber, setReferenceNumber] = useState('')
   const [form, setForm] = useState({
     phone: '', location_city: '', location_country: '', linkedin_url: '',
@@ -32,10 +33,14 @@ export default function FindWorkManageClient({ isEthioTax: isEthioTaxProp }: { i
     const t = params.get('token')
     if (!t) { setStatus('invalid'); setLoading(false); return }
     setToken(t)
+    // The answer's status decides between "invalid link" and "try again"; a
+    // body that is not JSON (for example a gateway error page) counts as empty.
     fetch('/api/recruitment/get-profile?token=' + t + '&type=candidate')
-      .then(r => r.json())
-      .then(({ data, error }) => {
-        if (error || !data) { setStatus('invalid'); setLoading(false); return }
+      .then(async r => ({ httpStatus: r.status, body: await r.json().catch(() => null) }))
+      .then(({ httpStatus, body }) => {
+        const data = body?.data
+        const linkStatus = manageLinkStatus(httpStatus, Boolean(data))
+        if (linkStatus !== 'ok') { setStatus(linkStatus === 'retry' ? 'linkRetry' : 'invalid'); setLoading(false); return }
         setReferenceNumber(data.reference_number ?? '')
         setForm({
           phone:              data.phone ?? '',
@@ -51,7 +56,7 @@ export default function FindWorkManageClient({ isEthioTax: isEthioTaxProp }: { i
         setLanguages(Array.isArray(data.languages) ? data.languages : [])
         setLoading(false)
       })
-      .catch(() => { setStatus('invalid'); setLoading(false) })
+      .catch(() => { setStatus('linkRetry'); setLoading(false) })
   }, [])
 
   const toggle = (val: string, list: string[], setter: (v: string[]) => void) => {
@@ -92,6 +97,18 @@ export default function FindWorkManageClient({ isEthioTax: isEthioTaxProp }: { i
         </div>
         <h2 className="font-display text-2xl mb-3" style={{ color: '#dc2626' }}>Invalid Link</h2>
         <p className="text-slate-500">This link is invalid. Please contact us if you need help updating your profile.</p>
+      </div>
+    </div>
+  )
+
+  if (status === 'linkRetry') return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#f8fafc' }}>
+      <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm max-w-md">
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: '#fee2e2' }}>
+          <svg className="w-8 h-8" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </div>
+        <h2 className="font-display text-2xl mb-3" style={{ color: '#dc2626' }}>{LINK_RETRY_HEADING}</h2>
+        <p className="text-slate-500">{MANAGE_LINK_RETRY_TEXT}</p>
       </div>
     </div>
   )

@@ -368,7 +368,7 @@ const scenarios: Scenario[] = [
     row: brief,
     call: async () => fetchBrief(get('/api/recruitment/fetch-brief?token=t')),
     healthy: { status: 200, body: { data: brief }, dbRequests: 1 },
-    never: { status: 404, body: { error: 'Not found' }, dbRequests: 1 },
+    never: { status: 500, body: serverProblem, dbRequests: 1 },
   },
   ...(['candidate', 'employer'] as const).map(
     (type): Scenario => ({
@@ -377,7 +377,7 @@ const scenarios: Scenario[] = [
       row: type === 'candidate' ? person : brief,
       call: async () => getProfile(get(`/api/recruitment/get-profile?token=t&type=${type}`)),
       healthy: { status: 200, body: { data: type === 'candidate' ? person : brief, type }, dbRequests: 1 },
-      never: { status: 404, body: { error: 'Invalid or expired link' }, dbRequests: 1 },
+      never: { status: 500, body: serverProblem, dbRequests: 1 },
     }),
   ),
   {
@@ -399,23 +399,23 @@ const scenarios: Scenario[] = [
         }),
       ),
     healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: 1, turnstile: 1 },
-    never: { status: 500, body: { error: 'Database error' }, emails: 0, dbRequests: 1, turnstile: 1 },
+    never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1, turnstile: 1 },
   },
   {
     name: 'candidate profile update',
     context: 'publicWrite',
     row: { ...person, reference_number: 'AB-C-0001' },
     call: async () => updateCandidate(post('/api/recruitment/update-candidate', { token: 't', phone: '0123 456' })),
-    healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: 3 },
-    never: { status: 404, body: { error: 'Invalid or expired link' }, emails: 0, dbRequests: 1 },
+    healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: 2 },
+    never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1 },
   },
   {
     name: 'hiring brief update',
     context: 'publicWrite',
     row: brief,
     call: async () => updateEmployer(post('/api/recruitment/update-employer', { token: 't', contact_phone: '0123 456' })),
-    healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: 3 },
-    never: { status: 404, body: { error: 'Invalid or expired link' }, emails: 0, dbRequests: 1 },
+    healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: 2 },
+    never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1 },
   },
   {
     name: 'job seeker email verification link',
@@ -430,7 +430,7 @@ const scenarios: Scenario[] = [
     },
     call: async () => verifyEmail(get('/api/recruitment/verify-email?token=t')),
     healthy: { status: 307, location: SITE + '/jobs/find-work?verified=true', emails: 2, dbRequests: 2 },
-    never: { status: 307, location: SITE + '/jobs/find-work?verified=invalid', emails: 0, dbRequests: 1 },
+    never: { status: 307, location: SITE + '/jobs/find-work?verified=error', emails: 0, dbRequests: 1 },
   },
   {
     name: 'newsletter signup',

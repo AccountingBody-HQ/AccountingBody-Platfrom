@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
 
     if (dbError) {
       console.error("Supabase insert error:", dbError)
-      return NextResponse.json({ error: "Database error" }, { status: 500 })
+      return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
     }
 
     const verifyUrl = `${baseUrl}/api/recruitment/verify-email?token=${token}`

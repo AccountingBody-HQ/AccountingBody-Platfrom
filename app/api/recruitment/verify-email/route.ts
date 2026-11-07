@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSupabase } from "@/lib/supabase-server"
 import { Resend } from "resend"
+import { checkRead } from "@/lib/db-check"
 import { checkEmailSend } from "@/lib/email-check"
 import { escapeHtml, withoutLineBreaks } from "@/lib/html-escape"
 
@@ -12,13 +13,21 @@ export async function GET(req: NextRequest) {
     const token = req.nextUrl.searchParams.get("token")
     if (!token) return NextResponse.redirect(new URL("/jobs/find-work?verified=invalid", req.url))
 
-    const { data, error } = await supabase
-      .from("job_seeker_registrations")
-      .select("*")
-      .eq("verification_token", token)
-      .single()
+    const lookup = checkRead(
+      await supabase
+        .from("job_seeker_registrations")
+        .select("*")
+        .eq("verification_token", token)
+        .single(),
+      "verify email lookup",
+      { noRowsIsEmpty: true },
+    )
 
-    if (error || !data) return NextResponse.redirect(new URL("/jobs/find-work?verified=invalid", req.url))
+    // Not looked up: the visitor is asked to try the same link again.
+    if (!lookup.ok) return NextResponse.redirect(new URL("/jobs/find-work?verified=error", req.url))
+    const data = lookup.data
+
+    if (!data) return NextResponse.redirect(new URL("/jobs/find-work?verified=invalid", req.url))
     if (data.status !== "pending_verification") return NextResponse.redirect(new URL("/jobs/find-work?verified=already", req.url))
 
     const { error: updateError } = await supabase

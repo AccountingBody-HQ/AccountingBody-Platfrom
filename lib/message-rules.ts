@@ -60,3 +60,21 @@ export function briefLinkStatus(value: string | null): BriefLinkStatus {
   if (value === 'error') return 'linkRetry'
   return 'idle'
 }
+
+// The manage screens (profile and hiring brief update links) first load the
+// saved details. A temporary problem has its own message, so the visitor
+// knows the same link can be tried again.
+
+export const MANAGE_LINK_RETRY_TEXT =
+  "We couldn't load your details just now. Please try the link again in a few minutes."
+
+export type ManageLinkStatus = 'ok' | 'invalid' | 'retry'
+
+// The manage screen's state from the lookup's HTTP status (null when no
+// answer arrived) and whether the answer held the saved details.
+export function manageLinkStatus(httpStatus: number | null, hasData: boolean): ManageLinkStatus {
+  if (httpStatus === null) return 'retry'
+  if (httpStatus >= 200 && httpStatus <= 299) return hasData ? 'ok' : 'invalid'
+  if (httpStatus >= 400 && httpStatus <= 499) return 'invalid'
+  return 'retry'
+}

@@ -1,6 +1,15 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { CONFIRMATION_EMAIL_FAILED_TEXT, SERVER_PROBLEM_TEXT } from './message-rules'
+import { changedFields } from './changed-fields'
+import {
+  CONFIRMATION_EMAIL_FAILED_TEXT,
+  LINK_RETRY_HEADING,
+  MANAGE_LINK_RETRY_TEXT,
+  SERVER_PROBLEM_TEXT,
+  manageLinkStatus,
+} from './message-rules'
 
 // What visitors see from the hiring brief form and from the links in the
 // recruitment emails (job-seeker verify, brief confirm and cancel) when a
@@ -15,6 +24,7 @@ type Mail = { from: unknown; to: unknown; subject: unknown }
 
 const mail = vi.hoisted(() => ({
   sent: [] as Mail[],
+  html: [] as string[],
   timeline: [] as string[],
   fail: (() => false) as (message: Mail) => boolean,
 }))
@@ -22,8 +32,9 @@ const mail = vi.hoisted(() => ({
 vi.mock('resend', () => ({
   Resend: class {
     emails = {
-      send: async (message: Mail) => {
+      send: async (message: Mail & { html?: unknown }) => {
         mail.sent.push({ from: message.from, to: message.to, subject: message.subject })
+        mail.html.push(String(message.html))
         mail.timeline.push(`email ${String(message.to)}`)
         if (mail.fail(message)) {
           return {
@@ -42,6 +53,11 @@ vi.mock('@sentry/nextjs', () => ({ captureException: () => {}, captureMessage: (
 import { GET as confirmBrief } from '@/app/api/recruitment/confirm-brief/route'
 import { POST as employerBrief } from '@/app/api/recruitment/employer-brief/route'
 import { GET as verifyEmail } from '@/app/api/recruitment/verify-email/route'
+import { GET as fetchBrief } from '@/app/api/recruitment/fetch-brief/route'
+import { GET as getProfile } from '@/app/api/recruitment/get-profile/route'
+import { POST as jobSeekerApply } from '@/app/api/recruitment/job-seeker-apply/route'
+import { POST as updateCandidate } from '@/app/api/recruitment/update-candidate/route'
+import { POST as updateEmployer } from '@/app/api/recruitment/update-employer/route'
 
 const DB_URL = 'https://example.supabase.co'
 const SITE = 'https://accountingbody.com'
@@ -69,10 +85,19 @@ function eqFilters(params: URLSearchParams): [string, string][] {
   })
   return filters
 }
-const matches = (row: Row, filters: [string, string][]) => filters.every(([key, value]) => String(row[key]) === value)
+function inFilters(params: URLSearchParams): [string, string[]][] {
+  const filters: [string, string[]][] = []
+  params.forEach((value, key) => {
+    if (value.startsWith('in.(') && value.endsWith(')')) filters.push([key, value.slice(4, -1).split(',')])
+  })
+  return filters
+}
+const matches = (row: Row, filters: [string, string][], lists: [string, string[]][] = []) =>
+  filters.every(([key, value]) => String(row[key]) === value) &&
+  lists.every(([key, allowed]) => allowed.includes(String(row[key])))
 
-// Supports what these routes send: eq filters on select, update and delete,
-// and insert.
+// Supports what these routes send: eq and in filters on select, update and
+// delete, and insert.
 const fakeFetch: typeof fetch = async (input, init) => {
   const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url)
   if (url.origin === 'https://challenges.cloudflare.com') return json({ success: true })
@@ -99,8 +124,9 @@ const fakeFetch: typeof fetch = async (input, init) => {
 
   const rows = (db.tables[table] ??= [])
   const filters = eqFilters(url.searchParams)
+  const lists = inFilters(url.searchParams)
   if (method === 'GET') {
-    const found = rows.filter((row) => matches(row, filters))
+    const found = rows.filter((row) => matches(row, filters, lists))
     if (!(headers.get('accept') ?? '').includes('vnd.pgrst.object')) return json(found)
     if (found.length === 1) return json(found[0])
     return json({ message: 'no single row', code: 'PGRST116', details: null, hint: null }, 406)
@@ -111,12 +137,12 @@ const fakeFetch: typeof fetch = async (input, init) => {
     return new Response(null, { status: 201 })
   }
   if (method === 'PATCH') {
-    for (const row of rows) if (matches(row, filters)) Object.assign(row, body)
+    for (const row of rows) if (matches(row, filters, lists)) Object.assign(row, body)
     return new Response(null, { status: 204 })
   }
   if (method === 'DELETE') {
-    const removed = rows.filter((row) => matches(row, filters))
-    db.tables[table] = rows.filter((row) => !matches(row, filters))
+    const removed = rows.filter((row) => matches(row, filters, lists))
+    db.tables[table] = rows.filter((row) => !matches(row, filters, lists))
     return new Response(null, { status: 204, headers: { 'content-range': `*/${removed.length}` } })
   }
   throw new Error(`unexpected ${method} to ${table}`)
@@ -188,6 +214,7 @@ beforeEach(() => {
   vi.spyOn(console, 'warn').mockImplementation(logged)
   logs = []
   mail.sent.length = 0
+  mail.html.length = 0
   mail.timeline.length = 0
   mail.fail = () => false
   db.tables = {}
@@ -566,5 +593,435 @@ describe('hiring brief confirm and cancel links', () => {
     const result = await openBriefLink('confirm')
     expect(result).toMatchObject({ status: 307, location: briefState('confirmed') })
     expect(logs).toEqual(['email: send failed (hiring brief confirmed team notification) application_error'])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Profile and hiring brief manage links: loading and saving
+// ---------------------------------------------------------------------------
+
+const serverProblem = { error: SERVER_PROBLEM_TEXT }
+const invalidLink = { error: 'Invalid or expired link' }
+const SPECIAL_NAME = 'Ada "A" <b>Lovelace</b>'
+const SPECIAL_NAME_SHOWN = 'Ada &quot;A&quot; &lt;b&gt;Lovelace&lt;/b&gt;'
+
+const savedCandidate: Row = {
+  id: ID,
+  platform: 'ab',
+  full_name: SPECIAL_NAME,
+  email: 'ada@example.com',
+  reference_number: 'AB-C-0001',
+  status: 'active',
+  update_token: 'update-token',
+  phone: '0123 456',
+  location_city: 'London',
+  location_country: null,
+  linkedin_url: null,
+  employment_status: 'Employed',
+  salary_expectation: null,
+  role_types: ['Permanent'],
+  jurisdictions: ['United Kingdom'],
+  languages: ['English'],
+  biography: 'Management accountant.',
+}
+// What the manage screen sends back for the saved details: '' for empty text.
+const candidateForm = {
+  phone: '0123 456',
+  location_city: 'London',
+  location_country: '',
+  linkedin_url: '',
+  employment_status: 'Employed',
+  salary_expectation: '',
+  role_types: ['Permanent'],
+  jurisdictions: ['United Kingdom'],
+  languages: ['English'],
+  biography: 'Management accountant.',
+}
+const savedBrief: Row = {
+  id: ID,
+  platform: 'ab',
+  company_name: SPECIAL_NAME,
+  contact_name: 'Ada Lovelace',
+  contact_email: 'ada@example.com',
+  reference_number: 'AB-E-0001',
+  status: 'reviewing',
+  update_token: 'update-token',
+  contact_phone: null,
+  salary_budget: '50000',
+  start_date: '2026-09-01',
+  jurisdiction: 'United Kingdom',
+  role_description: 'Prepare monthly management accounts.',
+  must_haves: 'ACCA',
+  nice_to_haves: null,
+}
+const briefForm2 = {
+  contact_phone: '',
+  salary_budget: '50000',
+  start_date: '2026-09-01',
+  jurisdiction: 'United Kingdom',
+  role_description: 'Prepare monthly management accounts.',
+  must_haves: 'ACCA',
+  nice_to_haves: '',
+}
+
+const updateRoutes = [
+  {
+    name: 'candidate profile update',
+    table: 'job_seeker_registrations',
+    saved: savedCandidate,
+    form: candidateForm as Row,
+    change: { phone: ' 0999 111 ', biography: 'Senior management accountant.' } as Row,
+    stored: { phone: '0999 111', biography: 'Senior management accountant.' } as Row,
+    listed: 'phone, biography',
+    subject: '[AB] Candidate profile updated - AB-C-0001',
+    closedStatus: 'pending_review',
+    send: (body: unknown) => run(() => updateCandidate(post('/api/recruitment/update-candidate', body))),
+    raw: (text: string) =>
+      run(() =>
+        updateCandidate(
+          new NextRequest(SITE + '/api/recruitment/update-candidate', {
+            method: 'POST',
+            body: text,
+            headers: { 'content-type': 'application/json' },
+          }),
+        ),
+      ),
+    notification: 'update-candidate notification',
+  },
+  {
+    name: 'hiring brief update',
+    table: 'employer_briefs',
+    saved: savedBrief,
+    form: briefForm2 as Row,
+    change: { contact_phone: '0123 456', nice_to_haves: 'CIMA' } as Row,
+    stored: { contact_phone: '0123 456', nice_to_haves: 'CIMA' } as Row,
+    listed: 'contact_phone, nice_to_haves',
+    subject: '[AB] Employer brief updated - AB-E-0001',
+    closedStatus: 'pending_confirmation',
+    send: (body: unknown) => run(() => updateEmployer(post('/api/recruitment/update-employer', body))),
+    raw: (text: string) =>
+      run(() =>
+        updateEmployer(
+          new NextRequest(SITE + '/api/recruitment/update-employer', {
+            method: 'POST',
+            body: text,
+            headers: { 'content-type': 'application/json' },
+          }),
+        ),
+      ),
+    notification: 'update-employer notification',
+  },
+]
+
+describe.each(updateRoutes)('$name', (route) => {
+  const rows = () => db.tables[route.table] ?? []
+
+  beforeEach(() => {
+    db.tables[route.table] = [{ ...route.saved }]
+  })
+
+  it('sends the update notification listing the changed details', async () => {
+    const result = await route.send({ ...route.form, ...route.change, token: 'update-token' })
+    expect(result).toEqual({ status: 200, location: null, body: { success: true } })
+    expect(db.requests.map((r) => `${r.method} ${r.table}`)).toEqual([`GET ${route.table}`, `PATCH ${route.table}`])
+    expect(rows()[0]).toMatchObject(route.stored)
+    expect(mail.sent).toEqual([
+      { from: 'Accounting Body <noreply@accountingbody.com>', to: 'info@accountingbody.com', subject: route.subject },
+    ])
+    expect(mail.html[0]).toContain(`Fields updated: ${route.listed}</p>`)
+    expect(mail.html[0]).toContain(`<strong>${SPECIAL_NAME_SHOWN}</strong>`)
+    expect(mail.html[0]).not.toContain('<b>Lovelace')
+    expect(logs).toEqual([])
+  })
+
+  it('saves and sends no notification when nothing changed', async () => {
+    const result = await route.send({ ...route.form, token: 'update-token' })
+    expect(result).toEqual({ status: 200, location: null, body: { success: true } })
+    expect(db.requests.map((r) => r.method)).toEqual(['GET', 'PATCH'])
+    expect(mail.sent).toEqual([])
+    expect(logs).toEqual([])
+  })
+
+  it('keeps the invalid link answer for an unknown link', async () => {
+    expect(await route.send({ ...route.change, token: 'unknown' })).toEqual({
+      status: 404,
+      location: null,
+      body: invalidLink,
+    })
+    expect(writes()).toEqual([])
+    expect(mail.sent).toEqual([])
+  })
+
+  it('keeps the invalid link answer for a record that is closed for updates', async () => {
+    db.tables[route.table] = [{ ...route.saved, status: route.closedStatus }]
+    expect(await route.send({ ...route.change, token: 'update-token' })).toEqual({
+      status: 404,
+      location: null,
+      body: invalidLink,
+    })
+    expect(writes()).toEqual([])
+    expect(mail.sent).toEqual([])
+  })
+
+  it('reports a temporary problem and saves nothing when the saved details cannot be read', async () => {
+    db.rules = [{ method: 'GET', table: route.table, answer: 'error' }]
+    const result = await route.send({ ...route.change, token: 'update-token' })
+    expect(result).toEqual({ status: 500, location: null, body: serverProblem })
+    expectNothingRevealed(result.body)
+    expect(writes()).toEqual([])
+    expect(mail.sent).toEqual([])
+    expect(rows()).toEqual([route.saved])
+  })
+
+  it('reports a temporary problem and saves nothing when the saved details do not arrive in time', async () => {
+    db.rules = [{ method: 'GET', table: route.table, answer: 'never' }]
+    const result = await route.send({ ...route.change, token: 'update-token' })
+    expect(result).toEqual({ status: 500, location: null, body: serverProblem })
+    expect(db.requests).toHaveLength(1)
+    expect(mail.sent).toEqual([])
+  })
+
+  it('keeps its answer and sends nothing when the update cannot be saved', async () => {
+    db.rules = [{ method: 'PATCH', table: route.table, answer: 'error' }]
+    const result = await route.send({ ...route.change, token: 'update-token' })
+    expect(result).toEqual({ status: 500, location: null, body: { error: 'Update failed' } })
+    expectNothingRevealed(result.body)
+    expect(mail.sent).toEqual([])
+  })
+
+  it('still answers success when the update notification is not sent', async () => {
+    mail.fail = failAllSends
+    const result = await route.send({ ...route.change, token: 'update-token' })
+    expect(result).toEqual({ status: 200, location: null, body: { success: true } })
+    expect(rows()[0]).toMatchObject(route.stored)
+    expect(mail.sent).toHaveLength(1)
+    expect(logs).toEqual([`email: send failed (${route.notification}) application_error`])
+  })
+
+  it('answers with the shared server problem text for a request it cannot read', async () => {
+    const result = await route.raw('{not json')
+    expect(result).toEqual({ status: 500, location: null, body: serverProblem })
+    expect(db.requests).toEqual([])
+  })
+})
+
+describe('hiring brief lookup', () => {
+  const pending: Row = { ...pendingBrief, reference_number: 'AB-E-0001' }
+  const lookUp = (token = 'brief-token') => run(() => fetchBrief(get('/api/recruitment/fetch-brief?token=' + token)))
+
+  beforeEach(() => {
+    db.tables.employer_briefs = [{ ...pending }]
+  })
+
+  it('returns the brief as before', async () => {
+    expect(await lookUp()).toEqual({ status: 200, location: null, body: { data: pending } })
+  })
+
+  it('keeps the not found answer for an unknown link', async () => {
+    expect(await lookUp('unknown')).toEqual({ status: 404, location: null, body: { error: 'Not found' } })
+  })
+
+  it.each(['error', 'never'] as const)('reports a temporary problem when the brief cannot be read (%s)', async (answer) => {
+    db.rules = [{ method: 'GET', table: 'employer_briefs', answer }]
+    const result = await lookUp()
+    expect(result).toEqual({ status: 500, location: null, body: serverProblem })
+    expectNothingRevealed(result.body)
+  })
+})
+
+describe.each([
+  { type: 'candidate', table: 'job_seeker_registrations', saved: savedCandidate },
+  { type: 'employer', table: 'employer_briefs', saved: savedBrief },
+])('$type profile lookup', ({ type, table, saved }) => {
+  const lookUp = (token = 'update-token') =>
+    run(() => getProfile(get(`/api/recruitment/get-profile?token=${token}&type=${type}`)))
+
+  beforeEach(() => {
+    db.tables[table] = [{ ...saved }]
+  })
+
+  it('returns the saved details as before', async () => {
+    const result = await lookUp()
+    expect(result.status).toBe(200)
+    expect(result.body).toMatchObject({ type, data: { reference_number: saved.reference_number } })
+  })
+
+  it('keeps the invalid link answer for an unknown link', async () => {
+    expect(await lookUp('unknown')).toEqual({ status: 404, location: null, body: invalidLink })
+  })
+
+  it.each(['error', 'never'] as const)('reports a temporary problem when the profile cannot be read (%s)', async (answer) => {
+    db.rules = [{ method: 'GET', table, answer }]
+    const result = await lookUp()
+    expect(result).toEqual({ status: 500, location: null, body: serverProblem })
+    expectNothingRevealed(result.body)
+  })
+})
+
+describe('job-seeker verify link lookup', () => {
+  beforeEach(() => {
+    db.tables.job_seeker_registrations = [{ ...registration }]
+  })
+
+  it.each(['error', 'never'] as const)(
+    'asks the visitor to try the link again and sends no email when the registration cannot be looked up (%s)',
+    async (answer) => {
+      db.rules = [{ method: 'GET', table: 'job_seeker_registrations', answer }]
+      const result = await openVerifyLink()
+      expect(result).toMatchObject({ status: 307, location: verified('error') })
+      expect(writes()).toEqual([])
+      expect(mail.sent).toEqual([])
+      expect(registrations()).toEqual([registration])
+    },
+  )
+})
+
+describe('job seeker registration form', () => {
+  it('shows the shared server problem text when the registration cannot be saved', async () => {
+    db.rules = [{ method: 'POST', table: 'job_seeker_registrations', answer: 'error' }]
+    const result = await run(() =>
+      jobSeekerApply(
+        post('/api/recruitment/job-seeker-apply', {
+          full_name: 'Ada Lovelace',
+          email: 'ada@example.com',
+          location_city: 'London',
+          professional_role: 'Accountant',
+          qualification: 'ACCA',
+          years_experience: '5',
+          employment_status: 'Employed',
+          biography: 'Management accountant.',
+          'cf-turnstile-response': 'token',
+        }),
+      ),
+    )
+    expect(result).toEqual({ status: 500, location: null, body: serverProblem })
+    expectNothingRevealed(result.body)
+    expect(mail.sent).toEqual([])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Changed details
+// ---------------------------------------------------------------------------
+
+describe('changed details', () => {
+  it('lists text values that differ, in the order of the update', () => {
+    expect(changedFields({ a: 'x', b: 'y', c: 'z' }, { c: 'Z', a: 'x', b: 'Y' })).toEqual(['c', 'b'])
+  })
+
+  it('treats null, a missing value and an empty text as the same empty value', () => {
+    expect(changedFields({ a: null, b: '', d: undefined }, { a: null, b: null, c: null, d: null })).toEqual([])
+    expect(changedFields({ a: null }, { a: 'x' })).toEqual(['a'])
+    expect(changedFields({ a: 'x' }, { a: null })).toEqual(['a'])
+  })
+
+  it('compares other values exactly', () => {
+    expect(changedFields({ a: 0, b: false, c: 5 }, { a: null, b: null, c: '5' })).toEqual(['a', 'b', 'c'])
+    expect(changedFields({ a: 5, b: true }, { a: 5, b: true })).toEqual([])
+  })
+
+  it('compares lists by their items and order', () => {
+    expect(changedFields({ a: ['x', 'y'] }, { a: ['x', 'y'] })).toEqual([])
+    expect(changedFields({ a: ['x', 'y'] }, { a: ['y', 'x'] })).toEqual(['a'])
+    expect(changedFields({ a: ['x'] }, { a: ['x', 'y'] })).toEqual(['a'])
+    expect(changedFields({ a: null }, { a: [] })).toEqual(['a'])
+    expect(changedFields({ a: [] }, { a: [] })).toEqual([])
+  })
+
+  it('compares objects by their contents whatever the key order', () => {
+    expect(changedFields({ a: { x: 1, y: { p: 1, q: 2 } } }, { a: { y: { q: 2, p: 1 }, x: 1 } })).toEqual([])
+    expect(changedFields({ a: { x: 1 } }, { a: { x: 2 } })).toEqual(['a'])
+  })
+
+  it('looks only at the keys of the update', () => {
+    expect(changedFields({ a: 'x', other: 'y' }, { a: 'x' })).toEqual([])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Manage screens: state from the lookup answer
+// ---------------------------------------------------------------------------
+
+describe('manage screen state from the lookup answer', () => {
+  it.each([
+    [200, true, 'ok'],
+    [200, false, 'invalid'],
+    [204, false, 'invalid'],
+    [400, false, 'invalid'],
+    [404, false, 'invalid'],
+    [500, false, 'retry'],
+    [502, false, 'retry'],
+    [504, false, 'retry'],
+    [null, false, 'retry'],
+    [302, false, 'retry'],
+    [0, false, 'retry'],
+  ] as const)('answer %s with details %s shows %s', (httpStatus, hasData, expected) => {
+    expect(manageLinkStatus(httpStatus, hasData)).toBe(expected)
+  })
+
+  it('uses the agreed text, free of site names and web addresses', () => {
+    expect(MANAGE_LINK_RETRY_TEXT).toBe(
+      "We couldn't load your details just now. Please try the link again in a few minutes.",
+    )
+    expect(MANAGE_LINK_RETRY_TEXT).not.toMatch(/accounting\s*body|ethio\s*tax|\.com\b|\.et\b|https?:|www\./i)
+    expect(LINK_RETRY_HEADING).toBe('Please Try Again')
+  })
+})
+
+const sourceOf = (path: string) => readFileSync(join(process.cwd(), path), 'utf8')
+
+describe.each([
+  'app/jobs/find-work/manage/FindWorkManageClient.tsx',
+  'app/jobs/hire-talent/manage/HireTalentManageClient.tsx',
+])('manage screen %s', (path) => {
+  const source = sourceOf(path)
+
+  it('chooses its state with the shared rule from the answer status', () => {
+    expect(source).toContain("from '@/lib/message-rules'")
+    expect(source).toContain('httpStatus: r.status')
+    expect(source).toContain('manageLinkStatus(httpStatus, Boolean(data))')
+    expect(source).toContain("setStatus(linkStatus === 'retry' ? 'linkRetry' : 'invalid')")
+  })
+
+  it('reads an answer that is not JSON as empty', () => {
+    expect(source).toContain('r.json().catch(() => null)')
+    expect(source).not.toMatch(/\.then\(r => r\.json\(\)\)/)
+  })
+
+  it('asks the visitor to try again when no answer arrives', () => {
+    expect(source).toContain(".catch(() => { setStatus('linkRetry'); setLoading(false) })")
+  })
+
+  it('shows the try-again panel with the shared texts', () => {
+    expect(source).toContain("if (status === 'linkRetry') return (")
+    expect(source).toContain('{LINK_RETRY_HEADING}</h2>')
+    expect(source).toContain('{MANAGE_LINK_RETRY_TEXT}</p>')
+    expect(source).toContain('>Invalid Link</h2>')
+  })
+})
+
+describe('recruitment link routes', () => {
+  it.each([
+    'app/api/recruitment/update-candidate/route.ts',
+    'app/api/recruitment/update-employer/route.ts',
+    'app/api/recruitment/fetch-brief/route.ts',
+    'app/api/recruitment/get-profile/route.ts',
+    'app/api/recruitment/verify-email/route.ts',
+    'app/api/recruitment/job-seeker-apply/route.ts',
+  ])('%s answers with fixed texts only', (path) => {
+    const source = sourceOf(path)
+    expect(source).not.toMatch(/\.message\b/)
+    expect(source).not.toContain('"Database error"')
+  })
+
+  it.each([
+    'app/api/recruitment/update-candidate/route.ts',
+    'app/api/recruitment/update-employer/route.ts',
+    'app/api/recruitment/fetch-brief/route.ts',
+    'app/api/recruitment/get-profile/route.ts',
+  ])('%s answers an unexpected problem with the shared server problem text', (path) => {
+    const source = sourceOf(path)
+    expect(source).not.toContain('"Server error"')
+    expect(source).toContain('return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })')
   })
 })
