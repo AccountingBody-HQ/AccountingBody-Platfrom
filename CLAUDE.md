@@ -37,6 +37,7 @@ A change here can reach both sites, and markup changes can affect the Worker eve
 | `app/study/`, `app/practice-questions/`, `app/free-courses/` | Study content, questions, courses |
 | `app/get-help/`, `app/firms-freelancers/` | Service and enquiry pages |
 | `app/api/` | Public route handlers |
+| `app/api/version/` | Shows which commit and deployment are live; used to confirm a release or rollback (`docs/RELEASE.md`) |
 | `app/api/cron/`, `app/api/ingest/` | Scheduled jobs and job ingestion; schedules are in `vercel.json` |
 | `app/<admin>/`, `app/api/<admin>/` | Admin area pages and admin route handlers |
 | `components/` | Shared UI |
@@ -52,6 +53,7 @@ A change here can reach both sites, and markup changes can affect the Worker eve
 | `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`, `instrumentation.ts` | Error reporting set-up |
 | `tailwind.config.ts` | Design tokens |
 | `.github/workflows/ci.yml` | CI: lint, type check, tests, production build (placeholder configuration only) |
+| `docs/RELEASE.md` | How to release a change and how to undo it |
 | `docs/RULES.md` | Numbered legacy rules |
 | `.env.example` | Every environment variable name, no values |
 | `reports/` | Git-ignored job reports (section 7) |
@@ -174,6 +176,13 @@ Only when the owner has approved the release:
 - Keep existing `fetchCache` settings and `await` on `headers()` and `cookies()`. They are deliberate.
 - Every database change gets a numbered file in `migrations/`, in the same commit as the code that needs it.
 - The `public` database schema is shared with other products. Only touch the tables listed in `migrations/README.md`.
+
+### Admin area
+
+- Server admin pages and the admin layout call `await requireAdmin()` (`lib/admin-auth.ts`) as their first statement. Admin pages marked `'use client'` are covered by the layout. `lib/admin-pages.test.ts` checks this.
+- Every admin API route handler starts with `if (!(await isAuthenticated(req))) return signedOutResponse()`, both imported from `@/lib/admin-auth`. A route never defines its own check. `lib/admin-api-routes.test.ts` checks this.
+- Admin screens call admin API routes only through `adminFetch` (`lib/admin-fetch.ts`), never plain `fetch`. When the session has ended, the shared signed-out notice (`components/AdminSignedOutNotice.tsx`, shown by the admin layout) tells the user. `lib/admin-client-calls.test.ts` checks this.
+- Admin sessions need `ADMIN_SESSION_SECRET` (at least 32 characters) as well as `ADMIN_SECRET`; both are listed in `.env.example`. There is one session check, `isAdminSessionValid` in `lib/middleware-logic.ts`, used by middleware, `requireAdmin()` and `isAuthenticated()`.
 
 ### Job ingestion
 

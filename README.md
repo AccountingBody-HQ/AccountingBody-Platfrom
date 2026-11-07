@@ -55,6 +55,8 @@ CI runs lint, the type check, the tests and the production build on every push a
 
 The site is hosted on Vercel. A branch gets a preview deployment; check the preview first. A push to `main` deploys to production.
 
+Release and rollback steps are in [`docs/RELEASE.md`](docs/RELEASE.md).
+
 ## Project guide
 
 Read [`CLAUDE.md`](CLAUDE.md) before making changes. It holds the codebase map, safety rules, conventions and how work is checked. Older numbered rules are listed in [`docs/RULES.md`](docs/RULES.md).
