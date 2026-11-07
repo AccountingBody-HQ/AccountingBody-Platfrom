@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { Resend } from "resend"
 import { getServerSupabase } from "@/lib/supabase-server"
 import { jwtVerify } from "jose"
+import { checkEmailSend } from "@/lib/email-check"
 
 export async function GET(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
@@ -55,13 +56,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect("https://" + brand.domain + "/?confirmed=error")
   }
 
+  // The subscription is saved, so a failed team notification is logged and
+  // the visitor still sees the confirmed page.
   try {
-    await resend.emails.send({
+    const notifyResult = await resend.emails.send({
       from: brand.name + " <noreply@accountingbody.com>",
       to: "info@accountingbody.com",
       subject: "New subscriber - " + email,
       html: "<!DOCTYPE html><html><body style=\"margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;\"><div style=\"max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;\"><div style=\"background:" + brand.color + ";padding:32px 40px;\"><p style=\"color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;\">" + brand.name + " - Admin</p><h1 style=\"color:#fff;font-size:24px;margin:0;line-height:1.3;\">New confirmed subscriber.</h1></div><div style=\"padding:32px 40px;\"><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 8px;\"><strong>Email:</strong> " + email + "</p><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 8px;\"><strong>Platform:</strong> " + platform.toUpperCase() + "</p><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 28px;\"><strong>Time:</strong> " + new Date().toUTCString() + "</p><a href=\"https://accountingbody.com/roodber8\" style=\"display:inline-block;background:#D4A017;color:#0a0f2e;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;\">View subscribers</a></div><div style=\"background:#f8fafc;padding:20px 40px;border-top:1px solid #e2e8f0;\"><p style=\"color:#94a3b8;font-size:12px;margin:0;\">" + brand.name + " - Expert accounting and finance services. <a href=\"https://" + brand.domain + "\" style=\"color:#94a3b8;\">" + brand.domain + "</a></p></div></div></body></html>",
     })
+    checkEmailSend(notifyResult, "subscription team notification")
   } catch (emailError) {
     console.error("Admin notification error:", emailError)
   }

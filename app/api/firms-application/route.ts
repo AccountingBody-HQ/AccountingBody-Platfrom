@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { checkEmailSend } from '@/lib/email-check'
+import { SERVER_PROBLEM_TEXT } from '@/lib/message-rules'
 
 async function verifyTurnstile(token: string, ip: string, isEthioTax: boolean): Promise<boolean> {
   if (!token) return false
@@ -67,15 +69,16 @@ export async function POST(req: NextRequest) {
       }])
 
     if (dbError) {
-      console.error('Supabase error:', dbError)
-      return NextResponse.json({ error: dbError.message }, { status: 500 })
+      console.error('firms application: save failed', dbError.code || 'no-code')
+      return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
     }
 
     // Parse applicant type from about field prefix
     const applicantType = about.startsWith('[FIRM]') ? 'Firm' : 'Independent Professional'
 
-    // Send notification to team — non-blocking
-    try { await resend.emails.send({
+    // Send notification to team — non-blocking: the application is saved, so
+    // a failed send is logged and the visitor still sees success.
+    try { checkEmailSend(await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: 'info@accountingbody.com',
       subject: `New Network Application — ${applicantType}: ${practice_name || contact_name}`,
@@ -196,10 +199,10 @@ export async function POST(req: NextRequest) {
         </html>
       `,
       replyTo: email,
-    }) } catch (emailErr) { console.error('Notification email error:', emailErr) }
+    }), 'firms application team notification') } catch (emailErr) { console.error('Notification email error:', emailErr) }
 
-    // Send acknowledgment to applicant — non-blocking
-    try { await resend.emails.send({
+    // Send acknowledgment to applicant — non-blocking (logged on failure)
+    try { checkEmailSend(await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: email,
       subject: `We have received your application — ${brand.name}`,
@@ -231,7 +234,7 @@ export async function POST(req: NextRequest) {
         </body>
         </html>
       `,
-    }) } catch (emailErr) { console.error('Acknowledgment email error:', emailErr) }
+    }), 'firms application acknowledgement') } catch (emailErr) { console.error('Acknowledgment email error:', emailErr) }
 
     return NextResponse.json({ success: true })
   } catch (error) {

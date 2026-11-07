@@ -2,6 +2,7 @@ import { createHmac } from 'node:crypto'
 import { SignJWT } from 'jose'
 import { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { SERVER_PROBLEM_TEXT } from './message-rules'
 import { DB_LIMITS_MS, type DbContext } from './supabase-server'
 
 // Public form and payment routes, run with a real supabase-js client from
@@ -209,9 +210,7 @@ const job = {
   platform: ['ab'],
 }
 const turnstile = { 'cf-turnstile-response': 'token' }
-const timeLimitError = (context: DbContext) => ({
-  error: `TimeoutError: db: request time limit reached (${DB_LIMITS_MS[context]} ms)`,
-})
+const serverProblem = { error: SERVER_PROBLEM_TEXT }
 
 const scenarios: Scenario[] = [
   {
@@ -237,7 +236,7 @@ const scenarios: Scenario[] = [
         }),
       ),
     healthy: { status: 200, body: { success: true }, emails: 2, dbRequests: 1, turnstile: 1 },
-    never: { status: 500, body: timeLimitError('publicWrite'), emails: 0, dbRequests: 1, turnstile: 1 },
+    never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1, turnstile: 1 },
   },
   {
     name: 'contact newsletter-only form',
@@ -245,7 +244,7 @@ const scenarios: Scenario[] = [
     row: {},
     call: async () => contact(post('/api/contact', { email: 'ada@example.com', subscribeOnly: true, ...turnstile })),
     healthy: { status: 200, body: { success: true }, emails: 0, dbRequests: 1, turnstile: 1 },
-    never: { status: 500, body: timeLimitError('publicWrite'), emails: 0, dbRequests: 1, turnstile: 1 },
+    never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1, turnstile: 1 },
   },
   {
     name: 'network application form',
@@ -263,7 +262,7 @@ const scenarios: Scenario[] = [
         }),
       ),
     healthy: { status: 200, body: { success: true }, emails: 2, dbRequests: 1, turnstile: 1 },
-    never: { status: 500, body: timeLimitError('publicWrite'), emails: 0, dbRequests: 1, turnstile: 1 },
+    never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1, turnstile: 1 },
   },
   {
     name: 'help request form',
@@ -280,7 +279,7 @@ const scenarios: Scenario[] = [
         }),
       ),
     healthy: { status: 200, body: { success: true }, emails: 2, dbRequests: 1, turnstile: 1 },
-    never: { status: 500, body: timeLimitError('publicWrite'), emails: 0, dbRequests: 1, turnstile: 1 },
+    never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1, turnstile: 1 },
   },
   {
     name: 'job listing checkout',
@@ -435,7 +434,7 @@ const scenarios: Scenario[] = [
     row: {},
     call: async () => subscribe(post('/api/subscribe', { email: 'ada@example.com', ...turnstile })),
     healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: 2, turnstile: 1 },
-    never: { status: 200, body: { success: true }, emails: 1, dbRequests: 2, turnstile: 1 },
+    never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1, turnstile: 1 },
   },
 ]
 

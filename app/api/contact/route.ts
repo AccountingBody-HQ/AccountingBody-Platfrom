@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { getContactBrand, contactPlatformValue } from '@/lib/contact-brand'
+import { checkEmailSend } from '@/lib/email-check'
+import { SERVER_PROBLEM_TEXT, isMessageTooShort, messageTooShortText } from '@/lib/message-rules'
 
 async function verifyTurnstile(token: string, ip: string, isEthioTax: boolean): Promise<boolean> {
   if (!token) return false
@@ -47,8 +49,10 @@ export async function POST(req: NextRequest) {
     const BLOCKED_DOMAINS = ['hardfer.com', 'mailinator.com', 'guerrillamail.com', 'trashmail.com', 'tempmail.com', 'yopmail.com', 'sharklasers.com', 'dispostable.com', 'maildrop.cc']
     const emailDomain = email?.split('@')[1]?.toLowerCase() ?? ''
     if (BLOCKED_DOMAINS.includes(emailDomain)) return NextResponse.json({ success: true })
-    if (message && message.trim().length < 20) return NextResponse.json({ success: true })
     if (message && !message.trim().includes(' ')) return NextResponse.json({ success: true })
+    if (message && isMessageTooShort(message)) {
+      return NextResponse.json({ error: messageTooShortText() }, { status: 400 })
+    }
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required.' }, { status: 400 })
@@ -63,8 +67,8 @@ export async function POST(req: NextRequest) {
         .from('email_subscribers')
         .upsert({ email, platform: contactPlatformValue(isEthioTax), status: 'subscribed', source: 'contact_form' }, { onConflict: 'email,platform' })
       if (subError) {
-        console.error('Subscribe error:', subError)
-        return NextResponse.json({ error: subError.message }, { status: 500 })
+        console.error('contact: newsletter save failed', subError.code || 'no-code')
+        return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
       }
       return NextResponse.json({ success: true })
     }
@@ -79,8 +83,8 @@ export async function POST(req: NextRequest) {
       .insert({ name, email, subject: subject ?? 'General Enquiry', message, platform: contactPlatformValue(isEthioTax) })
 
     if (dbError) {
-      console.error('Contact insert error:', dbError)
-      return NextResponse.json({ error: dbError.message }, { status: 500 })
+      console.error('contact: save failed', dbError.code || 'no-code')
+      return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
     }
 
     // Also subscribe if checkbox was ticked
@@ -93,8 +97,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Notify team
-    await resend.emails.send({
+    // Notify team. The message is saved, so a failed send is logged and the
+    // visitor still sees success.
+    const teamResult = await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: 'info@accountingbody.com',
       subject: `New Contact Submission — ${subject ?? 'General Enquiry'}`,
@@ -152,9 +157,10 @@ export async function POST(req: NextRequest) {
       `,
       replyTo: email,
     })
+    checkEmailSend(teamResult, 'contact team notification')
 
-    // Send acknowledgment to client
-    await resend.emails.send({
+    // Send acknowledgment to client (logged on failure, as above)
+    const ackResult = await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: email,
       subject: `We have received your message — ${brand.name}`,
@@ -188,6 +194,7 @@ export async function POST(req: NextRequest) {
         </html>
       `,
     })
+    checkEmailSend(ackResult, 'contact acknowledgement')
 
     return NextResponse.json({ success: true })
   } catch (error) {

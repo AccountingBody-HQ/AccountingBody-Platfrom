@@ -4,6 +4,9 @@ import { SignJWT } from "jose"
 import { getServerSupabase } from "@/lib/supabase-server"
 import * as Sentry from "@sentry/nextjs"
 import { shouldSendConfirmationEmail } from "@/lib/subscribe-dedup"
+import { checkRead } from "@/lib/db-check"
+import { checkEmailSend } from "@/lib/email-check"
+import { CONFIRMATION_EMAIL_FAILED_TEXT, SERVER_PROBLEM_TEXT } from "@/lib/message-rules"
 
 // Unlike help-request/firms-application/contact, this route fails CLOSED on
 // a bad Turnstile result: no subscription is created. That means the caller
@@ -81,19 +84,27 @@ export async function POST(req: NextRequest) {
     const normalisedEmail = email.toLowerCase().trim()
     const platform = isET ? "et" : "ab"
 
-    // A confirmed subscriber resubmitting keeps today's behaviour exactly:
-    // no DB lookup result gates it, no dedup window applies, and — because
-    // the pending-row upsert below sits inside the same `!== "subscribed"`
-    // branch as this check — nothing ever writes to email_subscribers for
-    // this case, so an already-subscribed row can never be downgraded to
-    // 'pending' by this route.
+    // A confirmed subscriber resubmitting gets a fresh confirmation email
+    // and no dedup window applies, and — because the pending-row upsert
+    // below sits inside the same `!== "subscribed"` branch as this check —
+    // nothing ever writes to email_subscribers for this case, so an
+    // already-subscribed row can never be downgraded to 'pending' by this
+    // route. If the lookup itself fails, nothing is sent: without it the
+    // route cannot tell whether a confirmation was sent recently.
     const supabase = getServerSupabase("publicWrite")
-    const { data: existing } = await supabase
-      .from("email_subscribers")
-      .select("status, last_confirmation_sent_at")
-      .eq("email", normalisedEmail)
-      .eq("platform", platform)
-      .maybeSingle()
+    const lookup = checkRead(
+      await supabase
+        .from("email_subscribers")
+        .select("status, last_confirmation_sent_at")
+        .eq("email", normalisedEmail)
+        .eq("platform", platform)
+        .maybeSingle(),
+      "subscribe: existing subscriber"
+    )
+    if (!lookup.ok) {
+      return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
+    }
+    const existing = lookup.data
 
     const alreadySubscribed = existing?.status === "subscribed"
 
@@ -117,18 +128,24 @@ export async function POST(req: NextRequest) {
 
     const confirmUrl = "https://" + brand.domain + "/api/confirm-subscription?token=" + token
 
-    await resend.emails.send({
+    const sendResult = await resend.emails.send({
       from: brand.name + " <noreply@accountingbody.com>",
       to: email,
       subject: "Confirm your subscription - " + brand.name,
       html: "<!DOCTYPE html><html><body style=\"margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;\"><div style=\"max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;\"><div style=\"background:" + brand.color + ";padding:32px 40px;\"><p style=\"color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;\">" + brand.name + "</p><h1 style=\"color:#fff;font-size:24px;margin:0;line-height:1.3;\">Confirm your subscription.</h1></div><div style=\"padding:32px 40px;\"><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 28px;\">One last step - click below to confirm your subscription. No spam. Unsubscribe any time.</p><a href=\"" + confirmUrl + "\" style=\"display:inline-block;background:#D4A017;color:#0a0f2e;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;\">Confirm subscription</a><p style=\"color:#94a3b8;font-size:13px;margin-top:32px;\">This link expires in 7 days. If you did not sign up, ignore this email.</p></div><div style=\"background:#f8fafc;padding:20px 40px;border-top:1px solid #e2e8f0;\"><p style=\"color:#94a3b8;font-size:12px;margin:0;\">" + brand.name + " - Expert accounting and finance services. <a href=\"https://" + brand.domain + "\" style=\"color:#94a3b8;\">" + brand.domain + "</a></p></div></div></body></html>",
     })
 
-    // Only recorded once Resend has confirmed the send succeeded (it would
-    // have thrown above otherwise, skipping straight to the catch block) —
-    // a failed send must never lock a real person out of retrying for an
-    // hour having received nothing. Never reached when alreadySubscribed,
-    // so this can never downgrade a 'subscribed' row to 'pending'.
+    // Resend reports a failed send in its result rather than by throwing, so
+    // the result is checked here. On failure nothing is recorded: a failed
+    // send must never lock a real person out of retrying for an hour having
+    // received nothing.
+    if (!checkEmailSend(sendResult, "subscribe confirmation")) {
+      return NextResponse.json({ error: CONFIRMATION_EMAIL_FAILED_TEXT }, { status: 502 })
+    }
+
+    // Only recorded once Resend has confirmed the send. Never reached when
+    // alreadySubscribed, so this can never downgrade a 'subscribed' row to
+    // 'pending'.
     if (!alreadySubscribed) {
       const { error: upsertError } = await supabase
         .from("email_subscribers")

@@ -5,6 +5,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { safeUserFacingErrorMessage } from '@/lib/turnstile-error'
+import { isMessageTooShort, messageTooShortText } from '@/lib/message-rules'
 
 declare global {
   interface Window {
@@ -208,6 +209,12 @@ export default function ContactForm() {
       subscribe: (form.elements.namedItem('subscribe') as HTMLInputElement).checked,
       _h:        (form.elements.namedItem('_h') as HTMLInputElement).value,
       'cf-turnstile-response': token,
+    }
+    // Same minimum as the server, so the visitor is told before sending.
+    if (isMessageTooShort(data.message)) {
+      setFormState('error')
+      setErrorMsg(messageTooShortText())
+      return
     }
     try {
       const res  = await fetch('/api/contact', {

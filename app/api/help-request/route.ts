@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { checkEmailSend } from '@/lib/email-check'
+import { SERVER_PROBLEM_TEXT, isMessageTooShort, messageTooShortText } from '@/lib/message-rules'
 
 async function verifyTurnstile(token: string, ip: string, isEthioTax: boolean): Promise<boolean> {
   if (!token) return false
@@ -49,8 +51,10 @@ export async function POST(req: NextRequest) {
     const BLOCKED_DOMAINS = ['hardfer.com', 'mailinator.com', 'guerrillamail.com', 'trashmail.com', 'tempmail.com', 'yopmail.com', 'sharklasers.com', 'dispostable.com', 'maildrop.cc']
     const emailDomain = email?.split('@')[1]?.toLowerCase() ?? ''
     if (BLOCKED_DOMAINS.includes(emailDomain)) return NextResponse.json({ success: true })
-    if (message && message.trim().length < 20) return NextResponse.json({ success: true })
     if (message && !message.trim().includes(' ')) return NextResponse.json({ success: true })
+    if (message && isMessageTooShort(message)) {
+      return NextResponse.json({ error: messageTooShortText() }, { status: 400 })
+    }
 
     if (!name || !email || !message || !service_type) {
       return NextResponse.json({ error: 'Name, email, service and message are required.' }, { status: 400 })
@@ -71,12 +75,13 @@ export async function POST(req: NextRequest) {
       }])
 
     if (dbError) {
-      console.error('Supabase error:', dbError)
-      return NextResponse.json({ error: dbError.message }, { status: 500 })
+      console.error('help request: save failed', dbError.code || 'no-code')
+      return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
     }
 
-    // Send notification to team
-    await resend.emails.send({
+    // Send notification to team. The request is saved, so a failed send is
+    // logged and the visitor still sees success.
+    const teamResult = await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: 'info@accountingbody.com',
       subject: `New Service Brief — ${service_type}`,
@@ -142,9 +147,10 @@ export async function POST(req: NextRequest) {
       `,
       replyTo: email,
     })
+    checkEmailSend(teamResult, 'help request team notification')
 
-    // Send acknowledgment to client
-    await resend.emails.send({
+    // Send acknowledgment to client (logged on failure, as above)
+    const ackResult = await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: email,
       subject: `We have received your enquiry — ${service_type}`,
@@ -177,6 +183,7 @@ export async function POST(req: NextRequest) {
         </html>
       `,
     })
+    checkEmailSend(ackResult, 'help request acknowledgement')
 
     return NextResponse.json({ success: true })
   } catch (error) {
