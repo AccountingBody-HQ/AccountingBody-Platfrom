@@ -25,4 +25,6 @@ Sentry.init({
   beforeSend: filterServerEvent,
   beforeSendTransaction: filterServerTransaction,
   beforeSendSpan: filterServerSpan,
+  // Trace headers are added to no outgoing request.
+  tracePropagationTargets: [],
 })

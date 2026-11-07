@@ -451,11 +451,13 @@ describe('the filters run in both server runtimes', () => {
     const text = source('lib/sentry-privacy.ts')
     const imports = Array.from(text.matchAll(/^import\s+(type\s+)?[^'"]*from\s+['"]([^'"]+)['"]/gm))
     const runtime = imports.filter((match) => !match[1]).map((match) => match[2])
-    expect(runtime).toEqual(['./middleware-logic'])
+    expect(runtime).toEqual(['./scrub-rules', './middleware-logic'])
     expect(text).not.toMatch(/\brequire\(|\bimport\(|\bnode:|\bBuffer\b|\bprocess\./)
-    const logic = source('lib/middleware-logic.ts')
-    expect(logic).not.toMatch(/^import\s/m)
-    expect(logic).not.toMatch(/\brequire\(|\bnode:/)
+    for (const file of ['lib/middleware-logic.ts', 'lib/scrub-rules.ts']) {
+      const logic = source(file)
+      expect(logic).not.toMatch(/^import\s/m)
+      expect(logic).not.toMatch(/\brequire\(|\bnode:/)
+    }
   })
 
   it.each(['sentry.server.config.ts', 'sentry.edge.config.ts'])('%s uses all three filters', (file) => {

@@ -16,13 +16,15 @@
 // each running instance per rolling hour; the number held back travels on the
 // next report as held_back_total.
 //
-// No runtime imports apart from ./middleware-logic, so this file runs in the
-// edge runtime as well as on the server. Each filter returns null (the event
-// is not sent) if it fails; the span filter returns a minimal span instead,
-// because Sentry keeps the original span when that hook returns null.
+// No runtime imports apart from ./scrub-rules and ./middleware-logic, so this
+// file runs in the edge runtime as well as on the server. Each filter returns
+// null (the event is not sent) if it fails; the span filter returns a minimal
+// span instead, because Sentry keeps the original span when that hook returns
+// null.
 
 import type * as Sentry from '@sentry/nextjs'
 import type { ErrorEvent, Event, EventHint } from '@sentry/nextjs'
+import { ADMIN_AREA, REMOVED, SCAN_LENGTH, replaceSecretNameParts, replaceSecretText, withoutQuery } from './scrub-rules'
 import { getAdminPath } from './middleware-logic'
 
 type InitOptions = NonNullable<Parameters<typeof Sentry.init>[0]>
@@ -32,22 +34,13 @@ type TransactionEvent = Parameters<NonNullable<InitOptions['beforeSendTransactio
 export const REPORTS_PER_HOUR = 30
 export const REPORT_HOUR_MS = 60 * 60 * 1000
 
-const REMOVED = '[removed]'
-const ADMIN_AREA = 'admin-area'
 const MESSAGE_LENGTH = 120
 const NAME_LENGTH = 300
 const TAG_LENGTH = 200
-const SCAN_LENGTH = 2000
 const MAX_ENTRIES = 50
 const MAX_FRAMES = 100
 const MAX_SPANS = 1000
 
-const EMAIL = /[^\s@<>()[\]"',;:]+@[^\s@<>()[\]"',;:]+/g
-// In paths an address ends at "/", so the rest of the path stays readable.
-const EMAIL_IN_NAME = /[^\s@<>()[\]"',;:/]+@[^\s@<>()[\]"',;:/]+/g
-const LONG_TOKEN = /[A-Za-z0-9_-]{20,}/g
-const LONG_DIGITS = /\d{6,}/g
-const QUERY_OR_FRAGMENT = /[?#][^\s]*/g
 const ERROR_NAME = /^[A-Za-z][A-Za-z0-9_]{0,40}$/
 const SAFE_KEY = /^[A-Za-z0-9_.:-]{1,64}$/
 const TRACE_ID = /^[0-9a-f]{16,32}$/i
@@ -92,7 +85,7 @@ export function scrubText(text: string, limit = MESSAGE_LENGTH): string {
   let out = text.slice(0, SCAN_LENGTH)
   const privateArea = getAdminPath()
   if (privateArea) out = out.replace(new RegExp(escapeRegExp(privateArea), 'gi'), REMOVED)
-  out = out.replace(EMAIL, REMOVED).replace(LONG_TOKEN, REMOVED).replace(LONG_DIGITS, REMOVED)
+  out = replaceSecretText(out)
   return out.slice(0, limit)
 }
 
@@ -103,25 +96,13 @@ export function scrubName(text: string, limit = NAME_LENGTH): string {
   let out = text.slice(0, SCAN_LENGTH)
   const admin = adminPattern()
   if (admin) out = out.replace(admin, ADMIN_AREA)
-  out = out
-    .replace(EMAIL_IN_NAME, REMOVED)
-    .replace(LONG_TOKEN, (run) => (/\d/.test(run) || run.length >= 40 ? REMOVED : run))
-    .replace(LONG_DIGITS, REMOVED)
+  out = replaceSecretNameParts(out)
   return out.slice(0, limit)
-}
-
-function decode(text: string): string {
-  try {
-    return decodeURIComponent(text)
-  } catch {
-    return text
-  }
 }
 
 // A path or URL-like text without its query string or fragment.
 export function scrubPath(text: string, limit = NAME_LENGTH): string {
-  const withoutQuery = text.slice(0, SCAN_LENGTH * 2).replace(QUERY_OR_FRAGMENT, '')
-  return scrubName(decode(withoutQuery).replace(QUERY_OR_FRAGMENT, ''), limit)
+  return scrubName(withoutQuery(text), limit)
 }
 
 // "https://host/path" only: no query, fragment, user name or password.

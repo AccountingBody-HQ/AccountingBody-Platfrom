@@ -75,6 +75,8 @@ export default withSentryConfig(nextConfig, {
   silent: !process.env.CI,
   telemetry: false,
   widenClientFileUpload: true,
+  // The browser bundle carries no list of the site's page routes.
+  routeManifestInjection: false,
   webpack: {
     treeshake: {
       removeDebugLogging: true,
