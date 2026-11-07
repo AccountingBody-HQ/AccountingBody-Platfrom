@@ -169,6 +169,8 @@ type Route = {
   via: 'body' | 'client'
   caught: (message: string) => Expected
   refusals: [string, () => void | NextRequest][]
+  // Fixed labels of the route's other reports, outside its final catch block.
+  otherLabels?: string[]
 }
 
 const somethingWrong = { status: 500, body: { error: 'Something went wrong.' } }
@@ -282,6 +284,7 @@ const ROUTES: Route[] = [
     via: 'client',
     caught: () => ({ status: 503, body: { status: 'error' } }),
     refusals: [['database error', () => { db.failing = true }]],
+    otherLabels: ['health check database error'],
   },
   {
     name: 'recruitment/employer-brief',
@@ -518,10 +521,15 @@ describe('public route reporting', () => {
     expect(new Set(labels).size).toBe(labels.length)
   })
 
-  it.each(ROUTES)('$name reports with a fixed label and the area only', ({ name, label }) => {
+  it.each(ROUTES)('$name reports with a fixed label and the area only', ({ name, label, otherLabels = [] }) => {
     const source = readFileSync(join(process.cwd(), 'app/api', name, 'route.ts'), 'utf8')
     const calls = source.match(/reportServerError\([^)]*\)/g) ?? []
-    expect(calls).toHaveLength(1)
-    expect(calls[0]).toMatch(new RegExp(`^reportServerError\\((['"])${label}\\1, (e|err|error), \\{ area: (['"])public\\3 \\}\\)$`))
+    const labels = [label, ...otherLabels]
+    expect(calls).toHaveLength(labels.length)
+    labels.forEach((expected, index) => {
+      expect(calls[calls.length - 1 - index]).toMatch(
+        new RegExp(`^reportServerError\\((['"])${expected}\\1, (e|err|error), \\{ area: (['"])public\\3 \\}\\)$`),
+      )
+    })
   })
 })

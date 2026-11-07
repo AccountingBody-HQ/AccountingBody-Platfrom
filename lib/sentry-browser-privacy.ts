@@ -76,6 +76,7 @@ export const PUBLIC_API_SEGMENTS: readonly string[] = [
   'ingest',
   'jobs',
   'mock-exam',
+  'ops-status',
   'recruitment',
   'saved-jobs',
   'search',

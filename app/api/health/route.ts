@@ -19,7 +19,9 @@ export async function GET() {
       .limit(1)
 
     if (error) {
-      return NextResponse.json({ status: 'error', message: error.message }, { status: 503 })
+      console.error('health: database check failed', error.code)
+      reportServerError('health check database error', error, { area: 'public' })
+      return NextResponse.json({ status: 'error' }, { status: 503 })
     }
 
     return NextResponse.json({ status: 'ok' }, { status: 200 })
