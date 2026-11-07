@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSupabase } from "@/lib/supabase-server"
 import { checkRead } from "@/lib/db-check"
 import { SERVER_PROBLEM_TEXT } from "@/lib/message-rules"
+import { reportServerError } from "@/lib/report-error"
 
 export async function GET(req: NextRequest) {
   try {
@@ -28,6 +29,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ data })
   } catch (err) {
     console.error("fetch-brief error:", err)
+    reportServerError("hiring brief lookup failed", err, { area: "public" })
     return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
   }
 }

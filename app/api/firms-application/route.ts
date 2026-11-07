@@ -5,6 +5,7 @@ import { checkEmailSend } from '@/lib/email-check'
 import { HUMAN_CHECK_FAILED_TEXT, SERVER_PROBLEM_TEXT } from '@/lib/message-rules'
 import { verifyHumanCheck } from '@/lib/turnstile-verify'
 import { escapeHtml, withoutLineBreaks } from '@/lib/html-escape'
+import { reportServerError } from '@/lib/report-error'
 
 export async function POST(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
@@ -228,6 +229,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Firms application error:', error)
+    reportServerError('firms application submit failed', error, { area: 'public' })
     return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 })
   }
 }

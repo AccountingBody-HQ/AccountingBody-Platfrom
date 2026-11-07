@@ -5,6 +5,7 @@ import { generateReferenceNumber, generateProfileToken } from "@/lib/profileUtil
 import { checkRead } from "@/lib/db-check"
 import { checkEmailSend } from "@/lib/email-check"
 import { escapeHtml, withoutLineBreaks } from "@/lib/html-escape"
+import { reportServerError } from "@/lib/report-error"
 
 export async function GET(req: NextRequest) {
   try {
@@ -106,6 +107,7 @@ export async function GET(req: NextRequest) {
 
   } catch (err) {
     console.error("confirm-brief error:", err)
+    reportServerError("hiring brief confirm failed", err, { area: "public" })
     return NextResponse.redirect("https://accountingbody.com/jobs/hire-talent?brief=invalid")
   }
 }

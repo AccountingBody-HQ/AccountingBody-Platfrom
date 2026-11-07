@@ -1,5 +1,6 @@
 import { getServerSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
+import { reportServerError } from '@/lib/report-error'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -22,7 +23,8 @@ export async function GET() {
     }
 
     return NextResponse.json({ status: 'ok' }, { status: 200 })
-  } catch {
+  } catch (error) {
+    reportServerError('health check failed', error, { area: 'public' })
     return NextResponse.json({ status: 'error' }, { status: 503 })
   }
 }

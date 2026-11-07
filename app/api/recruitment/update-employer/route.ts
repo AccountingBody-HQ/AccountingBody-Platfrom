@@ -6,6 +6,7 @@ import { changedFields as listChangedFields } from "@/lib/changed-fields"
 import { checkRead } from "@/lib/db-check"
 import { checkEmailSend } from "@/lib/email-check"
 import { SERVER_PROBLEM_TEXT } from "@/lib/message-rules"
+import { reportServerError } from "@/lib/report-error"
 
 export async function POST(req: NextRequest) {
   try {
@@ -89,6 +90,7 @@ export async function POST(req: NextRequest) {
 
   } catch (err) {
     console.error("update-employer error:", err)
+    reportServerError("hiring brief update failed", err, { area: "public" })
     return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
   }
 }

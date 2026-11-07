@@ -6,6 +6,7 @@ import { checkEmailSend } from "@/lib/email-check"
 import { CONFIRMATION_EMAIL_FAILED_TEXT, HUMAN_CHECK_FAILED_TEXT, SERVER_PROBLEM_TEXT } from "@/lib/message-rules"
 import { verifyHumanCheck } from "@/lib/turnstile-verify"
 import { escapeHtml } from "@/lib/html-escape"
+import { reportServerError } from "@/lib/report-error"
 
 export async function POST(req: NextRequest) {
   try {
@@ -124,6 +125,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (err) {
     console.error("employer-brief error:", err)
+    reportServerError("hiring brief submit failed", err, { area: "public" })
     return NextResponse.json({ error: "Server error" }, { status: 500 })
   }
 }

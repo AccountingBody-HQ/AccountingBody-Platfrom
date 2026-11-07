@@ -4,6 +4,7 @@ import { Resend } from "resend"
 import { checkRead } from "@/lib/db-check"
 import { checkEmailSend } from "@/lib/email-check"
 import { escapeHtml, withoutLineBreaks } from "@/lib/html-escape"
+import { reportServerError } from "@/lib/report-error"
 
 export async function GET(req: NextRequest) {
   try {
@@ -76,6 +77,7 @@ export async function GET(req: NextRequest) {
 
   } catch (err) {
     console.error("Verify email error:", err)
+    reportServerError("email verify failed", err, { area: "public" })
     return NextResponse.redirect(new URL("/jobs/find-work?verified=error", req.url))
   }
 }

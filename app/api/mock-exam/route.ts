@@ -3,6 +3,7 @@
 // Replaces Sanity GROQ fetch — Session 35
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { reportServerError } from '@/lib/report-error'
 
 function getSupabase() {
   return getServerSupabase('publicRead')
@@ -135,6 +136,7 @@ export async function GET(req: NextRequest) {
 
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Unknown error'
+    reportServerError('mock exam load failed', e, { area: 'public' })
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

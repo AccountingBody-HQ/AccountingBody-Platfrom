@@ -5,6 +5,7 @@ import { checkEmailSend } from "@/lib/email-check"
 import { HUMAN_CHECK_FAILED_TEXT, SERVER_PROBLEM_TEXT } from "@/lib/message-rules"
 import { verifyHumanCheck } from "@/lib/turnstile-verify"
 import { escapeHtml } from "@/lib/html-escape"
+import { reportServerError } from "@/lib/report-error"
 
 function generateToken() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -107,6 +108,7 @@ export async function POST(req: NextRequest) {
 
   } catch (err) {
     console.error("Job seeker apply error:", err)
-    return NextResponse.json({ error: "Server error" }, { status: 500 })
+    reportServerError("job seeker registration failed", err, { area: "public" })
+    return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
   }
 }
