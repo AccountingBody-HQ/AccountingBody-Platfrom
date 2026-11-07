@@ -150,6 +150,7 @@ Only when the owner has approved the release:
 | Concern | Where it lives | Rule |
 |---|---|---|
 | Job queries | `lib/jobs.ts` | New job queries go here |
+| Cached database reads | `lib/cache-guard.ts` | Wrap every `unstable_cache` database read with `guardCachedRead`, using the same key parts. The similar-jobs reads, which are off, are not wrapped yet |
 | Job emails | `lib/jobEmails.ts` | New job emails go here |
 | Admin session check | `lib/admin-auth.ts` | Every admin page and route checks the session on the server |
 | Admin colours | `lib/admin-theme.ts` | Use `ADMIN_COLORS`, not raw colour values |
@@ -173,6 +174,7 @@ Only when the owner has approved the release:
 - Public forms verify the Turnstile token on the server.
 - Server-only secrets never go in a `NEXT_PUBLIC_` variable.
 - Popular reads use `unstable_cache`, as `lib/jobs.ts` and `lib/db.ts` do. Treat any new query on a busy page as a database load decision.
+- Cached database reads go through the cache guard (`lib/cache-guard.ts`); never cache a failure. The cached function throws on a database error, and the caller catches outside the cache and returns its fallback.
 - Keep existing `fetchCache` settings and `await` on `headers()` and `cookies()`. They are deliberate.
 - Every database change gets a numbered file in `migrations/`, in the same commit as the code that needs it.
 - The `public` database schema is shared with other products. Only touch the tables listed in `migrations/README.md`.

@@ -2,6 +2,7 @@
 import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
+import { guardCachedRead } from '@/lib/cache-guard'
 
 function getSupabase() {
   return createClient(
@@ -112,12 +113,18 @@ async function fetchPublishedArticleBySlug(slug: string): Promise<ArticleFull | 
 // Returns null only for a genuine not-found. Any other failure is logged and
 // re-thrown, so an article page renders its error boundary with a 500
 // instead of a 404 that tells crawlers the article doesn't exist.
+const ARTICLE_BY_SLUG_KEY = ['article-by-slug', 'published']
+
+const guardedArticleBySlug = guardCachedRead(ARTICLE_BY_SLUG_KEY, (slug: string) =>
+  unstable_cache(fetchPublishedArticleBySlug, ARTICLE_BY_SLUG_KEY, {
+    revalidate: 3600,
+    tags: ['articles', `article:${slug}`],
+  })(slug)
+)
+
 export const getArticleBySlug = cache(async (slug: string): Promise<ArticleFull | null> => {
   try {
-    return await unstable_cache(fetchPublishedArticleBySlug, ['article-by-slug', 'published'], {
-      revalidate: 3600,
-      tags: ['articles', `article:${slug}`],
-    })(slug)
+    return await guardedArticleBySlug(slug)
   } catch (error) {
     console.error('getArticleBySlug error:', error)
     throw error
@@ -175,10 +182,10 @@ async function fetchCategoryCount(category: string): Promise<number> {
   return count
 }
 
-const cachedCategoryCount = unstable_cache(fetchCategoryCount, ['getCategoryCounts'], {
+const cachedCategoryCount = guardCachedRead(['getCategoryCounts'], unstable_cache(fetchCategoryCount, ['getCategoryCounts'], {
   revalidate: 3600,
   tags: ['counts', 'articles'],
-})
+}))
 
 // Cached per category, so one failed count reads as 0 for that category only
 // and the others keep their real values, as they did before caching.
@@ -307,10 +314,10 @@ async function fetchQuestionSetCount(): Promise<number> {
   return count
 }
 
-const cachedQuestionSetCount = unstable_cache(fetchQuestionSetCount, ['getQuestionSetCount'], {
+const cachedQuestionSetCount = guardCachedRead(['getQuestionSetCount'], unstable_cache(fetchQuestionSetCount, ['getQuestionSetCount'], {
   revalidate: 3600,
   tags: ['counts', 'questions'],
-})
+}))
 
 export async function getQuestionSetCount(): Promise<number> {
   try {
@@ -350,10 +357,10 @@ async function fetchPublishedQuestionCount(): Promise<number> {
   return count
 }
 
-const cachedPublishedQuestionCount = unstable_cache(fetchPublishedQuestionCount, ['getPublishedQuestionCount'], {
+const cachedPublishedQuestionCount = guardCachedRead(['getPublishedQuestionCount'], unstable_cache(fetchPublishedQuestionCount, ['getPublishedQuestionCount'], {
   revalidate: 3600,
   tags: ['counts', 'questions'],
-})
+}))
 
 export async function getPublishedQuestionCount(): Promise<number> {
   try {
@@ -396,10 +403,10 @@ async function fetchPublishedArticleCount(siteCode: string): Promise<number> {
   return count
 }
 
-const cachedPublishedArticleCount = unstable_cache(fetchPublishedArticleCount, ['getPublishedArticleCount'], {
+const cachedPublishedArticleCount = guardCachedRead(['getPublishedArticleCount'], unstable_cache(fetchPublishedArticleCount, ['getPublishedArticleCount'], {
   revalidate: 3600,
   tags: ['counts', 'articles'],
-})
+}))
 
 export async function getPublishedArticleCount(siteCode: string): Promise<number> {
   try {

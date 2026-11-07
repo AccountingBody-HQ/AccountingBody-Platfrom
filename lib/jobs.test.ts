@@ -6,6 +6,7 @@ import {
   getJobSitemapEntries, getJobSitemapChunk, getSimilarJobs, buildSimilarQuery,
   similarTitleTokens, SIMILAR_JOB_COLUMNS, getBrowsableJobsCount,
 } from './jobs'
+import { resetCacheGuard } from './cache-guard'
 
 const PAGE_SIZE = 1000
 
@@ -87,9 +88,11 @@ function setSimilarJobsEnabled(value: string | undefined) {
   else process.env.SIMILAR_JOBS_ENABLED = value
 }
 
+// Each test starts with no remembered values (lib/cache-guard.ts).
 afterEach(() => {
   vi.clearAllMocks()
   setSimilarJobsEnabled(originalSimilarJobsEnabled)
+  resetCacheGuard()
 })
 
 describe('getJobSitemapEntries — internal pagination', () => {

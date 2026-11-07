@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
 import { getArticleBySlug, getCategoryCounts, getPublishedArticleCount, getPublishedQuestionCount, getQuestionSetCount } from './db'
+import { resetCacheGuard } from './cache-guard'
 
 vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn(),
@@ -48,8 +49,10 @@ function fakeCountClient(result: { count: number | null; error: unknown }) {
   return { client: builder, calls }
 }
 
+// Each test starts with no remembered values (lib/cache-guard.ts).
 afterEach(() => {
   vi.clearAllMocks()
+  resetCacheGuard()
 })
 
 describe('getPublishedArticleCount', () => {
@@ -156,6 +159,7 @@ describe('count caching', () => {
   it.each(cases)('%s throws inside the cache and returns 0 outside it', async (_name, run) => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     for (const result of [{ count: null, error: { message: '' } }, { count: null, error: null }]) {
+      resetCacheGuard()
       cacheCalls.length = 0
       const { client } = fakeCountClient(result)
       vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)

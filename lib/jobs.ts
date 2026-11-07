@@ -3,6 +3,7 @@ import { unstable_cache } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
 import { bucketBounds } from '@/lib/sitemap-chunks'
 import { SINGLE_WORD_COUNTRY_NAMES } from '@/lib/ingestion/normalise'
+import { guardCachedRead } from '@/lib/cache-guard'
 
 function getSupabase() {
   return createClient(
@@ -483,12 +484,12 @@ async function fetchListingJobsCount(filters: ListingFilters): Promise<number> {
   return getActiveDirectJobs({ ...filters, countOnly: true })
 }
 
-const cachedListingJobs = cache(
+const cachedListingJobs = cache(guardCachedRead(['listing-jobs'],
   unstable_cache(fetchListingJobs, ['listing-jobs'], { revalidate: 300, tags: ['jobs', 'jobs:listings'] })
-)
-const cachedListingJobsCount = cache(
+))
+const cachedListingJobsCount = cache(guardCachedRead(['listing-jobs-count'],
   unstable_cache(fetchListingJobsCount, ['listing-jobs-count'], { revalidate: 300, tags: ['jobs', 'jobs:listings'] })
-)
+))
 
 // Normalising inside these wrappers (not at the call site) means no caller
 // can reach the cache with an un-normalised key.
@@ -958,10 +959,10 @@ async function fetchBrowsableJobsCount(platform: string): Promise<number> {
   return count
 }
 
-const cachedBrowsableJobsCount = unstable_cache(fetchBrowsableJobsCount, ['getBrowsableJobsCount'], {
+const cachedBrowsableJobsCount = guardCachedRead(['getBrowsableJobsCount'], unstable_cache(fetchBrowsableJobsCount, ['getBrowsableJobsCount'], {
   revalidate: 3600,
   tags: ['counts', 'jobs'],
-})
+}))
 
 export async function getBrowsableJobsCount(platform: string): Promise<number> {
   try {
@@ -1010,22 +1011,32 @@ export interface ActiveJobCountry {
 // callers don't need to re-sort. Rows with a null location_country are
 // excluded by the RPC's own WHERE clause, not filtered out here.
 //
-// Returns [] on any RPC error — including "the migration hasn't been run
-// yet" (a real possibility: this Codespace has no database credentials
-// and cannot apply migrations/0006 itself, see migrations/README.md) —
-// rather than throwing, so callers can treat "no data" and "the function
-// doesn't exist yet" identically and fall back to a hardcoded list.
-export async function getActiveJobCountries(platform: string): Promise<ActiveJobCountry[]> {
+// The query itself throws on any RPC error, so unstable_cache stores
+// nothing for it; a real result, including an empty list, is returned and
+// cached. Both exported readers catch outside the cache and return [] on
+// any RPC error — including "the migration hasn't been run yet" (a real
+// possibility: this Codespace has no database credentials and cannot apply
+// migrations/0006 itself, see migrations/README.md) — so callers can treat
+// "no data" and "the function doesn't exist yet" identically and fall back
+// to a hardcoded list.
+async function fetchActiveJobCountries(platform: string): Promise<ActiveJobCountry[]> {
   const supabase = getSupabase()
-  const { data, error } = await supabase.rpc('get_active_job_countries', { p_platform: platform })
-  if (error || !data) {
-    if (error) console.error('getActiveJobCountries error:', error)
-    return []
-  }
+  const { data, error, status } = await supabase.rpc('get_active_job_countries', { p_platform: platform })
+  if (error) throw new Error(`active job countries query failed (status ${status}): ${error.message}`)
+  if (!data) return []
   return (data as { country: string; job_count: number }[]).map(row => ({
     country: row.country,
     count: row.job_count,
   }))
+}
+
+export async function getActiveJobCountries(platform: string): Promise<ActiveJobCountry[]> {
+  try {
+    return await fetchActiveJobCountries(platform)
+  } catch (error) {
+    console.error('getActiveJobCountries error:', error)
+    return []
+  }
 }
 
 // Two layers, same composition and same reasoning as
@@ -1037,9 +1048,18 @@ export async function getActiveJobCountries(platform: string): Promise<ActiveJob
 // jobs changes far more slowly than the job count itself; a new country
 // appearing up to 6 hours late is an acceptable trade for a much cheaper
 // steady-state query volume against a GROUP BY aggregate.
-export const getCachedActiveJobCountries = cache(
-  unstable_cache(getActiveJobCountries, ['active-job-countries'], { revalidate: 21600 })
+const cachedActiveJobCountries = guardCachedRead(['active-job-countries'],
+  unstable_cache(fetchActiveJobCountries, ['active-job-countries'], { revalidate: 21600 })
 )
+
+export const getCachedActiveJobCountries = cache(async (platform: string): Promise<ActiveJobCountry[]> => {
+  try {
+    return await cachedActiveJobCountries(platform)
+  } catch (error) {
+    console.error('getActiveJobCountries error:', error)
+    return []
+  }
+})
 
 export async function getExpiringJobs(daysFromNow: number): Promise<Job[]> {
   const supabase = getSupabase()
