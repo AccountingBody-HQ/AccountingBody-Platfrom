@@ -6,12 +6,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
+import { checkRead } from '@/lib/db-check'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
 function getClient() {
   return getServerSupabase('admin')
+}
+
+// Answers for a check that could not be read; the action stops before any write.
+function courseCheckFailed() {
+  return NextResponse.json({ error: 'Could not check this course. Nothing was changed.' }, { status: 500 })
+}
+
+function nextPositionFailed() {
+  return NextResponse.json({ error: 'Could not work out the next position. Nothing was added.' }, { status: 500 })
 }
 
 // ── Row types ────────────────────────────────────────────────────────────────
@@ -242,13 +252,18 @@ export async function PATCH(
 
   // ── add_chapter ──────────────────────────────────────────────────────────
   if (action === 'add_chapter') {
-    const { data: maxRow } = await supabase
-      .from('course_chapters')
-      .select('chapter_order')
-      .eq('course_id', courseId)
-      .order('chapter_order', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+    const maxRead = checkRead(
+      await supabase
+        .from('course_chapters')
+        .select('chapter_order')
+        .eq('course_id', courseId)
+        .order('chapter_order', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      'chapter order lookup',
+    )
+    if (!maxRead.ok) return nextPositionFailed()
+    const maxRow = maxRead.data
 
     const nextOrder = ((maxRow?.chapter_order as number) ?? 0) + 1
 
@@ -267,12 +282,17 @@ export async function PATCH(
     const chapterId = body.chapterId as string
     if (!chapterId) return NextResponse.json({ error: 'chapterId required' }, { status: 400 })
 
-    const { data: chapter } = await supabase
-      .from('course_chapters')
-      .select('id')
-      .eq('id', chapterId)
-      .eq('course_id', courseId)
-      .maybeSingle()
+    const chapterRead = checkRead(
+      await supabase
+        .from('course_chapters')
+        .select('id')
+        .eq('id', chapterId)
+        .eq('course_id', courseId)
+        .maybeSingle(),
+      'course chapter check',
+    )
+    if (!chapterRead.ok) return courseCheckFailed()
+    const chapter = chapterRead.data
 
     if (!chapter) return NextResponse.json({ error: 'Chapter not found' }, { status: 404 })
 
@@ -291,11 +311,16 @@ export async function PATCH(
     const orderedIds = body.orderedIds as string[]
     if (!Array.isArray(orderedIds)) return NextResponse.json({ error: 'orderedIds required' }, { status: 400 })
 
-    const { data: owned } = await supabase
-      .from('course_chapters')
-      .select('id')
-      .eq('course_id', courseId)
-      .in('id', orderedIds)
+    const ownedRead = checkRead(
+      await supabase
+        .from('course_chapters')
+        .select('id')
+        .eq('course_id', courseId)
+        .in('id', orderedIds),
+      'course chapters check',
+    )
+    if (!ownedRead.ok) return courseCheckFailed()
+    const owned = ownedRead.data
 
     if (!owned || owned.length !== orderedIds.length)
       return NextResponse.json({ error: 'One or more chapters do not belong to this course' }, { status: 403 })
@@ -334,22 +359,32 @@ export async function PATCH(
     const title = (body.title as string | undefined) ?? 'New Lesson'
     if (!chapterId) return NextResponse.json({ error: 'chapterId required' }, { status: 400 })
 
-    const { data: chapter } = await supabase
-      .from('course_chapters')
-      .select('id, chapter_order')
-      .eq('id', chapterId)
-      .eq('course_id', courseId)
-      .maybeSingle()
+    const chapterRead = checkRead(
+      await supabase
+        .from('course_chapters')
+        .select('id, chapter_order')
+        .eq('id', chapterId)
+        .eq('course_id', courseId)
+        .maybeSingle(),
+      'course chapter check',
+    )
+    if (!chapterRead.ok) return courseCheckFailed()
+    const chapter = chapterRead.data
 
     if (!chapter) return NextResponse.json({ error: 'Chapter not found' }, { status: 404 })
 
-    const { data: maxRow } = await supabase
-      .from('course_lessons')
-      .select('lesson_order')
-      .eq('chapter_id', chapterId)
-      .order('lesson_order', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+    const maxRead = checkRead(
+      await supabase
+        .from('course_lessons')
+        .select('lesson_order')
+        .eq('chapter_id', chapterId)
+        .order('lesson_order', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      'lesson order lookup',
+    )
+    if (!maxRead.ok) return nextPositionFailed()
+    const maxRow = maxRead.data
 
     const nextOrder = ((maxRow?.lesson_order as number) ?? 0) + 1
     const randomSuffix = Math.random().toString(36).slice(2, 6)
@@ -376,12 +411,17 @@ export async function PATCH(
     const lessonId = body.lessonId as string
     if (!lessonId) return NextResponse.json({ error: 'lessonId required' }, { status: 400 })
 
-    const { data: lesson } = await supabase
-      .from('course_lessons')
-      .select('id')
-      .eq('id', lessonId)
-      .eq('course_id', courseId)
-      .maybeSingle()
+    const lessonRead = checkRead(
+      await supabase
+        .from('course_lessons')
+        .select('id')
+        .eq('id', lessonId)
+        .eq('course_id', courseId)
+        .maybeSingle(),
+      'course lesson check',
+    )
+    if (!lessonRead.ok) return courseCheckFailed()
+    const lesson = lessonRead.data
 
     if (!lesson) return NextResponse.json({ error: 'Lesson not found' }, { status: 404 })
 
@@ -402,20 +442,30 @@ export async function PATCH(
     if (!chapterId || !Array.isArray(orderedIds))
       return NextResponse.json({ error: 'chapterId and orderedIds required' }, { status: 400 })
 
-    const { data: chapter } = await supabase
-      .from('course_chapters')
-      .select('id')
-      .eq('id', chapterId)
-      .eq('course_id', courseId)
-      .maybeSingle()
+    const chapterRead = checkRead(
+      await supabase
+        .from('course_chapters')
+        .select('id')
+        .eq('id', chapterId)
+        .eq('course_id', courseId)
+        .maybeSingle(),
+      'course chapter check',
+    )
+    if (!chapterRead.ok) return courseCheckFailed()
+    const chapter = chapterRead.data
 
     if (!chapter) return NextResponse.json({ error: 'Chapter not found' }, { status: 404 })
 
-    const { data: owned } = await supabase
-      .from('course_lessons')
-      .select('id')
-      .eq('chapter_id', chapterId)
-      .in('id', orderedIds)
+    const ownedRead = checkRead(
+      await supabase
+        .from('course_lessons')
+        .select('id')
+        .eq('chapter_id', chapterId)
+        .in('id', orderedIds),
+      'chapter lessons check',
+    )
+    if (!ownedRead.ok) return courseCheckFailed()
+    const owned = ownedRead.data
 
     if (!owned || owned.length !== orderedIds.length)
       return NextResponse.json({ error: 'One or more lessons do not belong to this chapter' }, { status: 403 })
@@ -438,22 +488,32 @@ export async function PATCH(
     if (!lessonId || !articleId)
       return NextResponse.json({ error: 'lessonId and articleId required' }, { status: 400 })
 
-    const { data: lesson } = await supabase
-      .from('course_lessons')
-      .select('id')
-      .eq('id', lessonId)
-      .eq('course_id', courseId)
-      .maybeSingle()
+    const lessonRead = checkRead(
+      await supabase
+        .from('course_lessons')
+        .select('id')
+        .eq('id', lessonId)
+        .eq('course_id', courseId)
+        .maybeSingle(),
+      'course lesson check',
+    )
+    if (!lessonRead.ok) return courseCheckFailed()
+    const lesson = lessonRead.data
 
     if (!lesson) return NextResponse.json({ error: 'Lesson not found' }, { status: 404 })
 
-    const { data: maxRow } = await supabase
-      .from('course_lesson_articles')
-      .select('article_order')
-      .eq('lesson_id', lessonId)
-      .order('article_order', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+    const maxRead = checkRead(
+      await supabase
+        .from('course_lesson_articles')
+        .select('article_order')
+        .eq('lesson_id', lessonId)
+        .order('article_order', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      'article order lookup',
+    )
+    if (!maxRead.ok) return nextPositionFailed()
+    const maxRow = maxRead.data
 
     const nextOrder = ((maxRow?.article_order as number) ?? 0) + 1
 
@@ -472,12 +532,17 @@ export async function PATCH(
     if (!lessonId || !articleId)
       return NextResponse.json({ error: 'lessonId and articleId required' }, { status: 400 })
 
-    const { data: lesson } = await supabase
-      .from('course_lessons')
-      .select('id')
-      .eq('id', lessonId)
-      .eq('course_id', courseId)
-      .maybeSingle()
+    const lessonRead = checkRead(
+      await supabase
+        .from('course_lessons')
+        .select('id')
+        .eq('id', lessonId)
+        .eq('course_id', courseId)
+        .maybeSingle(),
+      'course lesson check',
+    )
+    if (!lessonRead.ok) return courseCheckFailed()
+    const lesson = lessonRead.data
 
     if (!lesson) return NextResponse.json({ error: 'Lesson not found' }, { status: 404 })
 
@@ -498,12 +563,17 @@ export async function PATCH(
     if (!lessonId || !Array.isArray(orderedIds))
       return NextResponse.json({ error: 'lessonId and orderedIds required' }, { status: 400 })
 
-    const { data: lesson } = await supabase
-      .from('course_lessons')
-      .select('id')
-      .eq('id', lessonId)
-      .eq('course_id', courseId)
-      .maybeSingle()
+    const lessonRead = checkRead(
+      await supabase
+        .from('course_lessons')
+        .select('id')
+        .eq('id', lessonId)
+        .eq('course_id', courseId)
+        .maybeSingle(),
+      'course lesson check',
+    )
+    if (!lessonRead.ok) return courseCheckFailed()
+    const lesson = lessonRead.data
 
     if (!lesson) return NextResponse.json({ error: 'Lesson not found' }, { status: 404 })
 

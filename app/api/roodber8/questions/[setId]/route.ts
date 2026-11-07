@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { checkRead } from '@/lib/db-check'
 
 export const runtime = 'nodejs'
 
@@ -189,15 +190,20 @@ export async function POST(
     return NextResponse.json({ error: 'Question set not found' }, { status: 404 })
 
   // Get current max question_order for this set
-  const { data: maxRow } = await supabase
-    .from('questions')
-    .select('question_order')
-    .eq('set_id', setId)
-    .order('question_order', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+  const maxRow = checkRead(
+    await supabase
+      .from('questions')
+      .select('question_order')
+      .eq('set_id', setId)
+      .order('question_order', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    'question order lookup',
+  )
+  if (!maxRow.ok)
+    return NextResponse.json({ error: 'Could not work out the next position. Nothing was added.' }, { status: 500 })
 
-  const nextOrder = ((maxRow?.question_order as number) ?? 0) + 1
+  const nextOrder = ((maxRow.data?.question_order as number) ?? 0) + 1
 
   const {
     type = 'multiple-choice',

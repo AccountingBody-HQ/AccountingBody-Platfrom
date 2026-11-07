@@ -555,3 +555,379 @@ describe('question set publish with a linked article', () => {
     })
   })
 })
+
+// ── Studio session save ─────────────────────────────────────────────────────
+
+const SESSION_CHECK_FAILED = { error: 'Could not check this session. Nothing was saved.' }
+const saveSession = async () =>
+  (await api('studio/session/route.ts')).PATCH(request('PATCH', 'studio/session', { pq_tasks: [{ id: 'task' }] }), {
+    params: {},
+  })
+
+describe('studio session save', () => {
+  it("updates today's session when it exists, as before", async () => {
+    network.rows = { studio_sessions: [{ id: ID }] }
+    const result = await answer(saveSession)
+    expect(result).toEqual({
+      status: 200,
+      body: { session: { id: ID, updated_at: '2026-06-01T09:00:00.000Z', pq_tasks: [{ id: 'task' }] } },
+      requests: ['GET studio_sessions', 'PATCH studio_sessions'],
+      elapsed: 0,
+    })
+  })
+
+  it("creates today's session when there is none yet, as before", async () => {
+    const result = await answer(saveSession)
+    expect(result.status).toBe(200)
+    expect(result.requests).toEqual(['GET studio_sessions', 'POST studio_sessions'])
+    expect((network.calls[1].body as Row).session_date).toBe('2026-06-01')
+    expect((network.calls[1].body as Row).pq_tasks).toEqual([{ id: 'task' }])
+  })
+
+  it.each(['error', 'never'] as const)('saves nothing when the session cannot be checked (%s)', async (how) => {
+    network.rows = { studio_sessions: [{ id: ID }] }
+    network.fail = failOn('GET', 'studio_sessions', how)
+    expect(await answer(saveSession)).toEqual({
+      status: 500,
+      body: SESSION_CHECK_FAILED,
+      requests: ['GET studio_sessions'],
+      elapsed: how === 'never' ? LIMIT_MS : 0,
+    })
+  })
+
+  it('saves nothing when more than one session matches today', async () => {
+    network.rows = { studio_sessions: [{ id: ID }, { id: CHAPTER }] }
+    expect(await answer(saveSession)).toEqual({
+      status: 500,
+      body: SESSION_CHECK_FAILED,
+      requests: ['GET studio_sessions'],
+      elapsed: 0,
+    })
+  })
+})
+
+// ── Next position for new items ─────────────────────────────────────────────
+
+const NO_POSITION = { error: 'Could not work out the next position. Nothing was added.' }
+const COURSE_CHECK_FAILED = { error: 'Could not check this course. Nothing was changed.' }
+const OTHER_CHAPTER = '2c5e39cb-3fb2-12e3-994f-1127e4ddb538'
+const OTHER_LESSON = '7ab56afb-ff9b-4db5-9a5f-ec88f271466f'
+
+const addQuestion = (body: Row = { question_text: 'Question?' }) => async () =>
+  (await api('questions/[setId]/route.ts')).POST(request('POST', `questions/${ID}`, body), { params: { setId: ID } })
+const addReference = async () =>
+  (await api('studio/references/route.ts')).POST(
+    request('POST', 'studio/references', { label: 'BBC', url: 'https://bbc.com' }),
+    { params: {} },
+  )
+const courseAction = (body: Row) => async () =>
+  (await api('courses/[courseId]/route.ts')).PATCH(request('PATCH', `courses/${ID}`, body), { params: { courseId: ID } })
+
+const chapterRow = { id: CHAPTER, chapter_order: 2 }
+const lessonRow = { id: LESSON }
+
+type Rows = Record<string, Row[]>
+type NextPositionCase = {
+  name: string
+  call: () => Promise<Response>
+  rows: Rows
+  reads: string[]
+  table: string
+  last: Row
+  field: string
+}
+type CourseCheckCase = { name: string; body: Row; table: string; rows: Rows; notFound: { error: string }; writes: string[] }
+type ListCheckCase = {
+  name: string
+  body: Row
+  before: string[]
+  rows: Rows
+  table: string
+  owned: Row[]
+  forbidden: { error: string }
+}
+
+describe.each<NextPositionCase>([
+  {
+    name: 'question add',
+    call: addQuestion(),
+    rows: { question_sets: [{ id: ID }] },
+    reads: ['GET question_sets'],
+    table: 'questions',
+    last: { question_order: 4 },
+    field: 'question_order',
+  },
+  {
+    name: 'chapter add',
+    call: courseAction({ action: 'add_chapter' }),
+    rows: {},
+    reads: [],
+    table: 'course_chapters',
+    last: { chapter_order: 3 },
+    field: 'chapter_order',
+  },
+  {
+    name: 'lesson add',
+    call: courseAction({ action: 'add_lesson', chapterId: CHAPTER, title: 'Lesson' }),
+    rows: { course_chapters: [chapterRow] },
+    reads: ['GET course_chapters'],
+    table: 'course_lessons',
+    last: { lesson_order: 5 },
+    field: 'lesson_order',
+  },
+  {
+    name: 'article link add',
+    call: courseAction({ action: 'add_article', lessonId: LESSON, articleId: ARTICLE }),
+    rows: { course_lessons: [lessonRow] },
+    reads: ['GET course_lessons'],
+    table: 'course_lesson_articles',
+    last: { article_order: 2 },
+    field: 'article_order',
+  },
+])('$name', ({ call, rows, reads, table, last, field }) => {
+  it('starts at 1 when there is nothing yet, as before', async () => {
+    network.rows = rows
+    const result = await answer(call)
+    expect(result.status).toBe(200)
+    expect(result.requests).toEqual([...reads, `GET ${table}`, `POST ${table}`])
+    expect((network.calls.at(-1)?.body as Row)[field]).toBe(1)
+  })
+
+  it('continues numbering from the last item, as before', async () => {
+    network.rows = { ...rows, [table]: [last] }
+    const result = await answer(call)
+    expect(result.status).toBe(200)
+    expect(result.requests).toEqual([...reads, `GET ${table}`, `POST ${table}`])
+    expect((network.calls.at(-1)?.body as Row)[field]).toBe(Number(Object.values(last)[0]) + 1)
+  })
+
+  it.each(['error', 'never'] as const)('adds nothing when the next position cannot be worked out (%s)', async (how) => {
+    network.rows = { ...rows, [table]: [last] }
+    network.fail = failOn('GET', table, how)
+    const result = await answer(call)
+    expect(result).toEqual({
+      status: 500,
+      body: NO_POSITION,
+      requests: [...reads, `GET ${table}`],
+      elapsed: how === 'never' ? LIMIT_MS : 0,
+    })
+    expect(result.requests.filter(isWrite)).toEqual([])
+  })
+})
+
+describe('question add', () => {
+  it('keeps the missing question text answer when the position is known', async () => {
+    network.rows = { question_sets: [{ id: ID }] }
+    expect(await answer(addQuestion({}))).toEqual({
+      status: 400,
+      body: { error: 'question_text is required' },
+      requests: ['GET question_sets', 'GET questions'],
+      elapsed: 0,
+    })
+  })
+
+  it('stops at the position check before looking at the question text', async () => {
+    network.rows = { question_sets: [{ id: ID }] }
+    network.fail = failOn('GET', 'questions', 'error')
+    expect(await answer(addQuestion({}))).toEqual({
+      status: 500,
+      body: NO_POSITION,
+      requests: ['GET question_sets', 'GET questions'],
+      elapsed: 0,
+    })
+  })
+})
+
+describe('reference add', () => {
+  it('places the new reference at the current count, as before', async () => {
+    network.counts = { studio_references: 3 }
+    const result = await answer(addReference)
+    expect(result.status).toBe(200)
+    expect(result.requests).toEqual(['HEAD studio_references', 'POST studio_references'])
+    expect((network.calls[1].body as Row).display_order).toBe(3)
+  })
+
+  it('places the first reference at 0, as before', async () => {
+    network.counts = { studio_references: 0 }
+    const result = await answer(addReference)
+    expect(result.status).toBe(200)
+    expect((network.calls[1].body as Row).display_order).toBe(0)
+  })
+
+  it('places a reference after the nine starting sources at 9, as before', async () => {
+    network.counts = { studio_references: 9 }
+    await answer(addReference)
+    expect((network.calls[1].body as Row).display_order).toBe(9)
+  })
+
+  it.each(['error', 'never'] as const)('adds nothing when the references cannot be counted (%s)', async (how) => {
+    network.counts = { studio_references: 3 }
+    network.fail = failOn('HEAD', 'studio_references', how)
+    expect(await answer(addReference)).toEqual({
+      status: 500,
+      body: NO_POSITION,
+      requests: ['HEAD studio_references'],
+      elapsed: how === 'never' ? LIMIT_MS : 0,
+    })
+  })
+})
+
+// ── Course checks before a change ───────────────────────────────────────────
+
+describe.each<CourseCheckCase>([
+  {
+    name: 'chapter delete',
+    body: { action: 'delete_chapter', chapterId: CHAPTER },
+    table: 'course_chapters',
+    rows: { course_chapters: [chapterRow] },
+    notFound: { error: 'Chapter not found' },
+    writes: ['DELETE course_chapters'],
+  },
+  {
+    name: 'lesson add',
+    body: { action: 'add_lesson', chapterId: CHAPTER, title: 'Lesson' },
+    table: 'course_chapters',
+    rows: { course_chapters: [chapterRow] },
+    notFound: { error: 'Chapter not found' },
+    writes: ['GET course_lessons', 'POST course_lessons'],
+  },
+  {
+    name: 'lesson delete',
+    body: { action: 'delete_lesson', lessonId: LESSON },
+    table: 'course_lessons',
+    rows: { course_lessons: [lessonRow] },
+    notFound: { error: 'Lesson not found' },
+    writes: ['DELETE course_lessons'],
+  },
+  {
+    name: 'lesson reorder',
+    body: { action: 'reorder_lessons', chapterId: CHAPTER, orderedIds: [LESSON, OTHER_LESSON] },
+    table: 'course_chapters',
+    rows: { course_chapters: [chapterRow], course_lessons: [{ id: LESSON }, { id: OTHER_LESSON }] },
+    notFound: { error: 'Chapter not found' },
+    writes: ['GET course_lessons', 'PATCH course_lessons', 'PATCH course_lessons'],
+  },
+  {
+    name: 'article link add',
+    body: { action: 'add_article', lessonId: LESSON, articleId: ARTICLE },
+    table: 'course_lessons',
+    rows: { course_lessons: [lessonRow] },
+    notFound: { error: 'Lesson not found' },
+    writes: ['GET course_lesson_articles', 'POST course_lesson_articles'],
+  },
+  {
+    name: 'article link remove',
+    body: { action: 'remove_article', lessonId: LESSON, articleId: ARTICLE },
+    table: 'course_lessons',
+    rows: { course_lessons: [lessonRow] },
+    notFound: { error: 'Lesson not found' },
+    writes: ['DELETE course_lesson_articles'],
+  },
+  {
+    name: 'article reorder',
+    body: { action: 'reorder_articles', lessonId: LESSON, orderedIds: [ARTICLE] },
+    table: 'course_lessons',
+    rows: { course_lessons: [lessonRow] },
+    notFound: { error: 'Lesson not found' },
+    writes: ['PATCH course_lesson_articles'],
+  },
+])('$name', ({ body, table, rows, notFound, writes }) => {
+  it('goes ahead when the item belongs to the course, as before', async () => {
+    network.rows = rows
+    const result = await answer(courseAction(body))
+    expect(result.status).toBe(200)
+    expect(result.requests).toEqual([`GET ${table}`, ...writes])
+  })
+
+  it('keeps the not found answer for an item that is not in the course', async () => {
+    expect(await answer(courseAction(body))).toEqual({
+      status: 404,
+      body: notFound,
+      requests: [`GET ${table}`],
+      elapsed: 0,
+    })
+  })
+
+  it.each(['error', 'never'] as const)('changes nothing when the course cannot be checked (%s)', async (how) => {
+    network.rows = rows
+    network.fail = failOn('GET', table, how)
+    expect(await answer(courseAction(body))).toEqual({
+      status: 500,
+      body: COURSE_CHECK_FAILED,
+      requests: [`GET ${table}`],
+      elapsed: how === 'never' ? LIMIT_MS : 0,
+    })
+  })
+})
+
+describe.each<ListCheckCase>([
+  {
+    name: 'chapter reorder',
+    body: { action: 'reorder_chapters', orderedIds: [CHAPTER, OTHER_CHAPTER] },
+    before: [],
+    rows: {},
+    table: 'course_chapters',
+    owned: [{ id: CHAPTER }, { id: OTHER_CHAPTER }],
+    forbidden: { error: 'One or more chapters do not belong to this course' },
+  },
+  {
+    name: 'lesson reorder',
+    body: { action: 'reorder_lessons', chapterId: CHAPTER, orderedIds: [LESSON, OTHER_LESSON] },
+    before: ['GET course_chapters'],
+    rows: { course_chapters: [chapterRow] },
+    table: 'course_lessons',
+    owned: [{ id: LESSON }, { id: OTHER_LESSON }],
+    forbidden: { error: 'One or more lessons do not belong to this chapter' },
+  },
+])('$name list check', ({ body, before, rows, table, owned, forbidden }) => {
+  it('saves the new order when every item belongs, as before', async () => {
+    network.rows = { ...rows, [table]: owned }
+    const result = await answer(courseAction(body))
+    expect(result).toEqual({
+      status: 200,
+      body: { success: true },
+      requests: [...before, `GET ${table}`, `PATCH ${table}`, `PATCH ${table}`],
+      elapsed: 0,
+    })
+    expect(network.calls.slice(-2).map((c) => c.body)).toEqual(
+      table === 'course_chapters' ? [{ chapter_order: 1 }, { chapter_order: 2 }] : [{ lesson_order: 1 }, { lesson_order: 2 }],
+    )
+  })
+
+  it.each([
+    ['one item belongs elsewhere', 1],
+    ['no item belongs', 0],
+  ])('keeps the forbidden answer when %s', async (_name, kept) => {
+    network.rows = { ...rows, [table]: owned.slice(0, kept) }
+    expect(await answer(courseAction(body))).toEqual({
+      status: 403,
+      body: forbidden,
+      requests: [...before, `GET ${table}`],
+      elapsed: 0,
+    })
+  })
+
+  it.each(['error', 'never'] as const)('changes nothing when the items cannot be checked (%s)', async (how) => {
+    network.rows = { ...rows, [table]: owned }
+    network.fail = failOn('GET', table, how)
+    expect(await answer(courseAction(body))).toEqual({
+      status: 500,
+      body: COURSE_CHECK_FAILED,
+      requests: [...before, `GET ${table}`],
+      elapsed: how === 'never' ? LIMIT_MS : 0,
+    })
+  })
+})
+
+describe('admin tools answer a signed-out request before reading', () => {
+  it.each([
+    ['studio session save', saveSession],
+    ['question add', addQuestion()],
+    ['reference add', addReference],
+    ['course change', courseAction({ action: 'add_chapter' })],
+  ])('%s', async (_name, call) => {
+    session = 'not-a-session'
+    jar.token = undefined
+    expect(await answer(call)).toEqual({ status: 401, body: { error: 'Signed out' }, requests: [], elapsed: 0 })
+  })
+})

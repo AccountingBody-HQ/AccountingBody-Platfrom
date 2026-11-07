@@ -506,7 +506,7 @@ const scenarios: Scenario[] = [
       body: { reference: { id: ID, label: 'BBC', url: 'https://bbc.com', category: 'news', display_order: 3 } },
       dbRequests: 2,
     },
-    stalled: { waits: 2, status: 500, body: { error: 'Failed to create reference' }, dbRequests: 2 },
+    stalled: { waits: 1, status: 500, body: { error: 'Could not work out the next position. Nothing was added.' }, dbRequests: 1 },
   },
   {
     name: 'submission delete',
