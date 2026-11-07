@@ -23,13 +23,13 @@ export async function POST(req: NextRequest) {
     const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
     const humanCheck = await verifyHumanCheck(turnstileToken, ip, isEthioTax, 'firms application')
 
-    // Honeypot — bots fill this, real users never do
-    if (_h) return NextResponse.json({ success: true })
-
     // Nothing is saved or sent unless the person check passed.
     if (!humanCheck.ok) {
       return NextResponse.json({ error: HUMAN_CHECK_FAILED_TEXT }, { status: 400 })
     }
+
+    // Honeypot — bots fill this, real users never do
+    if (_h) return NextResponse.json({ success: true })
 
     if (!contact_name || !email || !practice_type || !location || !about) {
       return NextResponse.json({ error: 'Required fields are missing.' }, { status: 400 })

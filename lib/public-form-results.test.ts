@@ -216,6 +216,7 @@ const jobSeekerForm = {
   years_experience: '5',
   employment_status: 'employed',
   biography: 'Experienced management accountant.',
+  ...turnstile,
 }
 
 describe('contact form', () => {

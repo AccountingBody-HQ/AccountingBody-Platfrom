@@ -2,9 +2,10 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 
 const services: Record<string, {
   name: string
@@ -161,6 +162,8 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
     name: '', email: '', phone: '', service_type: service.name, message: '', _h: ''
   })
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const personCheck = useRef<PersonCheckHandle>(null)
+  const [personCheckToken, setPersonCheckToken] = useState('')
 
   const brandColor = isEthioTax ? '#0f2d1e' : '#0C1A3D'
 
@@ -171,15 +174,17 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
       const res = await fetch('/api/help-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, 'cf-turnstile-response': personCheckToken }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'Something went wrong')
       setStatus('success')
       setForm({ name: '', email: '', phone: '', service_type: service.name, message: '', _h: '' })
+      personCheck.current?.reset()
     } catch (err) {
       console.error(err)
       setStatus('error')
+      personCheck.current?.reset()
     }
   }
 
@@ -310,6 +315,7 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
                 </button>
                 {/* Honeypot — hidden from real users, bots fill it */}
                 <input type="text" value={form._h} onChange={(e) => setForm({ ...form, _h: e.target.value })} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
+                <PersonCheck ref={personCheck} onToken={setPersonCheckToken} isEthioTax={isEthioTax} />
                 <p className="text-xs text-slate-400 text-center">
                   All briefs are reviewed by our team. We will confirm your engagement scope and fee before any work commences.
                 </p>

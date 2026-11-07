@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
+import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 import { BRIEF_LINK_RETRY_TEXT, LINK_RETRY_HEADING, briefLinkStatus } from '@/lib/message-rules'
 
 declare global {
@@ -155,7 +155,8 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
   }, [])
 
   const topRef = useRef<HTMLDivElement>(null)
-  const turnstileWidgetId = useRef<string | null>(null)
+  const personCheck = useRef<PersonCheckHandle>(null)
+  const [personCheckToken, setPersonCheckToken] = useState('')
 
   const refs = {
     company_name: useRef<HTMLDivElement>(null),
@@ -206,7 +207,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
 
   const handleSubmit = async () => {
     setStatus('loading')
-    const token = (document.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement)?.value ?? ''
+    const token = personCheckToken
     const payload = {
       ...form,
       platform: isEthioTax ? 'et' : 'ab',
@@ -222,10 +223,11 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'Something went wrong')
       setStatus('success')
-      if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
+      personCheck.current?.reset()
     } catch (err) {
       console.error(err)
       setStatus('error')
+      personCheck.current?.reset()
     }
   }
 
@@ -234,7 +236,6 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
 
   return (
     <>
-      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
       <main className="min-h-screen bg-surface">
 
         {/* HERO */}
@@ -503,14 +504,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                       </div>
                       {status === 'error' && <p className="text-red-500 text-sm">Something went wrong. Please try again or contact us directly.</p>}
                       <input type="text" value={form._h} onChange={e => setForm({...form, _h: e.target.value})} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
-                      <div ref={el => {
-                        if (el && window.turnstile && !turnstileWidgetId.current) {
-                          const sitekey = isEthioTax
-                            ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '')
-                            : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? '')
-                          turnstileWidgetId.current = window.turnstile.render(el, { sitekey })
-                        }
-                      }} />
+                      <PersonCheck ref={personCheck} onToken={setPersonCheckToken} isEthioTax={isEthioTax} />
                       <div className="flex justify-between pt-2">
                         <button type="button" onClick={handleBack}
                           className="h-11 px-6 rounded-lg font-semibold text-sm border-2 flex items-center gap-2 transition-opacity hover:opacity-80"

@@ -7,32 +7,20 @@ import { shouldSendConfirmationEmail } from "@/lib/subscribe-dedup"
 import { checkRead } from "@/lib/db-check"
 import { checkEmailSend } from "@/lib/email-check"
 import { CONFIRMATION_EMAIL_FAILED_TEXT, SERVER_PROBLEM_TEXT } from "@/lib/message-rules"
+import { verifyHumanCheck, type HumanCheckReason } from "@/lib/turnstile-verify"
 
-// Unlike help-request/firms-application/contact, this route fails CLOSED on
-// a bad Turnstile result: no subscription is created. That means the caller
-// must be able to tell success from failure, so this returns a reason
-// instead of a bare boolean. "unreachable" covers both a network failure
-// talking to Cloudflare and a missing/misconfigured secret — neither is
-// something the visitor did wrong, so both get the same user-facing copy.
-type TurnstileResult =
-  | { ok: true }
-  | { ok: false; reason: "missing_token" | "invalid_token" | "unreachable" }
+// This route fails CLOSED on a bad person-check result: no subscription is
+// created, and the visitor is told why. "unreachable" covers a network
+// failure or no answer in time from Cloudflare, an unreadable reply, and a
+// missing/misconfigured secret — none of them is something the visitor did
+// wrong, so they all get the same user-facing copy.
+type SubscribeCheckReason = "missing_token" | "invalid_token" | "unreachable"
 
-async function verifyTurnstile(token: string, ip: string, isET: boolean): Promise<TurnstileResult> {
-  if (!token) return { ok: false, reason: "missing_token" }
-  const secret = isET ? process.env.TURNSTILE_SECRET_KEY : process.env.TURNSTILE_SECRET_KEY_AB
-  if (!secret) return { ok: false, reason: "unreachable" }
-  try {
-    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ secret, response: token, remoteip: ip }),
-    })
-    const data = await res.json()
-    return data.success === true ? { ok: true } : { ok: false, reason: "invalid_token" }
-  } catch {
-    return { ok: false, reason: "unreachable" }
-  }
+const SUBSCRIBE_CHECK_REASON: Record<HumanCheckReason, SubscribeCheckReason> = {
+  missing: "missing_token",
+  "not-confirmed": "invalid_token",
+  unreadable: "unreachable",
+  unavailable: "unreachable",
 }
 
 export async function POST(req: NextRequest) {
@@ -46,18 +34,19 @@ export async function POST(req: NextRequest) {
       ? { name: "EthioTax", domain: "ethiotax.com", color: "#1A4731" }
       : { name: "Accounting Body", domain: "accountingbody.com", color: "#0C1A3D" }
 
-    if (_h) return NextResponse.json({ success: true })
-
     const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for") ?? ""
 
-    const turnstileResult = await verifyTurnstile(turnstileToken, ip, isET)
+    // The person check comes first, so a failing check gets the same answer
+    // whatever else was sent.
+    const turnstileResult = await verifyHumanCheck(turnstileToken, ip, isET, "subscribe")
     if (!turnstileResult.ok) {
       const platform = isET ? "et" : "ab"
+      const reason = SUBSCRIBE_CHECK_REASON[turnstileResult.reason]
       Sentry.captureMessage("[subscribe] Turnstile verification failed", {
         level: "warning",
-        tags: { platform, reason: turnstileResult.reason },
+        tags: { platform, reason },
       })
-      const unreachable = turnstileResult.reason === "unreachable"
+      const unreachable = reason === "unreachable"
       return NextResponse.json(
         {
           error: unreachable
@@ -68,6 +57,8 @@ export async function POST(req: NextRequest) {
         { status: unreachable ? 503 : 400 }
       )
     }
+
+    if (_h) return NextResponse.json({ success: true })
 
     const BLOCKED = [
       "mailinator.com", "guerrillamail.com", "trashmail.com", "tempmail.com",

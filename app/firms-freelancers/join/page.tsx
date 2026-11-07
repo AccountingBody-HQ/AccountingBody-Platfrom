@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useRef } from 'react'
-import Script from 'next/script'
+import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 
 declare global {
   interface Window {
@@ -39,7 +39,8 @@ export default function JoinNetworkPage() {
   const contactNameRef = useRef<HTMLDivElement>(null)
   const emailRef = useRef<HTMLDivElement>(null)
   const locationRef = useRef<HTMLDivElement>(null)
-  const turnstileWidgetId = useRef<string | null>(null)
+  const personCheck = useRef<PersonCheckHandle>(null)
+  const [personCheckToken, setPersonCheckToken] = useState('')
   const isEthioTax = typeof window !== 'undefined' && window.location.hostname.includes('ethiotax.com')
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,7 +73,7 @@ export default function JoinNetworkPage() {
     }
     setFieldErrors({})
     setStatus('loading')
-    const token = (document.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement)?.value ?? ''
+    const token = personCheckToken
     const payload = {
       ...form,
       about: `[${applicantType === 'firm' ? 'FIRM' : 'INDEPENDENT'}] Qualifications: ${qualifications.join(', ')}. ${form.about}${form.open_to_employment ? ` | Open to employment: ${form.open_to_employment}` : ''}${form.currently_hiring ? ` | Currently hiring: ${form.currently_hiring}` : ''}`,
@@ -87,10 +88,11 @@ export default function JoinNetworkPage() {
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'Something went wrong')
       setStatus('success')
-      if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
+      personCheck.current?.reset()
     } catch (err) {
       console.error(err)
       setStatus('error')
+      personCheck.current?.reset()
     }
   }
 
@@ -106,7 +108,6 @@ export default function JoinNetworkPage() {
 
   return (
     <>
-      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
       <main className="min-h-screen bg-surface">
 
       {/* HERO */}
@@ -436,13 +437,7 @@ export default function JoinNetworkPage() {
                     {/* Honeypot — hidden from real users, bots fill it */}
                     <input type="text" value={form._h} onChange={(e) => setForm({ ...form, _h: e.target.value })} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
                     {/* Turnstile invisible widget */}
-                    <div ref={(el) => {
-                      if (el && window.turnstile && !turnstileWidgetId.current) {
-                        turnstileWidgetId.current = window.turnstile.render(el, {
-                          sitekey: (typeof document !== 'undefined' && document.cookie.includes('x-et-platform=ethiotax')) ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? ''),
-                        })
-                      }
-                    }} />
+                    <PersonCheck ref={personCheck} onToken={setPersonCheckToken} />
                     <button type="submit" disabled={status === 'loading'}
                       className="w-full bg-navy-950 hover:bg-navy-900 text-white font-semibold h-12 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50">
                       {status === 'loading' ? 'Submitting...' : 'Submit Application'}

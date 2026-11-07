@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 
 export const dynamic = 'force-dynamic'
 
@@ -116,7 +117,8 @@ export default function GlobalPayrollServicePage({ params }: { params: { slug: s
     name: '', email: '', phone: '', service_type: service.name, message: '', _h: ''
   })
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
-  const turnstileWidgetId = useRef<string | null>(null)
+  const personCheck = useRef<PersonCheckHandle>(null)
+  const [personCheckToken, setPersonCheckToken] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -125,16 +127,17 @@ export default function GlobalPayrollServicePage({ params }: { params: { slug: s
       const res = await fetch('/api/help-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, 'cf-turnstile-response': personCheckToken }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'Something went wrong')
       setStatus('success')
       setForm({ name: '', email: '', phone: '', service_type: service.name, message: '', _h: '' })
-      if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
+      personCheck.current?.reset()
     } catch (err) {
       console.error(err)
       setStatus('error')
+      personCheck.current?.reset()
     }
   }
 
@@ -265,15 +268,7 @@ export default function GlobalPayrollServicePage({ params }: { params: { slug: s
                 </button>
                 {/* Honeypot — hidden from real users, bots fill it */}
                 {/* Turnstile invisible widget */}
-                <div
-                  ref={(el) => {
-                    if (el && window.turnstile && !turnstileWidgetId.current) {
-                      turnstileWidgetId.current = window.turnstile.render(el, {
-                        sitekey: (typeof document !== 'undefined' && document.cookie.includes('x-et-platform=ethiotax')) ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '') : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? ''),
-                      })
-                    }
-                  }}
-                />
+                <PersonCheck ref={personCheck} onToken={setPersonCheckToken} />
                 <input type="text" value={form._h} onChange={(e) => setForm({ ...form, _h: e.target.value })} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
                 <p className="text-xs text-slate-400 text-center">
                   All briefs are reviewed by our team. We will confirm your engagement scope and fee before any work commences.

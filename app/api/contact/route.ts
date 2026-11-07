@@ -20,23 +20,22 @@ export async function POST(req: NextRequest) {
     const isEthioTax = req.headers.get('x-et-platform') === 'ethiotax'
     const brand = getContactBrand(isEthioTax)
 
-    // Honeypot — bots fill this, real users never do
-    if (_h) return NextResponse.json({ success: true })
-
-    // Person check (Cloudflare Turnstile), verified on the server.
+    // Person check (Cloudflare Turnstile), verified on the server first.
+    // Nothing is saved or sent unless it passed.
     const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
     const humanCheck = await verifyHumanCheck(turnstileToken, ip, isEthioTax, 'contact')
+    if (!humanCheck.ok) {
+      return NextResponse.json({ error: HUMAN_CHECK_FAILED_TEXT }, { status: 400 })
+    }
+
+    // Honeypot — bots fill this, real users never do
+    if (_h) return NextResponse.json({ success: true })
 
     // Spam filters
     const BLOCKED_DOMAINS = ['hardfer.com', 'mailinator.com', 'guerrillamail.com', 'trashmail.com', 'tempmail.com', 'yopmail.com', 'sharklasers.com', 'dispostable.com', 'maildrop.cc']
     const emailDomain = email?.split('@')[1]?.toLowerCase() ?? ''
     if (BLOCKED_DOMAINS.includes(emailDomain)) return NextResponse.json({ success: true })
     if (message && !message.trim().includes(' ')) return NextResponse.json({ success: true })
-
-    // Nothing is saved or sent unless the person check passed.
-    if (!humanCheck.ok) {
-      return NextResponse.json({ error: HUMAN_CHECK_FAILED_TEXT }, { status: 400 })
-    }
 
     if (message && isMessageTooShort(message)) {
       return NextResponse.json({ error: messageTooShortText() }, { status: 400 })

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSupabase } from "@/lib/supabase-server"
 import { Resend } from "resend"
 import { checkEmailSend } from "@/lib/email-check"
-import { SERVER_PROBLEM_TEXT } from "@/lib/message-rules"
+import { HUMAN_CHECK_FAILED_TEXT, SERVER_PROBLEM_TEXT } from "@/lib/message-rules"
+import { verifyHumanCheck } from "@/lib/turnstile-verify"
 import { escapeHtml } from "@/lib/html-escape"
 
 function generateToken() {
@@ -14,6 +15,16 @@ export async function POST(req: NextRequest) {
     const supabase = getServerSupabase("publicWrite")
     const resend = new Resend(process.env.RESEND_API_KEY)
     const body = await req.json()
+
+    // Person check (Cloudflare Turnstile), verified on the server first.
+    // Nothing is saved or sent unless it passed. The site is the one the
+    // request came through, as for the widget's site key.
+    const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for") ?? ""
+    const onSecondSite = req.headers.get("x-et-platform") === "ethiotax"
+    const humanCheck = await verifyHumanCheck(body["cf-turnstile-response"], ip, onSecondSite, "job seeker registration")
+    if (!humanCheck.ok) {
+      return NextResponse.json({ error: HUMAN_CHECK_FAILED_TEXT }, { status: 400 })
+    }
 
     if (body._h) return NextResponse.json({ error: "Invalid submission" }, { status: 400 })
 

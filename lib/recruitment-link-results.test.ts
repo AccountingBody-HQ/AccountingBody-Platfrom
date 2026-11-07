@@ -75,6 +75,7 @@ const matches = (row: Row, filters: [string, string][]) => filters.every(([key, 
 // and insert.
 const fakeFetch: typeof fetch = async (input, init) => {
   const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url)
+  if (url.origin === 'https://challenges.cloudflare.com') return json({ success: true })
   if (url.origin !== DB_URL) throw new Error(`unexpected request to ${url.href}`)
 
   const method = (init?.method ?? 'GET').toUpperCase()
@@ -181,6 +182,8 @@ beforeEach(() => {
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', DB_URL)
   vi.stubEnv('SUPABASE_SECRET_KEY', 'test-key')
   vi.stubEnv('RESEND_API_KEY', 'test-key')
+  vi.stubEnv('TURNSTILE_SECRET_KEY', 'test-key')
+  vi.stubEnv('TURNSTILE_SECRET_KEY_AB', 'test-key')
   vi.spyOn(console, 'error').mockImplementation(logged)
   vi.spyOn(console, 'warn').mockImplementation(logged)
   logs = []
@@ -220,6 +223,7 @@ const briefForm = {
   contract_type: 'permanent',
   location: 'London',
   role_description: 'Prepare monthly management accounts.',
+  'cf-turnstile-response': 'token',
 }
 const earlierBrief: Row = {
   id: 'earlier',

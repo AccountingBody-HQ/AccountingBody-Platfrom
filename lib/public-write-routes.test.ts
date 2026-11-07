@@ -353,12 +353,13 @@ const scenarios: Scenario[] = [
             location: 'London',
             role_description: 'Prepare monthly management accounts.',
             ...(editToken ? { edit_token: editToken } : {}),
+            ...turnstile,
           }),
         ),
-      healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: editToken ? 2 : 1 },
+      healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: editToken ? 2 : 1, turnstile: 1 },
       // The new brief is saved first, so when that does not answer the route
       // stops there, also when editing.
-      never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1 },
+      never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1, turnstile: 1 },
     }),
   ),
   {
@@ -394,10 +395,11 @@ const scenarios: Scenario[] = [
           years_experience: '5',
           employment_status: 'employed',
           biography: 'Experienced management accountant.',
+          ...turnstile,
         }),
       ),
-    healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: 1 },
-    never: { status: 500, body: { error: 'Database error' }, emails: 0, dbRequests: 1 },
+    healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: 1, turnstile: 1 },
+    never: { status: 500, body: { error: 'Database error' }, emails: 0, dbRequests: 1, turnstile: 1 },
   },
   {
     name: 'candidate profile update',

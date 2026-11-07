@@ -2,25 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { checkEmailSend } from '@/lib/email-check'
-import { SERVER_PROBLEM_TEXT, isMessageTooShort, messageTooShortText } from '@/lib/message-rules'
+import { HUMAN_CHECK_FAILED_TEXT, SERVER_PROBLEM_TEXT, isMessageTooShort, messageTooShortText } from '@/lib/message-rules'
+import { verifyHumanCheck } from '@/lib/turnstile-verify'
 import { escapeHtml, withoutLineBreaks } from '@/lib/html-escape'
-
-async function verifyTurnstile(token: string, ip: string, isEthioTax: boolean): Promise<boolean> {
-  if (!token) return false
-  const secret = isEthioTax ? process.env.TURNSTILE_SECRET_KEY : process.env.TURNSTILE_SECRET_KEY_AB
-  if (!secret) return false
-  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      secret,
-      response: token,
-      remoteip: ip,
-    }),
-  })
-  const data = await res.json()
-  return data.success === true
-}
 
 export async function POST(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
@@ -38,13 +22,16 @@ export async function POST(req: NextRequest) {
     const { name, email, phone, service_type, message, _h } = body
     const turnstileToken = body['cf-turnstile-response'] ?? ''
 
+    // Person check (Cloudflare Turnstile), verified on the server first.
+    // Nothing is saved or sent unless it passed.
+    const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
+    const humanCheck = await verifyHumanCheck(turnstileToken, ip, isEthioTax, 'help request')
+    if (!humanCheck.ok) {
+      return NextResponse.json({ error: HUMAN_CHECK_FAILED_TEXT }, { status: 400 })
+    }
+
     // Honeypot
     if (_h) return NextResponse.json({ success: true })
-
-    // Turnstile verification — the result is logged with a fixed line.
-    const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
-    const turnstileValid = await verifyTurnstile(turnstileToken, ip, isEthioTax)
-    if (turnstileToken && !turnstileValid) console.warn('person check: help request not-confirmed')
 
     // Spam filters
     const BLOCKED_DOMAINS = ['hardfer.com', 'mailinator.com', 'guerrillamail.com', 'trashmail.com', 'tempmail.com', 'yopmail.com', 'sharklasers.com', 'dispostable.com', 'maildrop.cc']

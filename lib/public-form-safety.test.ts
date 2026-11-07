@@ -42,6 +42,7 @@ import { POST as jobSeekerApply } from '@/app/api/recruitment/job-seeker-apply/r
 import { POST as updateCandidate } from '@/app/api/recruitment/update-candidate/route'
 import { POST as updateEmployer } from '@/app/api/recruitment/update-employer/route'
 import { GET as verifyEmail } from '@/app/api/recruitment/verify-email/route'
+import { POST as subscribe } from '@/app/api/subscribe/route'
 
 const DB_URL = 'https://example.supabase.co'
 const SITE = 'https://accountingbody.com'
@@ -277,17 +278,15 @@ describe('contact form and the person check', () => {
     expect(check.requests.map((r) => r.secret)).toEqual(['test-secret-et'])
   })
 
-  it('keeps its existing answer for filtered submissions, whatever the person check says', async () => {
-    for (const answer of ['confirmed', 'rejected', 'down'] as CheckAnswer[]) {
-      check.answer = answer
-      for (const form of [
-        { ...contactForm, _h: 'x' },
-        { ...contactForm, email: 'ada@mailinator.com' },
-        { ...contactForm, message: 'nospacesatallinthismessage' },
-      ]) {
-        expect(await read(await contact(post('/api/contact', form)))).toEqual({ status: 200, body: { success: true } })
-      }
+  it('keeps its existing answer for filtered submissions that pass the person check', async () => {
+    for (const form of [
+      { ...contactForm, _h: 'x' },
+      { ...contactForm, email: 'ada@mailinator.com' },
+      { ...contactForm, message: 'nospacesatallinthismessage' },
+    ]) {
+      expect(await read(await contact(post('/api/contact', form)))).toEqual({ status: 200, body: { success: true } })
     }
+    expect(check.requests).toHaveLength(3)
     expect(writes()).toEqual([])
     expect(mail.sent).toEqual([])
   })
@@ -333,14 +332,235 @@ describe('network application form and the person check', () => {
     expect(mail.sent).toEqual([])
   })
 
-  it('keeps its existing answer for filtered submissions, whatever the person check says', async () => {
-    for (const answer of ['confirmed', 'rejected', 'down'] as CheckAnswer[]) {
-      check.answer = answer
-      const result = await read(await firmsApplication(post('/api/firms-application', { ...firmsForm, _h: 'x' })))
-      expect(result).toEqual({ status: 200, body: { success: true } })
-    }
+  it('keeps its existing answer for filtered submissions that pass the person check', async () => {
+    const result = await read(await firmsApplication(post('/api/firms-application', { ...firmsForm, _h: 'x' })))
+    expect(result).toEqual({ status: 200, body: { success: true } })
+    expect(check.requests).toHaveLength(1)
     expect(writes()).toEqual([])
     expect(mail.sent).toEqual([])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Every public form: the person check decides first
+// ---------------------------------------------------------------------------
+
+const jobSeekerForm = {
+  full_name: 'Ada Lovelace',
+  email: 'ada@example.com',
+  location_city: 'London',
+  professional_role: 'Accountant',
+  qualification: 'ACCA',
+  years_experience: '5',
+  employment_status: 'Employed',
+  biography: 'Experienced accountant.',
+  ...turnstile,
+}
+const briefForm = {
+  company_name: 'Example Ltd',
+  contact_name: 'Ada Lovelace',
+  contact_email: 'ada@example.com',
+  role_title: 'Accountant',
+  contract_type: 'Permanent',
+  location: 'London',
+  role_description: 'Prepare monthly management accounts.',
+  ...turnstile,
+}
+
+type Answer = { status: number; body: unknown }
+type FormCase = {
+  name: string
+  path: string
+  route: (req: NextRequest) => Promise<Response>
+  form: Row
+  // Other fields a submission can carry, with today's answer when the
+  // person check passes.
+  others: [string, Row, Answer][]
+}
+
+const ok: Answer = { status: 200, body: { success: true } }
+const formCases: FormCase[] = [
+  {
+    name: 'contact form',
+    path: '/api/contact',
+    route: contact,
+    form: contactForm,
+    others: [
+      ['the submission is filtered (1)', { _h: 'x' }, ok],
+      ['the submission is filtered (2)', { email: 'ada@mailinator.com' }, ok],
+      ['the submission is filtered (3)', { message: 'nospacesatallinthismessage' }, ok],
+    ],
+  },
+  {
+    name: 'network application form',
+    path: '/api/firms-application',
+    route: firmsApplication,
+    form: firmsForm,
+    others: [
+      ['the submission is filtered (1)', { _h: 'x' }, ok],
+      ['a required field is empty', { about: '' }, { status: 400, body: { error: 'Required fields are missing.' } }],
+    ],
+  },
+  {
+    name: 'help request form',
+    path: '/api/help-request',
+    route: helpRequest,
+    form: helpForm,
+    others: [
+      ['the submission is filtered (1)', { _h: 'x' }, ok],
+      ['the submission is filtered (2)', { email: 'ada@mailinator.com' }, ok],
+      ['the submission is filtered (3)', { message: 'nospacesatallinthismessage' }, ok],
+      ['a required field is empty', { name: '' }, { status: 400, body: { error: 'Name, email, service and message are required.' } }],
+    ],
+  },
+  {
+    name: 'job seeker registration form',
+    path: '/api/recruitment/job-seeker-apply',
+    route: jobSeekerApply,
+    form: jobSeekerForm,
+    others: [
+      ['the submission is filtered (1)', { _h: 'x' }, { status: 400, body: { error: 'Invalid submission' } }],
+      ['a required field is empty', { biography: '' }, { status: 400, body: { error: 'Missing required field: biography' } }],
+    ],
+  },
+  {
+    name: 'hiring brief form',
+    path: '/api/recruitment/employer-brief',
+    route: employerBrief,
+    form: briefForm,
+    others: [
+      ['the submission is filtered (1)', { _h: 'x' }, { status: 400, body: { error: 'Invalid submission' } }],
+      ['a required field is empty', { role_description: '' }, { status: 400, body: { error: 'Missing required field: role_description' } }],
+    ],
+  },
+]
+
+const withoutToken = (form: Row) => Object.fromEntries(Object.entries(form).filter(([key]) => key !== 'cf-turnstile-response'))
+const failingCheckCases: [string, () => void, (form: Row) => Row][] = [
+  ['no token is sent', () => {}, withoutToken],
+  ['the token is empty', () => {}, (form) => ({ ...form, 'cf-turnstile-response': '' })],
+  ['Cloudflare does not confirm the token', () => (check.answer = 'rejected'), (form) => form],
+  ['Cloudflare sends an unreadable reply', () => (check.answer = 'unreadable'), (form) => form],
+  ['Cloudflare cannot be reached', () => (check.answer = 'down'), (form) => form],
+]
+const refused: Answer = { status: 400, body: { error: HUMAN_CHECK_FAILED_TEXT } }
+
+describe.each(formCases)('$name: the person check decides first', ({ path, route, form, others }) => {
+  it('saves and sends as today when the person check passes', async () => {
+    const result = await read(await route(post(path, form)))
+    expect(result).toEqual(ok)
+    expect(writes().length).toBeGreaterThan(0)
+    expect(mail.sent.length).toBeGreaterThan(0)
+    expect(check.requests).toEqual([{ secret: 'test-secret-ab', response: TOKEN, remoteip: VISITOR_IP }])
+  })
+
+  it('uses the second site secret when the request is marked for the second site', async () => {
+    await route(post(path, form, { 'x-et-platform': 'ethiotax' }))
+    expect(check.requests.map((r) => r.secret)).toEqual(['test-secret-et'])
+  })
+
+  it.each(others)('keeps its existing answer when %s and the person check passes', async (_name, extra, answer) => {
+    expect(await read(await route(post(path, { ...form, ...extra })))).toEqual(answer)
+    expect(check.requests).toHaveLength(1)
+    expect(writes()).toEqual([])
+    expect(mail.sent).toEqual([])
+  })
+
+  const variants: [string, Row][] = [['all fields are as normal', {}], ...others.map(([name, extra]): [string, Row] => [name, extra])]
+  describe.each(failingCheckCases)('when %s', (_check, arrange, shape) => {
+    it.each(variants)('gets the refresh message, and nothing is saved or sent, when %s', async (_name, extra) => {
+      arrange()
+      const result = await read(await route(post(path, shape({ ...form, ...extra }))))
+      expect(result).toEqual(refused)
+      expect(writes()).toEqual([])
+      expect(mail.sent).toEqual([])
+      expect(check.requests.length).toBeLessThanOrEqual(1)
+    })
+  })
+
+  it('gets the refresh message when Cloudflare gives no answer within 5 seconds', async () => {
+    startTimeLimitClock()
+    check.answer = 'silent'
+    let settled = false
+    const pending = route(post(path, { ...form, _h: 'x' })).then((r) => {
+      settled = true
+      return r
+    })
+    await untilCheckRequested()
+    await vi.advanceTimersByTimeAsync(4999)
+    expect(settled).toBe(false)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(await read(await pending)).toEqual(refused)
+    expect(check.requests).toHaveLength(1)
+    expect(writes()).toEqual([])
+    expect(mail.sent).toEqual([])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Newsletter sign-up: its own answers, with the shared check and time limit
+// ---------------------------------------------------------------------------
+
+const SUBSCRIBE_FAILED = {
+  error: "We couldn't verify your request. If you're using an ad blocker or privacy extension, please disable it for this page and try again.",
+  code: 'turnstile_failed',
+}
+const SUBSCRIBE_UNREACHABLE = {
+  error: "We couldn't verify your request right now. Please try again in a moment.",
+  code: 'turnstile_unreachable',
+}
+const signupForm = { email: 'ada@example.com', ...turnstile }
+
+describe('newsletter sign-up and the person check', () => {
+  const subscribeCases: [string, () => void, (form: Row) => Row, Answer][] = [
+    ['no token is sent', () => {}, withoutToken, { status: 400, body: SUBSCRIBE_FAILED }],
+    ['the token is empty', () => {}, (form) => ({ ...form, 'cf-turnstile-response': '' }), { status: 400, body: SUBSCRIBE_FAILED }],
+    ['Cloudflare does not confirm the token', () => (check.answer = 'rejected'), (form) => form, { status: 400, body: SUBSCRIBE_FAILED }],
+    ['Cloudflare sends an unreadable reply', () => (check.answer = 'unreadable'), (form) => form, { status: 503, body: SUBSCRIBE_UNREACHABLE }],
+    ['Cloudflare cannot be reached', () => (check.answer = 'down'), (form) => form, { status: 503, body: SUBSCRIBE_UNREACHABLE }],
+    ['the site secret is not set', () => vi.stubEnv('TURNSTILE_SECRET_KEY_AB', ''), (form) => form, { status: 503, body: SUBSCRIBE_UNREACHABLE }],
+  ]
+
+  it.each(subscribeCases)('keeps its own answer when %s, whatever else was sent', async (_name, arrange, shape, answer) => {
+    arrange()
+    for (const extra of [{}, { _h: 'x' }, { email: 'ada@mailinator.com' }]) {
+      expect(await read(await subscribe(post('/api/subscribe', shape({ ...signupForm, ...extra }))))).toEqual(answer)
+    }
+    expect(check.requests.length).toBeLessThanOrEqual(3)
+    expect(writes()).toEqual([])
+    expect(mail.sent).toEqual([])
+  })
+
+  it('keeps its existing answer for filtered sign-ups that pass the person check', async () => {
+    for (const extra of [{ _h: 'x' }, { email: 'ada@mailinator.com' }]) {
+      expect(await read(await subscribe(post('/api/subscribe', { ...signupForm, ...extra })))).toEqual(ok)
+    }
+    expect(check.requests).toHaveLength(2)
+    expect(writes()).toEqual([])
+    expect(mail.sent).toEqual([])
+  })
+
+  it('answers that Cloudflare could not be reached after 5 seconds without an answer', async () => {
+    startTimeLimitClock()
+    check.answer = 'silent'
+    let settled = false
+    const pending = subscribe(post('/api/subscribe', signupForm)).then((r) => {
+      settled = true
+      return r
+    })
+    await untilCheckRequested()
+    await vi.advanceTimersByTimeAsync(4999)
+    expect(settled).toBe(false)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(await read(await pending)).toEqual({ status: 503, body: SUBSCRIBE_UNREACHABLE })
+    expect(check.requests).toEqual([{ secret: 'test-secret-ab', response: TOKEN, remoteip: VISITOR_IP }])
+    expect(writes()).toEqual([])
+  })
+
+  it('uses the second site secret when the request is marked for the second site', async () => {
+    check.answer = 'rejected'
+    await subscribe(post('/api/subscribe', signupForm, { 'x-et-platform': 'ethiotax' }))
+    expect(check.requests.map((r) => r.secret)).toEqual(['test-secret-et'])
   })
 })
 
@@ -440,6 +660,7 @@ describe('visitor text appears as plain text in emails', () => {
         years_experience: '5',
         employment_status: 'Employed',
         biography: 'Experienced accountant.',
+        ...turnstile,
       }),
     )
     expect(htmlOf(0)).toContain('Thank you for registering, &lt;b&gt;O&#39;Neil&lt;/b&gt;')
@@ -460,6 +681,7 @@ describe('visitor text appears as plain text in emails', () => {
         start_date: SPECIAL,
         role_description: SPECIAL,
         must_haves: SPECIAL,
+        ...turnstile,
       }),
     )
     const html = htmlOf(0)
