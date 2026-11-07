@@ -327,7 +327,7 @@ const scenarios: Scenario[] = [
     row: brief,
     call: async () => confirmBrief(get('/api/recruitment/confirm-brief?token=t&action=confirm')),
     healthy: { status: 307, location: SITE + '/jobs/hire-talent?brief=confirmed', emails: 2, dbRequests: 2 },
-    never: { status: 307, location: SITE + '/jobs/hire-talent?brief=invalid', emails: 0, dbRequests: 1 },
+    never: { status: 307, location: SITE + '/jobs/hire-talent?brief=error', emails: 0, dbRequests: 1 },
   },
   {
     name: 'hiring brief cancellation link',
@@ -335,7 +335,7 @@ const scenarios: Scenario[] = [
     row: brief,
     call: async () => confirmBrief(get('/api/recruitment/confirm-brief?token=t&action=cancel')),
     healthy: { status: 307, location: SITE + '/jobs/hire-talent?brief=cancelled', emails: 0, dbRequests: 2 },
-    never: { status: 307, location: SITE + '/jobs/hire-talent?brief=invalid', emails: 0, dbRequests: 1 },
+    never: { status: 307, location: SITE + '/jobs/hire-talent?brief=error', emails: 0, dbRequests: 1 },
   },
   ...[undefined, 'previous'].map(
     (editToken): Scenario => ({
@@ -356,7 +356,9 @@ const scenarios: Scenario[] = [
           }),
         ),
       healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: editToken ? 2 : 1 },
-      never: { status: 500, body: { error: 'Database error' }, emails: 0, dbRequests: editToken ? 2 : 1 },
+      // The new brief is saved first, so when that does not answer the route
+      // stops there, also when editing.
+      never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1 },
     }),
   ),
   {

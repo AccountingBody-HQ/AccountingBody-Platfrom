@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import {
+  BRIEF_LINK_RETRY_TEXT,
   CONFIRMATION_EMAIL_FAILED_TEXT,
+  LINK_RETRY_HEADING,
   MESSAGE_MIN_LENGTH,
   SERVER_PROBLEM_TEXT,
+  VERIFY_LINK_RETRY_TEXT,
+  briefLinkStatus,
   isMessageTooShort,
   messageTooShortText,
+  verifyLinkStatus,
 } from './message-rules'
 
 describe('message rules', () => {
@@ -40,10 +45,61 @@ describe('message rules', () => {
     )
   })
 
+  it('uses the agreed texts for a link that can be tried again', () => {
+    expect(LINK_RETRY_HEADING).toBe('Please Try Again')
+    expect(VERIFY_LINK_RETRY_TEXT).toBe(
+      "We couldn't confirm your email just now. Please try the link again in a few minutes.",
+    )
+    expect(BRIEF_LINK_RETRY_TEXT).toBe(
+      "We couldn't update your brief just now. Please try the link again in a few minutes.",
+    )
+  })
+
   it('keeps the shared visitor texts free of site names and web addresses', () => {
     const siteWords = /accounting\s*body|ethio\s*tax|\.com\b|\.et\b|https?:|www\./i
-    for (const text of [SERVER_PROBLEM_TEXT, CONFIRMATION_EMAIL_FAILED_TEXT, messageTooShortText()]) {
+    for (const text of [
+      SERVER_PROBLEM_TEXT,
+      CONFIRMATION_EMAIL_FAILED_TEXT,
+      messageTooShortText(),
+      LINK_RETRY_HEADING,
+      VERIFY_LINK_RETRY_TEXT,
+      BRIEF_LINK_RETRY_TEXT,
+    ]) {
       expect(text).not.toMatch(siteWords)
+    }
+  })
+})
+
+describe('job-seeker screen state from its link', () => {
+  it.each([
+    ['true', 'verified'],
+    ['already', 'already'],
+    ['invalid', 'invalid'],
+    ['error', 'linkRetry'],
+  ] as const)('shows %s as %s', (value, status) => {
+    expect(verifyLinkStatus(value)).toBe(status)
+  })
+
+  it('shows the form for no value or any other value', () => {
+    for (const value of [null, '', 'retry', 'TRUE', 'confirmed']) {
+      expect(verifyLinkStatus(value)).toBe('idle')
+    }
+  })
+})
+
+describe('hiring brief screen state from its link', () => {
+  it.each([
+    ['confirmed', 'confirmed'],
+    ['cancelled', 'cancelled'],
+    ['invalid', 'invalid'],
+    ['error', 'linkRetry'],
+  ] as const)('shows %s as %s', (value, status) => {
+    expect(briefLinkStatus(value)).toBe(status)
+  })
+
+  it('shows the form for no value or any other value', () => {
+    for (const value of [null, '', 'retry', 'Confirmed', 'true']) {
+      expect(briefLinkStatus(value)).toBe('idle')
     }
   })
 })

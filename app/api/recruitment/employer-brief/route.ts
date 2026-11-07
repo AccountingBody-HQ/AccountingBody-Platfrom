@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSupabase } from "@/lib/supabase-server"
 import { Resend } from "resend"
 import { randomUUID } from "crypto"
+import { checkEmailSend } from "@/lib/email-check"
+import { CONFIRMATION_EMAIL_FAILED_TEXT, SERVER_PROBLEM_TEXT } from "@/lib/message-rules"
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,23 +28,18 @@ export async function POST(req: NextRequest) {
     const baseDomain = isET ? "ethiotax.com" : "accountingbody.com"
     const firstName = body.contact_name.trim().split(" ")[0]
     const confirmToken = randomUUID()
+    const contactEmail = body.contact_email.trim().toLowerCase()
 
-    // If editing, delete the old record first before inserting new one
-    if (body.edit_token) {
-      await supabase
-        .from("employer_briefs")
-        .delete()
-        .eq("confirmation_token", body.edit_token)
-        .eq("status", "pending_confirmation")
-    }
-
+    // When editing, the earlier brief is removed only at the end, after the
+    // new brief is saved and its confirmation email is sent, so the visitor
+    // always holds one brief whose links work.
     const { error: dbError } = await supabase
       .from("employer_briefs")
       .insert({
         platform,
         company_name:     body.company_name.trim(),
         contact_name:     body.contact_name.trim(),
-        contact_email:    body.contact_email.trim().toLowerCase(),
+        contact_email:    contactEmail,
         contact_phone:    body.contact_phone?.trim() || null,
         role_title:       body.role_title.trim(),
         contract_type:    body.contract_type,
@@ -58,8 +55,8 @@ export async function POST(req: NextRequest) {
       })
 
     if (dbError) {
-      console.error("Supabase error:", dbError)
-      return NextResponse.json({ error: "Database error" }, { status: 500 })
+      console.error("employer brief: save failed", dbError.code || "no-code")
+      return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
     }
 
     const confirmUrl = baseUrl + "/api/recruitment/confirm-brief?token=" + confirmToken + "&action=confirm"
@@ -70,12 +67,47 @@ export async function POST(req: NextRequest) {
 
     const briefTable = "<table style=\"width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px;\"><tr style=\"background:#f8fafc;\"><td style=\"padding:10px 12px;color:#64748b;font-weight:600;width:140px;\">Role</td><td style=\"padding:10px 12px;color:#1e293b;font-weight:700;\">" + body.role_title + "</td></tr><tr><td style=\"padding:10px 12px;color:#64748b;font-weight:600;\">Company</td><td style=\"padding:10px 12px;color:#1e293b;\">" + body.company_name + "</td></tr><tr style=\"background:#f8fafc;\"><td style=\"padding:10px 12px;color:#64748b;font-weight:600;\">Type</td><td style=\"padding:10px 12px;color:#1e293b;\">" + body.contract_type + "</td></tr><tr><td style=\"padding:10px 12px;color:#64748b;font-weight:600;\">Location</td><td style=\"padding:10px 12px;color:#1e293b;\">" + body.location + "</td></tr>" + (body.salary_budget ? "<tr style=\"background:#f8fafc;\"><td style=\"padding:10px 12px;color:#64748b;font-weight:600;\">Budget</td><td style=\"padding:10px 12px;color:#1e293b;\">" + body.salary_budget + "</td></tr>" : "") + (body.start_date ? "<tr><td style=\"padding:10px 12px;color:#64748b;font-weight:600;\">Start Date</td><td style=\"padding:10px 12px;color:#1e293b;\">" + body.start_date + "</td></tr>" : "") + "</table><div style=\"background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin-bottom:24px;\"><p style=\"color:#64748b;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 8px;\">Role Description</p><p style=\"color:#1e293b;font-size:14px;line-height:1.7;margin:0;\">" + body.role_description + "</p></div>" + (body.must_haves ? "<div style=\"background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin-bottom:24px;\"><p style=\"color:#64748b;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin:0 0 8px;\">Must-Haves</p><p style=\"color:#1e293b;font-size:14px;line-height:1.7;margin:0;\">" + body.must_haves + "</p></div>" : "")
 
-    await resend.emails.send({
+    const sendResult = await resend.emails.send({
       from: platformName + " <noreply@accountingbody.com>",
       to:   body.contact_email.trim(),
       subject: "Please confirm your hiring brief - " + platformName,
       html: "<!DOCTYPE html><html><body style=\"margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;\"><div style=\"max-width:620px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;\"><div style=\"background:" + brandColor + ";padding:32px 40px;\"><p style=\"color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;\">" + platformName + " - Recruitment</p><h1 style=\"color:#fff;font-size:24px;margin:0;line-height:1.3;\">Please confirm your hiring brief.</h1></div><div style=\"padding:32px 40px;\"><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 16px;\">Dear " + firstName + ",</p><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 24px;\">Thank you for submitting your hiring brief. Please review the details below and confirm, edit, or cancel.</p>" + briefTable + "<div style=\"margin-top:8px;\"><a href=\"" + confirmUrl + "\" style=\"display:block;background:" + brandColor + ";color:#fff;font-weight:700;font-size:15px;padding:16px 24px;border-radius:8px;text-decoration:none;text-align:center;margin-bottom:12px;\">Confirm my brief &rarr;</a><a href=\"" + editUrl + "\" style=\"display:block;background:#f1f5f9;color:#1e293b;font-weight:600;font-size:14px;padding:14px 24px;border-radius:8px;text-decoration:none;text-align:center;margin-bottom:20px;border:1px solid #e2e8f0;\">Edit my brief</a><div style=\"text-align:center;\"><a href=\"" + cancelUrl + "\" style=\"color:#94a3b8;font-size:13px;text-decoration:underline;\">Cancel this brief</a></div></div><p style=\"color:#94a3b8;font-size:13px;margin-top:24px;\">This link expires in 7 days. If you did not submit this brief, you can ignore this email.</p></div>" + footer + "</div></body></html>",
     })
+
+    // Without the confirmation email the visitor cannot confirm, edit or
+    // cancel, so they are asked to try again. The brief saved above in this
+    // request is removed first, matched by the token made in this request
+    // (plus its email and unconfirmed status). When editing, the earlier
+    // brief has not been touched.
+    if (!checkEmailSend(sendResult, "hiring brief confirmation")) {
+      const { error: removeError, count } = await supabase
+        .from("employer_briefs")
+        .delete({ count: "exact" })
+        .eq("confirmation_token", confirmToken)
+        .eq("contact_email", contactEmail)
+        .eq("status", "pending_confirmation")
+      if (removeError || count !== 1) {
+        console.error(
+          "employer brief: unsent brief not removed",
+          removeError ? removeError.code || "no-code" : `count ${count}`
+        )
+      }
+      return NextResponse.json({ error: CONFIRMATION_EMAIL_FAILED_TEXT }, { status: 502 })
+    }
+
+    // The new brief is saved and its email sent, so the earlier one can go.
+    // If that fails the visitor still has the new brief, so the answer stays
+    // success and one line is logged.
+    if (body.edit_token) {
+      const { error: oldRemoveError } = await supabase
+        .from("employer_briefs")
+        .delete()
+        .eq("confirmation_token", body.edit_token)
+        .eq("status", "pending_confirmation")
+      if (oldRemoveError) {
+        console.error("employer brief: earlier brief not removed", oldRemoveError.code || "no-code")
+      }
+    }
 
     return NextResponse.json({ success: true })
   } catch (err) {

@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Script from 'next/script'
+import { BRIEF_LINK_RETRY_TEXT, LINK_RETRY_HEADING, briefLinkStatus } from '@/lib/message-rules'
 
 declare global {
   interface Window {
@@ -115,12 +116,9 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
     start_date: '', must_haves: '', nice_to_haves: '', role_description: '',
     jurisdiction: '', _h: '',
   })
-  const [status, setStatus] = useState<'idle'|'loading'|'success'|'error'|'confirmed'|'cancelled'|'invalid'>(() => {
+  const [status, setStatus] = useState<'idle'|'loading'|'success'|'error'|'confirmed'|'cancelled'|'invalid'|'linkRetry'>(() => {
     if (typeof window !== 'undefined') {
-      const p = new URLSearchParams(window.location.search).get('brief')
-      if (p === 'confirmed') return 'confirmed'
-      if (p === 'cancelled') return 'cancelled'
-      if (p === 'invalid') return 'invalid'
+      return briefLinkStatus(new URLSearchParams(window.location.search).get('brief'))
     }
     return 'idle'
   })
@@ -271,11 +269,11 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
           <div ref={topRef} />
           <div className="max-w-6xl mx-auto">
 
-            {(status === 'success' || status === 'confirmed' || status === 'cancelled' || status === 'invalid') ? (
+            {(status === 'success' || status === 'confirmed' || status === 'cancelled' || status === 'invalid' || status === 'linkRetry') ? (
               <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm max-w-3xl mx-auto">
                 <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
-                  style={{ background: status === 'cancelled' || status === 'invalid' ? '#fee2e2' : '#f0fdf4' }}>
-                  {status === 'cancelled' || status === 'invalid'
+                  style={{ background: status === 'cancelled' || status === 'invalid' || status === 'linkRetry' ? '#fee2e2' : '#f0fdf4' }}>
+                  {status === 'cancelled' || status === 'invalid' || status === 'linkRetry'
                     ? <svg className="w-8 h-8" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     : <svg className="w-8 h-8" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
                   }
@@ -298,6 +296,10 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                 {status === 'invalid' && <>
                   <h2 className="font-display text-2xl mb-3" style={{ color: '#dc2626' }}>Invalid Link</h2>
                   <p className="text-slate-500 leading-relaxed mb-4">This link is invalid or has already been used. If you need help, please <a href="/jobs/hire-talent" className="underline" style={{ color: brand }}>submit a new brief</a>.</p>
+                </>}
+                {status === 'linkRetry' && <>
+                  <h2 className="font-display text-2xl mb-3" style={{ color: '#dc2626' }}>{LINK_RETRY_HEADING}</h2>
+                  <p className="text-slate-500 leading-relaxed mb-4">{BRIEF_LINK_RETRY_TEXT}</p>
                 </>}
               </div>
             ) : (
