@@ -1,6 +1,6 @@
-import * as Sentry from '@sentry/nextjs'
 import { NextRequest } from 'next/server'
 import { getProvidersDueForFetch, reapStaleRuns } from '@/lib/providers'
+import { reportServerError } from '@/lib/report-error'
 
 export const maxDuration = 60
 
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     reaped = await reapStaleRuns(10)
   } catch (reapErr: unknown) {
     console.error('[orchestrator] reaper failed:', reapErr)
-    Sentry.captureException(reapErr)
+    reportServerError('job import stale run cleanup failed', reapErr, { area: 'ingest' })
   }
 
   let dueProviders
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     dueProviders = await getProvidersDueForFetch()
   } catch (err: unknown) {
     console.error('[orchestrator] getProvidersDueForFetch failed:', err)
-    Sentry.captureException(err)
+    reportServerError('job import due check failed', err, { area: 'ingest' })
     return Response.json(
       { ok: false, error: 'Failed to determine due providers', reaped },
       { status: 500 },
@@ -84,10 +84,7 @@ export async function GET(req: NextRequest) {
   // tracked by each provider's own consecutive_failures/health_status.
   const failedCount = summary.filter(s => !s.result.ok).length
   if (dueProviders.length > 0 && failedCount === dueProviders.length) {
-    Sentry.captureMessage(
-      `[orchestrator] All ${dueProviders.length} dispatched providers failed this run`,
-      { level: 'error', extra: { summary } }
-    )
+    reportServerError('job import dispatch failed', new Error('every dispatched import failed'), { area: 'ingest' })
   }
 
   console.log(`[orchestrator] Dispatched ${dispatched.length} providers:`, dispatched)

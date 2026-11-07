@@ -103,3 +103,37 @@ export function summarise(words: Record<CheckName, CheckWord>): StatusAnswer {
 export function neutralAttention(): StatusAnswer {
   return { httpStatus: 503, body: { status: 'attention', checks: {} } }
 }
+
+// How long one computed answer is reused, per server instance.
+export const OPS_STATUS_HOLD_MS = 60_000
+
+export type AnswerHold<T> = {
+  get: (compute: () => Promise<T>) => Promise<T>
+  clear: () => void
+}
+
+// Keeps one computed answer for holdMs from when its computation started.
+// Callers that arrive while it runs share it. Any answer the computation
+// returns is kept, ok or attention. A computation that throws is not kept,
+// and a new computation always replaces the previous answer, so no older
+// answer is ever returned once the hold has run out.
+export function createAnswerHold<T>(holdMs: number = OPS_STATUS_HOLD_MS, clock: () => number = () => Date.now()): AnswerHold<T> {
+  let held: { startedAt: number; answer: Promise<T> } | null = null
+  return {
+    get(compute) {
+      const now = clock()
+      if (held && now >= held.startedAt && now - held.startedAt < holdMs) return held.answer
+      const entry = { startedAt: now, answer: new Promise<T>((resolve) => resolve(compute())) }
+      held = entry
+      entry.answer.catch(() => {
+        if (held === entry) held = null
+      })
+      return entry.answer
+    },
+    clear() {
+      held = null
+    },
+  }
+}
+
+export const opsStatusHold = createAnswerHold<StatusAnswer>()

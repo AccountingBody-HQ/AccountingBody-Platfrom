@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import * as Sentry from '@sentry/nextjs'
 import { SAVED_JOBS_RETENTION_DAYS } from '@/lib/saved-jobs'
 import { pruneInactive } from '@/lib/saved-jobs-store'
+import { reportServerError } from '@/lib/report-error'
 
 export const dynamic = 'force-dynamic'
 // force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, deleted })
   } catch (err: unknown) {
     console.error('cron/prune-saved-jobs: fatal error', err)
-    Sentry.captureException(err)
+    reportServerError('saved jobs cleanup failed', err, { area: 'cron' })
     return NextResponse.json({ error: 'Cron run failed' }, { status: 500 })
   }
 }

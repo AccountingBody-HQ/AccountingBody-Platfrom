@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { Resend } from "resend"
 import { SignJWT } from "jose"
 import { getServerSupabase } from "@/lib/supabase-server"
-import * as Sentry from "@sentry/nextjs"
 import { shouldSendConfirmationEmail } from "@/lib/subscribe-dedup"
 import { checkRead } from "@/lib/db-check"
 import { checkEmailSend } from "@/lib/email-check"
@@ -41,12 +40,8 @@ export async function POST(req: NextRequest) {
     // whatever else was sent.
     const turnstileResult = await verifyHumanCheck(turnstileToken, ip, isET, "subscribe")
     if (!turnstileResult.ok) {
-      const platform = isET ? "et" : "ab"
       const reason = SUBSCRIBE_CHECK_REASON[turnstileResult.reason]
-      Sentry.captureMessage("[subscribe] Turnstile verification failed", {
-        level: "warning",
-        tags: { platform, reason },
-      })
+      reportServerError("subscribe person check refused", new Error("person check refused"), { area: "public", code: reason })
       const unreachable = reason === "unreachable"
       return NextResponse.json(
         {

@@ -17,6 +17,7 @@ import { deduplicate } from '@/lib/ingestion/deduplicate'
 import { validate } from '@/lib/ingestion/validate'
 import { computeQualityMetrics, type QualityMetrics } from '@/lib/ingestion/quality'
 import { deriveAlertState, maybeSendProviderAlert } from '@/lib/provider-alerts'
+import { reportServerError } from '@/lib/report-error'
 
 export const maxDuration = 300
 
@@ -400,6 +401,7 @@ export async function POST(
     }
 
     console.error(`[ingest/${slug}] Fatal error:`, err)
+    reportServerError('job import run failed', err, { area: 'ingest' })
     return Response.json({ ok: false, error: msg, durationMs }, { status: 500 })
   }
 }

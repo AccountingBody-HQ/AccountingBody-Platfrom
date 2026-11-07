@@ -18,25 +18,12 @@ vi.unstubAllEnvs()
 const LOCKED = 'AB Press files stay unchanged'
 const RETIRED = 'route kept unchanged while it is retired'
 const STAGE_PUBLIC = 'later stage: public forms and recruitment'
-const STAGE_JOBS = 'later stage: jobs, saved jobs, payments, scheduled and import routes'
 const STAGE_ADMIN = 'later stage: admin tools'
 
 // Paths under app/api; '@admin' stands for the admin folder.
 const NOT_YET_REPORTING: Record<string, string> = {
   careerjet: RETIRED,
   'confirm-subscription': STAGE_PUBLIC,
-  'cron/expire-jobs': STAGE_JOBS,
-  'cron/prune-pending-subscribers': STAGE_JOBS,
-  'cron/prune-saved-jobs': STAGE_JOBS,
-  'ingest/[slug]': STAGE_JOBS,
-  'ingest/orchestrator': STAGE_JOBS,
-  'jobs/click/[id]': STAGE_JOBS,
-  'jobs/direct': STAGE_JOBS,
-  'jobs/employer/checkout': STAGE_JOBS,
-  'jobs/employer/webhook': STAGE_JOBS,
-  'jobs/manage': STAGE_JOBS,
-  'saved-jobs': STAGE_JOBS,
-  'saved-jobs/import': STAGE_JOBS,
   '@admin-auth': STAGE_ADMIN,
   '@admin/ab-press/export-word': LOCKED,
   '@admin/ab-press/generate': LOCKED,

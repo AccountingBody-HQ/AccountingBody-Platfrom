@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { CHECKS } from '@/lib/ops-status'
+import { CHECKS, OPS_STATUS_HOLD_MS, createAnswerHold, opsStatusHold } from '@/lib/ops-status'
 
 // The status route reads with a real supabase-js client from the factory;
 // only the network is fake. The reporting helper is replaced by a recorder.
@@ -118,6 +118,7 @@ beforeEach(() => {
   db.failing = new Set()
   db.failCode = 'XX000'
   db.requests = []
+  opsStatusHold.clear()
 })
 
 afterEach(() => {
@@ -250,6 +251,7 @@ describe('ops status', () => {
       db.tables = healthyTables()
       db.failing = new Set()
       vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', DB_URL)
+      opsStatusHold.clear()
       scenario()
       const { text, body } = await call()
       expectAllowedShape(text, body)
@@ -298,5 +300,150 @@ describe('ops status', () => {
     expect(duration).toBeLessThanOrEqual(10)
     expect(source.match(/export (async )?function (\w+)/g)).toStrictEqual(['export async function GET'])
     expect(source).toContain("getServerSupabase('publicRead')")
+  })
+})
+
+describe('ops status within a minute', () => {
+  const later = (ms: number) => vi.setSystemTime(NOW + ms)
+
+  it('reuses one answer for a minute', () => {
+    expect(OPS_STATUS_HOLD_MS).toBe(60_000)
+  })
+
+  it('answers from a recent check within a minute', async () => {
+    const first = await call()
+    later(OPS_STATUS_HOLD_MS - 1)
+    const second = await call()
+    expect(db.requests).toHaveLength(4)
+    expect(second.status).toBe(first.status)
+    expect(second.text).toBe(first.text)
+    expect(second.response.headers.get('cache-control')).toBe('no-store')
+  })
+
+  it('shares one check between calls that arrive together', async () => {
+    const results = await Promise.all([call(), call(), call(), call(), call()])
+    expect(db.requests).toHaveLength(4)
+    expect(new Set(results.map((result) => result.text)).size).toBe(1)
+  })
+
+  it('checks again after a minute', async () => {
+    await call()
+    later(OPS_STATUS_HOLD_MS)
+    db.tables.saved_jobs = [{ last_seen_at: at(30 * DAY) }]
+    const result = await call()
+    expect(db.requests).toHaveLength(8)
+    expect(result.status).toBe(503)
+    expect(result.body.checks['saved-jobs-cleanup']).toBe('late')
+  })
+
+  it('holds an attention answer too', async () => {
+    db.failing.add('provider_runs')
+    const first = await call()
+    expect(first.status).toBe(503)
+    db.failing = new Set()
+    later(30_000)
+    const second = await call()
+    expect(second.status).toBe(503)
+    expect(second.body.checks['job-import']).toBe('unknown')
+    expect(db.requests).toHaveLength(4)
+    expect(state.reports.map((args) => args[0])).toStrictEqual(['ops status read'])
+  })
+
+  it('answers from the new check, never an older one, when a read fails', async () => {
+    expect((await call()).status).toBe(200)
+    later(OPS_STATUS_HOLD_MS)
+    for (const table of ['provider_runs', 'jobs', 'email_subscribers', 'saved_jobs']) db.failing.add(table)
+    const failed = await call()
+    expect(failed.status).toBe(503)
+    expect(Object.values(failed.body.checks)).toStrictEqual(['unknown', 'unknown', 'unknown', 'unknown'])
+    later(OPS_STATUS_HOLD_MS + 1)
+    expect((await call()).status).toBe(503)
+  })
+
+  it('checks again on the next call when the check could not run', async () => {
+    expect((await call()).status).toBe(200)
+    later(OPS_STATUS_HOLD_MS)
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', '')
+    const neutral = await call()
+    expect(neutral.status).toBe(503)
+    expect(neutral.body).toStrictEqual({ status: 'attention', checks: {} })
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', DB_URL)
+    later(OPS_STATUS_HOLD_MS + 1)
+    const next = await call()
+    expect(next.status).toBe(200)
+    expect(db.requests).toHaveLength(8)
+  })
+
+  it('gives every caller the neutral answer when a shared check cannot run', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', '')
+    const results = await Promise.all([call(), call(), call()])
+    expect(results.map((result) => result.status)).toStrictEqual([503, 503, 503])
+    expect(results.every((result) => result.text === '{"status":"attention","checks":{}}')).toBe(true)
+    expect(state.reports.every((args) => args[0] === 'ops status check failed')).toBe(true)
+  })
+
+  it('answers HEAD with the same check as GET', async () => {
+    const { autoImplementMethods } = await import('next/dist/server/future/route-modules/app-route/helpers/auto-implement-methods')
+    const methods = autoImplementMethods({ GET } as Parameters<typeof autoImplementMethods>[0])
+    expect(methods.HEAD).toBe(GET)
+    await call()
+    later(10_000)
+    const head = await (methods.HEAD as typeof GET)()
+    expect(head.status).toBe(200)
+    expect(db.requests).toHaveLength(4)
+  })
+})
+
+describe('answer hold', () => {
+  it('runs one computation per hold, from when it started', async () => {
+    let now = 1_000
+    let runs = 0
+    const hold = createAnswerHold<number>(100, () => now)
+    const compute = async () => ++runs
+    expect(await hold.get(compute)).toBe(1)
+    now = 1_099
+    expect(await hold.get(compute)).toBe(1)
+    now = 1_100
+    expect(await hold.get(compute)).toBe(2)
+  })
+
+  it('shares a running computation', async () => {
+    let finish: (value: string) => void = () => {}
+    let runs = 0
+    const hold = createAnswerHold<string>(100, () => 0)
+    const compute = () => {
+      runs += 1
+      return new Promise<string>((resolve) => { finish = resolve })
+    }
+    const first = hold.get(compute)
+    const second = hold.get(compute)
+    finish('answer')
+    expect(await Promise.all([first, second])).toStrictEqual(['answer', 'answer'])
+    expect(runs).toBe(1)
+  })
+
+  it('keeps nothing from a computation that throws', async () => {
+    let now = 0
+    const hold = createAnswerHold<string>(100, () => now)
+    expect(await hold.get(async () => 'ok')).toBe('ok')
+    now = 100
+    await expect(hold.get(async () => { throw new Error('could not check') })).rejects.toThrow('could not check')
+    now = 101
+    expect(await hold.get(async () => 'checked again')).toBe('checked again')
+  })
+
+  it('keeps nothing from a computation that throws at once', async () => {
+    const hold = createAnswerHold<string>(100, () => 0)
+    await expect(hold.get(() => { throw new Error('could not start') })).rejects.toThrow('could not start')
+    expect(await hold.get(async () => 'checked again')).toBe('checked again')
+  })
+
+  it('checks again when the clock goes back', async () => {
+    let now = 500
+    let runs = 0
+    const hold = createAnswerHold<number>(100, () => now)
+    await hold.get(async () => ++runs)
+    now = 400
+    expect(await hold.get(async () => ++runs)).toBe(2)
   })
 })

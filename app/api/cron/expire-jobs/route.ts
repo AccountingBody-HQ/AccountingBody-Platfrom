@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { getExpiringJobs, expireJob } from '@/lib/jobs'
 import { sendJobExpiredEmail, sendJobExpiryWarningEmail } from '@/lib/jobEmails'
+import { reportServerError } from '@/lib/report-error'
 
 export const dynamic = 'force-dynamic'
 // force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
@@ -91,6 +92,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ expired, warned })
   } catch (err: unknown) {
     console.error('cron/expire-jobs: fatal error', err)
+    reportServerError('job expiry run failed', err, { area: 'cron' })
     return NextResponse.json({ error: 'Cron run failed', expired, warned }, { status: 500 })
   }
 }

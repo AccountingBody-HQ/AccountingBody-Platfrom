@@ -171,6 +171,9 @@ type Route = {
   refusals: [string, () => void | NextRequest][]
   // Fixed labels of the route's other reports, outside its final catch block.
   otherLabels?: string[]
+  // Fixed labels of reports with a fixed problem and code, checked in
+  // lib/job-route-reporting.test.ts.
+  fixedProblemLabels?: string[]
 }
 
 const somethingWrong = { status: 500, body: { error: 'Something went wrong.' } }
@@ -251,6 +254,7 @@ const ROUTES: Route[] = [
       ['person check', () => { state.personOk = false }],
       ['database error', () => { db.failing = true }],
     ],
+    fixedProblemLabels: ['subscribe person check refused'],
   },
   {
     name: 'eticpa/mock-exam',
@@ -521,9 +525,11 @@ describe('public route reporting', () => {
     expect(new Set(labels).size).toBe(labels.length)
   })
 
-  it.each(ROUTES)('$name reports with a fixed label and the area only', ({ name, label, otherLabels = [] }) => {
+  it.each(ROUTES)('$name reports with a fixed label and the area only', ({ name, label, otherLabels = [], fixedProblemLabels = [] }) => {
     const source = readFileSync(join(process.cwd(), 'app/api', name, 'route.ts'), 'utf8')
-    const calls = source.match(/reportServerError\([^)]*\)/g) ?? []
+    const calls = (source.match(/reportServerError\([^)]*\)/g) ?? []).filter(
+      (call) => !fixedProblemLabels.some((fixed) => call.startsWith(`reportServerError("${fixed}"`) || call.startsWith(`reportServerError('${fixed}'`)),
+    )
     const labels = [label, ...otherLabels]
     expect(calls).toHaveLength(labels.length)
     labels.forEach((expected, index) => {
