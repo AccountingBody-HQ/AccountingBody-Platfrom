@@ -252,8 +252,9 @@ describe('keeping personal details out of problem reports', () => {
   })
 })
 
-describe('reports a server problem once per minute per label', () => {
+describe('reports a server problem once per 10 minutes per label', () => {
   it('holds back repeats inside the window and sends their count with the next report', () => {
+    expect(REPORT_WINDOW_MS).toBe(10 * 60 * 1000)
     reportServerError('contact submit failed', new Error('x'))
     vi.advanceTimersByTime(REPORT_WINDOW_MS - 1)
     reportServerError('contact submit failed', new Error('x'))

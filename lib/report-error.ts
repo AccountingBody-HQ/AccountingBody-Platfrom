@@ -15,46 +15,31 @@
 // body), the visitor, breadcrumbs, the route name, file paths, source lines,
 // the server's host name or database rows. The report is built from the
 // values above only; everything else Sentry would add is removed before it
-// is sent (see keepReportFields).
+// is sent (see keepReportFields in ./sentry-privacy).
 //
-// At most one report per label per minute is sent from each running
+// At most one report per label per 10 minutes is sent from each running
 // instance; repeats in between are counted and sent with the next report.
+// All problem reports together are also limited per hour (see
+// REPORTS_PER_HOUR in ./sentry-privacy).
 // When Sentry is not set up (no DSN, or in tests) nothing happens.
 
 import * as Sentry from '@sentry/nextjs'
-import { getAdminPath } from './middleware-logic'
+import { clearReportQuota, keepReportFields, markHelperReport, scrubText } from './sentry-privacy'
+
+export { keepReportFields, scrubText, REPORTS_PER_HOUR, REPORT_HOUR_MS } from './sentry-privacy'
 
 export type ReportArea = 'public' | 'admin' | 'cron' | 'ingest'
 
 export type ReportExtra = { area?: ReportArea; code?: string }
 
-export const REPORT_WINDOW_MS = 60_000
+export const REPORT_WINDOW_MS = 10 * 60 * 1000
 export const MAX_REPORT_LABELS = 500
 
-const REMOVED = '[removed]'
-const MESSAGE_LENGTH = 120
 const LABEL_LENGTH = 80
-const SCAN_LENGTH = 2000
 
-const EMAIL = /[^\s@<>()[\]"',;:]+@[^\s@<>()[\]"',;:]+/g
-const LONG_TOKEN = /[A-Za-z0-9_-]{20,}/g
-const LONG_DIGITS = /\d{6,}/g
 const SHORT_CODE = /^[A-Za-z0-9_.-]{1,40}$/
 const ERROR_NAME = /^[A-Za-z][A-Za-z0-9_]{0,40}$/
 const AREAS: readonly ReportArea[] = ['public', 'admin', 'cron', 'ingest']
-
-function escapeRegExp(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-// Replaces personal or secret-looking parts, then cuts to `limit` characters.
-export function scrubText(text: string, limit = MESSAGE_LENGTH): string {
-  let out = text.slice(0, SCAN_LENGTH)
-  const privateArea = getAdminPath()
-  if (privateArea) out = out.replace(new RegExp(escapeRegExp(privateArea), 'gi'), REMOVED)
-  out = out.replace(EMAIL, REMOVED).replace(LONG_TOKEN, REMOVED).replace(LONG_DIGITS, REMOVED)
-  return out.slice(0, limit)
-}
 
 function shortCode(value: unknown): string | undefined {
   if (typeof value === 'string' && SHORT_CODE.test(value)) return value
@@ -102,51 +87,13 @@ function admit(label: string, now: number): number | null {
   return heldBack
 }
 
+// Clears the per-label windows and the hourly count (tests).
 export function clearReportWindows(): void {
   windows.clear()
+  clearReportQuota()
 }
 
 // ── The report ──────────────────────────────────────────────────────────────
-
-const TAG_KEYS = ['area', 'label'] as const
-const EXTRA_KEYS = ['error_code', 'code', 'held_back'] as const
-
-function pick(source: Record<string, unknown> | undefined, keys: readonly string[]): Record<string, unknown> {
-  const out: Record<string, unknown> = {}
-  if (!source) return out
-  for (const key of keys) if (source[key] !== undefined) out[key] = source[key]
-  return out
-}
-
-// Keeps only the fields this helper sets plus Sentry's own bookkeeping.
-export function keepReportFields(event: Sentry.Event): Sentry.Event {
-  const values = (event.exception?.values ?? []).map((value) => ({
-    type: value.type,
-    value: value.value,
-    mechanism: value.mechanism,
-  }))
-  const trace = event.contexts?.trace
-  return {
-    type: event.type,
-    event_id: event.event_id,
-    timestamp: event.timestamp,
-    platform: event.platform,
-    level: event.level,
-    environment: event.environment,
-    release: event.release,
-    dist: event.dist,
-    sdk: event.sdk,
-    fingerprint: event.fingerprint,
-    exception: { values },
-    tags: pick(event.tags, TAG_KEYS) as Sentry.Event['tags'],
-    extra: pick(event.extra, EXTRA_KEYS),
-    contexts: {
-      ...(event.contexts?.runtime ? { runtime: event.contexts.runtime } : {}),
-      ...(trace ? { trace: { trace_id: trace.trace_id, span_id: trace.span_id } } : {}),
-    },
-    sdkProcessingMetadata: {},
-  }
-}
 
 export function reportServerError(label: string, error: unknown, extra: ReportExtra = {}): void {
   try {
@@ -159,6 +106,7 @@ export function reportServerError(label: string, error: unknown, extra: ReportEx
     const report = new Error(summary.message)
     report.name = summary.name
     report.stack = undefined
+    markHelperReport(report)
 
     const area = AREAS.includes(extra.area as ReportArea) ? extra.area : undefined
     const code = shortCode(extra.code)
