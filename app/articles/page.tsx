@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
 
 export const dynamic = 'force-dynamic'
@@ -21,10 +21,7 @@ interface ArticleSummary {
 
 async function getArticles(siteCode: string): Promise<ArticleSummary[]> {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SECRET_KEY!
-    )
+    const supabase = getServerSupabase('publicRead')
     const { data, error } = await supabase
       .from('articles')
       .select('id, title, slug, excerpt, category, published_at')

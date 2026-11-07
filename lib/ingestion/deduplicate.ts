@@ -1,12 +1,10 @@
 import type { NormalisedJob } from './normalise'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '../supabase-server'
 import { slugify } from '../jobs'
 
+// The database read here (deduplicate) is used only by provider ingestion.
 function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  return getServerSupabase('ingest')
 }
 
 // ── Dedup hash ────────────────────────────────────────────────────────────

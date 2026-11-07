@@ -17,7 +17,9 @@ export async function generateStaticParams() {
   const courses = await getPublishedCourses()
   const params: { slug: string; lessonSlug: string }[] = []
   for (const c of courses) {
-    const full = await getCourseBySlug(c.slug)
+    // A course whose read fails is skipped, so a slow database never fails
+    // a build; its lessons are then rendered on first request instead.
+    const full = await getCourseBySlug(c.slug).catch(() => null)
     if (!full) continue
     for (const chapter of full.chapters ?? []) {
       for (const lesson of chapter.lessons ?? []) {

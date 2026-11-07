@@ -1,10 +1,9 @@
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase, type DbContext } from '@/lib/supabase-server'
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+// Public pages use the public read limit (the default). getCourseBySlug's
+// admin mode is used only by admin tools, which get the admin limit.
+function getSupabase(context: DbContext = 'publicRead') {
+  return getServerSupabase(context)
 }
 
 export interface CourseArticle {
@@ -212,7 +211,7 @@ export async function getPublishedCourses(site?: string): Promise<CourseSummary[
 // its chapters or lessons silently missing.
 export async function getCourseBySlug(slug: string, adminMode = false): Promise<Course | null> {
   try {
-  const supabase = getSupabase()
+  const supabase = getSupabase(adminMode ? 'admin' : 'publicRead')
   // Stage 1: fetch course
   const { data: courseData, error: courseError, status: courseStatus } = await supabase
     .from('courses')

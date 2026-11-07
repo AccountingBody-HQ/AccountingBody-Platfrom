@@ -5,7 +5,7 @@
 import React from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
 
 interface ArticleSummary {
@@ -53,10 +53,7 @@ export async function generateMetadata({
 
 async function getArticlesByLetter(letter: string): Promise<ArticleSummary[]> {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SECRET_KEY!
-    )
+    const supabase = getServerSupabase('publicRead')
     let query = supabase
       .from('articles')
       .select('id, title, slug, excerpt, category, category_title, published_at')
@@ -82,10 +79,7 @@ async function getArticlesByLetter(letter: string): Promise<ArticleSummary[]> {
 
 async function getArticlesByCategorySlug(categorySlug: string): Promise<ArticleSummary[]> {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SECRET_KEY!
-    )
+    const supabase = getServerSupabase('publicRead')
     const { data, error } = await supabase
       .from('articles')
       .select('id, title, slug, excerpt, category, category_title, published_at')

@@ -1,15 +1,15 @@
 import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase, type DbContext } from '@/lib/supabase-server'
 import { bucketBounds } from '@/lib/sitemap-chunks'
 import { SINGLE_WORD_COUNTRY_NAMES } from '@/lib/ingestion/normalise'
 import { guardCachedRead } from '@/lib/cache-guard'
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+// Reads used by public pages and APIs use the public read limit (the
+// default). Functions used only by other kinds of work name their context
+// where they create the client.
+function getSupabase(context: DbContext = 'publicRead') {
+  return getServerSupabase(context)
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -877,7 +877,7 @@ export async function getAdminJobs(params: {
   search?: string
   page?: number
 }): Promise<{ jobs: Job[]; total: number }> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('admin')
   const { status, source, platform, search, page = 1 } = params
 
   const from = (Math.max(1, page) - 1) * ADMIN_PAGE_SIZE
@@ -1075,7 +1075,7 @@ export const getCachedActiveJobCountries = cache(async (platform: string): Promi
 })
 
 export async function getExpiringJobs(daysFromNow: number): Promise<Job[]> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('cron')
   const threshold = new Date(Date.now() + daysFromNow * 24 * 60 * 60 * 1000).toISOString()
 
   const { data, error } = await supabase
@@ -1107,7 +1107,7 @@ export async function getExpiringJobs(daysFromNow: number): Promise<Job[]> {
  * than retrying blindly.
  */
 export async function createJob(data: JobInsert): Promise<Job> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicWrite')
 
   const source: JobSource = data.source ?? 'employer'
   const slug = `${slugify(data.title)}-${slugify(data.company_name)}-${randomSuffix()}`
@@ -1353,7 +1353,7 @@ export async function getJobSitemapChunk(
 }
 
 export async function approveJob(id: string, adminNotes?: string): Promise<Job> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('admin')
   const nowIso = new Date().toISOString()
   const expiresAt = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString()
 
@@ -1376,7 +1376,7 @@ export async function approveJob(id: string, adminNotes?: string): Promise<Job> 
 }
 
 export async function rejectJob(id: string, reason: string): Promise<Job> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('admin')
 
   const { data, error } = await supabase
     .from('jobs')
@@ -1390,7 +1390,9 @@ export async function rejectJob(id: string, reason: string): Promise<Job> {
 }
 
 export async function expireJob(id: string): Promise<void> {
-  const supabase = getSupabase()
+  // Used by the daily cron and by admin. One single-row update: the admin
+  // limit is far above its work and below every caller's route limit.
+  const supabase = getSupabase('admin')
   const { error } = await supabase
     .from('jobs')
     .update({ status: 'expired', closed_at: new Date().toISOString() })
@@ -1415,7 +1417,7 @@ export async function closeJobByManageToken(token: string): Promise<Job | null> 
     return job
   }
 
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicWrite')
   const { data, error } = await supabase
     .from('jobs')
     .update({ status: 'closed', closed_at: new Date().toISOString() })
@@ -1440,7 +1442,7 @@ export async function markJobPaid(
   providerOrderId: string,
   pricePaidPence: number
 ): Promise<Job> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicWrite')
 
   const { data, error } = await supabase
     .from('jobs')
@@ -1468,7 +1470,7 @@ export async function markJobPaid(
 
 export async function incrementJobImpressions(id: string): Promise<void> {
   try {
-    const supabase = getSupabase()
+    const supabase = getSupabase('publicWrite')
     const { data } = await supabase
       .from('jobs')
       .select('impression_count, click_count')
@@ -1491,7 +1493,7 @@ export async function incrementJobImpressions(id: string): Promise<void> {
 
 export async function incrementJobClicks(id: string): Promise<void> {
   try {
-    const supabase = getSupabase()
+    const supabase = getSupabase('publicWrite')
     const { data } = await supabase
       .from('jobs')
       .select('impression_count, click_count')

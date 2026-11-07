@@ -1,14 +1,13 @@
 // Session 41 — private repo deploy test
 import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { guardCachedRead } from '@/lib/cache-guard'
 
+// Every function in this file that has a caller serves public pages, so all
+// use the public read limit.
 function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  return getServerSupabase('publicRead')
 }
 
 export interface ArticleSummary {

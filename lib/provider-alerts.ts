@@ -1,5 +1,5 @@
 import { Resend } from 'resend'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from './supabase-server'
 import type { JobProvider } from './providers'
 
 // Every other Resend call site in this codebase instantiates the client
@@ -14,11 +14,9 @@ function getResend(): Resend {
   return new Resend(process.env.RESEND_API_KEY)
 }
 
+// Used only by provider ingestion.
 function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  return getServerSupabase('ingest')
 }
 
 const ALERT_RECIPIENT = 'acctn.body@gmail.com'

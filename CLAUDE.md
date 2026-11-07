@@ -150,6 +150,7 @@ Only when the owner has approved the release:
 | Concern | Where it lives | Rule |
 |---|---|---|
 | Job queries | `lib/jobs.ts` | New job queries go here |
+| Server database clients | `lib/supabase-server.ts` | Get every server-side supabase-js client from `getServerSupabase(context)`. Each context (`publicRead`, `publicWrite`, `admin`, `cron`, `ingest`) has a fixed request time limit. Files that still call `createClient` themselves are on an explicit list in `lib/supabase-client-sources.test.ts`; later steps move them and the list only shrinks |
 | Cached database reads | `lib/cache-guard.ts` | Wrap every `unstable_cache` database read with `guardCachedRead`, using the same key parts. The similar-jobs reads, which are off, are not wrapped yet |
 | Job emails | `lib/jobEmails.ts` | New job emails go here |
 | Admin session check | `lib/admin-auth.ts` | Every admin page and route checks the session on the server |
@@ -164,6 +165,7 @@ Only when the owner has approved the release:
 
 ### Data and server code
 
+- Server code creates database clients only through `lib/supabase-server.ts` and picks the context for the work: `publicRead` for anything a public page or read API uses, `publicWrite` for a write a visitor triggers, and `admin`, `cron` or `ingest` only for work that no public request uses. A function shared between a public path and longer work keeps the public limit for the public path.
 - Never create a Supabase client at module scope. Create it inside a function, as `getSupabase()` does in `lib/jobs.ts`. Treat other SDK clients the same way.
 - Always check the returned `error`. supabase-js and Resend return errors rather than throwing them, so success must never be assumed.
 - A route returns success only if the work really happened. It never keeps an old value quietly.

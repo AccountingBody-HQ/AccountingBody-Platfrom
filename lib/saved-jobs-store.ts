@@ -1,16 +1,12 @@
-// Supabase access for the saved-jobs feature. Same client-construction
-// pattern as every other server-side data module in this repo (see
-// getSupabase() in lib/jobs.ts, lib/db.ts, app/api/subscribe/route.ts,
-// etc.) — there is no shared client singleton to import, each module
-// creates its own.
-import { createClient } from '@supabase/supabase-js'
+// Supabase access for the saved-jobs feature. Clients come from
+// lib/supabase-server.ts, created per call. Reads used by the public
+// saved-jobs API use the public read limit (the default); its writes use
+// the public write limit, and the daily prune uses the cron limit.
+import { getServerSupabase, type DbContext } from './supabase-server'
 import { SAVED_JOBS_LIMIT } from './saved-jobs'
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+function getSupabase(context: DbContext = 'publicRead') {
+  return getServerSupabase(context)
 }
 
 // Public-safe fields (a subset of lib/jobs.ts's JOB_COLUMNS) plus `status`,
@@ -117,7 +113,7 @@ export async function findSavableJob(jobId: string, platform: string): Promise<{
 }
 
 export async function insertSaved(visitorId: string, platform: string, jobId: string): Promise<void> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicWrite')
   const { error } = await supabase
     .from('saved_jobs')
     .upsert(
@@ -137,7 +133,7 @@ export async function insertSaved(visitorId: string, platform: string, jobId: st
 export async function insertManySaved(visitorId: string, platform: string, jobIds: string[]): Promise<{ imported: number }> {
   if (jobIds.length === 0) return { imported: 0 }
 
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicWrite')
   const nowIso = new Date().toISOString()
   const { data: eligible, error: eligibleError } = await supabase
     .from('jobs')
@@ -166,7 +162,7 @@ export async function insertManySaved(visitorId: string, platform: string, jobId
 }
 
 export async function deleteSaved(visitorId: string, platform: string, jobId: string): Promise<void> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicWrite')
   const { error } = await supabase
     .from('saved_jobs')
     .delete()
@@ -183,7 +179,7 @@ export async function deleteSaved(visitorId: string, platform: string, jobId: st
 // onto.
 export async function touchLastSeen(visitorId: string, platform: string, throttleMs: number): Promise<void> {
   try {
-    const supabase = getSupabase()
+    const supabase = getSupabase('publicWrite')
     const throttleCutoff = new Date(Date.now() - throttleMs).toISOString()
     const { error } = await supabase
       .from('saved_jobs')
@@ -203,7 +199,7 @@ export async function touchLastSeen(visitorId: string, platform: string, throttl
 // public.saved_jobs with this one condition — see 0008_saved_jobs.sql's
 // header comment. Called by app/api/cron/prune-saved-jobs/route.ts.
 export async function pruneInactive(olderThanDays: number): Promise<number> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('cron')
   const cutoff = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000).toISOString()
   const { error, count } = await supabase
     .from('saved_jobs')
