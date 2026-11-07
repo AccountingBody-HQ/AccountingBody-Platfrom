@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { isAuthenticated, signedOutResponse } from "@/lib/admin-auth"
 import { Resend } from "resend"
-import { createClient } from "@supabase/supabase-js"
+import { getServerSupabase } from "@/lib/supabase-server"
 import { generateReferenceNumber, generateProfileToken } from "@/lib/profileUtils"
 
 export async function POST(req: NextRequest) {
@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
     const { id, status, email, name, platform } = await req.json()
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!)
+    const supabase = getServerSupabase("admin")
     const isET = platform === "et"
     const platformName = isET ? "EthioTax" : "Accounting Body"
     const brandColor = isET ? "#1A4731" : "#0C1A3D"

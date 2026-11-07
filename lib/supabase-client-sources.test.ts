@@ -5,9 +5,9 @@ import { describe, expect, it, vi } from 'vitest'
 import { getAdminPath } from './middleware-logic'
 
 // Server code creates supabase-js clients only through lib/supabase-server.ts.
-// The files below still create their own and move to the factory in later
-// steps. This list may only shrink: a file that stops creating its own
-// client must be removed from it, and no new file may be added.
+// The three files below create their own on purpose. This list may only
+// shrink: a file that stops creating its own client must be removed from it,
+// and no new file may be added.
 
 const MODULE = '@supabase/supabase-js'
 const FACTORY = 'lib/supabase-server.ts'
@@ -22,55 +22,6 @@ const LEGACY = [
   'lib/ab-press-builder.ts',
   `app/api/${ADMIN}/ab-press/preview/route.ts`,
   'app/api/careerjet/route.ts',
-
-  // Scheduled routes and provider ingestion.
-  'app/api/cron/expire-jobs/route.ts',
-  'app/api/cron/prune-pending-subscribers/route.ts',
-  'app/api/ingest/[slug]/route.ts',
-
-  // Admin APIs.
-  `app/api/${ADMIN}/actions/route.ts`,
-  `app/api/${ADMIN}/articles/[articleId]/route.ts`,
-  `app/api/${ADMIN}/articles/lookup/route.ts`,
-  `app/api/${ADMIN}/articles/publish/route.ts`,
-  `app/api/${ADMIN}/articles/search/route.ts`,
-  `app/api/${ADMIN}/categories/route.ts`,
-  `app/api/${ADMIN}/content-factory/publish/route.ts`,
-  `app/api/${ADMIN}/course-factory/delete-course/route.ts`,
-  `app/api/${ADMIN}/course-factory/fetch-article/route.ts`,
-  `app/api/${ADMIN}/course-factory/load-course/route.ts`,
-  `app/api/${ADMIN}/course-factory/save/route.ts`,
-  `app/api/${ADMIN}/courses/[courseId]/route.ts`,
-  `app/api/${ADMIN}/jobs/[id]/route.ts`,
-  `app/api/${ADMIN}/jobs/explain-relevance-sample/route.ts`,
-  `app/api/${ADMIN}/jobs/reevaluate-relevance/route.ts`,
-  `app/api/${ADMIN}/notify-candidate/route.ts`,
-  `app/api/${ADMIN}/notify-firm/route.ts`,
-  `app/api/${ADMIN}/providers/[slug]/edit/route.ts`,
-  `app/api/${ADMIN}/providers/[slug]/preview/route.ts`,
-  `app/api/${ADMIN}/providers/[slug]/route.ts`,
-  `app/api/${ADMIN}/providers/create/route.ts`,
-  `app/api/${ADMIN}/providers/route.ts`,
-  `app/api/${ADMIN}/questions/[setId]/route.ts`,
-  `app/api/${ADMIN}/questions/publish/route.ts`,
-  `app/api/${ADMIN}/studio/article-content/route.ts`,
-  `app/api/${ADMIN}/studio/daily-articles/route.ts`,
-  `app/api/${ADMIN}/studio/post-social/route.ts`,
-  `app/api/${ADMIN}/studio/references/route.ts`,
-  `app/api/${ADMIN}/studio/session/route.ts`,
-
-  // Admin pages.
-  `app/${ADMIN}/articles/page.tsx`,
-  `app/${ADMIN}/candidates/page.tsx`,
-  `app/${ADMIN}/courses/page.tsx`,
-  `app/${ADMIN}/employers/page.tsx`,
-  `app/${ADMIN}/jobs-firms/page.tsx`,
-  `app/${ADMIN}/jobs/page.tsx`,
-  `app/${ADMIN}/page.tsx`,
-  `app/${ADMIN}/providers/[slug]/page.tsx`,
-  `app/${ADMIN}/questions/page.tsx`,
-  `app/${ADMIN}/submissions/page.tsx`,
-  `app/${ADMIN}/subscribers/page.tsx`,
 ]
 
 const ROOT = process.cwd()
@@ -153,6 +104,12 @@ describe('server database clients come from one place', () => {
 
   it('lists each file once', () => {
     expect(new Set(LEGACY).size).toBe(LEGACY.length)
+  })
+
+  it('only the factory and the three kept files create their own client', () => {
+    expect(users).toEqual(
+      [FACTORY, 'lib/ab-press-builder.ts', `app/api/${ADMIN}/ab-press/preview/route.ts`, 'app/api/careerjet/route.ts'].sort(),
+    )
   })
 
   it('recognises every way of taking createClient, and ignores type-only imports', () => {

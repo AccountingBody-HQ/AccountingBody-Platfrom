@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { unstable_noStore as noStore } from 'next/cache'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { FileText, Sparkles, ExternalLink, FileJson, Search } from 'lucide-react'
 
@@ -55,10 +55,7 @@ async function getArticles(
     return { articles: [] as ArticleRow[], filteredCount: 0 }
   }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  const supabase = getServerSupabase('admin')
 
   const from = (page - 1) * PAGE_SIZE
   const to   = from + PAGE_SIZE - 1
@@ -118,10 +115,7 @@ export default async function ArticlesLibraryPage({
   const pageParam = parseInt(searchParams?.page ?? '1', 10)
   const page = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  const supabase = getServerSupabase('admin')
 
   const { data: linkedSlugsData } = await supabase
     .from('question_sets')

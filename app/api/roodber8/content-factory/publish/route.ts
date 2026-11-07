@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { revalidateTag } from 'next/cache'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { marked } from 'marked'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Supabase environment variables are not set' }, { status: 500 })
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabase = getServerSupabase('admin')
 
     const title = extractTitle(content, topic)
     const slug  = generateSlug(title)

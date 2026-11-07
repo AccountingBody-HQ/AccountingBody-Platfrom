@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 
 export const runtime = 'nodejs'
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Supabase environment variables are not set' }, { status: 500 })
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabase = getServerSupabase('admin')
 
     const title = bundle.title ?? 'Practice Question Set'
     const slug  = generateSlug(title)

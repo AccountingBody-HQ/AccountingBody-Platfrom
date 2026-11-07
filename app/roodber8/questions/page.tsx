@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { unstable_noStore as noStore } from 'next/cache'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { requireAdmin } from '@/lib/admin-auth'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
 import {
@@ -41,10 +41,7 @@ const PAGE_SIZE = 50
 
 async function getQuestionSets(safeSearch: string, letter: string, page: number): Promise<{ sets: QuestionSetRow[]; filteredCount: number }> {
   noStore()
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  const supabase = getServerSupabase('admin')
 
   const from = (page - 1) * PAGE_SIZE
   const to   = from + PAGE_SIZE - 1
@@ -107,10 +104,7 @@ export default async function QuestionsLibraryPage({
   const pageParam = parseInt(searchParams?.page ?? '1', 10)
   const page = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
 
-  const supabaseForCount = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  const supabaseForCount = getServerSupabase('admin')
   const [
     { sets: posts, filteredCount },
     { count: totalSets },

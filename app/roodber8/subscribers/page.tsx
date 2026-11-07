@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { unstable_noStore as noStore } from 'next/cache'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
@@ -10,10 +10,7 @@ export const dynamic = 'force-dynamic'
 
 async function getSubscribers(filters: { status?: string; source?: string; platform?: string }) {
   noStore()
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  const supabase = getServerSupabase('admin')
   const platformFilter = filters.platform || 'ab'
   let query = supabase.from('email_subscribers').select('*', { count: 'exact' }).eq('platform', platformFilter).neq('status', 'pending').order('subscribed_at', { ascending: false })
   if (filters.status) query = query.eq('status', filters.status)
@@ -24,7 +21,7 @@ async function getSubscribers(filters: { status?: string; source?: string; platf
 
 async function getSources(platform: string = 'ab') {
   noStore()
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!)
+  const supabase = getServerSupabase('admin')
   const { data } = await supabase.from('email_subscribers').select('source').eq('platform', platform).not('source', 'is', null)
   return Array.from(new Set((data ?? []).map((r: any) => r.source).filter(Boolean))) as string[]
 }

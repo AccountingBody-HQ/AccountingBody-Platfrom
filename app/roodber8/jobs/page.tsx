@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { unstable_noStore as noStore } from 'next/cache'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
@@ -48,10 +48,7 @@ function qualityColor(score: number): string {
 }
 
 function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  return getServerSupabase('admin')
 }
 
 async function getJobStats() {

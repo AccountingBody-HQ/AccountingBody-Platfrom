@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 
 export const runtime = 'nodejs'
 
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const platform = searchParams.get('platform') ?? 'ab'
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabase = getServerSupabase('admin')
     const { data, error } = await supabase
       .from('articles')
       .select('category, category_title')

@@ -2,15 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getJobById, approveJob, rejectJob, expireJob } from '@/lib/jobs'
 import { sendJobApprovalEmail, sendJobRejectionEmail } from '@/lib/jobEmails'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 
 export const runtime = 'nodejs'
 
 function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  return getServerSupabase('admin')
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {

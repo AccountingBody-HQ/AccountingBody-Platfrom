@@ -1,13 +1,10 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { REGISTERED_ADAPTER_KEYS, isRegisteredAdapterKey } from '@/lib/adapters'
 
 function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  return getServerSupabase('admin')
 }
 
 function stringOrNull(v: unknown): string | null {

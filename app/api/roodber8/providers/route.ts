@@ -1,13 +1,10 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { getAllProviders, type ProviderRun } from '@/lib/providers'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 
 function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  return getServerSupabase('admin')
 }
 
 // ── GET /api/roodber8/providers ── all providers with their latest run

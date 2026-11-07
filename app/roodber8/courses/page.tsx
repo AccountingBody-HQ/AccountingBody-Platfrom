@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { unstable_noStore as noStore } from 'next/cache'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { requireAdmin } from '@/lib/admin-auth'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
 import { BookOpen, Plus, ExternalLink } from 'lucide-react'
@@ -44,10 +44,7 @@ interface RawCourseRow {
 
 async function getCourses(): Promise<CourseRow[]> {
   noStore()
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  const supabase = getServerSupabase('admin')
 
   // Stage 1 — courses (flat, no embed — Rule 52)
   const { data: coursesData } = await supabase
@@ -114,10 +111,7 @@ async function getCourses(): Promise<CourseRow[]> {
 
 export default async function CourseLibraryPage() {
   await requireAdmin()
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  const supabase = getServerSupabase('admin')
 
   const [
     courses,

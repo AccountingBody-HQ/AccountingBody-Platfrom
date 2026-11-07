@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { unstable_noStore as noStore } from 'next/cache'
 import { notFound } from 'next/navigation'
@@ -261,10 +261,7 @@ async function getProviderDetail(slug: string): Promise<{
   const provider = await getProvider(slug)
   if (!provider) return null
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  const supabase = getServerSupabase('admin')
 
   const [runsResult, errorsResult, activeJobResult] = await Promise.all([
     supabase.from('provider_runs').select('*').eq('provider_slug', slug).order('started_at', { ascending: false }).limit(50),

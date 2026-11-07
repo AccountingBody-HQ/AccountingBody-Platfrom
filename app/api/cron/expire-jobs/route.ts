@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { getExpiringJobs, expireJob } from '@/lib/jobs'
 import { sendJobExpiredEmail, sendJobExpiryWarningEmail } from '@/lib/jobEmails'
 
@@ -11,10 +11,7 @@ export const fetchCache = 'force-no-store'
 export const maxDuration = 60
 
 function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  return getServerSupabase('cron')
 }
 
 function isAuthorised(req: NextRequest): boolean {

@@ -143,6 +143,8 @@ Only when the owner has approved the release:
 2. Check both hosts.
 3. Purge the Vercel and Cloudflare caches after any deploy that changes cached pages.
 
+Full steps, checks and how to undo a release: `docs/RELEASE.md`.
+
 ## 5. Coding conventions
 
 ### Single sources
@@ -150,7 +152,7 @@ Only when the owner has approved the release:
 | Concern | Where it lives | Rule |
 |---|---|---|
 | Job queries | `lib/jobs.ts` | New job queries go here |
-| Server database clients | `lib/supabase-server.ts` | Get every server-side supabase-js client from `getServerSupabase(context)`. Each context (`publicRead`, `publicWrite`, `admin`, `cron`, `ingest`) has a fixed request time limit. Files that still call `createClient` themselves are on an explicit list in `lib/supabase-client-sources.test.ts`; later steps move them and the list only shrinks |
+| Server database clients | `lib/supabase-server.ts` | Get every server-side supabase-js client from `getServerSupabase(context)`. Each context (`publicRead`, `publicWrite`, `admin`, `cron`, `ingest`) has a fixed request time limit. Only three files call `createClient` themselves, on purpose: AB Press (`lib/ab-press-builder.ts` and its preview route) and `app/api/careerjet/route.ts`. They are listed in `lib/supabase-client-sources.test.ts`; the list only shrinks |
 | Cached database reads | `lib/cache-guard.ts` | Wrap every `unstable_cache` database read with `guardCachedRead`, using the same key parts. The similar-jobs reads, which are off, are not wrapped yet |
 | Job emails | `lib/jobEmails.ts` | New job emails go here |
 | Admin session check | `lib/admin-auth.ts` | Every admin page and route checks the session on the server |

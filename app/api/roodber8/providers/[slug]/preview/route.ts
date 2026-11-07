@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { getProvider } from '@/lib/providers'
 import { getAdapter } from '@/lib/adapters'
 import { normalise, type NormalisedJob } from '@/lib/ingestion/normalise'
@@ -11,10 +11,7 @@ import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 export const maxDuration = 60
 
 function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  return getServerSupabase('admin')
 }
 
 type Verdict = 'would_insert' | 'would_deduplicate' | 'would_reject'
