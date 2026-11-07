@@ -7,9 +7,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
+import { checkRead } from '@/lib/db-check'
 
 function getSupabase() {
   return getServerSupabase('admin')
+}
+
+function courseReadFailed() {
+  return NextResponse.json({ error: 'Could not read the current course. Nothing was changed.' }, { status: 500 })
 }
 
 export async function POST(req: NextRequest) {
@@ -35,12 +40,70 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = getSupabase()
     // Check if course already exists (to decide rollback scope)
-    const { data: existingCourse } = await supabase
-      .from('courses')
-      .select('id')
-      .eq('slug', slug)
-      .maybeSingle()
+    const existingRead = checkRead(
+      await supabase
+        .from('courses')
+        .select('id')
+        .eq('slug', slug)
+        .maybeSingle(),
+      'course-factory/save: existing course',
+    )
+    if (!existingRead.ok) return courseReadFailed()
+    const existingCourse = existingRead.data
     const isNewCourse = !existingCourse
+
+    // ── Snapshot existing structure before any write (update path only) ──
+    // The CREATE path doesn't need this — on failure it rolls back by deleting the
+    // orphaned course row instead (see the isNewCourse branch in the catch block below).
+    // On the UPDATE path, this snapshot is the restore point if re-insertion fails
+    // partway through Step 3, after Step 2 has already deleted the old structure.
+    // It is read before Step 1, so a failed read leaves the course as it was.
+    let snapshot: { chapters: any[]; lessons: any[]; articles: any[] } | null = null
+    if (!isNewCourse) {
+      const chaptersRead = checkRead(
+        await supabase
+          .from('course_chapters')
+          .select('*')
+          .eq('course_id', existingCourse.id),
+        'course-factory/save: snapshot chapters',
+      )
+      if (!chaptersRead.ok) return courseReadFailed()
+      const snapshotChapters = chaptersRead.data
+      const chapterIds = (snapshotChapters ?? []).map((c: any) => c.id)
+
+      let snapshotLessons: any[] = []
+      if (chapterIds.length > 0) {
+        const lessonsRead = checkRead(
+          await supabase
+            .from('course_lessons')
+            .select('*')
+            .in('chapter_id', chapterIds),
+          'course-factory/save: snapshot lessons',
+        )
+        if (!lessonsRead.ok) return courseReadFailed()
+        snapshotLessons = lessonsRead.data ?? []
+      }
+      const lessonIds = snapshotLessons.map((l: any) => l.id)
+
+      let snapshotArticles: any[] = []
+      if (lessonIds.length > 0) {
+        const articlesRead = checkRead(
+          await supabase
+            .from('course_lesson_articles')
+            .select('*')
+            .in('lesson_id', lessonIds),
+          'course-factory/save: snapshot articles',
+        )
+        if (!articlesRead.ok) return courseReadFailed()
+        snapshotArticles = articlesRead.data ?? []
+      }
+
+      snapshot = {
+        chapters: snapshotChapters ?? [],
+        lessons:  snapshotLessons,
+        articles: snapshotArticles,
+      }
+    }
 
     // Step 1 — Upsert course
     const { data: course, error: courseError } = await supabase
@@ -62,48 +125,6 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (courseError) return NextResponse.json({ error: courseError.message }, { status: 500 })
-
-    // ── Snapshot existing structure before any destructive operation (update path only) ──
-    // The CREATE path doesn't need this — on failure it rolls back by deleting the
-    // orphaned course row instead (see the isNewCourse branch in the catch block below).
-    // On the UPDATE path, this snapshot is the restore point if re-insertion fails
-    // partway through Step 3, after Step 2 has already deleted the old structure.
-    let snapshot: { chapters: any[]; lessons: any[]; articles: any[] } | null = null
-    if (!isNewCourse) {
-      const { data: snapshotChapters, error: snapshotChError } = await supabase
-        .from('course_chapters')
-        .select('*')
-        .eq('course_id', course.id)
-      if (snapshotChError) console.error('course-factory/save: snapshot chapters read failed:', snapshotChError)
-      const chapterIds = (snapshotChapters ?? []).map((c: any) => c.id)
-
-      let snapshotLessons: any[] = []
-      if (chapterIds.length > 0) {
-        const { data: lessonsData, error: snapshotLsError } = await supabase
-          .from('course_lessons')
-          .select('*')
-          .in('chapter_id', chapterIds)
-        if (snapshotLsError) console.error('course-factory/save: snapshot lessons read failed:', snapshotLsError)
-        snapshotLessons = lessonsData ?? []
-      }
-      const lessonIds = snapshotLessons.map((l: any) => l.id)
-
-      let snapshotArticles: any[] = []
-      if (lessonIds.length > 0) {
-        const { data: articlesData, error: snapshotArError } = await supabase
-          .from('course_lesson_articles')
-          .select('*')
-          .in('lesson_id', lessonIds)
-        if (snapshotArError) console.error('course-factory/save: snapshot articles read failed:', snapshotArError)
-        snapshotArticles = articlesData ?? []
-      }
-
-      snapshot = {
-        chapters: snapshotChapters ?? [],
-        lessons:  snapshotLessons,
-        articles: snapshotArticles,
-      }
-    }
 
     try {
       // Step 2 — Delete existing chapters (CASCADE removes lessons + lesson_articles)

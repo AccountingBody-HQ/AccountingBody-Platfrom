@@ -4,6 +4,7 @@ import { revalidateTag } from 'next/cache'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 import type { NormalisedArticle } from '@/lib/article-normaliser'
+import { checkRead } from '@/lib/db-check'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -59,13 +60,20 @@ export async function POST(req: NextRequest) {
     const platform = SITE_CODE_MAP[canonicalOwner] ?? canonicalOwner
 
     // Query the highest existing AB-ART-XXXXX content_id and use the next one in sequence
-    const { data: lastRow } = await supabase
-      .from('articles')
-      .select('content_id')
-      .like('content_id', 'AB-ART-%')
-      .order('content_id', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+    const lastRead = checkRead(
+      await supabase
+        .from('articles')
+        .select('content_id')
+        .like('content_id', 'AB-ART-%')
+        .order('content_id', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      'articles/publish: last content_id',
+    )
+    if (!lastRead.ok) {
+      return NextResponse.json({ error: 'Could not assign a content ID. Nothing was published.' }, { status: 500 })
+    }
+    const lastRow = lastRead.data
 
     let nextNum = 1
     if (lastRow?.content_id) {

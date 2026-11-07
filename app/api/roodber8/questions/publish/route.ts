@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
+import { checkRead } from '@/lib/db-check'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -55,13 +56,20 @@ export async function POST(req: NextRequest) {
     const platform = SITE_CODE_MAP[canonicalOwner] ?? canonicalOwner
 
     // Content ID — query highest existing AB-QZ-XXXXX and increment
-    const { data: lastRow } = await supabase
-      .from('question_sets')
-      .select('content_id')
-      .like('content_id', 'AB-QZ-%')
-      .order('content_id', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+    const lastRead = checkRead(
+      await supabase
+        .from('question_sets')
+        .select('content_id')
+        .like('content_id', 'AB-QZ-%')
+        .order('content_id', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      'questions/publish: last content_id',
+    )
+    if (!lastRead.ok) {
+      return NextResponse.json({ error: 'Could not assign a content ID. Nothing was published.' }, { status: 500 })
+    }
+    const lastRow = lastRead.data
     let nextNum = 1
     if (lastRow?.content_id) {
       const match = (lastRow.content_id as string).match(/AB-QZ-(\d+)$/)
@@ -75,11 +83,18 @@ export async function POST(req: NextRequest) {
     if (articleSlug) {
       const trimmed = String(articleSlug).trim().toUpperCase()
       if (trimmed.startsWith('AB-ART-')) {
-        const { data: artRow } = await supabase
-          .from('articles')
-          .select('slug')
-          .eq('content_id', trimmed)
-          .maybeSingle()
+        const artRead = checkRead(
+          await supabase
+            .from('articles')
+            .select('slug')
+            .eq('content_id', trimmed)
+            .maybeSingle(),
+          'questions/publish: linked article',
+        )
+        if (!artRead.ok) {
+          return NextResponse.json({ error: 'Could not read the linked article. Nothing was published.' }, { status: 500 })
+        }
+        const artRow = artRead.data
         resolvedArticleSlug = artRow?.slug ?? null
       } else {
         // Fallback: treat as a raw slug (legacy behaviour)

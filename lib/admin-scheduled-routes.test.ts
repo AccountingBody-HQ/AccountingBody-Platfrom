@@ -354,7 +354,13 @@ const scenarios: Scenario[] = [
         { params: {} },
       ),
     healthy: { status: 200, body: { success: true, id: ID }, dbRequests: 6 },
-    stalled: { waits: 2, status: 500, body: { error: TIMEOUT(20_000) }, dbRequests: 2 },
+    // The first read gets no answer, so nothing is written.
+    stalled: {
+      waits: 1,
+      status: 500,
+      body: { error: 'Could not read the current course. Nothing was changed.' },
+      dbRequests: 1,
+    },
   },
   {
     name: 'question set publish',
@@ -371,7 +377,12 @@ const scenarios: Scenario[] = [
       body: { success: true, documentId: ID, contentId: 'AB-QZ-00001', title: 'Set', slug: 'set', questionCount: 1 },
       dbRequests: 3,
     },
-    stalled: { waits: 2, status: 500, body: { error: TIMEOUT(20_000) }, dbRequests: 2 },
+    stalled: {
+      waits: 1,
+      status: 500,
+      body: { error: 'Could not assign a content ID. Nothing was published.' },
+      dbRequests: 1,
+    },
   },
   {
     name: 'article publish',
@@ -387,7 +398,13 @@ const scenarios: Scenario[] = [
       dbRequests: 2,
       revalidated: ['article:title'],
     },
-    stalled: { waits: 2, status: 500, body: { error: TIMEOUT(20_000) }, dbRequests: 2, revalidated: [] },
+    stalled: {
+      waits: 1,
+      status: 500,
+      body: { error: 'Could not assign a content ID. Nothing was published.' },
+      dbRequests: 1,
+      revalidated: [],
+    },
   },
   {
     name: 'candidate approval email',
