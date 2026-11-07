@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { getContactBrand, contactPlatformValue } from '@/lib/contact-brand'
 
 async function verifyTurnstile(token: string, ip: string, isEthioTax: boolean): Promise<boolean> {
@@ -22,10 +22,7 @@ async function verifyTurnstile(token: string, ip: string, isEthioTax: boolean): 
 
 export async function POST(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  const supabase = getServerSupabase('publicWrite')
 
   try {
     const body = await req.json()

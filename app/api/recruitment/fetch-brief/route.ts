@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { getServerSupabase } from "@/lib/supabase-server"
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!)
+    const supabase = getServerSupabase("publicRead")
     const token = req.nextUrl.searchParams.get("token")
     if (!token) return NextResponse.json({ error: "No token" }, { status: 400 })
 

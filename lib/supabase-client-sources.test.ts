@@ -23,23 +23,6 @@ const LEGACY = [
   `app/api/${ADMIN}/ab-press/preview/route.ts`,
   'app/api/careerjet/route.ts',
 
-  // Public write APIs.
-  'app/api/confirm-subscription/route.ts',
-  'app/api/contact/route.ts',
-  'app/api/firms-application/route.ts',
-  'app/api/help-request/route.ts',
-  'app/api/jobs/employer/checkout/route.ts',
-  'app/api/jobs/employer/webhook/route.ts',
-  'app/api/recruitment/confirm-brief/route.ts',
-  'app/api/recruitment/employer-brief/route.ts',
-  'app/api/recruitment/fetch-brief/route.ts',
-  'app/api/recruitment/get-profile/route.ts',
-  'app/api/recruitment/job-seeker-apply/route.ts',
-  'app/api/recruitment/update-candidate/route.ts',
-  'app/api/recruitment/update-employer/route.ts',
-  'app/api/recruitment/verify-email/route.ts',
-  'app/api/subscribe/route.ts',
-
   // Scheduled routes and provider ingestion.
   'app/api/cron/expire-jobs/route.ts',
   'app/api/cron/prune-pending-subscribers/route.ts',

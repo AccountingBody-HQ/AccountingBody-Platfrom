@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { getServerSupabase } from "@/lib/supabase-server"
 import { Resend } from "resend"
 
 function generateToken() {
@@ -8,7 +8,7 @@ function generateToken() {
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!)
+    const supabase = getServerSupabase("publicWrite")
     const resend = new Resend(process.env.RESEND_API_KEY)
     const body = await req.json()
 

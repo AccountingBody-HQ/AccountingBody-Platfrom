@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { Resend } from "resend"
 import { SignJWT } from "jose"
-import { createClient } from "@supabase/supabase-js"
+import { getServerSupabase } from "@/lib/supabase-server"
 import * as Sentry from "@sentry/nextjs"
 import { shouldSendConfirmationEmail } from "@/lib/subscribe-dedup"
 
@@ -87,10 +87,7 @@ export async function POST(req: NextRequest) {
     // branch as this check — nothing ever writes to email_subscribers for
     // this case, so an already-subscribed row can never be downgraded to
     // 'pending' by this route.
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SECRET_KEY!
-    )
+    const supabase = getServerSupabase("publicWrite")
     const { data: existing } = await supabase
       .from("email_subscribers")
       .select("status, last_confirmation_sent_at")
