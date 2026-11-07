@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSupabase } from "@/lib/supabase-server"
 import { Resend } from "resend"
+import { escapeHtml, withoutLineBreaks } from "@/lib/html-escape"
 
 export async function POST(req: NextRequest) {
   try {
@@ -75,8 +76,8 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: platformName + " <noreply@accountingbody.com>",
       to: "info@accountingbody.com",
-      subject: "[" + existing.platform.toUpperCase() + "] Candidate profile updated - " + existing.reference_number,
-      html: "<!DOCTYPE html><html><body style=\"margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;\"><div style=\"max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;\"><div style=\"background:" + brandColor + ";padding:32px 40px;\"><p style=\"color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;\">" + platformName + " - Admin</p><h1 style=\"color:#fff;font-size:24px;margin:0;line-height:1.3;\">Candidate profile updated.</h1></div><div style=\"padding:32px 40px;\"><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 16px;\"><strong>" + existing.full_name + "</strong> (" + existing.reference_number + ") has updated their profile.</p><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 28px;\">Fields updated: " + changedFields + "</p><a href=\"https://accountingbody.com/roodber8/candidates\" style=\"display:inline-block;background:" + brandColor + ";color:#fff;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;\">View in admin panel</a></div>" + footer + "</div></body></html>",
+      subject: "[" + withoutLineBreaks(existing.platform.toUpperCase()) + "] Candidate profile updated - " + existing.reference_number,
+      html: "<!DOCTYPE html><html><body style=\"margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;\"><div style=\"max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;\"><div style=\"background:" + brandColor + ";padding:32px 40px;\"><p style=\"color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;\">" + platformName + " - Admin</p><h1 style=\"color:#fff;font-size:24px;margin:0;line-height:1.3;\">Candidate profile updated.</h1></div><div style=\"padding:32px 40px;\"><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 16px;\"><strong>" + escapeHtml(existing.full_name) + "</strong> (" + existing.reference_number + ") has updated their profile.</p><p style=\"color:#475569;font-size:15px;line-height:1.7;margin:0 0 28px;\">Fields updated: " + changedFields + "</p><a href=\"https://accountingbody.com/roodber8/candidates\" style=\"display:inline-block;background:" + brandColor + ";color:#fff;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;\">View in admin panel</a></div>" + footer + "</div></body></html>",
     })
 
     return NextResponse.json({ success: true })

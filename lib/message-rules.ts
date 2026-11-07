@@ -12,6 +12,9 @@ export const SERVER_PROBLEM_TEXT = 'Something went wrong on our side. Please try
 export const CONFIRMATION_EMAIL_FAILED_TEXT =
   "We couldn't send the confirmation email. Please try again in a few minutes."
 
+export const HUMAN_CHECK_FAILED_TEXT =
+  "We couldn't confirm the form was sent by a person. Please refresh the page and try again."
+
 export const MESSAGE_MIN_LENGTH = 20
 
 // Counts the message without leading or trailing spaces, as the routes do.

@@ -2,24 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { checkEmailSend } from '@/lib/email-check'
-import { SERVER_PROBLEM_TEXT } from '@/lib/message-rules'
-
-async function verifyTurnstile(token: string, ip: string, isEthioTax: boolean): Promise<boolean> {
-  if (!token) return false
-  const secret = isEthioTax ? process.env.TURNSTILE_SECRET_KEY : process.env.TURNSTILE_SECRET_KEY_AB
-  if (!secret) return false
-  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      secret,
-      response: token,
-      remoteip: ip,
-    }),
-  })
-  const data = await res.json()
-  return data.success === true
-}
+import { HUMAN_CHECK_FAILED_TEXT, SERVER_PROBLEM_TEXT } from '@/lib/message-rules'
+import { verifyHumanCheck } from '@/lib/turnstile-verify'
+import { escapeHtml, withoutLineBreaks } from '@/lib/html-escape'
 
 export async function POST(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
@@ -36,11 +21,15 @@ export async function POST(req: NextRequest) {
     const { practice_name, contact_name, email, phone, website, practice_type, location, years_of_experience, languages, specialisms, about, _h } = body
     const turnstileToken = body['cf-turnstile-response'] ?? ''
     const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
-    const turnstileValid = await verifyTurnstile(turnstileToken, ip, isEthioTax)
-    if (turnstileToken && !turnstileValid) console.warn('Turnstile verification failed for:', email)
+    const humanCheck = await verifyHumanCheck(turnstileToken, ip, isEthioTax, 'firms application')
 
     // Honeypot — bots fill this, real users never do
     if (_h) return NextResponse.json({ success: true })
+
+    // Nothing is saved or sent unless the person check passed.
+    if (!humanCheck.ok) {
+      return NextResponse.json({ error: HUMAN_CHECK_FAILED_TEXT }, { status: 400 })
+    }
 
     if (!contact_name || !email || !practice_type || !location || !about) {
       return NextResponse.json({ error: 'Required fields are missing.' }, { status: 400 })
@@ -81,7 +70,7 @@ export async function POST(req: NextRequest) {
     try { checkEmailSend(await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: 'info@accountingbody.com',
-      subject: `New Network Application — ${applicantType}: ${practice_name || contact_name}`,
+      subject: `New Network Application — ${applicantType}: ${withoutLineBreaks(practice_name || contact_name)}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -106,7 +95,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Firm Name</span>
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                    <span style="color:#0C1A3D;font-size:14px;">${practice_name}</span>
+                    <span style="color:#0C1A3D;font-size:14px;">${escapeHtml(practice_name)}</span>
                   </td>
                 </tr>` : ''}
                 <tr>
@@ -114,7 +103,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Contact</span>
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                    <span style="color:#0C1A3D;font-size:14px;">${contact_name}</span>
+                    <span style="color:#0C1A3D;font-size:14px;">${escapeHtml(contact_name)}</span>
                   </td>
                 </tr>
                 <tr>
@@ -122,7 +111,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Email</span>
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                    <a href="mailto:${email}" style="color:#0C1A3D;font-size:14px;">${email}</a>
+                    <a href="mailto:${escapeHtml(email)}" style="color:#0C1A3D;font-size:14px;">${escapeHtml(email)}</a>
                   </td>
                 </tr>
                 <tr>
@@ -130,7 +119,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Phone</span>
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                    <span style="color:#0C1A3D;font-size:14px;">${phone || 'Not provided'}</span>
+                    <span style="color:#0C1A3D;font-size:14px;">${escapeHtml(phone || 'Not provided')}</span>
                   </td>
                 </tr>
                 <tr>
@@ -138,7 +127,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Role / Type</span>
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                    <span style="color:#0C1A3D;font-size:14px;">${practice_type}</span>
+                    <span style="color:#0C1A3D;font-size:14px;">${escapeHtml(practice_type)}</span>
                   </td>
                 </tr>
                 <tr>
@@ -146,7 +135,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Location</span>
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                    <span style="color:#0C1A3D;font-size:14px;">${location}</span>
+                    <span style="color:#0C1A3D;font-size:14px;">${escapeHtml(location)}</span>
                   </td>
                 </tr>
                 <tr>
@@ -154,7 +143,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Years of Experience</span>
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                    <span style="color:#0C1A3D;font-size:14px;">${years_of_experience || 'Not specified'}</span>
+                    <span style="color:#0C1A3D;font-size:14px;">${escapeHtml(years_of_experience || 'Not specified')}</span>
                   </td>
                 </tr>
                 <tr>
@@ -162,7 +151,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Languages</span>
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                    <span style="color:#0C1A3D;font-size:14px;">${languages || 'Not specified'}</span>
+                    <span style="color:#0C1A3D;font-size:14px;">${escapeHtml(languages || 'Not specified')}</span>
                   </td>
                 </tr>
                 <tr>
@@ -170,7 +159,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Specialisms</span>
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                    <span style="color:#0C1A3D;font-size:14px;">${specialisms || 'Not specified'}</span>
+                    <span style="color:#0C1A3D;font-size:14px;">${escapeHtml(specialisms || 'Not specified')}</span>
                   </td>
                 </tr>
                 ${website ? `<tr>
@@ -178,7 +167,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Website</span>
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                    <a href="${website}" style="color:#0C1A3D;font-size:14px;">${website}</a>
+                    <a href="${escapeHtml(website)}" style="color:#0C1A3D;font-size:14px;">${escapeHtml(website)}</a>
                   </td>
                 </tr>` : ''}
                 <tr>
@@ -186,7 +175,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">About</span>
                   </td>
                   <td style="padding:10px 0;">
-                    <span style="color:#0C1A3D;font-size:14px;line-height:1.6;">${about.split('\n').join('<br>')}</span>
+                    <span style="color:#0C1A3D;font-size:14px;line-height:1.6;">${escapeHtml(about).split('\n').join('<br>')}</span>
                   </td>
                 </tr>
               </table>
@@ -216,7 +205,7 @@ export async function POST(req: NextRequest) {
               <h1 style="color:#fff;font-size:22px;margin:0;line-height:1.3;">Application received.</h1>
             </div>
             <div style="padding:32px 40px;">
-              <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear ${contact_name},</p>
+              <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear ${escapeHtml(contact_name)},</p>
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Thank you for applying to join the ${brand.name} professional network. We have received your application and our team will review it carefully.</p>
               <div style="background:#f8fafc;border-radius:8px;border-left:3px solid #D4A017;padding:16px 20px;margin:0 0 24px;">
                 <p style="margin:0;color:#475569;font-size:13px;line-height:1.6;">We aim to review all applications within 5 working days. You will hear from us once your application has been assessed.</p>

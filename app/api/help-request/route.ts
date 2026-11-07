@@ -3,6 +3,7 @@ import { Resend } from 'resend'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { checkEmailSend } from '@/lib/email-check'
 import { SERVER_PROBLEM_TEXT, isMessageTooShort, messageTooShortText } from '@/lib/message-rules'
+import { escapeHtml, withoutLineBreaks } from '@/lib/html-escape'
 
 async function verifyTurnstile(token: string, ip: string, isEthioTax: boolean): Promise<boolean> {
   if (!token) return false
@@ -40,12 +41,10 @@ export async function POST(req: NextRequest) {
     // Honeypot
     if (_h) return NextResponse.json({ success: true })
 
-    // Turnstile verification — a failure is logged, not discarded: the
-    // submission still proceeds and is saved (silently dropping it would be
-    // data loss). Matches the firms-application route's behaviour.
+    // Turnstile verification — the result is logged with a fixed line.
     const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
     const turnstileValid = await verifyTurnstile(turnstileToken, ip, isEthioTax)
-    if (turnstileToken && !turnstileValid) console.warn('Turnstile verification failed for:', email)
+    if (turnstileToken && !turnstileValid) console.warn('person check: help request not-confirmed')
 
     // Spam filters
     const BLOCKED_DOMAINS = ['hardfer.com', 'mailinator.com', 'guerrillamail.com', 'trashmail.com', 'tempmail.com', 'yopmail.com', 'sharklasers.com', 'dispostable.com', 'maildrop.cc']
@@ -84,7 +83,7 @@ export async function POST(req: NextRequest) {
     const teamResult = await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: 'info@accountingbody.com',
-      subject: `New Service Brief — ${service_type}`,
+      subject: `New Service Brief — ${withoutLineBreaks(service_type)}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -101,7 +100,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Service</span>
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                    <span style="color:#0C1A3D;font-size:14px;font-weight:600;">${service_type}</span>
+                    <span style="color:#0C1A3D;font-size:14px;font-weight:600;">${escapeHtml(service_type)}</span>
                   </td>
                 </tr>
                 <tr>
@@ -109,7 +108,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Name</span>
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                    <span style="color:#0C1A3D;font-size:14px;">${name}</span>
+                    <span style="color:#0C1A3D;font-size:14px;">${escapeHtml(name)}</span>
                   </td>
                 </tr>
                 <tr>
@@ -117,7 +116,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Email</span>
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                    <a href="mailto:${email}" style="color:#0C1A3D;font-size:14px;">${email}</a>
+                    <a href="mailto:${escapeHtml(email)}" style="color:#0C1A3D;font-size:14px;">${escapeHtml(email)}</a>
                   </td>
                 </tr>
                 <tr>
@@ -125,7 +124,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Phone</span>
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                    <span style="color:#0C1A3D;font-size:14px;">${phone || 'Not provided'}</span>
+                    <span style="color:#0C1A3D;font-size:14px;">${escapeHtml(phone || 'Not provided')}</span>
                   </td>
                 </tr>
                 <tr>
@@ -133,7 +132,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Brief</span>
                   </td>
                   <td style="padding:10px 0;">
-                    <span style="color:#0C1A3D;font-size:14px;line-height:1.6;">${message.split('\n').join('<br>')}</span>
+                    <span style="color:#0C1A3D;font-size:14px;line-height:1.6;">${escapeHtml(message).split('\n').join('<br>')}</span>
                   </td>
                 </tr>
               </table>
@@ -153,7 +152,7 @@ export async function POST(req: NextRequest) {
     const ackResult = await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: email,
-      subject: `We have received your enquiry — ${service_type}`,
+      subject: `We have received your enquiry — ${withoutLineBreaks(service_type)}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -164,10 +163,10 @@ export async function POST(req: NextRequest) {
               <h1 style="color:#fff;font-size:22px;margin:0;line-height:1.3;">We have received your enquiry.</h1>
             </div>
             <div style="padding:32px 40px;">
-              <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear ${name},</p>
-              <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Thank you for getting in touch. We have received your service brief for <strong style="color:#0C1A3D;">${service_type}</strong> and a member of our team will be in contact with you shortly.</p>
+              <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear ${escapeHtml(name)},</p>
+              <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Thank you for getting in touch. We have received your service brief for <strong style="color:#0C1A3D;">${escapeHtml(service_type)}</strong> and a member of our team will be in contact with you shortly.</p>
               <div style="background:#f8fafc;border-radius:8px;border-left:3px solid #D4A017;padding:16px 20px;margin:0 0 24px;">
-                <p style="margin:0;color:#475569;font-size:13px;line-height:1.6;"><strong style="color:#0C1A3D;">Your message:</strong><br>${message.split('\n').join('<br>')}</p>
+                <p style="margin:0;color:#475569;font-size:13px;line-height:1.6;"><strong style="color:#0C1A3D;">Your message:</strong><br>${escapeHtml(message).split('\n').join('<br>')}</p>
               </div>
               <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 28px;">If you have any additional information to add, simply reply to this email.</p>
               <a href="https://${brand.domain}/get-help"
