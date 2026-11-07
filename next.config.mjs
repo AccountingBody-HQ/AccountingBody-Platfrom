@@ -73,6 +73,7 @@ export default withSentryConfig(nextConfig, {
   org: 'accounting-body',
   project: 'javascript-accountingbody-website',
   silent: !process.env.CI,
+  telemetry: false,
   widenClientFileUpload: true,
   webpack: {
     treeshake: {

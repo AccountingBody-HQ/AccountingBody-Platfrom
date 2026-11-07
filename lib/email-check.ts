@@ -12,6 +12,10 @@
 //   look like codes. The recipient, subject, body and the provider's message
 //   are never logged.
 // - Never throws.
+// - A failure is also reported to Sentry with the same short name and status
+//   code only (lib/report-error.ts).
+
+import { reportServerError } from './report-error'
 
 export type EmailSendResultLike =
   | {
@@ -39,6 +43,7 @@ export function checkEmailSend(result: EmailSendResultLike, label: string): bool
     const status = error && typeof error === 'object' ? shortCode(error.statusCode) : null
     const parts = [name, status].filter((part): part is string => part !== null)
     console.error(`email: send failed (${label})` + (parts.length > 0 ? ` ${parts.join(' ')}` : ''))
+    reportServerError(`email: ${label}`, { name: name ?? 'Error', code: status ?? undefined, message: 'send failed' })
   } catch {
     // Logging must never break the route.
   }

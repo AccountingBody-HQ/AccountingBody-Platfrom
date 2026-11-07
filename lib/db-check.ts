@@ -12,6 +12,9 @@
 //   has no body, so its message is '').
 // - noRowsIsEmpty: for a .single() read whose route already treats "no rows"
 //   (PGRST116) as "nothing found". Leave it off everywhere else.
+// - A failed read is also reported to Sentry under `label` (lib/report-error.ts).
+
+import { reportServerError } from './report-error'
 
 export type DbReadError = { message: string; code?: string; details?: string | null; hint?: string | null }
 
@@ -42,5 +45,6 @@ export function checkRead<R extends DbResultLike<unknown>>(
     return { ok: true, data: null, count: null }
   }
   console.error(`${label} read failed:`, error)
+  reportServerError(label, error)
   return { ok: false, error }
 }

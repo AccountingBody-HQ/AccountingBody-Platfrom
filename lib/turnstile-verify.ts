@@ -9,6 +9,11 @@
 //
 // Log lines are fixed text: never the token, the secret, the visitor's email
 // address or IP address, or Cloudflare's reply.
+//
+// When the check cannot be done (Cloudflare unreadable or unreachable, or no
+// secret set), it is also reported to Sentry (lib/report-error.ts).
+
+import { reportServerError } from './report-error'
 
 export const SITEVERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
 
@@ -18,11 +23,18 @@ export type HumanCheckReason = 'missing' | 'not-confirmed' | 'unreadable' | 'una
 
 export type HumanCheckResult = { ok: true } | { ok: false; reason: HumanCheckReason }
 
+// Reasons that mean the check itself could not be done, as opposed to an
+// answer about the visitor.
+const SERVER_SIDE_REASONS: readonly HumanCheckReason[] = ['unreadable', 'unavailable']
+
 function failed(label: string, reason: HumanCheckReason): HumanCheckResult {
   try {
     console.warn(`person check: ${label} ${reason}`)
   } catch {
     // Logging must never change the answer.
+  }
+  if (SERVER_SIDE_REASONS.includes(reason)) {
+    reportServerError(`person check: ${label}`, { name: 'Error', message: reason }, { area: 'public', code: reason })
   }
   return { ok: false, reason }
 }
