@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       .eq("id", existing.id)
 
     if (updateError) {
-      console.error("Update error:", updateError)
+      console.error("Update error:", updateError.code || "no-code")
       return NextResponse.json({ error: "Update failed" }, { status: 500 })
     }
 
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true })
 
   } catch (err) {
-    console.error("update-candidate error:", err)
+    console.error("update-candidate error:", String((err as { code?: unknown } | null)?.code ?? "no-code"))
     reportServerError("candidate profile update failed", err, { area: "public" })
     return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
   }

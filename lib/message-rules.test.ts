@@ -3,6 +3,7 @@ import {
   BRIEF_LINK_RETRY_TEXT,
   CONFIRMATION_EMAIL_FAILED_TEXT,
   LINK_RETRY_HEADING,
+  MANAGE_LINK_RETRY_TEXT,
   MESSAGE_MIN_LENGTH,
   SERVER_PROBLEM_TEXT,
   VERIFY_LINK_RETRY_TEXT,
@@ -64,6 +65,7 @@ describe('message rules', () => {
       LINK_RETRY_HEADING,
       VERIFY_LINK_RETRY_TEXT,
       BRIEF_LINK_RETRY_TEXT,
+      MANAGE_LINK_RETRY_TEXT,
     ]) {
       expect(text).not.toMatch(siteWords)
     }

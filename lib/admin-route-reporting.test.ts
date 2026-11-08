@@ -343,7 +343,7 @@ const ROUTES: Route[] = [
         state.clientFails = problem
         return call('/categories', 'GET')(load, request({ method: 'GET' }))
       },
-      answer: { status: 200, body: JSON.stringify({ categories: [] }) },
+      answer: { status: 500, body: JSON.stringify({ error: 'Could not load categories.' }) },
     },
   ], [
     ['healthy list', { method: 'GET' }, 200, () => { db.tables.articles = [{ category: 'audit', category_title: 'Audit', status: 'published', platform: 'ab' }] }],
@@ -675,12 +675,13 @@ describe('sign-in', () => {
     ['session not set up', async () => ({ password: TEST_ADMIN_SECRET, totpCode: await codeAt(NOW) }), () => vi.stubEnv('ADMIN_SESSION_SECRET', '')],
   ]
 
-  it.each(REFUSALS)('keeps the sign-in answer the same for every refusal: %s', async (_name, body, setup) => {
+  it.each(REFUSALS)('keeps the sign-in answer the same for every refusal: %s', async (name, body, setup) => {
     setup?.()
     const result = await answerOf(await send(await body()))
     expect({ status: result.status, body: result.body }).toStrictEqual(DENIED)
     expect(result.cookies).toStrictEqual([])
-    expect(state.reports).toStrictEqual([])
+    const setupReport = [['admin sign-in not set up', new Error('sign-in not set up'), { area: 'admin' }]]
+    expect(state.reports).toStrictEqual(name.endsWith('not set up') ? setupReport : [])
   })
 
   it('makes no report for a successful sign-in', async () => {
@@ -784,7 +785,7 @@ describe('admin route sources', () => {
     const calls = sourceOf(suffix).match(/reportServerError\(.*\)$/gm) ?? []
     expect(calls.length).toBeGreaterThan(0)
     for (const call of calls) {
-      expect(call).toMatch(/^reportServerError\((['"])admin [A-Za-z -]+\1, (err|error|e|new Error\('admin [a-z ]+'\)), \{ area: (['"])admin\3 \}\)$/)
+      expect(call).toMatch(/^reportServerError\((['"])admin [A-Za-z -]+\1, (?:err|error|e|new Error\((['"])(?:admin )?[a-z -]+\2\)), \{ area: (['"])admin\3 \}\)$/)
     }
   })
 

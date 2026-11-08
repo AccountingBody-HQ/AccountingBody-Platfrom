@@ -3,6 +3,7 @@ import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { Resend } from 'resend'
 import { getContactBrand, isEthioTaxPlatformValue } from '@/lib/contact-brand'
 import { reportServerError } from '@/lib/report-error'
+import { checkEmailSend } from '@/lib/email-check'
 
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
       ? 'EthioTax is an independent accounting, tax and business consulting platform serving the Ethiopian community in Ethiopia and worldwide. We are not affiliated with any government tax authority.'
       : 'Accounting Body · Professional Services Network'
 
-    await resend.emails.send({
+    const sendResult = await resend.emails.send({
       from: fromAddress,
       to,
       subject,
@@ -68,6 +69,9 @@ export async function POST(req: NextRequest) {
         </html>
       `,
     })
+    if (!checkEmailSend(sendResult, 'admin reply')) {
+      return NextResponse.json({ error: 'Failed to send reply.' }, { status: 500 })
+    }
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Reply error:', error)

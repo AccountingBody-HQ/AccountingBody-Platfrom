@@ -5,8 +5,13 @@ import { reportServerError } from '@/lib/report-error'
 export const maxDuration = 60
 
 export async function GET(req: NextRequest) {
+  const secret = process.env.CRON_SECRET
+  if (!secret) {
+    console.error('[orchestrator] not configured')
+    return Response.json({ error: 'Not configured' }, { status: 503 })
+  }
   const auth = req.headers.get('authorization')
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (auth !== `Bearer ${secret}`) {
     return new Response('Unauthorized', { status: 401 })
   }
 
@@ -49,9 +54,9 @@ export async function GET(req: NextRequest) {
           signal: AbortSignal.timeout(10000),
         }
       )
-      // Capture the sub-route's own error message on failure so a
-      // total-failure Sentry alert (below) is actionable, not just a bare
-      // status code. A body-parse failure must not itself throw here.
+      // Keep the sub-route's own error text for the summary in this answer.
+      // The report below carries a fixed message only. A body-parse failure
+      // must not itself throw here.
       let error: string | undefined
       if (!res.ok) {
         try {

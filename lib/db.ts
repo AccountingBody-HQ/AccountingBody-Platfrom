@@ -95,7 +95,7 @@ async function fetchPublishedArticleBySlug(slug: string): Promise<ArticleFull | 
   // A real Error, not the plain PostgREST error object, so the page's error
   // boundary and Sentry get a message and a stack.
   if (error) throw new Error(`getArticleBySlug: articles query failed (status ${status}): ${error.message}`)
-  if (!data) throw new Error(`getArticleBySlug: empty response for "${slug}"`)
+  if (!data) throw new Error('getArticleBySlug: article read returned no data')
   return data as ArticleFull
 }
 

@@ -46,8 +46,13 @@ export async function POST(
 ) {
   const startTime = Date.now()
 
+  const secret = process.env.CRON_SECRET
+  if (!secret) {
+    console.error('ingest: not configured')
+    return Response.json({ error: 'Not configured' }, { status: 503 })
+  }
   const auth = req.headers.get('authorization')
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (auth !== `Bearer ${secret}`) {
     return new Response('Unauthorized', { status: 401 })
   }
 

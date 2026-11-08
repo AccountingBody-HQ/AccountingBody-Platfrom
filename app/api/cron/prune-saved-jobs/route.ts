@@ -10,12 +10,7 @@ export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 export const maxDuration = 60
 
-function isAuthorised(req: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET
-  if (!secret) {
-    console.warn('cron/prune-saved-jobs: CRON_SECRET not set — running unauthenticated (dev mode)')
-    return true
-  }
+function isAuthorised(req: NextRequest, secret: string): boolean {
   return req.headers.get('authorization') === `Bearer ${secret}`
 }
 
@@ -23,7 +18,12 @@ function isAuthorised(req: NextRequest): boolean {
 // SAVED_JOBS_RETENTION_DAYS (7). See 0008_saved_jobs.sql's header comment —
 // this is the ONLY deletion path for that table.
 export async function GET(req: NextRequest) {
-  if (!isAuthorised(req)) {
+  const secret = process.env.CRON_SECRET
+  if (!secret) {
+    console.error('cron/prune-saved-jobs: not configured')
+    return NextResponse.json({ error: 'Not configured' }, { status: 503 })
+  }
+  if (!isAuthorised(req, secret)) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
 

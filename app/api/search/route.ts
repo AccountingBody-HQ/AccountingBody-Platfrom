@@ -219,7 +219,7 @@ export async function GET(req: NextRequest) {
     JOB_QUERY_TIMEOUT_MS,
     NO_JOBS,
     () => {
-      console.error('[search] job query timed out', { rawSearch, platform })
+      console.error('[search] job query timed out', { platform, length: rawSearch.length })
       reportServerError('search job lookup timed out', new Error('job lookup took too long'), { area: 'public', code: platform })
     },
   )

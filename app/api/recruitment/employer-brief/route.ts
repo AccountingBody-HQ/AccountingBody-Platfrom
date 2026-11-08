@@ -126,6 +126,6 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("employer-brief error:", err)
     reportServerError("hiring brief submit failed", err, { area: "public" })
-    return NextResponse.json({ error: "Server error" }, { status: 500 })
+    return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
   }
 }

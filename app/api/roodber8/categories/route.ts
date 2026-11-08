@@ -45,6 +45,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ categories })
   } catch (error) {
     reportServerError('admin category list failed', error, { area: 'admin' })
-    return NextResponse.json({ categories: [] })
+    return NextResponse.json({ error: 'Could not load categories.' }, { status: 500 })
   }
 }

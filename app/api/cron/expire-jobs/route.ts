@@ -15,12 +15,7 @@ function getSupabase() {
   return getServerSupabase('cron')
 }
 
-function isAuthorised(req: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET
-  if (!secret) {
-    console.warn('cron/expire-jobs: CRON_SECRET not set — running unauthenticated (dev mode)')
-    return true
-  }
+function isAuthorised(req: NextRequest, secret: string): boolean {
   return req.headers.get('authorization') === `Bearer ${secret}`
 }
 
@@ -35,7 +30,12 @@ function isInWarningWindow(expiresAt: string | null): boolean {
 }
 
 export async function GET(req: NextRequest) {
-  if (!isAuthorised(req)) {
+  const secret = process.env.CRON_SECRET
+  if (!secret) {
+    console.error('cron/expire-jobs: not configured')
+    return NextResponse.json({ error: 'Not configured' }, { status: 503 })
+  }
+  if (!isAuthorised(req, secret)) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
 

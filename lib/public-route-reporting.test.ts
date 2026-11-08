@@ -263,7 +263,7 @@ const ROUTES: Route[] = [
     healthy: () => get('/api/eticpa/mock-exam?level=level-1'),
     healthyAnswer: { status: 200, body: { questions: [], poolTotal: 0 } },
     via: 'client',
-    caught: (message) => ({ status: 500, body: { error: message } }),
+    caught: () => ({ status: 500, body: { error: SERVER_PROBLEM_TEXT } }),
     refusals: [['database error', () => { db.failing = true }]],
   },
   {
@@ -273,7 +273,7 @@ const ROUTES: Route[] = [
     healthy: () => get('/api/mock-exam?category=tax'),
     healthyAnswer: { status: 200, body: { questions: [], poolTotal: 0 } },
     via: 'client',
-    caught: (message) => ({ status: 500, body: { error: message } }),
+    caught: () => ({ status: 500, body: { error: SERVER_PROBLEM_TEXT } }),
     refusals: [
       ['validation', () => get('/api/mock-exam')],
       ['database error', () => { db.failing = true }],
@@ -308,7 +308,7 @@ const ROUTES: Route[] = [
       }),
     healthyAnswer: { status: 200, body: { success: true } },
     via: 'body',
-    caught: () => ({ status: 500, body: { error: 'Server error' } }),
+    caught: () => ({ status: 500, body: { error: SERVER_PROBLEM_TEXT } }),
     refusals: [
       ['validation', () => post('/api/recruitment/employer-brief', { company_name: 'Acme Ltd', ...turnstile })],
       ['person check', () => { state.personOk = false }],

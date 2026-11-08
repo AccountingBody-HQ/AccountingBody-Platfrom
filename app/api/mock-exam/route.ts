@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { reportServerError } from '@/lib/report-error'
+import { SERVER_PROBLEM_TEXT } from '@/lib/message-rules'
 
 function getSupabase() {
   return getServerSupabase('publicRead')
@@ -34,6 +35,12 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
+// The visitor gets the shared text; the log keeps the short code only.
+function readFailed(error: { code?: string }) {
+  console.error('mock exam: read failed', error.code || 'no-code')
+  return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
+}
+
 export async function GET(req: NextRequest) {
   const category = req.nextUrl.searchParams.get('category') ?? ''
   const count    = parseInt(req.nextUrl.searchParams.get('count') ?? '50', 10)
@@ -51,7 +58,7 @@ export async function GET(req: NextRequest) {
       .eq('category', category)
       .eq('status', 'published')
 
-    if (artError) return NextResponse.json({ error: artError.message }, { status: 500 })
+    if (artError) return readFailed(artError)
 
     const categorySlugs = new Set((articles ?? []).map(a => a.slug))
 
@@ -63,7 +70,7 @@ export async function GET(req: NextRequest) {
       .contains('show_on_sites', ['ab'])
       .not('article_slug', 'is', null)
 
-    if (qsError) return NextResponse.json({ error: qsError.message }, { status: 500 })
+    if (qsError) return readFailed(qsError)
 
     const matchingSets = (questionSets ?? []).filter(qs =>
       qs.article_slug && categorySlugs.has(qs.article_slug)
@@ -83,7 +90,7 @@ export async function GET(req: NextRequest) {
       .in('set_id', setIds)
       .order('question_order', { ascending: true })
 
-    if (qError) return NextResponse.json({ error: qError.message }, { status: 500 })
+    if (qError) return readFailed(qError)
 
     // Group questions by set for round-robin
     const groupMap = new Map<string, PoolQuestion[]>()
@@ -135,8 +142,7 @@ export async function GET(req: NextRequest) {
     })
 
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
     reportServerError('mock exam load failed', e, { area: 'public' })
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
   }
 }

@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       })
 
     if (dbError) {
-      console.error("Supabase insert error:", dbError)
+      console.error("Supabase insert error:", dbError.code || "no-code")
       return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
     }
 
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true })
 
   } catch (err) {
-    console.error("Job seeker apply error:", err)
+    console.error("Job seeker apply error:", String((err as { code?: unknown } | null)?.code ?? "no-code"))
     reportServerError("job seeker registration failed", err, { area: "public" })
     return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
   }

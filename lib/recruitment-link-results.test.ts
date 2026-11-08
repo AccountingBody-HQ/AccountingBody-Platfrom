@@ -959,11 +959,10 @@ describe('manage screen state from the lookup answer', () => {
     expect(manageLinkStatus(httpStatus, hasData)).toBe(expected)
   })
 
-  it('uses the agreed text, free of site names and web addresses', () => {
+  it('uses the agreed text', () => {
     expect(MANAGE_LINK_RETRY_TEXT).toBe(
       "We couldn't load your details just now. Please try the link again in a few minutes.",
     )
-    expect(MANAGE_LINK_RETRY_TEXT).not.toMatch(/accounting\s*body|ethio\s*tax|\.com\b|\.et\b|https?:|www\./i)
     expect(LINK_RETRY_HEADING).toBe('Please Try Again')
   })
 })
