@@ -3,6 +3,7 @@ import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { guardCachedRead } from '@/lib/cache-guard'
+import { reportServerError } from '@/lib/report-error'
 
 // Every function in this file that has a caller serves public pages, so all
 // use the public read limit.
@@ -200,6 +201,7 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
       counts[cat] = await cachedCategoryCount(cat)
     } catch (error) {
       console.error('getCategoryCounts error:', error)
+      reportServerError('article category count read failed', error, { area: 'public' })
       counts[cat] = 0
     }
   }
@@ -329,6 +331,7 @@ export async function getQuestionSetCount(): Promise<number> {
     return await cachedQuestionSetCount()
   } catch (error) {
     console.error('getQuestionSetCount error:', error)
+    reportServerError('question set count read failed', error, { area: 'public' })
     return 0
   }
 }
@@ -372,6 +375,7 @@ export async function getPublishedQuestionCount(): Promise<number> {
     return await cachedPublishedQuestionCount()
   } catch (error) {
     console.error('getPublishedQuestionCount error:', error)
+    reportServerError('question count read failed', error, { area: 'public' })
     return 0
   }
 }
@@ -418,6 +422,7 @@ export async function getPublishedArticleCount(siteCode: string): Promise<number
     return await cachedPublishedArticleCount(siteCode)
   } catch (error) {
     console.error('getPublishedArticleCount error:', error)
+    reportServerError('article count read failed', error, { area: 'public' })
     return 0
   }
 }

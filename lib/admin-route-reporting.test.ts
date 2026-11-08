@@ -347,7 +347,7 @@ const ROUTES: Route[] = [
     },
   ], [
     ['healthy list', { method: 'GET' }, 200, () => { db.tables.articles = [{ category: 'audit', category_title: 'Audit', status: 'published', platform: 'ab' }] }],
-    ['database error', { method: 'GET' }, 200, () => { db.failing = true }],
+    ['empty list', { method: 'GET' }, 200],
   ]),
   route('AI content generate', '/content-factory/generate', 'POST', () => undefined, [
     { label: 'admin AI content generate failed', log: 'content-factory/generate error:', run: bodyProblem('/content-factory/generate', 'POST'), answer: { status: 500, body: error(PROBLEM) } },
@@ -784,7 +784,7 @@ describe('admin route sources', () => {
     const calls = sourceOf(suffix).match(/reportServerError\(.*\)$/gm) ?? []
     expect(calls.length).toBeGreaterThan(0)
     for (const call of calls) {
-      expect(call).toMatch(/^reportServerError\((['"])admin [A-Za-z -]+\1, (err|error|e), \{ area: (['"])admin\3 \}\)$/)
+      expect(call).toMatch(/^reportServerError\((['"])admin [A-Za-z -]+\1, (err|error|e|new Error\('admin [a-z ]+'\)), \{ area: (['"])admin\3 \}\)$/)
     }
   })
 

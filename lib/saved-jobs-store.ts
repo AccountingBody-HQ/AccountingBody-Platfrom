@@ -4,6 +4,7 @@
 // the public write limit, and the daily prune uses the cron limit.
 import { getServerSupabase, type DbContext } from './supabase-server'
 import { SAVED_JOBS_LIMIT } from './saved-jobs'
+import { reportServerError } from './report-error'
 
 function getSupabase(context: DbContext = 'publicRead') {
   return getServerSupabase(context)
@@ -189,9 +190,11 @@ export async function touchLastSeen(visitorId: string, platform: string, throttl
       .lt('last_seen_at', throttleCutoff)
     if (error) {
       console.error('touchLastSeen: update failed (non-fatal):', error.message)
+      reportServerError('saved jobs last seen save failed', new Error('saved jobs last seen save failed'), { area: 'public' })
     }
   } catch (err) {
     console.error('touchLastSeen: unexpected error (non-fatal):', err)
+    reportServerError('saved jobs last seen save threw', new Error('saved jobs last seen save threw'), { area: 'public' })
   }
 }
 

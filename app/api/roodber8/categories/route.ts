@@ -27,7 +27,11 @@ export async function GET(req: NextRequest) {
       .neq('category', '')
       .limit(5000)
 
-    if (error || !data) return NextResponse.json({ categories: [] })
+    if (error) {
+      reportServerError('admin category list read failed', new Error('admin category list read failed'), { area: 'admin' })
+      return NextResponse.json({ error: 'Could not load categories.' }, { status: 500 })
+    }
+    if (!data) return NextResponse.json({ categories: [] })
 
     const seen = new Map<string, string>()
     for (const row of data as { category: string; category_title: string | null }[]) {

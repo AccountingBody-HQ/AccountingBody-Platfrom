@@ -541,7 +541,7 @@ const scenarios: Scenario[] = [
     context: 'cron',
     call: async () => (await load('app/api/cron/expire-jobs/route.ts')).GET(cron('/api/cron/expire-jobs'), { params: {} }),
     healthy: { status: 200, body: { expired: 0, warned: 0 }, dbRequests: 3 },
-    stalled: { waits: 3, status: 200, body: { expired: 0, warned: 0 }, dbRequests: 3 },
+    stalled: { waits: 3, status: 500, body: { error: 'Cron run failed', expired: 0, warned: 0 }, dbRequests: 3 },
   },
   {
     name: 'provider import',
@@ -573,7 +573,7 @@ const scenarios: Scenario[] = [
     call: async () =>
       (await load('app/api/ingest/[slug]/route.ts')).POST(cron('/api/ingest/example'), { params: { slug: 'example' } }),
     healthy: { status: 200, emails: 1, dbRequests: 11 },
-    stalled: { waits: 1, status: 404, body: { ok: false, error: 'Provider not found' }, dbRequests: 1 },
+    stalled: { waits: 1, status: 503, body: { ok: false, error: 'Provider could not be read' }, dbRequests: 1 },
   },
   {
     name: 'subscribers page',

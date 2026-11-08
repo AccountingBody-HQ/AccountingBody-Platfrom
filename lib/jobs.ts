@@ -4,6 +4,7 @@ import { getServerSupabase, type DbContext } from '@/lib/supabase-server'
 import { bucketBounds } from '@/lib/sitemap-chunks'
 import { SINGLE_WORD_COUNTRY_NAMES } from '@/lib/ingestion/normalise'
 import { guardCachedRead } from '@/lib/cache-guard'
+import { reportServerError } from '@/lib/report-error'
 
 // Reads used by public pages and APIs use the public read limit (the
 // default). Functions used only by other kinds of work name their context
@@ -784,6 +785,7 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Simi
     tokens = similarTitleTokens(title, 6)
   } catch (error) {
     console.error('getSimilarJobs (similarTitleTokens) error:', error)
+    reportServerError('similar jobs title words failed', new Error('similar jobs title words failed'), { area: 'public' })
   }
 
   if (tokens.length > 0) {
@@ -803,6 +805,7 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Simi
         addRows(await getCachedSimilarCandidates(platform, 'and', sortedTokens.join(' '), country, limit + 1))
       } catch (error) {
         console.error('getSimilarJobs (and, same country) error:', error)
+        reportServerError('similar jobs strong match read failed', new Error('similar jobs query failed'), { area: 'public' })
       }
     }
 
@@ -814,6 +817,7 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Simi
         addRows(rankByTitleOverlap(candidates, tokens))
       } catch (error) {
         console.error('getSimilarJobs (or, same country) error:', error)
+        reportServerError('similar jobs same country read failed', new Error('similar jobs query failed'), { area: 'public' })
       }
     }
 
@@ -825,6 +829,7 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Simi
         addRows(rankByTitleOverlap(candidates, tokens))
       } catch (error) {
         console.error('getSimilarJobs (or, worldwide) error:', error)
+        reportServerError('similar jobs worldwide read failed', new Error('similar jobs query failed'), { area: 'public' })
       }
     }
   }
@@ -844,6 +849,7 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Simi
       addRows(await getCachedSimilarCountryFallback(platform, cleanCountry, limit + 1))
     } catch (error) {
       console.error('getSimilarJobs (fallback) error:', error)
+      reportServerError('similar jobs country fallback read failed', new Error('similar jobs query failed'), { area: 'public' })
     }
   }
 
@@ -862,7 +868,11 @@ export async function getJobByManageToken(token: string): Promise<Job | null> {
     .select(JOB_COLUMNS_ADMIN)
     .eq('manage_token', token)
     .single()
-  if (error || !data) return null
+  // null only for zero rows (PostgREST code PGRST116); any other failure is
+  // thrown, so the caller answers a temporary problem, not "not found".
+  if (error && error.code === 'PGRST116') return null
+  if (error) throw error
+  if (!data) return null
   return data as Job
 }
 
@@ -913,8 +923,14 @@ export async function getAdminJobs(params: {
 
   const [{ data, error }, { count, error: countError }] = await Promise.all([listQuery, countQuery])
 
-  if (error) console.error('getAdminJobs list error:', error)
-  if (countError) console.error('getAdminJobs count error:', countError)
+  if (error) {
+    console.error('getAdminJobs list error:', error)
+    reportServerError('admin job list read failed', new Error('admin job list read failed'), { area: 'admin' })
+  }
+  if (countError) {
+    console.error('getAdminJobs count error:', countError)
+    reportServerError('admin job count read failed', new Error('admin job count read failed'), { area: 'admin' })
+  }
 
   return {
     jobs: (data ?? []) as Job[],
@@ -982,6 +998,7 @@ export async function getBrowsableJobsCount(platform: string): Promise<number> {
     return await cachedBrowsableJobsCount(platform)
   } catch (error) {
     console.error('getBrowsableJobsCount error:', error)
+    reportServerError('job count read failed', error, { area: 'public' })
     return 0
   }
 }
@@ -1048,6 +1065,7 @@ export async function getActiveJobCountries(platform: string): Promise<ActiveJob
     return await fetchActiveJobCountries(platform)
   } catch (error) {
     console.error('getActiveJobCountries error:', error)
+    reportServerError('job countries read failed', error, { area: 'public' })
     return []
   }
 }
@@ -1070,6 +1088,7 @@ export const getCachedActiveJobCountries = cache(async (platform: string): Promi
     return await cachedActiveJobCountries(platform)
   } catch (error) {
     console.error('getActiveJobCountries error:', error)
+    reportServerError('job countries cached read failed', error, { area: 'public' })
     return []
   }
 })
@@ -1086,10 +1105,13 @@ export async function getExpiringJobs(daysFromNow: number): Promise<Job[]> {
     .lte('expires_at', threshold)
     .order('expires_at', { ascending: true })
 
-  if (error || !data) {
-    if (error) console.error('getExpiringJobs error:', error)
-    return []
+  // A read error is thrown after its log line, so the run can answer a
+  // failure; an empty result is [].
+  if (error) {
+    console.error('getExpiringJobs error:', error)
+    throw error
   }
+  if (!data) return []
   return data as Job[]
 }
 
@@ -1251,7 +1273,10 @@ export async function getJobSitemapEntries(platform: string): Promise<JobSitemap
       // a row cap. Discard the accumulated pages and match the function's
       // existing on-error contract: log (if there was an actual error,
       // not just an empty page) and return [].
-      if (error) console.error('getJobSitemapEntries error:', error)
+      if (error) {
+        console.error('getJobSitemapEntries error:', error)
+        reportServerError('sitemap jobs read failed', error, { area: 'public' })
+      }
       return []
     }
 
@@ -1265,6 +1290,7 @@ export async function getJobSitemapEntries(platform: string): Promise<JobSitemap
         `(${allRows.length} rows) with more still available — investigate before ` +
         'raising it; this is not expected at any plausible current job count.'
       )
+      reportServerError('sitemap jobs page limit reached', new Error('sitemap jobs page limit reached'), { area: 'public' })
     }
   }
 
@@ -1322,7 +1348,10 @@ export async function getJobSitemapChunk(
       .limit(JOB_CHUNK_PAGE_SIZE)
 
     if (error || !data) {
-      if (error) console.error(`getJobSitemapChunk(bucket=${bucket}) error:`, error)
+      if (error) {
+        console.error(`getJobSitemapChunk(bucket=${bucket}) error:`, error)
+        reportServerError('sitemap job chunk read failed', error, { area: 'public' })
+      }
       return { ok: false }
     }
 
@@ -1338,6 +1367,7 @@ export async function getJobSitemapChunk(
         `bound (${allRows.length} rows) with more still available — investigate before ` +
         'raising it; this is not expected at any plausible current per-bucket job count.'
       )
+      reportServerError('sitemap job chunk page limit reached', new Error('sitemap job chunk page limit reached'), { area: 'public' })
     }
   }
 
@@ -1488,6 +1518,7 @@ export async function incrementJobImpressions(id: string): Promise<void> {
       .eq('id', id)
   } catch (err: unknown) {
     console.error('incrementJobImpressions failed (non-fatal):', err)
+    reportServerError('job impression count failed', err, { area: 'public' })
   }
 }
 
@@ -1511,5 +1542,6 @@ export async function incrementJobClicks(id: string): Promise<void> {
       .eq('id', id)
   } catch (err: unknown) {
     console.error('incrementJobClicks failed (non-fatal):', err)
+    reportServerError('job click count failed', err, { area: 'public' })
   }
 }

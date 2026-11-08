@@ -42,9 +42,20 @@ export async function GET(req: NextRequest) {
   let expired = 0
   let warned = 0
 
+  // A read that cannot be done counts as "no jobs" for the steps below, so
+  // the rest of the run goes ahead; the run then answers a failure.
+  let readFailed = false
+  let readError: unknown = null
+  const readExpiringJobs = (daysFromNow: number) =>
+    getExpiringJobs(daysFromNow).catch((error: unknown) => {
+      if (!readFailed) readError = error
+      readFailed = true
+      return []
+    })
+
   try {
     // 1 & 2. Expire jobs already past their expiry, notify each employer.
-    const pastDue = await getExpiringJobs(0)
+    const pastDue = await readExpiringJobs(0)
     for (const job of pastDue) {
       try {
         await expireJob(job.id)
@@ -61,7 +72,7 @@ export async function GET(req: NextRequest) {
 
     // 3 & 4. Warn employers of listings expiring within 7 days — only ones
     // that have had at least one impression, and only once (6-7 day band).
-    const expiringSoon = await getExpiringJobs(7)
+    const expiringSoon = await readExpiringJobs(7)
     for (const job of expiringSoon) {
       if (job.impression_count <= 0) continue
       if (!isInWarningWindow(job.expires_at)) continue
@@ -88,6 +99,9 @@ export async function GET(req: NextRequest) {
     } catch (resetErr: unknown) {
       console.error('cron/expire-jobs: jobs_today reset threw:', resetErr)
     }
+
+    // Answered by the catch below: logged, reported once, status 500.
+    if (readFailed) throw readError
 
     return NextResponse.json({ expired, warned })
   } catch (err: unknown) {

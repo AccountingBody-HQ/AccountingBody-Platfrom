@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase-server'
 import {
-  getProvider,
+  findProvider,
+  type JobProvider,
   createProviderRun,
   completeProviderRun,
   failProviderRun,
@@ -52,7 +53,13 @@ export async function POST(
 
   const { slug } = params
 
-  const provider = await getProvider(slug)
+  let provider: JobProvider | null
+  try {
+    provider = await findProvider(slug)
+  } catch (err: unknown) {
+    reportServerError('job import provider read failed', err, { area: 'ingest' })
+    return Response.json({ ok: false, error: 'Provider could not be read' }, { status: 503 })
+  }
   if (!provider) {
     return Response.json({ ok: false, error: 'Provider not found' }, { status: 404 })
   }
