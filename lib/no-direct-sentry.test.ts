@@ -88,6 +88,7 @@ const ROUTE_LABELS = [
   'job expiry run failed',
   'pending subscriber cleanup failed',
   'saved jobs cleanup failed',
+  'import log retention run failed',
   'job import run failed',
   'job import stale run cleanup failed',
   'job import due check failed',

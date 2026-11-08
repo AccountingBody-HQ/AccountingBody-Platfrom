@@ -66,3 +66,23 @@ Open `https://accountingbody.com/api/ops-status` to see which check is not `ok`.
   Check `/api/health`, the Supabase status page and Sentry.
 
 The monitor recovers by itself once every alerting check is `ok` again.
+
+## Import log clean-up
+
+A nightly scheduled run (07:45 UTC, `/api/cron/prune-import-logs`) can delete
+import error log rows (`provider_errors`) older than 90 days. Nothing else is
+deleted: import run records and job rows are kept.
+
+- It is off by default. The setting `IMPORT_LOG_RETENTION` decides what it
+  does: unset or any other value does nothing, `dry-run` only counts, `on`
+  deletes.
+- Use `dry-run` first. The answer in the Vercel cron logs reads
+  `{"mode":"dry-run","wouldDeleteAtLeast":N}` (it counts at most 500 rows).
+- Set `on` only after a checked backup and the owner's approval. Each run
+  deletes at most 10,000 rows; `"more":true` means rows remain for the next
+  night.
+- To switch it off: set `off` (or remove the setting) in Vercel, then
+  redeploy.
+- Deleted rows cannot be brought back except by restoring from a backup.
+- Deleting does not shrink the reported database size straight away: the
+  freed space is reused inside the table for new rows.
