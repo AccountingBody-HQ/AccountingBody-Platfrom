@@ -7,6 +7,7 @@ import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 import { checkRead } from '@/lib/db-check'
+import { reportServerError } from '@/lib/report-error'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -201,7 +202,8 @@ export async function PATCH(
   let body: Record<string, unknown>
   try {
     body = await req.json()
-  } catch {
+  } catch (error) {
+    reportServerError('admin course update request unreadable', error, { area: 'admin' })
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
@@ -612,6 +614,7 @@ export async function DELETE(
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ success: true })
   } catch (err: unknown) {
+    reportServerError('admin course delete failed', err, { area: 'admin' })
     const message = err instanceof Error ? err.message : 'Unknown error'
     return NextResponse.json({ error: message }, { status: 500 })
   }

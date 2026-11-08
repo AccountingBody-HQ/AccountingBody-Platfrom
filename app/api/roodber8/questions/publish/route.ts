@@ -4,6 +4,7 @@ import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 import { checkRead } from '@/lib/db-check'
+import { reportServerError } from '@/lib/report-error'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -218,6 +219,7 @@ export async function POST(req: NextRequest) {
 
   } catch (err: any) {
     console.error('questions/publish error:', err)
+    reportServerError('admin question set publish failed', err, { area: 'admin' })
     return NextResponse.json({ error: err.message ?? 'Internal server error' }, { status: 500 })
   }
 }

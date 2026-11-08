@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { reportServerError } from '@/lib/report-error'
 
 export const runtime = 'nodejs'
 
@@ -89,6 +90,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
   } catch (err: any) {
     console.error('admin/actions error:', err)
+    reportServerError('admin record action failed', err, { area: 'admin' })
     return NextResponse.json({ error: err.message ?? 'Internal server error' }, { status: 500 })
   }
 }

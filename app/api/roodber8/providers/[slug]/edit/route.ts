@@ -4,6 +4,7 @@ import { getProvider } from '@/lib/providers'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { REGISTERED_ADAPTER_KEYS, isRegisteredAdapterKey } from '@/lib/adapters'
 import { checkRead } from '@/lib/db-check'
+import { reportServerError } from '@/lib/report-error'
 
 function getSupabase() {
   return getServerSupabase('admin')
@@ -89,7 +90,10 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
   let body: unknown
   try { body = await req.json() }
-  catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }) }
+  catch (error) {
+    reportServerError('admin provider edit request unreadable', error, { area: 'admin' })
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
   if (!isRecord(body)) {
     return NextResponse.json({ ok: false, error: 'Invalid request body' }, { status: 400 })
   }

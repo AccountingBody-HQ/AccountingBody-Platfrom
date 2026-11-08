@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import Anthropic from '@anthropic-ai/sdk'
+import { reportServerError } from '@/lib/report-error'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -952,6 +953,7 @@ export async function POST(req: NextRequest) {
 
   } catch (err: any) {
     console.error('content-factory/generate error:', err)
+    reportServerError('admin AI content generate failed', err, { area: 'admin' })
     return NextResponse.json(
       { error: err.message ?? 'Internal server error' },
       { status: 500 }

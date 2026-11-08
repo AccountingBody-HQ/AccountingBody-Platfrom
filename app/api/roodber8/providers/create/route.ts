@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { REGISTERED_ADAPTER_KEYS, isRegisteredAdapterKey } from '@/lib/adapters'
+import { reportServerError } from '@/lib/report-error'
 
 function getSupabase() {
   return getServerSupabase('admin')
@@ -45,7 +46,8 @@ export async function POST(req: NextRequest) {
   let body: unknown
   try {
     body = await req.json()
-  } catch {
+  } catch (error) {
+    reportServerError('admin provider create request unreadable', error, { area: 'admin' })
     return Response.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 

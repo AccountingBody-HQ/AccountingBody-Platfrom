@@ -3,6 +3,7 @@ import { isAuthenticated, signedOutResponse } from "@/lib/admin-auth"
 import { Resend } from "resend"
 import { getServerSupabase } from "@/lib/supabase-server"
 import { generateReferenceNumber, generateProfileToken } from "@/lib/profileUtils"
+import { reportServerError } from "@/lib/report-error"
 
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (err) {
     console.error("notify-candidate error:", err)
+    reportServerError("admin candidate email failed", err, { area: "admin" })
     return NextResponse.json({ error: "Failed to send email" }, { status: 500 })
   }
 }

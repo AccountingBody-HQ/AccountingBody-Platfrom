@@ -3,6 +3,7 @@ import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getJobById, approveJob, rejectJob, expireJob } from '@/lib/jobs'
 import { sendJobApprovalEmail, sendJobRejectionEmail } from '@/lib/jobEmails'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { reportServerError } from '@/lib/report-error'
 
 export const runtime = 'nodejs'
 
@@ -107,6 +108,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
   } catch (err: unknown) {
     console.error('roodber8/jobs/[id] PATCH error:', err)
+    reportServerError('admin job update failed', err, { area: 'admin' })
     const message = err instanceof Error ? err.message : 'Internal server error'
     return NextResponse.json({ error: message }, { status: 500 })
   }

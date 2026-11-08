@@ -6,6 +6,7 @@ import {
   createAdminSession,
   sha256Hex,
 } from "@/lib/middleware-logic"
+import { reportServerError } from "@/lib/report-error"
 
 function base32ToBytes(base32: string): Uint8Array {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
@@ -101,8 +102,9 @@ export async function POST(req: NextRequest) {
     })
     return response
 
-  } catch {
+  } catch (error) {
     console.error("Admin sign-in failed unexpectedly")
+    reportServerError("admin sign-in failed", error, { area: "admin" })
     return accessDenied()
   }
 }

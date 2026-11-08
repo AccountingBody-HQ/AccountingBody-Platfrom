@@ -18,13 +18,13 @@ vi.unstubAllEnvs()
 const LOCKED = 'AB Press files stay unchanged'
 const RETIRED = 'route kept unchanged while it is retired'
 const STAGE_PUBLIC = 'later stage: public forms and recruitment'
-const STAGE_ADMIN = 'later stage: admin tools'
+const TOOL_ANSWER = "the catch gives the tool's answer to the admin's own input"
+const STAGE_SOCIAL = 'later job: social posting tool'
 
 // Paths under app/api; '@admin' stands for the admin folder.
 const NOT_YET_REPORTING: Record<string, string> = {
   careerjet: RETIRED,
   'confirm-subscription': STAGE_PUBLIC,
-  '@admin-auth': STAGE_ADMIN,
   '@admin/ab-press/export-word': LOCKED,
   '@admin/ab-press/generate': LOCKED,
   '@admin/ab-press/generate-chapter': LOCKED,
@@ -32,29 +32,10 @@ const NOT_YET_REPORTING: Record<string, string> = {
   '@admin/ab-press/generate-frontmatter': LOCKED,
   '@admin/ab-press/generate-pq': LOCKED,
   '@admin/ab-press/preview': LOCKED,
-  '@admin/actions': STAGE_ADMIN,
-  '@admin/articles/import': STAGE_ADMIN,
-  '@admin/articles/publish': STAGE_ADMIN,
-  '@admin/articles/search': STAGE_ADMIN,
-  '@admin/categories': STAGE_ADMIN,
-  '@admin/content-factory/generate': STAGE_ADMIN,
-  '@admin/content-factory/publish': STAGE_ADMIN,
-  '@admin/course-factory/delete-course': STAGE_ADMIN,
-  '@admin/course-factory/save': STAGE_ADMIN,
-  '@admin/courses/[courseId]': STAGE_ADMIN,
-  '@admin/jobs/[id]': STAGE_ADMIN,
-  '@admin/notify-candidate': STAGE_ADMIN,
-  '@admin/notify-firm': STAGE_ADMIN,
-  '@admin/providers/[slug]/edit': STAGE_ADMIN,
-  '@admin/providers/[slug]/preview': STAGE_ADMIN,
-  '@admin/providers/[slug]/test': STAGE_ADMIN,
-  '@admin/providers/[slug]/trigger': STAGE_ADMIN,
-  '@admin/providers/create': STAGE_ADMIN,
-  '@admin/questions/generate': STAGE_ADMIN,
-  '@admin/questions/import': STAGE_ADMIN,
-  '@admin/questions/publish': STAGE_ADMIN,
-  '@admin/reply': STAGE_ADMIN,
-  '@admin/studio/post-social': STAGE_ADMIN,
+  '@admin/articles/import': TOOL_ANSWER,
+  '@admin/providers/[slug]/test': TOOL_ANSWER,
+  '@admin/questions/import': TOOL_ANSWER,
+  '@admin/studio/post-social': STAGE_SOCIAL,
 }
 
 const API = join(process.cwd(), 'app/api')

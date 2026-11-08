@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { Resend } from 'resend'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { reportServerError } from '@/lib/report-error'
 
 export const runtime = 'nodejs'
 
@@ -116,6 +117,7 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Internal server error'
     console.error('notify-firm error:', err)
+    reportServerError('admin firm email failed', err, { area: 'admin' })
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

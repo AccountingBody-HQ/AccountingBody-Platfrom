@@ -5,6 +5,7 @@ import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 import type { NormalisedArticle } from '@/lib/article-normaliser'
 import { checkRead } from '@/lib/db-check'
+import { reportServerError } from '@/lib/report-error'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -171,6 +172,7 @@ export async function POST(req: NextRequest) {
     })
 
   } catch (err: unknown) {
+    reportServerError('admin article publish failed', err, { area: 'admin' })
     const message = err instanceof Error ? err.message : 'Internal server error'
     return NextResponse.json({ error: message }, { status: 500 })
   }

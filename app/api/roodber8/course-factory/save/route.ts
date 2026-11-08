@@ -8,6 +8,7 @@ import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 import { checkRead } from '@/lib/db-check'
+import { reportServerError } from '@/lib/report-error'
 
 function getSupabase() {
   return getServerSupabase('admin')
@@ -24,7 +25,8 @@ export async function POST(req: NextRequest) {
   let body: any
   try {
     body = await req.json()
-  } catch {
+  } catch (error) {
+    reportServerError('admin course save request unreadable', error, { area: 'admin' })
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
@@ -246,6 +248,7 @@ export async function POST(req: NextRequest) {
     }
 
   } catch (e: any) {
+    reportServerError('admin course save failed', e, { area: 'admin' })
     return NextResponse.json({ error: e.message ?? 'Unknown error' }, { status: 500 })
   }
 }

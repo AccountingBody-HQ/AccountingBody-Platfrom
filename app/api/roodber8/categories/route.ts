@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { reportServerError } from '@/lib/report-error'
 
 export const runtime = 'nodejs'
 
@@ -38,7 +39,8 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => a.title.localeCompare(b.title))
 
     return NextResponse.json({ categories })
-  } catch {
+  } catch (error) {
+    reportServerError('admin category list failed', error, { area: 'admin' })
     return NextResponse.json({ categories: [] })
   }
 }
