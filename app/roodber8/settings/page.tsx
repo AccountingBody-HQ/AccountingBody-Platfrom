@@ -1,6 +1,8 @@
 import { CheckCircle, Circle, HelpCircle, Server } from "lucide-react"
+import { requireAdmin } from "@/lib/admin-auth"
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  await requireAdmin()
   const envVars = [
     { name: "NEXT_PUBLIC_SUPABASE_URL", required: true, description: "Supabase project URL" },
     { name: "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", required: true, description: "Supabase anon key" },
@@ -10,6 +12,7 @@ export default function SettingsPage() {
     { name: "RESEND_API_KEY", required: true, description: "Resend email API key" },
     { name: "ANTHROPIC_API_KEY", required: true, description: "Claude AI — Content Factory" },
     { name: "ADMIN_SECRET", required: true, description: "Admin console password" },
+    { name: "ADMIN_SESSION_SECRET", required: true, description: "Admin session signing key" },
     { name: "NEXT_PUBLIC_SITE_URL", required: true, description: "Public site URL" },
     { name: "NEXT_PUBLIC_GTM_ID", required: false, description: "Google Tag Manager ID" },
     { name: "NEXT_PUBLIC_ADSENSE_ID", required: false, description: "AdSense verification ID" },

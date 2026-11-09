@@ -4,16 +4,41 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  # Pull requests share one group per ref, so a newer run replaces the old one.
+  # Every push gets its own group, so no push run is cancelled or dropped from a queue.
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name == 'pull_request' && 'pr' || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   ci:
+    name: CI
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Placeholders only. The build needs these two to be set, not to be real.
+      # The .invalid domain is reserved and never resolves.
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.invalid
+      SUPABASE_SECRET_KEY: ci-placeholder-not-a-secret
+      NEXT_TELEMETRY_DISABLED: 1
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: npm
-      - run: npm ci
-      - run: npx tsc --noEmit
-      - run: npm run lint
-      - run: npm test
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Test
+        run: npm test
+      - name: Production build
+        run: npm run build

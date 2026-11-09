@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 import { useState, useEffect } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import { Sparkles, ChevronRight, Check, Loader2, AlertCircle, Send, RefreshCw, Eye, BookOpen } from 'lucide-react'
 
 const QUALIFICATIONS = ['ACCA', 'CIMA', 'ICAEW', 'AAT', 'ETICPA / CPA', 'ETICPA / ATQ']
@@ -103,10 +104,13 @@ export default function GenerateQuestionsPage() {
   const [categories, setCategories] = useState<{slug:string;title:string}[]>([])
 
   useEffect(() => {
-    fetch('/api/roodber8/categories')
-      .then(r => r.json())
-      .then(d => setCategories(d.categories ?? []))
-      .catch(() => {})
+    adminFetch('/api/roodber8/categories')
+      .then(async r => {
+        const d = await r.json()
+        if (!r.ok) throw new Error(d.error)
+        setCategories(d.categories ?? [])
+      })
+      .catch((e: Error) => setError(e.message))
   }, [])
 
   const subjects = config.qualification ? QUAL_SUBJECTS[config.qualification] ?? [] : []
@@ -142,7 +146,7 @@ export default function GenerateQuestionsPage() {
   async function handleGenerate() {
     setGenerating(true); setError(''); setWarnings([])
     try {
-      const res = await fetch('/api/roodber8/questions/generate', {
+      const res = await adminFetch('/api/roodber8/questions/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...config, examBody: config.qualification.toLowerCase() }),
@@ -164,7 +168,7 @@ export default function GenerateQuestionsPage() {
     if (!bundle || publishing) return
     setPublishing(true); setError('')
     try {
-      const res = await fetch('/api/roodber8/questions/publish', {
+      const res = await adminFetch('/api/roodber8/questions/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bundle, qualification: config.qualification, examBody: config.qualification.toLowerCase(), showOnSites, canonicalOwner: canonical }),

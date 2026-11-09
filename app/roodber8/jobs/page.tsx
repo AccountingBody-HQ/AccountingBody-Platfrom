@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
+import { requireAdmin } from '@/lib/admin-auth'
 import { unstable_noStore as noStore } from 'next/cache'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
 import {
@@ -97,6 +98,7 @@ export default async function AdminJobsPage({
 }: {
   searchParams: Promise<{ search?: string; status?: string; source?: string; page?: string }>
 }) {
+  await requireAdmin()
   const sp = await searchParams
   const safeSearch = (sp.search ?? '').replace(/[,()%]/g, '')
   const status = sp.status ?? ''

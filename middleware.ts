@@ -1,82 +1,53 @@
 import { clerkMiddleware } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-
-const STATIC_REDIRECTS: Record<string, string> = {
-  "/course": "/free-courses",
-  "/courses": "/free-courses",
-  "/accountants-freelancers": "/firms-freelancers",
-  "/about-us": "/about",
-  "/cookie-policy-uk": "/cookie-policy",
-  "/ethiotax.com": "/ethiotax",
-}
-
-async function sha256Hex(message: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(message)
-  const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
-}
-
-async function isAdminAuthenticated(req: NextRequest): Promise<boolean> {
-  const token = req.cookies.get("admin_token")?.value
-  if (!token) return false
-  const secret = process.env.ADMIN_SECRET
-  if (!secret) return false
-  const expected = await sha256Hex(secret)
-  if (token.length !== expected.length) return false
-  let diff = 0
-  for (let i = 0; i < token.length; i++) {
-    diff |= token.charCodeAt(i) ^ expected.charCodeAt(i)
-  }
-  return diff === 0
-}
+import {
+  ADMIN_SESSION_COOKIE,
+  ADMIN_SIGNED_OUT_BODY,
+  ADMIN_SIGNED_OUT_INIT,
+  decideRequest,
+  getAdminPath,
+} from "./lib/middleware-logic"
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {
   const { pathname } = req.nextUrl
 
-  // Block account/login system — not in use, kept for future use only
-  if (
-    pathname.startsWith('/sign-in') ||
-    pathname.startsWith('/sign-up') ||
-    pathname.startsWith('/dashboard')
-  ) {
+  const adminPath = getAdminPath()
+  const decision = await decideRequest({
+    pathname,
+    adminPath,
+    adminToken: req.cookies.get(ADMIN_SESSION_COOKIE)?.value,
+    adminSessionSecret: process.env.ADMIN_SESSION_SECRET,
+    adminSecret: process.env.ADMIN_SECRET,
+    headers: req.headers,
+  })
+
+  if (decision.action === "redirect-home") {
     return NextResponse.redirect(new URL('/', req.url))
   }
 
-  const clean = pathname.replace(/\/$/, "")
-  if (STATIC_REDIRECTS[clean]) {
+  if (decision.action === "redirect-permanent") {
     const url = req.nextUrl.clone()
-    url.pathname = STATIC_REDIRECTS[clean]
+    url.pathname = decision.pathname
     return NextResponse.redirect(url, 301)
   }
 
-  const adminPath = process.env.ADMIN_PATH ?? "roodber8"
-  const isAdminRoute =
-    pathname.startsWith("/" + adminPath) && pathname !== "/" + adminPath + "-login"
-  const isAdminApi =
-    pathname.startsWith("/api/" + adminPath) &&
-    pathname !== "/api/" + adminPath + "-auth" &&
-    pathname !== "/api/" + adminPath + "-logout"
+  if (decision.action === "redirect-admin-login") {
+    const loginUrl = req.nextUrl.clone()
+    loginUrl.pathname = decision.pathname
+    return NextResponse.redirect(loginUrl)
+  }
 
-  if (isAdminRoute || isAdminApi) {
-    const authenticated = await isAdminAuthenticated(req)
-    if (!authenticated) {
-      const loginUrl = req.nextUrl.clone()
-      loginUrl.pathname = "/" + adminPath + "-login"
-      return NextResponse.redirect(loginUrl)
-    }
+  if (decision.action === "admin-api-signed-out") {
+    return NextResponse.json(ADMIN_SIGNED_OUT_BODY, ADMIN_SIGNED_OUT_INIT)
   }
 
   const requestHeaders = new Headers(req.headers)
-  const forwardedHost = req.headers.get('x-forwarded-host') ?? ''
-  const host = req.headers.get('host') ?? ''
-  const isEthioTax = forwardedHost.includes('ethiotax.com') || host.includes('ethiotax.com') || req.headers.get('x-et-platform') === 'ethiotax'
-  if (isEthioTax) {
+  if (decision.platform === 'ethiotax') {
     requestHeaders.set('x-et-platform', 'ethiotax')
   }
   const response = NextResponse.next({ request: { headers: requestHeaders } })
-  response.cookies.set('x-et-platform', isEthioTax ? 'ethiotax' : 'accountingbody', {
+  response.cookies.set('x-et-platform', decision.platform, {
     path: '/',
     sameSite: 'lax',
     httpOnly: false,
@@ -86,7 +57,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
 
 export const config = {
   matcher: [
-    "/((?!_next|[^?]*\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|txt)).*)",
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|txt)).*)",
     "/(api|trpc)(.*)",
   ],
 }

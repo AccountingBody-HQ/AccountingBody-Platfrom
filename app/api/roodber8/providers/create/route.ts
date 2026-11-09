@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { REGISTERED_ADAPTER_KEYS, isRegisteredAdapterKey } from '@/lib/adapters'
 
 function getSupabase() {
@@ -42,7 +42,7 @@ function booleanOr(v: unknown, fallback: boolean): boolean {
 // ── POST /api/roodber8/providers/create ── insert a new job_providers row
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
-    return new Response('Unauthorized', { status: 401 })
+    return signedOutResponse()
   }
 
   let body: unknown

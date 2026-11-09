@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AccountingBody Platform
 
-## Getting Started
+The codebase behind [accountingbody.com](https://accountingbody.com) and [ethiotax.com](https://ethiotax.com): study content, practice questions, courses, calculators and a jobs board for accounting and tax professionals.
 
-First, run the development server:
+## Stack
+
+- Next.js 14 App Router, React 18, TypeScript in strict mode
+- Tailwind CSS
+- Supabase (through supabase-js)
+- Resend for email
+- Sentry for error reporting
+- Cloudflare Turnstile for bot checks
+- Anthropic SDK for admin AI tools
+- vitest for tests
+- Vercel for hosting
+
+## Prerequisites
+
+- Node.js 24, the single version for local work, CI and hosting. It is defined in `.nvmrc` and `package.json` `engines`; CI reads `.nvmrc`.
+- npm
+- Access to the project's service accounts for real values
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then fill in `.env.local` privately. It is git-ignored; never commit real values. Delete any line you do not use, because a blank value is not the same as an unset variable.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | What it does |
+|---|---|
+| `npm run dev` | Starts the development server |
+| `npm run build` | Builds for production |
+| `npm run start` | Runs the production build |
+| `npm run lint` | Runs `next lint` |
+| `npm test` | Runs the tests once with vitest |
 
-## Learn More
+**Codespace warning:** the project's Codespace has too little memory for `npm run build`, which runs out of memory there. CI runs the production build, and Vercel builds a preview of each pushed branch. See `CLAUDE.md` for the exact checks to run in the Codespace.
 
-To learn more about Next.js, take a look at the following resources:
+## Tests
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Tests sit beside the code they cover, as `*.test.ts`, and run without network access or real services.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm test
+```
 
-## Deploy on Vercel
+CI runs lint, the type check, the tests and the production build on every push and pull request (`.github/workflows/ci.yml`). It uses placeholder configuration only, with no real secrets and no live services.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deployment
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The site is hosted on Vercel. A branch gets a preview deployment; check the preview first. A push to `main` deploys to production.
+
+Release and rollback steps are in [`docs/RELEASE.md`](docs/RELEASE.md).
+
+## Project guide
+
+Read [`CLAUDE.md`](CLAUDE.md) before making changes. It holds the codebase map, safety rules, conventions and how work is checked. Older numbered rules are listed in [`docs/RULES.md`](docs/RULES.md).
+
+## Licence
+
+MIT License. Copyright (c) 2026 AccountingBody-HQ. See [`LICENSE`](LICENSE).

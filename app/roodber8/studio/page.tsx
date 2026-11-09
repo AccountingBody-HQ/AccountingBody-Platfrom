@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import {
   Sparkles, Share2, Copy, Check, RefreshCw, Loader2, X, Plus,
   FileText, HelpCircle, BookOpen, ExternalLink, AlertTriangle,
@@ -725,6 +726,7 @@ export default function StudioPage() {
   const [articlesLoading, setArticlesLoading] = useState(true)
   const [articlesError, setArticlesError] = useState<string | null>(null)
   const [refsError, setRefsError] = useState<string | null>(null)
+  const [sessionSaveError, setSessionSaveError] = useState<string | null>(null)
 
   const [dailyArticles, setDailyArticles] = useState<DailyArticle[]>([])
   const [pqTasks, setPqTasks] = useState<PqTask[]>([])
@@ -770,13 +772,14 @@ export default function StudioPage() {
     partial: Partial<{ pq_tasks: PqTask[]; article_task: ArticleTaskState; social_task: SocialTaskState }>
   ) => {
     try {
-      await fetch('/api/roodber8/studio/session', {
+      const res = await adminFetch('/api/roodber8/studio/session', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(partial),
       })
+      setSessionSaveError(res.ok ? null : res.error)
     } catch {
-      // best-effort — UI state already updated
+      setSessionSaveError('Check your connection and try again.')
     }
   }, [])
 
@@ -785,7 +788,7 @@ export default function StudioPage() {
     setArticlesLoading(true)
     setArticlesError(null)
     try {
-      const res = await fetch('/api/roodber8/studio/daily-articles')
+      const res = await adminFetch('/api/roodber8/studio/daily-articles')
       if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json() as { articles?: DailyArticle[] }
       const articles = data.articles ?? []
@@ -809,7 +812,7 @@ export default function StudioPage() {
     setRefsLoading(true)
     setRefsError(null)
     try {
-      const res = await fetch('/api/roodber8/studio/references')
+      const res = await adminFetch('/api/roodber8/studio/references')
       if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json() as { references?: ReferenceSource[] }
       setReferences(data.references ?? [])
@@ -826,7 +829,7 @@ export default function StudioPage() {
       setSessionLoading(true)
       let savedPqTasks: PqTask[] = []
       try {
-        const res = await fetch('/api/roodber8/studio/session')
+        const res = await adminFetch('/api/roodber8/studio/session')
         if (res.ok) {
           const data = await res.json() as { session?: StudioSession }
           if (data.session) {
@@ -873,7 +876,7 @@ export default function StudioPage() {
     setManualArticleAdding(true)
     setManualArticleError(null)
     try {
-      const res = await fetch(
+      const res = await adminFetch(
         `/api/roodber8/articles/lookup?id=${encodeURIComponent(id)}`
       )
       if (!res.ok) {
@@ -931,13 +934,15 @@ export default function StudioPage() {
     try {
       let fullContent = article.content_preview
       if (article.content_id) {
-        const res = await fetch(
+        const res = await adminFetch(
           `/api/roodber8/studio/article-content?id=${encodeURIComponent(article.content_id)}`
         )
-        if (res.ok) {
-          const data = await res.json() as { article?: { content?: string } }
-          if (data.article?.content) fullContent = data.article.content
+        if (!res.ok) {
+          setArticlesError(res.error)
+          return
         }
+        const data = await res.json() as { article?: { content?: string } }
+        if (data.article?.content) fullContent = data.article.content
       }
       const prompt = buildPqPrompt(article, fullContent)
       setPqPromptText(prev => ({ ...prev, [key]: prompt }))
@@ -1025,7 +1030,7 @@ export default function StudioPage() {
     setSocialContentType(null)
     setSocialContentTitle(null)
     try {
-      const res = await fetch('/api/roodber8/studio/post-social', {
+      const res = await adminFetch('/api/roodber8/studio/post-social', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'generate', contentId: id, includeLink: fbIncludeLink }),
@@ -1036,7 +1041,7 @@ export default function StudioPage() {
         includeLink?: boolean
         error?: string
       }
-      if (data.error) throw new Error(data.error)
+      if (!res.ok || data.error) throw new Error(data.error)
       setFbCaption(data.caption ?? '')
       setSocialContentType(id.startsWith('AB-ART-') ? 'article' : 'pq')
       setSocialContentTitle(data.title ?? null)
@@ -1052,7 +1057,7 @@ export default function StudioPage() {
     setFbPosting(true)
     setFbError(null)
     try {
-      const res = await fetch('/api/roodber8/studio/post-social', {
+      const res = await adminFetch('/api/roodber8/studio/post-social', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'post', caption: fbCaption, includeLink: fbIncludeLink }),
@@ -1062,7 +1067,7 @@ export default function StudioPage() {
         postId?: string
         error?: string
       }
-      if (data.error) throw new Error(data.error)
+      if (!res.ok || data.error) throw new Error(data.error)
       setFbPosted(true)
       setFbPostId(data.postId ?? null)
       const updated = { ...socialTask, facebook_published: true, published_at: new Date().toISOString() }
@@ -1079,7 +1084,7 @@ export default function StudioPage() {
     if (!refLabel.trim() || !refUrl.trim()) return
     setRefSaving(true)
     try {
-      const res = await fetch('/api/roodber8/studio/references', {
+      const res = await adminFetch('/api/roodber8/studio/references', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ label: refLabel.trim(), url: refUrl.trim(), category: refCategory }),
@@ -1090,6 +1095,8 @@ export default function StudioPage() {
         setRefCategory('news')
         setShowAddRef(false)
         await loadReferences()
+      } else {
+        setRefsError(res.error)
       }
     } finally {
       setRefSaving(false)
@@ -1097,12 +1104,17 @@ export default function StudioPage() {
   }
 
   async function handleDeleteReference(id: string) {
+    const previous = references
     setReferences(prev => prev.filter(r => r.id !== id))
     try {
-      await fetch(
+      const res = await adminFetch(
         `/api/roodber8/studio/references?id=${encodeURIComponent(id)}`,
         { method: 'DELETE' }
       )
+      if (!res.ok) {
+        setReferences(previous)
+        setRefsError(res.error)
+      }
     } catch {
       await loadReferences()
     }
@@ -1257,6 +1269,13 @@ export default function StudioPage() {
             </p>
           )}
         </div>
+
+        {sessionSaveError && (
+          <div className="rounded-xl p-4 flex items-center gap-3 mb-4" style={C.danger}>
+            <AlertTriangle size={14} className="shrink-0" />
+            <p className="text-sm flex-1">Your progress was not saved: {sessionSaveError}</p>
+          </div>
+        )}
 
         {articlesError && (
           <div className="rounded-xl p-4 flex items-center gap-3 mb-4" style={C.danger}>

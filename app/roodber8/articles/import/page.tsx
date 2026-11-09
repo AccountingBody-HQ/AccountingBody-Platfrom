@@ -2,6 +2,7 @@
 'use client'
 
 import { useState } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import Link from 'next/link'
 import {
   ArrowLeft, Upload, CheckCircle2, AlertTriangle,
@@ -146,7 +147,7 @@ export default function ImportArticlePage() {
     if (!rawJson.trim()) { setParseError('Paste your JSON first'); return }
     setParsing(true); setParseError('')
     try {
-      const res = await fetch('/api/roodber8/articles/import', {
+      const res = await adminFetch('/api/roodber8/articles/import', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ rawJson }),
@@ -198,7 +199,7 @@ export default function ImportArticlePage() {
     }
 
     try {
-      const res = await fetch('/api/roodber8/articles/publish', {
+      const res = await adminFetch('/api/roodber8/articles/publish', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({

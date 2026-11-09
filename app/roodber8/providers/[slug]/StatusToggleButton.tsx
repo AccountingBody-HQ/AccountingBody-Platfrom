@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import { ADMIN_COLORS } from '@/lib/admin-theme'
 
 interface Props {
@@ -20,7 +21,7 @@ export default function StatusToggleButton({ slug, initialStatus }: Props) {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/roodber8/providers', {
+      const res = await adminFetch('/api/roodber8/providers', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ slug, status: newStatus }),

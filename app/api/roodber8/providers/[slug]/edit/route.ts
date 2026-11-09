@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getProvider } from '@/lib/providers'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { REGISTERED_ADAPTER_KEYS, isRegisteredAdapterKey } from '@/lib/adapters'
 
 function getSupabase() {
@@ -80,7 +80,7 @@ type RouteParams = { params: { slug: string } }
 // ── PATCH /api/roodber8/providers/[slug]/edit ── update an existing provider
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
   if (!(await isAuthenticated(req))) {
-    return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    return signedOutResponse()
   }
 
   const { slug } = params
@@ -176,7 +176,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 // ── DELETE /api/roodber8/providers/[slug]/edit ── delete a provider (blocked if it has active jobs)
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   if (!(await isAuthenticated(req))) {
-    return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    return signedOutResponse()
   }
 
   const { slug } = params

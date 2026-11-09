@@ -1,5 +1,7 @@
 # AccountingBody: Runbook
 
+How to release a change and how to undo it: see [`docs/RELEASE.md`](RELEASE.md).
+
 ## 1. Backups
 
 AccountingBody runs on Supabase's Free plan, which keeps **no backups for you**. This backup is the safety net.

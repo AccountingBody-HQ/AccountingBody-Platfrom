@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 
 interface EmployerStatusButtonsProps {
   id: string
@@ -23,7 +24,7 @@ export function EmployerStatusButtons({ id, currentStatus }: EmployerStatusButto
     setLoading(true)
     setToast(null)
     try {
-      const res = await fetch('/api/roodber8/actions', {
+      const res = await adminFetch('/api/roodber8/actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getProvider } from '@/lib/providers'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 
 function getSupabase() {
   return createClient(
@@ -16,7 +16,7 @@ export async function GET(
   { params }: { params: { slug: string } }
 ) {
   if (!(await isAuthenticated(req))) {
-    return new Response('Unauthorized', { status: 401 })
+    return signedOutResponse()
   }
 
   const { slug } = params

@@ -6,7 +6,7 @@ import { normalise, type NormalisedJob } from '@/lib/ingestion/normalise'
 import { validate, explainRelevance } from '@/lib/ingestion/validate'
 import { computeDedupHash } from '@/lib/ingestion/deduplicate'
 import { computeQualityMetrics } from '@/lib/ingestion/quality'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 
 export const maxDuration = 60
 
@@ -28,7 +28,7 @@ export async function POST(
   { params }: { params: { slug: string } }
 ) {
   if (!(await isAuthenticated(req))) {
-    return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    return signedOutResponse()
   }
 
   const provider = await getProvider(params.slug)

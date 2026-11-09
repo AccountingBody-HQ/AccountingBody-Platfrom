@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
-
-async function sha256Hex(message: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(message)
-  const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
-}
+import {
+  ADMIN_SESSION_COOKIE,
+  ADMIN_SESSION_LIFETIME_SECONDS,
+  constantTimeEqual,
+  createAdminSession,
+  sha256Hex,
+} from "@/lib/middleware-logic"
 
 function base32ToBytes(base32: string): Uint8Array {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
@@ -48,70 +48,61 @@ async function generateTOTP(secret: string, counter: number): Promise<string> {
 
 async function verifyTOTP(token: string, secret: string): Promise<boolean> {
   const counter = Math.floor(Date.now() / 1000 / 30)
+  let matched = false
   for (let i = -1; i <= 1; i++) {
     const expected = await generateTOTP(secret, counter + i)
-    if (expected === token) return true
+    if (constantTimeEqual(expected, token)) matched = true
   }
-  return false
+  return matched
+}
+
+// Every failure gets this same answer, so a caller learns nothing about which
+// step failed. The server log carries a fixed message for setup problems.
+function accessDenied() {
+  return NextResponse.json({ error: "Access denied." }, { status: 401 })
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { password, totpCode } = await req.json()
-
-    if (!password) {
-      return NextResponse.json({ error: "Password required" }, { status: 400 })
+    const body = await req.json().catch(() => null)
+    const password: unknown = body?.password
+    const totpCode: unknown = body?.totpCode
+    if (typeof password !== "string" || typeof totpCode !== "string") {
+      return accessDenied()
     }
 
     const secret = process.env.ADMIN_SECRET
-    if (!secret) {
-      return NextResponse.json({ error: "Server misconfigured" }, { status: 500 })
-    }
-
-    const submittedHash = await sha256Hex(password)
-    const expectedHash = await sha256Hex(secret)
-
-    let diff = 0
-    if (submittedHash.length === expectedHash.length) {
-      for (let i = 0; i < submittedHash.length; i++) {
-        diff |= submittedHash.charCodeAt(i) ^ expectedHash.charCodeAt(i)
-      }
-    } else {
-      diff = 1
-    }
-
-    if (diff !== 0) {
-      return NextResponse.json({ error: "Invalid password" }, { status: 401 })
-    }
-
     const totpSecret = process.env.ADMIN_TOTP_SECRET
-    if (!totpSecret) {
-      return NextResponse.json({ error: "2FA not configured" }, { status: 500 })
+    if (!secret || !totpSecret) {
+      console.error("Admin sign-in is not set up")
+      return accessDenied()
     }
 
-    if (!totpCode || String(totpCode).length !== 6) {
-      return NextResponse.json({ error: "2FA code required" }, { status: 400 })
+    // Both steps always run, so a wrong password and a wrong code take the same path.
+    const passwordMatches = constantTimeEqual(await sha256Hex(password), await sha256Hex(secret))
+    const codeMatches = await verifyTOTP(totpCode, totpSecret)
+    if (!passwordMatches || !codeMatches) {
+      return accessDenied()
     }
 
-    const isValid = await verifyTOTP(String(totpCode), totpSecret)
-
-    if (!isValid) {
-      return NextResponse.json({ error: "Invalid 2FA code" }, { status: 401 })
+    const token = await createAdminSession(process.env.ADMIN_SESSION_SECRET, secret)
+    if (!token) {
+      console.error("Admin sign-in is not set up")
+      return accessDenied()
     }
 
-    const token = expectedHash
     const response = NextResponse.json({ success: true }, { status: 200 })
-    response.cookies.set("admin_token", token, {
+    response.cookies.set(ADMIN_SESSION_COOKIE, token, {
       httpOnly: true,
       secure: true,
       sameSite: "strict",
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: ADMIN_SESSION_LIFETIME_SECONDS,
       path: "/",
     })
     return response
 
-  } catch (err) {
-    console.error("Auth error:", err)
-    return NextResponse.json({ error: "Server error" }, { status: 500 })
+  } catch {
+    console.error("Admin sign-in failed unexpectedly")
+    return accessDenied()
   }
 }

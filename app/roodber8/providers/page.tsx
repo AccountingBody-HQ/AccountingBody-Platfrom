@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { unstable_noStore as noStore } from 'next/cache'
+import { requireAdmin } from '@/lib/admin-auth'
 import { getAllProviders, getLatestRunPerProvider, type JobProvider, type ProviderRun } from '@/lib/providers'
 import { ADMIN_COLORS, HEALTH_COLORS, DATA_QUALITY_COLORS, RUN_STATUS_COLORS } from '@/lib/admin-theme'
 
@@ -95,6 +96,7 @@ async function getData() {
 // ── Page ─────────────────────────────────────────────────────────────────
 
 export default async function ProvidersPage() {
+  await requireAdmin()
   const { providers, latestRuns } = await getData()
 
   const totalProviders = providers.length

@@ -2,6 +2,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -198,7 +199,7 @@ export default function ArticleEditorPage() {
   const fetchArticle = useCallback(async () => {
     setLoading(true); setError('')
     try {
-      const res = await fetch(`/api/roodber8/articles/${articleId}`)
+      const res = await adminFetch(`/api/roodber8/articles/${articleId}`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to load')
       setArticle(data.article)
@@ -227,7 +228,7 @@ export default function ArticleEditorPage() {
         if (key in draft) fields[key] = (draft as any)[key]
       }
 
-      const res = await fetch(`/api/roodber8/articles/${articleId}`, {
+      const res = await adminFetch(`/api/roodber8/articles/${articleId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fields }),
@@ -246,7 +247,7 @@ export default function ArticleEditorPage() {
   async function handleDelete() {
     setDeleting(true); setDeleteError('')
     try {
-      const res = await fetch(`/api/roodber8/articles/${articleId}`, { method: 'DELETE' })
+      const res = await adminFetch(`/api/roodber8/articles/${articleId}`, { method: 'DELETE' })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Delete failed')
       router.push('/roodber8/articles')

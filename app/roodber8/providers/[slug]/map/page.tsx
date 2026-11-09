@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 import { useParams, useRouter } from 'next/navigation'
 import { ADMIN_COLORS } from '@/lib/admin-theme'
 
@@ -323,7 +324,7 @@ export default function ProviderMapPage() {
   async function fetchPreview(seq: number) {
     setPreviewLoading(true)
     try {
-      const res = await fetch(`/api/roodber8/providers/${slug}/preview`, {
+      const res = await adminFetch(`/api/roodber8/providers/${slug}/preview`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sampleSize: 1 }),
@@ -354,7 +355,7 @@ export default function ProviderMapPage() {
     setSaveState('saving')
     setSaveError(null)
     try {
-      const res = await fetch(`/api/roodber8/providers/${slug}/edit`, {
+      const res = await adminFetch(`/api/roodber8/providers/${slug}/edit`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -405,7 +406,7 @@ export default function ProviderMapPage() {
     let cancelled = false
     async function load() {
       try {
-        const res = await fetch(`/api/roodber8/providers/${slug}`)
+        const res = await adminFetch(`/api/roodber8/providers/${slug}`)
         const data = (await res.json()) as ProviderGetResponse
         if (cancelled) return
         if (!res.ok || !data.provider) {
@@ -467,7 +468,7 @@ export default function ProviderMapPage() {
     setActivating(true)
     setActivateError(null)
     try {
-      const res = await fetch(`/api/roodber8/providers/${slug}/edit`, {
+      const res = await adminFetch(`/api/roodber8/providers/${slug}/edit`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

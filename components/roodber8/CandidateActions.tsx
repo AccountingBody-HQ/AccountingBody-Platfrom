@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { adminFetch } from '@/lib/admin-fetch'
 
 interface CandidateActionButtonsProps {
   id: string
@@ -20,7 +21,7 @@ export function CandidateActionButtons({ id, currentStatus, email, name, platfor
     setLoading(true)
     setToast(null)
     try {
-      const res = await fetch('/api/roodber8/actions', {
+      const res = await adminFetch('/api/roodber8/actions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -32,7 +33,7 @@ export function CandidateActionButtons({ id, currentStatus, email, name, platfor
       })
       if (!res.ok) throw new Error('Status update failed')
 
-      const emailRes = await fetch('/api/roodber8/notify-candidate', {
+      const emailRes = await adminFetch('/api/roodber8/notify-candidate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status: newStatus, email, name, platform }),

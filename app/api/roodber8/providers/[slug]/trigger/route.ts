@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { isAuthenticated } from '@/lib/admin-auth'
+import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 
 // ── POST /api/roodber8/providers/[slug]/trigger ── manually run ingestion now
 export async function POST(
@@ -7,7 +7,7 @@ export async function POST(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   if (!(await isAuthenticated(req))) {
-    return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    return signedOutResponse()
   }
 
   const { slug } = await params
