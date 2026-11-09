@@ -2,6 +2,8 @@
 
 How a change goes live on accountingbody.com and ethiotax.com, and how to undo it. Read [`CLAUDE.md`](../CLAUDE.md) first: it lists the checks every change must pass and the things that must not change without the owner's approval.
 
+Backups and restores are covered in [`docs/RUNBOOK.md`](RUNBOOK.md).
+
 A release is one pull request merged into `main`. Vercel deploys `main` to production automatically. ethiotax.com is served through a Cloudflare Worker that fetches accountingbody.com, so every release reaches both sites.
 
 ## Which code is live
