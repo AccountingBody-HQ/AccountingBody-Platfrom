@@ -1,4 +1,4 @@
-import { Resend } from 'resend'
+import { Resend, type CreateEmailResponse } from 'resend'
 import type { Job } from '@/lib/jobs'
 
 // Shared transactional email templates for the direct-employer jobs flow.
@@ -175,7 +175,7 @@ export async function sendJobRejectionEmail(job: Job): Promise<void> {
 
 // ── Employer: listing expiring in 7 days ───────────────────────────────────────
 
-export async function sendJobExpiryWarningEmail(job: Job, manageToken: string): Promise<void> {
+export async function sendJobExpiryWarningEmail(job: Job, manageToken: string): Promise<CreateEmailResponse> {
   const brand = brandFor(job.platform)
   const firstName = job.employer_name.split(' ')[0]
   const postUrl = `${siteUrl(brand)}/jobs/post-a-job`
@@ -191,7 +191,7 @@ export async function sendJobExpiryWarningEmail(job: Job, manageToken: string): 
      <a href="${postUrl}" style="display:inline-block;background:${brand.color};color:#fff;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;">Repost this listing</a>`
   )
 
-  await getResend().emails.send({
+  return getResend().emails.send({
     from: `${brand.name} <noreply@accountingbody.com>`,
     to: job.employer_email,
     subject: 'Your job listing expires in 7 days — ' + brand.name,
@@ -201,7 +201,7 @@ export async function sendJobExpiryWarningEmail(job: Job, manageToken: string): 
 
 // ── Employer: listing has expired ──────────────────────────────────────────────
 
-export async function sendJobExpiredEmail(job: Job): Promise<void> {
+export async function sendJobExpiredEmail(job: Job): Promise<CreateEmailResponse> {
   const brand = brandFor(job.platform)
   const firstName = job.employer_name.split(' ')[0]
   const postUrl = `${siteUrl(brand)}/jobs/post-a-job`
@@ -215,7 +215,7 @@ export async function sendJobExpiredEmail(job: Job): Promise<void> {
      <a href="${postUrl}" style="display:inline-block;background:${brand.color};color:#fff;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;">Post a new listing</a>`
   )
 
-  await getResend().emails.send({
+  return getResend().emails.send({
     from: `${brand.name} <noreply@accountingbody.com>`,
     to: job.employer_email,
     subject: 'Your job listing has expired — ' + brand.name,

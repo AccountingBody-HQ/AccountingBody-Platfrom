@@ -5,6 +5,7 @@ import { bucketBounds } from '@/lib/sitemap-chunks'
 import { SINGLE_WORD_COUNTRY_NAMES } from '@/lib/ingestion/normalise'
 import { guardCachedRead } from '@/lib/cache-guard'
 import { reportServerError } from '@/lib/report-error'
+import { problemCode } from '@/lib/job-expiry'
 
 // Reads used by public pages and APIs use the public read limit (the
 // default). Functions used only by other kinds of work name their context
@@ -1093,26 +1094,72 @@ export const getCachedActiveJobCountries = cache(async (platform: string): Promi
   }
 })
 
-export async function getExpiringJobs(daysFromNow: number): Promise<Job[]> {
-  const supabase = getSupabase('cron')
-  const threshold = new Date(Date.now() + daysFromNow * 24 * 60 * 60 * 1000).toISOString()
+// Columns the daily expiry run uses: the paging key, the email rules and the
+// fields its two emails show.
+export const EXPIRY_RUN_COLUMNS: string =
+  'id, expires_at, source, employer_email, employer_name, title, company_name, platform, manage_token, impression_count'
 
-  const { data, error } = await supabase
+// The position after the last row of a page: rows come oldest first, and
+// rows with the same expiry time in id order.
+export type ExpiryCursor = { expires_at: string; id: string }
+
+// One page for the daily expiry run.
+export type ExpiringJobsPage = {
+  // The run's clock reading the windows are measured from.
+  now: number
+  limit: number
+  after?: ExpiryCursor | null
+  // Only jobs expiring later than this many days from `now`.
+  fromDays?: number
+  // Only jobs with at least one impression.
+  withImpressions?: boolean
+  signal?: AbortSignal
+}
+
+const CURSOR_TIME = /^[0-9][0-9T:.+ Z-]{9,40}$/
+const CURSOR_ID = /^[0-9A-Za-z-]{1,64}$/
+
+function afterCursor(after: ExpiryCursor): string {
+  if (!CURSOR_TIME.test(after.expires_at) || !CURSOR_ID.test(after.id)) {
+    throw new Error('expiry page position unreadable')
+  }
+  const time = `"${after.expires_at}"`
+  return `expires_at.gt.${time},and(expires_at.eq.${time},id.gt."${after.id}")`
+}
+
+export async function getExpiringJobs(daysFromNow: number, page?: ExpiringJobsPage): Promise<Job[]> {
+  const supabase = getSupabase('cron')
+  const now = page ? page.now : Date.now()
+  const threshold = new Date(now + daysFromNow * 24 * 60 * 60 * 1000).toISOString()
+
+  let query = supabase
     .from('jobs')
-    .select(JOB_COLUMNS_ADMIN)
+    .select(page ? EXPIRY_RUN_COLUMNS : JOB_COLUMNS_ADMIN)
     .eq('status', 'active')
     .not('expires_at', 'is', null)
     .lte('expires_at', threshold)
     .order('expires_at', { ascending: true })
 
+  if (page) {
+    if (page.fromDays !== undefined) {
+      query = query.gt('expires_at', new Date(now + page.fromDays * 24 * 60 * 60 * 1000).toISOString())
+    }
+    if (page.withImpressions) query = query.gt('impression_count', 0)
+    if (page.after) query = query.or(afterCursor(page.after))
+    query = query.order('id', { ascending: true }).limit(page.limit)
+    if (page.signal) query = query.abortSignal(page.signal)
+  }
+
+  const { data, error } = await query
+
   // A read error is thrown after its log line, so the run can answer a
   // failure; an empty result is [].
   if (error) {
-    console.error('getExpiringJobs error:', error)
+    console.error('getExpiringJobs error:', problemCode(error))
     throw error
   }
   if (!data) return []
-  return data as Job[]
+  return data as unknown as Job[]
 }
 
 // ── Writes ───────────────────────────────────────────────────────────────────
@@ -1419,16 +1466,35 @@ export async function rejectJob(id: string, reason: string): Promise<Job> {
   return data as Job
 }
 
+// The fields written when a job reaches its expiry.
+export function expiryUpdate(at: Date): { status: 'expired'; closed_at: string } {
+  return { status: 'expired', closed_at: at.toISOString() }
+}
+
 export async function expireJob(id: string): Promise<void> {
-  // Used by the daily cron and by admin. One single-row update: the admin
-  // limit is far above its work and below every caller's route limit.
+  // Used by admin. One single-row update: the admin limit is far above its
+  // work and below every caller's route limit.
   const supabase = getSupabase('admin')
   const { error } = await supabase
     .from('jobs')
-    .update({ status: 'expired', closed_at: new Date().toISOString() })
+    .update(expiryUpdate(new Date()))
     .eq('id', id)
 
   if (error) throw error
+}
+
+// Used by the daily expiry run: closes the listed jobs that are still active
+// in one update and returns the ids it closed. Jobs closed already are left
+// as they are.
+export async function expireJobsByIds(ids: string[], at: Date, signal?: AbortSignal): Promise<string[]> {
+  if (ids.length === 0) return []
+  const supabase = getSupabase('cron')
+  let query = supabase.from('jobs').update(expiryUpdate(at)).in('id', ids).eq('status', 'active').select('id')
+  if (signal) query = query.abortSignal(signal)
+  const { data, error } = await query
+
+  if (error) throw error
+  return ((data ?? []) as { id: string }[]).map((row) => row.id)
 }
 
 const TERMINAL_STATUSES: JobStatus[] = ['closed', 'expired', 'rejected']

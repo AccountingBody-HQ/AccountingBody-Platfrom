@@ -298,12 +298,12 @@ describe('listing manage screen', () => {
 
 describe('daily expiry run', () => {
   const run = () => expireJobs(cron('/api/cron/expire-jobs'))
-  const pastDue = { id: JOB_ID, title: 'Management Accountant', company_name: 'Example Ltd', status: 'active', employer_email: 'hiring@example.com', employer_name: 'Ada Lovelace', manage_token: TOKEN, impression_count: 0, expires_at: new Date(NOW - DAY).toISOString(), platform: ['ab'] }
+  const pastDue = { id: JOB_ID, title: 'Management Accountant', company_name: 'Example Ltd', status: 'active', source: 'employer', employer_email: 'hiring@example.com', employer_name: 'Ada Lovelace', manage_token: TOKEN, impression_count: 0, expires_at: new Date(NOW - DAY).toISOString(), platform: ['ab'] }
   const dueSoon = { ...pastDue, id: 'b1a4c7a2-58f4-4c3e-9a51-2c1f8f6f3d10', impression_count: 3, expires_at: new Date(NOW + 6.5 * DAY).toISOString() }
   const RUN_REQUESTS = ['GET jobs', 'GET jobs', 'PATCH job_providers']
 
   it('keeps an empty run answer when nothing is due', async () => {
-    expect(await answerOf(await run())).toStrictEqual({ status: 200, headers: JSON_HEADERS, body: { expired: 0, warned: 0 } })
+    expect(await answerOf(await run())).toStrictEqual({ status: 200, headers: JSON_HEADERS, body: { expired: 0, warned: 0, more: false } })
     expect(net.requests).toStrictEqual(RUN_REQUESTS)
     expect(state.reports).toStrictEqual([])
   })
@@ -342,7 +342,7 @@ describe('daily expiry run', () => {
   it('keeps the answer for a run that works', async () => {
     net.rows.jobs = [{ ...pastDue }]
     net.expiryReads = [[pastDue], [dueSoon]]
-    expect(await answerOf(await run())).toStrictEqual({ status: 200, headers: JSON_HEADERS, body: { expired: 1, warned: 1 } })
+    expect(await answerOf(await run())).toStrictEqual({ status: 200, headers: JSON_HEADERS, body: { expired: 1, warned: 1, more: false } })
     expect(state.reports).toStrictEqual([])
   })
 })

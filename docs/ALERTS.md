@@ -86,3 +86,22 @@ deleted: import run records and job rows are kept.
 - Deleted rows cannot be brought back except by restoring from a backup.
 - Deleting does not shrink the reported database size straight away: the
   freed space is reused inside the table for new rows.
+
+## Job expiry run
+
+The daily scheduled run (06:00 UTC, `/api/cron/expire-jobs`) closes active
+listings that are past their end date, oldest first. Listings are closed, never
+deleted.
+
+- Each run closes at most 1,000 listings. The answer in the Vercel cron logs
+  reads `{"expired":N,"warned":N,"more":true|false}`; `"more":true` means
+  listings past their end date remain for the next run.
+- The run starts no new work after 35 seconds, so it ends inside its
+  60-second limit. It still resets the providers' daily job counters.
+- Emails go only to employers who posted their listing on the site, at most
+  40 per run. Imported listings get no email.
+- The setting `JOB_EXPIRY_MAX_PER_RUN` (a whole number from 1 to 10,000)
+  changes the 1,000. Raise it only with the owner's approval.
+- `{"error":"Cron run failed",...}` with status 500 means a read or an update
+  could not be done; the counts show how far it got, and Sentry has one report
+  ("job expiry run failed").

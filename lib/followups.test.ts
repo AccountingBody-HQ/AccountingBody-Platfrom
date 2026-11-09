@@ -278,7 +278,7 @@ const SCHEDULED: {
     run: (a) => expireJobs(request('/api/cron/expire-jobs', { headers: authHeaders(a) })),
     log: 'cron/expire-jobs: not configured',
     refused: { status: 401, headers: JSON_HEADERS, body: { error: 'Unauthorised' } },
-    healthy: { status: 200, body: { expired: 0, warned: 0 } },
+    healthy: { status: 200, body: { expired: 0, warned: 0, more: false } },
   },
   {
     name: 'cron/prune-pending-subscribers',

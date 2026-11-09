@@ -271,8 +271,9 @@ type Scenario = {
   healthy: Expected
   // What the route or page answers when the database does not answer (all
   // requests, or only the ones `stall` picks), and how many database
-  // requests it waits for one after another before answering.
-  stalled: Expected & { waits: number; stall?: Stall }
+  // requests it waits for one after another before answering (and the total
+  // wait, when the route sets its own shorter limits).
+  stalled: Expected & { waits: number; elapsed?: number; stall?: Stall }
 }
 
 const TIMEOUT = (ms: number) => `TimeoutError: db: request time limit reached (${ms} ms)`
@@ -540,8 +541,10 @@ const scenarios: Scenario[] = [
     name: 'daily job expiry',
     context: 'cron',
     call: async () => (await load('app/api/cron/expire-jobs/route.ts')).GET(cron('/api/cron/expire-jobs'), { params: {} }),
-    healthy: { status: 200, body: { expired: 0, warned: 0 }, dbRequests: 3 },
-    stalled: { waits: 3, status: 500, body: { error: 'Cron run failed', expired: 0, warned: 0 }, dbRequests: 3 },
+    healthy: { status: 200, body: { expired: 0, warned: 0, more: false }, dbRequests: 3 },
+    // The first read ends at the 25 s limit, the second at the run's 45 s
+    // work limit and the counter reset at its 55 s limit.
+    stalled: { waits: 3, elapsed: 55_000, status: 500, body: { error: 'Cron run failed', expired: 0, warned: 0 }, dbRequests: 3 },
   },
   {
     name: 'provider import',
@@ -652,11 +655,11 @@ describe('admin, scheduled and import routes', () => {
 
   it.each(scenarios)('$name ends at its time limit when the database does not respond', async (scenario) => {
     network.rows = scenario.rows ?? {}
-    const { stall = 'all', waits, ...expected } = scenario.stalled
+    const { stall = 'all', waits, elapsed, ...expected } = scenario.stalled
     network.stall = stall
     const result = await answer(scenario.call)
     expectAnswer(result, expected)
-    expect(result.elapsed).toBe(DB_LIMITS_MS[scenario.context] * waits)
+    expect(result.elapsed).toBe(elapsed ?? DB_LIMITS_MS[scenario.context] * waits)
   })
 
   it('an admin API route answers a signed-out request before any database request', async () => {

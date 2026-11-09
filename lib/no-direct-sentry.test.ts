@@ -86,6 +86,7 @@ function reportLabels(file: ts.SourceFile): string[] {
 
 const ROUTE_LABELS = [
   'job expiry run failed',
+  'email: job expiry email',
   'pending subscriber cleanup failed',
   'saved jobs cleanup failed',
   'import log retention run failed',
