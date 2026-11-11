@@ -23,6 +23,27 @@ const NO_CACHE_HEADERS = {
 
 // Not exported: Next only allows its own route fields as exports here.
 const TOTAL_NOT_AVAILABLE_LOG = 'api/jobs/direct: total not available, rows returned without it'
+const TOTAL_STILL_COUNTING_LOG = 'api/jobs/direct: total still counting, rows returned without it'
+
+// How long the total may take after the rows are ready.
+const TOTAL_GRACE_MS = 1_000
+
+// The total if it arrives within the grace time, otherwise null. The count
+// itself is not stopped: it finishes on its own and fills the cache for the
+// next request when it can. `lookup` never rejects (see its callers).
+async function totalWithinGrace(lookup: Promise<number | null>): Promise<number | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const late = new Promise<'late'>(resolve => { timer = setTimeout(() => resolve('late'), TOTAL_GRACE_MS) })
+  try {
+    const result = await Promise.race([lookup, late])
+    if (result !== 'late') return result
+    // Fixed text only: no request values.
+    console.error(TOTAL_STILL_COUNTING_LOG)
+    return null
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
 const SENIORITY_VALUES: SeniorityLevel[] = ['junior', 'mid', 'senior', 'executive', 'director']
 const EMPLOYMENT_TYPE_VALUES: EmploymentType[] = ['permanent', 'contract', 'temporary', 'part_time', 'internship']
@@ -129,18 +150,21 @@ export async function GET(req: NextRequest) {
     // So a count that does not arrive becomes `total: null` ("not known")
     // while the rows are still returned, and JobListingsClient pages with
     // Previous/Next until a later request has the total again. The rows
-    // lookup still rejects Promise.all straight away, so a rows error
-    // answers with the 503 below without waiting for the count.
-    const [jobs, total] = await Promise.all([
-      getCachedListingJobs({ ...baseParams, limit, offset }),
-      unfiltered
-        ? getBrowsableJobsTotal(platform)
-        : getCachedListingJobsCount(baseParams).catch((): null => {
-          // Fixed text only: no request values, no upstream message.
-          console.error(TOTAL_NOT_AVAILABLE_LOG)
-          return null
-        }),
-    ])
+    // lookup is awaited first, so a rows error answers with the 503 below
+    // without waiting for the count. Once the rows are ready, the total gets
+    // at most TOTAL_GRACE_MS more; a count still running then (a slow
+    // filtered or word count) becomes `total: null` instead of holding the
+    // rows back. Both lookups start at the same moment.
+    const rowsLookup = getCachedListingJobs({ ...baseParams, limit, offset })
+    const totalLookup: Promise<number | null> = unfiltered
+      ? getBrowsableJobsTotal(platform)
+      : getCachedListingJobsCount(baseParams).catch((): null => {
+        // Fixed text only: no request values, no upstream message.
+        console.error(TOTAL_NOT_AVAILABLE_LOG)
+        return null
+      })
+    const jobs = await rowsLookup
+    const total = await totalWithinGrace(totalLookup)
     return NextResponse.json({ jobs, total }, { headers: NO_CACHE_HEADERS })
   } catch (err: unknown) {
     // 503, never a 200 with an empty list: JobListingsClient shows its error

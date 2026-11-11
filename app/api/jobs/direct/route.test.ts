@@ -290,3 +290,58 @@ describe('/api/jobs/direct GET — the plain list never waits for the exact coun
     expect(jobs.getCachedListingJobsCount).not.toHaveBeenCalled()
   })
 })
+
+// Speed job part 2: a slow filtered or word count never holds back the rows.
+describe('/api/jobs/direct GET — the total never holds back the rows', () => {
+  const ROWS = [{ id: 'c1', slug: 'cfo', title: 'CFO' }]
+  const STILL_COUNTING = 'api/jobs/direct: total still counting, rows returned without it'
+
+  afterEach(() => { vi.useRealTimers() })
+
+  it('returns the rows with total null when a word count is still running 1 second after the rows', async () => {
+    vi.useFakeTimers()
+    const { GET } = await import('./route')
+    const jobs = await import('@/lib/jobs')
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.mocked(jobs.getCachedListingJobs).mockResolvedValue(ROWS as never)
+    vi.mocked(jobs.getCachedListingJobsCount).mockImplementation(() => new Promise<number>(() => {}))
+
+    const pending = GET(new NextRequest('http://localhost/api/jobs/direct?platform=ab&search=CFO'))
+    await vi.advanceTimersByTimeAsync(1_000)
+    const res = await pending
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ jobs: ROWS, total: null })
+    expect(log.mock.calls).toEqual([[STILL_COUNTING]])
+  })
+
+  it('keeps a word count that arrives within the grace time', async () => {
+    vi.useFakeTimers()
+    const { GET } = await import('./route')
+    const jobs = await import('@/lib/jobs')
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.mocked(jobs.getCachedListingJobs).mockResolvedValue(ROWS as never)
+    vi.mocked(jobs.getCachedListingJobsCount).mockImplementation(
+      () => new Promise<number>(resolve => setTimeout(() => resolve(57), 900))
+    )
+
+    const pending = GET(new NextRequest('http://localhost/api/jobs/direct?platform=ab&search=CFO'))
+    await vi.advanceTimersByTimeAsync(900)
+    const res = await pending
+
+    expect(await res.json()).toEqual({ jobs: ROWS, total: 57 })
+    expect(log).not.toHaveBeenCalled()
+  })
+
+  it('passes the search words to both lookups unchanged', async () => {
+    const { GET } = await import('./route')
+    const jobs = await import('@/lib/jobs')
+    vi.mocked(jobs.getCachedListingJobs).mockResolvedValue([])
+    vi.mocked(jobs.getCachedListingJobsCount).mockResolvedValue(0)
+
+    await GET(new NextRequest('http://localhost/api/jobs/direct?platform=et&search=tax%20manager&offset=24'))
+
+    expect(vi.mocked(jobs.getCachedListingJobs).mock.calls[0][0]).toMatchObject({ platform: 'et', search: 'tax manager', limit: 24, offset: 24 })
+    expect(vi.mocked(jobs.getCachedListingJobsCount).mock.calls[0][0]).toMatchObject({ platform: 'et', search: 'tax manager' })
+  })
+})

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
 import {
   getBrowsableJobsTotal, getBrowsableJobsCount, getCachedListingJobs,
-  getCachedListingJobsCount, jobsTotalSource, resetJobsTotalSourceWarning,
+  getCachedListingJobsCount, getActiveJobCountries, jobsTotalSource, resetJobsTotalSourceWarning,
   normaliseListingPage, isUnfilteredListing, siteCountKey,
   DEFAULT_LIST_ORDER, PRECOUNT_MAX_AGE_MS, JOBS_TOTAL_LOG, RELEVANCE_FALLBACK_LOG,
 } from './jobs'
@@ -415,5 +415,59 @@ describe('isUnfilteredListing', () => {
     { salaryMin: 1 }, { salaryMax: 1 }, { postedWithin: 1 }, { qualifications: ['acca'] }, { sources: ['employer' as const] },
   ])('is false with %j', (filter) => {
     expect(isUnfilteredListing({ platform: 'ab', ...filter })).toBe(false)
+  })
+})
+
+// Speed job part 2: the database function is rewritten for speed with the
+// same name, inputs and output, so the app's call must stay exactly this.
+describe('word search keeps calling the ranked search with the same inputs', () => {
+  it('sends every input, by name, exactly as before', async () => {
+    script.rpc = { data: [{ id: 'c1', slug: 'cfo', title: 'CFO', description: 'long' }], error: null }
+
+    const rows = await getCachedListingJobs({ platform: 'ab', search: '  CFO ', limit: 24, offset: 48 })
+
+    expect(rpcCalls).toEqual([['search_jobs_ranked', {
+      p_platform: 'ab',
+      p_search: 'cfo',
+      p_location: null,
+      p_location_country: null,
+      p_employment_types: null,
+      p_seniority_levels: null,
+      p_remote_only: null,
+      p_salary_min: null,
+      p_salary_max: null,
+      p_posted_within_days: null,
+      p_qualifications: null,
+      p_sources: null,
+      p_sort_by: 'relevance',
+      p_limit: 24,
+      p_offset: 48,
+    }]])
+    // Rows come back in the function's own order, without description.
+    expect(rows).toEqual([{ id: 'c1', slug: 'cfo', title: 'CFO' }])
+  })
+
+  it('keeps the function\'s row order as given', async () => {
+    const order = ['c3', 'c1', 'c2']
+    script.rpc = { data: order.map(id => ({ id })), error: null }
+    const rows = await getCachedListingJobs({ platform: 'et', search: 'tax manager', limit: 24, offset: 0 })
+    expect(rows.map(r => r.id)).toEqual(order)
+  })
+})
+
+describe('countries list calls get_active_job_countries as the SQL defines it', () => {
+  it('passes p_platform and reads country and job_count', async () => {
+    script.rpc = { data: [{ country: 'United Kingdom', job_count: 12 }, { country: 'Ethiopia', job_count: 3 }], error: null }
+
+    expect(await getActiveJobCountries('et')).toEqual([
+      { country: 'United Kingdom', count: 12 },
+      { country: 'Ethiopia', count: 3 },
+    ])
+    expect(rpcCalls).toEqual([['get_active_job_countries', { p_platform: 'et' }]])
+  })
+
+  it('returns [] (the page then uses its built-in list) while the function is missing', async () => {
+    script.rpc = { data: null, error: { message: 'Could not find the function public.get_active_job_countries(p_platform) in the schema cache' }, status: 404 }
+    expect(await getActiveJobCountries('ab')).toEqual([])
   })
 })
