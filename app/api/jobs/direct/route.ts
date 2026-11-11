@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCachedListingJobs, getCachedListingJobsCount, type SeniorityLevel, type EmploymentType } from '@/lib/jobs'
+import {
+  getBrowsableJobsTotal, getCachedListingJobs, getCachedListingJobsCount, isUnfilteredListing,
+  type SeniorityLevel, type EmploymentType,
+} from '@/lib/jobs'
 import { parseLimit, parseOffset } from './pagination'
 
 export const dynamic = 'force-dynamic'
@@ -102,9 +105,15 @@ export async function GET(req: NextRequest) {
     sortBy,
   }
 
+  // The plain list (nothing but the platform) takes its total from
+  // getBrowsableJobsTotal: a pre-counted number, refreshed every 10 minutes,
+  // that never waits for an exact count (owner decision D108). It never
+  // throws; null means "not known". Filtered lists keep their exact count.
+  const unfiltered = isUnfilteredListing(baseParams)
+
   try {
     if (countOnly) {
-      const total = await getCachedListingJobsCount(baseParams)
+      const total = unfiltered ? await getBrowsableJobsTotal(platform) : await getCachedListingJobsCount(baseParams)
       return NextResponse.json({ jobs: [], total }, { headers: NO_CACHE_HEADERS })
     }
 
@@ -124,11 +133,13 @@ export async function GET(req: NextRequest) {
     // answers with the 503 below without waiting for the count.
     const [jobs, total] = await Promise.all([
       getCachedListingJobs({ ...baseParams, limit, offset }),
-      getCachedListingJobsCount(baseParams).catch((): null => {
-        // Fixed text only: no request values, no upstream message.
-        console.error(TOTAL_NOT_AVAILABLE_LOG)
-        return null
-      }),
+      unfiltered
+        ? getBrowsableJobsTotal(platform)
+        : getCachedListingJobsCount(baseParams).catch((): null => {
+          // Fixed text only: no request values, no upstream message.
+          console.error(TOTAL_NOT_AVAILABLE_LOG)
+          return null
+        }),
     ])
     return NextResponse.json({ jobs, total }, { headers: NO_CACHE_HEADERS })
   } catch (err: unknown) {

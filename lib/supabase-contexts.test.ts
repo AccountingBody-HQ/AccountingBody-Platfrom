@@ -148,14 +148,16 @@ const publicHeavyReads: Case[] = [
   ['getActiveDirectJobs count', () => jobs.getActiveDirectJobs({ platform: 'accountingbody', countOnly: true })],
   ['getCachedListingJobs', () => jobs.getCachedListingJobs({ platform: 'accountingbody' })],
   ['getCachedListingJobsCount', () => jobs.getCachedListingJobsCount({ platform: 'accountingbody' })],
-  ['getBrowsableJobsCount', () => jobs.getBrowsableJobsCount('accountingbody')],
   ['getActiveJobCountries', () => jobs.getActiveJobCountries('accountingbody')],
   ['getCachedActiveJobCountries', () => jobs.getCachedActiveJobCountries('accountingbody')],
-  ['jobs listings API', () => jobsDirect(request('https://accountingbody.com/api/jobs/direct?platform=ab'))],
 ]
 
 // Pages and APIs that show both counts or job results and ordinary content.
 const publicMixedReads: Case[] = [
+  // The pre-counted total is a one-row read (public read limit); its estimate
+  // fallback and the list rows use the longer limit.
+  ['getBrowsableJobsCount', () => jobs.getBrowsableJobsCount('accountingbody')],
+  ['jobs listings API', () => jobsDirect(request('https://accountingbody.com/api/jobs/direct?platform=ab'))],
   ['home page', () => HomePage({ searchParams: Promise.resolve({}) })],
   ['search API', () => search(request('https://accountingbody.com/api/search?q=budget'))],
 ]
