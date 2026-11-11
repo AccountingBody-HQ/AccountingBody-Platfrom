@@ -258,9 +258,8 @@ describe('getBrowsableJobsCount (footer, home page, jobs hub) keeps its number c
 // ── The default list order ──────────────────────────────────────────────────
 
 describe('default jobs list (no search words, no chosen sort)', () => {
-  it('pins the order: boost (source score), posted date (newest first), then created, then id', () => {
+  it('pins the order: posted date (newest first, undated last), then created, then id, with no boost', () => {
     expect(DEFAULT_LIST_ORDER).toEqual([
-      { column: 'source_score', ascending: false },
       { column: 'published_at', ascending: false, nullsFirst: false },
       { column: 'created_at', ascending: false },
       { column: 'id', ascending: false },
@@ -283,12 +282,16 @@ describe('default jobs list (no search words, no chosen sort)', () => {
       ['or', `expires_at.is.null,expires_at.gt.${NOW.toISOString()}`],
     ])
     expect(calls.filter(c => c[0] === 'order')).toEqual([
-      ['order', 'source_score', { ascending: false }],
       ['order', 'published_at', { ascending: false, nullsFirst: false }],
       ['order', 'created_at', { ascending: false }],
       ['order', 'id', { ascending: false }],
     ])
     expect(calls[calls.length - 1]).toEqual(['range', 24, 47])
+  })
+
+  it('never orders by source_score, quality_score or is_featured', () => {
+    const columns: string[] = DEFAULT_LIST_ORDER.map(o => o.column)
+    for (const boost of ['source_score', 'quality_score', 'is_featured']) expect(columns).not.toContain(boost)
   })
 
   it('pages 1, 2 and 3 ask for consecutive, non-overlapping row ranges', async () => {

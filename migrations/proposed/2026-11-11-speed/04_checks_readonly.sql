@@ -21,8 +21,8 @@ where c.oid = 'public.jobs'::regclass;
 select to_regclass('public.site_counts') as site_counts_table,
        to_regprocedure('public.refresh_site_counts()') as refresh_function;
 
--- 4. The boost tiers in the new default order: how many active jobs each
---    source has, and its source_score. Higher scores are listed first.
+-- 4. Information only (not used by the default order): how many active jobs
+--    each source has, with its source_score.
 select source, source_score, count(*) as active_jobs
 from public.jobs
 where status = 'active'
@@ -34,10 +34,10 @@ select i.indexrelid::regclass as index_name,
        i.indisvalid as is_valid,
        pg_size_pretty(pg_relation_size(i.indexrelid)) as size
 from pg_index i
-where i.indexrelid = to_regclass('public.idx_jobs_browsable_default_order');
+where i.indexrelid = to_regclass('public.idx_jobs_browsable_newest');
 
 -- 6. Plan of the browsable count (what refresh_site_counts runs).
---    After 02, expect "Index Only Scan using idx_jobs_browsable_default_order".
+--    After 02, expect "Index Only Scan using idx_jobs_browsable_newest".
 explain
 select count(*)
 from public.jobs j
@@ -46,7 +46,7 @@ where j.status = 'active'
   and (j.expires_at is null or j.expires_at > now());
 
 -- 7. Plan of the default list, page 2 (what the site runs with no search words).
---    After 02, expect "Index Scan using idx_jobs_browsable_default_order"
+--    After 02, expect "Index Scan using idx_jobs_browsable_newest"
 --    under a Limit, and no Sort step.
 explain
 select id, slug, title
@@ -54,7 +54,7 @@ from public.jobs
 where status = 'active'
   and platform @> array['ab']
   and (expires_at is null or expires_at > now())
-order by source_score desc, published_at desc nulls last, created_at desc, id desc
+order by published_at desc nulls last, created_at desc, id desc
 limit 24 offset 24;
 
 -- 8. After 03: the pre-counted totals and when they were last written

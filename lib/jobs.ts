@@ -482,15 +482,14 @@ export function isUnfilteredListing(params: ListingQuery): boolean {
   return Object.values(filters).every(value => value === undefined)
 }
 
-// The default list order. source_score is the only boost in the
-// 'Most relevant' score besides age and search words (migrations/0004:
-// 0.20 * source_score; direct employer jobs have the highest), so it is
-// kept, first; then posting date, newest first, as the job card shows it;
-// then created_at and id so equal rows always page in the same order.
+// The default list order: plain newest first by posting date, as the job
+// card shows it (undated rows last), then created_at and id so equal rows
+// always page in the same order. No boost of any kind: the owner dropped the
+// source_score boost on 11 Nov 2026 after the live tier check, because a
+// strict tier put every newer job from lower-scored feeds behind one feed.
 // migrations/proposed/2026-11-11-speed/02_jobs_list_index.sql indexes
 // exactly this order (NOT APPLIED until the owner runs it).
 export const DEFAULT_LIST_ORDER = [
-  { column: 'source_score', ascending: false },
   { column: 'published_at', ascending: false, nullsFirst: false },
   { column: 'created_at', ascending: false },
   { column: 'id', ascending: false },

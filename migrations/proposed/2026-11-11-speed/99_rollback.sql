@@ -37,4 +37,4 @@ COMMIT;
 -- Kept behind "--" so it cannot run by accident together with PART A.
 -- To use it: open a new query, paste the line below, remove the leading
 -- "-- " and run it on its own.
--- DROP INDEX CONCURRENTLY IF EXISTS public.idx_jobs_browsable_default_order;
+-- DROP INDEX CONCURRENTLY IF EXISTS public.idx_jobs_browsable_newest;

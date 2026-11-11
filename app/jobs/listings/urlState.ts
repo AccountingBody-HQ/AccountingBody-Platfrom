@@ -44,8 +44,8 @@ export const DEFAULT_PAGE = 1
 
 // What the sort menu shows. With no chosen sort it shows the order the
 // server actually uses: 'Most relevant' for a search with words, 'Most
-// recent' for the plain list (whose default order is newest first, with
-// direct employer jobs lifted to the top; see lib/jobs.ts DEFAULT_LIST_ORDER).
+// recent' for the plain list (whose default order is plain newest first;
+// see lib/jobs.ts DEFAULT_LIST_ORDER).
 export function sortMenuValue(sortBy: SortChoice, search: string): SortBy {
   if (sortBy !== 'default') return sortBy
   return search.trim() ? 'relevance' : 'recent'

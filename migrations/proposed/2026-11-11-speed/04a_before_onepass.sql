@@ -6,14 +6,14 @@
 -- Run as one query in the Supabase SQL editor. One row per check:
 -- check_name (text) and result (jsonb).
 --
--- Expected: the 'browsable_count' and 'boost_tiers' rows count every
+-- Expected: the 'browsable_count' and 'source_score_mix' rows count every
 -- browsable job exactly, so this query may take several seconds on the NANO
 -- database. That is normal.
 --
 -- "Browsable" is exactly the filter in lib/jobs.ts: status 'active', platform
 -- contains the site code ('ab' or 'et'), expires_at empty or in the future.
--- Boost tiers use the columns of the new default list order: source_score
--- (the boost) and published_at (empty values sort last).
+-- 'source_score_mix' is information only: the default list order does not
+-- use source_score (plain newest first by published_at; empty values last).
 -- A null in 'names_free' means that name is free.
 -- ============================================================================
 
@@ -56,7 +56,7 @@ from (
     jsonb_build_object(
       'site_counts_table', to_regclass('public.site_counts')::text,
       'refresh_function', to_regprocedure('public.refresh_site_counts()')::text,
-      'default_order_index', to_regclass('public.idx_jobs_browsable_default_order')::text
+      'default_order_index', to_regclass('public.idx_jobs_browsable_newest')::text
     )
 
   union all
@@ -76,12 +76,11 @@ from (
 
   union all
 
-  -- 5. Boost tiers per platform: browsable jobs per source_score (highest
-  --    first, as the new default order shows them), and how many in each
-  --    tier have no published_at (those go to the end of their tier).
+  -- 5. Information only: browsable jobs per platform by source_score, and
+  --    how many have no published_at (those go to the end of the list).
   select
     5,
-    'boost_tiers',
+    'source_score_mix',
     (
       select jsonb_object_agg(t.platform, t.tiers)
       from (
