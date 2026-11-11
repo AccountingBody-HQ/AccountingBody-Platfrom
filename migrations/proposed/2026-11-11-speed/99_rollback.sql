@@ -20,10 +20,15 @@ BEGIN
     END IF;
   END IF;
 
-  -- Never drop a same-named object that is not ours.
+  -- Never drop a same-named object that is not ours. to_regclass and
+  -- to_regprocedure return NULL for a missing object instead of failing.
   IF to_regclass('public.site_counts') IS NOT NULL
-     AND coalesce(obj_description('public.site_counts'::regclass, 'pg_class'), '') NOT LIKE 'AccountingBody:%' THEN
+     AND coalesce(obj_description(to_regclass('public.site_counts'), 'pg_class'), '') NOT LIKE 'AccountingBody:%' THEN
     RAISE EXCEPTION 'public.site_counts is not the AccountingBody table. Nothing was changed.';
+  END IF;
+  IF to_regprocedure('public.refresh_site_counts()') IS NOT NULL
+     AND coalesce(obj_description(to_regprocedure('public.refresh_site_counts()'), 'pg_proc'), '') NOT LIKE 'AccountingBody:%' THEN
+    RAISE EXCEPTION 'public.refresh_site_counts() is not the AccountingBody function. Nothing was changed.';
   END IF;
 END
 $$;

@@ -37,15 +37,17 @@ BEGIN;
 
 -- The public schema is shared with other products. Stop, changing nothing,
 -- if a table or function with these names already exists and is not ours
--- (ours carry a comment starting 'AccountingBody:').
+-- (ours carry a comment starting 'AccountingBody:'). to_regclass and
+-- to_regprocedure return NULL for a missing object instead of failing, so
+-- these checks also work on a database where neither object exists yet.
 DO $$
 BEGIN
   IF to_regclass('public.site_counts') IS NOT NULL
-     AND coalesce(obj_description('public.site_counts'::regclass, 'pg_class'), '') NOT LIKE 'AccountingBody:%' THEN
+     AND coalesce(obj_description(to_regclass('public.site_counts'), 'pg_class'), '') NOT LIKE 'AccountingBody:%' THEN
     RAISE EXCEPTION 'public.site_counts already exists and is not the AccountingBody table. Nothing was changed.';
   END IF;
   IF to_regprocedure('public.refresh_site_counts()') IS NOT NULL
-     AND coalesce(obj_description('public.refresh_site_counts()'::regprocedure, 'pg_proc'), '') NOT LIKE 'AccountingBody:%' THEN
+     AND coalesce(obj_description(to_regprocedure('public.refresh_site_counts()'), 'pg_proc'), '') NOT LIKE 'AccountingBody:%' THEN
     RAISE EXCEPTION 'public.refresh_site_counts() already exists and is not the AccountingBody function. Nothing was changed.';
   END IF;
 END
