@@ -6,7 +6,8 @@ import { SINGLE_WORD_COUNTRY_NAMES } from '@/lib/ingestion/normalise'
 import { guardCachedRead } from '@/lib/cache-guard'
 
 // Reads used by public pages and APIs use the public read limit (the
-// default). Functions used only by other kinds of work name their context
+// default); the whole-table counts and the job search use the heavy read
+// limit. Functions used only by other kinds of work name their context
 // where they create the client.
 function getSupabase(context: DbContext = 'publicRead') {
   return getServerSupabase(context)
@@ -260,7 +261,7 @@ function buildQualificationsOrFilter(qualifications: string[]): string | null {
 export async function getActiveDirectJobs(params: GetActiveDirectJobsParams & { countOnly: true }): Promise<number>
 export async function getActiveDirectJobs(params: GetActiveDirectJobsParams & { countOnly?: false }): Promise<Job[]>
 export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Promise<Job[] | number> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicHeavyRead')
   const {
     platform,
     search,
@@ -959,7 +960,7 @@ export async function getActiveJobsCount(platform: string): Promise<number> {
 // nothing when it throws. A missing count with no error counts as a failure
 // too. The exported function catches outside the cache and returns the 0.
 async function fetchBrowsableJobsCount(platform: string): Promise<number> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicHeavyRead')
   const nowIso = new Date().toISOString()
   const { count, error, status } = await supabase
     .from('jobs')
@@ -1033,7 +1034,7 @@ export interface ActiveJobCountry {
 // "no data" and "the function doesn't exist yet" identically and fall back
 // to a hardcoded list.
 async function fetchActiveJobCountries(platform: string): Promise<ActiveJobCountry[]> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicHeavyRead')
   const { data, error, status } = await supabase.rpc('get_active_job_countries', { p_platform: platform })
   if (error) throw new Error(`active job countries query failed (status ${status}): ${error.message}`)
   if (!data) return []

@@ -67,6 +67,7 @@ describe('database time limits', () => {
   it('names one limit per kind of work', () => {
     expect(DB_LIMITS_MS).toEqual({
       publicRead: 6000,
+      publicHeavyRead: 10000,
       publicWrite: 15000,
       admin: 20000,
       cron: 25000,
