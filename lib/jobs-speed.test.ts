@@ -1,9 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { createClient } from '@supabase/supabase-js'
 import {
   getBrowsableJobsTotal, getBrowsableJobsCount, getCachedListingJobs,
   getCachedListingJobsCount, getActiveJobCountries, jobsTotalSource, resetJobsTotalSourceWarning,
-  normaliseListingPage, isUnfilteredListing, siteCountKey,
+  normaliseListingPage, normaliseListingFilters, isUnfilteredListing, siteCountKey,
+  filterPrecountKey, getPrecountedFilterTotal, FILTER_TOTAL_LOG,
   DEFAULT_LIST_ORDER, PRECOUNT_MAX_AGE_MS, JOBS_TOTAL_LOG, RELEVANCE_FALLBACK_LOG,
 } from './jobs'
 import { resetCacheGuard } from './cache-guard'
@@ -48,7 +51,7 @@ function fakeClient() {
     current?.calls.push([name, ...args])
     return builder
   }
-  for (const name of ['select', 'eq', 'contains', 'or', 'in', 'ilike', 'gte', 'lte', 'textSearch', 'order', 'range']) {
+  for (const name of ['select', 'eq', 'contains', 'or', 'in', 'ilike', 'like', 'gte', 'lte', 'textSearch', 'order', 'range']) {
     builder[name] = chain(name)
   }
   builder.from = (table: string) => {
@@ -469,5 +472,191 @@ describe('countries list calls get_active_job_countries as the SQL defines it', 
   it('returns [] (the page then uses its built-in list) while the function is missing', async () => {
     script.rpc = { data: null, error: { message: 'Could not find the function public.get_active_job_countries(p_platform) in the schema cache' }, status: 404 }
     expect(await getActiveJobCountries('ab')).toEqual([])
+  })
+})
+
+// ── Speed job part 3: pre-counted one-country totals ────────────────────────
+
+// The Popular buttons exactly as written in the hero component.
+function popularButtons(): string[] {
+  const source = readFileSync(join(process.cwd(), 'app', 'jobs', 'listings', 'JobSearchHero.tsx'), 'utf8')
+  const list = source.match(/const POPULAR = \[([\s\S]*?)\]/)
+  if (!list) throw new Error('POPULAR list not found')
+  return Array.from(list[1].matchAll(/'([^']*)'/g), m => m[1])
+}
+
+describe('Popular searches always count live (no pre-counted search rows)', () => {
+  it('a pill search never reads site_counts, on either platform, with or without a sort', async () => {
+    const buttons = popularButtons()
+    expect(buttons.length).toBeGreaterThan(0)
+    // Even if old search rows were still stored, nothing may read them.
+    script.site_counts = { data: [{ key: 'jobs_browsable:ab:search:cfo', value: 140, updated_at: minutesAgo(1) }], error: null }
+    for (const search of buttons) {
+      for (const platform of ['ab', 'et']) {
+        for (const sortBy of [undefined, 'recent'] as const) {
+          expect(filterPrecountKey({ platform, search, sortBy })).toBeNull()
+          expect(await getPrecountedFilterTotal({ platform, search, sortBy })).toBeNull()
+        }
+      }
+      // The button text still reaches the word count unchanged apart from
+      // trimming and lowercasing.
+      expect(normaliseListingFilters({ platform: 'ab', search }).search).toBe(search.trim().toLowerCase())
+    }
+    expect(tableQueries('site_counts')).toHaveLength(0)
+    expect(queries).toHaveLength(0)
+    expect(logLines()).toEqual([])
+  })
+})
+
+describe('filterPrecountKey', () => {
+  it('one country and nothing else: the country row, name exactly as given after trimming', () => {
+    expect(filterPrecountKey({ platform: 'ab', locationCountry: 'United Kingdom' })).toBe('jobs_browsable:ab:country:United Kingdom')
+    expect(filterPrecountKey({ platform: 'et', locationCountry: '  Ethiopia ' })).toBe('jobs_browsable:et:country:Ethiopia')
+    // Case is kept: the country filter is an exact match.
+    expect(filterPrecountKey({ platform: 'ab', locationCountry: 'united kingdom' })).toBe('jobs_browsable:ab:country:united kingdom')
+  })
+
+  it.each(['relevance', 'recent', 'salary_high', 'salary_low', undefined] as const)('any sort (%s) keeps the same row', (sortBy) => {
+    expect(filterPrecountKey({ platform: 'ab', locationCountry: 'United States', sortBy })).toBe('jobs_browsable:ab:country:United States')
+  })
+
+  it('search words of any kind have no row', () => {
+    for (const search of ['CFO', 'cfo', 'tax manager', 'FP&A Analyst', 'tax', 'cfo uk', '"tax manager"']) {
+      expect(filterPrecountKey({ platform: 'ab', search })).toBeNull()
+      expect(filterPrecountKey({ platform: 'et', search })).toBeNull()
+    }
+  })
+
+  it('the plain list has no filter row (it keeps its own row)', () => {
+    expect(filterPrecountKey({ platform: 'ab' })).toBeNull()
+    expect(filterPrecountKey({ platform: 'ab', locationCountry: 'all', search: '  ' })).toBeNull()
+  })
+
+  it('a country with search words has no row', () => {
+    expect(filterPrecountKey({ platform: 'ab', locationCountry: 'United Kingdom', search: 'cfo' })).toBeNull()
+    expect(filterPrecountKey({ platform: 'ab', locationCountry: 'United Kingdom', search: 'accountant' })).toBeNull()
+  })
+
+  it.each([
+    ['location', { location: 'London' }],
+    ['employment types', { employmentTypes: ['permanent' as const] }],
+    ['seniority', { seniorityLevels: ['senior' as const] }],
+    ['remote only', { remoteOnly: true }],
+    ['minimum salary', { salaryMin: 30000 }],
+    ['maximum salary', { salaryMax: 90000 }],
+    ['posted within', { postedWithin: 7 }],
+    ['qualifications', { qualifications: ['ACCA'] }],
+    ['sources', { sources: ['employer' as const] }],
+  ])('any other filter (%s) has no row', (_name, extra) => {
+    expect(filterPrecountKey({ platform: 'ab', locationCountry: 'United Kingdom', ...extra })).toBeNull()
+    expect(filterPrecountKey({ platform: 'ab', search: 'CFO', ...extra })).toBeNull()
+  })
+})
+
+describe('getPrecountedFilterTotal — precount (default)', () => {
+  it('returns the fresh country row, from one read of the platform\'s filter rows, with no count query', async () => {
+    script.site_counts = {
+      data: [
+        { key: 'jobs_browsable:ab:country:United Kingdom', value: 6123, updated_at: minutesAgo(4) },
+        { key: 'jobs_browsable:ab:country:United States', value: 2210, updated_at: minutesAgo(4) },
+        { key: 'jobs_browsable:ab:search:cfo', value: 140, updated_at: minutesAgo(4) },
+      ],
+      error: null,
+    }
+
+    expect(await getPrecountedFilterTotal({ platform: 'ab', locationCountry: 'United States' })).toBe(2210)
+    expect(tableQueries('site_counts')).toHaveLength(1)
+    expect(tableQueries('site_counts')[0].calls).toEqual([
+      ['select', 'key, value, updated_at'],
+      ['like', 'key', 'jobs_browsable:ab:%'],
+    ])
+    expect(tableQueries('jobs')).toHaveLength(0)
+    expect(logLines()).toEqual([])
+  })
+
+  it('returns the fresh et country row with a chosen sort, and reads the et rows for et', async () => {
+    script.site_counts = { data: [{ key: 'jobs_browsable:et:country:Ethiopia', value: 12, updated_at: minutesAgo(1) }], error: null }
+
+    expect(await getPrecountedFilterTotal({ platform: 'et', locationCountry: 'Ethiopia', sortBy: 'recent' })).toBe(12)
+    expect(tableQueries('site_counts')[0].calls[1]).toEqual(['like', 'key', 'jobs_browsable:et:%'])
+  })
+
+  it('accepts a count sent as text', async () => {
+    script.site_counts = { data: [{ key: 'jobs_browsable:ab:country:Singapore', value: '57', updated_at: minutesAgo(1) }], error: null }
+    expect(await getPrecountedFilterTotal({ platform: 'ab', locationCountry: 'Singapore' })).toBe(57)
+  })
+
+  it('caches the read for two minutes, keyed on the platform', async () => {
+    script.site_counts = { data: [], error: null }
+    await getPrecountedFilterTotal({ platform: 'ab', locationCountry: 'Ethiopia' })
+    const call = cacheCalls.find(c => c.keyParts[0] === 'site-counts-jobs-filters')
+    expect(call).toEqual({ keyParts: ['site-counts-jobs-filters'], options: { revalidate: 120, tags: ['counts', 'jobs'] }, args: ['ab'] })
+  })
+
+  it('ignores a row whose key only looks like the prefix (LIKE treats "_" as any character)', async () => {
+    script.site_counts = { data: [{ key: 'jobsXbrowsable:ab:country:Ethiopia', value: 5, updated_at: minutesAgo(1) }], error: null }
+    expect(await getPrecountedFilterTotal({ platform: 'ab', locationCountry: 'Ethiopia' })).toBeNull()
+    expect(logLines()).toEqual([FILTER_TOTAL_LOG.missing])
+  })
+
+  it('still uses a row just under six hours old', async () => {
+    script.site_counts = { data: [{ key: 'jobs_browsable:ab:country:Australia', value: 9, updated_at: new Date(NOW.getTime() - PRECOUNT_MAX_AGE_MS + 1000).toISOString() }], error: null }
+    expect(await getPrecountedFilterTotal({ platform: 'ab', locationCountry: 'Australia' })).toBe(9)
+  })
+
+  it('gives null (count live) with one fixed line when the row is missing', async () => {
+    script.site_counts = { data: [{ key: 'jobs_browsable:ab:country:United Kingdom', value: 6123, updated_at: minutesAgo(4) }], error: null }
+    expect(await getPrecountedFilterTotal({ platform: 'ab', locationCountry: 'Ethiopia' })).toBeNull()
+    expect(logLines()).toEqual([FILTER_TOTAL_LOG.missing])
+    expect(logLines().join()).not.toContain('Ethiopia')
+  })
+
+  it('gives null (count live) with one fixed line when the row is older than six hours', async () => {
+    script.site_counts = { data: [{ key: 'jobs_browsable:ab:country:Ethiopia', value: 3, updated_at: new Date(NOW.getTime() - PRECOUNT_MAX_AGE_MS - 1000).toISOString() }], error: null }
+    expect(await getPrecountedFilterTotal({ platform: 'ab', locationCountry: 'Ethiopia' })).toBeNull()
+    expect(logLines()).toEqual([FILTER_TOTAL_LOG.stale])
+  })
+
+  it('gives null (count live) with one fixed line when the read fails, with no upstream text', async () => {
+    script.site_counts = { data: null, error: { message: 'relation "public.site_counts" does not exist zqx' }, status: 404 }
+    expect(await getPrecountedFilterTotal({ platform: 'ab', locationCountry: 'United Kingdom' })).toBeNull()
+    expect(logLines()).toEqual([FILTER_TOTAL_LOG.failed])
+    expect(logLines().join()).not.toContain('zqx')
+  })
+
+  it('gives null (count live) when a row has an unexpected shape', async () => {
+    script.site_counts = { data: [{ key: 'jobs_browsable:ab:country:United Kingdom', value: 'lots', updated_at: null }], error: null }
+    expect(await getPrecountedFilterTotal({ platform: 'ab', locationCountry: 'United Kingdom' })).toBeNull()
+    expect(logLines()).toEqual([FILTER_TOTAL_LOG.failed])
+  })
+
+  it('reads nothing and gives null for any request without a filter row', async () => {
+    for (const params of [
+      { platform: 'ab' },
+      { platform: 'ab', search: 'tax' },
+      { platform: 'ab', locationCountry: 'United Kingdom', remoteOnly: true },
+      { platform: 'ab', search: 'CFO', locationCountry: 'United Kingdom' },
+    ]) {
+      expect(await getPrecountedFilterTotal(params)).toBeNull()
+    }
+    expect(queries).toHaveLength(0)
+    expect(logLines()).toEqual([])
+  })
+})
+
+describe('getPrecountedFilterTotal — estimate and none modes are unaffected', () => {
+  it.each(['estimate', 'none'] as const)('%s: gives null and reads nothing, so filtered lists count live as before', async (mode) => {
+    vi.stubEnv('JOBS_TOTAL_SOURCE', mode)
+    script.site_counts = { data: [{ key: 'jobs_browsable:ab:country:United Kingdom', value: 140, updated_at: minutesAgo(1) }], error: null }
+
+    expect(await getPrecountedFilterTotal({ platform: 'ab', locationCountry: 'United Kingdom' })).toBeNull()
+    expect(queries).toHaveLength(0)
+  })
+
+  it('the plain list still reads only its own row', async () => {
+    script.site_counts = { data: { value: 13254, updated_at: minutesAgo(3) }, error: null }
+    expect(await getBrowsableJobsTotal('ab')).toBe(13254)
+    expect(tableQueries('site_counts')).toHaveLength(1)
+    expect(tableQueries('site_counts')[0].calls[1]).toEqual(['eq', 'key', 'jobs_browsable:ab'])
   })
 })
