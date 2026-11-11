@@ -1198,6 +1198,106 @@ export async function getBrowsableJobsCount(platform: string): Promise<number> {
 // reworded instead of wired to a live count.
 export const getCachedBrowsableJobsCount = cache(getBrowsableJobsCount)
 
+// ── Pre-counted totals for two kinds of filtered list (speed job part 3) ────
+//
+// public.refresh_site_counts() also writes, every 10 minutes:
+//   jobs_browsable:<platform>:country:<location_country exactly as stored>
+//   jobs_browsable:<platform>:search:<words>   (PRECOUNTED_SEARCHES only)
+// A list whose ONLY filter is one country, or whose ONLY input is one of
+// those searches, takes its total from that row (any sort: a sort never
+// changes a count). Only in 'precount' mode: in 'estimate' and 'none' modes
+// filtered lists keep their live count, as before. A missing, unreadable or
+// stale row gives null, and the caller counts live as before.
+
+// The Popular searches on /jobs/listings (app/jobs/listings/JobSearchHero.tsx)
+// as they reach the word count: trimmed and lowercased by
+// normaliseListingFilters, '&' kept. The SQL function counts these exact
+// strings; jobs-speed.test.ts checks them against the buttons.
+export const PRECOUNTED_SEARCHES: readonly string[] = [
+  'management accountant', 'tax manager', 'financial controller',
+  'audit senior', 'fp&a analyst', 'cfo',
+]
+
+export const FILTER_TOTAL_LOG = {
+  missing: 'jobs total: pre-counted filter row missing, counting live',
+  stale:   'jobs total: pre-counted filter row older than 6 hours, counting live',
+  failed:  'jobs total: pre-counted filter rows could not be read, counting live',
+} as const
+
+// The site_counts key for this request, or null when it has none: null for
+// the plain list (getBrowsableJobsTotal has its own row) and for anything
+// with another filter, more than one input, or other search words.
+export function filterPrecountKey(params: ListingQuery): string | null {
+  const { platform, locationCountry, search, ...others } = normaliseListingFilters(params)
+  if (Object.values(others).some(value => value !== undefined)) return null
+  if (locationCountry !== undefined && search === undefined) {
+    return `${siteCountKey(platform)}:country:${locationCountry}`
+  }
+  if (search !== undefined && locationCountry === undefined && PRECOUNTED_SEARCHES.includes(search)) {
+    return `${siteCountKey(platform)}:search:${search}`
+  }
+  return null
+}
+
+interface FilterPrecountRow extends PrecountRow {
+  key: string
+}
+
+// Every filter row of one platform in one query (a few hundred small rows
+// at most). LIKE treats '_' as any character, so rows are kept only when
+// the key really starts with the prefix. Throws on any error or unexpected
+// shape, so nothing is cached for it.
+async function fetchFilterPrecounts(platform: string): Promise<FilterPrecountRow[]> {
+  const prefix = `${siteCountKey(platform)}:`
+  const { data, error, status } = await getSupabase('publicRead')
+    .from('site_counts')
+    .select('key, value, updated_at')
+    .like('key', `${prefix}%`)
+  if (error) throw new Error(`site_counts filter read failed (status ${status})`)
+  if (!Array.isArray(data)) throw new Error('site_counts filter read returned no list')
+  const rows: FilterPrecountRow[] = []
+  for (const raw of data as Array<{ key?: unknown; value?: unknown; updated_at?: unknown }>) {
+    if (typeof raw.key !== 'string' || !raw.key.startsWith(prefix)) continue
+    const value = typeof raw.value === 'number' ? raw.value : typeof raw.value === 'string' ? Number(raw.value) : NaN
+    const updatedAt = typeof raw.updated_at === 'string' ? Date.parse(raw.updated_at) : NaN
+    if (!Number.isSafeInteger(value) || value < 0 || Number.isNaN(updatedAt)) {
+      throw new Error('site_counts filter row has an unexpected shape')
+    }
+    rows.push({ key: raw.key, value, updatedAt })
+  }
+  return rows
+}
+
+// Two minutes, as for the plain-list row: at most about 12.5 minutes old.
+const cachedFilterPrecounts = guardCachedRead(['site-counts-jobs-filters'], unstable_cache(fetchFilterPrecounts, ['site-counts-jobs-filters'], {
+  revalidate: 120,
+  tags: ['counts', 'jobs'],
+}))
+
+// The pre-counted total for a one-country or Popular-search list, or null.
+// Never throws; reads nothing for any other request.
+export async function getPrecountedFilterTotal(params: ListingQuery): Promise<number | null> {
+  if (jobsTotalSource() !== 'precount') return null
+  const key = filterPrecountKey(params)
+  if (key === null) return null
+  try {
+    const rows = await cachedFilterPrecounts(normaliseListingFilters(params).platform)
+    const row = rows.find(r => r.key === key)
+    if (!row) {
+      console.warn(FILTER_TOTAL_LOG.missing)
+      return null
+    }
+    if (Date.now() - row.updatedAt > PRECOUNT_MAX_AGE_MS) {
+      console.warn(FILTER_TOTAL_LOG.stale)
+      return null
+    }
+    return row.value
+  } catch {
+    console.warn(FILTER_TOTAL_LOG.failed)
+    return null
+  }
+}
+
 export interface ActiveJobCountry {
   country: string
   count: number

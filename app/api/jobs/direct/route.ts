@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
-  getBrowsableJobsTotal, getCachedListingJobs, getCachedListingJobsCount, isUnfilteredListing,
+  getBrowsableJobsTotal, getCachedListingJobs, getCachedListingJobsCount, getPrecountedFilterTotal, isUnfilteredListing,
   type SeniorityLevel, type EmploymentType,
 } from '@/lib/jobs'
 import { parseLimit, parseOffset } from './pagination'
@@ -129,12 +129,17 @@ export async function GET(req: NextRequest) {
   // The plain list (nothing but the platform) takes its total from
   // getBrowsableJobsTotal: a pre-counted number, refreshed every 10 minutes,
   // that never waits for an exact count (owner decision D108). It never
-  // throws; null means "not known". Filtered lists keep their exact count.
+  // throws; null means "not known". Filtered lists keep their exact count,
+  // except a list whose only filter is one country, or whose only input is
+  // one of the Popular searches: those first ask getPrecountedFilterTotal
+  // (never throws; null means "count live as before").
   const unfiltered = isUnfilteredListing(baseParams)
 
   try {
     if (countOnly) {
-      const total = unfiltered ? await getBrowsableJobsTotal(platform) : await getCachedListingJobsCount(baseParams)
+      const total = unfiltered
+        ? await getBrowsableJobsTotal(platform)
+        : (await getPrecountedFilterTotal(baseParams)) ?? await getCachedListingJobsCount(baseParams)
       return NextResponse.json({ jobs: [], total }, { headers: NO_CACHE_HEADERS })
     }
 
@@ -158,7 +163,9 @@ export async function GET(req: NextRequest) {
     const rowsLookup = getCachedListingJobs({ ...baseParams, limit, offset })
     const totalLookup: Promise<number | null> = unfiltered
       ? getBrowsableJobsTotal(platform)
-      : getCachedListingJobsCount(baseParams).catch((): null => {
+      : getPrecountedFilterTotal(baseParams).then(precounted =>
+        precounted ?? getCachedListingJobsCount(baseParams)
+      ).catch((): null => {
         // Fixed text only: no request values, no upstream message.
         console.error(TOTAL_NOT_AVAILABLE_LOG)
         return null
