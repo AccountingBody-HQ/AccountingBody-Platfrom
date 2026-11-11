@@ -1,27 +1,28 @@
 -- ============================================================================
--- NOT APPLIED. Proposed for review. Do not run until the owner and the
--- reviewer have read 04a's result and approved this exact file.
+-- NOT APPLIED. Proposed for review. Do not run until 04c_timing.sql has
+-- been run and shows GO, and the owner and the reviewer have approved this
+-- exact file.
 --
--- Speed job part 3: the refresh that already writes the plain-list totals
--- every 10 minutes (public.refresh_site_counts(), migration 0009, pg_cron
--- job refresh-site-counts) also writes, in the same run:
+-- Speed job part 3 (revised): the refresh that already writes the
+-- plain-list totals every 10 minutes (public.refresh_site_counts(),
+-- migration 0009, pg_cron job refresh-site-counts) also writes, in the
+-- same statement and from the same single read of public.jobs:
 --   jobs_browsable:<platform>:country:<location_country exactly as stored>
 --     one row per country with at least one browsable job, per platform
---   jobs_browsable:<platform>:search:<words>
---     one row per Popular search, per platform (twelve rows, 0 allowed)
--- and removes the country and search rows it did not write in this run
--- (for example a country that dropped to no jobs). No other row is touched.
--- The two existing rows (jobs_browsable:ab, jobs_browsable:et) are counted
--- exactly as in 0009.
+-- and then removes the country rows it did not write in this run (for
+-- example a country that dropped to no jobs), and any old search rows.
+-- No other row is touched.
 --
 -- "Browsable" is the same as everywhere else:
 --   status = 'active' AND platform @> ARRAY[<platform>]
 --   AND (expires_at IS NULL OR expires_at > now())
--- The country rows use the same equality as the site's country filter
--- (location_country = <value>, case-sensitive, NULL never matches). The
--- search rows use websearch_to_tsquery('english', <words>), the words being
--- exactly what the site passes to its word count for each Popular button
--- (trimmed and lowercased; '&' kept as it is).
+-- The plain totals (jobs_browsable:ab, jobs_browsable:et) are the sum of
+-- ALL country groups of that platform, including jobs with no country, an
+-- empty country or a very long one, so they equal 0009's count(*) exactly.
+-- A platform with no browsable jobs still gets its plain row, with 0.
+-- Country rows skip no country, empty names (the site never asks for one)
+-- and names over 200 characters (so a key always fits the primary-key
+-- index); the site counts those live, as today.
 --
 -- Same name, no arguments, SECURITY DEFINER, same search_path and
 -- statement_timeout, same owner-only EXECUTE as 0009. pg_cron's command
@@ -35,8 +36,8 @@
 -- Function body fingerprints (md5 and length of pg_proc.prosrc):
 --   0009 body, LF line endings:   03dc514ee0589c531f40ef12f1ad66bf  489
 --   0009 body, CRLF line endings: ec9c609a0df3f9e685acc84a0144e4b8  507
---   this body, LF line endings:   7e9cb5dcd980a987293f26f04898237e  3311
---   this body, CRLF line endings: c46dfe3d6fcede914977da6d094452f2  3396
+--   this body, LF line endings:   e2fa7cc06c83cef715c3e087180c19be  1860
+--   this body, CRLF line endings: f5a0f31a2f07fac7c832745d2b301607  1914
 -- ============================================================================
 
 BEGIN;
@@ -70,10 +71,10 @@ BEGIN
   IF v_md5 NOT IN (
     '03dc514ee0589c531f40ef12f1ad66bf',  -- 0009, LF
     'ec9c609a0df3f9e685acc84a0144e4b8',  -- 0009, CRLF
-    '7e9cb5dcd980a987293f26f04898237e',  -- this file, LF
-    'c46dfe3d6fcede914977da6d094452f2'   -- this file, CRLF
+    'e2fa7cc06c83cef715c3e087180c19be',  -- this file, LF
+    'f5a0f31a2f07fac7c832745d2b301607'   -- this file, CRLF
   ) THEN
-    RAISE EXCEPTION 'public.refresh_site_counts() body is not the 0009 body (md5 %). Nothing was changed.', v_md5;
+    RAISE EXCEPTION 'public.refresh_site_counts() body is neither the 0009 body nor this file''s body (md5 %). Nothing was changed.', v_md5;
   END IF;
 END
 $guard$;
@@ -86,93 +87,62 @@ SET search_path = public, pg_temp
 SET statement_timeout = '60s'
 AS $$
 BEGIN
-  -- 1. Plain-list totals, exactly as in 0009.
+  -- One statement, one read of public.jobs: b is MATERIALIZED, so jobs is
+  -- scanned once whatever plan the planner picks for the platform join.
+  -- Rows go in key order, so two runs at once lock keys in the same order.
   INSERT INTO public.site_counts AS sc (key, value, updated_at)
-  SELECT
-    'jobs_browsable:' || p.platform,
-    (
-      SELECT count(*)
-      FROM public.jobs j
-      WHERE j.status = 'active'
-        AND j.platform @> ARRAY[p.platform]
-        AND (j.expires_at IS NULL OR j.expires_at > now())
-    ),
-    now()
-  FROM (VALUES ('ab'::text), ('et'::text)) AS p(platform)
+  WITH b AS MATERIALIZED (
+    SELECT j.platform, j.location_country
+    FROM public.jobs j
+    WHERE j.status = 'active'
+      AND (j.expires_at IS NULL OR j.expires_at > now())
+  ),
+  p AS (
+    SELECT v.platform
+    FROM (VALUES ('ab'::text), ('et'::text)) AS v(platform)
+  ),
+  g AS (
+    SELECT p.platform, b.location_country, count(*) AS n
+    FROM p
+    JOIN b ON b.platform @> ARRAY[p.platform]
+    GROUP BY p.platform, b.location_country
+  )
+  SELECT r.key, r.value, now()
+  FROM (
+    SELECT
+      'jobs_browsable:' || p.platform AS key,
+      coalesce(sum(g.n), 0)::bigint AS value
+    FROM p
+    LEFT JOIN g ON g.platform = p.platform
+    GROUP BY p.platform
+    UNION ALL
+    SELECT
+      'jobs_browsable:' || g.platform || ':country:' || g.location_country,
+      g.n
+    FROM g
+    WHERE g.location_country IS NOT NULL
+      AND g.location_country <> ''
+      AND length(g.location_country) <= 200
+  ) AS r
+  ORDER BY r.key
   ON CONFLICT (key) DO UPDATE
     SET value = EXCLUDED.value,
         updated_at = EXCLUDED.updated_at;
 
-  -- Parts 2 to 4 run in their own sub-block: if one of them fails, the
-  -- plain-list totals above are still saved and a warning is logged. The
-  -- country and search rows then keep their old time and the site stops
-  -- using them once they are 6 hours old.
-  BEGIN
-    -- 2. One row per country with browsable jobs, per platform, in one
-    --    pass. Empty names are skipped (the site never asks for one), and
-    --    so are names over 200 characters, so a key always fits the
-    --    primary-key index. The site counts those live, as today.
-    INSERT INTO public.site_counts AS sc (key, value, updated_at)
-    SELECT
-      'jobs_browsable:' || p.platform || ':country:' || j.location_country,
-      count(*),
-      now()
-    FROM public.jobs j
-    JOIN (VALUES ('ab'::text), ('et'::text)) AS p(platform)
-      ON j.platform @> ARRAY[p.platform]
-    WHERE j.status = 'active'
-      AND (j.expires_at IS NULL OR j.expires_at > now())
-      AND j.location_country IS NOT NULL
-      AND j.location_country <> ''
-      AND length(j.location_country) <= 200
-    GROUP BY p.platform, j.location_country
-    ON CONFLICT (key) DO UPDATE
-      SET value = EXCLUDED.value,
-          updated_at = EXCLUDED.updated_at;
-
-    -- 3. The six Popular searches, per platform. A count of 0 is written.
-    INSERT INTO public.site_counts AS sc (key, value, updated_at)
-    SELECT
-      'jobs_browsable:' || p.platform || ':search:' || w.words,
-      (
-        SELECT count(*)
-        FROM public.jobs j
-        WHERE j.status = 'active'
-          AND j.platform @> ARRAY[p.platform]
-          AND (j.expires_at IS NULL OR j.expires_at > now())
-          AND j.search_vector @@ websearch_to_tsquery('english', w.words)
-      ),
-      now()
-    FROM (VALUES ('ab'::text), ('et'::text)) AS p(platform)
-    CROSS JOIN (VALUES
-      ('management accountant'::text),
-      ('tax manager'::text),
-      ('financial controller'::text),
-      ('audit senior'::text),
-      ('fp&a analyst'::text),
-      ('cfo'::text)
-    ) AS w(words)
-    ON CONFLICT (key) DO UPDATE
-      SET value = EXCLUDED.value,
-          updated_at = EXCLUDED.updated_at;
-
-    -- 4. Remove country and search rows not written in this run. Every
-    --    row written above has updated_at = now(), which is fixed for the
-    --    whole transaction. Only these four prefixes are looked at.
-    DELETE FROM public.site_counts
-    WHERE (starts_with(key, 'jobs_browsable:ab:country:')
-        OR starts_with(key, 'jobs_browsable:et:country:')
-        OR starts_with(key, 'jobs_browsable:ab:search:')
-        OR starts_with(key, 'jobs_browsable:et:search:'))
-      AND updated_at <> now();
-  EXCEPTION WHEN OTHERS THEN
-    RAISE WARNING 'refresh_site_counts: country and search counts not refreshed (%)', SQLSTATE;
-  END;
+  -- Remove country rows not written in this run (every row written above
+  -- has updated_at = now(), fixed for the whole transaction) and any
+  -- search rows left from earlier drafts. Only these prefixes are looked at.
+  DELETE FROM public.site_counts
+  WHERE ((starts_with(key, 'jobs_browsable:ab:country:')
+          OR starts_with(key, 'jobs_browsable:et:country:'))
+         AND updated_at <> now())
+     OR starts_with(key, 'jobs_browsable:ab:search:')
+     OR starts_with(key, 'jobs_browsable:et:search:');
 END;
 $$;
 
 COMMENT ON FUNCTION public.refresh_site_counts() IS
-  'AccountingBody: recounts public.site_counts (D108): plain-list totals, one-country totals and Popular-search totals. Called every 10 minutes by pg_cron job refresh-site-counts.';
+  'AccountingBody: recounts public.site_counts (D108): plain-list totals and one-country totals, from one read of public.jobs. Called every 10 minutes by pg_cron job refresh-site-counts.';
 
 -- Same as 0009: only the owner (and pg_cron, which runs as the owner) may
 -- call it. CREATE OR REPLACE keeps the existing grants; this repeats the
@@ -182,19 +152,17 @@ REVOKE ALL ON FUNCTION public.refresh_site_counts() FROM PUBLIC, anon, authentic
 -- Fill the new rows now, inside the same transaction.
 SELECT public.refresh_site_counts();
 
--- The sub-block in the function only warns on a failure. Here, at install
--- time, a missing result stops everything instead: unless the twelve
--- search rows were written in this transaction and at least one country
--- row exists for 'ab', the whole file is undone.
+-- Unless both plain rows and at least one 'ab' country row were written in
+-- this transaction, undo the whole file.
 DO $check$
 BEGIN
   IF (
     SELECT count(*)
     FROM public.site_counts
-    WHERE (starts_with(key, 'jobs_browsable:ab:search:') OR starts_with(key, 'jobs_browsable:et:search:'))
+    WHERE key IN ('jobs_browsable:ab', 'jobs_browsable:et')
       AND updated_at = now()
-  ) <> 12 THEN
-    RAISE EXCEPTION 'The Popular-search counts were not written. Nothing was changed.';
+  ) <> 2 THEN
+    RAISE EXCEPTION 'The two plain-list totals were not written. Nothing was changed.';
   END IF;
   IF NOT EXISTS (
     SELECT 1
@@ -214,9 +182,8 @@ select
   count(*) filter (where key in ('jobs_browsable:ab', 'jobs_browsable:et')) as plain_rows,
   count(*) filter (where starts_with(key, 'jobs_browsable:ab:country:')) as ab_country_rows,
   count(*) filter (where starts_with(key, 'jobs_browsable:et:country:')) as et_country_rows,
-  count(*) filter (where starts_with(key, 'jobs_browsable:ab:search:')) as ab_search_rows,
-  count(*) filter (where starts_with(key, 'jobs_browsable:et:search:')) as et_search_rows,
-  min(updated_at) as oldest_update,
+  count(*) filter (where strpos(key, ':search:') > 0) as search_rows,
+  count(distinct updated_at) as distinct_update_times,
   max(updated_at) as newest_update,
   (
     select md5(p.prosrc)

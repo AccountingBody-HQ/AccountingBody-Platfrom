@@ -1,18 +1,22 @@
 -- ============================================================================
 -- NOT APPLIED. Run ONLY if 01b shows a mismatch or an error.
 --
--- Undo for 01_refresh_site_counts_v2.sql (speed job part 3):
+-- Undo for 01_refresh_site_counts_v2.sql (speed job part 3, one-scan
+-- version):
 --   - puts back public.refresh_site_counts() exactly as migration 0009
 --     created it (the CREATE statement below is copied byte for byte from
 --     migrations/0009_site_counts_and_jobs_browsable_index.sql, body md5
---     03dc514ee0589c531f40ef12f1ad66bf, length 489), with 0009's comment
---     and the same owner-only EXECUTE,
+--     03dc514ee0589c531f40ef12f1ad66bf, length 489; pasted through the
+--     SQL editor it may arrive with CRLF line endings, md5
+--     ec9c609a0df3f9e685acc84a0144e4b8, length 507, which is how the live
+--     0009 body was stored), with 0009's comment and the same owner-only
+--     EXECUTE,
 --   - deletes only the rows whose key starts with 'jobs_browsable:' and
 --     contains ':country:' or ':search:'. The plain-list rows
 --     (jobs_browsable:ab, jobs_browsable:et) are kept.
 -- The pg_cron job is not touched: its command does not change.
--- The site keeps working throughout: with those rows gone, one-country and
--- Popular-search lists count live, as before part 3.
+-- The site keeps working throughout: with those rows gone, one-country
+-- lists count live, as before part 3.
 --
 -- Run the whole file as ONE query. One transaction. Safe to run twice.
 -- ============================================================================
@@ -71,13 +75,16 @@ WHERE starts_with(key, 'jobs_browsable:')
 
 COMMIT;
 
--- Read-only result: body_is_0009 must be true, filter_rows must be 0.
+-- Read-only result: body_is_0009 must be true (LF or CRLF form of the
+-- 0009 body), the comment must be 0009's, filter_rows must be 0.
 select
   (
-    select md5(p.prosrc) = '03dc514ee0589c531f40ef12f1ad66bf'
+    select md5(p.prosrc) in ('03dc514ee0589c531f40ef12f1ad66bf', 'ec9c609a0df3f9e685acc84a0144e4b8')
     from pg_proc p
     where p.oid = to_regprocedure('public.refresh_site_counts()')::oid
   ) as body_is_0009,
+  obj_description(to_regprocedure('public.refresh_site_counts()'), 'pg_proc')
+    = 'AccountingBody: recounts public.site_counts (D108). Called every 10 minutes by pg_cron job refresh-site-counts.' as comment_is_0009,
   count(*) filter (where starts_with(key, 'jobs_browsable:')
                      and (strpos(key, ':country:') > 0 or strpos(key, ':search:') > 0)) as filter_rows,
   count(*) filter (where key in ('jobs_browsable:ab', 'jobs_browsable:et')) as plain_rows
