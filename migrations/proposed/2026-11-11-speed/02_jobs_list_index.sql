@@ -1,0 +1,54 @@
+-- ============================================================================
+-- APPLIED 11 Nov 2026 — kept for checks/rollback; source of truth is 0009
+-- (migrations/0009_site_counts_and_jobs_browsable_index.sql).
+-- Proposed 11 November 2026 (speed job, owner decision D108;
+-- default order changed to plain newest first after the live tier check).
+-- Run after 01, on its own: this file must be the only statement in the
+-- query. CREATE INDEX CONCURRENTLY cannot run inside a transaction, so do
+-- not paste it together with any other file.
+-- Undo: 99_rollback.sql, part B.
+-- ============================================================================
+--
+-- One index for the two things that must be fast:
+--   (i)  the count in public.refresh_site_counts(): an index-only scan of
+--        the ~15,500 active jobs, checking platform and expires_at from the
+--        index itself (both are INCLUDEd), without reading the table rows;
+--   (ii) the default jobs list, page N (lib/jobs.ts, getDefaultOrderJobs):
+--        WHERE status='active' AND platform @> {p} AND not expired
+--        ORDER BY published_at DESC NULLS LAST, created_at DESC, id DESC
+--        LIMIT 24 OFFSET 24*(N-1)
+--        The index is already in that order, so the database reads entries
+--        from the top and stops after the requested page; nothing is sorted.
+--
+-- Platform ('ab' or 'et'): platform is an array, so it cannot lead a btree.
+-- It is checked on each entry as the scan walks the newest-first order:
+--   - accountingbody.com: ~12,400 of ~15,500 active jobs match, so about
+--     1.25 entries are read per job shown;
+--   - ethiotax.com: ~3,100 of ~15,500 match, so about 5 entries are read
+--     per job shown: about 120 for page 1, about 1,200 for page 10, and at
+--     most all ~15,500 for its last page (~129). Every page is a short,
+--     ordered read with no sort, and each page is cached for 5 minutes.
+--
+-- Why partial (WHERE status = 'active'): the "browsable" filter is
+-- status + platform + expiry. Expiry compares with now(), which an index
+-- predicate cannot contain; status = 'active' is the only fixed part, and
+-- it excludes every expired, closed, rejected and draft job (~39,000 rows
+-- in the table, ~15,500 active), which keeps the index small.
+--
+-- No boost column (source_score, quality_score, is_featured): the owner
+-- dropped the boost from the default order on 11 Nov 2026.
+--
+-- CONCURRENTLY: the jobs table stays readable and writable while it builds.
+-- If the build is interrupted it can leave an INVALID index behind, which
+-- IF NOT EXISTS would then skip; 04_checks_readonly.sql (query 5) shows
+-- whether it is valid. If it is not: run 99_rollback.sql part B, then this
+-- file again.
+--
+-- Additive: no existing index changes. The live code does not need it to
+-- work; it only makes the new code's queries fast.
+-- ============================================================================
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_jobs_browsable_newest
+  ON public.jobs USING btree (published_at DESC NULLS LAST, created_at DESC, id DESC)
+  INCLUDE (platform, expires_at)
+  WHERE status = 'active';

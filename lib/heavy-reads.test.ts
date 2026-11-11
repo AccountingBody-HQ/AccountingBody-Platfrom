@@ -78,6 +78,9 @@ beforeEach(() => {
   vi.useFakeTimers()
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://example.supabase.co')
   vi.stubEnv('SUPABASE_SECRET_KEY', 'test-key')
+  // The whole-table jobs count is now the estimate fallback; the pre-counted
+  // row is a one-row read on the public read limit (supabase-contexts.test.ts).
+  vi.stubEnv('JOBS_TOTAL_SOURCE', 'estimate')
   vi.spyOn(console, 'warn').mockImplementation(() => {})
   vi.spyOn(console, 'error').mockImplementation(() => {})
   resetCacheGuard()

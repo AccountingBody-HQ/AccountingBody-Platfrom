@@ -408,8 +408,13 @@ export interface ListingFilters {
   sources?: JobSource[]
 }
 
+// 'default' is the order used when the visitor has typed no search words and
+// chosen no sort (owner decision, 11 Nov 2026): a plain select in
+// DEFAULT_LIST_ORDER, served by an index, instead of the ranked search.
+export type ListingSort = NonNullable<GetActiveDirectJobsParams['sortBy']> | 'default'
+
 export interface ListingPage extends ListingFilters {
-  sortBy: NonNullable<GetActiveDirectJobsParams['sortBy']>
+  sortBy: ListingSort
   limit: number
   offset: number
 }
@@ -456,14 +461,84 @@ export function normaliseListingFilters(params: ListingQuery): ListingFilters {
 }
 
 // Key and query for one page of rows: the filters plus sort, limit and
-// offset, defaulted exactly as getActiveDirectJobs defaults them.
+// offset, with limit and offset defaulted exactly as getActiveDirectJobs
+// defaults them. With no chosen sort, a search with words ranks by
+// relevance (as it always has) and the plain list uses the 'default' order.
 export function normaliseListingPage(params: ListingQuery): ListingPage {
+  const filters = normaliseListingFilters(params)
   return {
-    ...normaliseListingFilters(params),
-    sortBy: params.sortBy ?? 'relevance',
+    ...filters,
+    sortBy: params.sortBy ?? (filters.search ? 'relevance' : 'default'),
     limit:  params.limit ?? 20,
     offset: params.offset ?? 0,
   }
+}
+
+// True when nothing but the platform narrows the list, so its total is the
+// whole browsable count (getBrowsableJobsTotal) rather than a filtered one.
+export function isUnfilteredListing(params: ListingQuery): boolean {
+  const filters: Partial<ListingFilters> = { ...normaliseListingFilters(params) }
+  delete filters.platform
+  return Object.values(filters).every(value => value === undefined)
+}
+
+// The default list order: plain newest first by posting date, as the job
+// card shows it (undated rows last), then created_at and id so equal rows
+// always page in the same order. No boost of any kind: the owner dropped the
+// source_score boost on 11 Nov 2026 after the live tier check, because a
+// strict tier put every newer job from lower-scored feeds behind one feed.
+// migrations/0009_site_counts_and_jobs_browsable_index.sql (applied
+// 11 Nov 2026) indexes exactly this order.
+export const DEFAULT_LIST_ORDER = [
+  { column: 'published_at', ascending: false, nullsFirst: false },
+  { column: 'created_at', ascending: false },
+  { column: 'id', ascending: false },
+] as const
+
+// The ranked search's RETURNS TABLE columns (migrations/0004) minus
+// description, which the listings card never renders: the default list
+// returns rows of exactly the same shape as the ranked search.
+const LISTING_ROW_COLUMNS = JOB_COLUMNS
+  .split(', ')
+  .filter(column => column !== 'description' && column !== 'salary_is_predicted')
+  .join(', ')
+
+// One page of the default list: the same filters as getActiveDirectJobs's
+// count path (search words never reach here), ordered by DEFAULT_LIST_ORDER.
+// Deliberately written out like that count path rather than sharing a
+// builder, so neither existing path changes; jobs-speed.test.ts checks that
+// both apply the same filters. Errors throw, so nothing is cached for them.
+async function getDefaultOrderJobs(page: ListingPage): Promise<ListingJob[]> {
+  const supabase = getSupabase('publicHeavyRead')
+  const nowIso = new Date().toISOString()
+  const qualificationsOrFilter = page.qualifications && page.qualifications.length > 0
+    ? buildQualificationsOrFilter(page.qualifications) : null
+
+  let query = supabase
+    .from('jobs')
+    .select(LISTING_ROW_COLUMNS)
+    .eq('status', 'active')
+    .contains('platform', [page.platform])
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+
+  if (page.sources && page.sources.length > 0) query = query.in('source', page.sources)
+  if (page.location) query = query.ilike('location_text', `%${page.location}%`)
+  if (page.locationCountry && page.locationCountry !== 'all') query = query.eq('location_country', page.locationCountry)
+  if (page.employmentTypes && page.employmentTypes.length > 0) query = query.in('employment_type', page.employmentTypes)
+  if (page.seniorityLevels && page.seniorityLevels.length > 0) query = query.in('seniority_level', page.seniorityLevels)
+  if (page.remoteOnly) query = query.eq('location_remote', true)
+  if (page.salaryMin != null) query = query.gte('salary_min', page.salaryMin)
+  if (page.salaryMax != null) query = query.lte('salary_max', page.salaryMax)
+  if (page.postedWithin != null) {
+    query = query.gte('created_at', new Date(Date.now() - page.postedWithin * 24 * 60 * 60 * 1000).toISOString())
+  }
+  if (qualificationsOrFilter) query = query.or(qualificationsOrFilter)
+
+  for (const { column, ...options } of DEFAULT_LIST_ORDER) query = query.order(column, options)
+
+  const { data, error } = await query.range(page.offset, page.offset + page.limit - 1)
+  if (error) throw new Error(`default jobs list query failed: ${error.message}`)
+  return (data ?? []) as unknown as ListingJob[]
 }
 
 // What the listings card needs: everything except `description`, which it
@@ -476,7 +551,8 @@ export type ListingJob = Omit<Job, 'description'>
 // so unstable_cache stores nothing for them; only real results, including
 // a genuine empty page, are cached.
 async function fetchListingJobs(page: ListingPage): Promise<ListingJob[]> {
-  const jobs = await getActiveDirectJobs({ ...page, countOnly: false })
+  if (page.sortBy === 'default') return getDefaultOrderJobs(page)
+  const jobs = await getActiveDirectJobs({ ...page, sortBy: page.sortBy, countOnly: false })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return jobs.map(({ description, ...rest }) => rest)
 }
@@ -494,8 +570,22 @@ const cachedListingJobsCount = cache(guardCachedRead(['listing-jobs-count'],
 
 // Normalising inside these wrappers (not at the call site) means no caller
 // can reach the cache with an un-normalised key.
-export function getCachedListingJobs(params: ListingQuery): Promise<ListingJob[]> {
-  return cachedListingJobs(normaliseListingPage(params))
+export const RELEVANCE_FALLBACK_LOG = 'jobs list: relevance order failed with no search words, showing the default order'
+
+// A visitor who chooses 'Most relevant' with no search words still gets the
+// ranked search; if it fails, they get the default order instead of an
+// error. The fallback happens outside the cache, so the relevance entry
+// never stores default-order rows. A search with words is never replaced.
+export async function getCachedListingJobs(params: ListingQuery): Promise<ListingJob[]> {
+  const page = normaliseListingPage(params)
+  if (page.sortBy !== 'relevance' || page.search) return cachedListingJobs(page)
+  try {
+    return await cachedListingJobs(page)
+  } catch {
+    // Fixed text only: no request values, no upstream message.
+    console.error(RELEVANCE_FALLBACK_LOG)
+    return cachedListingJobs({ ...page, sortBy: 'default' })
+  }
 }
 
 export function getCachedListingJobsCount(params: ListingQuery): Promise<number> {
@@ -949,22 +1039,99 @@ export async function getActiveJobsCount(platform: string): Promise<number> {
   return count ?? 0
 }
 
-// The real "how many jobs can a visitor currently browse" count — same
-// status/platform/not-yet-expired filters as getActiveDirectJobs's own
-// countOnly path (lib/jobs.ts, the `if (countOnly)` branch above),
-// deliberately with NO source restriction, so this agrees with what
-// /jobs/listings itself would show for an unfiltered search.
+// ── The jobs total (owner decision D108, 11 Nov 2026) ───────────────────────
 //
-// Failures throw inside the cached function, because unstable_cache stores
-// whatever it returns (a fallback 0 would be served for the whole TTL) and
-// nothing when it throws. A missing count with no error counts as a failure
-// too. The exported function catches outside the cache and returns the 0.
+// "How many jobs can a visitor currently browse": status 'active', on this
+// platform, not past its own expiry, with NO source restriction, so it
+// agrees with what /jobs/listings shows for the plain list.
+//
+// Where the number comes from is set by JOBS_TOTAL_SOURCE:
+//   - 'precount' (default): the row public.site_counts['jobs_browsable:<platform>'],
+//     written every 10 minutes by public.refresh_site_counts() (see
+//     migrations/0009_site_counts_and_jobs_browsable_index.sql). Missing, unreadable, or older
+//     than PRECOUNT_MAX_AGE_MS: fall through to the estimate.
+//   - 'estimate': PostgREST's estimated count with the same filter. On
+//     failure: fall through to none.
+//   - 'none': no total (null). The jobs list then pages with Previous/Next;
+//     the footer, home page and jobs hub show their non-numeric wording.
+// Nothing here throws; each fall-through writes one fixed log line.
+
+export type JobsTotalSource = 'precount' | 'estimate' | 'none'
+
+export const PRECOUNT_MAX_AGE_MS = 6 * 60 * 60 * 1000
+
+export const JOBS_TOTAL_LOG = {
+  invalidSource:   'jobs total: JOBS_TOTAL_SOURCE not recognised, using precount',
+  precountMissing: 'jobs total: pre-counted row missing, using estimate',
+  precountStale:   'jobs total: pre-counted row older than 6 hours, using estimate',
+  precountFailed:  'jobs total: pre-counted row could not be read, using estimate',
+  estimateFailed:  'jobs total: estimate failed, showing no total',
+} as const
+
+const JOBS_TOTAL_SOURCES: readonly JobsTotalSource[] = ['precount', 'estimate', 'none']
+let invalidSourceLogged = false
+
+export function jobsTotalSource(): JobsTotalSource {
+  const raw = process.env.JOBS_TOTAL_SOURCE?.trim().toLowerCase()
+  if (!raw) return 'precount'
+  if ((JOBS_TOTAL_SOURCES as readonly string[]).includes(raw)) return raw as JobsTotalSource
+  if (!invalidSourceLogged) {
+    invalidSourceLogged = true
+    console.warn(JOBS_TOTAL_LOG.invalidSource)
+  }
+  return 'precount'
+}
+
+// Tests only: allow the invalid-value line to be logged again.
+export function resetJobsTotalSourceWarning(): void {
+  invalidSourceLogged = false
+}
+
+export function siteCountKey(platform: string): string {
+  return `jobs_browsable:${platform}`
+}
+
+interface PrecountRow {
+  value: number
+  updatedAt: number
+}
+
+// One primary-key read. Throws on any error or unexpected shape, so nothing
+// is cached for it; a missing row is a real answer (null) and is cached
+// like any other for the two minutes below.
+async function fetchJobsPrecount(platform: string): Promise<PrecountRow | null> {
+  const { data, error, status } = await getSupabase('publicRead')
+    .from('site_counts')
+    .select('value, updated_at')
+    .eq('key', siteCountKey(platform))
+    .maybeSingle()
+  if (error) throw new Error(`site_counts read failed (status ${status})`)
+  if (data === null || data === undefined) return null
+  const row = data as { value?: unknown; updated_at?: unknown }
+  const value = typeof row.value === 'number' ? row.value : typeof row.value === 'string' ? Number(row.value) : NaN
+  const updatedAt = typeof row.updated_at === 'string' ? Date.parse(row.updated_at) : NaN
+  if (!Number.isSafeInteger(value) || value < 0 || Number.isNaN(updatedAt)) {
+    throw new Error('site_counts row has an unexpected shape')
+  }
+  return { value, updatedAt }
+}
+
+// Two minutes: with the 10-minute refresh, the total a visitor sees is at
+// most about 12.5 minutes old (10 + 2 + the cache guard's 30-second hold).
+const cachedJobsPrecount = guardCachedRead(['site-counts-jobs-browsable'], unstable_cache(fetchJobsPrecount, ['site-counts-jobs-browsable'], {
+  revalidate: 120,
+  tags: ['counts', 'jobs'],
+}))
+
+// The estimate. Failures throw inside the cached function, because
+// unstable_cache stores whatever it returns and nothing when it throws. A
+// missing count with no error counts as a failure too.
 async function fetchBrowsableJobsCount(platform: string): Promise<number> {
   const supabase = getSupabase('publicHeavyRead')
   const nowIso = new Date().toISOString()
   const { count, error, status } = await supabase
     .from('jobs')
-    .select('*', { count: 'exact', head: true })
+    .select('*', { count: 'estimated', head: true })
     .eq('status', 'active')
     .contains('platform', [platform])
     .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
@@ -978,21 +1145,42 @@ const cachedBrowsableJobsCount = guardCachedRead(['getBrowsableJobsCount'], unst
   tags: ['counts', 'jobs'],
 }))
 
-export async function getBrowsableJobsCount(platform: string): Promise<number> {
+// The total for the plain jobs list, or null when there is none.
+export async function getBrowsableJobsTotal(platform: string): Promise<number | null> {
+  const source = jobsTotalSource()
+  if (source === 'none') return null
+
+  if (source === 'precount') {
+    try {
+      const row = await cachedJobsPrecount(platform)
+      if (row === null) console.warn(JOBS_TOTAL_LOG.precountMissing)
+      else if (Date.now() - row.updatedAt > PRECOUNT_MAX_AGE_MS) console.warn(JOBS_TOTAL_LOG.precountStale)
+      else return row.value
+    } catch {
+      console.warn(JOBS_TOTAL_LOG.precountFailed)
+    }
+  }
+
   try {
     return await cachedBrowsableJobsCount(platform)
-  } catch (error) {
-    console.error('getBrowsableJobsCount error:', error)
-    return 0
+  } catch {
+    console.error(JOBS_TOTAL_LOG.estimateFailed)
+    return null
   }
 }
 
+// The footer, home page and jobs hub keep their number contract: 0 when
+// there is no total, which they already show as non-numeric wording.
+export async function getBrowsableJobsCount(platform: string): Promise<number> {
+  return (await getBrowsableJobsTotal(platform)) ?? 0
+}
+
 // Two layers, each solving a different problem:
-//   - unstable_cache (inside getBrowsableJobsCount) persists the result
+//   - unstable_cache (inside getBrowsableJobsTotal) persists the result
 //     across requests/instances (Vercel backs this with its own shared Data
-//     Cache, not per-instance memory) for 1 hour — this exact count is
-//     expensive and runs in the footer of nearly every page, so it's
-//     deliberately slower than ingestion. `platform` is passed as the
+//     Cache, not per-instance memory): 2 minutes for the pre-counted row,
+//     1 hour for the estimate fallback. It runs in the footer of nearly
+//     every page. `platform` is passed as the
 //     wrapped function's own argument, and per Next.js's documented
 //     unstable_cache behaviour the arguments passed to the returned function
 //     are always part of the cache key (in addition to the keyParts array) —

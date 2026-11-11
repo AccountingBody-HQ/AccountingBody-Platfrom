@@ -51,6 +51,9 @@ const ok = (fields: { data?: unknown; count?: number | null }) => { answer = { e
 const fail = () => { answer = { data: null, count: null, error: { message: 'upstream request timeout', code: '' }, status: 504 } }
 
 beforeEach(() => {
+  // The estimate path: these tests cover one guarded read per reader. The
+  // pre-counted row and its fall-throughs are covered in jobs-speed.test.ts.
+  vi.stubEnv('JOBS_TOTAL_SOURCE', 'estimate')
   vi.useFakeTimers()
   vi.setSystemTime(new Date('2026-01-01T00:00:00Z'))
   vi.mocked(createClient).mockImplementation(() => fakeClient() as unknown as ReturnType<typeof createClient>)
@@ -63,6 +66,7 @@ beforeEach(() => {
 afterEach(() => {
   resetCacheGuard()
   vi.useRealTimers()
+  vi.unstubAllEnvs()
   vi.restoreAllMocks()
 })
 
@@ -85,7 +89,8 @@ const readers: Reader[] = [
   { name: 'getPublishedQuestionCount', run: () => getPublishedQuestionCount(), healthy: () => ok({ count: 24531 }), expected: 24531, fallback: { value: 0 } },
   { name: 'getPublishedArticleCount', run: () => getPublishedArticleCount('ab'), healthy: () => ok({ count: 2017 }), expected: 2017, fallback: { value: 0 } },
   { name: 'getBrowsableJobsCount', run: () => getBrowsableJobsCount('et'), healthy: () => ok({ count: 13456 }), expected: 13456, fallback: { value: 0 } },
-  { name: 'getCachedListingJobs', run: () => getCachedListingJobs({ platform: 'ab', limit: 24, offset: 0 }), healthy: () => ok({ data: [{ ...row, description: 'long' }] }), expected: [row], fallback: { throws: 'search_jobs_ranked failed' } },
+  { name: 'getCachedListingJobs', run: () => getCachedListingJobs({ platform: 'ab', search: 'tax', limit: 24, offset: 0 }), healthy: () => ok({ data: [{ ...row, description: 'long' }] }), expected: [row], fallback: { throws: 'search_jobs_ranked failed' } },
+  { name: 'getCachedListingJobs (default order)', run: () => getCachedListingJobs({ platform: 'ab', limit: 24, offset: 24 }), healthy: () => ok({ data: [row] }), expected: [row], fallback: { throws: 'default jobs list query failed' } },
   { name: 'getCachedListingJobsCount', run: () => getCachedListingJobsCount({ platform: 'ab' }), healthy: () => ok({ count: 640 }), expected: 640, fallback: { throws: 'count query failed' } },
   { name: 'getCachedActiveJobCountries', run: () => getCachedActiveJobCountries('ab'), healthy: () => ok({ data: countries }), expected: [{ country: 'United Kingdom', count: 12 }, { country: 'Ethiopia', count: 3 }], fallback: { value: [] } },
 ]
