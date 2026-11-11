@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -10,10 +10,7 @@ export const fetchCache = 'force-no-store'
 
 export async function GET() {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SECRET_KEY!
-    )
+    const supabase = getServerSupabase('publicRead')
 
     const { error } = await supabase
       .from('email_subscribers')

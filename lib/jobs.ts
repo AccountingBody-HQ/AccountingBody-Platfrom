@@ -1,14 +1,16 @@
 import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase, type DbContext } from '@/lib/supabase-server'
 import { bucketBounds } from '@/lib/sitemap-chunks'
 import { SINGLE_WORD_COUNTRY_NAMES } from '@/lib/ingestion/normalise'
+import { guardCachedRead } from '@/lib/cache-guard'
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+// Reads used by public pages and APIs use the public read limit (the
+// default); the whole-table counts and the job search use the heavy read
+// limit. Functions used only by other kinds of work name their context
+// where they create the client.
+function getSupabase(context: DbContext = 'publicRead') {
+  return getServerSupabase(context)
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -259,7 +261,7 @@ function buildQualificationsOrFilter(qualifications: string[]): string | null {
 export async function getActiveDirectJobs(params: GetActiveDirectJobsParams & { countOnly: true }): Promise<number>
 export async function getActiveDirectJobs(params: GetActiveDirectJobsParams & { countOnly?: false }): Promise<Job[]>
 export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Promise<Job[] | number> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicHeavyRead')
   const {
     platform,
     search,
@@ -483,12 +485,12 @@ async function fetchListingJobsCount(filters: ListingFilters): Promise<number> {
   return getActiveDirectJobs({ ...filters, countOnly: true })
 }
 
-const cachedListingJobs = cache(
+const cachedListingJobs = cache(guardCachedRead(['listing-jobs'],
   unstable_cache(fetchListingJobs, ['listing-jobs'], { revalidate: 300, tags: ['jobs', 'jobs:listings'] })
-)
-const cachedListingJobsCount = cache(
+))
+const cachedListingJobsCount = cache(guardCachedRead(['listing-jobs-count'],
   unstable_cache(fetchListingJobsCount, ['listing-jobs-count'], { revalidate: 300, tags: ['jobs', 'jobs:listings'] })
-)
+))
 
 // Normalising inside these wrappers (not at the call site) means no caller
 // can reach the cache with an un-normalised key.
@@ -506,14 +508,23 @@ export function getCachedListingJobsCount(params: ListingQuery): Promise<number>
 // description/status into rendered HTML — it never passes the fetched job
 // object to a client component, so the wider row here never reaches the
 // browser as raw JSON the way /api/jobs/direct's response does).
+//
+// Returns null only when no such job exists: .single() reports zero rows as
+// HTTP 406 with PostgREST code PGRST116, and an id that is not a valid uuid
+// (jobs.id is uuid) is refused with code 22P02, so it can match no row
+// either. Any other failure is thrown, so the page renders its error page
+// with a 500 instead of a 404.
 export async function getJobById(id: string): Promise<Job | null> {
   const supabase = getSupabase()
-  const { data, error } = await supabase
+  const { data, error, status } = await supabase
     .from('jobs')
     .select(JOB_COLUMNS_ADMIN)
     .eq('id', id)
     .single()
-  if (error || !data) return null
+  if (error && status === 406 && error.code === 'PGRST116') return null
+  if (error && error.code === '22P02') return null
+  if (error) throw new Error(`getJobById: jobs query failed (status ${status}): ${error.message}`)
+  if (!data) throw new Error('getJobById: empty response')
   return data as Job
 }
 
@@ -537,13 +548,17 @@ export async function getJobById(id: string): Promise<Job | null> {
 // different fetch (out of scope here).
 export async function getJobBySlug(slug: string): Promise<Job | null> {
   const supabase = getSupabase()
-  const { data, error } = await supabase
+  const { data, error, status } = await supabase
     .from('jobs')
     .select(JOB_COLUMNS)
     .eq('slug', slug)
     .in('status', ['active', 'expired'])
     .single()
-  if (error || !data) return null
+  // null only for zero rows (HTTP 406, PostgREST code PGRST116); any other
+  // failure is thrown, so the page shows its error page (500), not a 404.
+  if (error && status === 406 && error.code === 'PGRST116') return null
+  if (error) throw new Error(`getJobBySlug: jobs query failed (status ${status}): ${error.message}`)
+  if (!data) throw new Error(`getJobBySlug: empty response for "${slug}"`)
   // See the comment on the JOB_COLUMNS cast in getActiveDirectJobs — same
   // non-literal-string limitation applies here.
   return data as unknown as Job
@@ -863,7 +878,7 @@ export async function getAdminJobs(params: {
   search?: string
   page?: number
 }): Promise<{ jobs: Job[]; total: number }> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('admin')
   const { status, source, platform, search, page = 1 } = params
 
   const from = (Math.max(1, page) - 1) * ADMIN_PAGE_SIZE
@@ -945,7 +960,7 @@ export async function getActiveJobsCount(platform: string): Promise<number> {
 // nothing when it throws. A missing count with no error counts as a failure
 // too. The exported function catches outside the cache and returns the 0.
 async function fetchBrowsableJobsCount(platform: string): Promise<number> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicHeavyRead')
   const nowIso = new Date().toISOString()
   const { count, error, status } = await supabase
     .from('jobs')
@@ -958,10 +973,10 @@ async function fetchBrowsableJobsCount(platform: string): Promise<number> {
   return count
 }
 
-const cachedBrowsableJobsCount = unstable_cache(fetchBrowsableJobsCount, ['getBrowsableJobsCount'], {
+const cachedBrowsableJobsCount = guardCachedRead(['getBrowsableJobsCount'], unstable_cache(fetchBrowsableJobsCount, ['getBrowsableJobsCount'], {
   revalidate: 3600,
   tags: ['counts', 'jobs'],
-})
+}))
 
 export async function getBrowsableJobsCount(platform: string): Promise<number> {
   try {
@@ -1010,22 +1025,32 @@ export interface ActiveJobCountry {
 // callers don't need to re-sort. Rows with a null location_country are
 // excluded by the RPC's own WHERE clause, not filtered out here.
 //
-// Returns [] on any RPC error — including "the migration hasn't been run
-// yet" (a real possibility: this Codespace has no database credentials
-// and cannot apply migrations/0006 itself, see migrations/README.md) —
-// rather than throwing, so callers can treat "no data" and "the function
-// doesn't exist yet" identically and fall back to a hardcoded list.
-export async function getActiveJobCountries(platform: string): Promise<ActiveJobCountry[]> {
-  const supabase = getSupabase()
-  const { data, error } = await supabase.rpc('get_active_job_countries', { p_platform: platform })
-  if (error || !data) {
-    if (error) console.error('getActiveJobCountries error:', error)
-    return []
-  }
+// The query itself throws on any RPC error, so unstable_cache stores
+// nothing for it; a real result, including an empty list, is returned and
+// cached. Both exported readers catch outside the cache and return [] on
+// any RPC error — including "the migration hasn't been run yet" (a real
+// possibility: this Codespace has no database credentials and cannot apply
+// migrations/0006 itself, see migrations/README.md) — so callers can treat
+// "no data" and "the function doesn't exist yet" identically and fall back
+// to a hardcoded list.
+async function fetchActiveJobCountries(platform: string): Promise<ActiveJobCountry[]> {
+  const supabase = getSupabase('publicHeavyRead')
+  const { data, error, status } = await supabase.rpc('get_active_job_countries', { p_platform: platform })
+  if (error) throw new Error(`active job countries query failed (status ${status}): ${error.message}`)
+  if (!data) return []
   return (data as { country: string; job_count: number }[]).map(row => ({
     country: row.country,
     count: row.job_count,
   }))
+}
+
+export async function getActiveJobCountries(platform: string): Promise<ActiveJobCountry[]> {
+  try {
+    return await fetchActiveJobCountries(platform)
+  } catch (error) {
+    console.error('getActiveJobCountries error:', error)
+    return []
+  }
 }
 
 // Two layers, same composition and same reasoning as
@@ -1037,12 +1062,21 @@ export async function getActiveJobCountries(platform: string): Promise<ActiveJob
 // jobs changes far more slowly than the job count itself; a new country
 // appearing up to 6 hours late is an acceptable trade for a much cheaper
 // steady-state query volume against a GROUP BY aggregate.
-export const getCachedActiveJobCountries = cache(
-  unstable_cache(getActiveJobCountries, ['active-job-countries'], { revalidate: 21600 })
+const cachedActiveJobCountries = guardCachedRead(['active-job-countries'],
+  unstable_cache(fetchActiveJobCountries, ['active-job-countries'], { revalidate: 21600 })
 )
 
+export const getCachedActiveJobCountries = cache(async (platform: string): Promise<ActiveJobCountry[]> => {
+  try {
+    return await cachedActiveJobCountries(platform)
+  } catch (error) {
+    console.error('getActiveJobCountries error:', error)
+    return []
+  }
+})
+
 export async function getExpiringJobs(daysFromNow: number): Promise<Job[]> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('cron')
   const threshold = new Date(Date.now() + daysFromNow * 24 * 60 * 60 * 1000).toISOString()
 
   const { data, error } = await supabase
@@ -1074,7 +1108,7 @@ export async function getExpiringJobs(daysFromNow: number): Promise<Job[]> {
  * than retrying blindly.
  */
 export async function createJob(data: JobInsert): Promise<Job> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicWrite')
 
   const source: JobSource = data.source ?? 'employer'
   const slug = `${slugify(data.title)}-${slugify(data.company_name)}-${randomSuffix()}`
@@ -1320,7 +1354,7 @@ export async function getJobSitemapChunk(
 }
 
 export async function approveJob(id: string, adminNotes?: string): Promise<Job> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('admin')
   const nowIso = new Date().toISOString()
   const expiresAt = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString()
 
@@ -1343,7 +1377,7 @@ export async function approveJob(id: string, adminNotes?: string): Promise<Job> 
 }
 
 export async function rejectJob(id: string, reason: string): Promise<Job> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('admin')
 
   const { data, error } = await supabase
     .from('jobs')
@@ -1357,7 +1391,9 @@ export async function rejectJob(id: string, reason: string): Promise<Job> {
 }
 
 export async function expireJob(id: string): Promise<void> {
-  const supabase = getSupabase()
+  // Used by the daily cron and by admin. One single-row update: the admin
+  // limit is far above its work and below every caller's route limit.
+  const supabase = getSupabase('admin')
   const { error } = await supabase
     .from('jobs')
     .update({ status: 'expired', closed_at: new Date().toISOString() })
@@ -1382,7 +1418,7 @@ export async function closeJobByManageToken(token: string): Promise<Job | null> 
     return job
   }
 
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicWrite')
   const { data, error } = await supabase
     .from('jobs')
     .update({ status: 'closed', closed_at: new Date().toISOString() })
@@ -1407,7 +1443,7 @@ export async function markJobPaid(
   providerOrderId: string,
   pricePaidPence: number
 ): Promise<Job> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicWrite')
 
   const { data, error } = await supabase
     .from('jobs')
@@ -1435,7 +1471,7 @@ export async function markJobPaid(
 
 export async function incrementJobImpressions(id: string): Promise<void> {
   try {
-    const supabase = getSupabase()
+    const supabase = getSupabase('publicWrite')
     const { data } = await supabase
       .from('jobs')
       .select('impression_count, click_count')
@@ -1458,7 +1494,7 @@ export async function incrementJobImpressions(id: string): Promise<void> {
 
 export async function incrementJobClicks(id: string): Promise<void> {
   try {
-    const supabase = getSupabase()
+    const supabase = getSupabase('publicWrite')
     const { data } = await supabase
       .from('jobs')
       .select('impression_count, click_count')

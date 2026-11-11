@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 
 export const runtime = 'nodejs'
 
@@ -12,10 +12,7 @@ export async function GET(req: NextRequest) {
   if (!id || !id.startsWith('AB-ART-'))
     return NextResponse.json({ error: 'Invalid Article ID' }, { status: 400 })
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  const supabase = getServerSupabase('admin')
 
   const { data, error } = await supabase
     .from('articles')

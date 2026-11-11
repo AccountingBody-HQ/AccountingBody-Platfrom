@@ -1,14 +1,11 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { getProvider } from '@/lib/providers'
 import { explainRelevance } from '@/lib/ingestion/validate'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 
 function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  return getServerSupabase('admin')
 }
 
 const DEFAULT_LIMIT = 50

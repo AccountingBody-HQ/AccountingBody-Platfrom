@@ -1,10 +1,9 @@
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase, type DbContext } from '@/lib/supabase-server'
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+// Public pages use the public read limit (the default). getCourseBySlug's
+// admin mode is used only by admin tools, which get the admin limit.
+function getSupabase(context: DbContext = 'publicRead') {
+  return getServerSupabase(context)
 }
 
 export interface CourseArticle {
@@ -205,36 +204,45 @@ export async function getPublishedCourses(site?: string): Promise<CourseSummary[
   })
 }
 
+// Returns null only when the course does not exist (.single() reports zero
+// rows as HTTP 406 with PostgREST code PGRST116) or, outside admin mode, is
+// not published. Any database error, in any stage, is logged and thrown, so
+// a page renders its error page with a 500 instead of a 404 or a course with
+// its chapters or lessons silently missing.
 export async function getCourseBySlug(slug: string, adminMode = false): Promise<Course | null> {
   try {
-  const supabase = getSupabase()
+  const supabase = getSupabase(adminMode ? 'admin' : 'publicRead')
   // Stage 1: fetch course
-  const { data: courseData, error: courseError } = await supabase
+  const { data: courseData, error: courseError, status: courseStatus } = await supabase
     .from('courses')
     .select('id, title, slug, description, level, status, is_featured, show_on_sites, canonical_owner')
     .eq('slug', slug)
     .single()
 
-  if (courseError || !courseData) return null
+  if (courseError && courseStatus === 406 && courseError.code === 'PGRST116') return null
+  if (courseError) throw new Error(`getCourseBySlug: courses query failed (status ${courseStatus}): ${courseError.message}`)
+  if (!courseData) throw new Error(`getCourseBySlug: empty response for "${slug}"`)
   if (!adminMode && courseData.status !== 'published') return null
 
   const course = courseData as unknown as RawCourseStageRow
 
   // Stage 2: fetch chapters
-  const { data: chaptersData } = await supabase
+  const { data: chaptersData, error: chaptersError } = await supabase
     .from('course_chapters')
     .select('id, chapter_title, chapter_order')
     .eq('course_id', course.id)
     .order('chapter_order', { ascending: true })
+  if (chaptersError) throw new Error(`getCourseBySlug: course_chapters query failed: ${chaptersError.message}`)
 
   const chapters = (chaptersData as unknown as RawChapterStageRow[] | null) ?? []
 
   // Stage 3: fetch all lessons for this course
-  const { data: lessonsData } = await supabase
+  const { data: lessonsData, error: lessonsError } = await supabase
     .from('course_lessons')
     .select('id, title, slug, lesson_order, chapter_id, estimated_time, video_url, audio_url, external_quiz_url')
     .eq('course_id', course.id)
     .order('lesson_order', { ascending: true })
+  if (lessonsError) throw new Error(`getCourseBySlug: course_lessons query failed: ${lessonsError.message}`)
 
   const lessons = (lessonsData as unknown as RawLessonStageRow[] | null) ?? []
 
@@ -244,11 +252,12 @@ export async function getCourseBySlug(slug: string, adminMode = false): Promise<
 
   if (lessonIds.length > 0) {
     // Stage 4a — flat: fetch lesson-article links (no embed)
-    const { data: laLinkData } = await supabase
+    const { data: laLinkData, error: laLinkError } = await supabase
       .from('course_lesson_articles')
       .select('lesson_id, article_order, article_id')
       .in('lesson_id', lessonIds)
       .order('article_order', { ascending: true })
+    if (laLinkError) throw new Error(`getCourseBySlug: course_lesson_articles query failed: ${laLinkError.message}`)
 
     const links = (laLinkData as unknown as RawLessonArticleLinkRow[] | null) ?? []
 
@@ -257,10 +266,11 @@ export async function getCourseBySlug(slug: string, adminMode = false): Promise<
     let articlesById = new Map<string, RawArticleRow>()
 
     if (linkedArticleIds.length > 0) {
-      const { data: articlesData } = await supabase
+      const { data: articlesData, error: articlesError } = await supabase
         .from('articles')
         .select('id, title, slug, excerpt, read_time, content_id, wp_id')
         .in('id', linkedArticleIds)
+      if (articlesError) throw new Error(`getCourseBySlug: articles query failed: ${articlesError.message}`)
 
       articlesById = new Map(
         ((articlesData as unknown as RawArticleRow[] | null) ?? []).map(a => [a.id, a])
@@ -332,7 +342,7 @@ export async function getCourseBySlug(slug: string, adminMode = false): Promise<
   }
   } catch (err) {
     console.error('getCourseBySlug error:', err)
-    return null
+    throw err
   }
 }
 
@@ -393,8 +403,9 @@ export async function getLessonData(courseSlug: string, lessonSlug: string): Pro
 
   return { course, lesson: lessonWithContent, prevLesson, nextLesson }
   } catch (err) {
+    // Rethrown, not returned as null: null means "no such lesson" (404).
     console.error('getLessonData error:', err)
-    return null
+    throw err
   }
 }
 

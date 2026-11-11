@@ -2,13 +2,10 @@
 // AB mock exam — fetches questions from Supabase via article category join
 // Replaces Sanity GROQ fetch — Session 35
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 
 function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  return getServerSupabase('publicRead')
 }
 
 export const runtime = 'nodejs'

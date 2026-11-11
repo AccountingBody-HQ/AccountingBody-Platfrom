@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { unstable_noStore as noStore } from 'next/cache'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
@@ -10,10 +10,7 @@ export const dynamic = 'force-dynamic'
 
 async function getSubmissions(filters: { safeSearch?: string; serviceType?: string; status?: string; platform?: string }) {
   noStore()
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  const supabase = getServerSupabase('admin')
 
   const platformFilter = filters.platform || 'ab'
   let helpQuery = supabase.from('help_requests').select('*').eq('platform', platformFilter).order('created_at', { ascending: false })
@@ -34,7 +31,7 @@ async function getSubmissions(filters: { safeSearch?: string; serviceType?: stri
 
 async function getServiceTypes(platform: string = 'ab') {
   noStore()
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!)
+  const supabase = getServerSupabase('admin')
   const { data } = await supabase.from('help_requests').select('service_type').eq('platform', platform).not('service_type', 'is', null)
   const types = Array.from(new Set((data ?? []).map((r: any) => r.service_type).filter(Boolean)))
   return types as string[]

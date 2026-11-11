@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import * as Sentry from '@sentry/nextjs'
 import { getActiveDirectJobs, buildSimilarQuery, type Job } from '@/lib/jobs'
 import { buildPhraseQuery, buildAndQuery, pickJobSearchTier } from '@/app/search/jobSearchTiers'
@@ -149,10 +149,7 @@ async function fetchJobsForSearch(rawQuery: string, platform: string): Promise<J
 }
 
 function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  return getServerSupabase('publicRead')
 }
 
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>()

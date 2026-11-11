@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { Resend } from 'resend'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 
 export const runtime = 'nodejs'
 
@@ -21,10 +21,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, skipped: true })
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SECRET_KEY!
-    )
+    const supabase = getServerSupabase('admin')
 
     const { data: app, error: fetchError } = await supabase
       .from('firms_applications')

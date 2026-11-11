@@ -143,6 +143,8 @@ Only when the owner has approved the release:
 2. Check both hosts.
 3. Purge the Vercel and Cloudflare caches after any deploy that changes cached pages.
 
+Full steps, checks and how to undo a release: `docs/RELEASE.md`.
+
 ## 5. Coding conventions
 
 ### Single sources
@@ -150,6 +152,8 @@ Only when the owner has approved the release:
 | Concern | Where it lives | Rule |
 |---|---|---|
 | Job queries | `lib/jobs.ts` | New job queries go here |
+| Server database clients | `lib/supabase-server.ts` | Get every server-side supabase-js client from `getServerSupabase(context)`. Each context (`publicRead`, `publicWrite`, `admin`, `cron`, `ingest`) has a fixed request time limit. Only three files call `createClient` themselves, on purpose: AB Press (`lib/ab-press-builder.ts` and its preview route) and `app/api/careerjet/route.ts`. They are listed in `lib/supabase-client-sources.test.ts`; the list only shrinks |
+| Cached database reads | `lib/cache-guard.ts` | Wrap every `unstable_cache` database read with `guardCachedRead`, using the same key parts. The similar-jobs reads, which are off, are not wrapped yet |
 | Job emails | `lib/jobEmails.ts` | New job emails go here |
 | Admin session check | `lib/admin-auth.ts` | Every admin page and route checks the session on the server |
 | Admin colours | `lib/admin-theme.ts` | Use `ADMIN_COLORS`, not raw colour values |
@@ -163,6 +167,7 @@ Only when the owner has approved the release:
 
 ### Data and server code
 
+- Server code creates database clients only through `lib/supabase-server.ts` and picks the context for the work: `publicRead` for anything a public page or read API uses, `publicWrite` for a write a visitor triggers, and `admin`, `cron` or `ingest` only for work that no public request uses. A function shared between a public path and longer work keeps the public limit for the public path.
 - Never create a Supabase client at module scope. Create it inside a function, as `getSupabase()` does in `lib/jobs.ts`. Treat other SDK clients the same way.
 - Always check the returned `error`. supabase-js and Resend return errors rather than throwing them, so success must never be assumed.
 - A route returns success only if the work really happened. It never keeps an old value quietly.
@@ -173,6 +178,7 @@ Only when the owner has approved the release:
 - Public forms verify the Turnstile token on the server.
 - Server-only secrets never go in a `NEXT_PUBLIC_` variable.
 - Popular reads use `unstable_cache`, as `lib/jobs.ts` and `lib/db.ts` do. Treat any new query on a busy page as a database load decision.
+- Cached database reads go through the cache guard (`lib/cache-guard.ts`); never cache a failure. The cached function throws on a database error, and the caller catches outside the cache and returns its fallback.
 - Keep existing `fetchCache` settings and `await` on `headers()` and `cookies()`. They are deliberate.
 - Every database change gets a numbered file in `migrations/`, in the same commit as the code that needs it.
 - The `public` database schema is shared with other products. Only touch the tables listed in `migrations/README.md`.

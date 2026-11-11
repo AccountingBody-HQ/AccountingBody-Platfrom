@@ -1,12 +1,12 @@
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase, type DbContext } from './supabase-server'
 import type { QualityMetrics } from './ingestion/quality'
 import type { AlertState } from './provider-alerts'
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+// No public page or API uses this file. Most functions serve provider
+// ingestion, which is the default limit here; the scheduled orchestrator's
+// and admin-only functions name their own context.
+function getSupabase(context: DbContext = 'ingest') {
+  return getServerSupabase(context)
 }
 
 export interface JobProvider {
@@ -92,7 +92,9 @@ export interface ProviderRun {
 
 // Get a single provider by slug
 export async function getProvider(slug: string): Promise<JobProvider | null> {
-  const supabase = getSupabase()
+  // Used by ingestion and by admin. One single-row read: the admin limit is
+  // far above its work and below every caller's route limit.
+  const supabase = getSupabase('admin')
   const { data, error } = await supabase
     .from('job_providers')
     .select('*')
@@ -107,7 +109,7 @@ export async function getProvider(slug: string): Promise<JobProvider | null> {
 // prevents concurrent orchestrator ticks from dispatching the same
 // provider twice when a run outlives the 15-minute cron interval.
 export async function getProvidersDueForFetch(): Promise<JobProvider[]> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('cron')
 
   const { data: runningRuns, error: runningError } = await supabase
     .from('provider_runs')
@@ -143,7 +145,7 @@ export async function getProvidersDueForFetch(): Promise<JobProvider[]> {
 
 // Get all providers (for admin dashboard)
 export async function getAllProviders(): Promise<JobProvider[]> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('admin')
   const { data, error } = await supabase
     .from('job_providers')
     .select('*')
@@ -382,7 +384,7 @@ export async function incrementProviderJobsToday(
 
 // Get the most recent run for every provider, keyed by provider_slug
 export async function getLatestRunPerProvider(): Promise<Record<string, ProviderRun>> {
-  const sb = getSupabase()
+  const sb = getSupabase('admin')
   const { data, error } = await sb
     .from('provider_runs')
     .select('*')
@@ -404,7 +406,7 @@ export async function getLatestRunPerProvider(): Promise<Record<string, Provider
 export async function reapStaleRuns(
   olderThanMinutes = 10
 ): Promise<number> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('cron')
   const cutoff = new Date(
     Date.now() - olderThanMinutes * 60_000
   ).toISOString()

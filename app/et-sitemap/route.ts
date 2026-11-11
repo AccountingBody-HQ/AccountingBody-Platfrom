@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { getJobSitemapEntries } from '@/lib/jobs'
 import { resolveArticleCanonicalUrl } from '@/lib/canonical'
 
@@ -105,10 +105,7 @@ export async function GET() {
     url('/disclaimer',                             0.3,  'yearly'),
   ]
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  const supabase = getServerSupabase('publicRead')
   const { data: etArticles } = await supabase
     .from('articles')
     .select('slug, updated_at, category, canonical_owner, show_on_sites')

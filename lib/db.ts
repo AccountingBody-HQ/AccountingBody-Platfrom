@@ -1,13 +1,14 @@
 // Session 41 — private repo deploy test
 import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase, type DbContext } from '@/lib/supabase-server'
+import { guardCachedRead } from '@/lib/cache-guard'
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+// Every function in this file that has a caller serves public pages, so all
+// use the public read limit (the default), except the whole-table counts,
+// which name the heavy read limit.
+function getSupabase(context: DbContext = 'publicRead') {
+  return getServerSupabase(context)
 }
 
 export interface ArticleSummary {
@@ -112,12 +113,18 @@ async function fetchPublishedArticleBySlug(slug: string): Promise<ArticleFull | 
 // Returns null only for a genuine not-found. Any other failure is logged and
 // re-thrown, so an article page renders its error boundary with a 500
 // instead of a 404 that tells crawlers the article doesn't exist.
+const ARTICLE_BY_SLUG_KEY = ['article-by-slug', 'published']
+
+const guardedArticleBySlug = guardCachedRead(ARTICLE_BY_SLUG_KEY, (slug: string) =>
+  unstable_cache(fetchPublishedArticleBySlug, ARTICLE_BY_SLUG_KEY, {
+    revalidate: 3600,
+    tags: ['articles', `article:${slug}`],
+  })(slug)
+)
+
 export const getArticleBySlug = cache(async (slug: string): Promise<ArticleFull | null> => {
   try {
-    return await unstable_cache(fetchPublishedArticleBySlug, ['article-by-slug', 'published'], {
-      revalidate: 3600,
-      tags: ['articles', `article:${slug}`],
-    })(slug)
+    return await guardedArticleBySlug(slug)
   } catch (error) {
     console.error('getArticleBySlug error:', error)
     throw error
@@ -175,10 +182,10 @@ async function fetchCategoryCount(category: string): Promise<number> {
   return count
 }
 
-const cachedCategoryCount = unstable_cache(fetchCategoryCount, ['getCategoryCounts'], {
+const cachedCategoryCount = guardCachedRead(['getCategoryCounts'], unstable_cache(fetchCategoryCount, ['getCategoryCounts'], {
   revalidate: 3600,
   tags: ['counts', 'articles'],
-})
+}))
 
 // Cached per category, so one failed count reads as 0 for that category only
 // and the others keep their real values, as they did before caching.
@@ -218,15 +225,21 @@ export async function searchArticles(query: string): Promise<ArticleSummary[]> {
 
 // ── Question Sets ─────────────────────────────────────────────────────────────
 
+// Returns null only for a genuine "no such published set": .single() reports
+// zero rows as HTTP 406 with PostgREST code PGRST116 (same rule as
+// fetchPublishedArticleBySlug above). Any other failure is thrown, so the
+// page renders its error page with a 500 instead of a 404.
 export async function getQuestionSetBySlug(slug: string): Promise<QuestionSet | null> {
   const supabase = getSupabase()
-  const { data, error } = await supabase
+  const { data, error, status } = await supabase
     .from('question_sets')
     .select('*')
     .eq('slug', slug)
     .eq('status', 'published')
     .single()
-  if (error || !data) return null
+  if (error && status === 406 && error.code === 'PGRST116') return null
+  if (error) throw new Error(`getQuestionSetBySlug: question_sets query failed (status ${status}): ${error.message}`)
+  if (!data) throw new Error(`getQuestionSetBySlug: empty response for "${slug}"`)
   return data as QuestionSet
 }
 
@@ -296,7 +309,7 @@ export async function getQuestionSets(params: {
 }
 
 async function fetchQuestionSetCount(): Promise<number> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicHeavyRead')
   const { count, error, status } = await supabase
     .from('question_sets')
     .select('*', { count: 'exact', head: true })
@@ -307,10 +320,10 @@ async function fetchQuestionSetCount(): Promise<number> {
   return count
 }
 
-const cachedQuestionSetCount = unstable_cache(fetchQuestionSetCount, ['getQuestionSetCount'], {
+const cachedQuestionSetCount = guardCachedRead(['getQuestionSetCount'], unstable_cache(fetchQuestionSetCount, ['getQuestionSetCount'], {
   revalidate: 3600,
   tags: ['counts', 'questions'],
-})
+}))
 
 export async function getQuestionSetCount(): Promise<number> {
   try {
@@ -339,7 +352,7 @@ export async function getQuestionSetCount(): Promise<number> {
 // see getQuestionSets above), so a question living in an 'ab'-only set is
 // what both hosts already see — matching, not inventing, that reality.
 async function fetchPublishedQuestionCount(): Promise<number> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicHeavyRead')
   const { count, error, status } = await supabase
     .from('questions')
     .select('*, question_sets!inner(status, show_on_sites)', { count: 'exact', head: true })
@@ -350,10 +363,10 @@ async function fetchPublishedQuestionCount(): Promise<number> {
   return count
 }
 
-const cachedPublishedQuestionCount = unstable_cache(fetchPublishedQuestionCount, ['getPublishedQuestionCount'], {
+const cachedPublishedQuestionCount = guardCachedRead(['getPublishedQuestionCount'], unstable_cache(fetchPublishedQuestionCount, ['getPublishedQuestionCount'], {
   revalidate: 3600,
   tags: ['counts', 'questions'],
-})
+}))
 
 export async function getPublishedQuestionCount(): Promise<number> {
   try {
@@ -385,7 +398,7 @@ export const getCachedPublishedQuestionCount = cache(getPublishedQuestionCount)
 // including EthioTax showing shared-library articles that were authored
 // on Accounting Body but tagged reachable on both.
 async function fetchPublishedArticleCount(siteCode: string): Promise<number> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicHeavyRead')
   const { count, error, status } = await supabase
     .from('articles')
     .select('*', { count: 'exact', head: true })
@@ -396,10 +409,10 @@ async function fetchPublishedArticleCount(siteCode: string): Promise<number> {
   return count
 }
 
-const cachedPublishedArticleCount = unstable_cache(fetchPublishedArticleCount, ['getPublishedArticleCount'], {
+const cachedPublishedArticleCount = guardCachedRead(['getPublishedArticleCount'], unstable_cache(fetchPublishedArticleCount, ['getPublishedArticleCount'], {
   revalidate: 3600,
   tags: ['counts', 'articles'],
-})
+}))
 
 export async function getPublishedArticleCount(siteCode: string): Promise<number> {
   try {

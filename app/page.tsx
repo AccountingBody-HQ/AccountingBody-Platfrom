@@ -6,7 +6,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import EmailSignupForm from '@/components/EmailSignupForm'
 import HomepageJobSearch from '@/components/HomepageJobSearch'
 import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
@@ -41,10 +41,7 @@ interface FeaturedArticle {
 
 async function getFeaturedArticles(siteCode: string): Promise<FeaturedArticle[]> {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SECRET_KEY!
-    )
+    const supabase = getServerSupabase('publicRead')
     const { data, error } = await supabase
       .from('articles')
       .select('id, title, slug, excerpt, category, category_title, exam_body, read_time, published_at')

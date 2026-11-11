@@ -32,7 +32,7 @@ export default async function ManagementAccountingPage() {
 
   const [articles, course] = await Promise.all([
     getETICPAModuleArticles(MODULE.level, MODULE.slug),
-    getCourseBySlug(COURSE_SLUG),
+    getCourseBySlug(COURSE_SLUG).catch(() => null),
   ])
 
   return (

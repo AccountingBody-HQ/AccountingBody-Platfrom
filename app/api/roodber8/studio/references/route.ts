@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 
 export const runtime = 'nodejs'
 
@@ -8,10 +8,7 @@ export async function GET(req: NextRequest) {
   if (!(await isAuthenticated(req)))
     return signedOutResponse()
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  const supabase = getServerSupabase('admin')
 
   const { data, error } = await supabase
     .from('studio_references')
@@ -60,10 +57,7 @@ export async function POST(req: NextRequest) {
   if (!url.trim().toLowerCase().startsWith('http'))
     return NextResponse.json({ error: 'url must start with http' }, { status: 400 })
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  const supabase = getServerSupabase('admin')
 
   const { count } = await supabase
     .from('studio_references')
@@ -94,10 +88,7 @@ export async function DELETE(req: NextRequest) {
   if (!id)
     return NextResponse.json({ error: 'id is required' }, { status: 400 })
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  const supabase = getServerSupabase('admin')
 
   const { error } = await supabase
     .from('studio_references')

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { revalidateTag } from 'next/cache'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 import type { NormalisedArticle } from '@/lib/article-normaliser'
 
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Supabase environment variables are not set' }, { status: 500 })
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const supabase = getServerSupabase('admin')
 
     const showOnSites = Array.isArray(body.showOnSites)
       ? body.showOnSites.filter((s): s is string => typeof s === 'string')

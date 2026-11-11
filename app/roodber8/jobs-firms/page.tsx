@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Link from 'next/link'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { unstable_noStore as noStore } from 'next/cache'
 import AutoRefresh from '@/components/roodber8/AutoRefresh'
@@ -48,10 +48,7 @@ function PlatformBadges({ platform }: { platform: unknown }) {
 
 async function getJobsAndFirms(filters: { safeSearch?: string; status?: string; platform?: string }) {
   noStore()
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  const supabase = getServerSupabase('admin')
   let firmsQuery = supabase.from('firms_applications').select('*').order('created_at', { ascending: false })
   if (filters.status) firmsQuery = firmsQuery.eq('status', filters.status)
   if (filters.safeSearch) firmsQuery = firmsQuery.or(`firm_name.ilike.%${filters.safeSearch}%,contact_name.ilike.%${filters.safeSearch}%,contact_email.ilike.%${filters.safeSearch}%`)

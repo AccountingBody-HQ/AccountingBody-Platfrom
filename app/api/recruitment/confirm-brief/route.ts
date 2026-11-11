@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { getServerSupabase } from "@/lib/supabase-server"
 import { Resend } from "resend"
 import { generateReferenceNumber, generateProfileToken } from "@/lib/profileUtils"
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!)
+    const supabase = getServerSupabase("publicWrite")
     const resend = new Resend(process.env.RESEND_API_KEY)
 
     const token = req.nextUrl.searchParams.get("token")

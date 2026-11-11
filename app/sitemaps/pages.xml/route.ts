@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getServerSupabase } from '@/lib/supabase-server'
 import { resolveArticleCanonicalUrl } from '@/lib/canonical'
 import { buildUrlset, type UrlsetEntry } from '@/lib/sitemap-chunks'
 
@@ -12,10 +12,7 @@ export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
 function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  return getServerSupabase('publicRead')
 }
 
 // Static pages, articles and practice-question sets — moved verbatim from
