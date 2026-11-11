@@ -59,7 +59,7 @@ A change here can reach both sites, and markup changes can affect the Worker eve
 | `reports/` | Git-ignored job reports (section 7) |
 | `sanity/`, `scripts/`, one-off scripts in the repository root | Historical. Do not run or extend them |
 
-**Tests** sit beside the code they cover, as `*.test.ts`.
+**Tests** sit beside the code they cover, as `*.test.ts`. Unit tests that do not belong beside one file live under `tests/unit/`.
 
 **Redirects** live in three places: `next.config.mjs`, `vercel.json` and `middleware.ts`. Check all three before adding or changing one.
 
