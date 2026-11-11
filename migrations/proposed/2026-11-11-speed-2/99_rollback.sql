@@ -1,5 +1,9 @@
 -- ============================================================================
 -- NOT APPLIED. Undo for speed job part 2 (01 and 02). Safe to run twice.
+-- RUN ORDER: 04a -> 00 -> 00b -> 00c -> (owner + reviewer decide) -> 01
+--            -> 01b at once -> 02 -> 04b -> 00d.
+-- Run this at once if 01b gives an error. The trial copy (00) is removed
+-- separately by 00d.
 -- Run as one query. One transaction: all of it or nothing.
 -- ============================================================================
 --

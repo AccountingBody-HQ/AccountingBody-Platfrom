@@ -1,5 +1,7 @@
 -- ============================================================================
 -- READ-ONLY. NOT A MIGRATION. Changes nothing.
+-- RUN ORDER: 04a -> 00 -> 00b -> 00c -> (owner + reviewer decide) -> 01
+--            -> 01b at once -> 02 -> 04b -> 00d.
 -- Purpose: query plans for the new search_jobs_ranked (01), written out as
 -- the database plans its inner query on each call (inputs known), for the
 -- 'CFO' search on each site.

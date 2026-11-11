@@ -1,5 +1,7 @@
 -- ============================================================================
 -- READ-ONLY. NOT A MIGRATION. Changes nothing.
+-- RUN ORDER: 04a -> 00 -> 00b -> 00c -> (owner + reviewer decide) -> 01
+--            -> 01b at once -> 02 -> 04b -> 00d.
 -- Purpose: the "before" checks for speed job part 2 in ONE statement.
 -- Run as one query in the Supabase SQL editor. One row per check:
 -- check_name (text) and result (jsonb).

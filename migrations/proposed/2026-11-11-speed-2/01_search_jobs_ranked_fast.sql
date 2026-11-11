@@ -1,7 +1,11 @@
 -- ============================================================================
 -- NOT APPLIED. Proposed 11 November 2026 (speed job part 2).
 -- Run only after the owner has approved it and taken a fresh backup.
--- Order: 04a (before) -> 01 -> 02 -> 04b (after). Undo: 99_rollback.sql.
+-- RUN ORDER: 04a -> 00 -> 00b -> 00c -> (owner + reviewer decide) -> 01
+--            -> 01b at once -> 02 -> 04b -> 00d.
+-- Only after 00b shows no real difference and 00c shows good times.
+-- Then run 01b AT ONCE; if 01b errors, run 99_rollback.sql at once.
+-- Undo: 99_rollback.sql.
 -- One transaction: the whole file succeeds or nothing changes.
 -- ============================================================================
 --
