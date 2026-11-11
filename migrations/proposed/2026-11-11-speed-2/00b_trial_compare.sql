@@ -4,9 +4,10 @@
 --            -> 01b at once -> 02 -> 04b -> 00d. Needs 00 applied first.
 -- Run as one query in the Supabase SQL editor.
 --
--- Purpose: compare the live public.search_jobs_ranked (0004) with the trial
--- copy public.search_jobs_ranked_trial (00, the same body as 01) on real
--- data. One row per case:
+-- Purpose: compare the live public.search_jobs_ranked with the trial copy
+-- public.search_jobs_ranked_trial (00, the same body as 01 v2) on real
+-- data. The live one is 0004, or 01 v1 if v1 is already live (v1 was shown
+-- identical to 0004 by this same comparison on 11 Nov). One row per case:
 --   case_name                  what was searched
 --   same_ids_same_order        true = identical page, identical order
 --   same_id_set                true = the same jobs on the page, any order

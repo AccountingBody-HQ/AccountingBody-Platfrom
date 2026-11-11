@@ -8,8 +8,12 @@
 -- ============================================================================
 --
 -- PART 1 puts back public.search_jobs_ranked exactly as migrations/0004
--- defines it: the statement below is copied byte for byte from 0004
+-- defines it (the 0004 logic; it also replaces 01 v1 or v2 if either is
+-- live). The statement below is copied byte for byte from 0004
 -- (checked by script), followed by the grants of 0003.
+-- Known, accepted: before the swap the live body was the 0004 text with
+-- CRLF line endings (md5 9309125892ecddec6014de33e7529552); this file uses
+-- LF endings (md5 aad246bd049e61611aed2c5391fdabb3). Same logic.
 -- PART 2 drops public.get_active_job_countries(text) ONLY if 02 created it
 -- (its comment starts 'AccountingBody:'); otherwise it is left alone.
 -- Then the API is told to reload.

@@ -7,8 +7,8 @@
 -- Purpose: prove the new live public.search_jobs_ranked runs without an
 -- error, using the same named inputs the app sends (search words
 -- lowercased, 24 per page). One row per case: case_name, rows_returned
--- (normally 24) and live_language (expect 'plpgsql', which shows 01 took
--- effect).
+-- (normally 24) and live_language. Expect 'plpgsql, v2 (EXECUTE)', which
+-- shows 01 v2 took effect ('plpgsql' alone would be v1; 'sql' is 0004).
 --
 -- IF THIS QUERY GIVES AN ERROR, OR ANY rows_returned IS 0: run
 -- 99_rollback.sql AT ONCE, then send the error text.
@@ -63,7 +63,11 @@ from (
     )
 ) as checks
 cross join lateral (
-  select string_agg(distinct l.lanname, ', ') as live_language
+  select string_agg(
+           distinct l.lanname
+             || case when p.prosrc like '%RETURN QUERY EXECUTE%' then ', v2 (EXECUTE)' else '' end,
+           ' | '
+         ) as live_language
   from pg_proc p
   join pg_language l on l.oid = p.prolang
   where p.proname = 'search_jobs_ranked'
