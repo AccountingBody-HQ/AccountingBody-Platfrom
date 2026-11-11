@@ -19,6 +19,7 @@ import {
 import {
   parseListingsUrlState,
   buildListingsSearchString,
+  sortMenuValue,
   EMPTY_FILTERS,
   DEFAULT_SORT,
   DEFAULT_PAGE,
@@ -26,6 +27,7 @@ import {
   type Filters,
   type PostedWithin,
   type SortBy,
+  type SortChoice,
   type ListingsUrlState,
 } from './urlState'
 import { Pagination, PrevNextPagination } from '@/components/Pagination'
@@ -341,7 +343,7 @@ function displaySearchTerm(raw: string): string {
 function ActiveFilterChips({ search, filters, sortBy, onRemoveSearch, onRemoveFilter, onRemoveSort, countryOptions }: {
   search: string
   filters: Filters
-  sortBy: SortBy
+  sortBy: SortChoice
   onRemoveSearch: () => void
   onRemoveFilter: (next: Filters) => void
   onRemoveSort: () => void
@@ -379,7 +381,7 @@ function ActiveFilterChips({ search, filters, sortBy, onRemoveSearch, onRemoveFi
   }
   if (filters.salaryMin.trim()) chips.push({ label: `Min £${filters.salaryMin}`, onRemove: () => onRemoveFilter({ ...filters, salaryMin: '' }) })
   if (filters.salaryMax.trim()) chips.push({ label: `Max £${filters.salaryMax}`, onRemove: () => onRemoveFilter({ ...filters, salaryMax: '' }) })
-  if (sortBy !== 'relevance') {
+  if (sortBy !== DEFAULT_SORT) {
     const label = SORT_OPTIONS.find(o => o.value === sortBy)?.label ?? sortBy
     chips.push({ label: `Sort: ${label}`, onRemove: onRemoveSort })
   }
@@ -811,7 +813,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
     if (filters.salaryMax.trim()) params.set('salary_max', filters.salaryMax.trim())
     if (filters.postedWithin !== 'all') params.set('posted_within', String(POSTED_DAYS[filters.postedWithin]))
     if (filters.qualifications.length > 0) params.set('qualifications', filters.qualifications.join(','))
-    if (sortBy !== 'relevance') params.set('sort_by', sortBy)
+    if (sortBy !== DEFAULT_SORT) params.set('sort_by', sortBy)
 
     try {
       const res = await fetch(`/api/jobs/direct?${params.toString()}`, { signal: controller.signal })
@@ -983,7 +985,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                         </Link>
                         <div className="relative">
                           <select
-                            value={sortBy}
+                            value={sortMenuValue(sortBy, activeSearch)}
                             onChange={e => navigateToState({ ...urlState, sortBy: e.target.value as SortBy, page: DEFAULT_PAGE })}
                             aria-label="Sort by"
                             className="h-10 pl-3 pr-8 rounded-lg border border-slate-200 text-sm font-medium text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white appearance-none cursor-pointer"

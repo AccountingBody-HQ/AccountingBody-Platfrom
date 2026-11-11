@@ -131,3 +131,15 @@ describe('jobs list screen uses the results summary', () => {
     expect(source).not.toMatch(/of \{total\.toLocaleString\(\)\}/)
   })
 })
+
+describe('Previous/Next walk with no total (speed job, 11 Nov 2026)', () => {
+  it('Next moves 1 -> 2 -> 3 while pages come back full, and Previous walks back to 1', () => {
+    const at = (page: number) => summariseResults({ page, pageSize: PAGE_SIZE, rowsLength: 24, total: null })
+    expect([1, 2, 3].map(p => at(p).pager)).toEqual([
+      { kind: 'prevNext', prevPage: null, nextPage: 2 },
+      { kind: 'prevNext', prevPage: 1, nextPage: 3 },
+      { kind: 'prevNext', prevPage: 2, nextPage: 4 },
+    ])
+    expect([1, 2, 3].map(p => at(p).headline)).toEqual(['Showing 1–24', 'Showing 25–48', 'Showing 49–72'])
+  })
+})

@@ -12,6 +12,10 @@ import { EMPLOYMENT_TYPE_LABELS, SENIORITY_LABELS } from '@/lib/job-format'
 
 export type PostedWithin = 'all' | '24h' | '7d' | '30d'
 export type SortBy = 'relevance' | 'recent' | 'salary_high' | 'salary_low'
+// 'default' means the visitor has chosen no sort (no sort_by in the URL):
+// the server then ranks a search with words by relevance, and orders the
+// plain list by its default order (lib/jobs.ts, DEFAULT_LIST_ORDER).
+export type SortChoice = 'default' | SortBy
 
 export interface Filters {
   qualifications:  string[]
@@ -35,8 +39,17 @@ export const EMPTY_FILTERS: Filters = {
   salaryMax:       '',
 }
 
-export const DEFAULT_SORT: SortBy = 'relevance'
+export const DEFAULT_SORT: SortChoice = 'default'
 export const DEFAULT_PAGE = 1
+
+// What the sort menu shows. With no chosen sort it shows the order the
+// server actually uses: 'Most relevant' for a search with words, 'Most
+// recent' for the plain list (whose default order is newest first, with
+// direct employer jobs lifted to the top; see lib/jobs.ts DEFAULT_LIST_ORDER).
+export function sortMenuValue(sortBy: SortChoice, search: string): SortBy {
+  if (sortBy !== 'default') return sortBy
+  return search.trim() ? 'relevance' : 'recent'
+}
 
 export const POSTED_DAYS: Record<Exclude<PostedWithin, 'all'>, number> = {
   '24h': 1, '7d': 7, '30d': 30,
@@ -46,7 +59,7 @@ export interface ListingsUrlState {
   search:   string
   location: string
   filters:  Filters
-  sortBy:   SortBy
+  sortBy:   SortChoice
   page:     number
 }
 
