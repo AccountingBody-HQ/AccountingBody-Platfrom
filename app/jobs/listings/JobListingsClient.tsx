@@ -28,12 +28,14 @@ import {
   type SortBy,
   type ListingsUrlState,
 } from './urlState'
-import { Pagination } from '@/components/Pagination'
+import { Pagination, PrevNextPagination } from '@/components/Pagination'
 import { useSavedJobs } from '@/app/jobs/saved/useSavedJobs'
+import { parseTotal, summariseResults } from './resultsSummary'
 
 interface DirectJobsResponse {
   jobs?: Job[]
-  total?: number
+  // null: the page of rows came back without its total (see the route).
+  total?: number | null
 }
 
 const PAGE_SIZE = 24
@@ -709,7 +711,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   const [alertDismissed, setAlertDismissed] = useState(false)
 
   const [jobs, setJobs] = useState<Job[]>([])
-  const [total, setTotal] = useState(0)
+  const [total, setTotal] = useState<number | null>(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -818,7 +820,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
       if (!res.ok) throw new Error(`jobs request failed: ${res.status}`)
       const data: DirectJobsResponse = await res.json()
       setJobs(Array.isArray(data.jobs) ? data.jobs : [])
-      setTotal(typeof data.total === 'number' ? data.total : 0)
+      setTotal(parseTotal(data.total))
       confirmedPageRef.current = page
     } catch (err) {
       if ((err as Error).name === 'AbortError') return
@@ -874,7 +876,6 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
     if (saved) window.scrollTo(0, parseInt(saved, 10))
   }, [loading])
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   const activeFilterCount = countActiveFilters(filters)
   const isFirstLoad = loading && jobs.length === 0
 
@@ -892,8 +893,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   function handlePageChange(next: number) { navigateToState({ ...urlState, page: next }); scrollToResults() }
 
   const displayedPage = confirmedPageRef.current
-  const rangeStart = total === 0 ? 0 : (displayedPage - 1) * PAGE_SIZE + 1
-  const rangeEnd = Math.min(displayedPage * PAGE_SIZE, total)
+  const summary = summariseResults({ page: displayedPage, pageSize: PAGE_SIZE, rowsLength: jobs.length, total })
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -971,7 +971,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                   <div className="mb-3">
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <p className="text-sm text-slate-500 font-medium">
-                        {total.toLocaleString()} job{total === 1 ? '' : 's'} found
+                        {summary.headline}
                       </p>
                       <div className="flex items-center gap-3 flex-wrap">
                         <Link
@@ -998,9 +998,11 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                         </div>
                       </div>
                     </div>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Showing {rangeStart}–{rangeEnd} of {total.toLocaleString()}
-                    </p>
+                    {summary.detail !== null && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        {summary.detail}
+                      </p>
+                    )}
                   </div>
 
                   <ActiveFilterChips
@@ -1024,14 +1026,24 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                       />
                     ))}
                   </div>
-                  <Pagination
-                    page={page}
-                    totalPages={totalPages}
-                    total={total}
-                    navLabel="Job results pages"
-                    itemLabel="job"
-                    onChange={handlePageChange}
-                  />
+                  {summary.pager.kind === 'numbered' ? (
+                    <Pagination
+                      page={page}
+                      totalPages={summary.pager.totalPages}
+                      total={summary.pager.total}
+                      navLabel="Job results pages"
+                      itemLabel="job"
+                      onChange={handlePageChange}
+                    />
+                  ) : (
+                    <PrevNextPagination
+                      page={displayedPage}
+                      prevPage={summary.pager.prevPage}
+                      nextPage={summary.pager.nextPage}
+                      navLabel="Job results pages"
+                      onChange={handlePageChange}
+                    />
+                  )}
                 </div>
               </div>
             )}

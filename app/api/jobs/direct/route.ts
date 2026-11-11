@@ -18,6 +18,9 @@ const NO_CACHE_HEADERS = {
   'Cache-Control': 'no-store, no-cache, must-revalidate',
 }
 
+// Not exported: Next only allows its own route fields as exports here.
+const TOTAL_NOT_AVAILABLE_LOG = 'api/jobs/direct: total not available, rows returned without it'
+
 const SENIORITY_VALUES: SeniorityLevel[] = ['junior', 'mid', 'senior', 'executive', 'director']
 const EMPLOYMENT_TYPE_VALUES: EmploymentType[] = ['permanent', 'contract', 'temporary', 'part_time', 'internship']
 const SORT_BY_VALUES = ['relevance', 'recent', 'salary_high', 'salary_low'] as const
@@ -112,9 +115,20 @@ export async function GET(req: NextRequest) {
     // it; getJobBySlug's separate detail-page path keeps the full text.
     // The HTTP response itself stays no-store (NO_CACHE_HEADERS): only the
     // data layer is cached, never the browser or CDN copy.
+    //
+    // The page of rows is what the visitor needs; the total only labels it.
+    // So a count that does not arrive becomes `total: null` ("not known")
+    // while the rows are still returned, and JobListingsClient pages with
+    // Previous/Next until a later request has the total again. The rows
+    // lookup still rejects Promise.all straight away, so a rows error
+    // answers with the 503 below without waiting for the count.
     const [jobs, total] = await Promise.all([
       getCachedListingJobs({ ...baseParams, limit, offset }),
-      getCachedListingJobsCount(baseParams),
+      getCachedListingJobsCount(baseParams).catch((): null => {
+        // Fixed text only: no request values, no upstream message.
+        console.error(TOTAL_NOT_AVAILABLE_LOG)
+        return null
+      }),
     ])
     return NextResponse.json({ jobs, total }, { headers: NO_CACHE_HEADERS })
   } catch (err: unknown) {
