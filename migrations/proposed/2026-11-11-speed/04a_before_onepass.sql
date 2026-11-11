@@ -1,4 +1,6 @@
 -- ============================================================================
+-- APPLIED 11 Nov 2026 — kept for checks/rollback; source of truth is 0009
+-- (migrations/0009_site_counts_and_jobs_browsable_index.sql).
 -- READ-ONLY. NOT A MIGRATION. Changes nothing.
 -- Purpose: every "before" check from 04_checks_readonly.sql (except the two
 -- query plans, which are in 04b_plans_after.sql) in ONE statement, because

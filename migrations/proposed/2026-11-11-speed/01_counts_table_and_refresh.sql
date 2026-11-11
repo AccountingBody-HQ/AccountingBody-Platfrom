@@ -1,5 +1,7 @@
 -- ============================================================================
--- NOT APPLIED. Proposed 11 November 2026 (speed job, owner decision D108).
+-- APPLIED 11 Nov 2026 — kept for checks/rollback; source of truth is 0009
+-- (migrations/0009_site_counts_and_jobs_browsable_index.sql).
+-- Proposed 11 November 2026 (speed job, owner decision D108).
 -- Run only after the owner has approved it and taken a fresh backup.
 -- Order: 04 (before checks) -> 01 -> 02 -> 03 -> 04 (after checks).
 -- Undo: 99_rollback.sql.

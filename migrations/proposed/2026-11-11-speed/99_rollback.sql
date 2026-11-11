@@ -1,5 +1,7 @@
 -- ============================================================================
--- NOT APPLIED. Undo for 01-03 of the speed job (11 November 2026).
+-- APPLIED 11 Nov 2026 — kept for checks/rollback; source of truth is 0009
+-- (migrations/0009_site_counts_and_jobs_browsable_index.sql).
+-- This rollback itself has NOT been run. Undo for 01-03 of the speed job.
 -- Safe to run more than once. The site keeps working throughout: with the
 -- table gone it falls back to an estimated total, then to no total.
 --

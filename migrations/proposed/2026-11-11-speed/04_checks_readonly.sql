@@ -1,4 +1,6 @@
 -- ============================================================================
+-- APPLIED 11 Nov 2026 — kept for checks/rollback; source of truth is 0009
+-- (migrations/0009_site_counts_and_jobs_browsable_index.sql).
 -- READ-ONLY. Changes nothing. Run each query on its own, BEFORE applying
 -- 01-03 and again AFTER, and keep the results for the report.
 -- Some queries name objects that exist only after 01-03; before then those

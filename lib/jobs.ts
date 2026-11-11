@@ -487,8 +487,8 @@ export function isUnfilteredListing(params: ListingQuery): boolean {
 // always page in the same order. No boost of any kind: the owner dropped the
 // source_score boost on 11 Nov 2026 after the live tier check, because a
 // strict tier put every newer job from lower-scored feeds behind one feed.
-// migrations/proposed/2026-11-11-speed/02_jobs_list_index.sql indexes
-// exactly this order (NOT APPLIED until the owner runs it).
+// migrations/0009_site_counts_and_jobs_browsable_index.sql (applied
+// 11 Nov 2026) indexes exactly this order.
 export const DEFAULT_LIST_ORDER = [
   { column: 'published_at', ascending: false, nullsFirst: false },
   { column: 'created_at', ascending: false },
@@ -1048,7 +1048,7 @@ export async function getActiveJobsCount(platform: string): Promise<number> {
 // Where the number comes from is set by JOBS_TOTAL_SOURCE:
 //   - 'precount' (default): the row public.site_counts['jobs_browsable:<platform>'],
 //     written every 10 minutes by public.refresh_site_counts() (see
-//     migrations/proposed/2026-11-11-speed/). Missing, unreadable, or older
+//     migrations/0009_site_counts_and_jobs_browsable_index.sql). Missing, unreadable, or older
 //     than PRECOUNT_MAX_AGE_MS: fall through to the estimate.
 //   - 'estimate': PostgREST's estimated count with the same filter. On
 //     failure: fall through to none.

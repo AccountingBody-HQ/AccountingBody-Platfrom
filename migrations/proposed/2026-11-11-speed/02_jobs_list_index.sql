@@ -1,5 +1,7 @@
 -- ============================================================================
--- NOT APPLIED. Proposed 11 November 2026 (speed job, owner decision D108;
+-- APPLIED 11 Nov 2026 — kept for checks/rollback; source of truth is 0009
+-- (migrations/0009_site_counts_and_jobs_browsable_index.sql).
+-- Proposed 11 November 2026 (speed job, owner decision D108;
 -- default order changed to plain newest first after the live tier check).
 -- Run after 01, on its own: this file must be the only statement in the
 -- query. CREATE INDEX CONCURRENTLY cannot run inside a transaction, so do

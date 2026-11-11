@@ -1,4 +1,6 @@
 -- ============================================================================
+-- APPLIED 11 Nov 2026 — kept for checks/rollback; source of truth is 0009
+-- (migrations/0009_site_counts_and_jobs_browsable_index.sql).
 -- READ-ONLY. NOT A MIGRATION. Changes nothing.
 -- Purpose: the two query plans to check AFTER 02_jobs_list_index.sql.
 -- Plain EXPLAIN (no ANALYZE) only shows the plan; it does not run the query.
