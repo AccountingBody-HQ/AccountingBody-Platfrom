@@ -348,10 +348,10 @@ describe('/api/jobs/direct GET — the total never holds back the rows', () => {
   })
 })
 
-// Speed job part 3: one country only, or one Popular search only, takes a
-// pre-counted total when there is a fresh one (lib/jobs.ts decides which
-// requests qualify; jobs-speed.test.ts covers that choice).
-describe('/api/jobs/direct GET — pre-counted one-country and Popular-search totals', () => {
+// Speed job part 3: one country only takes a pre-counted total when there
+// is a fresh one (lib/jobs.ts decides which requests qualify, and gives null
+// for every search; jobs-speed.test.ts covers that choice).
+describe('/api/jobs/direct GET — pre-counted one-country totals', () => {
   const ROWS = [{ id: 'u1', slug: 'controller', title: 'Financial Controller' }]
 
   it('a one-country list answers with the pre-counted total and never starts the live count', async () => {
@@ -370,17 +370,29 @@ describe('/api/jobs/direct GET — pre-counted one-country and Popular-search to
     expect(jobs.getBrowsableJobsTotal).not.toHaveBeenCalled()
   })
 
-  it('a Popular search with a chosen sort answers with the pre-counted total', async () => {
+  it('a one-country list with a chosen sort answers with the pre-counted total', async () => {
     const { GET } = await import('./route')
     const jobs = await import('@/lib/jobs')
     vi.mocked(jobs.getCachedListingJobs).mockResolvedValue(ROWS as never)
     vi.mocked(jobs.getPrecountedFilterTotal).mockResolvedValue(31)
 
+    const res = await GET(new NextRequest('http://localhost/api/jobs/direct?platform=et&location_country=Ethiopia&sort_by=recent'))
+
+    expect(await res.json()).toEqual({ jobs: ROWS, total: 31 })
+    expect(vi.mocked(jobs.getPrecountedFilterTotal).mock.calls[0][0]).toMatchObject({ platform: 'et', locationCountry: 'Ethiopia', sortBy: 'recent' })
+    expect(jobs.getCachedListingJobsCount).not.toHaveBeenCalled()
+  })
+
+  it('a Popular search counts live (the filter lookup gives null for searches)', async () => {
+    const { GET } = await import('./route')
+    const jobs = await import('@/lib/jobs')
+    vi.mocked(jobs.getCachedListingJobs).mockResolvedValue(ROWS as never)
+    vi.mocked(jobs.getCachedListingJobsCount).mockResolvedValue(31)
+
     const res = await GET(new NextRequest('http://localhost/api/jobs/direct?platform=et&search=FP%26A%20Analyst&sort_by=recent'))
 
     expect(await res.json()).toEqual({ jobs: ROWS, total: 31 })
-    expect(vi.mocked(jobs.getPrecountedFilterTotal).mock.calls[0][0]).toMatchObject({ platform: 'et', search: 'FP&A Analyst', sortBy: 'recent' })
-    expect(jobs.getCachedListingJobsCount).not.toHaveBeenCalled()
+    expect(vi.mocked(jobs.getCachedListingJobsCount).mock.calls[0][0]).toMatchObject({ platform: 'et', search: 'FP&A Analyst' })
   })
 
   it('no pre-counted total: the live count runs exactly as before', async () => {
@@ -434,11 +446,11 @@ describe('/api/jobs/direct GET — pre-counted one-country and Popular-search to
     vi.mocked(jobs.getPrecountedFilterTotal).mockResolvedValueOnce(140)
     vi.mocked(jobs.getCachedListingJobsCount).mockResolvedValue(9)
 
-    const first = await GET(new NextRequest('http://localhost/api/jobs/direct?platform=ab&search=CFO&count=true'))
+    const first = await GET(new NextRequest('http://localhost/api/jobs/direct?platform=ab&location_country=Singapore&count=true'))
     expect(await first.json()).toEqual({ jobs: [], total: 140 })
     expect(jobs.getCachedListingJobsCount).not.toHaveBeenCalled()
 
-    const second = await GET(new NextRequest('http://localhost/api/jobs/direct?platform=ab&search=CFO%20uk&count=true'))
+    const second = await GET(new NextRequest('http://localhost/api/jobs/direct?platform=ab&search=CFO&count=true'))
     expect(await second.json()).toEqual({ jobs: [], total: 9 })
   })
 

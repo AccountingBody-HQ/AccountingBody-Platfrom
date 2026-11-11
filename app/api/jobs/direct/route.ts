@@ -130,9 +130,9 @@ export async function GET(req: NextRequest) {
   // getBrowsableJobsTotal: a pre-counted number, refreshed every 10 minutes,
   // that never waits for an exact count (owner decision D108). It never
   // throws; null means "not known". Filtered lists keep their exact count,
-  // except a list whose only filter is one country, or whose only input is
-  // one of the Popular searches: those first ask getPrecountedFilterTotal
-  // (never throws; null means "count live as before").
+  // except a list whose only filter is one country: getPrecountedFilterTotal
+  // answers that one (never throws; null, as for every other filtered or
+  // search request, means "count live as before").
   const unfiltered = isUnfilteredListing(baseParams)
 
   try {

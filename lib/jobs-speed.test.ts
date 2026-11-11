@@ -6,7 +6,7 @@ import {
   getBrowsableJobsTotal, getBrowsableJobsCount, getCachedListingJobs,
   getCachedListingJobsCount, getActiveJobCountries, jobsTotalSource, resetJobsTotalSourceWarning,
   normaliseListingPage, normaliseListingFilters, isUnfilteredListing, siteCountKey,
-  filterPrecountKey, getPrecountedFilterTotal, PRECOUNTED_SEARCHES, FILTER_TOTAL_LOG,
+  filterPrecountKey, getPrecountedFilterTotal, FILTER_TOTAL_LOG,
   DEFAULT_LIST_ORDER, PRECOUNT_MAX_AGE_MS, JOBS_TOTAL_LOG, RELEVANCE_FALLBACK_LOG,
 } from './jobs'
 import { resetCacheGuard } from './cache-guard'
@@ -475,7 +475,7 @@ describe('countries list calls get_active_job_countries as the SQL defines it', 
   })
 })
 
-// ── Speed job part 3: pre-counted one-country and Popular-search totals ─────
+// ── Speed job part 3: pre-counted one-country totals ────────────────────────
 
 // The Popular buttons exactly as written in the hero component.
 function popularButtons(): string[] {
@@ -485,21 +485,26 @@ function popularButtons(): string[] {
   return Array.from(list[1].matchAll(/'([^']*)'/g), m => m[1])
 }
 
-describe('the pre-counted searches are the Popular buttons, as the word count receives them', () => {
-  it('has six buttons', () => {
-    expect(popularButtons()).toEqual([
-      'Management Accountant', 'Tax Manager', 'Financial Controller',
-      'Audit Senior', 'FP&A Analyst', 'CFO',
-    ])
-  })
-
-  it('normalises each button to exactly one pre-counted string, "&" kept', () => {
-    const normalised = popularButtons().map(term => normaliseListingFilters({ platform: 'ab', search: term }).search)
-    expect(normalised).toEqual([...PRECOUNTED_SEARCHES])
-    expect(PRECOUNTED_SEARCHES).toEqual([
-      'management accountant', 'tax manager', 'financial controller',
-      'audit senior', 'fp&a analyst', 'cfo',
-    ])
+describe('Popular searches always count live (no pre-counted search rows)', () => {
+  it('a pill search never reads site_counts, on either platform, with or without a sort', async () => {
+    const buttons = popularButtons()
+    expect(buttons.length).toBeGreaterThan(0)
+    // Even if old search rows were still stored, nothing may read them.
+    script.site_counts = { data: [{ key: 'jobs_browsable:ab:search:cfo', value: 140, updated_at: minutesAgo(1) }], error: null }
+    for (const search of buttons) {
+      for (const platform of ['ab', 'et']) {
+        for (const sortBy of [undefined, 'recent'] as const) {
+          expect(filterPrecountKey({ platform, search, sortBy })).toBeNull()
+          expect(await getPrecountedFilterTotal({ platform, search, sortBy })).toBeNull()
+        }
+      }
+      // The button text still reaches the word count unchanged apart from
+      // trimming and lowercasing.
+      expect(normaliseListingFilters({ platform: 'ab', search }).search).toBe(search.trim().toLowerCase())
+    }
+    expect(tableQueries('site_counts')).toHaveLength(0)
+    expect(queries).toHaveLength(0)
+    expect(logLines()).toEqual([])
   })
 })
 
@@ -513,24 +518,12 @@ describe('filterPrecountKey', () => {
 
   it.each(['relevance', 'recent', 'salary_high', 'salary_low', undefined] as const)('any sort (%s) keeps the same row', (sortBy) => {
     expect(filterPrecountKey({ platform: 'ab', locationCountry: 'United States', sortBy })).toBe('jobs_browsable:ab:country:United States')
-    expect(filterPrecountKey({ platform: 'ab', search: 'CFO', sortBy })).toBe('jobs_browsable:ab:search:cfo')
   })
 
-  it.each([
-    ['Management Accountant', 'management accountant'],
-    ['Tax Manager', 'tax manager'],
-    ['Financial Controller', 'financial controller'],
-    ['Audit Senior', 'audit senior'],
-    ['FP&A Analyst', 'fp&a analyst'],
-    ['CFO', 'cfo'],
-  ])('the Popular search %s uses the row for "%s"', (button, words) => {
-    expect(filterPrecountKey({ platform: 'ab', search: button })).toBe(`jobs_browsable:ab:search:${words}`)
-    expect(filterPrecountKey({ platform: 'et', search: ` ${button.toLowerCase()} ` })).toBe(`jobs_browsable:et:search:${words}`)
-  })
-
-  it('other words, phrases or spellings have no row', () => {
-    for (const search of ['tax', 'cfo uk', '"tax manager"', 'tax  manager', 'FP and A Analyst', 'fpa analyst']) {
+  it('search words of any kind have no row', () => {
+    for (const search of ['CFO', 'cfo', 'tax manager', 'FP&A Analyst', 'tax', 'cfo uk', '"tax manager"']) {
       expect(filterPrecountKey({ platform: 'ab', search })).toBeNull()
+      expect(filterPrecountKey({ platform: 'et', search })).toBeNull()
     }
   })
 
@@ -539,7 +532,7 @@ describe('filterPrecountKey', () => {
     expect(filterPrecountKey({ platform: 'ab', locationCountry: 'all', search: '  ' })).toBeNull()
   })
 
-  it('a country with words, or a Popular search with a country, has no row', () => {
+  it('a country with search words has no row', () => {
     expect(filterPrecountKey({ platform: 'ab', locationCountry: 'United Kingdom', search: 'cfo' })).toBeNull()
     expect(filterPrecountKey({ platform: 'ab', locationCountry: 'United Kingdom', search: 'accountant' })).toBeNull()
   })
@@ -581,16 +574,16 @@ describe('getPrecountedFilterTotal — precount (default)', () => {
     expect(logLines()).toEqual([])
   })
 
-  it('returns the fresh Popular-search row, and reads the et rows for et', async () => {
-    script.site_counts = { data: [{ key: 'jobs_browsable:et:search:fp&a analyst', value: 12, updated_at: minutesAgo(1) }], error: null }
+  it('returns the fresh et country row with a chosen sort, and reads the et rows for et', async () => {
+    script.site_counts = { data: [{ key: 'jobs_browsable:et:country:Ethiopia', value: 12, updated_at: minutesAgo(1) }], error: null }
 
-    expect(await getPrecountedFilterTotal({ platform: 'et', search: 'FP&A Analyst', sortBy: 'recent' })).toBe(12)
+    expect(await getPrecountedFilterTotal({ platform: 'et', locationCountry: 'Ethiopia', sortBy: 'recent' })).toBe(12)
     expect(tableQueries('site_counts')[0].calls[1]).toEqual(['like', 'key', 'jobs_browsable:et:%'])
   })
 
   it('accepts a count sent as text', async () => {
-    script.site_counts = { data: [{ key: 'jobs_browsable:ab:search:cfo', value: '57', updated_at: minutesAgo(1) }], error: null }
-    expect(await getPrecountedFilterTotal({ platform: 'ab', search: 'cfo' })).toBe(57)
+    script.site_counts = { data: [{ key: 'jobs_browsable:ab:country:Singapore', value: '57', updated_at: minutesAgo(1) }], error: null }
+    expect(await getPrecountedFilterTotal({ platform: 'ab', locationCountry: 'Singapore' })).toBe(57)
   })
 
   it('caches the read for two minutes, keyed on the platform', async () => {
@@ -607,8 +600,8 @@ describe('getPrecountedFilterTotal — precount (default)', () => {
   })
 
   it('still uses a row just under six hours old', async () => {
-    script.site_counts = { data: [{ key: 'jobs_browsable:ab:search:cfo', value: 9, updated_at: new Date(NOW.getTime() - PRECOUNT_MAX_AGE_MS + 1000).toISOString() }], error: null }
-    expect(await getPrecountedFilterTotal({ platform: 'ab', search: 'CFO' })).toBe(9)
+    script.site_counts = { data: [{ key: 'jobs_browsable:ab:country:Australia', value: 9, updated_at: new Date(NOW.getTime() - PRECOUNT_MAX_AGE_MS + 1000).toISOString() }], error: null }
+    expect(await getPrecountedFilterTotal({ platform: 'ab', locationCountry: 'Australia' })).toBe(9)
   })
 
   it('gives null (count live) with one fixed line when the row is missing', async () => {
@@ -626,14 +619,14 @@ describe('getPrecountedFilterTotal — precount (default)', () => {
 
   it('gives null (count live) with one fixed line when the read fails, with no upstream text', async () => {
     script.site_counts = { data: null, error: { message: 'relation "public.site_counts" does not exist zqx' }, status: 404 }
-    expect(await getPrecountedFilterTotal({ platform: 'ab', search: 'tax manager' })).toBeNull()
+    expect(await getPrecountedFilterTotal({ platform: 'ab', locationCountry: 'United Kingdom' })).toBeNull()
     expect(logLines()).toEqual([FILTER_TOTAL_LOG.failed])
     expect(logLines().join()).not.toContain('zqx')
   })
 
   it('gives null (count live) when a row has an unexpected shape', async () => {
-    script.site_counts = { data: [{ key: 'jobs_browsable:ab:search:cfo', value: 'lots', updated_at: null }], error: null }
-    expect(await getPrecountedFilterTotal({ platform: 'ab', search: 'cfo' })).toBeNull()
+    script.site_counts = { data: [{ key: 'jobs_browsable:ab:country:United Kingdom', value: 'lots', updated_at: null }], error: null }
+    expect(await getPrecountedFilterTotal({ platform: 'ab', locationCountry: 'United Kingdom' })).toBeNull()
     expect(logLines()).toEqual([FILTER_TOTAL_LOG.failed])
   })
 
@@ -654,9 +647,8 @@ describe('getPrecountedFilterTotal — precount (default)', () => {
 describe('getPrecountedFilterTotal — estimate and none modes are unaffected', () => {
   it.each(['estimate', 'none'] as const)('%s: gives null and reads nothing, so filtered lists count live as before', async (mode) => {
     vi.stubEnv('JOBS_TOTAL_SOURCE', mode)
-    script.site_counts = { data: [{ key: 'jobs_browsable:ab:search:cfo', value: 140, updated_at: minutesAgo(1) }], error: null }
+    script.site_counts = { data: [{ key: 'jobs_browsable:ab:country:United Kingdom', value: 140, updated_at: minutesAgo(1) }], error: null }
 
-    expect(await getPrecountedFilterTotal({ platform: 'ab', search: 'CFO' })).toBeNull()
     expect(await getPrecountedFilterTotal({ platform: 'ab', locationCountry: 'United Kingdom' })).toBeNull()
     expect(queries).toHaveLength(0)
   })

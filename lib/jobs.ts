@@ -1198,25 +1198,16 @@ export async function getBrowsableJobsCount(platform: string): Promise<number> {
 // reworded instead of wired to a live count.
 export const getCachedBrowsableJobsCount = cache(getBrowsableJobsCount)
 
-// ── Pre-counted totals for two kinds of filtered list (speed job part 3) ────
+// ── Pre-counted totals for one-country lists (speed job part 3) ─────────────
 //
 // public.refresh_site_counts() also writes, every 10 minutes:
 //   jobs_browsable:<platform>:country:<location_country exactly as stored>
-//   jobs_browsable:<platform>:search:<words>   (PRECOUNTED_SEARCHES only)
-// A list whose ONLY filter is one country, or whose ONLY input is one of
-// those searches, takes its total from that row (any sort: a sort never
-// changes a count). Only in 'precount' mode: in 'estimate' and 'none' modes
-// filtered lists keep their live count, as before. A missing, unreadable or
-// stale row gives null, and the caller counts live as before.
-
-// The Popular searches on /jobs/listings (app/jobs/listings/JobSearchHero.tsx)
-// as they reach the word count: trimmed and lowercased by
-// normaliseListingFilters, '&' kept. The SQL function counts these exact
-// strings; jobs-speed.test.ts checks them against the buttons.
-export const PRECOUNTED_SEARCHES: readonly string[] = [
-  'management accountant', 'tax manager', 'financial controller',
-  'audit senior', 'fp&a analyst', 'cfo',
-]
+// A list whose ONLY filter is one country takes its total from that row
+// (any sort: a sort never changes a count). Search words never use a
+// pre-counted row: they always count live. Only in 'precount' mode: in
+// 'estimate' and 'none' modes filtered lists keep their live count, as
+// before. A missing, unreadable or stale row gives null, and the caller
+// counts live as before.
 
 export const FILTER_TOTAL_LOG = {
   missing: 'jobs total: pre-counted filter row missing, counting live',
@@ -1226,15 +1217,12 @@ export const FILTER_TOTAL_LOG = {
 
 // The site_counts key for this request, or null when it has none: null for
 // the plain list (getBrowsableJobsTotal has its own row) and for anything
-// with another filter, more than one input, or other search words.
+// with search words or any filter other than one country.
 export function filterPrecountKey(params: ListingQuery): string | null {
   const { platform, locationCountry, search, ...others } = normaliseListingFilters(params)
   if (Object.values(others).some(value => value !== undefined)) return null
   if (locationCountry !== undefined && search === undefined) {
     return `${siteCountKey(platform)}:country:${locationCountry}`
-  }
-  if (search !== undefined && locationCountry === undefined && PRECOUNTED_SEARCHES.includes(search)) {
-    return `${siteCountKey(platform)}:search:${search}`
   }
   return null
 }
@@ -1274,8 +1262,8 @@ const cachedFilterPrecounts = guardCachedRead(['site-counts-jobs-filters'], unst
   tags: ['counts', 'jobs'],
 }))
 
-// The pre-counted total for a one-country or Popular-search list, or null.
-// Never throws; reads nothing for any other request.
+// The pre-counted total for a one-country list, or null. Never throws;
+// reads nothing for any other request (search words included).
 export async function getPrecountedFilterTotal(params: ListingQuery): Promise<number | null> {
   if (jobsTotalSource() !== 'precount') return null
   const key = filterPrecountKey(params)
