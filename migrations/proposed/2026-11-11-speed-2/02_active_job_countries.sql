@@ -1,5 +1,6 @@
 -- ============================================================================
--- NOT APPLIED. Proposed 11 November 2026 (speed job part 2).
+-- APPLIED 11 Nov 2026 — kept for checks/rollback; source of truth is 0010.
+-- (Proposed 11 November 2026, speed job part 2.)
 -- RUN ORDER: 04a -> 00 -> 00b -> 00c -> (owner + reviewer decide) -> 01
 --            -> 01b at once -> 02 -> 04b -> 00d.
 -- It does not depend on 01; it is placed after 01b in the order.

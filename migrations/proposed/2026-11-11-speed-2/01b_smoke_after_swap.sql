@@ -1,4 +1,5 @@
 -- ============================================================================
+-- APPLIED 11 Nov 2026 — kept for checks/rollback; source of truth is 0010.
 -- READ-ONLY. NOT A MIGRATION. Changes nothing.
 -- RUN ORDER: 04a -> 00 -> 00b -> 00c -> (owner + reviewer decide) -> 01
 --            -> 01b at once -> 02 -> 04b -> 00d.

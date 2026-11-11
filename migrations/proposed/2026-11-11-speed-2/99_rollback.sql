@@ -1,5 +1,8 @@
 -- ============================================================================
--- NOT APPLIED. Undo for speed job part 2 (01 and 02). Safe to run twice.
+-- APPLIED 11 Nov 2026 — kept for checks/rollback; source of truth is 0010.
+-- Run ONLY if a smoke test fails; this undoes 0010 (restores the 0004 logic,
+-- drops get_active_job_countries).
+-- Undo for speed job part 2 (01 and 02). Safe to run twice.
 -- RUN ORDER: 04a -> 00 -> 00b -> 00c -> (owner + reviewer decide) -> 01
 --            -> 01b at once -> 02 -> 04b -> 00d.
 -- Run this at once if 01b gives an error. The trial copy (00) is removed

@@ -68,10 +68,23 @@ extend a migration here to touch another product's tables.
 | `0003_search_jobs_ranked.sql` | Ranked job search function |
 | `0004_remove_ctr_from_ranking.sql` | Ranking without click-through rate |
 | `0005_email_subscribers_pending.sql` | Pending email subscribers |
-| `0006_active_job_countries.sql` | Countries with active jobs |
+| `0006_active_job_countries.sql` | Countries with active jobs. Never applied on its own: the function did not exist until `0010` created it (11 Nov 2026) |
 | `0007` | Unused number; left unused on purpose |
 | `0008_saved_jobs.sql` | Saved jobs |
 | `0009_site_counts_and_jobs_browsable_index.sql` | `site_counts` table, its refresh function, the newest-first jobs index and the 10-minute pg_cron schedule. Applied 11 Nov 2026 as three separate queries (the index must run alone). Checks and rollback: `proposed/2026-11-11-speed/` |
+| `0010_search_jobs_ranked_v2_and_countries.sql` | Faster `search_jobs_ranked` (v2: the query is written out with the actual values on each call) and `get_active_job_countries`, as defined by `0006`. Applied 11 Nov 2026 as two separate queries. Checks, trial helpers and rollback: `proposed/2026-11-11-speed-2/` |
+
+## Compare with the live database before any replace
+
+Before any future `CREATE OR REPLACE` of a function recorded here, compare the
+live definition with the repository by fingerprint first (the md5 and length
+of `pg_proc.prosrc`). Do not assume the repository text is what is live.
+
+Known case: before `0010`, the live `search_jobs_ranked` was the `0004` body
+with Windows-style (CRLF) line endings: md5 `9309125892ecddec6014de33e7529552`,
+length 3463. The file in this directory has Unix-style (LF) endings: md5
+`aad246bd049e61611aed2c5391fdabb3`, length 3389. Same logic, different
+fingerprint. The `0010` header gives both fingerprints for its v2 body.
 
 ## pg_cron jobs
 
