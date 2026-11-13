@@ -52,10 +52,14 @@ function isDedupConflict(err: { message?: string; code?: string } | null): boole
     || m.includes('duplicate key value')
 }
 
-// The short code of a caught value, for log lines.
+// The short code of a caught value, for log lines. Never throws.
 function shortCode(v: unknown): string {
-  const code = typeof v === 'object' && v !== null ? (v as { code?: unknown }).code : undefined
-  return typeof code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(code) ? code : 'no-code'
+  try {
+    const code = typeof v === 'object' && v !== null ? (v as { code?: unknown }).code : undefined
+    return typeof code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(code) ? code : 'no-code'
+  } catch {
+    return 'no-code'
+  }
 }
 
 // The code shown in the fixed failed-import text: the error's short code,

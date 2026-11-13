@@ -130,10 +130,10 @@ describe('runProviderImport failed-import text', () => {
     const hostile = {}
     Object.defineProperty(hostile, 'code', { get() { throw new Error(SECRET) } })
     const values = await failureValues(hostile)
-    // The later log line's own code read also throws, so the outer
-    // fixed answer is returned; the stored values use the failure text.
+    // The later log line's code read is caught too, so the answer and the
+    // stored values all use the failure text.
     expect(values).toStrictEqual({
-      answer: 'Import stopped unexpectedly', runMessage: 'Import failed (no-code)', healthMessage: 'Import failed (no-code)',
+      answer: 'Import failed (no-code)', runMessage: 'Import failed (no-code)', healthMessage: 'Import failed (no-code)',
     })
   })
 

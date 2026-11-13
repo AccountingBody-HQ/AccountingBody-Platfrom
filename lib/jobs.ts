@@ -374,7 +374,7 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
   })
 
   // Same as the count path above: an error is thrown, never returned as [].
-  if (error) throw new Error(`getActiveDirectJobs: search_jobs_ranked failed: ${error.message}`)
+  if (error) throw readProblem('getActiveDirectJobs: search_jobs_ranked failed', error)
   if (!data) return []
 
   // The RPC's RETURNS TABLE columns are exactly JOB_COLUMNS, by
@@ -971,7 +971,7 @@ export async function getJobByManageToken(token: string): Promise<Job | null> {
   // null only for zero rows (PostgREST code PGRST116); any other failure is
   // thrown, so the caller answers a temporary problem, not "not found".
   if (error && error.code === 'PGRST116') return null
-  if (error) throw error
+  if (error) throw readProblem('getJobByManageToken: jobs query failed', error)
   if (!data) return null
   return data as Job
 }
@@ -1439,7 +1439,7 @@ export async function getExpiringJobs(daysFromNow: number, page?: ExpiringJobsPa
   // failure; an empty result is [].
   if (error) {
     console.error('getExpiringJobs error:', problemCode(error))
-    throw error
+    throw readProblem('job expiry database request failed', error)
   }
   if (!data) return []
   return data as unknown as Job[]
@@ -1731,7 +1731,8 @@ export async function approveJob(id: string, adminNotes?: string): Promise<Job> 
     .select(JOB_COLUMNS_ADMIN)
     .single()
 
-  if (error || !data) throw error ?? new Error('approveJob: update returned no row')
+  if (error) throw readProblem('approveJob: update failed', error)
+  if (!data) throw new Error('approveJob: update returned no row')
   return data as Job
 }
 
@@ -1745,7 +1746,8 @@ export async function rejectJob(id: string, reason: string): Promise<Job> {
     .select(JOB_COLUMNS_ADMIN)
     .single()
 
-  if (error || !data) throw error ?? new Error('rejectJob: update returned no row')
+  if (error) throw readProblem('rejectJob: update failed', error)
+  if (!data) throw new Error('rejectJob: update returned no row')
   return data as Job
 }
 
@@ -1763,7 +1765,7 @@ export async function expireJob(id: string): Promise<void> {
     .update(expiryUpdate(new Date()))
     .eq('id', id)
 
-  if (error) throw error
+  if (error) throw readProblem('expireJob: update failed', error)
 }
 
 // Used by the daily expiry run: closes the listed jobs that are still active
@@ -1776,7 +1778,7 @@ export async function expireJobsByIds(ids: string[], at: Date, signal?: AbortSig
   if (signal) query = query.abortSignal(signal)
   const { data, error } = await query
 
-  if (error) throw error
+  if (error) throw readProblem('job expiry database request failed', error)
   return ((data ?? []) as { id: string }[]).map((row) => row.id)
 }
 
@@ -1804,7 +1806,8 @@ export async function closeJobByManageToken(token: string): Promise<Job | null> 
     .select(JOB_COLUMNS_ADMIN)
     .single()
 
-  if (error || !data) throw error ?? new Error('closeJobByManageToken: update returned no row')
+  if (error) throw readProblem('closeJobByManageToken: update failed', error)
+  if (!data) throw new Error('closeJobByManageToken: update returned no row')
   return data as Job
 }
 
@@ -1836,7 +1839,8 @@ export async function markJobPaid(
     .select(JOB_COLUMNS_ADMIN)
     .single()
 
-  if (error || !data) throw error ?? new Error('markJobPaid: update returned no row')
+  if (error) throw readProblem('markJobPaid: update failed', error)
+  if (!data) throw new Error('markJobPaid: update returned no row')
   return data as Job
 }
 

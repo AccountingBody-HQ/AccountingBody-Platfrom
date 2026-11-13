@@ -13,6 +13,16 @@ import {
 
 export const maxDuration = 300
 
+// The short code of a caught value, for log lines. Never throws.
+function shortCode(v: unknown): string {
+  try {
+    const code = typeof v === 'object' && v !== null ? (v as { code?: unknown }).code : undefined
+    return typeof code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(code) ? code : 'no-code'
+  } catch {
+    return 'no-code'
+  }
+}
+
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET
   if (!secret) {
@@ -36,7 +46,7 @@ export async function GET(req: NextRequest) {
   try {
     dueProviders = await getProvidersDueForFetch()
   } catch (err: unknown) {
-    console.error('[orchestrator] getProvidersDueForFetch failed:', err)
+    console.error('[orchestrator] getProvidersDueForFetch failed:', shortCode(err))
     reportServerError('job import due check failed', err, { area: 'ingest' })
     return Response.json(
       { ok: false, error: 'Failed to determine due providers', reaped },

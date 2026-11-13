@@ -10,9 +10,15 @@ function getSupabase() {
   return getServerSupabase('admin')
 }
 
-// The short code of a database problem, for log lines.
-function shortCode(v: { code?: unknown }): string {
-  return typeof v.code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(v.code) ? v.code : 'no-code'
+// The short code of a database problem or caught value, for log lines.
+// Never throws.
+function shortCode(v: unknown): string {
+  try {
+    const code = typeof v === 'object' && v !== null ? (v as { code?: unknown }).code : undefined
+    return typeof code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(code) ? code : 'no-code'
+  } catch {
+    return 'no-code'
+  }
 }
 
 // GET /api/roodber8/course-factory/load-course
@@ -54,7 +60,13 @@ export async function GET(req: NextRequest) {
     const slug = searchParams.get('slug')
     if (!slug) return NextResponse.json({ error: 'slug required' }, { status: 400 })
 
-    const course = await getCourseBySlug(slug, true)
+    let course
+    try {
+      course = await getCourseBySlug(slug, true)
+    } catch (err: unknown) {
+      console.error('admin course load failed', shortCode(err))
+      return NextResponse.json({ error: 'Course load failed' }, { status: 500 })
+    }
     if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 })
 
     return NextResponse.json({ course })

@@ -70,7 +70,8 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'Job not found' }, { status: 404 })
   }
 
-  const body: unknown = await req.json()
+  // Bad or empty JSON is treated as no body: the same 400 answer.
+  const body: unknown = await req.json().catch(() => null)
   if (!isRecord(body) || typeof body.action !== 'string') {
     return NextResponse.json({ error: 'action is required' }, { status: 400 })
   }
