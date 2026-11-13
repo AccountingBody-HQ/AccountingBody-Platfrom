@@ -111,6 +111,8 @@ const ROUTE_LABELS = [
   'admin sign-in not set up',
   'email: admin candidate approval',
   'email: admin candidate decision',
+  'email: admin firm approval',
+  'email: admin firm decision',
   'email: admin reply',
   'admin record action failed',
   'admin article publish failed',

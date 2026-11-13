@@ -124,8 +124,14 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error("employer-brief error:", err)
+    console.error("employer-brief error:", shortPart(err, "name"), shortPart(err, "code"))
     reportServerError("hiring brief submit failed", err, { area: "public" })
     return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
   }
+}
+
+// A short name or code from a caught value, or "-".
+function shortPart(value: unknown, key: "name" | "code"): string {
+  const part = typeof value === "object" && value !== null ? (value as Record<string, unknown>)[key] : undefined
+  return typeof part === "string" && /^[A-Za-z0-9_.-]{1,40}$/.test(part) ? part : "-"
 }

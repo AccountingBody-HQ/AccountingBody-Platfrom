@@ -425,7 +425,7 @@ const scenarios: Scenario[] = [
     stalled: {
       waits: 1,
       status: 500,
-      body: { error: 'Failed to save candidate token — email not sent', detail: TIMEOUT(20_000) },
+      body: { error: 'Failed to save candidate token — email not sent' },
       emails: 0,
       dbRequests: 1,
     },

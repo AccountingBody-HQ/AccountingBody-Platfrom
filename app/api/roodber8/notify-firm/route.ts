@@ -3,6 +3,7 @@ import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { Resend } from 'resend'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { reportServerError } from '@/lib/report-error'
+import { checkEmailSend } from '@/lib/email-check'
 
 export const runtime = 'nodejs'
 
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     const resend = new Resend(process.env.RESEND_API_KEY)
 
     if (status === 'approved') {
-      await resend.emails.send({
+      const sendResult = await resend.emails.send({
         from: `${brand.name} <noreply@accountingbody.com>`,
         to: contact_email,
         subject: `Your application has been approved — ${brand.name}`,
@@ -79,10 +80,13 @@ export async function POST(req: NextRequest) {
 </body>
 </html>`,
       })
+      if (!checkEmailSend(sendResult, 'admin firm approval')) {
+        return NextResponse.json({ error: 'Failed to send email' }, { status: 500 })
+      }
     }
 
     if (status === 'rejected') {
-      await resend.emails.send({
+      const sendResult = await resend.emails.send({
         from: `${brand.name} <noreply@accountingbody.com>`,
         to: contact_email,
         subject: `Update on your application — ${brand.name}`,
@@ -111,13 +115,15 @@ export async function POST(req: NextRequest) {
 </body>
 </html>`,
       })
+      if (!checkEmailSend(sendResult, 'admin firm decision')) {
+        return NextResponse.json({ error: 'Failed to send email' }, { status: 500 })
+      }
     }
 
     return NextResponse.json({ success: true })
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Internal server error'
     console.error('notify-firm error:', err)
     reportServerError('admin firm email failed', err, { area: 'admin' })
-    return NextResponse.json({ error: message }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to send email' }, { status: 500 })
   }
 }

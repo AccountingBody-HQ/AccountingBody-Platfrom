@@ -15,6 +15,12 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null
 }
 
+// The short code of a caught value, for log lines.
+function shortCode(v: unknown): string {
+  const code = isRecord(v) ? v.code : undefined
+  return typeof code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(code) ? code : 'no-code'
+}
+
 type RouteParams = { params: Promise<{ id: string }> }
 
 // ── GET /api/roodber8/jobs/[id] ── returns job by ID, any status
@@ -57,7 +63,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       try {
         await sendJobApprovalEmail(job, job.manage_token ?? '')
       } catch (emailErr: unknown) {
-        console.error('roodber8/jobs approve: email failed (non-fatal):', emailErr)
+        console.error('admin job approval email failed (non-fatal)', shortCode(emailErr))
       }
       return NextResponse.json({ job })
     }
@@ -71,7 +77,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
       try {
         await sendJobRejectionEmail(job)
       } catch (emailErr: unknown) {
-        console.error('roodber8/jobs reject: email failed (non-fatal):', emailErr)
+        console.error('admin job rejection email failed (non-fatal)', shortCode(emailErr))
       }
       return NextResponse.json({ job })
     }
@@ -107,7 +113,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
   } catch (err: unknown) {
-    console.error('roodber8/jobs/[id] PATCH error:', err)
+    console.error('admin job update failed', shortCode(err))
     reportServerError('admin job update failed', err, { area: 'admin' })
     const message = err instanceof Error ? err.message : 'Internal server error'
     return NextResponse.json({ error: message }, { status: 500 })

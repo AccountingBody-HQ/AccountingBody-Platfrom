@@ -380,7 +380,7 @@ describe('import callers', () => {
     vi.stubEnv('CRON_SECRET', '')
     const { POST } = await loadAdmin('/providers/[slug]/trigger')
     const result = await answerOf(await POST(withSession(request('/api/admin-tool', { method: 'POST' })), { params: Promise.resolve({ slug: 'example' }) }))
-    expect(result).toStrictEqual({ status: 500, headers: JSON_HEADERS, body: { ok: false, error: 'CRON_SECRET is not configured' } })
+    expect(result).toStrictEqual({ status: 500, headers: JSON_HEADERS, body: { ok: false, error: 'Not configured' } })
     expect(net.dispatches).toStrictEqual([])
   })
 })

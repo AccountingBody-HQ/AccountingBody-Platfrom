@@ -1,7 +1,9 @@
+import { execFileSync } from 'node:child_process'
 import { createRequire } from 'node:module'
+import { dirname, join } from 'node:path'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TEST_ADMIN_PATH } from './admin-session-fixtures'
-import { filterBrowserBreadcrumb, filterBrowserEvent, filterBrowserSpan, filterBrowserTransaction } from './sentry-browser-privacy'
+import { filterBrowserBreadcrumb, filterBrowserEvent, filterBrowserSpan, filterBrowserTransaction, limitEvents } from './sentry-browser-privacy'
 
 // Runs the browser Sentry SDK that @sentry/nextjs ships, with a transport that
 // only records what would be sent, so nothing leaves the process. The page,
@@ -193,5 +195,153 @@ describe('browser timings as Sentry receives them', () => {
     const [envelope] = await sentOfType('span')
     for (const value of VALUES) expect(envelope).not.toContain(value)
     expect(parts(envelope).body.data).toMatchObject({ transaction: '/admin-area' })
+  })
+})
+
+// The Next.js browser timing integration, run in a fresh Node process per
+// case so the SDK's one-time page observers start clean. The page, its
+// performance observers and visibility are stand-ins; a click with a slow
+// response is fed to the observers the SDK registered, then the page is hidden.
+const NEXT_CLIENT_DIR = join(dirname(nextjsEntry), 'client')
+const TIMING_PAGE = `
+const { createRequire } = require('module')
+const { join } = require('path')
+const [setting, scenario, clientDir] = process.argv.slice(1)
+const observers = []
+const listeners = []
+globalThis.PerformanceObserver = class {
+  constructor(callback) { this.callback = callback }
+  observe(options) { this.type = options.type; observers.push(this) }
+  disconnect() {}
+  takeRecords() { return [] }
+  static get supportedEntryTypes() { return ['event', 'first-input', 'long-animation-frame', 'paint', 'element', 'largest-contentful-paint', 'layout-shift', 'navigation', 'resource'] }
+}
+globalThis.PerformanceEventTiming = class {}
+PerformanceEventTiming.prototype.interactionId = 0
+const page = { referrer: '', location: { href: 'https://accountingbody.com/jobs' }, visibilityState: 'visible', readyState: 'complete',
+  addEventListener: (type, fn) => listeners.push([type, fn]), removeEventListener() {}, getElementById: () => null, querySelector: () => null, querySelectorAll: () => [] }
+globalThis.document = page
+globalThis.location = { href: 'https://accountingbody.com/jobs', origin: 'https://accountingbody.com', pathname: '/jobs' }
+globalThis.addEventListener = (type, fn) => listeners.push([type, fn])
+globalThis.removeEventListener = () => {}
+const load = createRequire(join(clientDir, 'index.js'))
+const Browser = createRequire(load.resolve('@sentry/react'))('@sentry/browser')
+const { browserTracingIntegration } = load('./browserTracingIntegration.js')
+const sent = []
+const client = new Browser.BrowserClient({
+  dsn: 'https://public@o1.ingest.example.invalid/1',
+  stackParser: Browser.defaultStackParser,
+  tracesSampleRate: 1,
+  sendClientReports: false,
+  integrations: [setting === 'configured' ? browserTracingIntegration({ enableInp: false }) : browserTracingIntegration()],
+  transport: (options) => Browser.createTransport(options, async (request) => {
+    sent.push(typeof request.body === 'string' ? request.body : new TextDecoder().decode(request.body))
+    return { statusCode: 200 }
+  }),
+})
+Browser.setCurrentClient(client)
+client.init()
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+;(async () => {
+  if (scenario === 'click') {
+    const entry = { name: 'click', entryType: 'event', interactionId: 7, duration: 240, startTime: 50, processingStart: 60, processingEnd: 280, target: null, toJSON: () => ({}) }
+    for (const observer of observers) if (observer.type === 'event' || observer.type === 'first-input') observer.callback({ getEntries: () => [entry] }, observer)
+    await wait(20)
+    page.visibilityState = 'hidden'
+    for (const [type, fn] of listeners) if (type === 'visibilitychange' || type === 'pagehide') fn({ type, timeStamp: 1000 })
+  } else {
+    await wait(1500)
+  }
+  await Browser.flush(2000)
+  const items = sent.map((envelope) => {
+    const [, itemHeader, body] = envelope.split('\\n')
+    const item = JSON.parse(body)
+    return { type: JSON.parse(itemHeader).type, op: item.op ?? item.contexts?.trace?.op, transaction: item.transaction, spans: (item.spans ?? []).map((span) => span.op).sort() }
+  })
+  process.stdout.write(JSON.stringify({ observers: observers.map((observer) => observer.type).sort(), integrations: Object.keys(client._integrations), items }), () => process.exit(0))
+})()
+`
+
+type PageResult = { observers: string[]; integrations: string[]; items: Array<{ type: string; op?: string; transaction?: string; spans: string[] }> }
+
+function runPage(setting: 'default' | 'configured', scenario: 'click' | 'load'): PageResult {
+  return JSON.parse(execFileSync(process.execPath, ['-e', TIMING_PAGE, setting, scenario, NEXT_CLIENT_DIR], { encoding: 'utf8', timeout: 15_000 }))
+}
+
+describe('interaction timing is not recorded', () => {
+  it('the configured timing integration takes the place of the default one', () => {
+    const core = createRequire(nextjsEntry)('@sentry/core') as { getIntegrationsToSetup: (options: object) => Array<{ name: string }> }
+    const { browserTracingIntegration } = createRequire(join(NEXT_CLIENT_DIR, 'index.js'))('./browserTracingIntegration.js') as {
+      browserTracingIntegration: (options?: object) => { name: string }
+    }
+    const configured = browserTracingIntegration({ enableInp: false })
+    const installed = core.getIntegrationsToSetup({ defaultIntegrations: [browserTracingIntegration()], integrations: [configured] })
+    const timing = installed.filter((integration) => integration.name === 'BrowserTracing')
+    expect(timing).toHaveLength(1)
+    expect(timing[0]).toBe(configured)
+  })
+
+  it('a slow click sends an interaction timing by default and none with the setting', () => {
+    const before = runPage('default', 'click')
+    expect(before.items.map((item) => [item.type, item.op])).toStrictEqual([['span', 'ui.interaction.click']])
+    const after = runPage('configured', 'click')
+    expect(after.integrations).toStrictEqual(['BrowserTracing'])
+    expect(after.items).toStrictEqual([])
+  }, 30_000)
+
+  it('only the interaction observers are left out', () => {
+    const before = runPage('default', 'click').observers
+    const after = runPage('configured', 'click').observers
+    expect(before.filter((type) => !after.includes(type)).sort()).toStrictEqual(['event', 'event', 'first-input', 'first-input', 'first-input'])
+    expect(after.every((type) => before.includes(type))).toBe(true)
+    expect(after).toStrictEqual(['element', 'largest-contentful-paint', 'long-animation-frame', 'paint'])
+  }, 30_000)
+
+  it('page-load timing is the same with the setting', () => {
+    const before = runPage('default', 'load')
+    const after = runPage('configured', 'load')
+    expect(before.items).toStrictEqual([{ type: 'transaction', op: 'pageload', transaction: '/jobs', spans: ['mark'] }])
+    expect(after.items).toStrictEqual(before.items)
+  }, 30_000)
+})
+
+describe('the browser sends a limited number of problem reports as Sentry receives them', () => {
+  const limitedSent: string[] = []
+  let previous: ReturnType<typeof Sentry.getClient>
+
+  beforeAll(() => {
+    previous = Sentry.getClient()
+    const limited = new Sentry.BrowserClient({
+      dsn: 'https://public@o1.ingest.example.invalid/1',
+      stackParser: Sentry.defaultStackParser,
+      integrations: [],
+      tracesSampleRate: 1,
+      sendClientReports: false,
+      beforeSend: limitEvents(filterBrowserEvent, 10),
+      beforeSendTransaction: filterBrowserTransaction,
+      beforeSendSpan: filterBrowserSpan,
+      transport: (options) =>
+        Sentry.createTransport(options, async (request) => {
+          limitedSent.push(typeof request.body === 'string' ? request.body : new TextDecoder().decode(request.body))
+          return { statusCode: 200 }
+        }),
+    })
+    Sentry.setCurrentClient(limited)
+    limited.init()
+  })
+
+  afterAll(() => {
+    if (previous) Sentry.setCurrentClient(previous)
+  })
+
+  it('delivers ten filtered problem reports, then none, while timings continue', async () => {
+    for (let i = 0; i < 12; i++) Sentry.captureException(errorWithFrames())
+    await Sentry.startSpan({ name: '/jobs', op: 'pageload', forceTransaction: true }, async () => undefined)
+    await Sentry.flush(2000)
+    const events = limitedSent.filter((envelope) => envelope.includes('{"type":"event"}'))
+    const transactions = limitedSent.filter((envelope) => envelope.includes('{"type":"transaction"}'))
+    expect(events).toHaveLength(10)
+    for (const envelope of events) for (const value of VALUES) expect(envelope).not.toContain(value)
+    expect(transactions).toHaveLength(1)
   })
 })

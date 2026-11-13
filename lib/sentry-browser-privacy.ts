@@ -518,6 +518,24 @@ export function filterBrowserEvent(event: ErrorEvent): ErrorEvent | null {
   }
 }
 
+// Passes problem reports through `filter`, then lets at most `max` of them
+// through for as long as this limiter lives (the client config makes one per
+// page load). Reports the filter drops are not counted. Timings use other
+// hooks and are not counted.
+export function limitEvents(
+  filter: (event: ErrorEvent) => ErrorEvent | null,
+  max: number
+): (event: ErrorEvent) => ErrorEvent | null {
+  let sent = 0
+  return function limitedBrowserEvent(event: ErrorEvent): ErrorEvent | null {
+    const kept = filter(event)
+    if (kept === null) return null
+    if (sent >= max) return null
+    sent += 1
+    return kept
+  }
+}
+
 // ── Timings ─────────────────────────────────────────────────────────────────
 
 type DataValue = string | number | boolean | Array<string | number | boolean>
