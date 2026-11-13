@@ -14,6 +14,7 @@ import {
   filterBrowserEvent,
   filterBrowserSpan,
   filterBrowserTransaction,
+  limitEvents,
 } from './sentry-browser-privacy'
 
 type Hook = (...args: never[]) => unknown
@@ -25,6 +26,7 @@ vi.mock('@sentry/nextjs', () => ({
   init: (options: Options) => {
     inits.push(options)
   },
+  browserTracingIntegration: (options: Options) => ({ name: 'BrowserTracing', options }),
 }))
 
 type TransactionEvent = Parameters<typeof filterBrowserTransaction>[0]
@@ -605,9 +607,10 @@ describe('trace headers are not sent to outside services', () => {
 
   it('the browser keeps the same-origin-only default and uses all four filters', async () => {
     const options = await configOptions('../sentry.client.config')
-    expect(Object.keys(options)).toEqual(['dsn', 'tracesSampleRate', 'beforeSend', 'beforeBreadcrumb', 'beforeSendTransaction', 'beforeSendSpan'])
+    expect(Object.keys(options)).toEqual(['dsn', 'tracesSampleRate', 'integrations', 'beforeSend', 'beforeBreadcrumb', 'beforeSendTransaction', 'beforeSendSpan'])
     expect(options.tracesSampleRate).toBe(0.1)
-    expect((options.beforeSend as Hook).name).toBe('filterBrowserEvent')
+    expect(options.integrations).toStrictEqual([{ name: 'BrowserTracing', options: { enableInp: false } }])
+    expect((options.beforeSend as Hook).name).toBe('limitedBrowserEvent')
     expect((options.beforeBreadcrumb as Hook).name).toBe('filterBrowserBreadcrumb')
     expect((options.beforeSendTransaction as Hook).name).toBe('filterBrowserTransaction')
     expect((options.beforeSendSpan as Hook).name).toBe('filterBrowserSpan')
@@ -616,5 +619,54 @@ describe('trace headers are not sent to outside services', () => {
     for (const url of OUTSIDE_URLS) expect(browserRequest.shouldAttachHeaders(url, options.tracePropagationTargets)).toBe(false)
     expect(browserRequest.shouldAttachHeaders('/api/jobs/manage', options.tracePropagationTargets)).toBe(true)
     expect(browserRequest.shouldAttachHeaders(`${SITE}/api/jobs/manage`, options.tracePropagationTargets)).toBe(true)
+  })
+})
+
+describe('the browser sends a limited number of problem reports', () => {
+  it('lets ten filtered reports through and then none', () => {
+    const limited = limitEvents(filterBrowserEvent, 10)
+    const results = Array.from({ length: 12 }, () => limited(browserEvent()))
+    for (const result of results.slice(0, 10)) expect(result).toStrictEqual(filterBrowserEvent(browserEvent()))
+    expect(results.slice(10)).toStrictEqual([null, null])
+  })
+
+  it('applies the filter to every report it lets through', () => {
+    const seen: ErrorEvent[] = []
+    const limited = limitEvents((event) => {
+      seen.push(event)
+      return { ...event, tags: { checked: 'yes' } }
+    }, 2)
+    expect(limited(browserEvent())?.tags).toStrictEqual({ checked: 'yes' })
+    expect(limited(browserEvent())?.tags).toStrictEqual({ checked: 'yes' })
+    expect(limited(browserEvent())).toBeNull()
+    expect(seen).toHaveLength(3)
+  })
+
+  it('does not count reports the filter leaves out', () => {
+    let keep = false
+    const limited = limitEvents((event) => (keep ? event : null), 2)
+    for (let i = 0; i < 5; i++) expect(limited(browserEvent())).toBeNull()
+    keep = true
+    expect(limited(browserEvent())).not.toBeNull()
+    expect(limited(browserEvent())).not.toBeNull()
+    expect(limited(browserEvent())).toBeNull()
+  })
+
+  it('keeps a separate count for each limiter', () => {
+    const first = limitEvents(filterBrowserEvent, 1)
+    expect(first(browserEvent())).not.toBeNull()
+    expect(first(browserEvent())).toBeNull()
+    const second = limitEvents(filterBrowserEvent, 1)
+    expect(second(browserEvent())).not.toBeNull()
+  })
+
+  it('the browser config sends ten filtered reports per page load', async () => {
+    const options = await configOptions('../sentry.client.config')
+    const beforeSend = options.beforeSend as (event: ErrorEvent) => ErrorEvent | null
+    const results = Array.from({ length: 11 }, () => beforeSend(browserEvent()))
+    for (const result of results.slice(0, 10)) expect(result).toStrictEqual(filterBrowserEvent(browserEvent()))
+    expect(results[10]).toBeNull()
+    expect(options.sampleRate).toBeUndefined()
+    expect(options.tracesSampleRate).toBe(0.1)
   })
 })

@@ -16,7 +16,7 @@ export async function POST(
   const cronSecret = process.env.CRON_SECRET
   if (!cronSecret) {
     return Response.json(
-      { ok: false, error: 'CRON_SECRET is not configured' },
+      { ok: false, error: 'Not configured' },
       { status: 500 }
     )
   }
@@ -34,8 +34,9 @@ export async function POST(
     const data: unknown = await res.json()
     return Response.json(data, { status: res.status })
   } catch (err: unknown) {
+    const code = typeof err === 'object' && err !== null ? (err as { code?: unknown }).code : undefined
+    console.error('admin provider run start failed', typeof code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(code) ? code : 'no-code')
     reportServerError('admin provider run start failed', err, { area: 'admin' })
-    const msg = err instanceof Error ? err.message : String(err)
-    return Response.json({ ok: false, error: msg }, { status: 500 })
+    return Response.json({ ok: false, error: 'Run failed' }, { status: 500 })
   }
 }

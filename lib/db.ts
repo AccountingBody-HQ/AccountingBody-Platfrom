@@ -95,7 +95,11 @@ async function fetchPublishedArticleBySlug(slug: string): Promise<ArticleFull | 
   if (error && status === 406 && error.code === 'PGRST116') return null
   // A real Error, not the plain PostgREST error object, so the page's error
   // boundary and Sentry get a message and a stack.
-  if (error) throw new Error(`getArticleBySlug: articles query failed (status ${status}): ${error.message}`)
+  if (error) {
+    const failed = new Error(`getArticleBySlug: articles query failed (status ${status})`) as Error & { code?: string }
+    if (typeof error.code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(error.code)) failed.code = error.code
+    throw failed
+  }
   if (!data) throw new Error('getArticleBySlug: article read returned no data')
   return data as ArticleFull
 }

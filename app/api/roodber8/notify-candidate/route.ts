@@ -34,9 +34,9 @@ export async function POST(req: NextRequest) {
         .eq("id", id)
 
       if (updateError) {
-        console.error('notify-candidate: token update failed:', updateError)
+        console.error('notify-candidate: token update failed:', /^[A-Za-z0-9_.-]{1,40}$/.test(updateError.code ?? '') ? updateError.code : 'no-code')
         return NextResponse.json(
-          { error: 'Failed to save candidate token — email not sent', detail: updateError.message },
+          { error: 'Failed to save candidate token — email not sent' },
           { status: 500 }
         )
       }

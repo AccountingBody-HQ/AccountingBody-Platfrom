@@ -417,7 +417,7 @@ const ROUTES: Route[] = [
   route('job update', '/jobs/[id]', 'PATCH', () => ({ params: Promise.resolve({ id: JOB_ID }) }), [
     {
       label: 'admin job update failed',
-      log: `${folder}/jobs/[id] PATCH error:`,
+      log: 'admin job update failed',
       seed: () => { db.tables.jobs = [{ ...job }] },
       run: (load, problem) => {
         state.failing.set('approveJob', problem)
@@ -445,7 +445,7 @@ const ROUTES: Route[] = [
     ['token save error', { method: 'POST', body: { id: JOB_ID, status: 'active', email: 'candidate@example.com', name: 'Ada' } }, 500, () => { db.failing = true }],
   ]),
   route('firm email', '/notify-firm', 'POST', () => undefined, [
-    { label: 'admin firm email failed', log: 'notify-firm error:', run: bodyProblem('/notify-firm', 'POST'), answer: { status: 500, body: error(PROBLEM) } },
+    { label: 'admin firm email failed', log: 'notify-firm error:', run: bodyProblem('/notify-firm', 'POST'), answer: { status: 500, body: error('Failed to send email') } },
   ], [
     ['missing fields', { method: 'POST', body: {} }, 400],
   ]),
@@ -495,12 +495,12 @@ const ROUTES: Route[] = [
   route('provider run start', '/providers/[slug]/trigger', 'POST', promisedSlug, [
     {
       label: 'admin provider run start failed',
-      log: null,
+      log: 'admin provider run start failed',
       run: (load, problem) => {
         ingest.fails = problem
         return call('/providers/[slug]/trigger', 'POST', promisedSlug())(load, request({ method: 'POST' }))
       },
-      answer: { status: 500, body: JSON.stringify({ ok: false, error: PROBLEM }) },
+      answer: { status: 500, body: JSON.stringify({ ok: false, error: 'Run failed' }) },
     },
   ], [
     ['healthy start', { method: 'POST' }, 200],
