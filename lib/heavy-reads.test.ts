@@ -130,7 +130,10 @@ describe('heavy public reads use the longer read limit', () => {
     expect(result.done).toBe(false)
     await vi.advanceTimersByTimeAsync(1)
     expect(result.done).toBe(true)
-    expect(String(result.error)).toContain(`(${DB_LIMITS_MS.publicHeavyRead} ms)`)
+    // The thrown search problem carries fixed text only; the time-limit line
+    // names the limit that ended it.
+    expect(String(result.error)).toBe('Error: getActiveDirectJobs: search_jobs_ranked failed')
+    expect(vi.mocked(console.warn).mock.calls).toContainEqual([expect.stringContaining(`(${DB_LIMITS_MS.publicHeavyRead} ms)`)])
   })
 
   it('a jobs count that never answers ends at the longer read limit with the usual fallback', async () => {

@@ -418,7 +418,7 @@ export async function getLatestRunPerProvider(): Promise<Record<string, Provider
     .select('*')
     .order('started_at', { ascending: false })
     .limit(500)
-  if (error) throw new Error(error.message)
+  if (error) throw readProblem('getLatestRunPerProvider: provider runs query failed', error)
   const map: Record<string, ProviderRun> = {}
   for (const run of data ?? []) {
     if (!map[run.provider_slug]) map[run.provider_slug] = run
