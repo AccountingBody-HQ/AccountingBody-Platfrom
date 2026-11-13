@@ -1,8 +1,17 @@
 import { NextRequest } from 'next/server'
 import { getProvidersDueForFetch, reapStaleRuns } from '@/lib/providers'
 import { reportServerError } from '@/lib/report-error'
+import { runProviderImport } from '@/lib/ingestion/run-provider-import'
+import {
+  IMPORTS_PER_TICK,
+  pickProvidersForTick,
+  summariseImport,
+  importLogLine,
+  countImports,
+  closingLogLine,
+} from '@/lib/ingestion/orchestrator-plan'
 
-export const maxDuration = 60
+export const maxDuration = 300
 
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET
@@ -39,60 +48,38 @@ export async function GET(req: NextRequest) {
     return Response.json({ ok: true, dispatched: [], reaped, message: 'No providers due' })
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accountingbody.com'
+  // Imports run here, in this function, one call per picked provider. At
+  // most IMPORTS_PER_TICK run together; the rest stay due for later ticks.
+  const picked = pickProvidersForTick(dueProviders, IMPORTS_PER_TICK)
 
   const results = await Promise.allSettled(
-    dueProviders.map(async (provider) => {
-      const res = await fetch(
-        `${siteUrl}/api/ingest/${provider.slug}`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${process.env.CRON_SECRET}`,
-            'Content-Type': 'application/json',
-          },
-          signal: AbortSignal.timeout(10000),
-        }
-      )
-      // Keep the sub-route's own error text for the summary in this answer.
-      // The report below carries a fixed message only. A body-parse failure
-      // must not itself throw here.
-      let error: string | undefined
-      if (!res.ok) {
-        try {
-          const body = await res.json()
-          if (typeof body?.error === 'string') error = body.error
-        } catch {
-          // Non-JSON or empty body — status/ok still tell the story
-        }
-      }
-      return {
-        slug:   provider.slug,
-        status: res.status,
-        ok:     res.ok,
-        error,
-      }
-    })
+    picked.map(p => runProviderImport(p.slug, 'cron')),
   )
 
-  const dispatched = dueProviders.map(p => p.slug)
-  const summary = results.map((r, i) => ({
-    slug:   dueProviders[i].slug,
-    result: r.status === 'fulfilled'
-      ? r.value
-      : { ok: false, error: String((r as PromiseRejectedResult).reason) },
-  }))
+  // Keep each import's own error text for the summary in this answer.
+  // The report below carries a fixed message only.
+  // The log lines carry the slug, an outcome word and the status number only.
+  const summaries = results.map((r, i) => summariseImport(picked[i].slug, r))
+  for (const s of summaries) {
+    if (s.outcome === 'failed') console.error(importLogLine(s))
+    else console.log(importLogLine(s))
+  }
 
-  // Every dispatched provider failing is a signal the dispatch mechanism
-  // itself is broken (misconfigured NEXT_PUBLIC_SITE_URL/CRON_SECRET, the
-  // deployment down) — not ordinary per-provider noise, which is already
-  // tracked by each provider's own consecutive_failures/health_status.
-  const failedCount = summary.filter(s => !s.result.ok).length
-  if (dueProviders.length > 0 && failedCount === dueProviders.length) {
+  const dispatched = picked.map(p => p.slug)
+  // Same shape as before: { slug, result: { slug, status, ok, error } }.
+  const summary = summaries.map(({ slug, status, ok, error }) => ({ slug, result: { slug, status, ok, error } }))
+  const counts = countImports(summaries, dueProviders.length)
+
+  // Every picked import failing is a signal something shared is broken
+  // (configuration, the database) — not ordinary per-provider noise, which
+  // is already tracked by each provider's own consecutive_failures/
+  // health_status.
+  if (picked.length > 0 && counts.failed === picked.length) {
+    console.error('[orchestrator] every import failed')
     reportServerError('job import dispatch failed', new Error('every dispatched import failed'), { area: 'ingest' })
   }
 
-  console.log(`[orchestrator] Dispatched ${dispatched.length} providers:`, dispatched)
+  console.log(closingLogLine(counts))
 
   return Response.json({
     ok:        true,
@@ -100,5 +87,6 @@ export async function GET(req: NextRequest) {
     count:     dispatched.length,
     reaped,
     summary,
+    counts,
   })
 }

@@ -67,7 +67,7 @@ const FILES: [string, keyof typeof DB_LIMITS_MS][] = [
   ...ADMIN_PAGES.map((path): [string, 'admin'] => [path, 'admin']),
   ['app/api/cron/expire-jobs/route.ts', 'cron'],
   ['app/api/cron/prune-pending-subscribers/route.ts', 'cron'],
-  ['app/api/ingest/[slug]/route.ts', 'ingest'],
+  ['lib/ingestion/run-provider-import.ts', 'ingest'],
 ]
 
 // Number of places each file creates a client.

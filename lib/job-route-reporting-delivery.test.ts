@@ -82,7 +82,11 @@ function json(body: unknown, status = 200): Response {
 const fakeFetch: typeof fetch = async (input) => {
   const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url)
   if (url.origin === 'https://challenges.cloudflare.com') return json({ success: false })
-  if (url.origin === SITE && url.pathname.startsWith('/api/ingest/')) return json({ ok: false, error: SUB_ROUTE_ERROR }, 500)
+  // The scheduled import runs in-process: its provider lookup finds no row,
+  // so every import answers 404 and counts as failed.
+  if (url.origin === DB_URL && url.pathname.endsWith('/job_providers')) {
+    return json({ message: SUB_ROUTE_ERROR, code: 'PGRST116', details: null, hint: null }, 406)
+  }
   if (url.origin === DB_URL) return json([])
   throw new Error(`unexpected request to ${url.href}`)
 }
