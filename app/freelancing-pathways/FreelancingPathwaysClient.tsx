@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import Link from 'next/link'
+import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 
 function scrollToRegister(e: React.MouseEvent) {
   e.preventDefault()
@@ -142,6 +143,8 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
   const [dataConsent, setDataConsent] = useState(false)
   const [status, setStatus] = useState<'idle'|'loading'|'success'|'error'>('idle')
   const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({})
+  const personCheck = useRef<PersonCheckHandle>(null)
+  const [personCheckToken, setPersonCheckToken] = useState('')
 
   const scrollToForm = () => {
     // No-op: form stays in place between steps to avoid jarring page jumps
@@ -205,6 +208,7 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
       platform:          isEthioTax ? 'et' : 'ab',
       pathway:           'freelancing-pathways',
       _h:                form._h,
+      'cf-turnstile-response': personCheckToken,
     }
     try {
       const res = await fetch('/api/recruitment/job-seeker-apply', {
@@ -218,6 +222,7 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
     } catch (err) {
       console.error(err)
       setStatus('error')
+      personCheck.current?.reset()
     }
   }
 
@@ -411,6 +416,7 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
               {status === 'error' && <p className="text-red-500 text-sm mb-4">Something went wrong. Please try again or contact us directly.</p>}
               <input type="text" value={form._h} onChange={e => setForm({...form, _h: e.target.value})} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
+              <PersonCheck ref={personCheck} onToken={setPersonCheckToken} isEthioTax={isEthioTax} />
               <div className="flex items-center justify-between">
                 <button type="button" onClick={handleBack}
                   className="flex items-center gap-2 text-sm font-semibold h-11 px-6 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors">

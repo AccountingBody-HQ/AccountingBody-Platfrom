@@ -1,12 +1,17 @@
-import * as Sentry from '@sentry/nextjs'
 import { NextRequest } from 'next/server'
 import { getProvidersDueForFetch, reapStaleRuns } from '@/lib/providers'
+import { reportServerError } from '@/lib/report-error'
 
 export const maxDuration = 60
 
 export async function GET(req: NextRequest) {
+  const secret = process.env.CRON_SECRET
+  if (!secret) {
+    console.error('[orchestrator] not configured')
+    return Response.json({ error: 'Not configured' }, { status: 503 })
+  }
   const auth = req.headers.get('authorization')
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (auth !== `Bearer ${secret}`) {
     return new Response('Unauthorized', { status: 401 })
   }
 
@@ -15,7 +20,7 @@ export async function GET(req: NextRequest) {
     reaped = await reapStaleRuns(10)
   } catch (reapErr: unknown) {
     console.error('[orchestrator] reaper failed:', reapErr)
-    Sentry.captureException(reapErr)
+    reportServerError('job import stale run cleanup failed', reapErr, { area: 'ingest' })
   }
 
   let dueProviders
@@ -23,7 +28,7 @@ export async function GET(req: NextRequest) {
     dueProviders = await getProvidersDueForFetch()
   } catch (err: unknown) {
     console.error('[orchestrator] getProvidersDueForFetch failed:', err)
-    Sentry.captureException(err)
+    reportServerError('job import due check failed', err, { area: 'ingest' })
     return Response.json(
       { ok: false, error: 'Failed to determine due providers', reaped },
       { status: 500 },
@@ -49,9 +54,9 @@ export async function GET(req: NextRequest) {
           signal: AbortSignal.timeout(10000),
         }
       )
-      // Capture the sub-route's own error message on failure so a
-      // total-failure Sentry alert (below) is actionable, not just a bare
-      // status code. A body-parse failure must not itself throw here.
+      // Keep the sub-route's own error text for the summary in this answer.
+      // The report below carries a fixed message only. A body-parse failure
+      // must not itself throw here.
       let error: string | undefined
       if (!res.ok) {
         try {
@@ -84,10 +89,7 @@ export async function GET(req: NextRequest) {
   // tracked by each provider's own consecutive_failures/health_status.
   const failedCount = summary.filter(s => !s.result.ok).length
   if (dueProviders.length > 0 && failedCount === dueProviders.length) {
-    Sentry.captureMessage(
-      `[orchestrator] All ${dueProviders.length} dispatched providers failed this run`,
-      { level: 'error', extra: { summary } }
-    )
+    reportServerError('job import dispatch failed', new Error('every dispatched import failed'), { area: 'ingest' })
   }
 
   console.log(`[orchestrator] Dispatched ${dispatched.length} providers:`, dispatched)

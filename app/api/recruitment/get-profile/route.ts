@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSupabase } from "@/lib/supabase-server"
+import { checkRead } from "@/lib/db-check"
+import { SERVER_PROBLEM_TEXT } from "@/lib/message-rules"
+import { reportServerError } from "@/lib/report-error"
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,14 +15,23 @@ export async function GET(req: NextRequest) {
     }
 
     if (type === "candidate") {
-      const { data, error } = await supabase
-        .from("job_seeker_registrations")
-        .select("reference_number, full_name, email, phone, location_city, location_country, linkedin_url, professional_role, qualification, years_experience, employment_status, salary_expectation, role_types, jurisdictions, languages, biography, platform, status")
-        .eq("update_token", token)
-        .eq("status", "active")
-        .single()
+      const lookup = checkRead(
+        await supabase
+          .from("job_seeker_registrations")
+          .select("reference_number, full_name, email, phone, location_city, location_country, linkedin_url, professional_role, qualification, years_experience, employment_status, salary_expectation, role_types, jurisdictions, languages, biography, platform, status")
+          .eq("update_token", token)
+          .eq("status", "active")
+          .single(),
+        "get-profile candidate lookup",
+        { noRowsIsEmpty: true },
+      )
 
-      if (error || !data) {
+      if (!lookup.ok) {
+        return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
+      }
+      const data = lookup.data
+
+      if (!data) {
         return NextResponse.json({ error: "Invalid or expired link" }, { status: 404 })
       }
 
@@ -27,14 +39,23 @@ export async function GET(req: NextRequest) {
     }
 
     if (type === "employer") {
-      const { data, error } = await supabase
-        .from("employer_briefs")
-        .select("reference_number, company_name, contact_name, contact_email, contact_phone, role_title, contract_type, location, salary_budget, start_date, jurisdiction, role_description, must_haves, nice_to_haves, platform, status")
-        .eq("update_token", token)
-        .in("status", ["pending", "reviewing"])
-        .single()
+      const lookup = checkRead(
+        await supabase
+          .from("employer_briefs")
+          .select("reference_number, company_name, contact_name, contact_email, contact_phone, role_title, contract_type, location, salary_budget, start_date, jurisdiction, role_description, must_haves, nice_to_haves, platform, status")
+          .eq("update_token", token)
+          .in("status", ["pending", "reviewing"])
+          .single(),
+        "get-profile employer lookup",
+        { noRowsIsEmpty: true },
+      )
 
-      if (error || !data) {
+      if (!lookup.ok) {
+        return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
+      }
+      const data = lookup.data
+
+      if (!data) {
         return NextResponse.json({ error: "Invalid or expired link" }, { status: 404 })
       }
 
@@ -45,6 +66,7 @@ export async function GET(req: NextRequest) {
 
   } catch (err) {
     console.error("get-profile error:", err)
-    return NextResponse.json({ error: "Server error" }, { status: 500 })
+    reportServerError("profile lookup failed", err, { area: "public" })
+    return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
   }
 }

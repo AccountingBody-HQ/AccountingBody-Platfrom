@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { LINK_RETRY_HEADING, MANAGE_LINK_RETRY_TEXT, manageLinkStatus } from '@/lib/message-rules'
 
 interface ManagedJob {
   id: string
@@ -46,6 +47,7 @@ export default function ManageListingClient({ token, isEthioTax }: { token: stri
 
   const [loading, setLoading] = useState(true)
   const [invalid, setInvalid] = useState(false)
+  const [linkRetry, setLinkRetry] = useState(false)
   const [job, setJob] = useState<ManagedJob | null>(null)
 
   const [confirming, setConfirming] = useState(false)
@@ -59,14 +61,18 @@ export default function ManageListingClient({ token, isEthioTax }: { token: stri
       setLoading(false)
       return
     }
+    // The answer's status decides between "invalid link" and "try again"; a
+    // body that is not JSON (for example a gateway error page) counts as empty.
     fetch('/api/jobs/manage?token=' + encodeURIComponent(token))
-      .then(r => r.json())
-      .then(({ job: data, error }) => {
-        if (error || !data) { setInvalid(true); setLoading(false); return }
+      .then(async r => ({ httpStatus: r.status, body: await r.json().catch(() => null) }))
+      .then(({ httpStatus, body }) => {
+        const data = body?.job
+        const linkStatus = manageLinkStatus(httpStatus, Boolean(data))
+        if (linkStatus !== 'ok') { if (linkStatus === 'retry') setLinkRetry(true); else setInvalid(true); setLoading(false); return }
         setJob(data)
         setLoading(false)
       })
-      .catch(() => { setInvalid(true); setLoading(false) })
+      .catch(() => { setLinkRetry(true); setLoading(false) })
   }, [token])
 
   async function handleWithdraw() {
@@ -94,6 +100,18 @@ export default function ManageListingClient({ token, isEthioTax }: { token: stri
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#f8fafc' }}>
       <p style={{ color: brand, fontFamily: 'Georgia, serif', fontSize: 16 }}>Loading your listing...</p>
+    </div>
+  )
+
+  if (linkRetry) return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#f8fafc' }}>
+      <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm max-w-md">
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: '#fee2e2' }}>
+          <svg className="w-8 h-8" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </div>
+        <h2 className="font-display text-2xl mb-3" style={{ color: '#dc2626' }}>{LINK_RETRY_HEADING}</h2>
+        <p className="text-slate-500">{MANAGE_LINK_RETRY_TEXT}</p>
+      </div>
     </div>
   )
 

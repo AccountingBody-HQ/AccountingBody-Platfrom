@@ -73,7 +73,10 @@ export default withSentryConfig(nextConfig, {
   org: 'accounting-body',
   project: 'javascript-accountingbody-website',
   silent: !process.env.CI,
+  telemetry: false,
   widenClientFileUpload: true,
+  // The browser bundle carries no list of the site's page routes.
+  routeManifestInjection: false,
   webpack: {
     treeshake: {
       removeDebugLogging: true,

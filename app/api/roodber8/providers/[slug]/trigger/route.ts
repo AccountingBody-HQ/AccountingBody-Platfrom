@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
+import { reportServerError } from '@/lib/report-error'
 
 // ── POST /api/roodber8/providers/[slug]/trigger ── manually run ingestion now
 export async function POST(
@@ -33,6 +34,7 @@ export async function POST(
     const data: unknown = await res.json()
     return Response.json(data, { status: res.status })
   } catch (err: unknown) {
+    reportServerError('admin provider run start failed', err, { area: 'admin' })
     const msg = err instanceof Error ? err.message : String(err)
     return Response.json({ ok: false, error: msg }, { status: 500 })
   }

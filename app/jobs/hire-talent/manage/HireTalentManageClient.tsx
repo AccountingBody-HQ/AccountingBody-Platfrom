@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Script from 'next/script'
+import { LINK_RETRY_HEADING, MANAGE_LINK_RETRY_TEXT, manageLinkStatus } from '@/lib/message-rules'
 
 const jurisdictionOptionsAB = ['United Kingdom','United States','Canada','Australia','European Union','UAE','Singapore','Other']
 const jurisdictionOptionsET = ['United Kingdom','Ethiopia','United States','Canada','UAE','European Union','Australia','Other']
@@ -12,7 +13,7 @@ export default function HireTalentManageClient({ isEthioTax: isEthioTaxProp }: {
 
   const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [status, setStatus] = useState<'idle'|'loading'|'success'|'error'|'invalid'>('idle')
+  const [status, setStatus] = useState<'idle'|'loading'|'success'|'error'|'invalid'|'linkRetry'>('idle')
   const [referenceNumber, setReferenceNumber] = useState('')
   const [lockedFields, setLockedFields] = useState({ company_name: '', role_title: '', contract_type: '' })
   const [form, setForm] = useState({
@@ -26,10 +27,14 @@ export default function HireTalentManageClient({ isEthioTax: isEthioTaxProp }: {
     const t = params.get('token')
     if (!t) { setStatus('invalid'); setLoading(false); return }
     setToken(t)
+    // The answer's status decides between "invalid link" and "try again"; a
+    // body that is not JSON (for example a gateway error page) counts as empty.
     fetch('/api/recruitment/get-profile?token=' + t + '&type=employer')
-      .then(r => r.json())
-      .then(({ data, error }) => {
-        if (error || !data) { setStatus('invalid'); setLoading(false); return }
+      .then(async r => ({ httpStatus: r.status, body: await r.json().catch(() => null) }))
+      .then(({ httpStatus, body }) => {
+        const data = body?.data
+        const linkStatus = manageLinkStatus(httpStatus, Boolean(data))
+        if (linkStatus !== 'ok') { setStatus(linkStatus === 'retry' ? 'linkRetry' : 'invalid'); setLoading(false); return }
         setReferenceNumber(data.reference_number ?? '')
         setLockedFields({
           company_name:  data.company_name ?? '',
@@ -47,7 +52,7 @@ export default function HireTalentManageClient({ isEthioTax: isEthioTaxProp }: {
         })
         setLoading(false)
       })
-      .catch(() => { setStatus('invalid'); setLoading(false) })
+      .catch(() => { setStatus('linkRetry'); setLoading(false) })
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,6 +89,18 @@ export default function HireTalentManageClient({ isEthioTax: isEthioTaxProp }: {
         </div>
         <h2 className="font-display text-2xl mb-3" style={{ color: '#dc2626' }}>Invalid Link</h2>
         <p className="text-slate-500">This link is invalid or your brief is no longer open for updates. Please contact us if you need help.</p>
+      </div>
+    </div>
+  )
+
+  if (status === 'linkRetry') return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#f8fafc' }}>
+      <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm max-w-md">
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: '#fee2e2' }}>
+          <svg className="w-8 h-8" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </div>
+        <h2 className="font-display text-2xl mb-3" style={{ color: '#dc2626' }}>{LINK_RETRY_HEADING}</h2>
+        <p className="text-slate-500">{MANAGE_LINK_RETRY_TEXT}</p>
       </div>
     </div>
   )

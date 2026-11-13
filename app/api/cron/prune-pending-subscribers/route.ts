@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { reportServerError } from '@/lib/report-error'
 
 export const dynamic = 'force-dynamic'
 // force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
@@ -12,12 +13,7 @@ function getSupabase() {
   return getServerSupabase('cron')
 }
 
-function isAuthorised(req: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET
-  if (!secret) {
-    console.warn('cron/prune-pending-subscribers: CRON_SECRET not set — running unauthenticated (dev mode)')
-    return true
-  }
+function isAuthorised(req: NextRequest, secret: string): boolean {
   return req.headers.get('authorization') === `Bearer ${secret}`
 }
 
@@ -28,7 +24,12 @@ function isAuthorised(req: NextRequest): boolean {
 const PENDING_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 
 export async function GET(req: NextRequest) {
-  if (!isAuthorised(req)) {
+  const secret = process.env.CRON_SECRET
+  if (!secret) {
+    console.error('cron/prune-pending-subscribers: not configured')
+    return NextResponse.json({ error: 'Not configured' }, { status: 503 })
+  }
+  if (!isAuthorised(req, secret)) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
 
@@ -53,6 +54,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ pruned: count ?? 0 })
   } catch (err: unknown) {
     console.error('cron/prune-pending-subscribers: fatal error', err)
+    reportServerError('pending subscriber cleanup failed', err, { area: 'cron' })
     return NextResponse.json({ error: 'Cron run failed' }, { status: 500 })
   }
 }

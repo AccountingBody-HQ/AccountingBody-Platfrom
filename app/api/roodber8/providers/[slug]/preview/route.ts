@@ -7,6 +7,7 @@ import { validate, explainRelevance } from '@/lib/ingestion/validate'
 import { computeDedupHash } from '@/lib/ingestion/deduplicate'
 import { computeQualityMetrics } from '@/lib/ingestion/quality'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
+import { reportServerError } from '@/lib/report-error'
 
 export const maxDuration = 60
 
@@ -37,7 +38,8 @@ export async function POST(
   try {
     const text = await req.text()
     body = text ? JSON.parse(text) : {}
-  } catch {
+  } catch (error) {
+    reportServerError('admin provider preview request unreadable', error, { area: 'admin' })
     return Response.json({ ok: false, error: 'Invalid JSON body' }, { status: 400 })
   }
   const b = (typeof body === 'object' && body !== null) ? (body as Record<string, unknown>) : {}
@@ -52,6 +54,7 @@ export async function POST(
   try {
     adapter = getAdapter(provider.adapter_key)
   } catch (err) {
+    reportServerError('admin provider preview adapter missing', err, { area: 'admin' })
     return Response.json(
       { ok: false, error: err instanceof Error ? err.message : String(err) },
       { status: 400 }
@@ -189,6 +192,7 @@ export async function POST(
       adapter_errors: adapterResult.errors ?? [],
     })
   } catch (err: unknown) {
+    reportServerError('admin provider preview failed', err, { area: 'admin' })
     const durationMs = Date.now() - startedAt
     const message = err instanceof Error ? err.message : String(err)
     return Response.json({ ok: false, error: message, durationMs }, { status: 502 })

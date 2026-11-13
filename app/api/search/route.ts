@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase-server'
-import * as Sentry from '@sentry/nextjs'
 import { getActiveDirectJobs, buildSimilarQuery, type Job } from '@/lib/jobs'
 import { buildPhraseQuery, buildAndQuery, pickJobSearchTier } from '@/app/search/jobSearchTiers'
+import { reportServerError } from '@/lib/report-error'
 
 const JOB_PANEL_LIMIT = 5
 
@@ -143,7 +143,7 @@ async function fetchJobsForSearch(rawQuery: string, platform: string): Promise<J
     return { jobs: orJobs, jobsTotal: orTotal, jobsSearchQuery: orTerm }
   } catch (err: unknown) {
     console.error('[search] job query failed:', err)
-    Sentry.captureException(err)
+    reportServerError('search job lookup failed', err, { area: 'public' })
     return NO_JOBS
   }
 }
@@ -219,12 +219,8 @@ export async function GET(req: NextRequest) {
     JOB_QUERY_TIMEOUT_MS,
     NO_JOBS,
     () => {
-      console.error('[search] job query timed out', { rawSearch, platform })
-      Sentry.captureMessage('[search] job query timed out', {
-        level: 'warning',
-        tags: { platform },
-        extra: { rawSearch },
-      })
+      console.error('[search] job query timed out', { platform, length: rawSearch.length })
+      reportServerError('search job lookup timed out', new Error('job lookup took too long'), { area: 'public', code: platform })
     },
   )
 

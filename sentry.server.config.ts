@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/nextjs'
+import { filterServerEvent, filterServerSpan, filterServerTransaction } from './lib/sentry-privacy'
 
 // Vercel Cron routes must be sampled at 1.0 — Sentry's cron check-ins are
 // span-based and are only emitted for spans that survive trace sampling.
@@ -20,4 +21,10 @@ Sentry.init({
     }
     return 0.1
   },
+  // Problem reports and timings keep only what is needed to fix a problem.
+  beforeSend: filterServerEvent,
+  beforeSendTransaction: filterServerTransaction,
+  beforeSendSpan: filterServerSpan,
+  // Trace headers are added to no outgoing request.
+  tracePropagationTargets: [],
 })

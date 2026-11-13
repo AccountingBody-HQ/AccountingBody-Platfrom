@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { createJob, type ApplyMethod, type Job, type JobInsert } from '@/lib/jobs'
+import { reportServerError } from '@/lib/report-error'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -197,6 +198,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    reportServerError('employer checkout failed', err, { area: 'public' })
     const message = err instanceof Error ? err.message : 'Internal server error'
     const status = message.startsWith('Missing required field') ? 400 : 500
     return NextResponse.json({ error: status === 400 ? message : 'Could not start checkout. Please try again.' }, { status })

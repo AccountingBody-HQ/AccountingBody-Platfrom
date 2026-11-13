@@ -4,6 +4,8 @@ import { getServerSupabase, type DbContext } from '@/lib/supabase-server'
 import { bucketBounds } from '@/lib/sitemap-chunks'
 import { SINGLE_WORD_COUNTRY_NAMES } from '@/lib/ingestion/normalise'
 import { guardCachedRead } from '@/lib/cache-guard'
+import { reportServerError } from '@/lib/report-error'
+import { problemCode } from '@/lib/job-expiry'
 
 // Reads used by public pages and APIs use the public read limit (the
 // default); the whole-table counts and the job search use the heavy read
@@ -875,6 +877,7 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Simi
     tokens = similarTitleTokens(title, 6)
   } catch (error) {
     console.error('getSimilarJobs (similarTitleTokens) error:', error)
+    reportServerError('similar jobs title words failed', new Error('similar jobs title words failed'), { area: 'public' })
   }
 
   if (tokens.length > 0) {
@@ -894,6 +897,7 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Simi
         addRows(await getCachedSimilarCandidates(platform, 'and', sortedTokens.join(' '), country, limit + 1))
       } catch (error) {
         console.error('getSimilarJobs (and, same country) error:', error)
+        reportServerError('similar jobs strong match read failed', new Error('similar jobs query failed'), { area: 'public' })
       }
     }
 
@@ -905,6 +909,7 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Simi
         addRows(rankByTitleOverlap(candidates, tokens))
       } catch (error) {
         console.error('getSimilarJobs (or, same country) error:', error)
+        reportServerError('similar jobs same country read failed', new Error('similar jobs query failed'), { area: 'public' })
       }
     }
 
@@ -916,6 +921,7 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Simi
         addRows(rankByTitleOverlap(candidates, tokens))
       } catch (error) {
         console.error('getSimilarJobs (or, worldwide) error:', error)
+        reportServerError('similar jobs worldwide read failed', new Error('similar jobs query failed'), { area: 'public' })
       }
     }
   }
@@ -935,6 +941,7 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Simi
       addRows(await getCachedSimilarCountryFallback(platform, cleanCountry, limit + 1))
     } catch (error) {
       console.error('getSimilarJobs (fallback) error:', error)
+      reportServerError('similar jobs country fallback read failed', new Error('similar jobs query failed'), { area: 'public' })
     }
   }
 
@@ -953,7 +960,11 @@ export async function getJobByManageToken(token: string): Promise<Job | null> {
     .select(JOB_COLUMNS_ADMIN)
     .eq('manage_token', token)
     .single()
-  if (error || !data) return null
+  // null only for zero rows (PostgREST code PGRST116); any other failure is
+  // thrown, so the caller answers a temporary problem, not "not found".
+  if (error && error.code === 'PGRST116') return null
+  if (error) throw error
+  if (!data) return null
   return data as Job
 }
 
@@ -1004,8 +1015,14 @@ export async function getAdminJobs(params: {
 
   const [{ data, error }, { count, error: countError }] = await Promise.all([listQuery, countQuery])
 
-  if (error) console.error('getAdminJobs list error:', error)
-  if (countError) console.error('getAdminJobs count error:', countError)
+  if (error) {
+    console.error('getAdminJobs list error:', error)
+    reportServerError('admin job list read failed', new Error('admin job list read failed'), { area: 'admin' })
+  }
+  if (countError) {
+    console.error('getAdminJobs count error:', countError)
+    reportServerError('admin job count read failed', new Error('admin job count read failed'), { area: 'admin' })
+  }
 
   return {
     jobs: (data ?? []) as Job[],
@@ -1163,8 +1180,9 @@ export async function getBrowsableJobsTotal(platform: string): Promise<number | 
 
   try {
     return await cachedBrowsableJobsCount(platform)
-  } catch {
+  } catch (error) {
     console.error(JOBS_TOTAL_LOG.estimateFailed)
+    reportServerError('job count read failed', error, { area: 'public' })
     return null
   }
 }
@@ -1335,8 +1353,9 @@ export const getCachedActiveJobCountries = cache(async (platform: string): Promi
   let rows: FilterPrecountRow[]
   try {
     rows = await cachedFilterPrecounts(p)
-  } catch {
+  } catch (error) {
     console.warn(COUNTRY_LIST_LOG.failed)
+    reportServerError('job countries cached read failed', error, { area: 'public' })
     return []
   }
   const now = Date.now()
@@ -1350,23 +1369,72 @@ export const getCachedActiveJobCountries = cache(async (platform: string): Promi
   return list
 })
 
-export async function getExpiringJobs(daysFromNow: number): Promise<Job[]> {
-  const supabase = getSupabase('cron')
-  const threshold = new Date(Date.now() + daysFromNow * 24 * 60 * 60 * 1000).toISOString()
+// Columns the daily expiry run uses: the paging key, the email rules and the
+// fields its two emails show.
+export const EXPIRY_RUN_COLUMNS: string =
+  'id, expires_at, source, employer_email, employer_name, title, company_name, platform, manage_token, impression_count'
 
-  const { data, error } = await supabase
+// The position after the last row of a page: rows come oldest first, and
+// rows with the same expiry time in id order.
+export type ExpiryCursor = { expires_at: string; id: string }
+
+// One page for the daily expiry run.
+export type ExpiringJobsPage = {
+  // The run's clock reading the windows are measured from.
+  now: number
+  limit: number
+  after?: ExpiryCursor | null
+  // Only jobs expiring later than this many days from `now`.
+  fromDays?: number
+  // Only jobs with at least one impression.
+  withImpressions?: boolean
+  signal?: AbortSignal
+}
+
+const CURSOR_TIME = /^[0-9][0-9T:.+ Z-]{9,40}$/
+const CURSOR_ID = /^[0-9A-Za-z-]{1,64}$/
+
+function afterCursor(after: ExpiryCursor): string {
+  if (!CURSOR_TIME.test(after.expires_at) || !CURSOR_ID.test(after.id)) {
+    throw new Error('expiry page position unreadable')
+  }
+  const time = `"${after.expires_at}"`
+  return `expires_at.gt.${time},and(expires_at.eq.${time},id.gt."${after.id}")`
+}
+
+export async function getExpiringJobs(daysFromNow: number, page?: ExpiringJobsPage): Promise<Job[]> {
+  const supabase = getSupabase('cron')
+  const now = page ? page.now : Date.now()
+  const threshold = new Date(now + daysFromNow * 24 * 60 * 60 * 1000).toISOString()
+
+  let query = supabase
     .from('jobs')
-    .select(JOB_COLUMNS_ADMIN)
+    .select(page ? EXPIRY_RUN_COLUMNS : JOB_COLUMNS_ADMIN)
     .eq('status', 'active')
     .not('expires_at', 'is', null)
     .lte('expires_at', threshold)
     .order('expires_at', { ascending: true })
 
-  if (error || !data) {
-    if (error) console.error('getExpiringJobs error:', error)
-    return []
+  if (page) {
+    if (page.fromDays !== undefined) {
+      query = query.gt('expires_at', new Date(now + page.fromDays * 24 * 60 * 60 * 1000).toISOString())
+    }
+    if (page.withImpressions) query = query.gt('impression_count', 0)
+    if (page.after) query = query.or(afterCursor(page.after))
+    query = query.order('id', { ascending: true }).limit(page.limit)
+    if (page.signal) query = query.abortSignal(page.signal)
   }
-  return data as Job[]
+
+  const { data, error } = await query
+
+  // A read error is thrown after its log line, so the run can answer a
+  // failure; an empty result is [].
+  if (error) {
+    console.error('getExpiringJobs error:', problemCode(error))
+    throw error
+  }
+  if (!data) return []
+  return data as unknown as Job[]
 }
 
 // ── Writes ───────────────────────────────────────────────────────────────────
@@ -1527,7 +1595,10 @@ export async function getJobSitemapEntries(platform: string): Promise<JobSitemap
       // a row cap. Discard the accumulated pages and match the function's
       // existing on-error contract: log (if there was an actual error,
       // not just an empty page) and return [].
-      if (error) console.error('getJobSitemapEntries error:', error)
+      if (error) {
+        console.error('getJobSitemapEntries error:', error)
+        reportServerError('sitemap jobs read failed', error, { area: 'public' })
+      }
       return []
     }
 
@@ -1541,6 +1612,7 @@ export async function getJobSitemapEntries(platform: string): Promise<JobSitemap
         `(${allRows.length} rows) with more still available — investigate before ` +
         'raising it; this is not expected at any plausible current job count.'
       )
+      reportServerError('sitemap jobs page limit reached', new Error('sitemap jobs page limit reached'), { area: 'public' })
     }
   }
 
@@ -1598,7 +1670,10 @@ export async function getJobSitemapChunk(
       .limit(JOB_CHUNK_PAGE_SIZE)
 
     if (error || !data) {
-      if (error) console.error(`getJobSitemapChunk(bucket=${bucket}) error:`, error)
+      if (error) {
+        console.error(`getJobSitemapChunk(bucket=${bucket}) error:`, error)
+        reportServerError('sitemap job chunk read failed', error, { area: 'public' })
+      }
       return { ok: false }
     }
 
@@ -1614,6 +1689,7 @@ export async function getJobSitemapChunk(
         `bound (${allRows.length} rows) with more still available — investigate before ` +
         'raising it; this is not expected at any plausible current per-bucket job count.'
       )
+      reportServerError('sitemap job chunk page limit reached', new Error('sitemap job chunk page limit reached'), { area: 'public' })
     }
   }
 
@@ -1665,16 +1741,35 @@ export async function rejectJob(id: string, reason: string): Promise<Job> {
   return data as Job
 }
 
+// The fields written when a job reaches its expiry.
+export function expiryUpdate(at: Date): { status: 'expired'; closed_at: string } {
+  return { status: 'expired', closed_at: at.toISOString() }
+}
+
 export async function expireJob(id: string): Promise<void> {
-  // Used by the daily cron and by admin. One single-row update: the admin
-  // limit is far above its work and below every caller's route limit.
+  // Used by admin. One single-row update: the admin limit is far above its
+  // work and below every caller's route limit.
   const supabase = getSupabase('admin')
   const { error } = await supabase
     .from('jobs')
-    .update({ status: 'expired', closed_at: new Date().toISOString() })
+    .update(expiryUpdate(new Date()))
     .eq('id', id)
 
   if (error) throw error
+}
+
+// Used by the daily expiry run: closes the listed jobs that are still active
+// in one update and returns the ids it closed. Jobs closed already are left
+// as they are.
+export async function expireJobsByIds(ids: string[], at: Date, signal?: AbortSignal): Promise<string[]> {
+  if (ids.length === 0) return []
+  const supabase = getSupabase('cron')
+  let query = supabase.from('jobs').update(expiryUpdate(at)).in('id', ids).eq('status', 'active').select('id')
+  if (signal) query = query.abortSignal(signal)
+  const { data, error } = await query
+
+  if (error) throw error
+  return ((data ?? []) as { id: string }[]).map((row) => row.id)
 }
 
 const TERMINAL_STATUSES: JobStatus[] = ['closed', 'expired', 'rejected']
@@ -1764,6 +1859,7 @@ export async function incrementJobImpressions(id: string): Promise<void> {
       .eq('id', id)
   } catch (err: unknown) {
     console.error('incrementJobImpressions failed (non-fatal):', err)
+    reportServerError('job impression count failed', err, { area: 'public' })
   }
 }
 
@@ -1787,5 +1883,6 @@ export async function incrementJobClicks(id: string): Promise<void> {
       .eq('id', id)
   } catch (err: unknown) {
     console.error('incrementJobClicks failed (non-fatal):', err)
+    reportServerError('job click count failed', err, { area: 'public' })
   }
 }

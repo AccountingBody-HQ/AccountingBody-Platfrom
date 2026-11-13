@@ -2,6 +2,7 @@ import { createHmac } from 'node:crypto'
 import { SignJWT } from 'jose'
 import { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { SERVER_PROBLEM_TEXT } from './message-rules'
 import { DB_LIMITS_MS, type DbContext } from './supabase-server'
 
 // Public form and payment routes, run with a real supabase-js client from
@@ -209,9 +210,7 @@ const job = {
   platform: ['ab'],
 }
 const turnstile = { 'cf-turnstile-response': 'token' }
-const timeLimitError = (context: DbContext) => ({
-  error: `TimeoutError: db: request time limit reached (${DB_LIMITS_MS[context]} ms)`,
-})
+const serverProblem = { error: SERVER_PROBLEM_TEXT }
 
 const scenarios: Scenario[] = [
   {
@@ -237,7 +236,7 @@ const scenarios: Scenario[] = [
         }),
       ),
     healthy: { status: 200, body: { success: true }, emails: 2, dbRequests: 1, turnstile: 1 },
-    never: { status: 500, body: timeLimitError('publicWrite'), emails: 0, dbRequests: 1, turnstile: 1 },
+    never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1, turnstile: 1 },
   },
   {
     name: 'contact newsletter-only form',
@@ -245,7 +244,7 @@ const scenarios: Scenario[] = [
     row: {},
     call: async () => contact(post('/api/contact', { email: 'ada@example.com', subscribeOnly: true, ...turnstile })),
     healthy: { status: 200, body: { success: true }, emails: 0, dbRequests: 1, turnstile: 1 },
-    never: { status: 500, body: timeLimitError('publicWrite'), emails: 0, dbRequests: 1, turnstile: 1 },
+    never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1, turnstile: 1 },
   },
   {
     name: 'network application form',
@@ -263,7 +262,7 @@ const scenarios: Scenario[] = [
         }),
       ),
     healthy: { status: 200, body: { success: true }, emails: 2, dbRequests: 1, turnstile: 1 },
-    never: { status: 500, body: timeLimitError('publicWrite'), emails: 0, dbRequests: 1, turnstile: 1 },
+    never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1, turnstile: 1 },
   },
   {
     name: 'help request form',
@@ -280,7 +279,7 @@ const scenarios: Scenario[] = [
         }),
       ),
     healthy: { status: 200, body: { success: true }, emails: 2, dbRequests: 1, turnstile: 1 },
-    never: { status: 500, body: timeLimitError('publicWrite'), emails: 0, dbRequests: 1, turnstile: 1 },
+    never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1, turnstile: 1 },
   },
   {
     name: 'job listing checkout',
@@ -328,7 +327,7 @@ const scenarios: Scenario[] = [
     row: brief,
     call: async () => confirmBrief(get('/api/recruitment/confirm-brief?token=t&action=confirm')),
     healthy: { status: 307, location: SITE + '/jobs/hire-talent?brief=confirmed', emails: 2, dbRequests: 2 },
-    never: { status: 307, location: SITE + '/jobs/hire-talent?brief=invalid', emails: 0, dbRequests: 1 },
+    never: { status: 307, location: SITE + '/jobs/hire-talent?brief=error', emails: 0, dbRequests: 1 },
   },
   {
     name: 'hiring brief cancellation link',
@@ -336,7 +335,7 @@ const scenarios: Scenario[] = [
     row: brief,
     call: async () => confirmBrief(get('/api/recruitment/confirm-brief?token=t&action=cancel')),
     healthy: { status: 307, location: SITE + '/jobs/hire-talent?brief=cancelled', emails: 0, dbRequests: 2 },
-    never: { status: 307, location: SITE + '/jobs/hire-talent?brief=invalid', emails: 0, dbRequests: 1 },
+    never: { status: 307, location: SITE + '/jobs/hire-talent?brief=error', emails: 0, dbRequests: 1 },
   },
   ...[undefined, 'previous'].map(
     (editToken): Scenario => ({
@@ -354,10 +353,13 @@ const scenarios: Scenario[] = [
             location: 'London',
             role_description: 'Prepare monthly management accounts.',
             ...(editToken ? { edit_token: editToken } : {}),
+            ...turnstile,
           }),
         ),
-      healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: editToken ? 2 : 1 },
-      never: { status: 500, body: { error: 'Database error' }, emails: 0, dbRequests: editToken ? 2 : 1 },
+      healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: editToken ? 2 : 1, turnstile: 1 },
+      // The new brief is saved first, so when that does not answer the route
+      // stops there, also when editing.
+      never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1, turnstile: 1 },
     }),
   ),
   {
@@ -366,7 +368,7 @@ const scenarios: Scenario[] = [
     row: brief,
     call: async () => fetchBrief(get('/api/recruitment/fetch-brief?token=t')),
     healthy: { status: 200, body: { data: brief }, dbRequests: 1 },
-    never: { status: 404, body: { error: 'Not found' }, dbRequests: 1 },
+    never: { status: 500, body: serverProblem, dbRequests: 1 },
   },
   ...(['candidate', 'employer'] as const).map(
     (type): Scenario => ({
@@ -375,7 +377,7 @@ const scenarios: Scenario[] = [
       row: type === 'candidate' ? person : brief,
       call: async () => getProfile(get(`/api/recruitment/get-profile?token=t&type=${type}`)),
       healthy: { status: 200, body: { data: type === 'candidate' ? person : brief, type }, dbRequests: 1 },
-      never: { status: 404, body: { error: 'Invalid or expired link' }, dbRequests: 1 },
+      never: { status: 500, body: serverProblem, dbRequests: 1 },
     }),
   ),
   {
@@ -393,26 +395,27 @@ const scenarios: Scenario[] = [
           years_experience: '5',
           employment_status: 'employed',
           biography: 'Experienced management accountant.',
+          ...turnstile,
         }),
       ),
-    healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: 1 },
-    never: { status: 500, body: { error: 'Database error' }, emails: 0, dbRequests: 1 },
+    healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: 1, turnstile: 1 },
+    never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1, turnstile: 1 },
   },
   {
     name: 'candidate profile update',
     context: 'publicWrite',
     row: { ...person, reference_number: 'AB-C-0001' },
     call: async () => updateCandidate(post('/api/recruitment/update-candidate', { token: 't', phone: '0123 456' })),
-    healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: 3 },
-    never: { status: 404, body: { error: 'Invalid or expired link' }, emails: 0, dbRequests: 1 },
+    healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: 2 },
+    never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1 },
   },
   {
     name: 'hiring brief update',
     context: 'publicWrite',
     row: brief,
     call: async () => updateEmployer(post('/api/recruitment/update-employer', { token: 't', contact_phone: '0123 456' })),
-    healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: 3 },
-    never: { status: 404, body: { error: 'Invalid or expired link' }, emails: 0, dbRequests: 1 },
+    healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: 2 },
+    never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1 },
   },
   {
     name: 'job seeker email verification link',
@@ -427,7 +430,7 @@ const scenarios: Scenario[] = [
     },
     call: async () => verifyEmail(get('/api/recruitment/verify-email?token=t')),
     healthy: { status: 307, location: SITE + '/jobs/find-work?verified=true', emails: 2, dbRequests: 2 },
-    never: { status: 307, location: SITE + '/jobs/find-work?verified=invalid', emails: 0, dbRequests: 1 },
+    never: { status: 307, location: SITE + '/jobs/find-work?verified=error', emails: 0, dbRequests: 1 },
   },
   {
     name: 'newsletter signup',
@@ -435,7 +438,7 @@ const scenarios: Scenario[] = [
     row: {},
     call: async () => subscribe(post('/api/subscribe', { email: 'ada@example.com', ...turnstile })),
     healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: 2, turnstile: 1 },
-    never: { status: 200, body: { success: true }, emails: 1, dbRequests: 2, turnstile: 1 },
+    never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1, turnstile: 1 },
   },
 ]
 

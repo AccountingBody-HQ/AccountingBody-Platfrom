@@ -2,23 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { getContactBrand, contactPlatformValue } from '@/lib/contact-brand'
-
-async function verifyTurnstile(token: string, ip: string, isEthioTax: boolean): Promise<boolean> {
-  if (!token) return false
-  const secret = isEthioTax ? process.env.TURNSTILE_SECRET_KEY : process.env.TURNSTILE_SECRET_KEY_AB
-  if (!secret) return false
-  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      secret,
-      response: token,
-      remoteip: ip,
-    }),
-  })
-  const data = await res.json()
-  return data.success === true
-}
+import { checkEmailSend } from '@/lib/email-check'
+import { HUMAN_CHECK_FAILED_TEXT, SERVER_PROBLEM_TEXT, isMessageTooShort, messageTooShortText } from '@/lib/message-rules'
+import { verifyHumanCheck } from '@/lib/turnstile-verify'
+import { escapeHtml, withoutLineBreaks } from '@/lib/html-escape'
+import { reportServerError } from '@/lib/report-error'
 
 export async function POST(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
@@ -33,22 +21,26 @@ export async function POST(req: NextRequest) {
     const isEthioTax = req.headers.get('x-et-platform') === 'ethiotax'
     const brand = getContactBrand(isEthioTax)
 
+    // Person check (Cloudflare Turnstile), verified on the server first.
+    // Nothing is saved or sent unless it passed.
+    const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
+    const humanCheck = await verifyHumanCheck(turnstileToken, ip, isEthioTax, 'contact')
+    if (!humanCheck.ok) {
+      return NextResponse.json({ error: HUMAN_CHECK_FAILED_TEXT }, { status: 400 })
+    }
+
     // Honeypot — bots fill this, real users never do
     if (_h) return NextResponse.json({ success: true })
-
-    // Turnstile verification — a failure is logged, not discarded: the
-    // submission still proceeds and is saved (silently dropping it would be
-    // data loss). Matches the firms-application route's behaviour.
-    const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for') ?? ''
-    const turnstileValid = await verifyTurnstile(turnstileToken, ip, isEthioTax)
-    if (turnstileToken && !turnstileValid) console.warn('Turnstile verification failed for:', email)
 
     // Spam filters
     const BLOCKED_DOMAINS = ['hardfer.com', 'mailinator.com', 'guerrillamail.com', 'trashmail.com', 'tempmail.com', 'yopmail.com', 'sharklasers.com', 'dispostable.com', 'maildrop.cc']
     const emailDomain = email?.split('@')[1]?.toLowerCase() ?? ''
     if (BLOCKED_DOMAINS.includes(emailDomain)) return NextResponse.json({ success: true })
-    if (message && message.trim().length < 20) return NextResponse.json({ success: true })
     if (message && !message.trim().includes(' ')) return NextResponse.json({ success: true })
+
+    if (message && isMessageTooShort(message)) {
+      return NextResponse.json({ error: messageTooShortText() }, { status: 400 })
+    }
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required.' }, { status: 400 })
@@ -63,8 +55,8 @@ export async function POST(req: NextRequest) {
         .from('email_subscribers')
         .upsert({ email, platform: contactPlatformValue(isEthioTax), status: 'subscribed', source: 'contact_form' }, { onConflict: 'email,platform' })
       if (subError) {
-        console.error('Subscribe error:', subError)
-        return NextResponse.json({ error: subError.message }, { status: 500 })
+        console.error('contact: newsletter save failed', subError.code || 'no-code')
+        return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
       }
       return NextResponse.json({ success: true })
     }
@@ -79,8 +71,8 @@ export async function POST(req: NextRequest) {
       .insert({ name, email, subject: subject ?? 'General Enquiry', message, platform: contactPlatformValue(isEthioTax) })
 
     if (dbError) {
-      console.error('Contact insert error:', dbError)
-      return NextResponse.json({ error: dbError.message }, { status: 500 })
+      console.error('contact: save failed', dbError.code || 'no-code')
+      return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
     }
 
     // Also subscribe if checkbox was ticked
@@ -93,11 +85,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Notify team
-    await resend.emails.send({
+    // Notify team. The message is saved, so a failed send is logged and the
+    // visitor still sees success.
+    const teamResult = await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: 'info@accountingbody.com',
-      subject: `New Contact Submission — ${subject ?? 'General Enquiry'}`,
+      subject: `New Contact Submission — ${withoutLineBreaks(subject ?? 'General Enquiry')}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -114,7 +107,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Name</span>
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                    <span style="color:#0C1A3D;font-size:14px;">${name}</span>
+                    <span style="color:#0C1A3D;font-size:14px;">${escapeHtml(name)}</span>
                   </td>
                 </tr>
                 <tr>
@@ -122,7 +115,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Email</span>
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                    <a href="mailto:${email}" style="color:#0C1A3D;font-size:14px;">${email}</a>
+                    <a href="mailto:${escapeHtml(email)}" style="color:#0C1A3D;font-size:14px;">${escapeHtml(email)}</a>
                   </td>
                 </tr>
                 <tr>
@@ -130,7 +123,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Subject</span>
                   </td>
                   <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
-                    <span style="color:#0C1A3D;font-size:14px;">${subject ?? 'General Enquiry'}</span>
+                    <span style="color:#0C1A3D;font-size:14px;">${escapeHtml(subject ?? 'General Enquiry')}</span>
                   </td>
                 </tr>
                 <tr>
@@ -138,7 +131,7 @@ export async function POST(req: NextRequest) {
                     <span style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Message</span>
                   </td>
                   <td style="padding:10px 0;">
-                    <span style="color:#0C1A3D;font-size:14px;line-height:1.6;">${message.split('\n').join('<br>')}</span>
+                    <span style="color:#0C1A3D;font-size:14px;line-height:1.6;">${escapeHtml(message).split('\n').join('<br>')}</span>
                   </td>
                 </tr>
               </table>
@@ -152,9 +145,10 @@ export async function POST(req: NextRequest) {
       `,
       replyTo: email,
     })
+    checkEmailSend(teamResult, 'contact team notification')
 
-    // Send acknowledgment to client
-    await resend.emails.send({
+    // Send acknowledgment to client (logged on failure, as above)
+    const ackResult = await resend.emails.send({
       from: `${brand.name} <${brand.email}>`,
       to: email,
       subject: `We have received your message — ${brand.name}`,
@@ -168,11 +162,11 @@ export async function POST(req: NextRequest) {
               <h1 style="color:#fff;font-size:22px;margin:0;line-height:1.3;">We have received your message.</h1>
             </div>
             <div style="padding:32px 40px;">
-              <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear ${name},</p>
+              <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear ${escapeHtml(name)},</p>
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Thank you for contacting us. We have received your message and will get back to you as soon as possible.</p>
               <div style="background:#f8fafc;border-radius:8px;border-left:3px solid #D4A017;padding:16px 20px;margin:0 0 24px;">
                 <p style="margin:0 0 8px;color:#0C1A3D;font-size:13px;font-weight:600;">Your message:</p>
-                <p style="margin:0;color:#475569;font-size:13px;line-height:1.6;">${message.split('\n').join('<br>')}</p>
+                <p style="margin:0;color:#475569;font-size:13px;line-height:1.6;">${escapeHtml(message).split('\n').join('<br>')}</p>
               </div>
               <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 28px;">If you have anything to add, simply reply to this email.</p>
               <a href="https://${brand.domain}"
@@ -188,10 +182,12 @@ export async function POST(req: NextRequest) {
         </html>
       `,
     })
+    checkEmailSend(ackResult, 'contact acknowledgement')
 
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Contact route error:', error)
+    reportServerError('contact submit failed', error, { area: 'public' })
     return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 })
   }
 }

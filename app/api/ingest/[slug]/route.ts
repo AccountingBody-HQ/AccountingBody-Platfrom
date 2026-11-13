@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase-server'
 import {
-  getProvider,
+  findProvider,
+  type JobProvider,
   createProviderRun,
   completeProviderRun,
   failProviderRun,
@@ -17,6 +18,7 @@ import { deduplicate } from '@/lib/ingestion/deduplicate'
 import { validate } from '@/lib/ingestion/validate'
 import { computeQualityMetrics, type QualityMetrics } from '@/lib/ingestion/quality'
 import { deriveAlertState, maybeSendProviderAlert } from '@/lib/provider-alerts'
+import { reportServerError } from '@/lib/report-error'
 
 export const maxDuration = 300
 
@@ -44,14 +46,25 @@ export async function POST(
 ) {
   const startTime = Date.now()
 
+  const secret = process.env.CRON_SECRET
+  if (!secret) {
+    console.error('ingest: not configured')
+    return Response.json({ error: 'Not configured' }, { status: 503 })
+  }
   const auth = req.headers.get('authorization')
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (auth !== `Bearer ${secret}`) {
     return new Response('Unauthorized', { status: 401 })
   }
 
   const { slug } = params
 
-  const provider = await getProvider(slug)
+  let provider: JobProvider | null
+  try {
+    provider = await findProvider(slug)
+  } catch (err: unknown) {
+    reportServerError('job import provider read failed', err, { area: 'ingest' })
+    return Response.json({ ok: false, error: 'Provider could not be read' }, { status: 503 })
+  }
   if (!provider) {
     return Response.json({ ok: false, error: 'Provider not found' }, { status: 404 })
   }
@@ -400,6 +413,7 @@ export async function POST(
     }
 
     console.error(`[ingest/${slug}] Fatal error:`, err)
+    reportServerError('job import run failed', err, { area: 'ingest' })
     return Response.json({ ok: false, error: msg, durationMs }, { status: 500 })
   }
 }

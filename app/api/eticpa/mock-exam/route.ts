@@ -3,6 +3,8 @@
 // Replaces Sanity GROQ fetch — Session 35
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { reportServerError } from '@/lib/report-error'
+import { SERVER_PROBLEM_TEXT } from '@/lib/message-rules'
 
 function getSupabase() {
   return getServerSupabase('publicRead')
@@ -33,6 +35,12 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
+// The visitor gets the shared text; the log keeps the short code only.
+function readFailed(error: { code?: string }) {
+  console.error('eticpa mock exam: read failed', error.code || 'no-code')
+  return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
+}
+
 export async function GET(req: NextRequest) {
   const level      = req.nextUrl.searchParams.get('level')  ?? 'level-1'
   const moduleSlug = req.nextUrl.searchParams.get('module') ?? 'introduction-to-accounting'
@@ -49,7 +57,7 @@ export async function GET(req: NextRequest) {
       .eq('eticpa_level', level)
       .eq('eticpa_module', moduleSlug)
 
-    if (qsError) return NextResponse.json({ error: qsError.message }, { status: 500 })
+    if (qsError) return readFailed(qsError)
 
     if (!questionSets || questionSets.length === 0) {
       return NextResponse.json({ questions: [], poolTotal: 0 })
@@ -65,7 +73,7 @@ export async function GET(req: NextRequest) {
       .in('set_id', setIds)
       .order('question_order', { ascending: true })
 
-    if (qError) return NextResponse.json({ error: qError.message }, { status: 500 })
+    if (qError) return readFailed(qError)
 
     // Group questions by set for round-robin
     const groupMap = new Map<string, PoolQuestion[]>()
@@ -117,7 +125,7 @@ export async function GET(req: NextRequest) {
     })
 
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    reportServerError('eticpa mock exam load failed', e, { area: 'public' })
+    return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
   }
 }

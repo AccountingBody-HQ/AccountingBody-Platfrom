@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { checkRead } from '@/lib/db-check'
 
 export const runtime = 'nodejs'
 
@@ -59,9 +60,15 @@ export async function POST(req: NextRequest) {
 
   const supabase = getServerSupabase('admin')
 
-  const { count } = await supabase
-    .from('studio_references')
-    .select('*', { count: 'exact', head: true })
+  // The count sets the new reference's position, so nothing is added unless it was read.
+  const counted = checkRead(
+    await supabase
+      .from('studio_references')
+      .select('*', { count: 'exact', head: true }),
+    'studio references count',
+  )
+  if (!counted.ok)
+    return NextResponse.json({ error: 'Could not work out the next position. Nothing was added.' }, { status: 500 })
 
   const { data, error } = await supabase
     .from('studio_references')
@@ -69,7 +76,7 @@ export async function POST(req: NextRequest) {
       label: label.trim(),
       url: url.trim(),
       category: category?.trim() || 'news',
-      display_order: count ?? 0,
+      display_order: counted.count ?? 0,
     })
     .select('id, label, url, category, display_order')
     .single()

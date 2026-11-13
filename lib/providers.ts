@@ -1,6 +1,7 @@
 import { getServerSupabase, type DbContext } from './supabase-server'
 import type { QualityMetrics } from './ingestion/quality'
 import type { AlertState } from './provider-alerts'
+import { reportServerError } from './report-error'
 
 // No public page or API uses this file. Most functions serve provider
 // ingestion, which is the default limit here; the scheduled orchestrator's
@@ -101,6 +102,22 @@ export async function getProvider(slug: string): Promise<JobProvider | null> {
     .eq('slug', slug)
     .single()
   if (error || !data) return null
+  return data as JobProvider
+}
+
+// The same read for an import run: null only when no provider has this slug
+// (zero rows, PostgREST code PGRST116); any other failure is thrown, so the
+// run answers a temporary problem rather than "not found".
+export async function findProvider(slug: string): Promise<JobProvider | null> {
+  const supabase = getSupabase('admin')
+  const { data, error } = await supabase
+    .from('job_providers')
+    .select('*')
+    .eq('slug', slug)
+    .single()
+  if (error && error.code === 'PGRST116') return null
+  if (error) throw error
+  if (!data) return null
   return data as JobProvider
 }
 
@@ -325,6 +342,7 @@ export async function updateProviderDataQuality(
     .eq('id', providerId)
   if (error) {
     console.error('[updateProviderDataQuality] failed:', error.message)
+    reportServerError('job import quality save failed', error, { area: 'ingest' })
   }
 }
 
@@ -364,6 +382,7 @@ export async function incrementProviderJobsToday(
       '[incrementProviderJobsToday] failed to fetch provider:',
       fetchError?.message
     )
+    reportServerError('job import counter read failed', fetchError ?? new Error('job import counter read failed'), { area: 'ingest' })
     return
   }
   const { error: updateError } = await supabase
@@ -379,6 +398,7 @@ export async function incrementProviderJobsToday(
       '[incrementProviderJobsToday] failed to update counters:',
       updateError.message
     )
+    reportServerError('job import counter save failed', updateError, { area: 'ingest' })
   }
 }
 
@@ -424,6 +444,7 @@ export async function reapStaleRuns(
     .select('id')
   if (error) {
     console.error('[reapStaleRuns] failed:', error.message)
+    reportServerError('job import stale run update failed', error, { area: 'ingest' })
     return 0
   }
   return data?.length ?? 0
@@ -445,5 +466,6 @@ export async function updateProviderKeywordCursor(
       '[updateProviderKeywordCursor] failed:',
       error.message
     )
+    reportServerError('job import keyword cursor save failed', error, { area: 'ingest' })
   }
 }

@@ -3,6 +3,8 @@ import { getServerSupabase } from '@/lib/supabase-server'
 import { getProvider } from '@/lib/providers'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { REGISTERED_ADAPTER_KEYS, isRegisteredAdapterKey } from '@/lib/adapters'
+import { checkRead } from '@/lib/db-check'
+import { reportServerError } from '@/lib/report-error'
 
 function getSupabase() {
   return getServerSupabase('admin')
@@ -88,7 +90,10 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
   let body: unknown
   try { body = await req.json() }
-  catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }) }
+  catch (error) {
+    reportServerError('admin provider edit request unreadable', error, { area: 'admin' })
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
   if (!isRecord(body)) {
     return NextResponse.json({ ok: false, error: 'Invalid request body' }, { status: 400 })
   }
@@ -184,11 +189,21 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
 
   const supabase = getSupabase()
 
-  const { count: activeJobCount } = await supabase
-    .from('jobs')
-    .select('id', { count: 'exact', head: true })
-    .eq('provider_id', existing.id)
-    .eq('status', 'active')
+  const activeJobsRead = checkRead(
+    await supabase
+      .from('jobs')
+      .select('id', { count: 'exact', head: true })
+      .eq('provider_id', existing.id)
+      .eq('status', 'active'),
+    'providers/edit DELETE: active job count',
+  )
+  if (!activeJobsRead.ok) {
+    return NextResponse.json(
+      { ok: false, error: "Could not check this provider's jobs. Nothing was deleted." },
+      { status: 500 }
+    )
+  }
+  const activeJobCount = activeJobsRead.count
 
   if ((activeJobCount ?? 0) > 0) {
     return NextResponse.json(

@@ -71,6 +71,7 @@ describe('public pages', () => {
     ['an article', '/study/financial-reporting'],
     ['practice questions', '/practice-questions/taxation'],
     ['a public API route', '/api/jobs'],
+    ['the scheduled job status route', '/api/ops-status'],
   ])('%s passes through unchanged', async (_label, path) => {
     expectPassThrough(await run(path))
   })

@@ -271,8 +271,9 @@ type Scenario = {
   healthy: Expected
   // What the route or page answers when the database does not answer (all
   // requests, or only the ones `stall` picks), and how many database
-  // requests it waits for one after another before answering.
-  stalled: Expected & { waits: number; stall?: Stall }
+  // requests it waits for one after another before answering (and the total
+  // wait, when the route sets its own shorter limits).
+  stalled: Expected & { waits: number; elapsed?: number; stall?: Stall }
 }
 
 const TIMEOUT = (ms: number) => `TimeoutError: db: request time limit reached (${ms} ms)`
@@ -354,7 +355,13 @@ const scenarios: Scenario[] = [
         { params: {} },
       ),
     healthy: { status: 200, body: { success: true, id: ID }, dbRequests: 6 },
-    stalled: { waits: 2, status: 500, body: { error: TIMEOUT(20_000) }, dbRequests: 2 },
+    // The first read gets no answer, so nothing is written.
+    stalled: {
+      waits: 1,
+      status: 500,
+      body: { error: 'Could not read the current course. Nothing was changed.' },
+      dbRequests: 1,
+    },
   },
   {
     name: 'question set publish',
@@ -371,7 +378,12 @@ const scenarios: Scenario[] = [
       body: { success: true, documentId: ID, contentId: 'AB-QZ-00001', title: 'Set', slug: 'set', questionCount: 1 },
       dbRequests: 3,
     },
-    stalled: { waits: 2, status: 500, body: { error: TIMEOUT(20_000) }, dbRequests: 2 },
+    stalled: {
+      waits: 1,
+      status: 500,
+      body: { error: 'Could not assign a content ID. Nothing was published.' },
+      dbRequests: 1,
+    },
   },
   {
     name: 'article publish',
@@ -387,7 +399,13 @@ const scenarios: Scenario[] = [
       dbRequests: 2,
       revalidated: ['article:title'],
     },
-    stalled: { waits: 2, status: 500, body: { error: TIMEOUT(20_000) }, dbRequests: 2, revalidated: [] },
+    stalled: {
+      waits: 1,
+      status: 500,
+      body: { error: 'Could not assign a content ID. Nothing was published.' },
+      dbRequests: 1,
+      revalidated: [],
+    },
   },
   {
     name: 'candidate approval email',
@@ -489,7 +507,7 @@ const scenarios: Scenario[] = [
       body: { reference: { id: ID, label: 'BBC', url: 'https://bbc.com', category: 'news', display_order: 3 } },
       dbRequests: 2,
     },
-    stalled: { waits: 2, status: 500, body: { error: 'Failed to create reference' }, dbRequests: 2 },
+    stalled: { waits: 1, status: 500, body: { error: 'Could not work out the next position. Nothing was added.' }, dbRequests: 1 },
   },
   {
     name: 'submission delete',
@@ -523,8 +541,10 @@ const scenarios: Scenario[] = [
     name: 'daily job expiry',
     context: 'cron',
     call: async () => (await load('app/api/cron/expire-jobs/route.ts')).GET(cron('/api/cron/expire-jobs'), { params: {} }),
-    healthy: { status: 200, body: { expired: 0, warned: 0 }, dbRequests: 3 },
-    stalled: { waits: 3, status: 200, body: { expired: 0, warned: 0 }, dbRequests: 3 },
+    healthy: { status: 200, body: { expired: 0, warned: 0, more: false }, dbRequests: 3 },
+    // The first read ends at the 25 s limit, the second at the run's 45 s
+    // work limit and the counter reset at its 55 s limit.
+    stalled: { waits: 3, elapsed: 55_000, status: 500, body: { error: 'Cron run failed', expired: 0, warned: 0 }, dbRequests: 3 },
   },
   {
     name: 'provider import',
@@ -556,7 +576,7 @@ const scenarios: Scenario[] = [
     call: async () =>
       (await load('app/api/ingest/[slug]/route.ts')).POST(cron('/api/ingest/example'), { params: { slug: 'example' } }),
     healthy: { status: 200, emails: 1, dbRequests: 11 },
-    stalled: { waits: 1, status: 404, body: { ok: false, error: 'Provider not found' }, dbRequests: 1 },
+    stalled: { waits: 1, status: 503, body: { ok: false, error: 'Provider could not be read' }, dbRequests: 1 },
   },
   {
     name: 'subscribers page',
@@ -635,11 +655,11 @@ describe('admin, scheduled and import routes', () => {
 
   it.each(scenarios)('$name ends at its time limit when the database does not respond', async (scenario) => {
     network.rows = scenario.rows ?? {}
-    const { stall = 'all', waits, ...expected } = scenario.stalled
+    const { stall = 'all', waits, elapsed, ...expected } = scenario.stalled
     network.stall = stall
     const result = await answer(scenario.call)
     expectAnswer(result, expected)
-    expect(result.elapsed).toBe(DB_LIMITS_MS[scenario.context] * waits)
+    expect(result.elapsed).toBe(elapsed ?? DB_LIMITS_MS[scenario.context] * waits)
   })
 
   it('an admin API route answers a signed-out request before any database request', async () => {

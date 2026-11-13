@@ -3,6 +3,7 @@ import { getServerSupabase } from '@/lib/supabase-server'
 import { markJobPaid } from '@/lib/jobs'
 import { sendJobConfirmationEmail, sendAdminJobNotificationEmail } from '@/lib/jobEmails'
 import { Resend } from 'resend'
+import { reportServerError } from '@/lib/report-error'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -158,6 +159,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true })
   } catch (err: unknown) {
     console.error('jobs/employer/webhook processing error:', err)
+    reportServerError('payment notice failed', err, { area: 'public' })
     // Always 200 here — see comment above the handler.
     return NextResponse.json({ received: true })
   }

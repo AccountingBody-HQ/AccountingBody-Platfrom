@@ -6,6 +6,7 @@ import {
   createAdminSession,
   sha256Hex,
 } from "@/lib/middleware-logic"
+import { reportServerError } from "@/lib/report-error"
 
 function base32ToBytes(base32: string): Uint8Array {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
@@ -62,6 +63,13 @@ function accessDenied() {
   return NextResponse.json({ error: "Access denied." }, { status: 401 })
 }
 
+// Same answer as any other refusal; the setup problem is logged and reported.
+function notSetUp() {
+  console.error("Admin sign-in is not set up")
+  reportServerError("admin sign-in not set up", new Error("sign-in not set up"), { area: "admin" })
+  return accessDenied()
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null)
@@ -74,8 +82,7 @@ export async function POST(req: NextRequest) {
     const secret = process.env.ADMIN_SECRET
     const totpSecret = process.env.ADMIN_TOTP_SECRET
     if (!secret || !totpSecret) {
-      console.error("Admin sign-in is not set up")
-      return accessDenied()
+      return notSetUp()
     }
 
     // Both steps always run, so a wrong password and a wrong code take the same path.
@@ -87,8 +94,7 @@ export async function POST(req: NextRequest) {
 
     const token = await createAdminSession(process.env.ADMIN_SESSION_SECRET, secret)
     if (!token) {
-      console.error("Admin sign-in is not set up")
-      return accessDenied()
+      return notSetUp()
     }
 
     const response = NextResponse.json({ success: true }, { status: 200 })
@@ -101,8 +107,9 @@ export async function POST(req: NextRequest) {
     })
     return response
 
-  } catch {
+  } catch (error) {
     console.error("Admin sign-in failed unexpectedly")
+    reportServerError("admin sign-in failed", error, { area: "admin" })
     return accessDenied()
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { getJobByManageToken, closeJobByManageToken, type Job, type JobStatus } from '@/lib/jobs'
+import { reportServerError } from '@/lib/report-error'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -46,6 +47,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ job: toPublicJob(job) })
   } catch (err: unknown) {
     console.error('jobs/manage GET error:', err)
+    reportServerError('job manage link failed', err, { area: 'public' })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -97,6 +99,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, job: toPublicJob(job) })
   } catch (err: unknown) {
     console.error('jobs/manage POST error:', err)
+    reportServerError('job withdraw failed', err, { area: 'public' })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

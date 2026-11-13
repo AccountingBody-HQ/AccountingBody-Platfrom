@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { reportServerError } from '@/lib/report-error'
 
 function getSupabase() {
   return getServerSupabase('admin')
@@ -48,6 +49,7 @@ export async function DELETE(req: NextRequest) {
       deleted: { lessons: lessonCount, courseId: course.id },
     })
   } catch (e: unknown) {
+    reportServerError('admin course factory delete failed', e, { area: 'admin' })
     const msg = e instanceof Error ? e.message : 'Delete failed'
     return NextResponse.json({ error: msg }, { status: 500 })
   }

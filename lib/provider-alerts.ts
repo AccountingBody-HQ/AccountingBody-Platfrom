@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 import { getServerSupabase } from './supabase-server'
 import type { JobProvider } from './providers'
+import { reportServerError } from './report-error'
 
 // Every other Resend call site in this codebase instantiates the client
 // inline — grep across lib/ and app/ turns up 15+ separate
@@ -167,9 +168,11 @@ export async function maybeSendProviderAlert(
       // never assume the call succeeded just because it didn't throw.
       if (sendError) {
         console.error('[maybeSendProviderAlert] Resend error:', sendError)
+        reportServerError('job import alert email refused', sendError, { area: 'ingest' })
       }
     } catch (err: unknown) {
       console.error('[maybeSendProviderAlert] send threw:', err)
+      reportServerError('job import alert email failed', err, { area: 'ingest' })
     }
   }
 
@@ -183,5 +186,6 @@ export async function maybeSendProviderAlert(
     .eq('id', provider.id)
   if (updateError) {
     console.error('[maybeSendProviderAlert] failed to write last_alert_state:', updateError.message)
+    reportServerError('job import alert state save failed', updateError, { area: 'ingest' })
   }
 }

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import * as Sentry from '@sentry/nextjs'
 import {
   SAVED_JOBS_COOKIE,
   SAVED_JOBS_LIMIT,
@@ -19,6 +18,7 @@ import {
   deleteSaved,
   touchLastSeen,
 } from '@/lib/saved-jobs-store'
+import { reportServerError } from '@/lib/report-error'
 
 export const dynamic = 'force-dynamic'
 // force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
     return res
   } catch (err) {
     console.error('api/saved-jobs GET error:', err)
-    Sentry.captureException(err)
+    reportServerError('saved jobs load failed', err, { area: 'public' })
     return NextResponse.json({ error: 'server_error' }, { status: 500, headers: NO_STORE })
   }
 }
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
     return res
   } catch (err) {
     console.error('api/saved-jobs POST error:', err)
-    Sentry.captureException(err)
+    reportServerError('saved job save failed', err, { area: 'public' })
     return NextResponse.json({ error: 'server_error' }, { status: 500, headers: NO_STORE })
   }
 }
@@ -180,7 +180,7 @@ export async function DELETE(req: NextRequest) {
     return res
   } catch (err) {
     console.error('api/saved-jobs DELETE error:', err)
-    Sentry.captureException(err)
+    reportServerError('saved job remove failed', err, { area: 'public' })
     return NextResponse.json({ error: 'server_error' }, { status: 500, headers: NO_STORE })
   }
 }

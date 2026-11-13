@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { reportServerError } from '@/lib/report-error'
 
 export const runtime = 'nodejs'
 
@@ -31,6 +32,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ articles: data ?? [] })
   } catch (err: unknown) {
+    reportServerError('admin article search failed', err, { area: 'admin' })
     const message = err instanceof Error ? err.message : 'Unknown error'
     return NextResponse.json({ error: message }, { status: 500 })
   }

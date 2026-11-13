@@ -4,7 +4,8 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useRef } from 'react'
 import Link from 'next/link'
-import Script from 'next/script'
+import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
+import { LINK_RETRY_HEADING, VERIFY_LINK_RETRY_TEXT, verifyLinkStatus } from '@/lib/message-rules'
 
 declare global {
   interface Window {
@@ -144,17 +145,15 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
   const [languages, setLanguages] = useState<string[]>([])
   const [termsAgreed, setTermsAgreed] = useState(false)
   const [dataConsent, setDataConsent] = useState(false)
-  const [status, setStatus] = useState<'idle'|'loading'|'success'|'error'|'verified'|'already'|'invalid'>(() => {
+  const [status, setStatus] = useState<'idle'|'loading'|'success'|'error'|'verified'|'already'|'invalid'|'linkRetry'>(() => {
     if (typeof window !== 'undefined') {
-      const p = new URLSearchParams(window.location.search).get('verified')
-      if (p === 'true') return 'verified'
-      if (p === 'already') return 'already'
-      if (p === 'invalid') return 'invalid'
+      return verifyLinkStatus(new URLSearchParams(window.location.search).get('verified'))
     }
     return 'idle'
   })
   const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({})
-  const turnstileWidgetId = useRef<string | null>(null)
+  const personCheck = useRef<PersonCheckHandle>(null)
+  const [personCheckToken, setPersonCheckToken] = useState('')
   const topRef = useRef<HTMLDivElement>(null)
 
   const toggleMulti = (value: string, current: string[], setter: (v: string[]) => void) => {
@@ -205,7 +204,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
     if (Object.keys(errors).length > 0) { setFieldErrors(errors); return }
     setFieldErrors({})
     setStatus('loading')
-    const token = (document.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement)?.value ?? ''
+    const token = personCheckToken
     const payload = {
       ...form,
       role_types: roleTypes.join(', '),
@@ -225,10 +224,11 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'Something went wrong')
       setStatus('success')
-      if (turnstileWidgetId.current) window.turnstile?.reset(turnstileWidgetId.current)
+      personCheck.current?.reset()
     } catch (err) {
       console.error(err)
       setStatus('error')
+      personCheck.current?.reset()
     }
   }
 
@@ -256,7 +256,6 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
 
   return (
     <>
-      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
       <main className="min-h-screen bg-surface">
 
         {/* HERO */}
@@ -294,11 +293,11 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
 
               {/* FORM COLUMN */}
               <div>
-                {(status === 'success' || status === 'verified' || status === 'already' || status === 'invalid') ? (
+                {(status === 'success' || status === 'verified' || status === 'already' || status === 'invalid' || status === 'linkRetry') ? (
                   <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm">
                     <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
-                      style={{ background: status === 'invalid' ? '#fee2e2' : '#f0fdf4' }}>
-                      {status === 'invalid'
+                      style={{ background: status === 'invalid' || status === 'linkRetry' ? '#fee2e2' : '#f0fdf4' }}>
+                      {status === 'invalid' || status === 'linkRetry'
                         ? <svg className="w-8 h-8" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                         : <svg className="w-8 h-8" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
                       }
@@ -320,6 +319,10 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                     {status === 'invalid' && <>
                       <h2 className="font-display text-2xl mb-3" style={{ color: '#dc2626' }}>Invalid Link</h2>
                       <p className="text-slate-500 leading-relaxed max-w-md mx-auto">This verification link is invalid or has already been used. If you believe this is an error, please <a href="/jobs/find-work" style={{ color: brand, textDecoration: 'underline' }}>register again</a>.</p>
+                    </>}
+                    {status === 'linkRetry' && <>
+                      <h2 className="font-display text-2xl mb-3" style={{ color: '#dc2626' }}>{LINK_RETRY_HEADING}</h2>
+                      <p className="text-slate-500 leading-relaxed max-w-md mx-auto">{VERIFY_LINK_RETRY_TEXT}</p>
                     </>}
                   </div>
                 ) : (
@@ -548,14 +551,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
                           {status === 'error' && <p className="text-red-500 text-sm mb-4">Something went wrong. Please try again or contact us directly.</p>}
                           <input type="text" value={form._h} onChange={e => setForm({...form, _h: e.target.value})} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
-                          <div ref={el => {
-                            if (el && window.turnstile && !turnstileWidgetId.current) {
-                              const sitekey = isEthioTax
-                                ? (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '')
-                                : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_AB ?? '')
-                              turnstileWidgetId.current = window.turnstile.render(el, { sitekey })
-                            }
-                          }} />
+                          <PersonCheck ref={personCheck} onToken={setPersonCheckToken} isEthioTax={isEthioTax} />
                           <div className="flex items-center justify-between">
                             <button type="button" onClick={handleBack}
                               className="flex items-center gap-2 text-sm font-semibold h-11 px-6 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors">

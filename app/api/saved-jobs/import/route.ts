@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import * as Sentry from '@sentry/nextjs'
 import {
   SAVED_JOBS_COOKIE,
   LAST_SEEN_THROTTLE_MS,
@@ -9,6 +8,7 @@ import {
   checkSavedJobsRateLimit,
 } from '@/lib/saved-jobs'
 import { insertManySaved, listSavedIds, touchLastSeen } from '@/lib/saved-jobs-store'
+import { reportServerError } from '@/lib/report-error'
 
 export const dynamic = 'force-dynamic'
 // force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     return res
   } catch (err) {
     console.error('api/saved-jobs/import POST error:', err)
-    Sentry.captureException(err)
+    reportServerError('saved jobs import failed', err, { area: 'public' })
     return NextResponse.json({ error: 'server_error' }, { status: 500, headers: NO_STORE })
   }
 }

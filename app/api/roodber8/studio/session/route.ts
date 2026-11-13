@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { checkRead } from '@/lib/db-check'
 
 export const runtime = 'nodejs'
 
@@ -80,13 +81,19 @@ export async function PATCH(req: NextRequest) {
   if (article_task !== undefined) updates.article_task = article_task
   if (social_task !== undefined) updates.social_task = social_task
 
-  const { data: existing } = await supabase
-    .from('studio_sessions')
-    .select('id')
-    .eq('session_date', sessionDate)
-    .maybeSingle()
+  // Decides between update and insert, so nothing is saved unless it was read.
+  const lookup = checkRead(
+    await supabase
+      .from('studio_sessions')
+      .select('id')
+      .eq('session_date', sessionDate)
+      .maybeSingle(),
+    'studio session lookup',
+  )
+  if (!lookup.ok)
+    return NextResponse.json({ error: 'Could not check this session. Nothing was saved.' }, { status: 500 })
 
-  if (!existing) {
+  if (!lookup.data) {
     const { data: created, error: insertError } = await supabase
       .from('studio_sessions')
       .insert({
