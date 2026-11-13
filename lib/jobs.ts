@@ -1291,63 +1291,63 @@ export interface ActiveJobCountry {
   count: number
 }
 
-// Real distinct location_country values for a platform, each with its own
-// job count, restricted to the same "reachable" definition
-// getActiveDirectJobs's own countOnly path uses (status='active', platform
-// contains, not yet expired) — via the get_active_job_countries RPC
-// (migrations/0006_active_job_countries.sql), so the counts this returns
-// agree with what an unfiltered/single-country /api/jobs/direct request
-// would actually show. Ordered by count descending server-side, so
-// callers don't need to re-sort. Rows with a null location_country are
-// excluded by the RPC's own WHERE clause, not filtered out here.
+// ── The country menu's list ─────────────────────────────────────────────────
 //
-// The query itself throws on any RPC error, so unstable_cache stores
-// nothing for it; a real result, including an empty list, is returned and
-// cached. Both exported readers catch outside the cache and return [] on
-// any RPC error, so callers treat "no data" and "the read failed"
-// identically and fall back to a hardcoded list. The function (as defined
-// in migrations/0006) was applied 11 Nov 2026 by migration 0010; the
-// built-in list stays as a fallback.
-async function fetchActiveJobCountries(platform: string): Promise<ActiveJobCountry[]> {
-  const supabase = getSupabase('publicHeavyRead')
-  const { data, error, status } = await supabase.rpc('get_active_job_countries', { p_platform: platform })
-  if (error) throw new Error(`active job countries query failed (status ${status}): ${error.message}`)
-  if (!data) return []
-  return (data as { country: string; job_count: number }[]).map(row => ({
-    country: row.country,
-    count: row.job_count,
-  }))
-}
+// Real location_country values for a platform, each with its browsable job
+// count, taken from the same pre-counted rows as the one-country totals
+// (jobs_browsable:<platform>:country:<name>, written every 10 minutes by
+// public.refresh_site_counts() with the same "browsable" filter). It reuses
+// the cached filter-row read above, so it adds no database query and no
+// cache entry. An empty list means "use the page's built-in list".
 
-export async function getActiveJobCountries(platform: string): Promise<ActiveJobCountry[]> {
-  try {
-    return await fetchActiveJobCountries(platform)
-  } catch (error) {
-    console.error('getActiveJobCountries error:', error)
-    return []
+export const COUNTRY_LIST_LOG = {
+  missing: 'country list: no pre-counted country rows, using the built-in list',
+  stale:   'country list: pre-counted country rows older than 6 hours, using the built-in list',
+  failed:  'country list: pre-counted rows could not be read, using the built-in list',
+} as const
+
+// Pure: the platform's country rows that are fresh by the same rule as
+// getPrecountedFilterTotal, ordered count descending then country
+// ascending. The name is everything after the prefix (names can contain
+// spaces, commas and other punctuation). Rows with a count that is not a
+// whole number above zero are left out.
+export function countryListFromPrecounts(
+  rows: ReadonlyArray<{ key: string; value: number; updatedAt: number }>,
+  platform: string,
+  now: number,
+): ActiveJobCountry[] {
+  const prefix = `${siteCountKey(platform)}:country:`
+  const list: ActiveJobCountry[] = []
+  for (const row of rows) {
+    if (!row.key.startsWith(prefix)) continue
+    const country = row.key.slice(prefix.length)
+    if (country === '' || !Number.isSafeInteger(row.value) || row.value <= 0) continue
+    if (now - row.updatedAt > PRECOUNT_MAX_AGE_MS) continue
+    list.push({ country, count: row.value })
   }
+  return list.sort((a, b) =>
+    b.count - a.count || (a.country < b.country ? -1 : a.country > b.country ? 1 : 0))
 }
 
-// Two layers, same composition and same reasoning as
-// getCachedBrowsableJobsCount above: unstable_cache persists across
-// requests/instances (platform folded into the cache key automatically,
-// so 'ab' and 'et' are separate entries), cache() collapses duplicate
-// calls within one render. TTL is 6 hours, not 1 hour — deliberately
-// longer than the footer counts, because the set of countries with active
-// jobs changes far more slowly than the job count itself; a new country
-// appearing up to 6 hours late is an acceptable trade for a much cheaper
-// steady-state query volume against a GROUP BY aggregate.
-const cachedActiveJobCountries = guardCachedRead(['active-job-countries'],
-  unstable_cache(fetchActiveJobCountries, ['active-job-countries'], { revalidate: 21600 })
-)
-
+// Never throws. cache() collapses duplicate calls within one render.
 export const getCachedActiveJobCountries = cache(async (platform: string): Promise<ActiveJobCountry[]> => {
+  const p = platform.trim()
+  let rows: FilterPrecountRow[]
   try {
-    return await cachedActiveJobCountries(platform)
-  } catch (error) {
-    console.error('getActiveJobCountries error:', error)
+    rows = await cachedFilterPrecounts(p)
+  } catch {
+    console.warn(COUNTRY_LIST_LOG.failed)
     return []
   }
+  const now = Date.now()
+  const list = countryListFromPrecounts(rows, p, now)
+  if (list.length === 0) {
+    const prefix = `${siteCountKey(p)}:country:`
+    const countryRows = rows.filter(r => r.key.startsWith(prefix))
+    const allStale = countryRows.length > 0 && countryRows.every(r => now - r.updatedAt > PRECOUNT_MAX_AGE_MS)
+    console.warn(allStale ? COUNTRY_LIST_LOG.stale : COUNTRY_LIST_LOG.missing)
+  }
+  return list
 })
 
 export async function getExpiringJobs(daysFromNow: number): Promise<Job[]> {
