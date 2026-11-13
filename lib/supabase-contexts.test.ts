@@ -110,6 +110,8 @@ const publicReads: Case[] = [
   ['getJobBySlug', () => jobs.getJobBySlug('s')],
   ['getJobByManageToken', () => jobs.getJobByManageToken('t')],
   ['getPendingJobsCount', () => jobs.getPendingJobsCount()],
+  // The country menu reads the small pre-counted rows, not the old country scan.
+  ['getCachedActiveJobCountries', () => jobs.getCachedActiveJobCountries('accountingbody')],
   ['getActiveJobsCount', () => jobs.getActiveJobsCount('accountingbody')],
   ['getJobSitemapEntries', () => jobs.getJobSitemapEntries('ethiotax')],
   ['getJobSitemapChunk', () => jobs.getJobSitemapChunk('accountingbody', 0)],
@@ -148,8 +150,6 @@ const publicHeavyReads: Case[] = [
   ['getActiveDirectJobs count', () => jobs.getActiveDirectJobs({ platform: 'accountingbody', countOnly: true })],
   ['getCachedListingJobs', () => jobs.getCachedListingJobs({ platform: 'accountingbody' })],
   ['getCachedListingJobsCount', () => jobs.getCachedListingJobsCount({ platform: 'accountingbody' })],
-  ['getActiveJobCountries', () => jobs.getActiveJobCountries('accountingbody')],
-  ['getCachedActiveJobCountries', () => jobs.getCachedActiveJobCountries('accountingbody')],
 ]
 
 // Pages and APIs that show both counts or job results and ordinary content.

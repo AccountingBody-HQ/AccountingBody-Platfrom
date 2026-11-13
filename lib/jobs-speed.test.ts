@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync, readdirSync } from 'node:fs'
+import { join, relative, sep } from 'node:path'
 import { createClient } from '@supabase/supabase-js'
 import {
   getBrowsableJobsTotal, getBrowsableJobsCount, getCachedListingJobs,
-  getCachedListingJobsCount, getActiveJobCountries, jobsTotalSource, resetJobsTotalSourceWarning,
+  getCachedListingJobsCount, getCachedActiveJobCountries, countryListFromPrecounts, COUNTRY_LIST_LOG, jobsTotalSource, resetJobsTotalSourceWarning,
   normaliseListingPage, normaliseListingFilters, isUnfilteredListing, siteCountKey,
   filterPrecountKey, getPrecountedFilterTotal, FILTER_TOTAL_LOG,
   DEFAULT_LIST_ORDER, PRECOUNT_MAX_AGE_MS, JOBS_TOTAL_LOG, RELEVANCE_FALLBACK_LOG,
@@ -458,20 +458,173 @@ describe('word search keeps calling the ranked search with the same inputs', () 
   })
 })
 
-describe('countries list calls get_active_job_countries as the SQL defines it', () => {
-  it('passes p_platform and reads country and job_count', async () => {
-    script.rpc = { data: [{ country: 'United Kingdom', job_count: 12 }, { country: 'Ethiopia', job_count: 3 }], error: null }
+// ── The country menu reads the pre-counted country rows ─────────────────────
 
-    expect(await getActiveJobCountries('et')).toEqual([
-      { country: 'United Kingdom', count: 12 },
-      { country: 'Ethiopia', count: 3 },
+const row = (key: string, value: number, updatedAt = NOW.getTime() - 4 * 60_000) => ({ key, value, updatedAt })
+const dbRow = (key: string, value: number | string, m = 4) => ({ key, value, updated_at: minutesAgo(m) })
+
+// Live rows as read on 13 Nov (same numbers as get_active_job_countries
+// returned on 11 Nov), plus the plain-list rows that share the prefix.
+const LIVE_ROWS = [
+  dbRow('jobs_browsable:ab', 14351),
+  dbRow('jobs_browsable:ab:country:Australia', 1380),
+  dbRow('jobs_browsable:ab:country:Canada', 1364),
+  dbRow('jobs_browsable:ab:country:Ireland', 2),
+  dbRow('jobs_browsable:ab:country:Singapore', 1579),
+  dbRow('jobs_browsable:ab:country:South Africa', 3089),
+  dbRow('jobs_browsable:ab:country:United Arab Emirates', 1),
+  dbRow('jobs_browsable:ab:country:United Kingdom', 1979),
+  dbRow('jobs_browsable:ab:country:United States', 2957),
+  dbRow('jobs_browsable:et', 3089),
+  dbRow('jobs_browsable:et:country:South Africa', 3089),
+]
+
+describe('countryListFromPrecounts', () => {
+  const now = NOW.getTime()
+
+  it('keeps only this platform\'s country rows, takes the whole name after the prefix, and skips counts that are not whole numbers above zero', () => {
+    const rows = [
+      row('jobs_browsable:ab', 9000),
+      row('jobs_browsable:ab:country:United Kingdom', 40),
+      row('jobs_browsable:ab:country:Korea, Republic of', 7),
+      row("jobs_browsable:ab:country:Côte d'Ivoire", 5),
+      row('jobs_browsable:ab:country:Bosnia: Herzegovina', 4),
+      row('jobs_browsable:ab:search:cfo', 140),
+      row('jobs_browsable:ab:countryX', 99),
+      row('jobs_browsable:ab:country:', 98),
+      row('jobs_browsable:et:country:Ethiopia', 97),
+      row('xjobs_browsable:ab:country:Kenya', 96),
+      row('jobs_browsable:ab:country:Zero', 0),
+      row('jobs_browsable:ab:country:Negative', -3),
+      row('jobs_browsable:ab:country:Fraction', 2.5),
+      row('jobs_browsable:ab:country:NotANumber', NaN),
+    ]
+    expect(countryListFromPrecounts(rows, 'ab', now)).toEqual([
+      { country: 'United Kingdom', count: 40 },
+      { country: 'Korea, Republic of', count: 7 },
+      { country: "Côte d'Ivoire", count: 5 },
+      { country: 'Bosnia: Herzegovina', count: 4 },
     ])
-    expect(rpcCalls).toEqual([['get_active_job_countries', { p_platform: 'et' }]])
   })
 
-  it('returns [] (the page then uses its built-in list) while the function is missing', async () => {
-    script.rpc = { data: null, error: { message: 'Could not find the function public.get_active_job_countries(p_platform) in the schema cache' }, status: 404 }
-    expect(await getActiveJobCountries('ab')).toEqual([])
+  it('orders by count descending, then name ascending for equal counts (as the SQL ORDER BY job_count DESC, country ASC)', () => {
+    const rows = [
+      row('jobs_browsable:ab:country:Canada', 10),
+      row('jobs_browsable:ab:country:Zambia', 50),
+      row('jobs_browsable:ab:country:Australia', 10),
+      row('jobs_browsable:ab:country:Belgium', 10),
+      row('jobs_browsable:ab:country:Mexico', 1),
+    ]
+    expect(countryListFromPrecounts(rows, 'ab', now).map(c => c.country)).toEqual(['Zambia', 'Australia', 'Belgium', 'Canada', 'Mexico'])
+  })
+
+  it('applies the 6-hour rule of getPrecountedFilterTotal to each row', () => {
+    const rows = [
+      row('jobs_browsable:ab:country:Fresh', 3, now - PRECOUNT_MAX_AGE_MS),
+      row('jobs_browsable:ab:country:Stale', 9, now - PRECOUNT_MAX_AGE_MS - 1),
+    ]
+    expect(countryListFromPrecounts(rows, 'ab', now)).toEqual([{ country: 'Fresh', count: 3 }])
+  })
+
+  it('gives the 11 Nov list for ab and et from the live rows', () => {
+    const rows = LIVE_ROWS.map(r => row(r.key, r.value as number))
+    expect(countryListFromPrecounts(rows, 'ab', now)).toEqual([
+      { country: 'South Africa', count: 3089 },
+      { country: 'United States', count: 2957 },
+      { country: 'United Kingdom', count: 1979 },
+      { country: 'Singapore', count: 1579 },
+      { country: 'Australia', count: 1380 },
+      { country: 'Canada', count: 1364 },
+      { country: 'Ireland', count: 2 },
+      { country: 'United Arab Emirates', count: 1 },
+    ])
+    expect(countryListFromPrecounts(rows, 'et', now)).toEqual([{ country: 'South Africa', count: 3089 }])
+  })
+})
+
+describe('getCachedActiveJobCountries — from the pre-counted rows', () => {
+  it('ab: one read of the filter rows, the 11 Nov list, no database function call, no log', async () => {
+    script.site_counts = { data: LIVE_ROWS, error: null }
+    const list = await getCachedActiveJobCountries('ab')
+    expect(list.map(c => `${c.country} ${c.count}`)).toEqual([
+      'South Africa 3089', 'United States 2957', 'United Kingdom 1979', 'Singapore 1579',
+      'Australia 1380', 'Canada 1364', 'Ireland 2', 'United Arab Emirates 1',
+    ])
+    expect(tableQueries('site_counts')).toHaveLength(1)
+    expect(tableQueries('site_counts')[0].calls).toEqual([
+      ['select', 'key, value, updated_at'],
+      ['like', 'key', 'jobs_browsable:ab:%'],
+    ])
+    expect(rpcCalls).toEqual([])
+    expect(tableQueries('jobs')).toHaveLength(0)
+    expect(logLines()).toEqual([])
+  })
+
+  it('et: reads the et rows and gets only South Africa', async () => {
+    script.site_counts = { data: LIVE_ROWS, error: null }
+    expect(await getCachedActiveJobCountries('et')).toEqual([{ country: 'South Africa', count: 3089 }])
+    expect(tableQueries('site_counts')[0].calls[1]).toEqual(['like', 'key', 'jobs_browsable:et:%'])
+    expect(rpcCalls).toEqual([])
+  })
+
+  it('shares the cached read with the one-country total: one query for both', async () => {
+    script.site_counts = { data: LIVE_ROWS, error: null }
+    expect(await getPrecountedFilterTotal({ platform: 'ab', locationCountry: 'United States' })).toBe(2957)
+    expect(await getCachedActiveJobCountries('ab')).toHaveLength(8)
+    expect(tableQueries('site_counts')).toHaveLength(1)
+    expect(new Set(cacheCalls.map(c => c.keyParts[0]))).toEqual(new Set(['site-counts-jobs-filters']))
+  })
+
+  it('gives [] (the built-in list) with one fixed line when every country row is older than six hours', async () => {
+    script.site_counts = { data: [dbRow('jobs_browsable:ab', 14351, 3), dbRow('jobs_browsable:ab:country:United States', 2957, 6 * 60 + 1)], error: null }
+    expect(await getCachedActiveJobCountries('ab')).toEqual([])
+    expect(logLines()).toEqual([COUNTRY_LIST_LOG.stale])
+    expect(rpcCalls).toEqual([])
+  })
+
+  it('gives [] (the built-in list) with one fixed line when there are no country rows', async () => {
+    script.site_counts = { data: [dbRow('jobs_browsable:ab', 14351), dbRow('jobs_browsable:et:country:South Africa', 3089)], error: null }
+    expect(await getCachedActiveJobCountries('ab')).toEqual([])
+    expect(logLines()).toEqual([COUNTRY_LIST_LOG.missing])
+    expect(rpcCalls).toEqual([])
+  })
+
+  it('gives [] (the built-in list) with one fixed line, no upstream text, when the read fails', async () => {
+    script.site_counts = { data: null, error: { message: 'canceling statement due to statement timeout zqx' }, status: 500 }
+    expect(await getCachedActiveJobCountries('ab')).toEqual([])
+    expect(logLines()).toEqual([COUNTRY_LIST_LOG.failed])
+    expect(logLines().join()).not.toContain('zqx')
+    expect(rpcCalls).toEqual([])
+  })
+
+  it('gives [] (the built-in list) when any row has an unexpected shape (the shared reader rejects the whole read)', async () => {
+    script.site_counts = { data: [...LIVE_ROWS, dbRow('jobs_browsable:ab:country:Bad', -1)], error: null }
+    expect(await getCachedActiveJobCountries('ab')).toEqual([])
+    expect(logLines()).toEqual([COUNTRY_LIST_LOG.failed])
+  })
+
+  it.each(['estimate', 'none'] as const)('%s mode: the menu still reads the rows (the switch is about totals only)', async (mode) => {
+    vi.stubEnv('JOBS_TOTAL_SOURCE', mode)
+    script.site_counts = { data: LIVE_ROWS, error: null }
+    expect(await getCachedActiveJobCountries('et')).toEqual([{ country: 'South Africa', count: 3089 }])
+  })
+})
+
+describe('the app no longer calls get_active_job_countries', () => {
+  const ROOT = process.cwd()
+  const SOURCE = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/
+  const files = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+    if (entry.name.startsWith('.') || entry.name === 'node_modules') return []
+    const path = join(dir, entry.name)
+    if (entry.isDirectory()) return files(path)
+    return SOURCE.test(entry.name) ? [relative(ROOT, path).split(sep).join('/')] : []
+  })
+
+  it('no file under app/ or lib/ calls rpc() with that function name', () => {
+    const all = [...files(join(ROOT, 'app')), ...files(join(ROOT, 'lib'))]
+    expect(all.length).toBeGreaterThan(100)
+    const calls = all.filter(f => /\brpc\s*\(\s*['"`]get_active_job_countries['"`]/.test(readFileSync(join(ROOT, f), 'utf8')))
+    expect(calls).toEqual([])
   })
 })
 

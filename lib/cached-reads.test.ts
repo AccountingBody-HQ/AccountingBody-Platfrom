@@ -5,7 +5,7 @@ import {
 } from './db'
 import {
   getCachedListingJobs, getCachedListingJobsCount, getBrowsableJobsCount,
-  getCachedActiveJobCountries, getActiveJobCountries,
+  getCachedActiveJobCountries, COUNTRY_LIST_LOG,
 } from './jobs'
 import { resetCacheGuard, HOLD_MS, BACKOFF_MS } from './cache-guard'
 
@@ -39,7 +39,7 @@ function fakeClient() {
   const builder: Record<string, unknown> = {
     from: () => builder, select: () => builder, eq: () => builder, in: () => builder,
     or: () => builder, textSearch: () => builder, order: () => builder, range: () => builder,
-    contains: () => builder,
+    contains: () => builder, like: () => builder,
     single: settle,
     rpc: settle,
     then: (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) => settle().then(resolve, reject),
@@ -72,7 +72,11 @@ afterEach(() => {
 
 const article = { id: '1', slug: 'fixed-costs', title: 'Fixed costs', content: '<p>x</p>' }
 const row = { id: 'a', title: 'Tax Manager', slug: 'tax-manager', excerpt: 'Short text' }
-const countries = [{ country: 'United Kingdom', job_count: 12 }, { country: 'Ethiopia', job_count: 3 }]
+// The pre-counted country rows the country menu now reads (fresh: 5 minutes old).
+const countries = [
+  { key: 'jobs_browsable:ab:country:Ethiopia', value: 3, updated_at: '2025-12-31T23:55:00Z' },
+  { key: 'jobs_browsable:ab:country:United Kingdom', value: 12, updated_at: '2025-12-31T23:55:00Z' },
+]
 
 // Each reader with: a healthy answer, what that answer returns today, and
 // the caller-visible fallback when the database fails with no good value.
@@ -190,12 +194,12 @@ describe('cache settings are unchanged', () => {
     ])
   })
 
-  it('the country list keeps its key parts and 6-hour duration, with no tags', async () => {
+  it('the country list reuses the pre-counted filter rows entry (no cache entry of its own)', async () => {
     ok({ data: [] })
     await getCachedActiveJobCountries('et')
-    expect(cacheCalls[0].keyParts).toEqual(['active-job-countries'])
-    expect(cacheCalls[0].args).toEqual(['et'])
-    expect(cacheCalls[0].options).toEqual({ revalidate: 21600 })
+    expect(cacheCalls.map(c => [c.keyParts, c.args, c.options])).toEqual([
+      [['site-counts-jobs-filters'], ['et'], { revalidate: 120, tags: ['counts', 'jobs'] }],
+    ])
   })
 
   it('different articles never share a remembered value', async () => {
@@ -221,35 +225,24 @@ describe('cache settings are unchanged', () => {
   })
 })
 
-describe('active job countries', () => {
+describe('active job countries (from the pre-counted rows)', () => {
   it('throws inside the cached function on a database error, so nothing is stored, and returns [] outside it', async () => {
     fail()
     expect(await getCachedActiveJobCountries('ab')).toEqual([])
-    await expect(cacheCalls[0].result).rejects.toThrow('active job countries query failed (status 504)')
+    await expect(cacheCalls[0].result).rejects.toThrow('site_counts filter read failed (status 504)')
   })
 
-  it('stores a genuine empty list', async () => {
+  it('stores a genuine empty list of rows, and returns [] (the built-in list) for it', async () => {
     ok({ data: [] })
     expect(await getCachedActiveJobCountries('ab')).toEqual([])
     await expect(cacheCalls[0].result).resolves.toEqual([])
+    expect(console.warn).toHaveBeenCalledWith(COUNTRY_LIST_LOG.missing)
   })
 
-  it('treats no data with no error as an empty list, as before', async () => {
-    ok({ data: null })
-    expect(await getCachedActiveJobCountries('ab')).toEqual([])
-    await expect(cacheCalls[0].result).resolves.toEqual([])
-  })
-
-  it('logs the failure with the same label as before', async () => {
+  it('logs one fixed line on a failed read, with no upstream text', async () => {
     fail()
     await getCachedActiveJobCountries('ab')
-    expect(console.error).toHaveBeenCalledWith('getActiveJobCountries error:', expect.any(Error))
-  })
-
-  it('the uncached reader still returns [] on a database error and the rows otherwise', async () => {
-    fail()
-    expect(await getActiveJobCountries('ab')).toEqual([])
-    ok({ data: countries })
-    expect(await getActiveJobCountries('ab')).toEqual([{ country: 'United Kingdom', count: 12 }, { country: 'Ethiopia', count: 3 }])
+    expect(console.warn).toHaveBeenCalledWith(COUNTRY_LIST_LOG.failed)
+    expect(console.error).not.toHaveBeenCalled()
   })
 })
