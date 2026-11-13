@@ -142,8 +142,7 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
       qualityMetrics = computeQualityMetrics(normalised)
       await updateProviderDataQuality(provider.id, qualityMetrics)
     } catch (qualityErr: unknown) {
-      const msg = qualityErr instanceof Error ? qualityErr.message : String(qualityErr)
-      console.error('[ingest] quality metrics failed:', msg)
+      console.error('[ingest] quality metrics failed:', shortCode(qualityErr))
       // do NOT rethrow — ingestion must proceed regardless
     }
 
@@ -209,7 +208,7 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
         // that noisily; the per-row fallback below classifies each row
         // correctly anyway. Genuine errors still get logged as before.
         if (!isDedupConflict(error)) {
-          console.warn(`[ingest/${slug}] Batch insert failed, falling back to individual inserts:`, error.message)
+          console.warn(`[ingest/${slug}] Batch insert failed, falling back to individual inserts:`, shortCode(error))
         }
         for (const job of batch) {
           const { error: singleError } = await supabase.from('jobs').insert({
@@ -259,7 +258,7 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
               // keyword fan-out, not a failure. Count it as deduplicated.
               duplicateCount++
             } else {
-              insertErrors.push(`${job.slug}: ${singleError.message}`)
+              insertErrors.push(`${job.slug}: ${shortCode(singleError)}`)
               await logProviderError(
                 provider.id, run.id, 'INSERT_FAILED',
                 singleError.code ?? 'INSERT_ERROR',
@@ -302,7 +301,7 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
         )
       } catch (cursorErr: unknown) {
         console.error('[ingest] keyword cursor update failed:',
-          cursorErr)
+          shortCode(cursorErr))
       }
     }
 
@@ -310,9 +309,7 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
       try {
         await incrementProviderJobsToday(provider.id, insertedCount)
       } catch (counterErr: unknown) {
-        const msg = counterErr instanceof Error
-          ? counterErr.message : String(counterErr)
-        console.error('[ingest] jobs_today counter failed:', msg)
+        console.error('[ingest] jobs_today counter failed:', shortCode(counterErr))
         // do NOT rethrow — jobs were already inserted successfully
       }
     }
@@ -339,8 +336,7 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
       const newAlertState = deriveAlertState(freshHealthStatus, freshDataQualityStatus, 0)
       await maybeSendProviderAlert(provider, newAlertState, 0)
     } catch (alertErr: unknown) {
-      const msg = alertErr instanceof Error ? alertErr.message : String(alertErr)
-      console.error('[ingest] provider alert failed:', msg)
+      console.error('[ingest] provider alert failed:', shortCode(alertErr))
       // do NOT rethrow — ingestion must proceed regardless
     }
 
@@ -417,8 +413,7 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
         }
       }
     } catch (alertErr: unknown) {
-      const alertMsg = alertErr instanceof Error ? alertErr.message : String(alertErr)
-      console.error('[ingest] provider alert failed (failure path):', alertMsg)
+      console.error('[ingest] provider alert failed (failure path):', shortCode(alertErr))
       // do NOT rethrow — the error response below must still return
     }
 

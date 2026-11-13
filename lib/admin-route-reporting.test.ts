@@ -823,7 +823,7 @@ describe('admin route sources', () => {
     const calls = ['app', 'lib', 'components']
       .flatMap(walk)
       .flatMap((file) => readFileSync(join(ROOT, file), 'utf8').match(/reportServerError\([^)]*area: ['"]admin['"][^)]*\)/g) ?? [])
-    expect(calls).toHaveLength(24)
+    expect(calls).toHaveLength(25)
     const labels = calls.map((text) => text.match(/^reportServerError\((['"])(.*?)\1/)?.[2] ?? '')
     expect(new Set(labels).size).toBe(labels.length)
     for (const label of labels) {
