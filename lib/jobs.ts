@@ -15,6 +15,14 @@ function getSupabase(context: DbContext = 'publicRead') {
   return getServerSupabase(context)
 }
 
+// A read problem as a real Error with fixed text and the database's short
+// code only (the same shape as readProblem in lib/db.ts).
+function readProblem(message: string, error: { code?: unknown }): Error & { code?: string } {
+  const failed = new Error(message) as Error & { code?: string }
+  if (typeof error.code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(error.code)) failed.code = error.code
+  return failed
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type JobSource = 'employer' | 'careerjet' | 'adzuna' | 'scrape' | 'manual'
@@ -335,7 +343,7 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
     // Callers decide how to surface it (/api/jobs/direct returns a 503;
     // /api/search's fetchJobsForSearch catches and hides its jobs panel).
     const { count, error } = await countQuery
-    if (error) throw new Error(`getActiveDirectJobs: count query failed: ${error.message}`)
+    if (error) throw readProblem('getActiveDirectJobs: count query failed', error)
     return count ?? 0
   }
 
@@ -539,7 +547,7 @@ async function getDefaultOrderJobs(page: ListingPage): Promise<ListingJob[]> {
   for (const { column, ...options } of DEFAULT_LIST_ORDER) query = query.order(column, options)
 
   const { data, error } = await query.range(page.offset, page.offset + page.limit - 1)
-  if (error) throw new Error(`default jobs list query failed: ${error.message}`)
+  if (error) throw readProblem('default jobs list query failed', error)
   return (data ?? []) as unknown as ListingJob[]
 }
 
@@ -615,7 +623,7 @@ export async function getJobById(id: string): Promise<Job | null> {
     .single()
   if (error && status === 406 && error.code === 'PGRST116') return null
   if (error && error.code === '22P02') return null
-  if (error) throw new Error(`getJobById: jobs query failed (status ${status}): ${error.message}`)
+  if (error) throw readProblem(`getJobById: jobs query failed (status ${status})`, error)
   if (!data) throw new Error('getJobById: empty response')
   return data as Job
 }
@@ -649,8 +657,8 @@ export async function getJobBySlug(slug: string): Promise<Job | null> {
   // null only for zero rows (HTTP 406, PostgREST code PGRST116); any other
   // failure is thrown, so the page shows its error page (500), not a 404.
   if (error && status === 406 && error.code === 'PGRST116') return null
-  if (error) throw new Error(`getJobBySlug: jobs query failed (status ${status}): ${error.message}`)
-  if (!data) throw new Error(`getJobBySlug: empty response for "${slug}"`)
+  if (error) throw readProblem(`getJobBySlug: jobs query failed (status ${status})`, error)
+  if (!data) throw new Error('getJobBySlug: empty response')
   // See the comment on the JOB_COLUMNS cast in getActiveDirectJobs — same
   // non-literal-string limitation applies here.
   return data as unknown as Job
@@ -799,7 +807,7 @@ async function fetchSimilarCandidates(
   if (country) query = query.eq('location_country', country)
 
   const { data, error } = await query.order('published_at', { ascending: false }).limit(limit)
-  if (error) throw new Error(`getSimilarJobs: ${mode} query failed: ${error.message}`)
+  if (error) throw readProblem(`getSimilarJobs: ${mode} query failed`, error)
   return (data ?? []) as unknown as SimilarJob[]
 }
 
@@ -828,7 +836,7 @@ async function fetchSimilarCountryFallback(
     .eq('location_country', country)
     .order('created_at', { ascending: false })
     .limit(limit)
-  if (error) throw new Error(`getSimilarJobs: fallback query failed: ${error.message}`)
+  if (error) throw readProblem('getSimilarJobs: fallback query failed', error)
   return (data ?? []) as unknown as SimilarJob[]
 }
 
@@ -1152,7 +1160,7 @@ async function fetchBrowsableJobsCount(platform: string): Promise<number> {
     .eq('status', 'active')
     .contains('platform', [platform])
     .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-  if (error) throw new Error(`jobs count query failed (status ${status}): ${error.message}`)
+  if (error) throw readProblem(`jobs count query failed (status ${status})`, error)
   if (count === null) throw new Error(`jobs count query returned no count (status ${status})`)
   return count
 }

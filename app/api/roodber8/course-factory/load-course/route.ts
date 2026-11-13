@@ -10,6 +10,11 @@ function getSupabase() {
   return getServerSupabase('admin')
 }
 
+// The short code of a database problem, for log lines.
+function shortCode(v: { code?: unknown }): string {
+  return typeof v.code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(v.code) ? v.code : 'no-code'
+}
+
 // GET /api/roodber8/course-factory/load-course
 // ?action=list  → returns all courses (id, title, slug, status, level, chapterCount)
 // ?action=load&slug=xxx → returns full course structure with chapters, lessons, articles
@@ -28,7 +33,10 @@ export async function GET(req: NextRequest) {
       .select('id, title, slug, status, level, course_chapters(id)')
       .order('title', { ascending: true })
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      console.error('admin course list failed', shortCode(error))
+      return NextResponse.json({ error: 'Course list failed' }, { status: 500 })
+    }
 
     const formatted = (courses ?? []).map(c => ({
       _id:          c.id,

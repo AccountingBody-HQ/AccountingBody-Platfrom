@@ -562,7 +562,7 @@ const scenarios: Scenario[] = [
       body: {
         ...imported,
         inserted: 0,
-        insertErrors: [`${importedSlug}: ${TIMEOUT(60_000)}`],
+        insertErrors: [`${importedSlug}: no-code`],
         durationMs: 120_000,
       },
       emails: 1,

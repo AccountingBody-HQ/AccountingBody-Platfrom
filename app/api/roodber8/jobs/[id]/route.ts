@@ -23,6 +23,22 @@ function shortCode(v: unknown): string {
 
 type RouteParams = { params: Promise<{ id: string }> }
 
+type JobRead =
+  | { ok: true; job: Awaited<ReturnType<typeof getJobById>> }
+  | { ok: false; answer: NextResponse }
+
+// Reads the job for a handler. A read problem gives a fixed 500 answer,
+// a log line with the short code and one problem report.
+async function readJob(id: string): Promise<JobRead> {
+  try {
+    return { ok: true, job: await getJobById(id) }
+  } catch (err: unknown) {
+    console.error('admin job read failed', shortCode(err))
+    reportServerError('admin job read failed', err, { area: 'admin' })
+    return { ok: false, answer: NextResponse.json({ error: 'Job read failed' }, { status: 500 }) }
+  }
+}
+
 // ── GET (admin) jobs/[id] ── returns job by ID, any status
 export async function GET(req: NextRequest, { params }: RouteParams) {
   if (!(await isAuthenticated(req))) {
@@ -30,7 +46,9 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   }
 
   const { id } = await params
-  const job = await getJobById(id)
+  const read = await readJob(id)
+  if (!read.ok) return read.answer
+  const job = read.job
   if (!job) {
     return NextResponse.json({ error: 'Job not found' }, { status: 404 })
   }
@@ -45,7 +63,9 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   }
 
   const { id } = await params
-  const existing = await getJobById(id)
+  const read = await readJob(id)
+  if (!read.ok) return read.answer
+  const existing = read.job
   if (!existing) {
     return NextResponse.json({ error: 'Job not found' }, { status: 404 })
   }
@@ -126,7 +146,9 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
   }
 
   const { id } = await params
-  const existing = await getJobById(id)
+  const read = await readJob(id)
+  if (!read.ok) return read.answer
+  const existing = read.job
   if (!existing) {
     return NextResponse.json({ error: 'Job not found' }, { status: 404 })
   }

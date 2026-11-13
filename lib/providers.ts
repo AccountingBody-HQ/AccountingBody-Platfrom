@@ -10,6 +10,14 @@ function getSupabase(context: DbContext = 'ingest') {
   return getServerSupabase(context)
 }
 
+// A read problem as a real Error with fixed text and the database's short
+// code only (the same shape as readProblem in lib/db.ts).
+function readProblem(message: string, error: { code?: unknown }): Error & { code?: string } {
+  const failed = new Error(message) as Error & { code?: string }
+  if (typeof error.code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(error.code)) failed.code = error.code
+  return failed
+}
+
 export interface JobProvider {
   id: string
   slug: string
@@ -133,7 +141,7 @@ export async function getProvidersDueForFetch(): Promise<JobProvider[]> {
     .select('provider_id')
     .eq('status', 'running')
   if (runningError) {
-    throw new Error(`getProvidersDueForFetch: running-runs query failed: ${runningError.message}`)
+    throw readProblem('getProvidersDueForFetch: running-runs query failed', runningError)
   }
 
   const runningProviderIds = Array.from(
@@ -152,7 +160,7 @@ export async function getProvidersDueForFetch(): Promise<JobProvider[]> {
 
   const { data, error } = await query.order('priority', { ascending: true })
   if (error) {
-    throw new Error(`getProvidersDueForFetch: due-providers query failed: ${error.message}`)
+    throw readProblem('getProvidersDueForFetch: due-providers query failed', error)
   }
   if (!data) {
     throw new Error('getProvidersDueForFetch: due-providers query returned no data')

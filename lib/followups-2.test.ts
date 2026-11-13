@@ -259,7 +259,7 @@ describe('admin job updates log a short code', () => {
   it('the route source names no admin folder in its log lines', () => {
     const source = readFileSync(adminFile('/jobs/[id]'), 'utf8')
     const lines = source.split('\n').filter((line) => line.includes('console.'))
-    expect(lines).toHaveLength(4)
+    expect(lines).toHaveLength(5)
     for (const line of lines) expect(line.toLowerCase()).not.toContain(folder.toLowerCase())
   })
 })

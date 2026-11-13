@@ -626,7 +626,7 @@ describe('getSimilarJobs — indexed steps', () => {
     expect(result.map(j => j.id)).toEqual(['a', 'b'])
     const [label, err] = consoleError.mock.calls[0]
     expect(label).toContain('and, same country')
-    expect((err as Error).message).toBe('getSimilarJobs: and query failed: upstream request timeout')
+    expect((err as Error).message).toBe('getSimilarJobs: and query failed')
   })
 
   it('returns [] when every step fails, so the page just hides the section', async () => {

@@ -19,9 +19,10 @@ export async function POST(
 
   const { slug } = params
 
-  // 'manual' only when the admin trigger route asks for it via ?trigger=manual;
-  // any other call to this route keeps recording 'cron'. The orchestrator
-  // does not call this route: it runs runProviderImport directly with 'cron'.
+  // 'manual' only when a call asks for it via ?trigger=manual; any other call
+  // to this route keeps recording 'cron'. Neither the admin Run now button nor
+  // the orchestrator calls this route: each runs runProviderImport directly,
+  // with 'manual' and 'cron' respectively.
   const triggerSource = new URL(req.url).searchParams.get('trigger') === 'manual'
     ? 'manual' as const
     : 'cron' as const

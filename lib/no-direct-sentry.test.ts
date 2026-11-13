@@ -126,6 +126,7 @@ const ROUTE_LABELS = [
   'admin course update request unreadable',
   'admin course delete failed',
   'admin job update failed',
+  'admin job read failed',
   'admin candidate email failed',
   'admin firm email failed',
   'admin provider edit request unreadable',
