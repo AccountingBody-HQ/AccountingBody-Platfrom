@@ -372,7 +372,8 @@ describe('import callers', () => {
     net.tables.job_providers = [{ ...inactive }]
     const { POST } = await loadAdmin('/providers/[slug]/trigger')
     const result = await answerOf(await POST(withSession(request('/api/admin-tool', { method: 'POST' })), { params: Promise.resolve({ slug: 'example' }) }))
-    expect(net.dispatches).toStrictEqual([`Bearer ${CRON_TEST_VALUE}`])
+    expect(net.dispatches).toStrictEqual([])
+    expect(net.requests).toContain('GET job_providers')
     expect(result).toStrictEqual({ status: 200, headers: JSON_HEADERS, body: { ok: true, skipped: true, reason: 'Provider inactive' } })
   })
 

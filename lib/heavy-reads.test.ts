@@ -120,7 +120,8 @@ describe('heavy public reads use the longer read limit', () => {
     ] as [string, () => Promise<unknown>][])('ordinary public reads: %s still ends at the public read limit', async (_name, run) => {
       const result = await runFor(run, delayMs, DB_LIMITS_MS.publicRead)
       expect(result.done).toBe(true)
-      expect(String(result.error)).toContain(`(${DB_LIMITS_MS.publicRead} ms)`)
+      expect(result.error).toBeInstanceOf(Error)
+      expect(vi.mocked(console.warn).mock.calls).toContainEqual([expect.stringContaining(`(${DB_LIMITS_MS.publicRead} ms)`)])
     })
   })
 

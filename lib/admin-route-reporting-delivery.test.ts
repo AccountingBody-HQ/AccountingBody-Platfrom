@@ -34,6 +34,13 @@ vi.mock('next/cache', () => ({
   revalidateTag: () => {},
   revalidatePath: () => {},
 }))
+// Run now starts the import in the same process; here it stops with a
+// network problem.
+vi.mock('@/lib/ingestion/run-provider-import', () => ({
+  runProviderImport: async () => {
+    throw new TypeError('fetch failed')
+  },
+}))
 
 // The folder comes from the app's own default, so its name is not repeated here.
 vi.stubEnv('ADMIN_PATH', undefined)

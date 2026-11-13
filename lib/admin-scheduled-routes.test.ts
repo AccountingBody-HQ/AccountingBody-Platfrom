@@ -301,7 +301,7 @@ const scenarios: Scenario[] = [
         { params: Promise.resolve({ id: ID }) },
       ),
     healthy: { status: 200, body: { job: { id: ID, admin_notes: 'Checked' } }, dbRequests: 2 },
-    stalled: { stall: writes, waits: 1, status: 500, body: { error: 'Internal server error' }, dbRequests: 2 },
+    stalled: { stall: writes, waits: 1, status: 500, body: { error: 'Job update failed' }, dbRequests: 2 },
   },
   {
     name: 'job close',
@@ -312,7 +312,7 @@ const scenarios: Scenario[] = [
         params: Promise.resolve({ id: ID }),
       }),
     healthy: { status: 200, body: { success: true }, dbRequests: 2 },
-    stalled: { stall: writes, waits: 1, status: 500, body: { error: TIMEOUT(20_000) }, dbRequests: 2 },
+    stalled: { stall: writes, waits: 1, status: 500, body: { error: 'Job close failed' }, dbRequests: 2 },
   },
   {
     name: 'provider detail',

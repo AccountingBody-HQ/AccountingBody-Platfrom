@@ -66,5 +66,5 @@ export function countImports(results: readonly ImportResultSummary[], dueCount: 
 }
 
 export function closingLogLine(counts: ImportCounts): string {
-  return `[orchestrator] imports: ${counts.started} started, ${counts.ok} ok, ${counts.failed} failed, ${counts.stillDue} still due`
+  return `[orchestrator] imports: ${counts.started} started, ${counts.ok} ok, ${counts.skipped} skipped, ${counts.failed} failed, ${counts.stillDue} still due`
 }

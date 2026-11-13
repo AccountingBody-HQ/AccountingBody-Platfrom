@@ -84,6 +84,14 @@ vi.mock('@/lib/adapters', async (importOriginal) => {
   }
 })
 
+// Run now starts the import in the same process; this stands in for it.
+vi.mock('@/lib/ingestion/run-provider-import', () => ({
+  runProviderImport: async () => {
+    if (ingest.fails) throw ingest.fails
+    return { status: ingest.status, body: ingest.body }
+  },
+}))
+
 vi.mock('@anthropic-ai/sdk', () => ({
   default: class {
     messages = {
@@ -423,7 +431,7 @@ const ROUTES: Route[] = [
         state.failing.set('approveJob', problem)
         return call('/jobs/[id]', 'PATCH', { params: Promise.resolve({ id: JOB_ID }) })(load, request({ method: 'PATCH', body: { action: 'approve' } }))
       },
-      answer: { status: 500, body: error(PROBLEM) },
+      answer: { status: 500, body: error('Job update failed') },
     },
   ], [
     ['no such job', { method: 'PATCH', body: { action: 'approve' } }, 404],

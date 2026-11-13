@@ -95,7 +95,7 @@ describe('import outcome words and log lines', () => {
     ]
     const counts = countImports(results, 6)
     expect(counts).toStrictEqual({ started: 4, ok: 1, skipped: 1, failed: 2, stillDue: 2 })
-    expect(closingLogLine(counts)).toBe('[orchestrator] imports: 4 started, 1 ok, 2 failed, 2 still due')
+    expect(closingLogLine(counts)).toBe('[orchestrator] imports: 4 started, 1 ok, 1 skipped, 2 failed, 2 still due')
   })
 })
 
@@ -149,7 +149,7 @@ describe('orchestrator GET runs imports directly', () => {
     await t.GET(cronRequest())
     expect(t.log.mock.calls).toStrictEqual([
       ['[orchestrator] import p1 ok 200'],
-      ['[orchestrator] imports: 1 started, 1 ok, 0 failed, 3 still due'],
+      ['[orchestrator] imports: 1 started, 1 ok, 0 skipped, 0 failed, 3 still due'],
     ])
     expect(t.error.mock.calls).toStrictEqual([])
     expect(t.reporting.reportServerError).not.toHaveBeenCalled()

@@ -1,8 +1,11 @@
 import { NextRequest } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { reportServerError } from '@/lib/report-error'
+import { runProviderImport } from '@/lib/ingestion/run-provider-import'
 
-// ── POST /api/roodber8/providers/[slug]/trigger ── manually run ingestion now
+export const maxDuration = 300
+
+// ── POST (admin) providers/[slug]/trigger ── manually run ingestion now
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -13,6 +16,7 @@ export async function POST(
 
   const { slug } = await params
 
+  // Imports start from here only where the scheduled-import secret is set.
   const cronSecret = process.env.CRON_SECRET
   if (!cronSecret) {
     return Response.json(
@@ -21,18 +25,10 @@ export async function POST(
     )
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accountingbody.com'
-
   try {
-    const res = await fetch(`${siteUrl}/api/ingest/${slug}?trigger=manual`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${cronSecret}`,
-      },
-    })
-
-    const data: unknown = await res.json()
-    return Response.json(data, { status: res.status })
+    // Runs the import here and passes its answer on unchanged.
+    const { status, body } = await runProviderImport(slug, 'manual')
+    return Response.json(body, { status })
   } catch (err: unknown) {
     const code = typeof err === 'object' && err !== null ? (err as { code?: unknown }).code : undefined
     console.error('admin provider run start failed', typeof code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(code) ? code : 'no-code')
