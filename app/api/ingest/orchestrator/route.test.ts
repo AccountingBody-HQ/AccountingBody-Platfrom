@@ -37,8 +37,8 @@ const fulfilled = (status: number, body: unknown): PromiseSettledResult<Provider
 const rejected: PromiseSettledResult<ProviderImportResult> = { status: 'rejected', reason: new Error('detail text') }
 
 describe('pickProvidersForTick', () => {
-  it('runs three imports per tick', () => {
-    expect(IMPORTS_PER_TICK).toBe(3)
+  it('runs one import per tick', () => {
+    expect(IMPORTS_PER_TICK).toBe(1)
   })
 
   it('keeps the given order and takes at most the limit', () => {
@@ -123,20 +123,20 @@ async function setUp(slugs: string[], answers: Record<string, ProviderImportResu
 }
 
 describe('orchestrator GET runs imports directly', () => {
-  it('runs the first three due providers with trigger cron and makes no request', async () => {
+  it('runs only the first due provider with trigger cron and makes no request', async () => {
     const t = await setUp(['p1', 'p2', 'p3', 'p4', 'p5'], {})
     const res = await t.GET(cronRequest())
     expect(res.status).toBe(200)
-    expect(vi.mocked(t.runner.runProviderImport).mock.calls).toStrictEqual([['p1', 'cron'], ['p2', 'cron'], ['p3', 'cron']])
+    expect(vi.mocked(t.runner.runProviderImport).mock.calls).toStrictEqual([['p1', 'cron']])
     expect(t.fetchMock).not.toHaveBeenCalled()
     const body = await res.json()
     expect(body).toStrictEqual({
       ok: true,
-      dispatched: ['p1', 'p2', 'p3'],
-      count: 3,
+      dispatched: ['p1'],
+      count: 1,
       reaped: 0,
-      summary: ['p1', 'p2', 'p3'].map(slug => ({ slug, result: { slug, status: 200, ok: true } })),
-      counts: { started: 3, ok: 3, skipped: 0, failed: 0, stillDue: 2 },
+      summary: ['p1'].map(slug => ({ slug, result: { slug, status: 200, ok: true } })),
+      counts: { started: 1, ok: 1, skipped: 0, failed: 0, stillDue: 4 },
     })
   })
 
@@ -149,10 +149,9 @@ describe('orchestrator GET runs imports directly', () => {
     await t.GET(cronRequest())
     expect(t.log.mock.calls).toStrictEqual([
       ['[orchestrator] import p1 ok 200'],
-      ['[orchestrator] import p2 skipped 200'],
-      ['[orchestrator] imports: 3 started, 1 ok, 1 failed, 1 still due'],
+      ['[orchestrator] imports: 1 started, 1 ok, 0 failed, 3 still due'],
     ])
-    expect(t.error.mock.calls).toStrictEqual([['[orchestrator] import p3 failed threw']])
+    expect(t.error.mock.calls).toStrictEqual([])
     expect(t.reporting.reportServerError).not.toHaveBeenCalled()
   })
 
@@ -165,7 +164,6 @@ describe('orchestrator GET runs imports directly', () => {
     expect(res.status).toBe(200)
     expect(t.error.mock.calls).toStrictEqual([
       ['[orchestrator] import p1 failed 500'],
-      ['[orchestrator] import p2 failed 503'],
       ['[orchestrator] every import failed'],
     ])
     expect(t.reporting.reportServerError).toHaveBeenCalledTimes(1)
@@ -179,7 +177,7 @@ describe('orchestrator GET runs imports directly', () => {
     const skipped = { status: 200, body: { ok: true, skipped: true, reason: 'Provider inactive' } }
     const t = await setUp(['p1', 'p2'], { p1: skipped, p2: skipped })
     const body = await (await t.GET(cronRequest())).json()
-    expect(body.counts).toStrictEqual({ started: 2, ok: 0, skipped: 2, failed: 0, stillDue: 0 })
+    expect(body.counts).toStrictEqual({ started: 1, ok: 0, skipped: 1, failed: 0, stillDue: 1 })
     expect(t.reporting.reportServerError).not.toHaveBeenCalled()
   })
 
@@ -199,7 +197,7 @@ describe('orchestrator GET runs imports directly', () => {
     expect(t.runner.runProviderImport).not.toHaveBeenCalled()
   })
 
-  it('allows the time three imports need', async () => {
+  it('allows the time an import needs', async () => {
     const route = await import('./route')
     expect(route.maxDuration).toBe(300)
   })
