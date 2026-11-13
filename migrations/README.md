@@ -55,6 +55,14 @@ site_counts
 ```
 
 `site_counts` (pre-counted totals for public pages) was added by `0009`.
+Its rows are written by `public.refresh_site_counts()`, which pg_cron job 3
+runs every 10 minutes. Since `0011` the job writes both kinds of key from one
+read of `jobs`:
+
+- `jobs_browsable:<ab|et>`: plain-list totals
+- `jobs_browsable:<ab|et>:country:<location_country>`: one-country totals
+
+0009's `refresh_site_counts` body is superseded by `0011`.
 
 Rule 6 stands: the HagerLand `hrlake` / `et.*` schemas are off-limits. Never
 extend a migration here to touch another product's tables.
@@ -73,6 +81,7 @@ extend a migration here to touch another product's tables.
 | `0008_saved_jobs.sql` | Saved jobs |
 | `0009_site_counts_and_jobs_browsable_index.sql` | `site_counts` table, its refresh function, the newest-first jobs index and the 10-minute pg_cron schedule. Applied 11 Nov 2026 as three separate queries (the index must run alone). Checks and rollback: `proposed/2026-11-11-speed/` |
 | `0010_search_jobs_ranked_v2_and_countries.sql` | Faster `search_jobs_ranked` (v2: the query is written out with the actual values on each call) and `get_active_job_countries`, as defined by `0006`. Applied 11 Nov 2026 as two separate queries. Checks, trial helpers and rollback: `proposed/2026-11-11-speed-2/` |
+| `0011_refresh_site_counts_one_pass_with_countries.sql` | New `refresh_site_counts` body: plain-list and one-country totals from one read of `jobs` (replaces the `0009` body; the table, index and cron job stay as `0009` records them). Applied 11 Nov 2026 23:04 UTC as one query. Timing check, after-check and rollback: `proposed/2026-11-11-speed-3/` |
 
 ## Compare with the live database before any replace
 
@@ -86,6 +95,15 @@ length 3463. The file in this directory has Unix-style (LF) endings: md5
 `aad246bd049e61611aed2c5391fdabb3`, length 3389. Same logic, different
 fingerprint. The `0010` header gives both fingerprints for its v2 body.
 
+`refresh_site_counts` (live text has CRLF line endings in both cases):
+
+| Body | md5 (CRLF) | Length |
+|---|---|---|
+| `0009` (live until 11 Nov 2026 23:04 UTC) | `ec9c609a0df3f9e685acc84a0144e4b8` | 507 |
+| `0011` (live since then) | `f5a0f31a2f07fac7c832745d2b301607` | 1914 |
+
+The LF fingerprints of both bodies are in the `0011` header.
+
 ## pg_cron jobs
 
 Scheduled jobs inside the database, as found on 11 Nov 2026:
@@ -94,7 +112,7 @@ Scheduled jobs inside the database, as found on 11 Nov 2026:
 |---|---|---|---|
 | 1 | `delete-unverified-candidates` | `0 2 * * *` | Not in these migrations. Pre-existing; to be captured in the Phase 4 schema capture |
 | 2 | `delete-unconfirmed-briefs` | `0 2 * * *` | Not in these migrations. Pre-existing; to be captured in the Phase 4 schema capture |
-| 3 | `refresh-site-counts` | `*/10 * * * *` | `0009` |
+| 3 | `refresh-site-counts` | `*/10 * * * *` | `0009` (job and command); the function it calls has the `0011` body |
 
 ## Known gaps in the baseline
 

@@ -684,8 +684,9 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   // Computed once per render from the server-fetched derived list (see
   // JobListingsPage) — never refetched client-side, so there is no
   // loading gap for this specific data: it's present from first paint.
-  // Falls back to the hardcoded list when the derived list is empty (RPC
-  // error, or migrations/0006 not yet applied) — see buildCountryOptions.
+  // Falls back to the hardcoded list when the derived list is empty (for
+  // example an RPC error; the function from migrations/0006 was applied
+  // 11 Nov 2026 by migration 0010) — see buildCountryOptions.
   const countryOptions = useMemo(() => buildCountryOptions(derivedCountryOptions), [derivedCountryOptions])
 
   const router = useRouter()
