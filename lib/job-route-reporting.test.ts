@@ -345,7 +345,7 @@ const ROUTES: Route[] = [
       state.failing.set('getAdapter', problem)
       return ingest(cron('/api/ingest/example', 'POST'), { params: { slug: 'example' } })
     },
-    caughtAnswer: { status: 500, body: { ok: false, error: 'unexpected problem', durationMs: 0 } },
+    caughtAnswer: { status: 500, body: { ok: false, error: 'Import failed (Error)', durationMs: 0 } },
     refusals: [
       ['cron auth refusal', () => ingest(request('/api/ingest/example', { method: 'POST' }), { params: { slug: 'example' } }), 401],
       ['no row', () => ingest(cron('/api/ingest/unknown', 'POST'), { params: { slug: 'unknown' } }), 404],

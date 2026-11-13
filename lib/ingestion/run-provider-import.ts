@@ -58,6 +58,20 @@ function shortCode(v: unknown): string {
   return typeof code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(code) ? code : 'no-code'
 }
 
+// The code shown in the fixed failed-import text: the error's short code,
+// else its short name, else "no-code". Never throws.
+function failureCode(v: unknown): string {
+  try {
+    if (typeof v !== 'object' || v === null) return 'no-code'
+    const { code, name } = v as { code?: unknown; name?: unknown }
+    if (typeof code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(code)) return code
+    if (typeof name === 'string' && /^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(name)) return name
+    return 'no-code'
+  } catch {
+    return 'no-code'
+  }
+}
+
 export async function runProviderImport(slug: string, trigger: ImportTrigger): Promise<ProviderImportResult> {
   try {
     return await importProvider(slug, trigger)
@@ -360,12 +374,13 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
     } }
 
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err)
+    // Fixed text only; the error's own message is not returned or stored.
+    const failure = `Import failed (${failureCode(err)})`
     const durationMs = Date.now() - startTime
 
-    await failProviderRun(run.id, msg, 'INGESTION_ERROR')
+    await failProviderRun(run.id, failure, 'INGESTION_ERROR')
     await updateProviderHealth(provider.id, 'failure', {
-      errorMessage: msg,
+      errorMessage: failure,
       errorCode:    'INGESTION_ERROR',
     })
 
@@ -419,6 +434,6 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
 
     console.error(`[ingest/${slug}] Fatal error:`, shortCode(err))
     reportServerError('job import run failed', err, { area: 'ingest' })
-    return { status: 500, body: { ok: false, error: msg, durationMs } }
+    return { status: 500, body: { ok: false, error: failure, durationMs } }
   }
 }
