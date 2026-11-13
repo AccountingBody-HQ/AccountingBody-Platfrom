@@ -404,3 +404,38 @@ export function Pagination({
     </nav>
   )
 }
+
+// Previous/Next only, for a client-fetched list whose total is not known
+// (the jobs list when /api/jobs/direct returns `total: null`; see
+// app/jobs/listings/resultsSummary.ts for when each target is offered).
+// It uses the same NavButton as <Pagination>, so the colour notes at the
+// top of this file apply unchanged. There is no number row and no jump box,
+// because both need a last page.
+export function PrevNextPagination({
+  page,
+  prevPage,
+  nextPage,
+  navLabel = 'Results pages',
+  onChange,
+}: {
+  page: number
+  prevPage: number | null
+  nextPage: number | null
+  /** aria-label for the <nav> — describe what's being paginated. */
+  navLabel?: string
+  onChange: (page: number) => void
+}) {
+  if (prevPage === null && nextPage === null) return null
+
+  return (
+    <nav aria-label={navLabel} className="mt-10">
+      <div className="flex items-center justify-center gap-2">
+        <NavButton direction="prev" target={prevPage} onChange={onChange} />
+        <span className="text-sm font-semibold text-navy-950 px-2 whitespace-nowrap" aria-current="page">
+          Page {page.toLocaleString()}
+        </span>
+        <NavButton direction="next" target={nextPage} onChange={onChange} />
+      </div>
+    </nav>
+  )
+}

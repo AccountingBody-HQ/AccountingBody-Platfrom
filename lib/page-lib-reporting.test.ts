@@ -171,14 +171,18 @@ describe('page counts', () => {
     ['getPublishedQuestionCount', () => db.getPublishedQuestionCount(), 'questions', 'question count read failed', 0],
     ['getPublishedArticleCount', () => db.getPublishedArticleCount('ab'), 'articles', 'article count read failed', 0],
     ['getBrowsableJobsCount', () => jobs.getBrowsableJobsCount('ab'), 'jobs', 'job count read failed', 0],
-    ['getActiveJobCountries', () => jobs.getActiveJobCountries('ab'), 'rpc/get_active_job_countries', 'job countries read failed', []],
-    ['getCachedActiveJobCountries', () => jobs.getCachedActiveJobCountries('ab'), 'rpc/get_active_job_countries', 'job countries cached read failed', []],
+    ['getCachedActiveJobCountries', () => jobs.getCachedActiveJobCountries('ab'), 'site_counts', 'job countries cached read failed', []],
   ]
 
   it.each(counts)('%s reports an unexpected problem with its label and keeps its fallback', async (name, run, table, label, fallback) => {
     net.fail = (call) => call.table === table
     expect(await run()).toStrictEqual(fallback)
-    const log = name === 'getCachedActiveJobCountries' ? 'getActiveJobCountries error:' : `${name} error:`
+    // The jobs total and the country menu log their own fixed lines.
+    const fixedLogs: Record<string, string> = {
+      getBrowsableJobsCount: jobs.JOBS_TOTAL_LOG.estimateFailed,
+      getCachedActiveJobCountries: jobs.COUNTRY_LIST_LOG.failed,
+    }
+    const log = fixedLogs[name] ?? `${name} error:`
     expectReports([[label, 'public', log]])
     expect(state.reports[0][1]).toBeInstanceOf(Error)
   })
@@ -515,8 +519,7 @@ const REPORTING: Record<string, string[]> = {
     "reportServerError('admin job list read failed', new Error('admin job list read failed'), { area: 'admin' })",
     "reportServerError('admin job count read failed', new Error('admin job count read failed'), { area: 'admin' })",
   ],
-  'lib/jobs.ts:getBrowsableJobsCount': ["reportServerError('job count read failed', error, { area: 'public' })"],
-  'lib/jobs.ts:getActiveJobCountries': ["reportServerError('job countries read failed', error, { area: 'public' })"],
+  'lib/jobs.ts:getBrowsableJobsTotal': ["reportServerError('job count read failed', error, { area: 'public' })"],
   'lib/jobs.ts:getCachedActiveJobCountries': ["reportServerError('job countries cached read failed', error, { area: 'public' })"],
   'lib/jobs.ts:getJobSitemapEntries': [
     "reportServerError('sitemap jobs read failed', error, { area: 'public' })",
@@ -556,6 +559,9 @@ const LOG_ONLY: Record<string, string> = {
   'lib/coursesNew.ts:getLessonData': 'passed on to the page',
   'lib/db.ts:getArticleBySlug': 'passed on to the page',
   'lib/jobs.ts:getExpiringJobs': 'passed on to the expiry run, which reports',
+  'lib/jobs.ts:jobsTotalSource': 'an unrecognised setting falls back to the default total source',
+  'lib/jobs.ts:getCachedListingJobs': 'relevance order with no search words falls back to the default order',
+  'lib/jobs.ts:getPrecountedFilterTotal': 'a missing, stale or unreadable pre-counted row falls back to a live count',
 }
 
 describe('log lines in server pages and shared code', () => {

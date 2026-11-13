@@ -5,7 +5,7 @@ import {
 } from './db'
 import {
   getCachedListingJobs, getCachedListingJobsCount, getBrowsableJobsCount,
-  getCachedActiveJobCountries, getActiveJobCountries,
+  getCachedActiveJobCountries, COUNTRY_LIST_LOG,
 } from './jobs'
 import { resetCacheGuard, HOLD_MS, BACKOFF_MS } from './cache-guard'
 
@@ -39,7 +39,7 @@ function fakeClient() {
   const builder: Record<string, unknown> = {
     from: () => builder, select: () => builder, eq: () => builder, in: () => builder,
     or: () => builder, textSearch: () => builder, order: () => builder, range: () => builder,
-    contains: () => builder,
+    contains: () => builder, like: () => builder,
     single: settle,
     rpc: settle,
     then: (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) => settle().then(resolve, reject),
@@ -51,6 +51,9 @@ const ok = (fields: { data?: unknown; count?: number | null }) => { answer = { e
 const fail = () => { answer = { data: null, count: null, error: { message: 'upstream request timeout', code: '' }, status: 504 } }
 
 beforeEach(() => {
+  // The estimate path: these tests cover one guarded read per reader. The
+  // pre-counted row and its fall-throughs are covered in jobs-speed.test.ts.
+  vi.stubEnv('JOBS_TOTAL_SOURCE', 'estimate')
   vi.useFakeTimers()
   vi.setSystemTime(new Date('2026-01-01T00:00:00Z'))
   vi.mocked(createClient).mockImplementation(() => fakeClient() as unknown as ReturnType<typeof createClient>)
@@ -63,12 +66,17 @@ beforeEach(() => {
 afterEach(() => {
   resetCacheGuard()
   vi.useRealTimers()
+  vi.unstubAllEnvs()
   vi.restoreAllMocks()
 })
 
 const article = { id: '1', slug: 'fixed-costs', title: 'Fixed costs', content: '<p>x</p>' }
 const row = { id: 'a', title: 'Tax Manager', slug: 'tax-manager', excerpt: 'Short text' }
-const countries = [{ country: 'United Kingdom', job_count: 12 }, { country: 'Ethiopia', job_count: 3 }]
+// The pre-counted country rows the country menu now reads (fresh: 5 minutes old).
+const countries = [
+  { key: 'jobs_browsable:ab:country:Ethiopia', value: 3, updated_at: '2025-12-31T23:55:00Z' },
+  { key: 'jobs_browsable:ab:country:United Kingdom', value: 12, updated_at: '2025-12-31T23:55:00Z' },
+]
 
 // Each reader with: a healthy answer, what that answer returns today, and
 // the caller-visible fallback when the database fails with no good value.
@@ -85,7 +93,8 @@ const readers: Reader[] = [
   { name: 'getPublishedQuestionCount', run: () => getPublishedQuestionCount(), healthy: () => ok({ count: 24531 }), expected: 24531, fallback: { value: 0 } },
   { name: 'getPublishedArticleCount', run: () => getPublishedArticleCount('ab'), healthy: () => ok({ count: 2017 }), expected: 2017, fallback: { value: 0 } },
   { name: 'getBrowsableJobsCount', run: () => getBrowsableJobsCount('et'), healthy: () => ok({ count: 13456 }), expected: 13456, fallback: { value: 0 } },
-  { name: 'getCachedListingJobs', run: () => getCachedListingJobs({ platform: 'ab', limit: 24, offset: 0 }), healthy: () => ok({ data: [{ ...row, description: 'long' }] }), expected: [row], fallback: { throws: 'search_jobs_ranked failed' } },
+  { name: 'getCachedListingJobs', run: () => getCachedListingJobs({ platform: 'ab', search: 'tax', limit: 24, offset: 0 }), healthy: () => ok({ data: [{ ...row, description: 'long' }] }), expected: [row], fallback: { throws: 'search_jobs_ranked failed' } },
+  { name: 'getCachedListingJobs (default order)', run: () => getCachedListingJobs({ platform: 'ab', limit: 24, offset: 24 }), healthy: () => ok({ data: [row] }), expected: [row], fallback: { throws: 'default jobs list query failed' } },
   { name: 'getCachedListingJobsCount', run: () => getCachedListingJobsCount({ platform: 'ab' }), healthy: () => ok({ count: 640 }), expected: 640, fallback: { throws: 'count query failed' } },
   { name: 'getCachedActiveJobCountries', run: () => getCachedActiveJobCountries('ab'), healthy: () => ok({ data: countries }), expected: [{ country: 'United Kingdom', count: 12 }, { country: 'Ethiopia', count: 3 }], fallback: { value: [] } },
 ]
@@ -185,12 +194,12 @@ describe('cache settings are unchanged', () => {
     ])
   })
 
-  it('the country list keeps its key parts and 6-hour duration, with no tags', async () => {
+  it('the country list reuses the pre-counted filter rows entry (no cache entry of its own)', async () => {
     ok({ data: [] })
     await getCachedActiveJobCountries('et')
-    expect(cacheCalls[0].keyParts).toEqual(['active-job-countries'])
-    expect(cacheCalls[0].args).toEqual(['et'])
-    expect(cacheCalls[0].options).toEqual({ revalidate: 21600 })
+    expect(cacheCalls.map(c => [c.keyParts, c.args, c.options])).toEqual([
+      [['site-counts-jobs-filters'], ['et'], { revalidate: 120, tags: ['counts', 'jobs'] }],
+    ])
   })
 
   it('different articles never share a remembered value', async () => {
@@ -216,35 +225,24 @@ describe('cache settings are unchanged', () => {
   })
 })
 
-describe('active job countries', () => {
+describe('active job countries (from the pre-counted rows)', () => {
   it('throws inside the cached function on a database error, so nothing is stored, and returns [] outside it', async () => {
     fail()
     expect(await getCachedActiveJobCountries('ab')).toEqual([])
-    await expect(cacheCalls[0].result).rejects.toThrow('active job countries query failed (status 504)')
+    await expect(cacheCalls[0].result).rejects.toThrow('site_counts filter read failed (status 504)')
   })
 
-  it('stores a genuine empty list', async () => {
+  it('stores a genuine empty list of rows, and returns [] (the built-in list) for it', async () => {
     ok({ data: [] })
     expect(await getCachedActiveJobCountries('ab')).toEqual([])
     await expect(cacheCalls[0].result).resolves.toEqual([])
+    expect(console.warn).toHaveBeenCalledWith(COUNTRY_LIST_LOG.missing)
   })
 
-  it('treats no data with no error as an empty list, as before', async () => {
-    ok({ data: null })
-    expect(await getCachedActiveJobCountries('ab')).toEqual([])
-    await expect(cacheCalls[0].result).resolves.toEqual([])
-  })
-
-  it('logs the failure with the same label as before', async () => {
+  it('logs one fixed line on a failed read, with no upstream text', async () => {
     fail()
     await getCachedActiveJobCountries('ab')
-    expect(console.error).toHaveBeenCalledWith('getActiveJobCountries error:', expect.any(Error))
-  })
-
-  it('the uncached reader still returns [] on a database error and the rows otherwise', async () => {
-    fail()
-    expect(await getActiveJobCountries('ab')).toEqual([])
-    ok({ data: countries })
-    expect(await getActiveJobCountries('ab')).toEqual([{ country: 'United Kingdom', count: 12 }, { country: 'Ethiopia', count: 3 }])
+    expect(console.warn).toHaveBeenCalledWith(COUNTRY_LIST_LOG.failed)
+    expect(console.error).not.toHaveBeenCalled()
   })
 })

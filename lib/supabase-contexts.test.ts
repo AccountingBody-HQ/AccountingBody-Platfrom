@@ -70,6 +70,7 @@ import { GET as search } from '@/app/api/search/route'
 import { GET as health } from '@/app/api/health/route'
 import { GET as mockExam } from '@/app/api/mock-exam/route'
 import { GET as eticpaMockExam } from '@/app/api/eticpa/mock-exam/route'
+import { GET as jobsDirect } from '@/app/api/jobs/direct/route'
 
 vi.stubGlobal('React', React)
 
@@ -103,18 +104,15 @@ const publicReads: Case[] = [
   ['getQuestionsBySetId', () => db.getQuestionsBySetId('1')],
   ['getCasesBySetId', () => db.getCasesBySetId('1')],
   ['getQuestionSets', () => db.getQuestionSets({})],
-  ['getQuestionSetCount', () => db.getQuestionSetCount()],
-  ['getPublishedQuestionCount', () => db.getPublishedQuestionCount()],
-  ['getPublishedArticleCount', () => db.getPublishedArticleCount('ab')],
   ['getETICPAModuleArticles', () => db.getETICPAModuleArticles('level-1', 'm')],
-  ['getActiveDirectJobs', () => jobs.getActiveDirectJobs({ platform: 'accountingbody' })],
-  ['getCachedListingJobs', () => jobs.getCachedListingJobs({ platform: 'accountingbody' })],
-  ['getCachedListingJobsCount', () => jobs.getCachedListingJobsCount({ platform: 'accountingbody' })],
+  ['getAllQuestionSetsForAdmin', () => db.getAllQuestionSetsForAdmin()],
   ['getJobById', () => jobs.getJobById(ID)],
   ['getJobBySlug', () => jobs.getJobBySlug('s')],
   ['getJobByManageToken', () => jobs.getJobByManageToken('t')],
-  ['getBrowsableJobsCount', () => jobs.getBrowsableJobsCount('accountingbody')],
-  ['getActiveJobCountries', () => jobs.getActiveJobCountries('accountingbody')],
+  ['getPendingJobsCount', () => jobs.getPendingJobsCount()],
+  // The country menu reads the small pre-counted rows, not the old country scan.
+  ['getCachedActiveJobCountries', () => jobs.getCachedActiveJobCountries('accountingbody')],
+  ['getActiveJobsCount', () => jobs.getActiveJobsCount('accountingbody')],
   ['getJobSitemapEntries', () => jobs.getJobSitemapEntries('ethiotax')],
   ['getJobSitemapChunk', () => jobs.getJobSitemapChunk('accountingbody', 0)],
   ['getPublishedCourses', () => courses.getPublishedCourses()],
@@ -124,15 +122,44 @@ const publicReads: Case[] = [
   ['listSavedIds', () => saved.listSavedIds('v', 'accountingbody')],
   ['countSaved', () => saved.countSaved('v', 'accountingbody')],
   ['findSavableJob', () => saved.findSavableJob(ID, 'accountingbody')],
-  ['home page', () => HomePage({ searchParams: Promise.resolve({}) })],
+  [
+    'getSimilarJobs',
+    async () => {
+      vi.stubEnv('SIMILAR_JOBS_ENABLED', 'true')
+      try {
+        await jobs.getSimilarJobs({ excludeId: ID, platform: 'accountingbody', title: 'Senior Tax Accountant', locationCountry: 'UK' })
+      } finally {
+        vi.unstubAllEnvs()
+      }
+    },
+  ],
   ['articles page', () => ArticlesPage()],
   ['dictionary page', () => DictionaryPage({ searchParams: { letter: 'b' } })],
   ['ethiotax sitemap', () => etSitemap()],
   ['pages sitemap', () => pagesXml()],
-  ['search API', () => search(request('https://accountingbody.com/api/search?q=budget'))],
   ['health API', () => health()],
   ['mock exam API', () => mockExam(request('https://accountingbody.com/api/mock-exam?category=x&count=5'))],
   ['ETICPA mock exam API', () => eticpaMockExam(request('https://accountingbody.com/api/eticpa/mock-exam?count=5'))],
+]
+
+const publicHeavyReads: Case[] = [
+  ['getQuestionSetCount', () => db.getQuestionSetCount()],
+  ['getPublishedQuestionCount', () => db.getPublishedQuestionCount()],
+  ['getPublishedArticleCount', () => db.getPublishedArticleCount('ab')],
+  ['getActiveDirectJobs', () => jobs.getActiveDirectJobs({ platform: 'accountingbody' })],
+  ['getActiveDirectJobs count', () => jobs.getActiveDirectJobs({ platform: 'accountingbody', countOnly: true })],
+  ['getCachedListingJobs', () => jobs.getCachedListingJobs({ platform: 'accountingbody' })],
+  ['getCachedListingJobsCount', () => jobs.getCachedListingJobsCount({ platform: 'accountingbody' })],
+]
+
+// Pages and APIs that show both counts or job results and ordinary content.
+const publicMixedReads: Case[] = [
+  // The pre-counted total is a one-row read (public read limit); its estimate
+  // fallback and the list rows use the longer limit.
+  ['getBrowsableJobsCount', () => jobs.getBrowsableJobsCount('accountingbody')],
+  ['jobs listings API', () => jobsDirect(request('https://accountingbody.com/api/jobs/direct?platform=ab'))],
+  ['home page', () => HomePage({ searchParams: Promise.resolve({}) })],
+  ['search API', () => search(request('https://accountingbody.com/api/search?q=budget'))],
 ]
 
 const otherWork: [string, () => unknown, string[]][] = [
@@ -180,6 +207,14 @@ beforeEach(() => {
 describe('database work uses the limit for its context', () => {
   it.each(publicReads)('%s uses the public read limit', async (_name, run) => {
     expect(await contextsOf(run)).toEqual(['publicRead'])
+  })
+
+  it.each(publicHeavyReads)('%s uses the longer read limit', async (_name, run) => {
+    expect(await contextsOf(run)).toEqual(['publicHeavyRead'])
+  })
+
+  it.each(publicMixedReads)('%s uses the longer read limit for counts and job search only', async (_name, run) => {
+    expect((await contextsOf(run)).sort()).toEqual(['publicHeavyRead', 'publicRead'])
   })
 
   it.each(otherWork)('%s uses %j', async (_name, run, expected) => {

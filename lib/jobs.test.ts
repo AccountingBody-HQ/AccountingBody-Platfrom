@@ -364,9 +364,16 @@ describe('listings cache keys', () => {
       search: '   ', location: '', locationCountry: 'all',
       employmentTypes: [], seniorityLevels: [], qualifications: [], sources: [],
       remoteOnly: false,
-      sortBy: 'relevance', limit: 24, offset: 0,
+      limit: 24, offset: 0,
     })
     expect(empty).toBe(bare)
+  })
+
+  // Since the speed job (11 Nov 2026) no chosen sort and no search words is
+  // the 'default' order, so an explicitly chosen relevance is its own entry.
+  it('keeps an explicitly chosen relevance with no search words apart from the default', () => {
+    expect(pageKey({ platform: 'ab', sortBy: 'relevance', limit: 24, offset: 0 }))
+      .not.toBe(pageKey({ platform: 'ab', limit: 24, offset: 0 }))
   })
 
   it('does not lowercase platform or country, which are exact matches in the query', () => {
@@ -413,7 +420,7 @@ describe('cached listings wrappers', () => {
       fakeDirectJobsClient({ rpc: { data: null, error: { message: 'upstream request timeout' } } }) as unknown as ReturnType<typeof createClient>
     )
 
-    await expect(getCachedListingJobs({ platform: 'ab', limit: 24, offset: 0 })).rejects.toThrow('search_jobs_ranked failed')
+    await expect(getCachedListingJobs({ platform: 'ab', search: 'tax', limit: 24, offset: 0 })).rejects.toThrow('search_jobs_ranked failed')
   })
 
   it('throws through the cached count wrapper on a DB error', async () => {
@@ -429,7 +436,7 @@ describe('cached listings wrappers', () => {
       fakeDirectJobsClient({ count: { count: 0, error: null }, rpc: { data: [], error: null } }) as unknown as ReturnType<typeof createClient>
     )
 
-    expect(await getCachedListingJobs({ platform: 'ab', limit: 24, offset: 0 })).toEqual([])
+    expect(await getCachedListingJobs({ platform: 'ab', search: 'tax', limit: 24, offset: 0 })).toEqual([])
     expect(await getCachedListingJobsCount({ platform: 'ab' })).toBe(0)
   })
 
@@ -438,7 +445,7 @@ describe('cached listings wrappers', () => {
       fakeDirectJobsClient({ rpc: { data: [{ id: 'a', title: 'T', description: 'x'.repeat(50_000) }], error: null } }) as unknown as ReturnType<typeof createClient>
     )
 
-    const rows = await getCachedListingJobs({ platform: 'ab', limit: 24, offset: 0 })
+    const rows = await getCachedListingJobs({ platform: 'ab', search: 'tax', limit: 24, offset: 0 })
     expect(rows).toEqual([{ id: 'a', title: 'T' }])
   })
 })

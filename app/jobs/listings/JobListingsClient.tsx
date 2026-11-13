@@ -19,6 +19,7 @@ import {
 import {
   parseListingsUrlState,
   buildListingsSearchString,
+  sortMenuValue,
   EMPTY_FILTERS,
   DEFAULT_SORT,
   DEFAULT_PAGE,
@@ -26,14 +27,17 @@ import {
   type Filters,
   type PostedWithin,
   type SortBy,
+  type SortChoice,
   type ListingsUrlState,
 } from './urlState'
-import { Pagination } from '@/components/Pagination'
+import { Pagination, PrevNextPagination } from '@/components/Pagination'
 import { useSavedJobs } from '@/app/jobs/saved/useSavedJobs'
+import { parseTotal, summariseResults } from './resultsSummary'
 
 interface DirectJobsResponse {
   jobs?: Job[]
-  total?: number
+  // null: the page of rows came back without its total (see the route).
+  total?: number | null
 }
 
 const PAGE_SIZE = 24
@@ -339,7 +343,7 @@ function displaySearchTerm(raw: string): string {
 function ActiveFilterChips({ search, filters, sortBy, onRemoveSearch, onRemoveFilter, onRemoveSort, countryOptions }: {
   search: string
   filters: Filters
-  sortBy: SortBy
+  sortBy: SortChoice
   onRemoveSearch: () => void
   onRemoveFilter: (next: Filters) => void
   onRemoveSort: () => void
@@ -377,7 +381,7 @@ function ActiveFilterChips({ search, filters, sortBy, onRemoveSearch, onRemoveFi
   }
   if (filters.salaryMin.trim()) chips.push({ label: `Min £${filters.salaryMin}`, onRemove: () => onRemoveFilter({ ...filters, salaryMin: '' }) })
   if (filters.salaryMax.trim()) chips.push({ label: `Max £${filters.salaryMax}`, onRemove: () => onRemoveFilter({ ...filters, salaryMax: '' }) })
-  if (sortBy !== 'relevance') {
+  if (sortBy !== DEFAULT_SORT) {
     const label = SORT_OPTIONS.find(o => o.value === sortBy)?.label ?? sortBy
     chips.push({ label: `Sort: ${label}`, onRemove: onRemoveSort })
   }
@@ -680,8 +684,8 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   // Computed once per render from the server-fetched derived list (see
   // JobListingsPage) — never refetched client-side, so there is no
   // loading gap for this specific data: it's present from first paint.
-  // Falls back to the hardcoded list when the derived list is empty (RPC
-  // error, or migrations/0006 not yet applied) — see buildCountryOptions.
+  // Falls back to the hardcoded list when the derived list is empty (for
+  // example missing or stale pre-counted rows) — see buildCountryOptions.
   const countryOptions = useMemo(() => buildCountryOptions(derivedCountryOptions), [derivedCountryOptions])
 
   const router = useRouter()
@@ -709,7 +713,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   const [alertDismissed, setAlertDismissed] = useState(false)
 
   const [jobs, setJobs] = useState<Job[]>([])
-  const [total, setTotal] = useState(0)
+  const [total, setTotal] = useState<number | null>(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -809,7 +813,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
     if (filters.salaryMax.trim()) params.set('salary_max', filters.salaryMax.trim())
     if (filters.postedWithin !== 'all') params.set('posted_within', String(POSTED_DAYS[filters.postedWithin]))
     if (filters.qualifications.length > 0) params.set('qualifications', filters.qualifications.join(','))
-    if (sortBy !== 'relevance') params.set('sort_by', sortBy)
+    if (sortBy !== DEFAULT_SORT) params.set('sort_by', sortBy)
 
     try {
       const res = await fetch(`/api/jobs/direct?${params.toString()}`, { signal: controller.signal })
@@ -818,7 +822,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
       if (!res.ok) throw new Error(`jobs request failed: ${res.status}`)
       const data: DirectJobsResponse = await res.json()
       setJobs(Array.isArray(data.jobs) ? data.jobs : [])
-      setTotal(typeof data.total === 'number' ? data.total : 0)
+      setTotal(parseTotal(data.total))
       confirmedPageRef.current = page
     } catch (err) {
       if ((err as Error).name === 'AbortError') return
@@ -874,7 +878,6 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
     if (saved) window.scrollTo(0, parseInt(saved, 10))
   }, [loading])
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   const activeFilterCount = countActiveFilters(filters)
   const isFirstLoad = loading && jobs.length === 0
 
@@ -892,8 +895,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   function handlePageChange(next: number) { navigateToState({ ...urlState, page: next }); scrollToResults() }
 
   const displayedPage = confirmedPageRef.current
-  const rangeStart = total === 0 ? 0 : (displayedPage - 1) * PAGE_SIZE + 1
-  const rangeEnd = Math.min(displayedPage * PAGE_SIZE, total)
+  const summary = summariseResults({ page: displayedPage, pageSize: PAGE_SIZE, rowsLength: jobs.length, total })
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -971,7 +973,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                   <div className="mb-3">
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <p className="text-sm text-slate-500 font-medium">
-                        {total.toLocaleString()} job{total === 1 ? '' : 's'} found
+                        {summary.headline}
                       </p>
                       <div className="flex items-center gap-3 flex-wrap">
                         <Link
@@ -983,7 +985,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                         </Link>
                         <div className="relative">
                           <select
-                            value={sortBy}
+                            value={sortMenuValue(sortBy, activeSearch)}
                             onChange={e => navigateToState({ ...urlState, sortBy: e.target.value as SortBy, page: DEFAULT_PAGE })}
                             aria-label="Sort by"
                             className="h-10 pl-3 pr-8 rounded-lg border border-slate-200 text-sm font-medium text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white appearance-none cursor-pointer"
@@ -998,9 +1000,11 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                         </div>
                       </div>
                     </div>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Showing {rangeStart}–{rangeEnd} of {total.toLocaleString()}
-                    </p>
+                    {summary.detail !== null && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        {summary.detail}
+                      </p>
+                    )}
                   </div>
 
                   <ActiveFilterChips
@@ -1024,14 +1028,24 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                       />
                     ))}
                   </div>
-                  <Pagination
-                    page={page}
-                    totalPages={totalPages}
-                    total={total}
-                    navLabel="Job results pages"
-                    itemLabel="job"
-                    onChange={handlePageChange}
-                  />
+                  {summary.pager.kind === 'numbered' ? (
+                    <Pagination
+                      page={page}
+                      totalPages={summary.pager.totalPages}
+                      total={summary.pager.total}
+                      navLabel="Job results pages"
+                      itemLabel="job"
+                      onChange={handlePageChange}
+                    />
+                  ) : (
+                    <PrevNextPagination
+                      page={displayedPage}
+                      prevPage={summary.pager.prevPage}
+                      nextPage={summary.pager.nextPage}
+                      navLabel="Job results pages"
+                      onChange={handlePageChange}
+                    />
+                  )}
                 </div>
               </div>
             )}

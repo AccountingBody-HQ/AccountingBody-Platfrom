@@ -1,14 +1,15 @@
 // Session 41 — private repo deploy test
 import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
-import { getServerSupabase } from '@/lib/supabase-server'
+import { getServerSupabase, type DbContext } from '@/lib/supabase-server'
 import { guardCachedRead } from '@/lib/cache-guard'
 import { reportServerError } from '@/lib/report-error'
 
 // Every function in this file that has a caller serves public pages, so all
-// use the public read limit.
-function getSupabase() {
-  return getServerSupabase('publicRead')
+// use the public read limit (the default), except the whole-table counts,
+// which name the heavy read limit.
+function getSupabase(context: DbContext = 'publicRead') {
+  return getServerSupabase(context)
 }
 
 export interface ArticleSummary {
@@ -310,7 +311,7 @@ export async function getQuestionSets(params: {
 }
 
 async function fetchQuestionSetCount(): Promise<number> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicHeavyRead')
   const { count, error, status } = await supabase
     .from('question_sets')
     .select('*', { count: 'exact', head: true })
@@ -354,7 +355,7 @@ export async function getQuestionSetCount(): Promise<number> {
 // see getQuestionSets above), so a question living in an 'ab'-only set is
 // what both hosts already see — matching, not inventing, that reality.
 async function fetchPublishedQuestionCount(): Promise<number> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicHeavyRead')
   const { count, error, status } = await supabase
     .from('questions')
     .select('*, question_sets!inner(status, show_on_sites)', { count: 'exact', head: true })
@@ -401,7 +402,7 @@ export const getCachedPublishedQuestionCount = cache(getPublishedQuestionCount)
 // including EthioTax showing shared-library articles that were authored
 // on Accounting Body but tagged reachable on both.
 async function fetchPublishedArticleCount(siteCode: string): Promise<number> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicHeavyRead')
   const { count, error, status } = await supabase
     .from('articles')
     .select('*', { count: 'exact', head: true })

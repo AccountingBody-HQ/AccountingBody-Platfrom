@@ -8,11 +8,11 @@ export interface CountryOption {
   label: string
 }
 
-// Used only when the derived list (from get_active_job_countries, passed
-// down via JobListingsClient's countryOptions prop) is empty — the RPC
-// errored, or hasn't been migrated in yet (this Codespace cannot run
-// migrations/0006 itself; see lib/jobs.ts's getActiveJobCountries). A
-// filter with no options is worse than one with a stale list.
+// Used only when the derived list (from the pre-counted country rows, passed
+// down via JobListingsClient's countryOptions prop) is empty: the rows are
+// missing, older than 6 hours, or could not be read (see lib/jobs.ts's
+// getCachedActiveJobCountries). A filter with no options is worse than one
+// with a stale list.
 export const FALLBACK_COUNTRY_OPTIONS: CountryOption[] = [
   { value: 'all',            label: 'All countries' },
   { value: 'United Kingdom', label: 'United Kingdom' },
@@ -36,11 +36,11 @@ const COUNTRY_LABEL_OVERRIDES: Record<string, string> = {
 }
 
 // Builds the dropdown's real option list: the platform-scoped derived
-// list (already ordered by job count descending server-side, see
-// migrations/0006_active_job_countries.sql) with 'all' prepended as the
+// list (already ordered by job count descending, see lib/jobs.ts's
+// countryListFromPrecounts) with 'all' prepended as the
 // fixed no-filter sentinel — or the hardcoded fallback above if the
 // derived list is empty. Deliberately does not show a per-country count
-// in the label: the count would be up to 6 hours stale (the cache TTL)
+// in the label: the count is a saved count, not a live one,
 // while the underlying job count itself can change sooner than that, so
 // a shown number could contradict what clicking the option actually
 // returns — the same "claims something untrue" failure this filter is

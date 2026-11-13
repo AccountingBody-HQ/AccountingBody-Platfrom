@@ -8,7 +8,8 @@ import { reportServerError } from '@/lib/report-error'
 import { problemCode } from '@/lib/job-expiry'
 
 // Reads used by public pages and APIs use the public read limit (the
-// default). Functions used only by other kinds of work name their context
+// default); the whole-table counts and the job search use the heavy read
+// limit. Functions used only by other kinds of work name their context
 // where they create the client.
 function getSupabase(context: DbContext = 'publicRead') {
   return getServerSupabase(context)
@@ -262,7 +263,7 @@ function buildQualificationsOrFilter(qualifications: string[]): string | null {
 export async function getActiveDirectJobs(params: GetActiveDirectJobsParams & { countOnly: true }): Promise<number>
 export async function getActiveDirectJobs(params: GetActiveDirectJobsParams & { countOnly?: false }): Promise<Job[]>
 export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Promise<Job[] | number> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicHeavyRead')
   const {
     platform,
     search,
@@ -409,8 +410,13 @@ export interface ListingFilters {
   sources?: JobSource[]
 }
 
+// 'default' is the order used when the visitor has typed no search words and
+// chosen no sort (owner decision, 11 Nov 2026): a plain select in
+// DEFAULT_LIST_ORDER, served by an index, instead of the ranked search.
+export type ListingSort = NonNullable<GetActiveDirectJobsParams['sortBy']> | 'default'
+
 export interface ListingPage extends ListingFilters {
-  sortBy: NonNullable<GetActiveDirectJobsParams['sortBy']>
+  sortBy: ListingSort
   limit: number
   offset: number
 }
@@ -457,14 +463,84 @@ export function normaliseListingFilters(params: ListingQuery): ListingFilters {
 }
 
 // Key and query for one page of rows: the filters plus sort, limit and
-// offset, defaulted exactly as getActiveDirectJobs defaults them.
+// offset, with limit and offset defaulted exactly as getActiveDirectJobs
+// defaults them. With no chosen sort, a search with words ranks by
+// relevance (as it always has) and the plain list uses the 'default' order.
 export function normaliseListingPage(params: ListingQuery): ListingPage {
+  const filters = normaliseListingFilters(params)
   return {
-    ...normaliseListingFilters(params),
-    sortBy: params.sortBy ?? 'relevance',
+    ...filters,
+    sortBy: params.sortBy ?? (filters.search ? 'relevance' : 'default'),
     limit:  params.limit ?? 20,
     offset: params.offset ?? 0,
   }
+}
+
+// True when nothing but the platform narrows the list, so its total is the
+// whole browsable count (getBrowsableJobsTotal) rather than a filtered one.
+export function isUnfilteredListing(params: ListingQuery): boolean {
+  const filters: Partial<ListingFilters> = { ...normaliseListingFilters(params) }
+  delete filters.platform
+  return Object.values(filters).every(value => value === undefined)
+}
+
+// The default list order: plain newest first by posting date, as the job
+// card shows it (undated rows last), then created_at and id so equal rows
+// always page in the same order. No boost of any kind: the owner dropped the
+// source_score boost on 11 Nov 2026 after the live tier check, because a
+// strict tier put every newer job from lower-scored feeds behind one feed.
+// migrations/0009_site_counts_and_jobs_browsable_index.sql (applied
+// 11 Nov 2026) indexes exactly this order.
+export const DEFAULT_LIST_ORDER = [
+  { column: 'published_at', ascending: false, nullsFirst: false },
+  { column: 'created_at', ascending: false },
+  { column: 'id', ascending: false },
+] as const
+
+// The ranked search's RETURNS TABLE columns (migrations/0004) minus
+// description, which the listings card never renders: the default list
+// returns rows of exactly the same shape as the ranked search.
+const LISTING_ROW_COLUMNS = JOB_COLUMNS
+  .split(', ')
+  .filter(column => column !== 'description' && column !== 'salary_is_predicted')
+  .join(', ')
+
+// One page of the default list: the same filters as getActiveDirectJobs's
+// count path (search words never reach here), ordered by DEFAULT_LIST_ORDER.
+// Deliberately written out like that count path rather than sharing a
+// builder, so neither existing path changes; jobs-speed.test.ts checks that
+// both apply the same filters. Errors throw, so nothing is cached for them.
+async function getDefaultOrderJobs(page: ListingPage): Promise<ListingJob[]> {
+  const supabase = getSupabase('publicHeavyRead')
+  const nowIso = new Date().toISOString()
+  const qualificationsOrFilter = page.qualifications && page.qualifications.length > 0
+    ? buildQualificationsOrFilter(page.qualifications) : null
+
+  let query = supabase
+    .from('jobs')
+    .select(LISTING_ROW_COLUMNS)
+    .eq('status', 'active')
+    .contains('platform', [page.platform])
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+
+  if (page.sources && page.sources.length > 0) query = query.in('source', page.sources)
+  if (page.location) query = query.ilike('location_text', `%${page.location}%`)
+  if (page.locationCountry && page.locationCountry !== 'all') query = query.eq('location_country', page.locationCountry)
+  if (page.employmentTypes && page.employmentTypes.length > 0) query = query.in('employment_type', page.employmentTypes)
+  if (page.seniorityLevels && page.seniorityLevels.length > 0) query = query.in('seniority_level', page.seniorityLevels)
+  if (page.remoteOnly) query = query.eq('location_remote', true)
+  if (page.salaryMin != null) query = query.gte('salary_min', page.salaryMin)
+  if (page.salaryMax != null) query = query.lte('salary_max', page.salaryMax)
+  if (page.postedWithin != null) {
+    query = query.gte('created_at', new Date(Date.now() - page.postedWithin * 24 * 60 * 60 * 1000).toISOString())
+  }
+  if (qualificationsOrFilter) query = query.or(qualificationsOrFilter)
+
+  for (const { column, ...options } of DEFAULT_LIST_ORDER) query = query.order(column, options)
+
+  const { data, error } = await query.range(page.offset, page.offset + page.limit - 1)
+  if (error) throw new Error(`default jobs list query failed: ${error.message}`)
+  return (data ?? []) as unknown as ListingJob[]
 }
 
 // What the listings card needs: everything except `description`, which it
@@ -477,7 +553,8 @@ export type ListingJob = Omit<Job, 'description'>
 // so unstable_cache stores nothing for them; only real results, including
 // a genuine empty page, are cached.
 async function fetchListingJobs(page: ListingPage): Promise<ListingJob[]> {
-  const jobs = await getActiveDirectJobs({ ...page, countOnly: false })
+  if (page.sortBy === 'default') return getDefaultOrderJobs(page)
+  const jobs = await getActiveDirectJobs({ ...page, sortBy: page.sortBy, countOnly: false })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return jobs.map(({ description, ...rest }) => rest)
 }
@@ -495,8 +572,22 @@ const cachedListingJobsCount = cache(guardCachedRead(['listing-jobs-count'],
 
 // Normalising inside these wrappers (not at the call site) means no caller
 // can reach the cache with an un-normalised key.
-export function getCachedListingJobs(params: ListingQuery): Promise<ListingJob[]> {
-  return cachedListingJobs(normaliseListingPage(params))
+export const RELEVANCE_FALLBACK_LOG = 'jobs list: relevance order failed with no search words, showing the default order'
+
+// A visitor who chooses 'Most relevant' with no search words still gets the
+// ranked search; if it fails, they get the default order instead of an
+// error. The fallback happens outside the cache, so the relevance entry
+// never stores default-order rows. A search with words is never replaced.
+export async function getCachedListingJobs(params: ListingQuery): Promise<ListingJob[]> {
+  const page = normaliseListingPage(params)
+  if (page.sortBy !== 'relevance' || page.search) return cachedListingJobs(page)
+  try {
+    return await cachedListingJobs(page)
+  } catch {
+    // Fixed text only: no request values, no upstream message.
+    console.error(RELEVANCE_FALLBACK_LOG)
+    return cachedListingJobs({ ...page, sortBy: 'default' })
+  }
 }
 
 export function getCachedListingJobsCount(params: ListingQuery): Promise<number> {
@@ -965,22 +1056,99 @@ export async function getActiveJobsCount(platform: string): Promise<number> {
   return count ?? 0
 }
 
-// The real "how many jobs can a visitor currently browse" count — same
-// status/platform/not-yet-expired filters as getActiveDirectJobs's own
-// countOnly path (lib/jobs.ts, the `if (countOnly)` branch above),
-// deliberately with NO source restriction, so this agrees with what
-// /jobs/listings itself would show for an unfiltered search.
+// ── The jobs total (owner decision D108, 11 Nov 2026) ───────────────────────
 //
-// Failures throw inside the cached function, because unstable_cache stores
-// whatever it returns (a fallback 0 would be served for the whole TTL) and
-// nothing when it throws. A missing count with no error counts as a failure
-// too. The exported function catches outside the cache and returns the 0.
+// "How many jobs can a visitor currently browse": status 'active', on this
+// platform, not past its own expiry, with NO source restriction, so it
+// agrees with what /jobs/listings shows for the plain list.
+//
+// Where the number comes from is set by JOBS_TOTAL_SOURCE:
+//   - 'precount' (default): the row public.site_counts['jobs_browsable:<platform>'],
+//     written every 10 minutes by public.refresh_site_counts() (see
+//     migrations/0009_site_counts_and_jobs_browsable_index.sql). Missing, unreadable, or older
+//     than PRECOUNT_MAX_AGE_MS: fall through to the estimate.
+//   - 'estimate': PostgREST's estimated count with the same filter. On
+//     failure: fall through to none.
+//   - 'none': no total (null). The jobs list then pages with Previous/Next;
+//     the footer, home page and jobs hub show their non-numeric wording.
+// Nothing here throws; each fall-through writes one fixed log line.
+
+export type JobsTotalSource = 'precount' | 'estimate' | 'none'
+
+export const PRECOUNT_MAX_AGE_MS = 6 * 60 * 60 * 1000
+
+export const JOBS_TOTAL_LOG = {
+  invalidSource:   'jobs total: JOBS_TOTAL_SOURCE not recognised, using precount',
+  precountMissing: 'jobs total: pre-counted row missing, using estimate',
+  precountStale:   'jobs total: pre-counted row older than 6 hours, using estimate',
+  precountFailed:  'jobs total: pre-counted row could not be read, using estimate',
+  estimateFailed:  'jobs total: estimate failed, showing no total',
+} as const
+
+const JOBS_TOTAL_SOURCES: readonly JobsTotalSource[] = ['precount', 'estimate', 'none']
+let invalidSourceLogged = false
+
+export function jobsTotalSource(): JobsTotalSource {
+  const raw = process.env.JOBS_TOTAL_SOURCE?.trim().toLowerCase()
+  if (!raw) return 'precount'
+  if ((JOBS_TOTAL_SOURCES as readonly string[]).includes(raw)) return raw as JobsTotalSource
+  if (!invalidSourceLogged) {
+    invalidSourceLogged = true
+    console.warn(JOBS_TOTAL_LOG.invalidSource)
+  }
+  return 'precount'
+}
+
+// Tests only: allow the invalid-value line to be logged again.
+export function resetJobsTotalSourceWarning(): void {
+  invalidSourceLogged = false
+}
+
+export function siteCountKey(platform: string): string {
+  return `jobs_browsable:${platform}`
+}
+
+interface PrecountRow {
+  value: number
+  updatedAt: number
+}
+
+// One primary-key read. Throws on any error or unexpected shape, so nothing
+// is cached for it; a missing row is a real answer (null) and is cached
+// like any other for the two minutes below.
+async function fetchJobsPrecount(platform: string): Promise<PrecountRow | null> {
+  const { data, error, status } = await getSupabase('publicRead')
+    .from('site_counts')
+    .select('value, updated_at')
+    .eq('key', siteCountKey(platform))
+    .maybeSingle()
+  if (error) throw new Error(`site_counts read failed (status ${status})`)
+  if (data === null || data === undefined) return null
+  const row = data as { value?: unknown; updated_at?: unknown }
+  const value = typeof row.value === 'number' ? row.value : typeof row.value === 'string' ? Number(row.value) : NaN
+  const updatedAt = typeof row.updated_at === 'string' ? Date.parse(row.updated_at) : NaN
+  if (!Number.isSafeInteger(value) || value < 0 || Number.isNaN(updatedAt)) {
+    throw new Error('site_counts row has an unexpected shape')
+  }
+  return { value, updatedAt }
+}
+
+// Two minutes: with the 10-minute refresh, the total a visitor sees is at
+// most about 12.5 minutes old (10 + 2 + the cache guard's 30-second hold).
+const cachedJobsPrecount = guardCachedRead(['site-counts-jobs-browsable'], unstable_cache(fetchJobsPrecount, ['site-counts-jobs-browsable'], {
+  revalidate: 120,
+  tags: ['counts', 'jobs'],
+}))
+
+// The estimate. Failures throw inside the cached function, because
+// unstable_cache stores whatever it returns and nothing when it throws. A
+// missing count with no error counts as a failure too.
 async function fetchBrowsableJobsCount(platform: string): Promise<number> {
-  const supabase = getSupabase()
+  const supabase = getSupabase('publicHeavyRead')
   const nowIso = new Date().toISOString()
   const { count, error, status } = await supabase
     .from('jobs')
-    .select('*', { count: 'exact', head: true })
+    .select('*', { count: 'estimated', head: true })
     .eq('status', 'active')
     .contains('platform', [platform])
     .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
@@ -994,22 +1162,43 @@ const cachedBrowsableJobsCount = guardCachedRead(['getBrowsableJobsCount'], unst
   tags: ['counts', 'jobs'],
 }))
 
-export async function getBrowsableJobsCount(platform: string): Promise<number> {
+// The total for the plain jobs list, or null when there is none.
+export async function getBrowsableJobsTotal(platform: string): Promise<number | null> {
+  const source = jobsTotalSource()
+  if (source === 'none') return null
+
+  if (source === 'precount') {
+    try {
+      const row = await cachedJobsPrecount(platform)
+      if (row === null) console.warn(JOBS_TOTAL_LOG.precountMissing)
+      else if (Date.now() - row.updatedAt > PRECOUNT_MAX_AGE_MS) console.warn(JOBS_TOTAL_LOG.precountStale)
+      else return row.value
+    } catch {
+      console.warn(JOBS_TOTAL_LOG.precountFailed)
+    }
+  }
+
   try {
     return await cachedBrowsableJobsCount(platform)
   } catch (error) {
-    console.error('getBrowsableJobsCount error:', error)
+    console.error(JOBS_TOTAL_LOG.estimateFailed)
     reportServerError('job count read failed', error, { area: 'public' })
-    return 0
+    return null
   }
 }
 
+// The footer, home page and jobs hub keep their number contract: 0 when
+// there is no total, which they already show as non-numeric wording.
+export async function getBrowsableJobsCount(platform: string): Promise<number> {
+  return (await getBrowsableJobsTotal(platform)) ?? 0
+}
+
 // Two layers, each solving a different problem:
-//   - unstable_cache (inside getBrowsableJobsCount) persists the result
+//   - unstable_cache (inside getBrowsableJobsTotal) persists the result
 //     across requests/instances (Vercel backs this with its own shared Data
-//     Cache, not per-instance memory) for 1 hour — this exact count is
-//     expensive and runs in the footer of nearly every page, so it's
-//     deliberately slower than ingestion. `platform` is passed as the
+//     Cache, not per-instance memory): 2 minutes for the pre-counted row,
+//     1 hour for the estimate fallback. It runs in the footer of nearly
+//     every page. `platform` is passed as the
 //     wrapped function's own argument, and per Next.js's documented
 //     unstable_cache behaviour the arguments passed to the returned function
 //     are always part of the cache key (in addition to the keyParts array) —
@@ -1027,71 +1216,157 @@ export async function getBrowsableJobsCount(platform: string): Promise<number> {
 // reworded instead of wired to a live count.
 export const getCachedBrowsableJobsCount = cache(getBrowsableJobsCount)
 
+// ── Pre-counted totals for one-country lists (speed job part 3) ─────────────
+//
+// public.refresh_site_counts() also writes, every 10 minutes:
+//   jobs_browsable:<platform>:country:<location_country exactly as stored>
+// A list whose ONLY filter is one country takes its total from that row
+// (any sort: a sort never changes a count). Search words never use a
+// pre-counted row: they always count live. Only in 'precount' mode: in
+// 'estimate' and 'none' modes filtered lists keep their live count, as
+// before. A missing, unreadable or stale row gives null, and the caller
+// counts live as before.
+
+export const FILTER_TOTAL_LOG = {
+  missing: 'jobs total: pre-counted filter row missing, counting live',
+  stale:   'jobs total: pre-counted filter row older than 6 hours, counting live',
+  failed:  'jobs total: pre-counted filter rows could not be read, counting live',
+} as const
+
+// The site_counts key for this request, or null when it has none: null for
+// the plain list (getBrowsableJobsTotal has its own row) and for anything
+// with search words or any filter other than one country.
+export function filterPrecountKey(params: ListingQuery): string | null {
+  const { platform, locationCountry, search, ...others } = normaliseListingFilters(params)
+  if (Object.values(others).some(value => value !== undefined)) return null
+  if (locationCountry !== undefined && search === undefined) {
+    return `${siteCountKey(platform)}:country:${locationCountry}`
+  }
+  return null
+}
+
+interface FilterPrecountRow extends PrecountRow {
+  key: string
+}
+
+// Every filter row of one platform in one query (a few hundred small rows
+// at most). LIKE treats '_' as any character, so rows are kept only when
+// the key really starts with the prefix. Throws on any error or unexpected
+// shape, so nothing is cached for it.
+async function fetchFilterPrecounts(platform: string): Promise<FilterPrecountRow[]> {
+  const prefix = `${siteCountKey(platform)}:`
+  const { data, error, status } = await getSupabase('publicRead')
+    .from('site_counts')
+    .select('key, value, updated_at')
+    .like('key', `${prefix}%`)
+  if (error) throw new Error(`site_counts filter read failed (status ${status})`)
+  if (!Array.isArray(data)) throw new Error('site_counts filter read returned no list')
+  const rows: FilterPrecountRow[] = []
+  for (const raw of data as Array<{ key?: unknown; value?: unknown; updated_at?: unknown }>) {
+    if (typeof raw.key !== 'string' || !raw.key.startsWith(prefix)) continue
+    const value = typeof raw.value === 'number' ? raw.value : typeof raw.value === 'string' ? Number(raw.value) : NaN
+    const updatedAt = typeof raw.updated_at === 'string' ? Date.parse(raw.updated_at) : NaN
+    if (!Number.isSafeInteger(value) || value < 0 || Number.isNaN(updatedAt)) {
+      throw new Error('site_counts filter row has an unexpected shape')
+    }
+    rows.push({ key: raw.key, value, updatedAt })
+  }
+  return rows
+}
+
+// Two minutes, as for the plain-list row: at most about 12.5 minutes old.
+const cachedFilterPrecounts = guardCachedRead(['site-counts-jobs-filters'], unstable_cache(fetchFilterPrecounts, ['site-counts-jobs-filters'], {
+  revalidate: 120,
+  tags: ['counts', 'jobs'],
+}))
+
+// The pre-counted total for a one-country list, or null. Never throws;
+// reads nothing for any other request (search words included).
+export async function getPrecountedFilterTotal(params: ListingQuery): Promise<number | null> {
+  if (jobsTotalSource() !== 'precount') return null
+  const key = filterPrecountKey(params)
+  if (key === null) return null
+  try {
+    const rows = await cachedFilterPrecounts(normaliseListingFilters(params).platform)
+    const row = rows.find(r => r.key === key)
+    if (!row) {
+      console.warn(FILTER_TOTAL_LOG.missing)
+      return null
+    }
+    if (Date.now() - row.updatedAt > PRECOUNT_MAX_AGE_MS) {
+      console.warn(FILTER_TOTAL_LOG.stale)
+      return null
+    }
+    return row.value
+  } catch {
+    console.warn(FILTER_TOTAL_LOG.failed)
+    return null
+  }
+}
+
 export interface ActiveJobCountry {
   country: string
   count: number
 }
 
-// Real distinct location_country values for a platform, each with its own
-// job count, restricted to the same "reachable" definition
-// getActiveDirectJobs's own countOnly path uses (status='active', platform
-// contains, not yet expired) — via the get_active_job_countries RPC
-// (migrations/0006_active_job_countries.sql), so the counts this returns
-// agree with what an unfiltered/single-country /api/jobs/direct request
-// would actually show. Ordered by count descending server-side, so
-// callers don't need to re-sort. Rows with a null location_country are
-// excluded by the RPC's own WHERE clause, not filtered out here.
+// ── The country menu's list ─────────────────────────────────────────────────
 //
-// The query itself throws on any RPC error, so unstable_cache stores
-// nothing for it; a real result, including an empty list, is returned and
-// cached. Both exported readers catch outside the cache and return [] on
-// any RPC error — including "the migration hasn't been run yet" (a real
-// possibility: this Codespace has no database credentials and cannot apply
-// migrations/0006 itself, see migrations/README.md) — so callers can treat
-// "no data" and "the function doesn't exist yet" identically and fall back
-// to a hardcoded list.
-async function fetchActiveJobCountries(platform: string): Promise<ActiveJobCountry[]> {
-  const supabase = getSupabase()
-  const { data, error, status } = await supabase.rpc('get_active_job_countries', { p_platform: platform })
-  if (error) throw new Error(`active job countries query failed (status ${status}): ${error.message}`)
-  if (!data) return []
-  return (data as { country: string; job_count: number }[]).map(row => ({
-    country: row.country,
-    count: row.job_count,
-  }))
-}
+// Real location_country values for a platform, each with its browsable job
+// count, taken from the same pre-counted rows as the one-country totals
+// (jobs_browsable:<platform>:country:<name>, written every 10 minutes by
+// public.refresh_site_counts() with the same "browsable" filter). It reuses
+// the cached filter-row read above, so it adds no database query and no
+// cache entry. An empty list means "use the page's built-in list".
 
-export async function getActiveJobCountries(platform: string): Promise<ActiveJobCountry[]> {
-  try {
-    return await fetchActiveJobCountries(platform)
-  } catch (error) {
-    console.error('getActiveJobCountries error:', error)
-    reportServerError('job countries read failed', error, { area: 'public' })
-    return []
+export const COUNTRY_LIST_LOG = {
+  missing: 'country list: no pre-counted country rows, using the built-in list',
+  stale:   'country list: pre-counted country rows older than 6 hours, using the built-in list',
+  failed:  'country list: pre-counted rows could not be read, using the built-in list',
+} as const
+
+// Pure: the platform's country rows that are fresh by the same rule as
+// getPrecountedFilterTotal, ordered count descending then country
+// ascending. The name is everything after the prefix (names can contain
+// spaces, commas and other punctuation). Rows with a count that is not a
+// whole number above zero are left out.
+export function countryListFromPrecounts(
+  rows: ReadonlyArray<{ key: string; value: number; updatedAt: number }>,
+  platform: string,
+  now: number,
+): ActiveJobCountry[] {
+  const prefix = `${siteCountKey(platform)}:country:`
+  const list: ActiveJobCountry[] = []
+  for (const row of rows) {
+    if (!row.key.startsWith(prefix)) continue
+    const country = row.key.slice(prefix.length)
+    if (country === '' || !Number.isSafeInteger(row.value) || row.value <= 0) continue
+    if (now - row.updatedAt > PRECOUNT_MAX_AGE_MS) continue
+    list.push({ country, count: row.value })
   }
+  return list.sort((a, b) =>
+    b.count - a.count || (a.country < b.country ? -1 : a.country > b.country ? 1 : 0))
 }
 
-// Two layers, same composition and same reasoning as
-// getCachedBrowsableJobsCount above: unstable_cache persists across
-// requests/instances (platform folded into the cache key automatically,
-// so 'ab' and 'et' are separate entries), cache() collapses duplicate
-// calls within one render. TTL is 6 hours, not 1 hour — deliberately
-// longer than the footer counts, because the set of countries with active
-// jobs changes far more slowly than the job count itself; a new country
-// appearing up to 6 hours late is an acceptable trade for a much cheaper
-// steady-state query volume against a GROUP BY aggregate.
-const cachedActiveJobCountries = guardCachedRead(['active-job-countries'],
-  unstable_cache(fetchActiveJobCountries, ['active-job-countries'], { revalidate: 21600 })
-)
-
+// Never throws. cache() collapses duplicate calls within one render.
 export const getCachedActiveJobCountries = cache(async (platform: string): Promise<ActiveJobCountry[]> => {
+  const p = platform.trim()
+  let rows: FilterPrecountRow[]
   try {
-    return await cachedActiveJobCountries(platform)
+    rows = await cachedFilterPrecounts(p)
   } catch (error) {
-    console.error('getActiveJobCountries error:', error)
+    console.warn(COUNTRY_LIST_LOG.failed)
     reportServerError('job countries cached read failed', error, { area: 'public' })
     return []
   }
+  const now = Date.now()
+  const list = countryListFromPrecounts(rows, p, now)
+  if (list.length === 0) {
+    const prefix = `${siteCountKey(p)}:country:`
+    const countryRows = rows.filter(r => r.key.startsWith(prefix))
+    const allStale = countryRows.length > 0 && countryRows.every(r => now - r.updatedAt > PRECOUNT_MAX_AGE_MS)
+    console.warn(allStale ? COUNTRY_LIST_LOG.stale : COUNTRY_LIST_LOG.missing)
+  }
+  return list
 })
 
 // Columns the daily expiry run uses: the paging key, the email rules and the

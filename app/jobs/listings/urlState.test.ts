@@ -3,6 +3,7 @@ import {
   parseListingsUrlState,
   buildListingsUrlParams,
   buildListingsSearchString,
+  sortMenuValue,
   DEFAULT_URL_STATE,
   EMPTY_FILTERS,
   type ListingsUrlState,
@@ -47,7 +48,7 @@ describe('parseListingsUrlState', () => {
     expect(state.filters.seniority).toEqual(['senior']) // invalid entry dropped, valid one kept
     expect(state.filters.employmentTypes).toEqual([])
     expect(state.filters.postedWithin).toBe('all')
-    expect(state.sortBy).toBe('relevance')
+    expect(state.sortBy).toBe('default')
     expect(state.page).toBe(1)
   })
 
@@ -63,12 +64,12 @@ describe('buildListingsUrlParams / buildListingsSearchString', () => {
     expect(buildListingsSearchString(DEFAULT_URL_STATE)).toBe('')
   })
 
-  it('omits page=1, sort_by=relevance and location_country=all specifically, not just when everything is default', () => {
+  it('omits page=1, an unchosen sort and location_country=all specifically, not just when everything is default', () => {
     const state: ListingsUrlState = {
       ...DEFAULT_URL_STATE,
       search: 'tax manager',
       page: 1,
-      sortBy: 'relevance',
+      sortBy: 'default',
       filters: { ...EMPTY_FILTERS, locationCountry: 'all' },
     }
     const qs = buildListingsUrlParams(state)
@@ -135,5 +136,70 @@ describe('round-trip: parse(build(state)) reproduces the same state', () => {
     expect(state.page).toBe(6)
     expect(state.filters.locationCountry).toBe('Canada')
     expect(state.filters.seniority).toEqual(['director'])
+  })
+})
+
+// Speed job (11 Nov 2026): no chosen sort is its own state, so a visitor who
+// picks 'Most relevant' keeps it in the URL (and in the request).
+describe('the sort choice', () => {
+  it('writes an explicitly chosen Most relevant to the URL and reads it back', () => {
+    const qs = buildListingsSearchString({ ...DEFAULT_URL_STATE, sortBy: 'relevance' })
+    expect(qs).toBe('?sort_by=relevance')
+    expect(parseListingsUrlState(new URLSearchParams(qs.slice(1))).sortBy).toBe('relevance')
+  })
+
+  it('reads a URL with no sort_by as no chosen sort', () => {
+    expect(parseListingsUrlState(new URLSearchParams('search=tax')).sortBy).toBe('default')
+  })
+
+  it('shows Most recent in the menu for the plain list and Most relevant for a search with words', () => {
+    expect(sortMenuValue('default', '')).toBe('recent')
+    expect(sortMenuValue('default', '  ')).toBe('recent')
+    expect(sortMenuValue('default', 'tax')).toBe('relevance')
+    expect(sortMenuValue('salary_low', 'tax')).toBe('salary_low')
+    expect(sortMenuValue('relevance', '')).toBe('relevance')
+  })
+})
+
+// Previous/Next mode (total not known): each step keeps every filter, the
+// search, the location and the sort, and changes only the page.
+describe('Next and Previous keep the filters', () => {
+  const start: ListingsUrlState = {
+    search: 'audit',
+    location: 'Leeds',
+    filters: {
+      ...EMPTY_FILTERS,
+      seniority: ['senior'],
+      employmentTypes: ['permanent'],
+      locationCountry: 'United Kingdom',
+      remoteOnly: true,
+      postedWithin: '7d',
+      salaryMin: '40000',
+      salaryMax: '60000',
+      qualifications: ['ACCA'],
+    },
+    sortBy: 'salary_high',
+    page: 1,
+  }
+
+  it('page 1 -> 2 -> 3 -> 2 -> 1 round-trips through the URL', () => {
+    let state = start
+    const pages: number[] = []
+    for (const target of [2, 3, 2, 1]) {
+      const qs = buildListingsSearchString({ ...state, page: target })
+      state = parseListingsUrlState(new URLSearchParams(qs.slice(1)))
+      pages.push(state.page)
+      expect({ ...state, page: 1 }).toEqual(start)
+    }
+    expect(pages).toEqual([2, 3, 2, 1])
+  })
+
+  it('the page-3 URL carries every filter plus page=3', () => {
+    const qs = new URLSearchParams(buildListingsSearchString({ ...start, page: 3 }).slice(1))
+    expect(Object.fromEntries(qs)).toEqual({
+      search: 'audit', location: 'Leeds', qualifications: 'ACCA', seniority: 'senior',
+      employment_types: 'permanent', location_country: 'United Kingdom', remote: 'true',
+      posted_within: '7d', salary_min: '40000', salary_max: '60000', sort_by: 'salary_high', page: '3',
+    })
   })
 })

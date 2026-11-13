@@ -18,6 +18,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 export const DB_LIMITS_MS = {
   publicRead: 6_000, // visitor pages and read APIs
+  publicHeavyRead: 10_000, // whole-table counts and job search for visitors
   publicWrite: 15_000, // visitor forms, saves and payments
   admin: 20_000, // admin pages and APIs
   cron: 25_000, // scheduled routes (route limit 60 s)

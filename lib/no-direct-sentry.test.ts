@@ -150,7 +150,6 @@ const ROUTE_LABELS = [
   'admin job list read failed',
   'admin job count read failed',
   'job count read failed',
-  'job countries read failed',
   'job countries cached read failed',
   'sitemap jobs read failed',
   'sitemap jobs page limit reached',

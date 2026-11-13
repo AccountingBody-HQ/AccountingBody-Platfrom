@@ -23,7 +23,7 @@ export default async function JobListingsPage() {
   // post-mount client fetch — the <select> never has to render with an
   // empty or momentarily-wrong option set. platform must match
   // JobListingsClient's own derivation (isEthioTax ? 'et' : 'ab') exactly,
-  // since get_active_job_countries is platform-scoped.
+  // since the pre-counted country rows are platform-scoped.
   const countryOptions = await getCachedActiveJobCountries(isEthioTax ? 'et' : 'ab')
   return (
     <>
