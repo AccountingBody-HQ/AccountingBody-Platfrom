@@ -681,7 +681,7 @@ describe('orchestrator', () => {
     due('first-provider', 'second-provider')
     const result = await answerOf(await run())
     expect(result.status).toBe(200)
-    expect(result.body).toMatchObject({ ok: true, dispatched: ['first-provider', 'second-provider'], count: 2 })
+    expect(result.body).toMatchObject({ ok: true, dispatched: ['first-provider'], count: 1 })
     expect(state.reports).toHaveLength(1)
     const [label, problem, extra] = state.reports[0] as [string, Error, unknown]
     expect(label).toBe('job import dispatch failed')
@@ -706,15 +706,14 @@ describe('orchestrator', () => {
 
   it('makes no report when one dispatched import works', async () => {
     due('first-provider', 'second-provider')
-    // Only the first provider has a row, so its import works and the second
-    // answers 404.
+    // Only the first due provider runs on a tick. It has a row, so its
+    // import works; the second stays due.
     db.tables.job_providers = [{ ...provider, slug: 'first-provider' }]
     const result = await answerOf(await run())
     expect(result.status).toBe(200)
     expect(result.body).toMatchObject({
       summary: [
         { slug: 'first-provider', result: { status: 200, ok: true } },
-        { slug: 'second-provider', result: { status: 404, ok: false } },
       ],
     })
     expect(state.reports).toStrictEqual([])

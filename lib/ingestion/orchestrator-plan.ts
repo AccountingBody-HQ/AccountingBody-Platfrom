@@ -4,9 +4,9 @@
 
 import type { ProviderImportResult } from '@/lib/ingestion/run-provider-import'
 
-// At most this many imports run together on one tick. The rest stay due and
-// run on the following ticks.
-export const IMPORTS_PER_TICK = 3
+// One import runs on each tick. Any other due providers stay due and run on
+// the following ticks, one per tick.
+export const IMPORTS_PER_TICK = 1
 
 // Keeps the order it is given (getProvidersDueForFetch already orders by
 // priority) and takes at most `limit` providers.
