@@ -1,7 +1,7 @@
 -- ============================================================================
--- NOT APPLIED. Proposed for review. Do not run until 04c_timing.sql has
--- been run and shows GO, and the owner and the reviewer have approved this
--- exact file.
+-- APPLIED 11 Nov 2026 23:04 UTC — kept for checks/rollback; source of truth
+-- is migrations/0011_refresh_site_counts_one_pass_with_countries.sql.
+-- Do not run it again.
 --
 -- Speed job part 3 (revised): the refresh that already writes the
 -- plain-list totals every 10 minutes (public.refresh_site_counts(),

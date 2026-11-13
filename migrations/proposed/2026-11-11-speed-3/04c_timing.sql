@@ -1,6 +1,7 @@
 -- ============================================================================
--- NOT APPLIED. READ-ONLY. NOT A MIGRATION. Changes nothing.
--- Run ON ITS OWN, as one query, BEFORE 01_refresh_site_counts_v2.sql.
+-- RUN 11 Nov 2026 23:01 UTC: 11,430 ms, one scan — GO (read-only).
+-- NOT A MIGRATION. Changes nothing.
+-- Was run ON ITS OWN, as one query, BEFORE 01_refresh_site_counts_v2.sql.
 --
 -- ANALYZE really runs this read-only query; expect a time near or below
 -- today's ~13 s; GO only if Execution Time <= 15,000 ms.

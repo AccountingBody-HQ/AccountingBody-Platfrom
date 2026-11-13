@@ -1304,11 +1304,10 @@ export interface ActiveJobCountry {
 // The query itself throws on any RPC error, so unstable_cache stores
 // nothing for it; a real result, including an empty list, is returned and
 // cached. Both exported readers catch outside the cache and return [] on
-// any RPC error — including "the migration hasn't been run yet" (a real
-// possibility: this Codespace has no database credentials and cannot apply
-// migrations/0006 itself, see migrations/README.md) — so callers can treat
-// "no data" and "the function doesn't exist yet" identically and fall back
-// to a hardcoded list.
+// any RPC error, so callers treat "no data" and "the read failed"
+// identically and fall back to a hardcoded list. The function (as defined
+// in migrations/0006) was applied 11 Nov 2026 by migration 0010; the
+// built-in list stays as a fallback.
 async function fetchActiveJobCountries(platform: string): Promise<ActiveJobCountry[]> {
   const supabase = getSupabase('publicHeavyRead')
   const { data, error, status } = await supabase.rpc('get_active_job_countries', { p_platform: platform })

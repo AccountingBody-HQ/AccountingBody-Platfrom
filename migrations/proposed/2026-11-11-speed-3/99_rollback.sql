@@ -1,5 +1,7 @@
 -- ============================================================================
--- NOT APPLIED. Run ONLY if 01b shows a mismatch or an error.
+-- Run ONLY if 01b shows a false or an error. Undoes 0011 (restores the 0009
+-- body of refresh_site_counts; deletes only :country:/:search: keys).
+-- Not run: 01b showed 17/17 true on 11 Nov 2026 23:06 UTC.
 --
 -- Undo for 01_refresh_site_counts_v2.sql (speed job part 3, one-scan
 -- version):

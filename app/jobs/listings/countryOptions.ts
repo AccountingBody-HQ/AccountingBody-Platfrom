@@ -9,10 +9,11 @@ export interface CountryOption {
 }
 
 // Used only when the derived list (from get_active_job_countries, passed
-// down via JobListingsClient's countryOptions prop) is empty — the RPC
-// errored, or hasn't been migrated in yet (this Codespace cannot run
-// migrations/0006 itself; see lib/jobs.ts's getActiveJobCountries). A
-// filter with no options is worse than one with a stale list.
+// down via JobListingsClient's countryOptions prop) is empty, for example
+// when the RPC errored. The function (as defined in migrations/0006) was
+// applied 11 Nov 2026 by migration 0010; this built-in list stays as a
+// fallback (see lib/jobs.ts's getActiveJobCountries). A filter with no
+// options is worse than one with a stale list.
 export const FALLBACK_COUNTRY_OPTIONS: CountryOption[] = [
   { value: 'all',            label: 'All countries' },
   { value: 'United Kingdom', label: 'United Kingdom' },

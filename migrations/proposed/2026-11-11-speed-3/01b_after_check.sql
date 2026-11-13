@@ -1,6 +1,7 @@
 -- ============================================================================
--- NOT APPLIED. READ-ONLY. NOT A MIGRATION. Changes nothing.
--- Run at once after 01_refresh_site_counts_v2.sql, as ONE query.
+-- RUN 11 Nov 2026 23:06 UTC: 17/17 equal_ok true — kept for later checks
+-- (read-only). NOT A MIGRATION. Changes nothing.
+-- Run as ONE query (first run: at once after 01_refresh_site_counts_v2.sql).
 -- One row per check: check_name, result (jsonb) and equal_ok.
 -- equal_ok must be true on every row.
 --
