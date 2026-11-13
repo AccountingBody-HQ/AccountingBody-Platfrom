@@ -536,6 +536,10 @@ const REPORTING: Record<string, string[]> = {
     "reportServerError('job import alert email failed', err, { area: 'ingest' })",
     "reportServerError('job import alert state save failed', updateError, { area: 'ingest' })",
   ],
+  'lib/ingestion/run-provider-import.ts:importProvider': [
+    "reportServerError('job import provider read failed', err, { area: 'ingest' })",
+    "reportServerError('job import run failed', err, { area: 'ingest' })",
+  ],
   'lib/providers.ts:updateProviderDataQuality': ["reportServerError('job import quality save failed', error, { area: 'ingest' })"],
   'lib/providers.ts:incrementProviderJobsToday': [
     "reportServerError('job import counter read failed', fetchError ?? new Error('job import counter read failed'), { area: 'ingest' })",
@@ -554,6 +558,7 @@ const LOG_ONLY: Record<string, string> = {
   'lib/cache-guard.ts:refresh': 'the last good value is served; without one the problem goes to the reader, which reports',
   'lib/adapters/adzuna.ts:fetch': 'some search words failed and the run goes on; when all fail the run fails and reports',
   'lib/ingestion/validate.ts:validate': 'a job refused for its data',
+  'lib/ingestion/run-provider-import.ts:runProviderImport': 'an unexpected stop is logged with fixed text and becomes a 500 answer for the caller',
   'lib/supabase-server.ts:timeLimitedFetch': 'the caller receives the time-limit problem and handles it',
   'lib/coursesNew.ts:getCourseBySlug': 'passed on to the page or route',
   'lib/coursesNew.ts:getLessonData': 'passed on to the page',

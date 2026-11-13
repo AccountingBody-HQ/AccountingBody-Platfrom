@@ -352,11 +352,12 @@ describe.each(SCHEDULED)('$name', (route) => {
 describe('import callers', () => {
   const inactive = { id: 'provider-1', slug: 'example', name: 'Example jobs', status: 'inactive', adapter_key: 'generic-rest' }
 
-  it('the scheduler still starts each import with its configuration', async () => {
+  it('the scheduler starts each import directly, without a request to the site', async () => {
     net.tables.job_providers = [{ ...inactive }]
     state.due = [{ ...inactive }]
     const result = await answerOf(await orchestrator(request('/api/ingest/orchestrator', { headers: { authorization: `Bearer ${CRON_TEST_VALUE}` } })))
-    expect(net.dispatches).toStrictEqual([`Bearer ${CRON_TEST_VALUE}`])
+    expect(net.dispatches).toStrictEqual([])
+    expect(net.requests).toContain('GET job_providers')
     expect(result.status).toBe(200)
     expect(result.body).toMatchObject({
       ok: true,

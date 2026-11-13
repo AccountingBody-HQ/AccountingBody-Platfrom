@@ -150,13 +150,10 @@ function filtersOf(params: URLSearchParams) {
   return (row: Row) => eq.every(([key, value]) => String(row[key]) === value)
 }
 
-const dispatch = { status: 500, body: { ok: false, error: 'sub-route problem' } as unknown }
-
 const fakeFetch: typeof fetch = async (input, init) => {
   const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url)
   if (url.origin === 'https://challenges.cloudflare.com') return json({ success: state.personOk })
   if (url.origin === 'https://api.lemonsqueezy.com') return json({ data: { attributes: { url: 'https://pay.example/checkout' } } }, 201)
-  if (url.origin === SITE && url.pathname.startsWith('/api/ingest/')) return json(dispatch.body, dispatch.status)
   if (url.origin !== DB_URL) throw new Error(`unexpected request to ${url.href}`)
   if (db.failing) return json({ message: 'database detail', code: 'XX000', details: null, hint: null }, 500)
 
@@ -571,8 +568,6 @@ beforeEach(() => {
   state.hanging.clear()
   state.due = null
   state.personOk = true
-  dispatch.status = 500
-  dispatch.body = { ok: false, error: 'sub-route problem' }
   db.tables = {}
   db.failing = false
 })
@@ -699,22 +694,29 @@ describe('orchestrator', () => {
 
   it('keeps provider names and error text out of the report', async () => {
     due('seed-provider-x1')
-    dispatch.body = { ok: false, error: 'seed-sub-error-4k' }
+    db.tables.job_providers = [{ ...provider, slug: 'seed-provider-x1' }]
+    state.failing.set('getAdapter', new Error('seed-sub-error-4k'))
     await run()
-    const text = JSON.stringify(state.reports, (_key, value: unknown) => (value instanceof Error ? { name: value.name, message: value.message } : value))
+    const dispatchReports = state.reports.filter(([label]) => label === 'job import dispatch failed')
+    expect(dispatchReports).toHaveLength(1)
+    const text = JSON.stringify(dispatchReports, (_key, value: unknown) => (value instanceof Error ? { name: value.name, message: value.message } : value))
     expect(text).not.toContain('seed-provider-x1')
     expect(text).not.toContain('seed-sub-error-4k')
   })
 
   it('makes no report when one dispatched import works', async () => {
     due('first-provider', 'second-provider')
-    let calls = 0
-    vi.mocked(fetch).mockImplementation(async (input, init) => {
-      const url = String(input instanceof Request ? input.url : input)
-      if (url.startsWith(`${SITE}/api/ingest/`)) return json(calls++ === 0 ? { ok: true } : { ok: false, error: 'x' }, calls === 1 ? 200 : 500)
-      return fakeFetch(input, init)
+    // Only the first provider has a row, so its import works and the second
+    // answers 404.
+    db.tables.job_providers = [{ ...provider, slug: 'first-provider' }]
+    const result = await answerOf(await run())
+    expect(result.status).toBe(200)
+    expect(result.body).toMatchObject({
+      summary: [
+        { slug: 'first-provider', result: { status: 200, ok: true } },
+        { slug: 'second-provider', result: { status: 404, ok: false } },
+      ],
     })
-    expect((await run()).status).toBe(200)
     expect(state.reports).toStrictEqual([])
   })
 })
@@ -818,7 +820,7 @@ describe('job route reporting', () => {
     ['app/api/cron/expire-jobs/route.ts', 1],
     ['app/api/cron/prune-pending-subscribers/route.ts', 1],
     ['app/api/cron/prune-saved-jobs/route.ts', 1],
-    ['app/api/ingest/[slug]/route.ts', 2],
+    ['lib/ingestion/run-provider-import.ts', 2],
     ['app/api/ingest/orchestrator/route.ts', 3],
     ['app/api/jobs/click/[id]/route.ts', 1],
     ['app/api/jobs/direct/route.ts', 1],
@@ -854,7 +856,7 @@ describe('job route reporting', () => {
     for (const [file] of SOURCES) {
       const source = readFileSync(join(process.cwd(), file), 'utf8')
       const areas = Array.from(source.matchAll(/area: '(\w+)'/g), (match) => match[1])
-      const expected = file.includes('/cron/') ? 'cron' : file.includes('/ingest/') ? 'ingest' : 'public'
+      const expected = file.includes('/cron/') ? 'cron' : /\/ingest(ion)?\//.test(file) ? 'ingest' : 'public'
       expect(new Set(areas)).toStrictEqual(new Set([expected]))
     }
   })
