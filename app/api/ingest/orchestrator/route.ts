@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getProvidersDueForFetch, reapStaleRuns } from '@/lib/providers'
+import { getProvidersDueForFetch, reapStaleRuns, updateProviderHealth, deferProvider } from '@/lib/providers'
 import { reportServerError } from '@/lib/report-error'
 import { runProviderImport } from '@/lib/ingestion/run-provider-import'
 import {
@@ -35,11 +35,34 @@ export async function GET(req: NextRequest) {
   }
 
   let reaped = 0
+  let reapedProviderIds: string[] = []
   try {
-    reaped = await reapStaleRuns(10)
+    const result = await reapStaleRuns(10)
+    reaped = result.count
+    reapedProviderIds = result.providerIds
   } catch (reapErr: unknown) {
     console.error('[orchestrator] reaper failed:', reapErr)
     reportServerError('job import stale run cleanup failed', reapErr, { area: 'ingest' })
+  }
+
+  // A timed-out run counts as a failure for its provider (five in a row
+  // pause it) and moves the provider aside by its interval, so it does not
+  // stay due and block the providers behind it. Done before the due check.
+  // Each step is independent; a problem is logged and never stops the tick.
+  for (const providerId of Array.from(new Set(reapedProviderIds))) {
+    try {
+      await updateProviderHealth(providerId, 'failure', {
+        errorCode: 'TIMEOUT_REAPED',
+        errorMessage: 'Import timed out',
+      })
+    } catch (healthErr: unknown) {
+      console.error('[orchestrator] timed-out provider health update failed:', shortCode(healthErr))
+    }
+    try {
+      await deferProvider(providerId)
+    } catch (deferErr: unknown) {
+      console.error('[orchestrator] timed-out provider deferral failed:', shortCode(deferErr))
+    }
   }
 
   let dueProviders

@@ -430,10 +430,11 @@ export async function getLatestRunPerProvider(): Promise<Record<string, Provider
 // timeout. A killed serverless function never reaches
 // completeProviderRun/failProviderRun, leaving the row open forever
 // and (via getProvidersDueForFetch) permanently blocking the
-// provider. Returns the number of rows reaped.
+// provider. Returns the number of rows reaped and their provider ids
+// (one per reaped row, so an id can repeat).
 export async function reapStaleRuns(
   olderThanMinutes = 10
-): Promise<number> {
+): Promise<{ count: number; providerIds: string[] }> {
   const supabase = getSupabase('cron')
   const cutoff = new Date(
     Date.now() - olderThanMinutes * 60_000
@@ -449,13 +450,46 @@ export async function reapStaleRuns(
     })
     .eq('status', 'running')
     .lt('started_at', cutoff)
-    .select('id')
+    .select('id, provider_id')
   if (error) {
     console.error('[reapStaleRuns] failed:', error.message)
     reportServerError('job import stale run update failed', error, { area: 'ingest' })
-    return 0
+    return { count: 0, providerIds: [] }
   }
-  return data?.length ?? 0
+  const rows = data ?? []
+  return {
+    count: rows.length,
+    providerIds: rows
+      .map(r => r.provider_id)
+      .filter((id): id is string => typeof id === 'string' && id !== ''),
+  }
+}
+
+// Move a provider's next scheduled import to `until`, so a provider that
+// cannot run now does not stay due and block the ones behind it. Without
+// `until`, uses now + the provider's fetch_interval_minutes (default 1440),
+// the same rule a successful run uses in updateProviderHealth. Throws fixed
+// text with the database's short code only.
+export async function deferProvider(
+  providerId: string,
+  until?: Date
+): Promise<void> {
+  const supabase = getSupabase()
+  let nextFetch = until
+  if (!nextFetch) {
+    const { data: provider, error: readError } = await supabase
+      .from('job_providers')
+      .select('fetch_interval_minutes')
+      .eq('id', providerId)
+      .single()
+    if (readError) throw readProblem('deferProvider: interval read failed', readError)
+    nextFetch = new Date(Date.now() + (provider?.fetch_interval_minutes ?? 1440) * 60 * 1000)
+  }
+  const { error } = await supabase
+    .from('job_providers')
+    .update({ next_fetch_at: nextFetch.toISOString() })
+    .eq('id', providerId)
+  if (error) throw readProblem('deferProvider: provider update failed', error)
 }
 
 // Persist the adapter's keyword cursor so the next run resumes

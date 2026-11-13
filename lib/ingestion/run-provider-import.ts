@@ -21,6 +21,7 @@ import {
   logProviderError,
   incrementProviderJobsToday,
   updateProviderKeywordCursor,
+  deferProvider,
 } from '@/lib/providers'
 import { getAdapter } from '@/lib/adapters'
 import { normalise } from '@/lib/ingestion/normalise'
@@ -108,6 +109,15 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
     provider.rate_limit_daily !== null &&
     provider.requests_today >= provider.rate_limit_daily
   ) {
+    // Move the provider aside by its own interval (the rule a success uses),
+    // so it does not stay due and block the providers behind it. A failure
+    // here never changes the skip answer.
+    try {
+      const intervalMs = (provider.fetch_interval_minutes ?? 1440) * 60 * 1000
+      await deferProvider(provider.id, new Date(Date.now() + intervalMs))
+    } catch (deferErr: unknown) {
+      console.error('[ingest] daily limit deferral failed:', shortCode(deferErr))
+    }
     return { status: 200, body: { ok: true, skipped: true, reason: 'Daily rate limit reached' } }
   }
 
