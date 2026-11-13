@@ -23,7 +23,7 @@ function shortCode(v: unknown): string {
 
 type RouteParams = { params: Promise<{ id: string }> }
 
-// ── GET /api/roodber8/jobs/[id] ── returns job by ID, any status
+// ── GET (admin) jobs/[id] ── returns job by ID, any status
 export async function GET(req: NextRequest, { params }: RouteParams) {
   if (!(await isAuthenticated(req))) {
     return signedOutResponse()
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   return NextResponse.json({ job })
 }
 
-// ── PATCH /api/roodber8/jobs/[id] ── body: { action, ...payload }
+// ── PATCH (admin) jobs/[id] ── body: { action, ...payload }
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
   if (!(await isAuthenticated(req))) {
     return signedOutResponse()
@@ -115,12 +115,11 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   } catch (err: unknown) {
     console.error('admin job update failed', shortCode(err))
     reportServerError('admin job update failed', err, { area: 'admin' })
-    const message = err instanceof Error ? err.message : 'Internal server error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return NextResponse.json({ error: 'Job update failed' }, { status: 500 })
   }
 }
 
-// ── DELETE /api/roodber8/jobs/[id] ── soft delete: sets status='closed'
+// ── DELETE (admin) jobs/[id] ── soft delete: sets status='closed'
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   if (!(await isAuthenticated(req))) {
     return signedOutResponse()
@@ -139,7 +138,8 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     .eq('id', id)
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('admin job close failed', shortCode(error))
+    return NextResponse.json({ error: 'Job close failed' }, { status: 500 })
   }
 
   return NextResponse.json({ success: true })

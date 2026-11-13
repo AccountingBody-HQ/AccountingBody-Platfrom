@@ -6,6 +6,12 @@ import { generateReferenceNumber, generateProfileToken } from "@/lib/profileUtil
 import { reportServerError } from "@/lib/report-error"
 import { checkEmailSend } from "@/lib/email-check"
 
+// The short code of a caught value, for log lines.
+function shortCode(v: unknown): string {
+  const code = typeof v === "object" && v !== null ? (v as { code?: unknown }).code : undefined
+  return typeof code === "string" && /^[A-Za-z0-9_.-]{1,40}$/.test(code) ? code : "no-code"
+}
+
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
     return signedOutResponse()
@@ -66,7 +72,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error("notify-candidate error:", err)
+    console.error("notify-candidate error:", shortCode(err))
     reportServerError("admin candidate email failed", err, { area: "admin" })
     return NextResponse.json({ error: "Failed to send email" }, { status: 500 })
   }

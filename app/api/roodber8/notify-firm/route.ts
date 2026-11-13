@@ -7,6 +7,12 @@ import { checkEmailSend } from '@/lib/email-check'
 
 export const runtime = 'nodejs'
 
+// The short code of a caught value, for log lines.
+function shortCode(v: unknown): string {
+  const code = typeof v === 'object' && v !== null ? (v as { code?: unknown }).code : undefined
+  return typeof code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(code) ? code : 'no-code'
+}
+
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
     return signedOutResponse()
@@ -122,7 +128,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (err: unknown) {
-    console.error('notify-firm error:', err)
+    console.error('notify-firm error:', shortCode(err))
     reportServerError('admin firm email failed', err, { area: 'admin' })
     return NextResponse.json({ error: 'Failed to send email' }, { status: 500 })
   }

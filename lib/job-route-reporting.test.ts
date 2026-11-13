@@ -819,7 +819,7 @@ describe('job route reporting', () => {
     ['app/api/cron/expire-jobs/route.ts', 1],
     ['app/api/cron/prune-pending-subscribers/route.ts', 1],
     ['app/api/cron/prune-saved-jobs/route.ts', 1],
-    ['lib/ingestion/run-provider-import.ts', 2],
+    ['lib/ingestion/run-provider-import.ts', 3],
     ['app/api/ingest/orchestrator/route.ts', 3],
     ['app/api/jobs/click/[id]/route.ts', 1],
     ['app/api/jobs/direct/route.ts', 1],

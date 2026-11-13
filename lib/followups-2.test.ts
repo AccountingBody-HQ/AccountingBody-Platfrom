@@ -69,6 +69,15 @@ vi.mock('@/lib/jobEmails', () => ({
   },
 }))
 
+// Run now starts the import in the same process; this stands in for it.
+vi.mock('@/lib/ingestion/run-provider-import', () => ({
+  runProviderImport: async (slug: string, trigger: string) => {
+    net.dispatches.push(`run ${slug} ${trigger}`)
+    if (net.ingestFails) throw net.ingestFails
+    return { status: 200, body: { ok: true, inserted: 2 } }
+  },
+}))
+
 vi.mock('react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('react')>()),
   cache: <T extends (...args: never[]) => unknown>(fn: T): T => fn,
@@ -231,7 +240,7 @@ describe('admin job updates log a short code', () => {
     const problem = Object.assign(new Error('update problem'), { code: 'XX000' })
     state.jobFails = problem
     const result = await patch({ action: 'approve' })
-    expect(result).toStrictEqual({ status: 500, headers: JSON_HEADERS, body: { error: 'update problem' } })
+    expect(result).toStrictEqual({ status: 500, headers: JSON_HEADERS, body: { error: 'Job update failed' } })
     expect(state.logs).toStrictEqual([['admin job update failed', 'XX000']])
     expect(state.reports).toStrictEqual([['admin job update failed', problem, { area: 'admin' }]])
     expectPlainLogs()
@@ -250,7 +259,7 @@ describe('admin job updates log a short code', () => {
   it('the route source names no admin folder in its log lines', () => {
     const source = readFileSync(adminFile('/jobs/[id]'), 'utf8')
     const lines = source.split('\n').filter((line) => line.includes('console.'))
-    expect(lines).toHaveLength(3)
+    expect(lines).toHaveLength(4)
     for (const line of lines) expect(line.toLowerCase()).not.toContain(folder.toLowerCase())
   })
 })
@@ -342,9 +351,10 @@ describe('the admin run-now answer', () => {
     return answerOf(await POST(admin('/api/admin-tool', { method: 'POST' }), { params: Promise.resolve({ slug: 'example' }) }))
   }
 
-  it('starts the import the same way and passes its answer on', async () => {
+  it('starts the import directly and passes its answer on', async () => {
     expect(await run()).toStrictEqual({ status: 200, headers: JSON_HEADERS, body: { ok: true, inserted: 2 } })
-    expect(net.dispatches).toStrictEqual([`POST /api/ingest/example?trigger=manual Bearer ${CRON_TEST_VALUE}`])
+    expect(net.dispatches).toStrictEqual(['run example manual'])
+    expect(fetch).not.toHaveBeenCalled()
   })
 
   it('answers a fixed text when it is not set up', async () => {
@@ -407,7 +417,7 @@ describe('admin answers use fixed texts', () => {
   it('the run-now answer names no setting', () => {
     const source = readFileSync(adminFile('/providers/[slug]/trigger'), 'utf8')
     expect(source.match(/CRON_SECRET/g)).toStrictEqual(['CRON_SECRET'])
-    expect(source).toContain('fetch(`${siteUrl}/api/ingest/${slug}?trigger=manual`')
+    expect(source).toContain("runProviderImport(slug, 'manual')")
   })
 
   it('each admin handler still checks the session first', () => {

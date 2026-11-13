@@ -52,12 +52,19 @@ function isDedupConflict(err: { message?: string; code?: string } | null): boole
     || m.includes('duplicate key value')
 }
 
+// The short code of a caught value, for log lines.
+function shortCode(v: unknown): string {
+  const code = typeof v === 'object' && v !== null ? (v as { code?: unknown }).code : undefined
+  return typeof code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(code) ? code : 'no-code'
+}
+
 export async function runProviderImport(slug: string, trigger: ImportTrigger): Promise<ProviderImportResult> {
   try {
     return await importProvider(slug, trigger)
-  } catch {
+  } catch (err: unknown) {
     // Fixed text only; the error itself is not logged or returned.
     console.error(`[ingest/${slug}] import stopped unexpectedly`)
+    reportServerError('job import stopped unexpectedly', err, { area: 'ingest' })
     return { status: 500, body: { ok: false, error: 'Import stopped unexpectedly' } }
   }
 }
@@ -415,7 +422,7 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
       // do NOT rethrow — the error response below must still return
     }
 
-    console.error(`[ingest/${slug}] Fatal error:`, err)
+    console.error(`[ingest/${slug}] Fatal error:`, shortCode(err))
     reportServerError('job import run failed', err, { area: 'ingest' })
     return { status: 500, body: { ok: false, error: msg, durationMs } }
   }

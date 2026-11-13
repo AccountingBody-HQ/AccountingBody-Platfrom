@@ -6,6 +6,14 @@ function getSupabase(context: DbContext = 'publicRead') {
   return getServerSupabase(context)
 }
 
+// A read problem as a real Error with fixed text and the database's short
+// code only.
+function readProblem(message: string, error: { code?: unknown }): Error & { code?: string } {
+  const failed = new Error(message) as Error & { code?: string }
+  if (typeof error.code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(error.code)) failed.code = error.code
+  return failed
+}
+
 export interface CourseArticle {
   id:         string
   title:      string
@@ -220,8 +228,8 @@ export async function getCourseBySlug(slug: string, adminMode = false): Promise<
     .single()
 
   if (courseError && courseStatus === 406 && courseError.code === 'PGRST116') return null
-  if (courseError) throw new Error(`getCourseBySlug: courses query failed (status ${courseStatus}): ${courseError.message}`)
-  if (!courseData) throw new Error(`getCourseBySlug: empty response for "${slug}"`)
+  if (courseError) throw readProblem(`getCourseBySlug: courses query failed (status ${courseStatus})`, courseError)
+  if (!courseData) throw new Error('getCourseBySlug: empty response')
   if (!adminMode && courseData.status !== 'published') return null
 
   const course = courseData as unknown as RawCourseStageRow
@@ -232,7 +240,7 @@ export async function getCourseBySlug(slug: string, adminMode = false): Promise<
     .select('id, chapter_title, chapter_order')
     .eq('course_id', course.id)
     .order('chapter_order', { ascending: true })
-  if (chaptersError) throw new Error(`getCourseBySlug: course_chapters query failed: ${chaptersError.message}`)
+  if (chaptersError) throw readProblem('getCourseBySlug: course_chapters query failed', chaptersError)
 
   const chapters = (chaptersData as unknown as RawChapterStageRow[] | null) ?? []
 
@@ -242,7 +250,7 @@ export async function getCourseBySlug(slug: string, adminMode = false): Promise<
     .select('id, title, slug, lesson_order, chapter_id, estimated_time, video_url, audio_url, external_quiz_url')
     .eq('course_id', course.id)
     .order('lesson_order', { ascending: true })
-  if (lessonsError) throw new Error(`getCourseBySlug: course_lessons query failed: ${lessonsError.message}`)
+  if (lessonsError) throw readProblem('getCourseBySlug: course_lessons query failed', lessonsError)
 
   const lessons = (lessonsData as unknown as RawLessonStageRow[] | null) ?? []
 
@@ -257,7 +265,7 @@ export async function getCourseBySlug(slug: string, adminMode = false): Promise<
       .select('lesson_id, article_order, article_id')
       .in('lesson_id', lessonIds)
       .order('article_order', { ascending: true })
-    if (laLinkError) throw new Error(`getCourseBySlug: course_lesson_articles query failed: ${laLinkError.message}`)
+    if (laLinkError) throw readProblem('getCourseBySlug: course_lesson_articles query failed', laLinkError)
 
     const links = (laLinkData as unknown as RawLessonArticleLinkRow[] | null) ?? []
 
@@ -270,7 +278,7 @@ export async function getCourseBySlug(slug: string, adminMode = false): Promise<
         .from('articles')
         .select('id, title, slug, excerpt, read_time, content_id, wp_id')
         .in('id', linkedArticleIds)
-      if (articlesError) throw new Error(`getCourseBySlug: articles query failed: ${articlesError.message}`)
+      if (articlesError) throw readProblem('getCourseBySlug: articles query failed', articlesError)
 
       articlesById = new Map(
         ((articlesData as unknown as RawArticleRow[] | null) ?? []).map(a => [a.id, a])

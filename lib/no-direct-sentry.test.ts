@@ -139,6 +139,7 @@ const ROUTE_LABELS = [
   'admin reply email failed',
   'admin category list read failed',
   'job import provider read failed',
+  'job import stopped unexpectedly',
   // Pages and shared code
   'article category count read failed',
   'question set count read failed',

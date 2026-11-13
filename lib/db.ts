@@ -12,6 +12,14 @@ function getSupabase(context: DbContext = 'publicRead') {
   return getServerSupabase(context)
 }
 
+// A read problem as a real Error with fixed text and the database's short
+// code only (same shape as the getArticleBySlug problem below).
+function readProblem(message: string, error: { code?: unknown }): Error & { code?: string } {
+  const failed = new Error(message) as Error & { code?: string }
+  if (typeof error.code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(error.code)) failed.code = error.code
+  return failed
+}
+
 export interface ArticleSummary {
   id:             string
   title:          string
@@ -182,7 +190,7 @@ async function fetchCategoryCount(category: string): Promise<number> {
     .eq('category', category)
     .eq('status', 'published')
     .contains('show_on_sites', ['ab'])
-  if (error) throw new Error(`category count query failed (status ${status}): ${error.message}`)
+  if (error) throw readProblem(`category count query failed (status ${status})`, error)
   if (count === null) throw new Error(`category count query returned no count (status ${status})`)
   return count
 }
@@ -244,8 +252,8 @@ export async function getQuestionSetBySlug(slug: string): Promise<QuestionSet | 
     .eq('status', 'published')
     .single()
   if (error && status === 406 && error.code === 'PGRST116') return null
-  if (error) throw new Error(`getQuestionSetBySlug: question_sets query failed (status ${status}): ${error.message}`)
-  if (!data) throw new Error(`getQuestionSetBySlug: empty response for "${slug}"`)
+  if (error) throw readProblem(`getQuestionSetBySlug: question_sets query failed (status ${status})`, error)
+  if (!data) throw new Error('getQuestionSetBySlug: empty response')
   return data as QuestionSet
 }
 
@@ -321,7 +329,7 @@ async function fetchQuestionSetCount(): Promise<number> {
     .select('*', { count: 'exact', head: true })
     .eq('status', 'published')
     .contains('show_on_sites', ['ab'])
-  if (error) throw new Error(`question set count query failed (status ${status}): ${error.message}`)
+  if (error) throw readProblem(`question set count query failed (status ${status})`, error)
   if (count === null) throw new Error(`question set count query returned no count (status ${status})`)
   return count
 }
@@ -365,7 +373,7 @@ async function fetchPublishedQuestionCount(): Promise<number> {
     .select('*, question_sets!inner(status, show_on_sites)', { count: 'exact', head: true })
     .eq('question_sets.status', 'published')
     .contains('question_sets.show_on_sites', ['ab'])
-  if (error) throw new Error(`question count query failed (status ${status}): ${error.message}`)
+  if (error) throw readProblem(`question count query failed (status ${status})`, error)
   if (count === null) throw new Error(`question count query returned no count (status ${status})`)
   return count
 }
@@ -412,7 +420,7 @@ async function fetchPublishedArticleCount(siteCode: string): Promise<number> {
     .select('*', { count: 'exact', head: true })
     .eq('status', 'published')
     .contains('show_on_sites', [siteCode])
-  if (error) throw new Error(`article count query failed (status ${status}): ${error.message}`)
+  if (error) throw readProblem(`article count query failed (status ${status})`, error)
   if (count === null) throw new Error(`article count query returned no count (status ${status})`)
   return count
 }
@@ -453,7 +461,7 @@ export async function getETICPAModuleArticles(level: string, module: string): Pr
   return data as ArticleSummary[]
 }
 
-// ── Admin: Question Sets (roodber8) ─────────────────────────────────────────
+// ── Admin: Question Sets ─────────────────────────────────────────────────────
 
 export async function getAllQuestionSetsForAdmin(): Promise<QuestionSet[]> {
   const supabase = getSupabase()
