@@ -282,11 +282,17 @@ export async function updateProviderHealth(
 
   if (outcome === 'success') {
     // Compute next_fetch_at from DB (avoids race conditions)
-    const { data: provider } = await supabase
+    const { data, error: readError } = await supabase
       .from('job_providers')
       .select('fetch_interval_minutes, fetch_offset_minutes')
       .eq('id', providerId)
       .single()
+    // A failed read keeps the default interval below and still saves.
+    if (readError) {
+      console.error('[updateProviderHealth] read failed:', shortCode(readError))
+      reportServerError('job import health read failed', readError, { area: 'ingest' })
+    }
+    const provider = readError ? null : data
 
     const intervalMs = ((provider?.fetch_interval_minutes ?? 1440) * 60 * 1000)
     const nextFetch = new Date(Date.now() + intervalMs)
@@ -313,15 +319,25 @@ export async function updateProviderHealth(
         last_error_code: isZeroFetch ? 'ZERO_FETCH' : null,
       })
       .eq('id', providerId)
-    if (saveError) console.error('[updateProviderHealth] save failed:', shortCode(saveError))
+    if (saveError) {
+      console.error('[updateProviderHealth] save failed:', shortCode(saveError))
+      reportServerError('job import health save failed', saveError, { area: 'ingest' })
+    }
 
   } else {
     // Failure — increment consecutive_failures, update health_status
-    const { data: provider } = await supabase
+    const { data, error: readError } = await supabase
       .from('job_providers')
       .select('consecutive_failures, status')
       .eq('id', providerId)
       .single()
+    // A failed read is treated as no row: the count starts from 0 and the
+    // provider is never paused on it. The failure is still saved.
+    if (readError) {
+      console.error('[updateProviderHealth] read failed:', shortCode(readError))
+      reportServerError('job import health read failed', readError, { area: 'ingest' })
+    }
+    const provider = readError ? null : data
 
     const failures = (provider?.consecutive_failures ?? 0) + 1
     const healthStatus = failures >= 3 ? 'down' : 'degraded'
@@ -339,7 +355,10 @@ export async function updateProviderHealth(
         ...(newStatus ? { status: newStatus } : {}),
       })
       .eq('id', providerId)
-    if (saveError) console.error('[updateProviderHealth] save failed:', shortCode(saveError))
+    if (saveError) {
+      console.error('[updateProviderHealth] save failed:', shortCode(saveError))
+      reportServerError('job import health save failed', saveError, { area: 'ingest' })
+    }
   }
 }
 

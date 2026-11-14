@@ -546,6 +546,12 @@ const REPORTING: Record<string, string[]> = {
     "reportServerError('job import counter read failed', fetchError ?? new Error('job import counter read failed'), { area: 'ingest' })",
     "reportServerError('job import counter save failed', updateError, { area: 'ingest' })",
   ],
+  'lib/providers.ts:updateProviderHealth': [
+    "reportServerError('job import health read failed', readError, { area: 'ingest' })",
+    "reportServerError('job import health save failed', saveError, { area: 'ingest' })",
+    "reportServerError('job import health read failed', readError, { area: 'ingest' })",
+    "reportServerError('job import health save failed', saveError, { area: 'ingest' })",
+  ],
   'lib/providers.ts:reapStaleRuns': ["reportServerError('job import stale run update failed', error, { area: 'ingest' })"],
   'lib/providers.ts:updateProviderKeywordCursor': ["reportServerError('job import keyword cursor save failed', error, { area: 'ingest' })"],
   'lib/saved-jobs-store.ts:touchLastSeen': [
@@ -567,7 +573,6 @@ const LOG_ONLY: Record<string, string> = {
   'lib/jobs.ts:jobsTotalSource': 'an unrecognised setting falls back to the default total source',
   'lib/jobs.ts:getCachedListingJobs': 'relevance order with no search words falls back to the default order',
   'lib/jobs.ts:getPrecountedFilterTotal': 'a missing, stale or unreadable pre-counted row falls back to a live count',
-  'lib/providers.ts:updateProviderHealth': 'a health save problem is logged with its short code; the import result is unchanged',
 }
 
 describe('log lines in server pages and shared code', () => {
