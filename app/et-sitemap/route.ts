@@ -122,8 +122,16 @@ export async function GET() {
   </url>`
   )
 
-  const jobEntries = await getJobSitemapEntries('et')
-  const jobUrls = jobEntries.map(j => url(`/jobs/${j.slug}`, 0.7, 'daily', j.lastModified))
+  const jobResult = await getJobSitemapEntries('et')
+  if (!jobResult.ok) {
+    // Same as app/sitemaps/jobs/[file]/route.ts: a failed job read is a 500
+    // that is never cached, not a 200 list without jobs kept for an hour.
+    return new NextResponse('Internal Server Error', {
+      status: 500,
+      headers: { 'Cache-Control': 'no-store' },
+    })
+  }
+  const jobUrls = jobResult.entries.map(j => url(`/jobs/${j.slug}`, 0.7, 'daily', j.lastModified))
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

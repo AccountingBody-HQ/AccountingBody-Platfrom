@@ -289,9 +289,9 @@ describe('admin job list', () => {
 })
 
 describe('sitemaps', () => {
-  it('reports a jobs read that fails and keeps the empty list', async () => {
+  it('reports a jobs read that fails and keeps its failed result', async () => {
     net.fail = (call) => call.table === 'jobs'
-    expect(await jobs.getJobSitemapEntries('et')).toStrictEqual([])
+    expect(await jobs.getJobSitemapEntries('et')).toStrictEqual({ ok: false })
     expectReports([['sitemap jobs read failed', 'public', 'getJobSitemapEntries error:']])
   })
 
@@ -303,7 +303,8 @@ describe('sitemaps', () => {
 
   it('reports the page limit with a fixed problem', async () => {
     net.fullPages = true
-    expect(await jobs.getJobSitemapEntries('et')).toHaveLength(100_000)
+    const entries = await jobs.getJobSitemapEntries('et')
+    expect(entries.ok && entries.entries).toHaveLength(100_000)
     expect(await jobs.getJobSitemapChunk('ab', 0)).toMatchObject({ ok: true })
     expect(labels()).toStrictEqual(['sitemap jobs page limit reached', 'sitemap job chunk page limit reached'])
     expect(state.reports[0][1]).toStrictEqual(new Error('sitemap jobs page limit reached'))
@@ -312,7 +313,8 @@ describe('sitemaps', () => {
 
   it('makes no report for a short list', async () => {
     net.rows.jobs = [{ id: JOB_ID, slug: 'a', expires_at: null, published_at: null, created_at: '2026-11-01T00:00:00Z' }]
-    expect(await jobs.getJobSitemapEntries('et')).toHaveLength(1)
+    const entries = await jobs.getJobSitemapEntries('et')
+    expect(entries.ok && entries.entries).toHaveLength(1)
     expect(await jobs.getJobSitemapChunk('ab', 0)).toMatchObject({ ok: true })
     expect(state.reports).toStrictEqual([])
   })
