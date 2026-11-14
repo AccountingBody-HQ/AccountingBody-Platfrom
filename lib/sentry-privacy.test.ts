@@ -43,7 +43,8 @@ function requestEvent(): ErrorEvent {
     level: 'error',
     environment: 'production',
     release: 'r1',
-    sdk: { name: 'sentry.javascript.nextjs', version: '10.45.0' },
+    // Fixture only: SDK version string kept in step with the installed 10.78.0.
+    sdk: { name: 'sentry.javascript.nextjs', version: '10.78.0' },
     server_name: 'host-1',
     modules: { next: '14.2.35' },
     transaction: `POST /api/${TEST_ADMIN_PATH}/courses/[courseId]?token=${TOKEN}`,
