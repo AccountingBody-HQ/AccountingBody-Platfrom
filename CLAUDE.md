@@ -87,10 +87,10 @@ This repository is public. Anything committed can be read by anyone, and stays i
 
 - Read a file before writing to it.
 - One task per job. One change per release. Do not tidy nearby code.
-- No push, merge or deploy without the owner's explicit go-ahead.
+- No push, merge or deploy without the owner's explicit go-ahead. A brief issued under the owner's hands-free arrangement is that go-ahead for exactly the steps it lists, and nothing more (`docs/RELEASE.md`, "Hands-free checks").
 - No network unless the brief explicitly allows it. That includes `git fetch`, `git pull`, `git push`, `npm install`, `npx` downloads, `curl`, `wget`, `gh`, live sites and AI calls.
 - No sub-agents unless the brief asks for them.
-- No live database changes from this environment. Every data or schema change needs a fresh backup and the owner's approval of the exact change.
+- No live database changes from this environment unless the brief names the exact change (file and part), the expected row count and the undo, and a fresh backup has been proven first. Every data or schema change needs that fresh backup and the owner's approval of the exact change. Run each change once, in one transaction that rolls back if the count differs. Read-only database sessions start with `BEGIN READ ONLY;` (check `SHOW transaction_read_only;` prints `on`) and end with `ROLLBACK;`; do not rely on connection options for read-only.
 - Keep scratch files under `reports/` and delete them when finished.
 - Never run `npm audit fix --force`, codemods or `--fix` tools without approval.
 - Do not run old scripts from `scripts/` or the repository root.
@@ -99,7 +99,7 @@ This repository is public. Anything committed can be read by anyone, and stays i
 ### Before calling a job finished
 
 - Record the commit and how to undo it.
-- Preview before live. Check both hosts: accountingbody.com and ethiotax.com.
+- Preview before live. Check both hosts: accountingbody.com and ethiotax.com. Scripts check them on the Vercel deployment address, using the `x-et-platform: ethiotax` header for the ethiotax.com view, and never request the two domains directly (`docs/RELEASE.md`, "Hands-free checks").
 - Report your own slips honestly.
 
 ## 4. How to check a change
