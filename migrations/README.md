@@ -7,9 +7,11 @@ a new column, an altered constraint, a new index, a backfill — gets a numbered
 `.sql` file in this directory containing the exact DDL that was run, committed
 in the same commit as the code that depends on it.
 
-Applying the change in the Supabase SQL editor is still how it actually gets
-run (the Codespace has no database credentials). The file is not a substitute
-for that. It is the record that the change happened, what it was, and why.
+The change is run either in the Supabase SQL editor or, under the owner's
+hands-free arrangement, from the Codespace with `psql`, always after a fresh
+backup and the owner's approval of the exact change. The file is not a
+substitute for running it. It is the record that the change happened, what it
+was, and why.
 
 ## Why this exists
 
@@ -82,6 +84,7 @@ extend a migration here to touch another product's tables.
 | `0009_site_counts_and_jobs_browsable_index.sql` | `site_counts` table, its refresh function, the newest-first jobs index and the 10-minute pg_cron schedule. Applied 11 Nov 2026 as three separate queries (the index must run alone). Checks and rollback: `proposed/2026-11-11-speed/` |
 | `0010_search_jobs_ranked_v2_and_countries.sql` | Faster `search_jobs_ranked` (v2: the query is written out with the actual values on each call) and `get_active_job_countries`, as defined by `0006`. Applied 11 Nov 2026 as two separate queries. Checks, trial helpers and rollback: `proposed/2026-11-11-speed-2/` |
 | `0011_refresh_site_counts_one_pass_with_countries.sql` | New `refresh_site_counts` body: plain-list and one-country totals from one read of `jobs` (replaces the `0009` body; the table, index and cron job stay as `0009` records them). Applied 11 Nov 2026 23:04 UTC as one query. Timing check, after-check and rollback: `proposed/2026-11-11-speed-3/` |
+| `0012_backfill_job_country_from_location_text.sql` | Backfill of `jobs.location_country` from the last comma segment of `location_text`, for jobs imported before every country was recognised. Part A is a read-only preview, Part B the update, Part C the undo. No schema change. **Part B applied 14 Nov 2026 12:27:28 UTC** from the Codespace (`psql`, one transaction, after a fresh backup): 62 rows (54 active, 8 not), all stamped `updated_at = 2026-11-14 12:27:28.892284+00`. Undo only with the owner's approval: Part C with that stamp and expected count 62 |
 
 ## Compare with the live database before any replace
 
