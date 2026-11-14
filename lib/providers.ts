@@ -18,6 +18,16 @@ function readProblem(message: string, error: { code?: unknown }): Error & { code
   return failed
 }
 
+// The short code of a database problem, for log lines. Never throws.
+function shortCode(v: unknown): string {
+  try {
+    const code = typeof v === 'object' && v !== null ? (v as { code?: unknown }).code : undefined
+    return typeof code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(code) ? code : 'no-code'
+  } catch {
+    return 'no-code'
+  }
+}
+
 export interface JobProvider {
   id: string
   slug: string
@@ -272,11 +282,17 @@ export async function updateProviderHealth(
 
   if (outcome === 'success') {
     // Compute next_fetch_at from DB (avoids race conditions)
-    const { data: provider } = await supabase
+    const { data, error: readError } = await supabase
       .from('job_providers')
       .select('fetch_interval_minutes, fetch_offset_minutes')
       .eq('id', providerId)
       .single()
+    // A failed read keeps the default interval below and still saves.
+    if (readError) {
+      console.error('[updateProviderHealth] read failed:', shortCode(readError))
+      reportServerError('job import health read failed', readError, { area: 'ingest' })
+    }
+    const provider = readError ? null : data
 
     const intervalMs = ((provider?.fetch_interval_minutes ?? 1440) * 60 * 1000)
     const nextFetch = new Date(Date.now() + intervalMs)
@@ -289,7 +305,7 @@ export async function updateProviderHealth(
     // warning, not a failure.
     const isZeroFetch = extras.jobsFetched === 0
 
-    await supabase
+    const { error: saveError } = await supabase
       .from('job_providers')
       .update({
         health_status: isZeroFetch ? 'degraded' : 'healthy',
@@ -303,31 +319,52 @@ export async function updateProviderHealth(
         last_error_code: isZeroFetch ? 'ZERO_FETCH' : null,
       })
       .eq('id', providerId)
+    if (saveError) {
+      console.error('[updateProviderHealth] save failed:', shortCode(saveError))
+      reportServerError('job import health save failed', saveError, { area: 'ingest' })
+    }
 
   } else {
     // Failure — increment consecutive_failures, update health_status
-    const { data: provider } = await supabase
+    const { data, error: readError } = await supabase
       .from('job_providers')
-      .select('consecutive_failures')
+      .select('consecutive_failures, status')
       .eq('id', providerId)
       .single()
+    // A failed read saves the error only: the failure count, health and
+    // status are left as they are (never reset, never paused on it).
+    if (readError) {
+      console.error('[updateProviderHealth] read failed:', shortCode(readError))
+      reportServerError('job import health read failed', readError, { area: 'ingest' })
+    }
 
-    const failures = (provider?.consecutive_failures ?? 0) + 1
-    const healthStatus = failures >= 3 ? 'down' : 'degraded'
-    // Auto-pause after 5 consecutive failures
-    const newStatus = failures >= 5 ? 'paused' : undefined
-
-    await supabase
-      .from('job_providers')
-      .update({
+    const lastError = {
+      last_error_at: new Date().toISOString(),
+      last_error_message: extras.errorMessage ?? null,
+      last_error_code: extras.errorCode ?? null,
+    }
+    let payload: Record<string, unknown> = lastError
+    if (!readError) {
+      const failures = (data?.consecutive_failures ?? 0) + 1
+      const healthStatus = failures >= 3 ? 'down' : 'degraded'
+      // Auto-pause after 5 consecutive failures, only an active provider
+      const newStatus = failures >= 5 && data?.status === 'active' ? 'paused' : undefined
+      payload = {
         health_status: healthStatus,
         consecutive_failures: failures,
-        last_error_at: new Date().toISOString(),
-        last_error_message: extras.errorMessage ?? null,
-        last_error_code: extras.errorCode ?? null,
+        ...lastError,
         ...(newStatus ? { status: newStatus } : {}),
-      })
+      }
+    }
+
+    const { error: saveError } = await supabase
+      .from('job_providers')
+      .update(payload)
       .eq('id', providerId)
+    if (saveError) {
+      console.error('[updateProviderHealth] save failed:', shortCode(saveError))
+      reportServerError('job import health save failed', saveError, { area: 'ingest' })
+    }
   }
 }
 
@@ -374,21 +411,24 @@ export async function logProviderError(
   })
 }
 
-// Update jobs_today counter on provider
+// Update the jobs_today and requests_today counters on provider.
+// requests: the provider API requests this run made (pages fetched).
 export async function incrementProviderJobsToday(
   providerId: string,
-  count: number
+  count: number,
+  requests = 0
 ): Promise<void> {
+  const added = typeof requests === 'number' && Number.isFinite(requests) && requests > 0 ? Math.floor(requests) : 0
   const supabase = getSupabase()
   const { data: current, error: fetchError } = await supabase
     .from('job_providers')
-    .select('jobs_today, total_jobs_ingested, jobs_last_run')
+    .select('jobs_today, total_jobs_ingested, jobs_last_run, requests_today')
     .eq('id', providerId)
     .single()
   if (fetchError || !current) {
     console.error(
       '[incrementProviderJobsToday] failed to fetch provider:',
-      fetchError?.message
+      shortCode(fetchError)
     )
     reportServerError('job import counter read failed', fetchError ?? new Error('job import counter read failed'), { area: 'ingest' })
     return
@@ -399,12 +439,13 @@ export async function incrementProviderJobsToday(
       jobs_today: (current.jobs_today ?? 0) + count,
       total_jobs_ingested: (current.total_jobs_ingested ?? 0) + count,
       jobs_last_run: count,
+      requests_today: (current.requests_today ?? 0) + added,
     })
     .eq('id', providerId)
   if (updateError) {
     console.error(
       '[incrementProviderJobsToday] failed to update counters:',
-      updateError.message
+      shortCode(updateError)
     )
     reportServerError('job import counter save failed', updateError, { area: 'ingest' })
   }

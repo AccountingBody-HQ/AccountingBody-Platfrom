@@ -63,6 +63,11 @@ function shortCode(v: unknown): string {
   }
 }
 
+// A count from the duplicate check: a whole number of 0 or more, else 0.
+export function safeCount(v: unknown): number {
+  return typeof v === 'number' && Number.isInteger(v) && v >= 0 ? v : 0
+}
+
 // The code shown in the fixed failed-import text: the error's short code,
 // else its short name, else "no-code". Never throws.
 function failureCode(v: unknown): string {
@@ -174,8 +179,13 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
       // do NOT rethrow — ingestion must proceed regardless
     }
 
-    const { toInsert, duplicateCount: dedupedAtCheckTime } = await deduplicate(valid)
-    let duplicateCount = dedupedAtCheckTime
+    // duplicateCount already includes the refreshed and revived rows ("seen
+    // again", owner decision D140), so jobs_deduplicated = refreshed +
+    // revived + other duplicates. The two counts default to 0 when missing.
+    const dedup = await deduplicate(valid)
+    const { toInsert } = dedup
+    let duplicateCount = dedup.duplicateCount
+    console.log(`[ingest/${slug}] seen again: refreshed ${safeCount(dedup.refreshed)}, revived ${safeCount(dedup.revived)}`)
 
     const supabase = getSupabase()
     let insertedCount = 0
@@ -333,9 +343,12 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
       }
     }
 
-    if (insertedCount > 0) {
+    // Requests made this run count towards requests_today even when no job
+    // was new.
+    const requestsMade = typeof pagesFetched === 'number' && Number.isFinite(pagesFetched) && pagesFetched > 0 ? pagesFetched : 0
+    if (insertedCount > 0 || requestsMade > 0) {
       try {
-        await incrementProviderJobsToday(provider.id, insertedCount)
+        await incrementProviderJobsToday(provider.id, insertedCount, requestsMade)
       } catch (counterErr: unknown) {
         console.error('[ingest] jobs_today counter failed:', shortCode(counterErr))
         // do NOT rethrow — jobs were already inserted successfully

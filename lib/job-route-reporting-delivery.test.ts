@@ -15,7 +15,7 @@ const seen = vi.hoisted(() => ({ due: [] as unknown[] }))
 
 vi.mock('@/lib/providers', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/providers')>()),
-  reapStaleRuns: async () => 0,
+  reapStaleRuns: async () => ({ count: 0, providerIds: [] }),
   getProvidersDueForFetch: async () => seen.due,
 }))
 vi.mock('@/lib/jobs', async (importOriginal) => ({

@@ -156,6 +156,10 @@ async function answerOf(response: Response) {
   return { status: response.status, body: text ? JSON.parse(text) : text }
 }
 
+// The one "seen again" line every import run logs (owner decision D140); the
+// mocked duplicate check refreshes and revives nothing.
+const SEEN_AGAIN = '[ingest/example] seen again: refreshed 0, revived 0'
+
 // Every log argument is a short string and none holds the admin folder or a seeded value.
 function expectPlainLogs() {
   for (const line of state.logs) for (const part of line) expect(typeof part).toBe('string')
@@ -242,6 +246,7 @@ describe('import runner log lines', () => {
     const shown = code ?? 'no-code'
     expect(state.logs).toStrictEqual([
       ['[ingest] quality metrics failed:', shown],
+      [SEEN_AGAIN],
       ['[ingest] keyword cursor update failed:', shown],
       ['[ingest] jobs_today counter failed:', shown],
       ['[ingest] provider alert failed:', shown],
@@ -258,6 +263,7 @@ describe('import runner log lines', () => {
     expect(result.status).toBe(200)
     expect(result.body).toMatchObject({ ok: true, inserted: 0, insertErrors: ['role-1: XX000'] })
     expect(state.logs).toStrictEqual([
+      [SEEN_AGAIN],
       ['[ingest/example] Batch insert failed, falling back to individual inserts:', 'XX000'],
     ])
     expect(JSON.stringify(result.body)).not.toMatch(SEED)
@@ -272,19 +278,20 @@ describe('import runner log lines', () => {
 
     expect(result.body).toMatchObject({ insertErrors: ['role-1: no-code'] })
     expect(state.logs).toStrictEqual([
+      [SEEN_AGAIN],
       ['[ingest/example] Batch insert failed, falling back to individual inserts:', 'no-code'],
     ])
     expectPlainLogs()
   })
 
-  it('an existing job still counts as deduplicated with no log line', async () => {
+  it('an existing job still counts as deduplicated with no log line beyond the seen-again line', async () => {
     state.db.jobs = { data: null, error: { message: 'duplicate key value', code: '23505' } }
 
     const result = await runProviderImport('example', 'cron')
 
     expect(result.body).toMatchObject({ ok: true, inserted: 0, deduplicated: 1 })
     expect((result.body as Record<string, unknown>).insertErrors).toBeUndefined()
-    expect(state.logs).toStrictEqual([])
+    expect(state.logs).toStrictEqual([[SEEN_AGAIN]])
   })
 
   it('a failed alert after a failed run logs its fixed line with the short code', async () => {

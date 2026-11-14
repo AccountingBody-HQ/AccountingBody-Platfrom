@@ -87,6 +87,17 @@ deleted: import run records and job rows are kept.
 - Deleting does not shrink the reported database size straight away: the
   freed space is reused inside the table for new rows.
 
+## Expired imported job clean-up
+
+A daily scheduled run (07:30 UTC, `/api/cron/prune-expired-jobs`, owner
+decision D140) can delete imported jobs that expired more than 30 days ago
+(`JOB_RETENTION_DAYS`, 14 to 365). Employer jobs and jobs with an application
+are never deleted; a deleted job's saved-job rows go with it and its page
+answers 404. It is off by default: `JOB_RETENTION` unset or any other value
+does nothing, `dry-run` only counts (`{"mode":"dry-run",...,"wouldDeleteAtLeast":N}`,
+at most 500), `on` deletes (at most 10,000 jobs a run). Deleted jobs cannot be
+brought back except by restoring from a backup.
+
 ## Job expiry run
 
 The daily scheduled run (06:00 UTC, `/api/cron/expire-jobs`) closes active

@@ -250,6 +250,7 @@ describe('orchestrator GET — fails loudly on a database error', () => {
     const providers = await import('@/lib/providers')
 
     vi.stubEnv('CRON_SECRET', 'test-secret')
+    vi.mocked(providers.reapStaleRuns).mockResolvedValue({ count: 0, providerIds: [] })
     vi.mocked(providers.getProvidersDueForFetch).mockRejectedValue(
       new Error('getProvidersDueForFetch: due-providers query failed: connection refused')
     )

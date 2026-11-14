@@ -824,6 +824,11 @@ describe('job expiry problems', () => {
     expect(resets()).toHaveLength(1)
   })
 
+  it('resets requests_today with jobs_today in one statement', async () => {
+    expect(await run()).toStrictEqual({ status: 200, body: { expired: 0, warned: 0, more: false } })
+    expect(resets().map((request) => request.body)).toStrictEqual([{ jobs_today: 0, requests_today: 0 }])
+  })
+
   it('keeps a failed counter reset to a log line', async () => {
     net.trouble = (request) => (request.table === 'job_providers' ? 'fail' : undefined)
     expect(await run()).toStrictEqual({ status: 200, body: { expired: 0, warned: 0, more: false } })
