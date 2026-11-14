@@ -52,7 +52,8 @@ function browserEvent(): ErrorEvent {
     level: 'error',
     environment: 'production',
     release: 'r1',
-    sdk: { name: 'sentry.javascript.nextjs', version: '10.45.0', settings: { infer_ip: 'never' } } as ErrorEvent['sdk'],
+    // Fixture only: SDK version string kept in step with the installed 10.78.0.
+    sdk: { name: 'sentry.javascript.nextjs', version: '10.78.0', settings: { infer_ip: 'never' } } as ErrorEvent['sdk'],
     transaction: `/${TEST_ADMIN_PATH}/courses/1?token=${TOKEN}`,
     request: {
       url: `${SITE}/jobs/find-work/manage?token=${TOKEN}#part`,
@@ -596,7 +597,8 @@ describe('trace headers are not sent to outside services', () => {
     expect(Object.keys(options)).toEqual(keys)
     expect(options.tracePropagationTargets).toEqual([])
     const core = coreOf(pkg)
-    expect(core.SDK_VERSION).toBe('10.45.0')
+    // Version tripwire, reviewed and bumped for the Sentry 10.78.0 update.
+    expect(core.SDK_VERSION).toBe('10.78.0')
     for (const url of [...OUTSIDE_URLS, 'https://accountingbody.com/api/jobs']) {
       expect(core.shouldPropagateTraceForUrl(url, options.tracePropagationTargets)).toBe(false)
       expect(core.stringMatchesSomePattern(url, options.tracePropagationTargets)).toBe(false)
@@ -614,7 +616,8 @@ describe('trace headers are not sent to outside services', () => {
     expect((options.beforeBreadcrumb as Hook).name).toBe('filterBrowserBreadcrumb')
     expect((options.beforeSendTransaction as Hook).name).toBe('filterBrowserTransaction')
     expect((options.beforeSendSpan as Hook).name).toBe('filterBrowserSpan')
-    expect(coreOf('@sentry/nextjs').SDK_VERSION).toBe('10.45.0')
+    // Version tripwire, reviewed and bumped for the Sentry 10.78.0 update.
+    expect(coreOf('@sentry/nextjs').SDK_VERSION).toBe('10.78.0')
     vi.stubGlobal('document', { location: { href: `${SITE}/jobs/find-work/manage` } })
     for (const url of OUTSIDE_URLS) expect(browserRequest.shouldAttachHeaders(url, options.tracePropagationTargets)).toBe(false)
     expect(browserRequest.shouldAttachHeaders('/api/jobs/manage', options.tracePropagationTargets)).toBe(true)
