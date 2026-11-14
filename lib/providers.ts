@@ -18,6 +18,16 @@ function readProblem(message: string, error: { code?: unknown }): Error & { code
   return failed
 }
 
+// The short code of a database problem, for log lines. Never throws.
+function shortCode(v: unknown): string {
+  try {
+    const code = typeof v === 'object' && v !== null ? (v as { code?: unknown }).code : undefined
+    return typeof code === 'string' && /^[A-Za-z0-9_.-]{1,40}$/.test(code) ? code : 'no-code'
+  } catch {
+    return 'no-code'
+  }
+}
+
 export interface JobProvider {
   id: string
   slug: string
@@ -289,7 +299,7 @@ export async function updateProviderHealth(
     // warning, not a failure.
     const isZeroFetch = extras.jobsFetched === 0
 
-    await supabase
+    const { error: saveError } = await supabase
       .from('job_providers')
       .update({
         health_status: isZeroFetch ? 'degraded' : 'healthy',
@@ -303,21 +313,22 @@ export async function updateProviderHealth(
         last_error_code: isZeroFetch ? 'ZERO_FETCH' : null,
       })
       .eq('id', providerId)
+    if (saveError) console.error('[updateProviderHealth] save failed:', shortCode(saveError))
 
   } else {
     // Failure — increment consecutive_failures, update health_status
     const { data: provider } = await supabase
       .from('job_providers')
-      .select('consecutive_failures')
+      .select('consecutive_failures, status')
       .eq('id', providerId)
       .single()
 
     const failures = (provider?.consecutive_failures ?? 0) + 1
     const healthStatus = failures >= 3 ? 'down' : 'degraded'
-    // Auto-pause after 5 consecutive failures
-    const newStatus = failures >= 5 ? 'paused' : undefined
+    // Auto-pause after 5 consecutive failures, only an active provider
+    const newStatus = failures >= 5 && provider?.status === 'active' ? 'paused' : undefined
 
-    await supabase
+    const { error: saveError } = await supabase
       .from('job_providers')
       .update({
         health_status: healthStatus,
@@ -328,6 +339,7 @@ export async function updateProviderHealth(
         ...(newStatus ? { status: newStatus } : {}),
       })
       .eq('id', providerId)
+    if (saveError) console.error('[updateProviderHealth] save failed:', shortCode(saveError))
   }
 }
 

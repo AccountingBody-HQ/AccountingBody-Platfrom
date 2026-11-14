@@ -567,6 +567,7 @@ const LOG_ONLY: Record<string, string> = {
   'lib/jobs.ts:jobsTotalSource': 'an unrecognised setting falls back to the default total source',
   'lib/jobs.ts:getCachedListingJobs': 'relevance order with no search words falls back to the default order',
   'lib/jobs.ts:getPrecountedFilterTotal': 'a missing, stale or unreadable pre-counted row falls back to a live count',
+  'lib/providers.ts:updateProviderHealth': 'a health save problem is logged with its short code; the import result is unchanged',
 }
 
 describe('log lines in server pages and shared code', () => {

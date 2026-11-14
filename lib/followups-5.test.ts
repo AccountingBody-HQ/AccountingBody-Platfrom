@@ -488,8 +488,8 @@ describe('source checks', () => {
     ]) expect(source).toContain(`throw readProblem('${name}', error)`)
     expect(source.match(/throw readProblem\('job expiry database request failed', error\)/g)).toHaveLength(2)
     const whole = source.split('\n').filter((line) => /\bthrow error\b/.test(line))
-    // Only createJob still throws the whole error; it is outside this change.
-    expect(whole).toStrictEqual(["    throw error ?? new Error('createJob: insert returned no row')"])
+    // No function throws the whole error (createJob since follow-ups part 6).
+    expect(whole).toStrictEqual([])
     expect(source).not.toMatch(/throw new Error\([^\n]*\.message/)
   })
 

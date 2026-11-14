@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
     reaped = result.count
     reapedProviderIds = result.providerIds
   } catch (reapErr: unknown) {
-    console.error('[orchestrator] reaper failed:', reapErr)
+    console.error('[orchestrator] reaper failed:', shortCode(reapErr))
     reportServerError('job import stale run cleanup failed', reapErr, { area: 'ingest' })
   }
 
