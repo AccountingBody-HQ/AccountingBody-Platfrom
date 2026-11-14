@@ -411,21 +411,24 @@ export async function logProviderError(
   })
 }
 
-// Update jobs_today counter on provider
+// Update the jobs_today and requests_today counters on provider.
+// requests: the provider API requests this run made (pages fetched).
 export async function incrementProviderJobsToday(
   providerId: string,
-  count: number
+  count: number,
+  requests = 0
 ): Promise<void> {
+  const added = typeof requests === 'number' && Number.isFinite(requests) && requests > 0 ? Math.floor(requests) : 0
   const supabase = getSupabase()
   const { data: current, error: fetchError } = await supabase
     .from('job_providers')
-    .select('jobs_today, total_jobs_ingested, jobs_last_run')
+    .select('jobs_today, total_jobs_ingested, jobs_last_run, requests_today')
     .eq('id', providerId)
     .single()
   if (fetchError || !current) {
     console.error(
       '[incrementProviderJobsToday] failed to fetch provider:',
-      fetchError?.message
+      shortCode(fetchError)
     )
     reportServerError('job import counter read failed', fetchError ?? new Error('job import counter read failed'), { area: 'ingest' })
     return
@@ -436,12 +439,13 @@ export async function incrementProviderJobsToday(
       jobs_today: (current.jobs_today ?? 0) + count,
       total_jobs_ingested: (current.total_jobs_ingested ?? 0) + count,
       jobs_last_run: count,
+      requests_today: (current.requests_today ?? 0) + added,
     })
     .eq('id', providerId)
   if (updateError) {
     console.error(
       '[incrementProviderJobsToday] failed to update counters:',
-      updateError.message
+      shortCode(updateError)
     )
     reportServerError('job import counter save failed', updateError, { area: 'ingest' })
   }

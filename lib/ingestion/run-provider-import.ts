@@ -333,9 +333,12 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
       }
     }
 
-    if (insertedCount > 0) {
+    // Requests made this run count towards requests_today even when no job
+    // was new.
+    const requestsMade = typeof pagesFetched === 'number' && Number.isFinite(pagesFetched) && pagesFetched > 0 ? pagesFetched : 0
+    if (insertedCount > 0 || requestsMade > 0) {
       try {
-        await incrementProviderJobsToday(provider.id, insertedCount)
+        await incrementProviderJobsToday(provider.id, insertedCount, requestsMade)
       } catch (counterErr: unknown) {
         console.error('[ingest] jobs_today counter failed:', shortCode(counterErr))
         // do NOT rethrow — jobs were already inserted successfully

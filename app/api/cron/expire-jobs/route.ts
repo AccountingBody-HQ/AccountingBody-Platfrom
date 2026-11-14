@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
       const { error: resetError } = await untilEnd(run.start + RESET_END_MS, () => Date.now(), async (signal) =>
         await getSupabase()
           .from('job_providers')
-          .update({ jobs_today: 0 })
+          .update({ jobs_today: 0, requests_today: 0 })
           .neq('id', '00000000-0000-0000-0000-000000000000')
           // .neq with a non-existent id effectively matches all rows
           // Use this pattern since Supabase requires a filter on update
