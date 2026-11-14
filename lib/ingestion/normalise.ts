@@ -1,5 +1,6 @@
 import type { RawJob } from '../adapters/types'
 import type { JobProvider } from '../providers'
+import { COUNTRY_KEYS } from './countries'
 
 // ── Safe integer parsing for salary_min / salary_max (Postgres integer columns) ──
 // Guarantees the result is either null or a finite, rounded integer — never NaN,
@@ -448,42 +449,22 @@ export interface NormalisedJob {
 
 // ── Location string parser ─────────────────────────────────────────────────
 
-// Country names and codes we can recognise at the tail of a
-// location string. Ordered longest-first so "United Kingdom"
-// wins over "United".
-const KNOWN_COUNTRIES: Record<string, string> = {
-  'united kingdom': 'United Kingdom',
-  'great britain': 'United Kingdom',
-  'england': 'United Kingdom',
-  'scotland': 'United Kingdom',
-  'wales': 'United Kingdom',
-  'northern ireland': 'United Kingdom',
-  'uk': 'United Kingdom',
-  'gb': 'United Kingdom',
-  'united states': 'United States',
-  'usa': 'United States',
-  'us': 'United States',
-  'canada': 'Canada',
-  'australia': 'Australia',
-  'singapore': 'Singapore',
-  'south africa': 'South Africa',
-  'kenya': 'Kenya',
-  'nigeria': 'Nigeria',
-  'ethiopia': 'Ethiopia',
-  'united arab emirates': 'United Arab Emirates',
-  'uae': 'United Arab Emirates',
-  'ireland': 'Ireland',
-  'india': 'India',
-  'new zealand': 'New Zealand',
-}
+// Country names and codes we can recognise as a whole location
+// segment (lowercase, exact match). Every country and territory in the
+// world; see lib/ingestion/countries.ts.
+const KNOWN_COUNTRIES: Readonly<Record<string, string>> = COUNTRY_KEYS
 
-// Single-word country names from the list above (e.g. "ireland", "uk").
-// Used by lib/jobs.ts to drop country words from similar-jobs title
-// tokens: the similar-jobs queries already filter by country, so these
-// words only widen the match.
-export const SINGLE_WORD_COUNTRY_NAMES: ReadonlySet<string> = new Set(
-  Object.keys(KNOWN_COUNTRIES).filter(name => !name.includes(' '))
-)
+// Single-word country names (e.g. "ireland", "uk"). Used by lib/jobs.ts
+// to drop country words from similar-jobs title tokens: the similar-jobs
+// queries already filter by country, so these words only widen the match.
+// Kept fixed as the words of the shorter country list that came before
+// countries.ts, because similar-jobs is locked: its behaviour must not
+// change when the country list grows.
+export const SINGLE_WORD_COUNTRY_NAMES: ReadonlySet<string> = new Set([
+  'england', 'scotland', 'wales', 'uk', 'gb', 'usa', 'us', 'canada',
+  'australia', 'singapore', 'kenya', 'nigeria', 'ethiopia', 'uae',
+  'ireland', 'india',
+])
 
 // Split a human-readable location string into city and country.
 // "Hoddesdon, Hertfordshire"  -> city Hoddesdon,  country null
