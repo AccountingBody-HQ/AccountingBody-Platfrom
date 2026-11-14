@@ -14,7 +14,7 @@ import type { ProviderImportResult } from '@/lib/ingestion/run-provider-import'
 
 vi.mock('@/lib/providers', () => ({
   getProvidersDueForFetch: vi.fn(),
-  reapStaleRuns: vi.fn().mockResolvedValue(0),
+  reapStaleRuns: vi.fn().mockResolvedValue({ count: 0, providerIds: [] }),
 }))
 vi.mock('@sentry/nextjs', () => ({
   captureException: vi.fn(),
@@ -109,6 +109,7 @@ async function setUp(slugs: string[], answers: Record<string, ProviderImportResu
   const runner = await import('@/lib/ingestion/run-provider-import')
   const reporting = await import('@/lib/report-error')
   vi.stubEnv('CRON_SECRET', SECRET)
+  vi.mocked(providers.reapStaleRuns).mockResolvedValue({ count: 0, providerIds: [] })
   vi.mocked(providers.getProvidersDueForFetch).mockResolvedValue(slugs.map((slug, i) => ({ slug, priority: i })) as never)
   vi.mocked(runner.runProviderImport).mockImplementation(async (slug: string) => {
     const answer = answers[slug]

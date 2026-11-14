@@ -357,7 +357,7 @@ describe('import run helpers', () => {
 
   it('reapStaleRuns reports an unexpected problem and keeps its 0 answer', async () => {
     net.fail = failOn('PATCH', 'provider_runs')
-    expect(await providers.reapStaleRuns(10)).toBe(0)
+    expect(await providers.reapStaleRuns(10)).toStrictEqual({ count: 0, providerIds: [] })
     expectReports([['job import stale run update failed', 'ingest', '[reapStaleRuns] failed:']])
   })
 
