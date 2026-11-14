@@ -258,11 +258,11 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
     const item = JSON.parse(body)
     return { type: JSON.parse(itemHeader).type, op: item.op ?? item.contexts?.trace?.op, transaction: item.transaction, spans: (item.spans ?? []).map((span) => span.op).sort() }
   })
-  process.stdout.write(JSON.stringify({ observers: observers.map((observer) => observer.type).sort(), integrations: Object.keys(client._integrations), items }), () => process.exit(0))
+  process.stdout.write(JSON.stringify({ observers: observers.map((observer) => observer.type).sort(), integrations: Object.keys(client._integrations), items, raw: sent }), () => process.exit(0))
 })()
 `
 
-type PageResult = { observers: string[]; integrations: string[]; items: Array<{ type: string; op?: string; transaction?: string; spans: string[] }> }
+type PageResult = { observers: string[]; integrations: string[]; items: Array<{ type: string; op?: string; transaction?: string; spans: string[] }>; raw: string[] }
 
 function runPage(setting: 'default' | 'configured', scenario: 'click' | 'load'): PageResult {
   return JSON.parse(execFileSync(process.execPath, ['-e', TIMING_PAGE, setting, scenario, NEXT_CLIENT_DIR], { encoding: 'utf8', timeout: 15_000 }))
@@ -284,9 +284,14 @@ describe('interaction timing is not recorded', () => {
   it('a slow click sends an interaction timing by default and none with the setting', () => {
     const before = runPage('default', 'click')
     expect(before.items.map((item) => [item.type, item.op])).toStrictEqual([['span', 'ui.interaction.click']])
+    // The default run's raw envelopes name INP, so the check below can catch it.
+    expect(before.raw.join('\n')).toMatch(/\binp\b/i)
     const after = runPage('configured', 'click')
-    expect(after.integrations).toStrictEqual(['BrowserTracing'])
+    // From 10.57 (seen on 10.78.0) BrowserTracing adds a WebVitals integration, told to ignore INP when enableInp is false.
+    expect(after.integrations).toStrictEqual(['BrowserTracing', 'WebVitals'])
     expect(after.items).toStrictEqual([])
+    // With the setting, nothing sent mentions INP or interaction timing (items, spans or measurements).
+    expect(after.raw.join('\n')).not.toMatch(/\binp\b|interaction/i)
   }, 30_000)
 
   it('only the interaction observers are left out', () => {
@@ -294,7 +299,8 @@ describe('interaction timing is not recorded', () => {
     const after = runPage('configured', 'click').observers
     expect(before.filter((type) => !after.includes(type)).sort()).toStrictEqual(['event', 'event', 'first-input', 'first-input', 'first-input'])
     expect(after.every((type) => before.includes(type))).toBe(true)
-    expect(after).toStrictEqual(['element', 'largest-contentful-paint', 'long-animation-frame', 'paint'])
+    // 10.78.0: element timing has its own integration (no 'element' observer); the web-vitals FCP helper and the FP/FCP measurement each observe 'paint'.
+    expect(after).toStrictEqual(['largest-contentful-paint', 'long-animation-frame', 'paint', 'paint'])
   }, 30_000)
 
   it('page-load timing is the same with the setting', () => {
