@@ -541,6 +541,9 @@ const REPORTING: Record<string, string[]> = {
     "reportServerError('job import run failed', err, { area: 'ingest' })",
   ],
   'lib/ingestion/run-provider-import.ts:runProviderImport': ["reportServerError('job import stopped unexpectedly', err, { area: 'ingest' })"],
+  'lib/ingestion/deduplicate.ts:deduplicate': ["reportServerError('job import duplicate read failed', err, { area: 'ingest' })"],
+  'lib/ingestion/deduplicate.ts:refreshRows': ["reportServerError('job import refresh failed', err, { area: 'ingest' })"],
+  'lib/ingestion/deduplicate.ts:reviveOne': ["reportServerError('job import revive failed', err, { area: 'ingest' })"],
   'lib/providers.ts:updateProviderDataQuality': ["reportServerError('job import quality save failed', error, { area: 'ingest' })"],
   'lib/providers.ts:incrementProviderJobsToday': [
     "reportServerError('job import counter read failed', fetchError ?? new Error('job import counter read failed'), { area: 'ingest' })",
