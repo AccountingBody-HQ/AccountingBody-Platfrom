@@ -331,29 +331,35 @@ export async function updateProviderHealth(
       .select('consecutive_failures, status')
       .eq('id', providerId)
       .single()
-    // A failed read is treated as no row: the count starts from 0 and the
-    // provider is never paused on it. The failure is still saved.
+    // A failed read saves the error only: the failure count, health and
+    // status are left as they are (never reset, never paused on it).
     if (readError) {
       console.error('[updateProviderHealth] read failed:', shortCode(readError))
       reportServerError('job import health read failed', readError, { area: 'ingest' })
     }
-    const provider = readError ? null : data
 
-    const failures = (provider?.consecutive_failures ?? 0) + 1
-    const healthStatus = failures >= 3 ? 'down' : 'degraded'
-    // Auto-pause after 5 consecutive failures, only an active provider
-    const newStatus = failures >= 5 && provider?.status === 'active' ? 'paused' : undefined
+    const lastError = {
+      last_error_at: new Date().toISOString(),
+      last_error_message: extras.errorMessage ?? null,
+      last_error_code: extras.errorCode ?? null,
+    }
+    let payload: Record<string, unknown> = lastError
+    if (!readError) {
+      const failures = (data?.consecutive_failures ?? 0) + 1
+      const healthStatus = failures >= 3 ? 'down' : 'degraded'
+      // Auto-pause after 5 consecutive failures, only an active provider
+      const newStatus = failures >= 5 && data?.status === 'active' ? 'paused' : undefined
+      payload = {
+        health_status: healthStatus,
+        consecutive_failures: failures,
+        ...lastError,
+        ...(newStatus ? { status: newStatus } : {}),
+      }
+    }
 
     const { error: saveError } = await supabase
       .from('job_providers')
-      .update({
-        health_status: healthStatus,
-        consecutive_failures: failures,
-        last_error_at: new Date().toISOString(),
-        last_error_message: extras.errorMessage ?? null,
-        last_error_code: extras.errorCode ?? null,
-        ...(newStatus ? { status: newStatus } : {}),
-      })
+      .update(payload)
       .eq('id', providerId)
     if (saveError) {
       console.error('[updateProviderHealth] save failed:', shortCode(saveError))

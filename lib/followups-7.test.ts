@@ -91,7 +91,10 @@ describe('a failed read is logged and reported, and the outcome stays safe', () 
     expect(reports()).toStrictEqual([[READ_LABEL, problem, { area: 'ingest' }]])
     expect(db.updates).toHaveLength(1)
     expect(db.updates[0]).not.toHaveProperty('status')
-    expect(db.updates[0]).toMatchObject({ consecutive_failures: 1, health_status: 'degraded', last_error_code: 'E', last_error_message: 'm' })
+    // Part 8: a failed read saves the error only (count and health untouched).
+    expect(db.updates[0]).not.toHaveProperty('consecutive_failures')
+    expect(db.updates[0]).not.toHaveProperty('health_status')
+    expect(db.updates[0]).toMatchObject({ last_error_code: 'E', last_error_message: 'm' })
   })
 
   it('log lines carry the short code only, never the database message', async () => {
