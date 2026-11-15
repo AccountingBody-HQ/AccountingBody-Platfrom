@@ -376,10 +376,11 @@ export async function getLessonData(courseSlug: string, lessonSlug: string): Pro
   let articlesWithContent: CourseArticle[] = lesson.articles
 
   if (articleIds.length > 0) {
-    const { data: articleData } = await supabase
+    const { data: articleData, error: articlesError } = await supabase
       .from('articles')
       .select('id, title, slug, excerpt, content, category, read_time, content_id, wp_id')
       .in('id', articleIds)
+    if (articlesError) throw readProblem('getLessonData: articles query failed', articlesError)
 
     const fullArticles = (articleData as unknown as RawArticleFullRow[] | null) ?? []
 
