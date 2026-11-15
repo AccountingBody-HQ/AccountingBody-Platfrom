@@ -68,6 +68,7 @@ A rollback restores the old code only. It never undoes a database change.
 ## Secrets and releases
 
 - If a release needs a new environment variable, add it in Vercel (Settings → Environment Variables) **before** merging. Add its name, never its value, to `.env.example` in the same pull request.
+- An environment variable change takes effect only on the next deployment. Set it just before a release merges, or the owner redeploys the deployment that is Production now (Vercel → Deployments → that row → ⋯ → Redeploy). Never redeploy or promote an older row.
 - Changing a secret's value in Vercel takes effect only after a redeploy. After the redeploy, `/api/version` shows a new `deployment` with the same `commit`.
 - Secret values never go in the repository, a pull request, a commit message or a report.
 

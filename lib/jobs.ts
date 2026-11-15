@@ -1578,40 +1578,52 @@ const JOB_SITEMAP_PAGE_SIZE = 1000
 // is killed" a much larger or absent bound would allow.
 const JOB_SITEMAP_MAX_PAGES = 100
 
-export async function getJobSitemapEntries(platform: string): Promise<JobSitemapEntry[]> {
+// Pages by key (.gt('id', lastId)), like getJobSitemapChunk below, not by
+// OFFSET: an OFFSET page makes the database walk past every skipped row
+// again, and each page has its own 6 s request limit (publicRead), so one
+// slow page used to drop the whole list. On any page error the result is
+// { ok: false } so the route can answer 500 instead of an empty list.
+export async function getJobSitemapEntries(
+  platform: string
+): Promise<{ ok: true; entries: JobSitemapEntry[] } | { ok: false }> {
   const supabase = getSupabase()
-  const allRows: { slug: string; expires_at: string | null; published_at: string | null; created_at: string }[] = []
+  const allRows: { id: string; slug: string; expires_at: string | null; published_at: string | null; created_at: string }[] = []
+  let lastId: string | null = null
 
   for (let page = 0; page < JOB_SITEMAP_MAX_PAGES; page++) {
-    const from = page * JOB_SITEMAP_PAGE_SIZE
-    const to = from + JOB_SITEMAP_PAGE_SIZE - 1
-    const { data, error } = await supabase
+    let query = supabase
       .from('jobs')
-      .select('slug, expires_at, published_at, created_at')
+      .select('id, slug, expires_at, published_at, created_at')
       .in('status', ['active', 'expired'])
       .contains('platform', [platform])
-      // stable order is required for OFFSET pagination on a live table
+
+    if (lastId !== null) {
+      query = query.gt('id', lastId)
+    }
+
+    const { data, error } = await query
       .order('id', { ascending: true })
-      .range(from, to)
+      .limit(JOB_SITEMAP_PAGE_SIZE)
 
     if (error || !data) {
       // A failure on any page — not just the first — must not return
       // whatever pages already succeeded as if it were the complete list.
       // A silently partial sitemap is the same class of bug this
       // pagination exists to fix, just caused by a query error instead of
-      // a row cap. Discard the accumulated pages and match the function's
-      // existing on-error contract: log (if there was an actual error,
-      // not just an empty page) and return [].
+      // a row cap. Discard the accumulated pages: log (if there was an
+      // actual error, not just an empty page) and return { ok: false }.
       if (error) {
         console.error('getJobSitemapEntries error:', error)
         reportServerError('sitemap jobs read failed', error, { area: 'public' })
       }
-      return []
+      return { ok: false }
     }
 
     allRows.push(...data)
 
     if (data.length < JOB_SITEMAP_PAGE_SIZE) break
+
+    lastId = data[data.length - 1].id
 
     if (page === JOB_SITEMAP_MAX_PAGES - 1) {
       console.error(
@@ -1623,19 +1635,22 @@ export async function getJobSitemapEntries(platform: string): Promise<JobSitemap
     }
   }
 
-  return allRows
-    .filter(job => getJobLifecycleState(job) !== 'archived')
-    .map(job => ({
-      slug: job.slug,
-      lastModified: new Date(job.published_at ?? job.created_at),
-    }))
+  return {
+    ok: true,
+    entries: allRows
+      .filter(job => getJobLifecycleState(job) !== 'archived')
+      .map(job => ({
+        slug: job.slug,
+        lastModified: new Date(job.published_at ?? job.created_at),
+      })),
+  }
 }
 
 // Session 16 — the split-sitemap counterpart to getJobSitemapEntries above,
 // scoped to one uuid leading-byte bucket (lib/sitemap-chunks.ts's
 // bucketBounds) instead of the whole table. Paginates by keyset
-// (.gt('id', lastId)) rather than OFFSET/.range(): unlike the table-wide
-// scan above, a page's logical position here is defined by the last id
+// (.gt('id', lastId)) rather than OFFSET/.range(): as in the table-wide
+// read above, a page's logical position here is defined by the last id
 // actually seen on the previous page, not by a row count, so it can't
 // shift under concurrent inserts. Same status/platform filters and
 // lifecycle rule as getJobSitemapEntries — kept unchanged, alongside this,
