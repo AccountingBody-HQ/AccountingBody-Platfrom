@@ -146,6 +146,9 @@ export const getArticleBySlug = cache(async (slug: string): Promise<ArticleFull 
 
 const QUALIFICATION_SLUGS = ['acca', 'cima', 'aat', 'icaew', 'eticpa', 'eticpa-atq', 'eticpa-cpa']
 
+// Returns an empty list only for a genuine empty result. Any failure is
+// thrown, so the page renders its error page with a 500 instead of an
+// empty category.
 export async function getArticlesByCategory(categorySlug: string): Promise<ArticleSummary[]> {
   const supabase = getSupabase()
   const isQualification = QUALIFICATION_SLUGS.includes(categorySlug.toLowerCase())
@@ -162,8 +165,9 @@ export async function getArticlesByCategory(categorySlug: string): Promise<Artic
     query = query.eq('category', categorySlug)
   }
 
-  const { data, error } = await query.limit(3000)
-  if (error || !data) return []
+  const { data, error, status } = await query.limit(3000)
+  if (error) throw readProblem(`getArticlesByCategory: articles query failed (status ${status})`, error)
+  if (!data) return []
   return data as ArticleSummary[]
 }
 
