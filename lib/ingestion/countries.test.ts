@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import {
   COUNTRY_CANONICAL_NAMES,
+  COUNTRY_CODES,
   COUNTRY_KEYS,
   EXCLUDED_COUNTRY_KEYS,
 } from '@/lib/ingestion/countries'
@@ -223,5 +224,59 @@ describe('migrations/0012 matches countries.ts', () => {
     const cutoffs = sql.match(/TIMESTAMPTZ '[^']*'/g) ?? []
     expect(cutoffs.length).toBeGreaterThanOrEqual(3)
     expect(new Set(cutoffs)).toEqual(new Set(["TIMESTAMPTZ '2026-11-15 00:00:00+00'"]))
+  })
+})
+
+describe('migrations/0014 matches countries.ts', () => {
+  const sql = readFileSync(
+    join(process.cwd(), 'migrations', '0014_repair_job_country_display_strings.sql'),
+    'utf8',
+  )
+
+  function blocks(text: string, name: string): string[][] {
+    const out: string[][] = []
+    let current: string[] | null = null
+    for (const line of text.split('\n')) {
+      if (line.includes(`-- ${name}:begin`)) { current = []; continue }
+      if (line.includes(`-- ${name}:end`)) {
+        if (current) out.push(current)
+        current = null
+        continue
+      }
+      if (current) current.push(line)
+    }
+    return out
+  }
+
+  function pairs(lines: string[]): Array<[string, string]> {
+    return lines.map(line => {
+      const m = /^\s*\('((?:[^']|'')*)', '((?:[^']|'')*)'\),?$/.exec(line)
+      if (!m) throw new Error(`Unparsable VALUES line: ${line}`)
+      return [m[1].replace(/''/g, "'"), m[2].replace(/''/g, "'")]
+    })
+  }
+
+  it('has the country-keys list in Parts A, B0 and B, each equal to COUNTRY_KEYS (the 0012 list)', () => {
+    const expected = Object.entries(COUNTRY_KEYS).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    const found = blocks(sql, 'country-keys')
+    expect(found).toHaveLength(3)
+    for (const block of found) expect(pairs(block)).toEqual(expected)
+  })
+
+  it('has the provider-codes list in Parts A, B0 and B, each entry equal to COUNTRY_CODES', () => {
+    const found = blocks(sql, 'provider-codes')
+    expect(found).toHaveLength(3)
+    for (const block of found) {
+      const list = pairs(block)
+      expect(list.map(([code]) => code)).toEqual(['au', 'ca', 'gb', 'sg', 'us', 'za'])
+      for (const [code, name] of list) expect(COUNTRY_CODES[code.toUpperCase()]).toBe(name)
+    }
+  })
+
+  it('uses one identical mapping in Parts A, B0 and B', () => {
+    const found = blocks(sql, 'mapping')
+    expect(found).toHaveLength(3)
+    expect(found[1]).toEqual(found[0])
+    expect(found[2]).toEqual(found[0])
   })
 })

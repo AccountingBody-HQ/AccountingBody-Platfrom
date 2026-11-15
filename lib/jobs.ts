@@ -3,6 +3,7 @@ import { unstable_cache } from 'next/cache'
 import { getServerSupabase, type DbContext } from '@/lib/supabase-server'
 import { bucketBounds } from '@/lib/sitemap-chunks'
 import { SINGLE_WORD_COUNTRY_NAMES } from '@/lib/ingestion/normalise'
+import { COUNTRY_CANONICAL_NAMES } from '@/lib/ingestion/countries'
 import { guardCachedRead } from '@/lib/cache-guard'
 import { reportServerError } from '@/lib/report-error'
 import { problemCode } from '@/lib/job-expiry'
@@ -1336,7 +1337,11 @@ export const COUNTRY_LIST_LOG = {
 // getPrecountedFilterTotal, ordered count descending then country
 // ascending. The name is everything after the prefix (names can contain
 // spaces, commas and other punctuation). Rows with a count that is not a
-// whole number above zero are left out.
+// whole number above zero are left out. Only real countries reach the
+// menu: a row is kept only when its name is one of the canonical country
+// names (lib/ingestion/countries.ts) or exactly 'Worldwide'.
+const COUNTRY_MENU_NAMES: ReadonlySet<string> = new Set([...COUNTRY_CANONICAL_NAMES, 'Worldwide'])
+
 export function countryListFromPrecounts(
   rows: ReadonlyArray<{ key: string; value: number; updatedAt: number }>,
   platform: string,
@@ -1349,6 +1354,7 @@ export function countryListFromPrecounts(
     const country = row.key.slice(prefix.length)
     if (country === '' || !Number.isSafeInteger(row.value) || row.value <= 0) continue
     if (now - row.updatedAt > PRECOUNT_MAX_AGE_MS) continue
+    if (!COUNTRY_MENU_NAMES.has(country)) continue
     list.push({ country, count: row.value })
   }
   return list.sort((a, b) =>
