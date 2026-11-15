@@ -7,7 +7,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
-import { getPublishedCourses } from '@/lib/coursesNew'
+import { getPublishedCoursesOrThrow } from '@/lib/coursesNew'
 import { canonicalMetadata } from '@/lib/canonical'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -37,7 +37,7 @@ const WHY_FREE = [
 export default async function FreeCoursesPage({ searchParams }: { searchParams: { level?: string } }) {
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
-  const allCourses = await getPublishedCourses('ab')
+  const allCourses = await getPublishedCoursesOrThrow('ab')
 
   const activeLevel = searchParams.level
     ? searchParams.level.charAt(0).toUpperCase() + searchParams.level.slice(1)

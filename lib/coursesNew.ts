@@ -1,4 +1,5 @@
 import { getServerSupabase, type DbContext } from '@/lib/supabase-server'
+import { reportServerError } from '@/lib/report-error'
 
 // Public pages use the public read limit (the default). getCourseBySlug's
 // admin mode is used only by admin tools, which get the admin limit.
@@ -140,7 +141,10 @@ interface RawLessonArticleLinkRow {
   article_id:    string
 }
 
-export async function getPublishedCourses(site?: string): Promise<CourseSummary[]> {
+// Runs the three stages. Any stage's database error is thrown with fixed
+// text and the short code only. No error and no data at stage 1 is a genuine
+// empty list.
+async function readPublishedCourses(site?: string): Promise<CourseSummary[]> {
   const supabase = getSupabase()
   // Stage 1: fetch courses (flat, no embed)
   let query = supabase
@@ -153,8 +157,9 @@ export async function getPublishedCourses(site?: string): Promise<CourseSummary[
     query = query.contains('show_on_sites', [site])
   }
 
-  const { data: coursesData, error } = await query
-  if (error || !coursesData) return []
+  const { data: coursesData, error, status } = await query
+  if (error) throw readProblem(`getPublishedCourses: courses query failed (status ${status})`, error)
+  if (!coursesData) return []
 
   const courses = coursesData as unknown as RawCourseStageRow[]
   const courseIds = courses.map(c => c.id)
@@ -164,10 +169,11 @@ export async function getPublishedCourses(site?: string): Promise<CourseSummary[
 
   if (courseIds.length > 0) {
     // Stage 2: fetch chapters (flat, no embed)
-    const { data: chaptersData } = await supabase
+    const { data: chaptersData, error: chaptersError, status: chaptersStatus } = await supabase
       .from('course_chapters')
       .select('id, course_id')
       .in('course_id', courseIds)
+    if (chaptersError) throw readProblem(`getPublishedCourses: course_chapters query failed (status ${chaptersStatus})`, chaptersError)
 
     const chapters = (chaptersData as unknown as RawChapterListRow[] | null) ?? []
     for (const ch of chapters) {
@@ -180,10 +186,11 @@ export async function getPublishedCourses(site?: string): Promise<CourseSummary[
 
     if (chapterIds.length > 0) {
       // Stage 3: fetch lessons (flat, no embed)
-      const { data: lessonsData } = await supabase
+      const { data: lessonsData, error: lessonsError, status: lessonsStatus } = await supabase
         .from('course_lessons')
         .select('id, chapter_id')
         .in('chapter_id', chapterIds)
+      if (lessonsError) throw readProblem(`getPublishedCourses: course_lessons query failed (status ${lessonsStatus})`, lessonsError)
 
       const lessons = (lessonsData as unknown as RawLessonListRow[] | null) ?? []
       for (const l of lessons) {
@@ -210,6 +217,23 @@ export async function getPublishedCourses(site?: string): Promise<CourseSummary[
       ),
     }
   })
+}
+
+// For request-time pages: a failed read throws, so the page shows its error
+// page with a 500 instead of an empty or wrong list.
+export async function getPublishedCoursesOrThrow(site?: string): Promise<CourseSummary[]> {
+  return readPublishedCourses(site)
+}
+
+// For build-time callers (generateStaticParams): a failed read is reported
+// and gives an empty list, so a slow database never fails a build.
+export async function getPublishedCourses(site?: string): Promise<CourseSummary[]> {
+  try {
+    return await readPublishedCourses(site)
+  } catch (error) {
+    reportServerError('free courses read failed', error, { area: 'public' })
+    return []
+  }
 }
 
 // Returns null only when the course does not exist (.single() reports zero
