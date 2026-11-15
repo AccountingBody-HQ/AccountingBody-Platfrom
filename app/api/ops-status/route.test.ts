@@ -38,6 +38,7 @@ function json(body: unknown, status = 200): Response {
 function matches(row: Row, key: string, value: string): boolean {
   const cell = row[key]
   if (value.startsWith('eq.')) return String(cell) === value.slice(3)
+  if (value.startsWith('neq.')) return String(cell) !== value.slice(4)
   if (value.startsWith('in.(')) return value.slice(4, -1).split(',').includes(String(cell))
   if (value === 'not.is.null') return cell !== null && cell !== undefined
   if (value.startsWith('gte.')) return typeof cell === 'string' && Date.parse(cell) >= Date.parse(value.slice(4))
@@ -78,6 +79,7 @@ function healthyTables(): Record<string, Row[]> {
     jobs: [{ status: 'active', expires_at: at(-DAY) }],
     email_subscribers: [{ status: 'pending', last_confirmation_sent_at: at(DAY) }],
     saved_jobs: [{ last_seen_at: at(DAY) }],
+    job_applications: [],
   }
 }
 
@@ -111,6 +113,8 @@ beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn(fakeFetch))
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', DB_URL)
   vi.stubEnv('SUPABASE_SECRET_KEY', 'test-key')
+  vi.stubEnv('JOB_RETENTION', undefined)
+  vi.stubEnv('JOB_RETENTION_DAYS', undefined)
   vi.spyOn(console, 'error').mockImplementation(() => {})
   vi.spyOn(console, 'warn').mockImplementation(() => {})
   state.reports.length = 0
@@ -134,7 +138,7 @@ describe('ops status', () => {
     expect(result.status).toBe(200)
     expect(result.body).toStrictEqual({
       status: 'ok',
-      checks: { 'job-import': 'ok', 'job-expiry': 'ok', 'subscriber-cleanup': 'ok', 'saved-jobs-cleanup': 'ok' },
+      checks: { 'job-import': 'ok', 'job-expiry': 'ok', 'subscriber-cleanup': 'ok', 'saved-jobs-cleanup': 'ok', 'job-retention': 'ok' },
     })
     expect(state.reports).toStrictEqual([])
   })
@@ -185,7 +189,7 @@ describe('ops status', () => {
     expect(result.status).toBe(200)
     expect(result.body).toStrictEqual({
       status: 'ok',
-      checks: { 'job-import': 'ok', 'job-expiry': 'late', 'subscriber-cleanup': 'ok', 'saved-jobs-cleanup': 'ok' },
+      checks: { 'job-import': 'ok', 'job-expiry': 'late', 'subscriber-cleanup': 'ok', 'saved-jobs-cleanup': 'ok', 'job-retention': 'ok' },
     })
   })
 
@@ -223,7 +227,8 @@ describe('ops status', () => {
     for (const table of ['provider_runs', 'jobs', 'email_subscribers', 'saved_jobs']) db.failing.add(table)
     const result = await call()
     expect(result.status).toBe(503)
-    expect(Object.values(result.body.checks)).toStrictEqual(['unknown', 'unknown', 'unknown', 'unknown'])
+    // job-retention is off here, so it reads nothing and stays ok.
+    expect(Object.values(result.body.checks)).toStrictEqual(['unknown', 'unknown', 'unknown', 'unknown', 'ok'])
   })
 
   it('answers a neutral 503 and reports once when the check cannot run', async () => {
@@ -303,6 +308,134 @@ describe('ops status', () => {
   })
 })
 
+describe('job retention check', () => {
+  // 30 days (the default) plus the 26-hour grace.
+  const OVERDUE = 30 * DAY + 26 * HOUR
+  const SECOND = 1000
+  const expired = (id: string, closedAgo: number, row: Row = {}): Row => ({
+    id, source: 'adzuna', status: 'expired', closed_at: at(closedAgo), ...row,
+  })
+  const retentionReads = () =>
+    db.requests.filter((r) => r.table === 'job_applications' || (r.table === 'jobs' && r.params[0][1] === 'id'))
+  const withOverdue = () => {
+    db.tables.jobs.push(expired('r1', OVERDUE + DAY), expired('r2', OVERDUE + 2 * DAY))
+  }
+
+  it.each([
+    ['unset', undefined],
+    ['off', 'off'],
+    ['dry-run', 'dry-run'],
+    ['ON', 'ON'],
+    ['" on"', ' on'],
+    ['yes', 'yes'],
+    ['empty', ''],
+  ] as const)('answers ok with no read when JOB_RETENTION is %s, even with overdue jobs', async (_label, value) => {
+    vi.stubEnv('JOB_RETENTION', value)
+    withOverdue()
+    const result = await call()
+    expect(result.status).toBe(200)
+    expect(result.body.checks['job-retention']).toBe('ok')
+    expect(db.requests).toHaveLength(4)
+    expect(retentionReads()).toStrictEqual([])
+  })
+
+  it('when on with nothing overdue, answers ok with exactly one extra read', async () => {
+    vi.stubEnv('JOB_RETENTION', 'on')
+    const result = await call()
+    expect(result.status).toBe(200)
+    expect(result.body.checks['job-retention']).toBe('ok')
+    expect(db.requests).toHaveLength(5)
+    expect(retentionReads().map((r) => r.params)).toStrictEqual([[
+      ['select', 'id'],
+      ['source', 'neq.employer'],
+      ['status', 'eq.expired'],
+      ['closed_at', 'not.is.null'],
+      ['closed_at', `lt.${at(OVERDUE)}`],
+      ['limit', '100'],
+    ]])
+  })
+
+  it('when on, answers late and 503 for an overdue job with no application', async () => {
+    vi.stubEnv('JOB_RETENTION', 'on')
+    withOverdue()
+    db.tables.job_applications = [{ id: 'a1', job_id: 'r1' }]
+    const result = await call()
+    expect(result.status).toBe(503)
+    expect(result.body.status).toBe('attention')
+    expect(result.body.checks['job-retention']).toBe('late')
+    expect(db.requests).toHaveLength(6)
+    const guard = retentionReads()[1]
+    expect(guard.table).toBe('job_applications')
+    expect(guard.params).toStrictEqual([['select', 'job_id'], ['job_id', 'in.(r1,r2)'], ['limit', '1000']])
+    expect(state.reports).toStrictEqual([])
+  })
+
+  it('when on, answers ok when every overdue job has an application', async () => {
+    vi.stubEnv('JOB_RETENTION', 'on')
+    withOverdue()
+    db.tables.job_applications = [{ id: 'a1', job_id: 'r1' }, { id: 'a2', job_id: 'r2' }, { id: 'a3', job_id: 'r2' }]
+    const result = await call()
+    expect(result.status).toBe(200)
+    expect(result.body.checks['job-retention']).toBe('ok')
+    expect(db.requests).toHaveLength(6)
+  })
+
+  it('when on, leaves out employer jobs and jobs that are not expired', async () => {
+    vi.stubEnv('JOB_RETENTION', 'on')
+    db.tables.jobs.push(
+      expired('e1', OVERDUE + DAY, { source: 'employer' }),
+      expired('a1', OVERDUE + DAY, { status: 'active' }),
+      expired('n1', OVERDUE + DAY, { closed_at: null }),
+    )
+    const result = await call()
+    expect(result.body.checks['job-retention']).toBe('ok')
+    expect(db.requests).toHaveLength(5)
+  })
+
+  it('when on, does not count a job just inside the grace and counts one just past it', async () => {
+    vi.stubEnv('JOB_RETENTION', 'on')
+    db.tables.jobs.push(expired('in1', OVERDUE), expired('in2', 30 * DAY + HOUR))
+    expect((await call()).body.checks['job-retention']).toBe('ok')
+    opsStatusHold.clear()
+    db.tables.jobs.push(expired('out', OVERDUE + SECOND))
+    const result = await call()
+    expect(result.body.checks['job-retention']).toBe('late')
+    expect(result.status).toBe(503)
+  })
+
+  it('when on, uses JOB_RETENTION_DAYS with the same rules as the cron', async () => {
+    vi.stubEnv('JOB_RETENTION', 'on')
+    vi.stubEnv('JOB_RETENTION_DAYS', '60')
+    db.tables.jobs.push(expired('r1', OVERDUE + DAY))
+    expect((await call()).body.checks['job-retention']).toBe('ok')
+    expect(retentionReads()[0].params).toContainEqual(['closed_at', `lt.${at(60 * DAY + 26 * HOUR)}`])
+  })
+
+  it.each([
+    // A failed read 1 means no read 2: 4 checks + read 1. A failed read 2 follows read 1.
+    ['jobs', 5],
+    ['job_applications', 6],
+  ] as const)('when on, answers unknown and 503 when %s cannot be read', async (table, reads) => {
+    vi.stubEnv('JOB_RETENTION', 'on')
+    withOverdue()
+    db.failing.add(table)
+    const result = await call()
+    expect(result.body.checks['job-retention']).toBe('unknown')
+    expect(result.status).toBe(503)
+    expect(result.text).not.toContain('7f3a')
+    expect(db.requests).toHaveLength(reads)
+    expect(state.reports.every((args) => args[0] === 'ops status read')).toBe(true)
+  })
+
+  it('keeps the answer to the allowed words when on', async () => {
+    vi.stubEnv('JOB_RETENTION', 'on')
+    withOverdue()
+    const { text, body } = await call()
+    expectAllowedShape(text, body)
+    expect(text).not.toContain('r1')
+  })
+})
+
 describe('ops status within a minute', () => {
   const later = (ms: number) => vi.setSystemTime(NOW + ms)
 
@@ -355,7 +488,7 @@ describe('ops status within a minute', () => {
     for (const table of ['provider_runs', 'jobs', 'email_subscribers', 'saved_jobs']) db.failing.add(table)
     const failed = await call()
     expect(failed.status).toBe(503)
-    expect(Object.values(failed.body.checks)).toStrictEqual(['unknown', 'unknown', 'unknown', 'unknown'])
+    expect(Object.values(failed.body.checks)).toStrictEqual(['unknown', 'unknown', 'unknown', 'unknown', 'ok'])
     later(OPS_STATUS_HOLD_MS + 1)
     expect((await call()).status).toBe(503)
   })

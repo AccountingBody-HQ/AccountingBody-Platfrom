@@ -6,11 +6,14 @@ import {
   DAILY_GRACE_MS,
   IMPORT_WINDOW_MS,
   PENDING_SUBSCRIBER_MAX_AGE_MS,
+  RETENTION_GUARD_ROWS,
   SAVED_JOB_MAX_AGE_MS,
   cutoffs,
   judgeDue,
+  judgeRetention,
   judgeRuns,
   neutralAttention,
+  retentionOverdueBefore,
   summarise,
   type CheckName,
   type CheckWord,
@@ -28,6 +31,7 @@ const ALL_OK: Record<CheckName, CheckWord> = {
   'job-expiry': 'ok',
   'subscriber-cleanup': 'ok',
   'saved-jobs-cleanup': 'ok',
+  'job-retention': 'ok',
 }
 const WORDS: CheckWord[] = ['ok', 'late', 'failing', 'unknown']
 
@@ -126,6 +130,38 @@ describe('rows due for a clean-up', () => {
   })
 })
 
+describe('job retention', () => {
+  it('counts a job as overdue only past the cron cutoff plus the daily grace', () => {
+    expect(retentionOverdueBefore(NOW, 30)).toBe(at(30 * DAY + DAILY_GRACE_MS))
+    expect(retentionOverdueBefore(NOW, 14)).toBe(at(14 * DAY + 26 * HOUR))
+  })
+
+  it('answers unknown when either read failed', () => {
+    expect(judgeRetention(null, [])).toBe('unknown')
+    expect(judgeRetention(['a'], null)).toBe('unknown')
+  })
+
+  it('answers ok when nothing is overdue, whatever the guard read', () => {
+    expect(judgeRetention([], null)).toBe('ok')
+    expect(judgeRetention([], [])).toBe('ok')
+  })
+
+  it('answers late when any overdue job has no application', () => {
+    expect(judgeRetention(['a'], [])).toBe('late')
+    expect(judgeRetention(['a', 'b'], ['a', 'a'])).toBe('late')
+  })
+
+  it('answers ok when every overdue job has an application', () => {
+    expect(judgeRetention(['a', 'b'], ['b', 'a', 'b'])).toBe('ok')
+  })
+
+  it('answers ok when the guard read came back full and may have been cut short', () => {
+    expect(RETENTION_GUARD_ROWS).toBe(1000)
+    expect(judgeRetention(['a', 'b'], ['a', 'a'], 2)).toBe('ok')
+    expect(judgeRetention(['a', 'b'], ['a'], 2)).toBe('late')
+  })
+})
+
 describe('the overall answer', () => {
   it('answers 200 ok when every check is ok', () => {
     expect(summarise(ALL_OK)).toStrictEqual({ httpStatus: 200, body: { status: 'ok', checks: ALL_OK } })
@@ -136,7 +172,13 @@ describe('the overall answer', () => {
 
   it('lists the job expiry check as shown but not alerting', () => {
     expect(quiet).toStrictEqual(['job-expiry'])
-    expect(alerting).toStrictEqual(['job-import', 'subscriber-cleanup', 'saved-jobs-cleanup'])
+    expect(alerting).toStrictEqual(['job-import', 'subscriber-cleanup', 'saved-jobs-cleanup', 'job-retention'])
+  })
+
+  it('keeps the four existing checks in their order and adds job-retention last', () => {
+    expect(CHECKS.map((check) => check.name)).toStrictEqual([
+      'job-import', 'job-expiry', 'subscriber-cleanup', 'saved-jobs-cleanup', 'job-retention',
+    ])
   })
 
   for (const name of alerting) {

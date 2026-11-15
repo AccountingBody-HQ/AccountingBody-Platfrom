@@ -11,6 +11,8 @@
 //
 // A check with alerting: false is shown but never changes the overall answer.
 
+import { jobRetentionCutoff } from './job-retention'
+
 export type CheckWord = 'ok' | 'late' | 'failing' | 'unknown'
 export type OverallWord = 'ok' | 'attention'
 
@@ -37,6 +39,7 @@ export const CHECKS = [
   { name: 'job-expiry', alerting: false },
   { name: 'subscriber-cleanup', alerting: true },
   { name: 'saved-jobs-cleanup', alerting: true },
+  { name: 'job-retention', alerting: true },
 ] as const
 
 export type CheckName = (typeof CHECKS)[number]['name']
@@ -80,6 +83,29 @@ export function judgeDue(rows: Record<string, unknown>[] | null, column: string,
   })
     ? 'late'
     : 'ok'
+}
+
+// The job retention cron (07:30 UTC, lib/job-retention.ts) runs once a day,
+// so a due job may wait up to a day. A job counts as overdue only once its
+// closed_at is DAILY_GRACE_MS before the cron's own cutoff.
+export function retentionOverdueBefore(now: number, days: number): string {
+  return new Date(Date.parse(jobRetentionCutoff(new Date(now), days)) - DAILY_GRACE_MS).toISOString()
+}
+
+// At most this many job_applications rows are read for the retention check.
+export const RETENTION_GUARD_ROWS = 1000
+
+// Overdue job ids, and the ids among them that have an application (the cron
+// keeps those). null means that read failed. Any overdue id without an
+// application → late. A guard read that came back full may have been cut
+// short, so it cannot show which ids are unguarded → ok (never a false alarm).
+export function judgeRetention(due: string[] | null, guarded: string[] | null, guardRows = RETENTION_GUARD_ROWS): CheckWord {
+  if (due === null) return 'unknown'
+  if (due.length === 0) return 'ok'
+  if (guarded === null) return 'unknown'
+  if (guarded.length >= guardRows) return 'ok'
+  const kept = new Set(guarded)
+  return due.some((id) => !kept.has(id)) ? 'late' : 'ok'
 }
 
 export type StatusAnswer = {
