@@ -6,7 +6,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
-import { getServerSupabase } from '@/lib/supabase-server'
+import { getFeaturedArticlesForSite, type FeaturedArticle } from '@/lib/featured-articles'
 import EmailSignupForm from '@/components/EmailSignupForm'
 import HomepageJobSearch from '@/components/HomepageJobSearch'
 import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
@@ -21,39 +21,6 @@ import { formatJobCountLabel, formatCountLabel } from '@/lib/job-format'
 // value happened to be correct, so it still needs its own now.
 export async function generateMetadata(): Promise<Metadata> {
   return { ...(await canonicalMetadata('/')) }
-}
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-interface FeaturedArticle {
-  id:              string
-  title:           string
-  slug:            string
-  excerpt?:        string
-  category?:       string
-  category_title?: string
-  exam_body?:      string[]
-  read_time?:      number
-  published_at?:   string
-}
-
-// ── Supabase fetch ───────────────────────────────────────────────────────────
-
-async function getFeaturedArticles(siteCode: string): Promise<FeaturedArticle[]> {
-  try {
-    const supabase = getServerSupabase('publicRead')
-    const { data, error } = await supabase
-      .from('articles')
-      .select('id, title, slug, excerpt, category, category_title, exam_body, read_time, published_at')
-      .eq('status', 'published')
-      .contains('show_on_sites', [siteCode])
-      .order('published_at', { ascending: false })
-      .limit(4)
-    if (error || !data) return []
-    return data as FeaturedArticle[]
-  } catch {
-    return []
-  }
 }
 
 
@@ -393,7 +360,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const activeQualificationPaths = isEthioTax
     ? [eticpaCard, ...qualificationPaths.filter(q => q.slug !== 'icaew')]
     : qualificationPaths
-  const featuredArticles = await getFeaturedArticles(isEthioTax ? 'et' : 'ab')
+  const featuredArticles = await getFeaturedArticlesForSite(isEthioTax ? 'et' : 'ab')
   const articles = featuredArticles
 
   return (
