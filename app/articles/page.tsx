@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
-import { getServerSupabase } from '@/lib/supabase-server'
+import { getPublishedArticlesForSite, type ArticleSummary } from '@/lib/articles-list'
 import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
 
 export const dynamic = 'force-dynamic'
@@ -10,37 +10,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return { ...(await canonicalMetadata('/articles')) }
 }
 
-interface ArticleSummary {
-  id:            string
-  title:         string
-  slug:          string
-  excerpt?:      string
-  category?:     string
-  published_at?: string
-}
-
-async function getArticles(siteCode: string): Promise<ArticleSummary[]> {
-  try {
-    const supabase = getServerSupabase('publicRead')
-    const { data, error } = await supabase
-      .from('articles')
-      .select('id, title, slug, excerpt, category, published_at')
-      .eq('status', 'published')
-      .contains('show_on_sites', [siteCode])
-      .order('published_at', { ascending: false })
-      .limit(100)
-    if (error || !data) return []
-    return data as ArticleSummary[]
-  } catch {
-    return []
-  }
-}
-
 export default async function ArticlesPage() {
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
   const siteCode = isEthioTax ? 'et' : 'ab'
-  const articles = await getArticles(siteCode)
+  const articles: ArticleSummary[] = await getPublishedArticlesForSite(siteCode)
 
   return (
     <div>

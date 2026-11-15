@@ -2,8 +2,8 @@
 -- 0013_et_sitemap_index.sql
 -- Date: 15 Nov 2026
 --
--- NOT YET APPLIED — run only after a fresh backup and the owner's approval
--- of the exact statement.
+-- APPLIED on 15 Nov 2026 at 18:35 UTC (built in 7 s; valid; about 1 MB).
+-- Kept as the record. Do not run it again. The undo is Part D.
 --
 -- What: one small index on public.jobs, idx_jobs_et_sitemap. It lists only
 -- the jobs the EthioTax sitemap reads (platform includes 'et', status
