@@ -24,7 +24,7 @@ import {
   deferProvider,
 } from '@/lib/providers'
 import { getAdapter } from '@/lib/adapters'
-import { normalise } from '@/lib/ingestion/normalise'
+import { normalise, reslug } from '@/lib/ingestion/normalise'
 import { deduplicate } from '@/lib/ingestion/deduplicate'
 import { validate } from '@/lib/ingestion/validate'
 import { computeQualityMetrics, type QualityMetrics } from '@/lib/ingestion/quality'
@@ -41,12 +41,29 @@ function getSupabase() {
 
 const BATCH_SIZE = 50
 
+// Retries after a new job's slug clashes with an existing slug (3 attempts in all).
+const SLUG_RETRIES = 2
+
+// A unique violation on the slug (jobs_slug_key): the job is new, only its
+// random slug suffix collided. Never throws.
+function isSlugConflict(err: unknown): boolean {
+  try {
+    if (typeof err !== 'object' || err === null) return false
+    const { code, message } = err as { code?: unknown; message?: unknown }
+    return code === '23505' && typeof message === 'string' && message.includes('jobs_slug_key')
+  } catch {
+    return false
+  }
+}
+
 // A dedup_hash unique violation isn't a failure — it means the job already
 // exists (often because the concurrent keyword fan-out returned the same
 // job under multiple keywords in the same run). Classify it separately so
 // it's counted as deduplicated rather than logged as a real error.
+// A slug clash is not a duplicate (see isSlugConflict).
 function isDedupConflict(err: { message?: string; code?: string } | null): boolean {
   if (!err) return false
+  if (isSlugConflict(err)) return false
   if (err.code === '23505') return true
   const m = err.message ?? ''
   return m.includes('idx_jobs_dedup')
@@ -245,14 +262,19 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
         // means at least one row in the batch already exists. Don't log
         // that noisily; the per-row fallback below classifies each row
         // correctly anyway. Genuine errors still get logged as before.
-        if (!isDedupConflict(error)) {
+        if (!isDedupConflict(error) && !isSlugConflict(error)) {
           console.warn(`[ingest/${slug}] Batch insert failed, falling back to individual inserts:`, shortCode(error))
         }
         for (const job of batch) {
-          const { error: singleError } = await supabase.from('jobs').insert({
+          // A slug clash is retried with the same base and a fresh suffix.
+          let rowSlug = job.slug
+          let singleError: { message: string; code?: string } | null = null
+          for (let attempt = 0; attempt <= SLUG_RETRIES; attempt++) {
+          if (attempt > 0) rowSlug = reslug(rowSlug)
+          const { error: attemptError } = await supabase.from('jobs').insert({
             title:                 job.title,
             company_name:          job.company_name,
-            slug:                  job.slug,
+            slug:                  rowSlug,
             description:           job.description,
             excerpt:               job.excerpt,
             location_text:         job.location_text,
@@ -290,6 +312,9 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
             employer_company:      job.company_name,
             apply_method:          'external',
           })
+          singleError = attemptError
+          if (!isSlugConflict(attemptError)) break
+          }
           if (singleError) {
             if (isDedupConflict(singleError)) {
               // Job already exists — a legitimate outcome of the concurrent
@@ -299,7 +324,7 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
               insertErrors.push(`${job.slug}: ${shortCode(singleError)}`)
               await logProviderError(
                 provider.id, run.id, 'INSERT_FAILED',
-                singleError.code ?? 'INSERT_ERROR',
+                isSlugConflict(singleError) ? 'SLUG_CONFLICT' : (singleError.code ?? 'INSERT_ERROR'),
                 singleError.message,
                 job.raw_source_data as Record<string, unknown>
               )

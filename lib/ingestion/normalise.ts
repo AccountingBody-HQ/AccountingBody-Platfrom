@@ -262,8 +262,21 @@ function generateSlug(title: string, company: string): string {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .slice(0, 80)
-  const suffix = Math.random().toString(36).slice(2, 6)
+  const suffix = slugSuffix()
   return `${base}-${suffix}`
+}
+
+function slugSuffix(): string {
+  return Math.random().toString(36).slice(2, 6)
+}
+
+// A new slug for a job that has not been saved yet: the same base as
+// generateSlug made, with a fresh random suffix. Used only when inserting a
+// new job hit a slug clash; never for an existing row.
+export function reslug(slug: string): string {
+  const cut = slug.lastIndexOf('-')
+  const base = cut >= 0 ? slug.slice(0, cut) : slug
+  return `${base}-${slugSuffix()}`
 }
 
 // ── Excerpt generator ──────────────────────────────────────────────────────
