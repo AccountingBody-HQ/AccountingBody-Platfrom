@@ -1,10 +1,16 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
-import { getArticleBySlug, getCategoryCounts, getPublishedArticleCount, getPublishedQuestionCount, getQuestionSetCount } from './db'
+import { getArticleBySlug, getCategoryCounts, getPagesSitemapContent, getPublishedArticleCount, getPublishedQuestionCount, getQuestionSetCount } from './db'
 import { resetCacheGuard } from './cache-guard'
+import { reportServerError } from '@/lib/report-error'
 
 vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn(),
+}))
+
+// Reports are recorded, not sent (no Sentry is set up in tests either way).
+vi.mock('@/lib/report-error', () => ({
+  reportServerError: vi.fn(),
 }))
 
 // Same workaround as lib/jobs.test.ts: plain vitest resolves 'react' to a
@@ -256,5 +262,94 @@ describe('getArticleBySlug', () => {
     )
 
     await expect(getArticleBySlug('fixed-costs')).rejects.toThrow()
+  })
+})
+
+// Fake client for the pages sitemap: each from(table) starts its own query,
+// records its calls, and resolves to that table's result.
+function fakeSitemapClient(results: Record<string, { data: unknown; error: unknown }>) {
+  const queries: { table: string; calls: { method: string; args: unknown[] }[] }[] = []
+  const client = {
+    from: (table: string) => {
+      const query = { table, calls: [] as { method: string; args: unknown[] }[] }
+      queries.push(query)
+      const builder = {
+        select: (...args: unknown[]) => { query.calls.push({ method: 'select', args }); return builder },
+        eq:     (...args: unknown[]) => { query.calls.push({ method: 'eq', args }); return builder },
+        then:   (resolve: (value: unknown) => unknown, reject?: (reason: unknown) => unknown) =>
+          Promise.resolve(results[table]).then(resolve, reject),
+      }
+      return builder
+    },
+  }
+  vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
+  return queries
+}
+
+describe('getPagesSitemapContent', () => {
+  const ARTICLE = { slug: 'fixed-costs', updated_at: '2026-10-01T00:00:00Z', category: 'cost', canonical_owner: null, show_on_sites: ['ab'] }
+  const QUESTION_SET = { slug: 'variance-quiz', updated_at: '2026-10-02T00:00:00Z' }
+  const ok = (data: unknown) => ({ data, error: null })
+  const failed = { data: null, error: { message: 'database detail', code: '57014' } }
+
+  it('reads published AB articles and question sets with the same columns and filters as before', async () => {
+    const queries = fakeSitemapClient({ articles: ok([ARTICLE]), question_sets: ok([QUESTION_SET]) })
+
+    expect(await getPagesSitemapContent()).toStrictEqual({ ok: true, articles: [ARTICLE], questionSets: [QUESTION_SET] })
+    expect(queries).toStrictEqual([
+      {
+        table: 'articles',
+        calls: [
+          { method: 'select', args: ['slug, updated_at, category, canonical_owner, show_on_sites'] },
+          { method: 'eq', args: ['status', 'published'] },
+          { method: 'eq', args: ['platform', 'ab'] },
+        ],
+      },
+      {
+        table: 'question_sets',
+        calls: [
+          { method: 'select', args: ['slug, updated_at'] },
+          { method: 'eq', args: ['status', 'published'] },
+          { method: 'eq', args: ['platform', 'ab'] },
+        ],
+      },
+    ])
+    expect(reportServerError).not.toHaveBeenCalled()
+  })
+
+  it('treats real empty lists as a good result', async () => {
+    fakeSitemapClient({ articles: ok([]), question_sets: ok([]) })
+    expect(await getPagesSitemapContent()).toStrictEqual({ ok: true, articles: [], questionSets: [] })
+    expect(reportServerError).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['articles', { articles: failed, question_sets: ok([QUESTION_SET]) }],
+    ['question sets', { articles: ok([ARTICLE]), question_sets: failed }],
+  ])('fails, logs the short code only and reports once when the %s read fails', async (_name, results) => {
+    fakeSitemapClient(results)
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    expect(await getPagesSitemapContent()).toStrictEqual({ ok: false })
+    expect(log.mock.calls).toStrictEqual([['getPagesSitemapContent error:', '57014']])
+    expect(reportServerError).toHaveBeenCalledTimes(1)
+    const [label, error, extra] = vi.mocked(reportServerError).mock.calls[0]
+    expect(label).toBe('sitemap pages read failed')
+    expect(error).toBeInstanceOf(Error)
+    expect((error as Error).message).toBe('sitemap pages read failed')
+    expect((error as Error & { code?: string }).code).toBe('57014')
+    expect(extra).toStrictEqual({ area: 'public' })
+  })
+
+  it.each([
+    ['articles', { articles: ok(null), question_sets: ok([QUESTION_SET]) }],
+    ['question sets', { articles: ok([ARTICLE]), question_sets: ok(null) }],
+  ])('fails and reports once when the %s read returns no data', async (_name, results) => {
+    fakeSitemapClient(results)
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    expect(await getPagesSitemapContent()).toStrictEqual({ ok: false })
+    expect(reportServerError).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(reportServerError).mock.calls[0][0]).toBe('sitemap pages read failed')
   })
 })

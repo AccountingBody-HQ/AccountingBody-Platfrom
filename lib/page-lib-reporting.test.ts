@@ -318,6 +318,26 @@ describe('sitemaps', () => {
     expect(await jobs.getJobSitemapChunk('ab', 0)).toMatchObject({ ok: true })
     expect(state.reports).toStrictEqual([])
   })
+
+  it.each(['articles', 'question_sets'])('reports a pages sitemap %s read that fails and keeps its failed result', async (table) => {
+    net.fail = (call) => call.table === table
+    expect(await db.getPagesSitemapContent()).toStrictEqual({ ok: false })
+    expectReports([['sitemap pages read failed', 'public', 'getPagesSitemapContent error:']])
+    expect(state.reports[0][1]).toBeInstanceOf(Error)
+    expect((state.reports[0][1] as { code?: string }).code).toBe('XX000')
+  })
+
+  it('reports a pages sitemap failure once when both reads fail', async () => {
+    net.fail = (call) => call.table === 'articles' || call.table === 'question_sets'
+    expect(await db.getPagesSitemapContent()).toStrictEqual({ ok: false })
+    expect(labels()).toStrictEqual(['sitemap pages read failed'])
+  })
+
+  it('makes no report for the pages sitemap when the reads work', async () => {
+    net.rows.articles = [{ slug: 'a', updated_at: null, category: null, canonical_owner: null, show_on_sites: ['ab'], status: 'published', platform: 'ab' }]
+    expect(await db.getPagesSitemapContent()).toMatchObject({ ok: true, questionSets: [] })
+    expect(state.reports).toStrictEqual([])
+  })
 })
 
 describe('job counters', () => {
@@ -510,6 +530,7 @@ const REPORTING: Record<string, string[]> = {
   'lib/db.ts:getQuestionSetCount': ["reportServerError('question set count read failed', error, { area: 'public' })"],
   'lib/db.ts:getPublishedQuestionCount': ["reportServerError('question count read failed', error, { area: 'public' })"],
   'lib/db.ts:getPublishedArticleCount': ["reportServerError('article count read failed', error, { area: 'public' })"],
+  'lib/db.ts:getPagesSitemapContent': ["reportServerError('sitemap pages read failed', error, { area: 'public' })"],
   'lib/jobs.ts:getSimilarJobs': [
     "reportServerError('similar jobs title words failed', new Error('similar jobs title words failed'), { area: 'public' })",
     "reportServerError('similar jobs strong match read failed', new Error('similar jobs query failed'), { area: 'public' })",
