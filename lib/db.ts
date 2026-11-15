@@ -451,9 +451,12 @@ export async function getPublishedArticleCount(siteCode: string): Promise<number
 // approach, same platform-keying guarantee).
 export const getCachedPublishedArticleCount = cache(getPublishedArticleCount)
 
+// Returns an empty list only for a genuine empty result. Any failure is
+// thrown, so the module page renders its error page with a 500 instead of
+// "0 published" study notes.
 export async function getETICPAModuleArticles(level: string, module: string): Promise<ArticleSummary[]> {
   const supabase = getSupabase()
-  const { data, error } = await supabase
+  const { data, error, status } = await supabase
     .from('articles')
     .select('id, title, slug, excerpt, category, category_title, exam_body, read_time, published_at, author_name')
     .eq('status', 'published')
@@ -461,7 +464,8 @@ export async function getETICPAModuleArticles(level: string, module: string): Pr
     .eq('eticpa_module', module)
     .order('title', { ascending: true })
     .limit(5000)
-  if (error || !data) return []
+  if (error) throw readProblem(`getETICPAModuleArticles: articles query failed (status ${status})`, error)
+  if (!data) return []
   return data as ArticleSummary[]
 }
 
