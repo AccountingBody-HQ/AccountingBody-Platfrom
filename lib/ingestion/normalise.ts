@@ -1,6 +1,6 @@
 import type { RawJob } from '../adapters/types'
 import type { JobProvider } from '../providers'
-import { COUNTRY_KEYS } from './countries'
+import { COUNTRY_CODES, COUNTRY_KEYS } from './countries'
 
 // ── Safe integer parsing for salary_min / salary_max (Postgres integer columns) ──
 // Guarantees the result is either null or a finite, rounded integer — never NaN,
@@ -626,10 +626,20 @@ export function normalise(rawJob: RawJob, provider: JobProvider): NormalisedJob 
     ? String(resolvePath(rawJob, mapping.location_country) ?? '') || null
     : null
 
+  // A provider's own country field may hold a 2-letter ISO code ("PH").
+  // Only this field is read that way; free location text never is.
+  const mappedCode = (mappedLocationCountry ?? '').trim()
+  const mappedCodeCountry = /^[A-Za-z]{2}$/.test(mappedCode)
+    ? COUNTRY_CODES[mappedCode.toUpperCase()] ?? null
+    : null
+
   let locationCountry: string | null = null
   if (mappedLocationCountry && KNOWN_COUNTRIES[mappedLocationCountry.toLowerCase().trim()]) {
-    // 1. Mapping points at a genuine, recognised country value — trust it.
+    // 1a. Mapping points at a genuine, recognised country value — trust it.
     locationCountry = KNOWN_COUNTRIES[mappedLocationCountry.toLowerCase().trim()]
+  } else if (mappedCodeCountry) {
+    // 1b. Mapping holds a 2-letter ISO country code — trust it.
+    locationCountry = mappedCodeCountry
   } else if (parsedLocation.country) {
     // 2. Mapping was empty or unrecognised (e.g. a display string like
     //    "Hoddesdon, Hertfordshire") — fall back to what parseLocation found.
