@@ -1,9 +1,15 @@
 import Link from 'next/link'
+import { cache } from 'react'
 import ScrollToTop from '@/components/ScrollToTop'
 import type { Metadata } from 'next'
 import { getArticlesByCategory } from '@/lib/db'
 import { canonicalMetadata } from '@/lib/canonical'
-import type { ArticleSummary } from '@/lib/db'
+import { OTHER_KEY, groupAlphabetically, pickLetter, letterHref } from '@/lib/study-letter'
+
+// One database read per request, shared by generateMetadata and the page.
+const readArticles = cache((category: string) => getArticlesByCategory(category))
+
+type LetterSearchParams = { letter?: string | string[] }
 
 const EXAM_BODY_META: Record<string, { name: string; description: string; accent: string; badgeBg: string; badgeText: string }> = {
   acca:  { name: 'ACCA',  description: 'Association of Chartered Certified Accountants — all 13 papers.', accent: 'bg-[#004B8D]', badgeBg: 'bg-blue-50',    badgeText: 'text-[#004B8D]' },
@@ -38,16 +44,6 @@ function getCategoryDisplay(slug: string) {
   }
 }
 
-function groupAlphabetically(articles: ArticleSummary[]): { letter: string; articles: ArticleSummary[] }[] {
-  const map = new Map<string, ArticleSummary[]>()
-  for (const article of articles) {
-    const letter = article.title.charAt(0).toUpperCase()
-    if (!map.has(letter)) map.set(letter, [])
-    map.get(letter)!.push(article)
-  }
-  return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b)).map(([letter, articles]) => ({ letter, articles }))
-}
-
 export const dynamicParams = true
 
 export async function generateStaticParams() {
@@ -55,22 +51,31 @@ export async function generateStaticParams() {
   return known.map(category => ({ category }))
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: { params: Promise<{ category: string }>; searchParams?: LetterSearchParams }): Promise<Metadata> {
   const { category } = await params
-  const meta = getCategoryDisplay(category)
+  const meta       = getCategoryDisplay(category)
+  const articles   = await readArticles(category)
+  const available  = groupAlphabetically(articles).map(g => g.letter)
+  const defaultKey = available[0] ?? ''
+  const chosen     = pickLetter(searchParams?.letter, available)
+  const path       = articles.length > 0 ? letterHref(category, chosen, defaultKey) : `/study/${category}`
   return {
     title: `${meta.name} Study Notes | Accounting Body`,
     description: meta.description,
-    ...(await canonicalMetadata(`/study/${category}`)),
+    ...(await canonicalMetadata(path)),
   }
 }
 
-export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
+export default async function CategoryPage({ params, searchParams }: { params: Promise<{ category: string }>; searchParams?: LetterSearchParams }) {
   const { category } = await params
   const meta         = getCategoryDisplay(category)
-  const articles     = await getArticlesByCategory(category)
+  const articles     = await readArticles(category)
   const groups       = groupAlphabetically(articles)
   const letters      = groups.map(g => g.letter)
+  const defaultKey   = letters[0] ?? ''
+  const chosen       = pickLetter(searchParams?.letter, letters)
+  const shownGroups  = groups.filter(g => g.letter === chosen)
+  const barKeys      = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').concat(letters.includes(OTHER_KEY) ? [OTHER_KEY] : [])
 
   return (
     <div>
@@ -105,13 +110,21 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
           <div className="container-site py-3">
             <div className="flex items-center gap-1 flex-wrap">
               <span className="text-xs font-semibold text-slate-400 mr-2 shrink-0">Jump to:</span>
-              {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(l => {
-                const active = letters.includes(l)
+              {barKeys.map(l => {
+                const base = 'w-7 h-7 rounded flex items-center justify-center text-xs font-bold transition-colors'
+                if (!letters.includes(l)) {
+                  return (
+                    <span key={l} aria-disabled="true" className={[base, 'text-slate-300 cursor-default'].join(' ')} translate='no'>
+                      {l}
+                    </span>
+                  )
+                }
+                const isChosen = l === chosen
                 return (
-                  <a key={l} href={active ? `#letter-${l}` : undefined} aria-disabled={!active}
-                    className={['w-7 h-7 rounded flex items-center justify-center text-xs font-bold transition-colors', active ? 'bg-navy-50 text-navy-700 hover:bg-navy-950 hover:text-white cursor-pointer' : 'text-slate-300 cursor-default'].join(' ')} translate='no'>
+                  <Link key={l} href={letterHref(category, l, defaultKey)} aria-current={isChosen ? 'page' : undefined}
+                    className={[base, isChosen ? 'bg-navy-950 text-white' : 'bg-navy-50 text-navy-700 hover:bg-navy-950 hover:text-white cursor-pointer'].join(' ')} translate='no'>
                     {l}
-                  </a>
+                  </Link>
                 )
               })}
             </div>
@@ -132,7 +145,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
             </div>
           ) : (
             <div className="space-y-12">
-              {groups.map(({ letter, articles: groupArticles }) => (
+              {shownGroups.map(({ letter, articles: groupArticles }) => (
                 <div key={letter} id={`letter-${letter}`} className="scroll-mt-16">
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-11 h-11 rounded-xl bg-navy-950 flex items-center justify-center shrink-0">
