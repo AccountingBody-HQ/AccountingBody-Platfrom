@@ -201,6 +201,9 @@ export async function getPagesSitemapContent(): Promise<PagesSitemapContent> {
 
 const QUALIFICATION_SLUGS = ['acca', 'cima', 'aat', 'icaew', 'eticpa', 'eticpa-atq', 'eticpa-cpa']
 
+// Returns an empty list only for a genuine empty result. Any failure is
+// thrown, so the page renders its error page with a 500 instead of an
+// empty category.
 export async function getArticlesByCategory(categorySlug: string): Promise<ArticleSummary[]> {
   const supabase = getSupabase()
   const isQualification = QUALIFICATION_SLUGS.includes(categorySlug.toLowerCase())
@@ -217,8 +220,9 @@ export async function getArticlesByCategory(categorySlug: string): Promise<Artic
     query = query.eq('category', categorySlug)
   }
 
-  const { data, error } = await query.limit(3000)
-  if (error || !data) return []
+  const { data, error, status } = await query.limit(3000)
+  if (error) throw readProblem(`getArticlesByCategory: articles query failed (status ${status})`, error)
+  if (!data) return []
   return data as ArticleSummary[]
 }
 
@@ -314,12 +318,13 @@ export async function getQuestionSetBySlug(slug: string): Promise<QuestionSet | 
 
 export async function getQuestionsBySetId(setId: string): Promise<Question[]> {
   const supabase = getSupabase()
-  const { data, error } = await supabase
+  const { data, error, status } = await supabase
     .from('questions')
     .select('*')
     .eq('set_id', setId)
     .order('question_order', { ascending: true })
-  if (error || !data) return []
+  if (error) throw readProblem(`getQuestionsBySetId: questions query failed (status ${status})`, error)
+  if (!data) return []
   return data as Question[]
 }
 
@@ -334,12 +339,13 @@ export interface QuestionCase {
 
 export async function getCasesBySetId(setId: string): Promise<QuestionCase[]> {
   const supabase = getSupabase()
-  const { data, error } = await supabase
+  const { data, error, status } = await supabase
     .from('question_cases')
     .select('*')
     .eq('set_id', setId)
     .order('created_at', { ascending: true })
-  if (error || !data) return []
+  if (error) throw readProblem(`getCasesBySetId: question_cases query failed (status ${status})`, error)
+  if (!data) return []
   return data as QuestionCase[]
 }
 
@@ -372,8 +378,9 @@ export async function getQuestionSets(params: {
 
   query = query.range(start, end)
 
-  const { data, error, count } = await query
-  if (error || !data) return { sets: [], total: 0 }
+  const { data, error, count, status } = await query
+  if (error) throw readProblem(`getQuestionSets: question_sets query failed (status ${status})`, error)
+  if (!data) return { sets: [], total: 0 }
   return { sets: data as QuestionSet[], total: count ?? 0 }
 }
 
@@ -502,9 +509,12 @@ export async function getPublishedArticleCount(siteCode: string): Promise<number
 // approach, same platform-keying guarantee).
 export const getCachedPublishedArticleCount = cache(getPublishedArticleCount)
 
+// Returns an empty list only for a genuine empty result. Any failure is
+// thrown, so the module page renders its error page with a 500 instead of
+// "0 published" study notes.
 export async function getETICPAModuleArticles(level: string, module: string): Promise<ArticleSummary[]> {
   const supabase = getSupabase()
-  const { data, error } = await supabase
+  const { data, error, status } = await supabase
     .from('articles')
     .select('id, title, slug, excerpt, category, category_title, exam_body, read_time, published_at, author_name')
     .eq('status', 'published')
@@ -512,7 +522,8 @@ export async function getETICPAModuleArticles(level: string, module: string): Pr
     .eq('eticpa_module', module)
     .order('title', { ascending: true })
     .limit(5000)
-  if (error || !data) return []
+  if (error) throw readProblem(`getETICPAModuleArticles: articles query failed (status ${status})`, error)
+  if (!data) return []
   return data as ArticleSummary[]
 }
 
