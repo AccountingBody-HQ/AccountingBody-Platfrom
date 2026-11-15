@@ -5,18 +5,12 @@
 import React from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { getServerSupabase } from '@/lib/supabase-server'
 import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
-
-interface ArticleSummary {
-  id:              string
-  title:           string
-  slug:            string
-  excerpt?:        string
-  category?:       string
-  category_title?: string
-  published_at?:   string
-}
+import {
+  getDictionaryArticlesByLetter,
+  getDictionaryArticlesByCategory,
+  type DictionaryArticle,
+} from '@/lib/dictionary-articles'
 
 const LETTERS = [
   '#','A','B','C','D','E','F','G','H','I','J','K','L','M',
@@ -51,50 +45,6 @@ export async function generateMetadata({
   }
 }
 
-async function getArticlesByLetter(letter: string): Promise<ArticleSummary[]> {
-  try {
-    const supabase = getServerSupabase('publicRead')
-    let query = supabase
-      .from('articles')
-      .select('id, title, slug, excerpt, category, category_title, published_at')
-      .eq('status', 'published')
-      .contains('show_on_sites', ['ab'])
-
-    if (letter === '#') {
-      const digitFilter = Array.from({ length: 10 }, (_, i) => `title.ilike.${i}%`).join(',')
-      query = query.or(digitFilter)
-    } else {
-      const u = letter.toUpperCase()
-      const next = String.fromCharCode(u.charCodeAt(0) + 1)
-      query = query.gte('title', u).lt('title', next)
-    }
-
-    const { data, error } = await query.order('title', { ascending: true }).limit(5000)
-    if (error || !data) return []
-    return data as ArticleSummary[]
-  } catch {
-    return []
-  }
-}
-
-async function getArticlesByCategorySlug(categorySlug: string): Promise<ArticleSummary[]> {
-  try {
-    const supabase = getServerSupabase('publicRead')
-    const { data, error } = await supabase
-      .from('articles')
-      .select('id, title, slug, excerpt, category, category_title, published_at')
-      .eq('status', 'published')
-      .contains('show_on_sites', ['ab'])
-      .eq('category', categorySlug)
-      .order('title', { ascending: true })
-      .limit(5000)
-    if (error || !data) return []
-    return data as ArticleSummary[]
-  } catch {
-    return []
-  }
-}
-
 function LetterNav({ activeLetter }: { activeLetter: string }) {
   return (
     <nav aria-label="Dictionary alphabet navigation" className="flex flex-wrap gap-1.5">
@@ -120,7 +70,7 @@ function LetterNav({ activeLetter }: { activeLetter: string }) {
   )
 }
 
-function ArticleRow({ article }: { article: ArticleSummary }) {
+function ArticleRow({ article }: { article: DictionaryArticle }) {
   return (
     <article className="group flex flex-col sm:flex-row sm:items-start gap-4 py-5 border-b border-slate-100 last:border-0">
       <div className="hidden sm:flex w-10 h-10 rounded-lg bg-navy-50 border border-navy-100 items-center justify-center shrink-0 mt-0.5">
@@ -161,14 +111,14 @@ export default async function DictionaryPage({
   const activeLetter   = LETTERS.includes(rawLetter) ? rawLetter : ''
   const activeCategory = searchParams.category ?? ''
 
-  let articles: ArticleSummary[] = []
+  let articles: DictionaryArticle[] = []
   let categoryTitle = ''
 
   if (activeCategory) {
-    articles = await getArticlesByCategorySlug(activeCategory)
+    articles = await getDictionaryArticlesByCategory(activeCategory)
     categoryTitle = activeCategory.replace(/-/g, ' ').replace(/\w/g, c => c.toUpperCase())
   } else if (activeLetter) {
-    articles = await getArticlesByLetter(activeLetter)
+    articles = await getDictionaryArticlesByLetter(activeLetter)
   }
 
   const prevLetter = activeLetter ? LETTERS[LETTERS.indexOf(activeLetter) - 1] : null
