@@ -465,7 +465,7 @@ export async function getPublishedQuestionCount(): Promise<number> {
 export const getCachedPublishedQuestionCount = cache(getPublishedQuestionCount)
 
 // Real per-host article count for the footer stat. Deliberately mirrors
-// getArticles()'s own filter in app/articles/page.tsx — status='published'
+// the filter of getPublishedArticlesForSite() in lib/articles-list.ts (the /articles page's reader) — status='published'
 // AND show_on_sites contains the requesting host's code — NOT
 // canonical_owner, which is a different, narrower concept (which site
 // originally authored a piece, used by app/et-sitemap/route.ts) that
