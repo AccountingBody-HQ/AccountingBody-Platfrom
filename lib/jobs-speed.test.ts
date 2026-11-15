@@ -486,9 +486,9 @@ describe('countryListFromPrecounts', () => {
     const rows = [
       row('jobs_browsable:ab', 9000),
       row('jobs_browsable:ab:country:United Kingdom', 40),
-      row('jobs_browsable:ab:country:Korea, Republic of', 7),
-      row("jobs_browsable:ab:country:Côte d'Ivoire", 5),
-      row('jobs_browsable:ab:country:Bosnia: Herzegovina', 4),
+      row('jobs_browsable:ab:country:Cocos (Keeling) Islands', 7),
+      row('jobs_browsable:ab:country:São Tomé and Príncipe', 5),
+      row('jobs_browsable:ab:country:Guinea-Bissau', 4),
       row('jobs_browsable:ab:search:cfo', 140),
       row('jobs_browsable:ab:countryX', 99),
       row('jobs_browsable:ab:country:', 98),
@@ -501,9 +501,9 @@ describe('countryListFromPrecounts', () => {
     ]
     expect(countryListFromPrecounts(rows, 'ab', now)).toEqual([
       { country: 'United Kingdom', count: 40 },
-      { country: 'Korea, Republic of', count: 7 },
-      { country: "Côte d'Ivoire", count: 5 },
-      { country: 'Bosnia: Herzegovina', count: 4 },
+      { country: 'Cocos (Keeling) Islands', count: 7 },
+      { country: 'São Tomé and Príncipe', count: 5 },
+      { country: 'Guinea-Bissau', count: 4 },
     ])
   })
 
@@ -520,10 +520,10 @@ describe('countryListFromPrecounts', () => {
 
   it('applies the 6-hour rule of getPrecountedFilterTotal to each row', () => {
     const rows = [
-      row('jobs_browsable:ab:country:Fresh', 3, now - PRECOUNT_MAX_AGE_MS),
+      row('jobs_browsable:ab:country:Kenya', 3, now - PRECOUNT_MAX_AGE_MS),
       row('jobs_browsable:ab:country:Stale', 9, now - PRECOUNT_MAX_AGE_MS - 1),
     ]
-    expect(countryListFromPrecounts(rows, 'ab', now)).toEqual([{ country: 'Fresh', count: 3 }])
+    expect(countryListFromPrecounts(rows, 'ab', now)).toEqual([{ country: 'Kenya', count: 3 }])
   })
 
   it('gives the 11 Nov list for ab and et from the live rows', () => {

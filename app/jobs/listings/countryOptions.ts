@@ -28,9 +28,11 @@ export const FALLBACK_COUNTRY_OPTIONS: CountryOption[] = [
   { value: 'Bulgaria',       label: 'Bulgaria' },
 ]
 
-// Only 'Worldwide' needs a friendlier label than its raw stored value —
-// every other value the derived list can return is already a real,
-// displayable country name.
+// Only 'Worldwide' needs a friendlier label than its raw stored value.
+// Stored values are not always country names, but the derived list only
+// passes on canonical country names and 'Worldwide' (lib/jobs.ts's
+// countryListFromPrecounts drops every other value), so every other
+// value shown here is a real, displayable country name.
 const COUNTRY_LABEL_OVERRIDES: Record<string, string> = {
   Worldwide: 'Worldwide / Remote',
 }
