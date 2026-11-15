@@ -471,6 +471,7 @@ describe('import log clean-up setup', () => {
       { path: '/api/ingest/orchestrator', schedule: '*/15 * * * *' },
       { path: '/api/cron/prune-pending-subscribers', schedule: '30 6 * * *' },
       { path: '/api/cron/prune-saved-jobs', schedule: '0 7 * * *' },
+      { path: '/api/cron/prune-expired-jobs', schedule: '30 7 * * *' },
       { path: '/api/cron/prune-import-logs', schedule: '45 7 * * *' },
     ])
   })

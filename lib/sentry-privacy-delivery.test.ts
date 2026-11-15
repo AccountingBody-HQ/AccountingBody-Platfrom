@@ -82,7 +82,12 @@ describe('a direct problem report as Sentry receives it', () => {
       Sentry.captureException(thrownWithAdminFrame())
     })
     filtersOn = true
-    for (const value of [EMAIL, TEST_ADMIN_PATH, TOKEN, 'admin_token', 'session-value', 'pre_context']) expect(envelope).toContain(value)
+    for (const value of [EMAIL, TEST_ADMIN_PATH, 'admin_token', 'session-value', 'pre_context']) expect(envelope).toContain(value)
+    // 10.78.0 (from 10.75.2) replaces sensitive query values itself, so the token is no longer sent even without the filters.
+    const { event } = eventOf(envelope)
+    expect(event.request.query_string).toBe('token=[Filtered]')
+    expect(event.request.url).toBe(`https://accountingbody.com/api/${TEST_ADMIN_PATH}/courses/1?token=[Filtered]`)
+    expect(envelope).not.toContain(TOKEN)
   })
 
   it('keeps the error type, a shortened message and stack frames, and nothing from the request', async () => {
@@ -122,7 +127,12 @@ describe('an uncaught route error as Sentry receives it', () => {
     filtersOn = false
     const [envelope] = await failingRoute()
     filtersOn = true
-    for (const value of [EMAIL, TEST_ADMIN_PATH, TOKEN, 'admin_token', 'pre_context']) expect(envelope).toContain(value)
+    for (const value of [EMAIL, TEST_ADMIN_PATH, 'admin_token', 'pre_context']) expect(envelope).toContain(value)
+    // 10.78.0 (from 10.75.2) replaces sensitive query values itself, so the token is no longer sent even without the filters.
+    const { event } = eventOf(envelope)
+    expect(event.request.query_string).toBe('token=[Filtered]')
+    expect(event.request.url).toBe(`https://accountingbody.com/api/${TEST_ADMIN_PATH}/courses/1?token=[Filtered]`)
+    expect(envelope).not.toContain(TOKEN)
   })
 
   it('reaches Sentry as unhandled, with nothing from the request, and the route still fails the same way', async () => {

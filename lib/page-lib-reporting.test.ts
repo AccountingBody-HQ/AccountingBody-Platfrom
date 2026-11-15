@@ -357,7 +357,7 @@ describe('import run helpers', () => {
 
   it('reapStaleRuns reports an unexpected problem and keeps its 0 answer', async () => {
     net.fail = failOn('PATCH', 'provider_runs')
-    expect(await providers.reapStaleRuns(10)).toBe(0)
+    expect(await providers.reapStaleRuns(10)).toStrictEqual({ count: 0, providerIds: [] })
     expectReports([['job import stale run update failed', 'ingest', '[reapStaleRuns] failed:']])
   })
 
@@ -541,10 +541,19 @@ const REPORTING: Record<string, string[]> = {
     "reportServerError('job import run failed', err, { area: 'ingest' })",
   ],
   'lib/ingestion/run-provider-import.ts:runProviderImport': ["reportServerError('job import stopped unexpectedly', err, { area: 'ingest' })"],
+  'lib/ingestion/deduplicate.ts:deduplicate': ["reportServerError('job import duplicate read failed', err, { area: 'ingest' })"],
+  'lib/ingestion/deduplicate.ts:refreshRows': ["reportServerError('job import refresh failed', err, { area: 'ingest' })"],
+  'lib/ingestion/deduplicate.ts:reviveOne': ["reportServerError('job import revive failed', err, { area: 'ingest' })"],
   'lib/providers.ts:updateProviderDataQuality': ["reportServerError('job import quality save failed', error, { area: 'ingest' })"],
   'lib/providers.ts:incrementProviderJobsToday': [
     "reportServerError('job import counter read failed', fetchError ?? new Error('job import counter read failed'), { area: 'ingest' })",
     "reportServerError('job import counter save failed', updateError, { area: 'ingest' })",
+  ],
+  'lib/providers.ts:updateProviderHealth': [
+    "reportServerError('job import health read failed', readError, { area: 'ingest' })",
+    "reportServerError('job import health save failed', saveError, { area: 'ingest' })",
+    "reportServerError('job import health read failed', readError, { area: 'ingest' })",
+    "reportServerError('job import health save failed', saveError, { area: 'ingest' })",
   ],
   'lib/providers.ts:reapStaleRuns': ["reportServerError('job import stale run update failed', error, { area: 'ingest' })"],
   'lib/providers.ts:updateProviderKeywordCursor': ["reportServerError('job import keyword cursor save failed', error, { area: 'ingest' })"],

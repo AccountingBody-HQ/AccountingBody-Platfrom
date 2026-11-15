@@ -32,7 +32,7 @@ vi.mock('@/lib/admin-auth', () => ({
 }))
 vi.mock('@/lib/providers', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/providers')>()),
-  reapStaleRuns: async () => 0,
+  reapStaleRuns: async () => ({ count: 0, providerIds: [] }),
   getProvidersDueForFetch: async () => state.due,
 }))
 vi.mock('resend', () => ({

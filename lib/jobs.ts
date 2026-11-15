@@ -1517,9 +1517,8 @@ export async function createJob(data: JobInsert): Promise<Job> {
     .select(JOB_COLUMNS_ADMIN)
     .single()
 
-  if (error || !inserted) {
-    throw error ?? new Error('createJob: insert returned no row')
-  }
+  if (error) throw readProblem('createJob: insert failed', error)
+  if (!inserted) throw new Error('createJob: insert returned no row')
 
   return inserted as Job
 }

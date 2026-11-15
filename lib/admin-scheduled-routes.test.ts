@@ -566,7 +566,9 @@ const scenarios: Scenario[] = [
         durationMs: 120_000,
       },
       emails: 1,
-      dbRequests: 11,
+      // No job was new, but the run's one request is still counted
+      // (requests_today read + save), as in the healthy run.
+      dbRequests: 13,
     },
   },
   {
