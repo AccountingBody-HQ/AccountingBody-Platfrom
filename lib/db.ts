@@ -263,12 +263,13 @@ export async function getQuestionSetBySlug(slug: string): Promise<QuestionSet | 
 
 export async function getQuestionsBySetId(setId: string): Promise<Question[]> {
   const supabase = getSupabase()
-  const { data, error } = await supabase
+  const { data, error, status } = await supabase
     .from('questions')
     .select('*')
     .eq('set_id', setId)
     .order('question_order', { ascending: true })
-  if (error || !data) return []
+  if (error) throw readProblem(`getQuestionsBySetId: questions query failed (status ${status})`, error)
+  if (!data) return []
   return data as Question[]
 }
 
@@ -283,12 +284,13 @@ export interface QuestionCase {
 
 export async function getCasesBySetId(setId: string): Promise<QuestionCase[]> {
   const supabase = getSupabase()
-  const { data, error } = await supabase
+  const { data, error, status } = await supabase
     .from('question_cases')
     .select('*')
     .eq('set_id', setId)
     .order('created_at', { ascending: true })
-  if (error || !data) return []
+  if (error) throw readProblem(`getCasesBySetId: question_cases query failed (status ${status})`, error)
+  if (!data) return []
   return data as QuestionCase[]
 }
 
