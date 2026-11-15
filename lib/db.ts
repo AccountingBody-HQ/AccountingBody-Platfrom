@@ -144,6 +144,61 @@ export const getArticleBySlug = cache(async (slug: string): Promise<ArticleFull 
   }
 })
 
+// ── Pages sitemap ─────────────────────────────────────────────────────────────
+
+// The two reads behind app/sitemaps/pages.xml/route.ts: published AB articles
+// and published AB question sets. If either read fails (or returns no data),
+// the problem is logged and reported here and the result is { ok: false }, so
+// the route answers 500 (never cached) instead of an hour-long sitemap that
+// quietly leaves those pages out. Real empty lists are ok: true. Same contract
+// as getJobSitemapChunk in lib/jobs.ts.
+export interface PagesSitemapArticle {
+  slug:             string
+  updated_at:       string | null
+  category?:        string
+  canonical_owner?: string
+  show_on_sites?:   string[]
+}
+
+export interface PagesSitemapQuestionSet {
+  slug:       string
+  updated_at: string | null
+}
+
+export type PagesSitemapContent =
+  | { ok: true; articles: PagesSitemapArticle[]; questionSets: PagesSitemapQuestionSet[] }
+  | { ok: false }
+
+export async function getPagesSitemapContent(): Promise<PagesSitemapContent> {
+  const supabase = getSupabase()
+
+  const articlesRead = await supabase
+    .from('articles')
+    .select('slug, updated_at, category, canonical_owner, show_on_sites')
+    .eq('status', 'published')
+    .eq('platform', 'ab')
+
+  const questionSetsRead = await supabase
+    .from('question_sets')
+    .select('slug, updated_at')
+    .eq('status', 'published')
+    .eq('platform', 'ab')
+
+  const problem = articlesRead.error ?? questionSetsRead.error
+  if (problem || !articlesRead.data || !questionSetsRead.data) {
+    const error = readProblem(problem ? 'sitemap pages read failed' : 'sitemap pages read returned no data', problem ?? {})
+    console.error('getPagesSitemapContent error:', error.code ?? 'no code')
+    reportServerError('sitemap pages read failed', error, { area: 'public' })
+    return { ok: false }
+  }
+
+  return {
+    ok:           true,
+    articles:     articlesRead.data as PagesSitemapArticle[],
+    questionSets: questionSetsRead.data as PagesSitemapQuestionSet[],
+  }
+}
+
 const QUALIFICATION_SLUGS = ['acca', 'cima', 'aat', 'icaew', 'eticpa', 'eticpa-atq', 'eticpa-cpa']
 
 export async function getArticlesByCategory(categorySlug: string): Promise<ArticleSummary[]> {
