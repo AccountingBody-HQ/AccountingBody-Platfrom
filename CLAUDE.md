@@ -91,7 +91,7 @@ This repository is public. Anything committed can be read by anyone, and stays i
 - Hands-free jobs also follow `docs/AGENT-RULES.md`.
 - No network unless the brief explicitly allows it. That includes `git fetch`, `git pull`, `git push`, `npm install`, `npx` downloads, `curl`, `wget`, `gh`, live sites and AI calls.
 - No sub-agents unless the brief asks for them.
-- No live database changes from this environment unless the brief names the exact change (file and part), the expected row count and the undo, and a fresh backup has been proven first. Every data or schema change needs that fresh backup and the owner's approval of the exact change. Run each change once, in one transaction that rolls back if the count differs. Read-only database sessions start with `BEGIN READ ONLY;` (check `SHOW transaction_read_only;` prints `on`) and end with `ROLLBACK;`; do not rely on connection options for read-only. Standing exception (owner decision D140): the daily retention cron's deletes of imported jobs are approved by D140 and covered by the daily scheduled backup; turning `JOB_RETENTION` on is the owner's step.
+- No live database changes from this environment unless the brief names the exact change (file and part), the expected row count and the undo, and a fresh backup has been proven first. Every data or schema change needs that fresh backup and the owner's approval of the exact change. Run each change once, in one transaction that rolls back if the count differs. An index built with `CREATE INDEX CONCURRENTLY` is the designed exception: it cannot run inside a transaction and changes no rows, so it runs alone with its own `statement_timeout` and is verified afterwards (valid, size, plan). Read-only database sessions start with `BEGIN READ ONLY;` (check `SHOW transaction_read_only;` prints `on`) and end with `ROLLBACK;`; do not rely on connection options for read-only. Standing exception (owner decision D140): the daily retention cron's deletes of imported jobs are approved by D140 and covered by the scheduled backup (twice a month, the 1st and 15th at 02:17 UTC; GitHub may run it late, so a data step that cannot wait still takes a manual backup first); turning `JOB_RETENTION` on is the owner's step.
 - Keep scratch files under `reports/` and delete them when finished.
 - Never run `npm audit fix --force`, codemods or `--fix` tools without approval.
 - Do not run old scripts from `scripts/` or the repository root.
@@ -193,7 +193,7 @@ Full steps, checks and how to undo a release: `docs/RELEASE.md`.
 
 ### Job ingestion
 
-- Keep `dedup_hash` behaviour stable. Duplicates are found with a plain `insert()`, treating error `23505` as a duplicate, not with `upsert`.
+- Keep `dedup_hash` behaviour stable. Duplicates are found with a plain `insert()`, treating error `23505` as a duplicate — except a clash on `jobs_slug_key`, which is a new job and is retried with a new slug suffix (`lib/ingestion/run-provider-import.ts`) — not with `upsert`.
 - Rejected jobs stay out of the duplicate check, so they can be ingested again later.
 - If every keyword in a provider run fails, the adapter throws, so the run is recorded as failed.
 - Keep relevance enforcement on for a provider unless its own filter has been tested.
@@ -237,7 +237,7 @@ The Tailwind `gold-500` and `accent` tokens and `ADMIN_COLORS.gold` currently ho
 - The admin path mechanism.
 - AB Press. It is locked, including `components/book/PracticeKitTemplate.tsx`, `lib/ab-press-builder.ts`, and its `generate-pq` route under `app/api/<admin>/ab-press/`. Make no changes unless the owner explicitly asks. One owner-approved exception: its admin login-check lines may later be replaced by the shared check.
 - Addresses (URLs and slugs) of published articles, question sets, courses and jobs. Change one only with a permanent redirect. Never re-generate a slug for an existing row. A job page whose row was deleted under owner decision D140 answers 404 (410 later); that is not an address change.
-- Job records. They are kept; expired jobs are hidden. One standing exception (owner decision D140): imported jobs (source other than 'employer') whose closed_at is more than 30 days old may be deleted by the daily retention cron `/api/cron/prune-expired-jobs` (env `JOB_RETENTION`, off by default); employer jobs and any job with an application are never deleted. The other exception: a job row created moments earlier in the same request may be removed if checkout set-up fails, because it was never public.
+- Job records. They are kept; expired jobs are hidden. One standing exception (owner decision D140): imported jobs (source other than 'employer') whose closed_at is older than the retention period (`JOB_RETENTION_DAYS`, 14–365, default 30) may be deleted by the daily retention cron `/api/cron/prune-expired-jobs` (env `JOB_RETENTION`, off by default); employer jobs and any job with an application are never deleted. The other exception: a job row created moments earlier in the same request may be removed if checkout set-up fails, because it was never public.
 - Database tables that look unused. Never drop a table on code evidence alone.
 - The EthioTax DNS and Worker set-up.
 - Hosting firewall and bot-protection settings.

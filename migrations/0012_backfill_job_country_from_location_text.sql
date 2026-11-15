@@ -2,7 +2,7 @@
 -- 0012_backfill_job_country_from_location_text.sql
 -- Date: 14 Nov 2026
 --
--- NOT YET APPLIED — run only after a fresh backup and the owner's approval.
+-- APPLIED (Part B) on 14 Nov 2026 at 12:27:28 UTC: 62 rows changed. Kept as the record; do not run it again.
 --
 -- Why: until this change, job imports recognised only about 13 countries
 -- (lib/ingestion/normalise.ts). Jobs whose location named any other
