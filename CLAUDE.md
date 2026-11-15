@@ -86,8 +86,9 @@ This repository is public. Anything committed can be read by anyone, and stays i
 ### Working limits
 
 - Read a file before writing to it.
-- One task per job. One change per release. Do not tidy nearby code.
+- One task per job. One change per release, unless the owner approves a batch in the brief. Do not tidy nearby code.
 - No push, merge or deploy without the owner's explicit go-ahead. A brief issued under the owner's hands-free arrangement is that go-ahead for exactly the steps it lists, and nothing more (`docs/RELEASE.md`, "Hands-free checks").
+- Hands-free jobs also follow `docs/AGENT-RULES.md`.
 - No network unless the brief explicitly allows it. That includes `git fetch`, `git pull`, `git push`, `npm install`, `npx` downloads, `curl`, `wget`, `gh`, live sites and AI calls.
 - No sub-agents unless the brief asks for them.
 - No live database changes from this environment unless the brief names the exact change (file and part), the expected row count and the undo, and a fresh backup has been proven first. Every data or schema change needs that fresh backup and the owner's approval of the exact change. Run each change once, in one transaction that rolls back if the count differs. Read-only database sessions start with `BEGIN READ ONLY;` (check `SHOW transaction_read_only;` prints `on`) and end with `ROLLBACK;`; do not rely on connection options for read-only. Standing exception (owner decision D140): the daily retention cron's deletes of imported jobs are approved by D140 and covered by the daily scheduled backup; turning `JOB_RETENTION` on is the owner's step.
