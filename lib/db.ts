@@ -323,8 +323,9 @@ export async function getQuestionSets(params: {
 
   query = query.range(start, end)
 
-  const { data, error, count } = await query
-  if (error || !data) return { sets: [], total: 0 }
+  const { data, error, count, status } = await query
+  if (error) throw readProblem(`getQuestionSets: question_sets query failed (status ${status})`, error)
+  if (!data) return { sets: [], total: 0 }
   return { sets: data as QuestionSet[], total: count ?? 0 }
 }
 
