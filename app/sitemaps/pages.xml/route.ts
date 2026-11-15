@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSupabase } from '@/lib/supabase-server'
+import { getPagesSitemapContent } from '@/lib/db'
 import { resolveArticleCanonicalUrl } from '@/lib/canonical'
 import { buildUrlset, type UrlsetEntry } from '@/lib/sitemap-chunks'
 
@@ -11,16 +11,20 @@ export const dynamic = 'force-dynamic'
 // at 13 Sept 2026. Do not remove. See Session 15 handover.
 export const fetchCache = 'force-no-store'
 
-function getSupabase() {
-  return getServerSupabase('publicRead')
-}
-
-// Static pages, articles and practice-question sets — moved verbatim from
-// the old app/sitemap.ts (same URLs, priorities, changeFrequency values,
-// and the same silent-empty-array-on-error behaviour for the two Supabase
-// queries below). Jobs live in app/sitemaps/jobs/[file]/route.ts instead.
+// Static pages, published articles and practice-question sets. If the article
+// or question-set read fails, this answers 500 and is never cached, instead of
+// a sitemap that leaves those pages out (the reads, their log line and report
+// live in getPagesSitemapContent in lib/db.ts). Jobs live in
+// app/sitemaps/jobs/[file]/route.ts instead.
 export async function GET() {
-  const supabase = getSupabase()
+  const result = await getPagesSitemapContent()
+  if (!result.ok) {
+    return new NextResponse('Internal Server Error', {
+      status: 500,
+      headers: { 'Cache-Control': 'no-store' },
+    })
+  }
+  const { articles, questionSets } = result
 
   const staticPages: UrlsetEntry[] = [
     { url: AB_BASE_URL,                         lastModified: new Date(), changeFrequency: 'daily',   priority: 1.0 },
@@ -50,27 +54,15 @@ export async function GET() {
     })),
   ]
 
-  const { data: articles } = await supabase
-    .from('articles')
-    .select('slug, updated_at, category, canonical_owner, show_on_sites')
-    .eq('status', 'published')
-    .eq('platform', 'ab')
-
-  const { data: questionSets } = await supabase
-    .from('question_sets')
-    .select('slug, updated_at')
-    .eq('status', 'published')
-    .eq('platform', 'ab')
-
   const entries: UrlsetEntry[] = [
     ...staticPages,
-    ...(articles ?? []).map(a => ({
+    ...articles.map(a => ({
       url:             resolveArticleCanonicalUrl(a, AB_BASE_URL),
       lastModified:    new Date(a.updated_at ?? Date.now()),
       changeFrequency: 'monthly' as const,
       priority:        0.75,
     })),
-    ...(questionSets ?? []).map(p => ({
+    ...questionSets.map(p => ({
       url:             `${AB_BASE_URL}/practice-questions/${p.slug}`,
       lastModified:    new Date(p.updated_at ?? Date.now()),
       changeFrequency: 'monthly' as const,

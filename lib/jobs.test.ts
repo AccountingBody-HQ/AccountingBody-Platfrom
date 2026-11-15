@@ -45,40 +45,54 @@ vi.mock('next/cache', () => ({
     },
 }))
 
-function makeJobs(n: number, startIndex = 0) {
-  // expires_at: null keeps getJobLifecycleState at 'active' for every row,
-  // so the archived-filter inside getJobSitemapEntries never drops any of
-  // these — the counts below are exact, not "at most."
-  return Array.from({ length: n }, (_, i) => ({
-    slug: `job-${startIndex + i}`,
-    expires_at: null,
-    published_at: '2024-01-01T00:00:00.000Z',
-    created_at: '2024-01-01T00:00:00.000Z',
-  }))
-}
-
-// Minimal fake query builder: .from/.select/.in/.contains all return the
-// same object so the chain keeps going; .range() is the only call that
-// resolves, returning the next scripted page each time it's invoked —
-// mirroring how getJobSitemapEntries calls .range() once per loop
-// iteration on the same client returned by a single getSupabase() call.
-function fakeSupabaseClient(pages: Array<{ data: unknown[] | null; error: unknown }>) {
-  const rangeCalls: Array<[number, number]> = []
+// Fake query builder for getJobSitemapEntries's keyset shape. Records every
+// filter so a test can check exactly what each page asked for; .limit() is
+// the call that resolves, returning the next scripted page (or, with
+// `always`, a fresh full page every time).
+function fakeEntriesSupabaseClient(
+  pages: Array<{ data: unknown[] | null; error: unknown }>,
+  always?: () => { data: unknown[]; error: null },
+) {
+  const calls: Array<{ gt: string | null; limit: number; order: [string, unknown]; in: [string, unknown]; contains: [string, unknown]; select: string }> = []
+  let current: { gt: string | null; order?: [string, unknown]; in?: [string, unknown]; contains?: [string, unknown]; select?: string } = { gt: null }
   let call = 0
   const builder = {
-    from: () => builder,
-    select: () => builder,
-    in: () => builder,
-    contains: () => builder,
-    order: () => builder,
-    range: (from: number, to: number) => {
-      rangeCalls.push([from, to])
-      const page = pages[call] ?? { data: [], error: null }
+    from: () => {
+      current = { gt: null }
+      return builder
+    },
+    select: (cols: string) => {
+      current.select = cols
+      return builder
+    },
+    in: (col: string, val: unknown) => {
+      current.in = [col, val]
+      return builder
+    },
+    contains: (col: string, val: unknown) => {
+      current.contains = [col, val]
+      return builder
+    },
+    gt: (col: string, val: string) => {
+      expect(col).toBe('id')
+      current.gt = val
+      return builder
+    },
+    order: (col: string, opts: unknown) => {
+      current.order = [col, opts]
+      return builder
+    },
+    range: () => {
+      throw new Error('range() must not be used: the sitemap pages by key')
+    },
+    limit: (n: number) => {
+      calls.push({ ...current, limit: n } as (typeof calls)[number])
+      const page = always ? always() : pages[call] ?? { data: [], error: null }
       call += 1
       return Promise.resolve(page)
     },
   }
-  return { client: builder, rangeCalls }
+  return { client: builder, calls }
 }
 
 const originalSimilarJobsEnabled = process.env.SIMILAR_JOBS_ENABLED
@@ -95,50 +109,10 @@ afterEach(() => {
   resetCacheGuard()
 })
 
-describe('getJobSitemapEntries — internal pagination', () => {
-  it('concatenates a full page followed by a partial page, and stops after the partial one', async () => {
-    const { client, rangeCalls } = fakeSupabaseClient([
-      { data: makeJobs(PAGE_SIZE, 0), error: null },
-      { data: makeJobs(300, PAGE_SIZE), error: null },
-    ])
-    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
-
-    const result = await getJobSitemapEntries('ab')
-
-    expect(result).toHaveLength(PAGE_SIZE + 300)
-    expect(rangeCalls).toHaveLength(2)
-    expect(rangeCalls[0]).toEqual([0, PAGE_SIZE - 1])
-    expect(rangeCalls[1]).toEqual([PAGE_SIZE, PAGE_SIZE * 2 - 1])
-  })
-
-  it('does not fetch a second page when the first page is already short', async () => {
-    const { client, rangeCalls } = fakeSupabaseClient([
-      { data: makeJobs(5, 0), error: null },
-    ])
-    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
-
-    const result = await getJobSitemapEntries('ab')
-
-    expect(result).toHaveLength(5)
-    expect(rangeCalls).toHaveLength(1)
-  })
-
-  it('returns [] rather than a partial list when a later page errors', async () => {
-    const { client } = fakeSupabaseClient([
-      { data: makeJobs(PAGE_SIZE, 0), error: null },
-      { data: null, error: new Error('connection refused') },
-    ])
-    vi.mocked(createClient).mockReturnValue(client as unknown as ReturnType<typeof createClient>)
-
-    const result = await getJobSitemapEntries('ab')
-
-    expect(result).toEqual([])
-  })
-})
-
 function makeChunkJobs(n: number, startIndex = 0) {
-  // Same expires_at: null convention as makeJobs — keeps every row 'active'
-  // so the archived-filter never drops any of these test rows.
+  // expires_at: null keeps getJobLifecycleState at 'active' for every row,
+  // so the archived-filter never drops any of these test rows — the counts
+  // below are exact, not "at most." Ids sort in the same order as startIndex.
   return Array.from({ length: n }, (_, i) => ({
     id: `id-${String(startIndex + i).padStart(6, '0')}`,
     slug: `job-${startIndex + i}`,
@@ -147,6 +121,110 @@ function makeChunkJobs(n: number, startIndex = 0) {
     created_at: '2024-01-01T00:00:00.000Z',
   }))
 }
+
+describe('getJobSitemapEntries — keyset pagination', () => {
+  function useClient(fake: { client: unknown }) {
+    vi.mocked(createClient).mockReturnValue(fake.client as unknown as ReturnType<typeof createClient>)
+  }
+
+  it('reads page after page by key: each page starts after the last id of the one before', async () => {
+    const pages = [makeChunkJobs(PAGE_SIZE, 0), makeChunkJobs(PAGE_SIZE, PAGE_SIZE), makeChunkJobs(300, PAGE_SIZE * 2)]
+    const fake = fakeEntriesSupabaseClient(pages.map(data => ({ data, error: null })))
+    useClient(fake)
+
+    const result = await getJobSitemapEntries('et')
+
+    expect(result.ok).toBe(true)
+    const entries = result.ok ? result.entries : []
+    expect(entries).toHaveLength(PAGE_SIZE * 2 + 300)
+    expect(new Set(entries.map(e => e.slug)).size).toBe(entries.length)
+    expect(fake.calls.map(c => c.gt)).toEqual([null, pages[0][PAGE_SIZE - 1].id, pages[1][PAGE_SIZE - 1].id])
+    const keys = fake.calls.map(c => c.gt).filter((k): k is string => k !== null)
+    for (let i = 1; i < keys.length; i++) expect(keys[i] > keys[i - 1]).toBe(true)
+    for (const c of fake.calls) {
+      expect(c.limit).toBe(PAGE_SIZE)
+      expect(c.order).toEqual(['id', { ascending: true }])
+      expect(c.in).toEqual(['status', ['active', 'expired']])
+      expect(c.contains).toEqual(['platform', ['et']])
+      expect(c.select).toBe('id, slug, expires_at, published_at, created_at')
+    }
+  })
+
+  it('does not fetch a second page when the first page is already short', async () => {
+    const fake = fakeEntriesSupabaseClient([{ data: makeChunkJobs(5, 0), error: null }])
+    useClient(fake)
+
+    const result = await getJobSitemapEntries('et')
+
+    expect(result.ok && result.entries).toHaveLength(5)
+    expect(fake.calls).toHaveLength(1)
+    expect(fake.calls[0].gt).toBeNull()
+  })
+
+  it('stops on the empty page that follows an exactly full one', async () => {
+    const fake = fakeEntriesSupabaseClient([
+      { data: makeChunkJobs(PAGE_SIZE, 0), error: null },
+      { data: [], error: null },
+    ])
+    useClient(fake)
+
+    const result = await getJobSitemapEntries('et')
+
+    expect(result.ok && result.entries).toHaveLength(PAGE_SIZE)
+    expect(fake.calls).toHaveLength(2)
+  })
+
+  it('returns ok:false rather than a partial list when a later page errors', async () => {
+    const fake = fakeEntriesSupabaseClient([
+      { data: makeChunkJobs(PAGE_SIZE, 0), error: null },
+      { data: makeChunkJobs(PAGE_SIZE, PAGE_SIZE), error: null },
+      { data: null, error: new Error('connection refused') },
+    ])
+    useClient(fake)
+
+    expect(await getJobSitemapEntries('et')).toEqual({ ok: false })
+    expect(fake.calls).toHaveLength(3)
+  })
+
+  it('returns ok:false when a later page has no data and no error', async () => {
+    const fake = fakeEntriesSupabaseClient([
+      { data: makeChunkJobs(PAGE_SIZE, 0), error: null },
+      { data: null, error: null },
+    ])
+    useClient(fake)
+
+    expect(await getJobSitemapEntries('et')).toEqual({ ok: false })
+  })
+
+  it('still leaves out archived jobs (expired over a year ago) and keeps stale ones', async () => {
+    const day = 24 * 60 * 60 * 1000
+    const rows = makeChunkJobs(3, 0)
+    rows[0].expires_at = new Date(Date.now() - 400 * day).toISOString() as never
+    rows[1].expires_at = new Date(Date.now() - 40 * day).toISOString() as never
+    const fake = fakeEntriesSupabaseClient([{ data: rows, error: null }])
+    useClient(fake)
+
+    const result = await getJobSitemapEntries('et')
+
+    expect(result.ok && result.entries.map(e => e.slug)).toEqual(['job-1', 'job-2'])
+    expect(result.ok && result.entries[0].lastModified).toEqual(new Date('2024-01-01T00:00:00.000Z'))
+  })
+
+  it('stops at the 100-page safety bound even if every page is full', async () => {
+    let next = 0
+    const fake = fakeEntriesSupabaseClient([], () => {
+      const data = makeChunkJobs(PAGE_SIZE, next)
+      next += PAGE_SIZE
+      return { data, error: null }
+    })
+    useClient(fake)
+
+    const result = await getJobSitemapEntries('et')
+
+    expect(fake.calls).toHaveLength(100)
+    expect(result.ok && result.entries).toHaveLength(100 * PAGE_SIZE)
+  })
+})
 
 // Minimal fake query builder for getJobSitemapChunk's keyset shape:
 // .gte/.lt/.gt are recorded (not just passed through) so a test can assert
