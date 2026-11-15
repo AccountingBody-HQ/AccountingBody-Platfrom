@@ -2,8 +2,8 @@
 -- 0014_repair_job_country_display_strings.sql
 -- Date: 15 Nov 2026
 --
--- NOT YET APPLIED — run only after a fresh backup and the owner's approval
--- of the exact change.
+-- APPLIED (Part B) on 15 Nov 2026 at 21:02 UTC: 3914 rows changed. Kept as the record.
+-- Do not run it again. The undo is Part C (needs the private before-image CSV).
 --
 -- What: rewrites public.jobs.location_country for jobs whose stored value
 -- is not a country name: the provider's display text ("UK", "US",
