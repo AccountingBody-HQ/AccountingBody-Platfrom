@@ -1,10 +1,20 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { getServerSupabase } from './supabase-server'
 import { reportServerError } from './report-error'
 import { getFeaturedArticlesForSite } from './featured-articles'
+import { resetCacheGuard } from './cache-guard'
 
 vi.mock('./supabase-server', () => ({ getServerSupabase: vi.fn() }))
 vi.mock('./report-error', () => ({ reportServerError: vi.fn() }))
+// Same reasons as lib/study-category-read.test.ts: no real React cache() or
+// Next incremental cache outside a Next server.
+vi.mock('react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react')>()),
+  cache: <T extends (...args: never[]) => unknown>(fn: T): T => fn,
+}))
+vi.mock('next/cache', () => ({
+  unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
+}))
 
 type Result = { data: unknown; error: unknown; status: number }
 type Call = [method: string, ...args: unknown[]]
@@ -47,13 +57,17 @@ const ROWS = [
 beforeEach(() => {
   vi.mocked(getServerSupabase).mockReset()
   vi.mocked(reportServerError).mockReset()
+  resetCacheGuard()
+})
+afterEach(() => {
+  resetCacheGuard()
 })
 
 describe('getFeaturedArticlesForSite: answers that are not failures', () => {
   it('a normal result is returned unchanged and nothing is reported', async () => {
     use({ data: ROWS, error: null, status: 200 })
     const articles = await getFeaturedArticlesForSite('ab')
-    expect(articles).toBe(ROWS)
+    expect(articles).toStrictEqual(ROWS)
     expect(reportServerError).not.toHaveBeenCalled()
   })
 
@@ -75,7 +89,7 @@ describe('getFeaturedArticlesForSite: a failed read is reported, never thrown', 
     use({ data: null, error: DB_PROBLEM, status: 500 })
     expect(await getFeaturedArticlesForSite('ab')).toStrictEqual([])
     expect(reportServerError).toHaveBeenCalledTimes(1)
-    expect(reportServerError).toHaveBeenCalledWith(LABEL, DB_PROBLEM, { area: 'public' })
+    expect(reportServerError).toHaveBeenCalledWith(LABEL, expect.objectContaining({ message: 'getFeaturedArticlesForSite: articles query failed (status 500)', code: 'XX000' }), { area: 'public' })
   })
 
   it('an error that arrives together with rows is still reported and no rows are shown', async () => {

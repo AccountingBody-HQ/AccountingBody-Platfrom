@@ -283,24 +283,24 @@ const cachedCategoryCount = guardCachedRead(['getCategoryCounts'], unstable_cach
 }))
 
 // Cached per category, so one failed count reads as 0 for that category only
-// and the others keep their real values, as they did before caching.
+// and the others keep their real values, as they did before caching. Read in
+// parallel, so a cold cache costs one round trip, not ten; keys keep the
+// category order.
 export async function getCategoryCounts(): Promise<Record<string, number>> {
   const categories = [
     'financial-accounting', 'financial-management', 'management-accounting',
     'financial-market', 'business-management', 'audit-assurance',
     'taxation', 'economics', 'cryptocurrency', 'tools-templates',
   ]
-  const counts: Record<string, number> = {}
-  for (const cat of categories) {
+  return Object.fromEntries(await Promise.all(categories.map(async (cat): Promise<[string, number]> => {
     try {
-      counts[cat] = await cachedCategoryCount(cat)
+      return [cat, await cachedCategoryCount(cat)]
     } catch (error) {
       console.error('getCategoryCounts error:', error)
       reportServerError('article category count read failed', error, { area: 'public' })
-      counts[cat] = 0
+      return [cat, 0]
     }
-  }
-  return counts
+  })))
 }
 
 export async function searchArticles(query: string): Promise<ArticleSummary[]> {

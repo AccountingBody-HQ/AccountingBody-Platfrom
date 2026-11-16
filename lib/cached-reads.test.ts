@@ -9,6 +9,8 @@ import {
   getCachedListingJobs, getCachedListingJobsCount, getBrowsableJobsCount,
   getCachedActiveJobCountries, COUNTRY_LIST_LOG,
 } from './jobs'
+import { getFeaturedArticlesForSite } from './featured-articles'
+import { getPublishedArticlesForSite } from './articles-list'
 import { resetCacheGuard, HOLD_MS, BACKOFF_MS } from './cache-guard'
 
 // Same mocks as lib/db.test.ts and lib/jobs.test.ts: no real React cache()
@@ -105,6 +107,8 @@ const readers: Reader[] = [
   { name: 'getPublicQuestionSetBySlug', run: () => getPublicQuestionSetBySlug('budgeting'), healthy: () => ok({ data: { id: 's1', slug: 'budgeting', title: 'Budgeting' } }), expected: { id: 's1', slug: 'budgeting', title: 'Budgeting' }, fallback: { throws: 'getQuestionSetBySlug: question_sets query failed (status 504)' } },
   { name: 'getPublicQuestionsBySetId', run: () => getPublicQuestionsBySetId('s1'), healthy: () => ok({ data: [{ id: 'q1', set_id: 's1' }] }), expected: [{ id: 'q1', set_id: 's1' }], fallback: { throws: 'getQuestionsBySetId: questions query failed (status 504)' } },
   { name: 'getPublicCasesBySetId', run: () => getPublicCasesBySetId('s1'), healthy: () => ok({ data: [{ id: 'k1', set_id: 's1' }] }), expected: [{ id: 'k1', set_id: 's1' }], fallback: { throws: 'getCasesBySetId: question_cases query failed (status 504)' } },
+  { name: 'getFeaturedArticlesForSite', run: () => getFeaturedArticlesForSite('ab'), healthy: () => ok({ data: [{ id: 'a1', title: 'Accruals', slug: 'accruals' }] }), expected: [{ id: 'a1', title: 'Accruals', slug: 'accruals' }], fallback: { value: [] } },
+  { name: 'getPublishedArticlesForSite', run: () => getPublishedArticlesForSite('ab'), healthy: () => ok({ data: [{ id: 'a1', title: 'Accruals', slug: 'accruals' }] }), expected: [{ id: 'a1', title: 'Accruals', slug: 'accruals' }], fallback: { throws: 'getPublishedArticlesForSite: articles query failed (status 504)' } },
   // The multi-stage course readers, with their not-found answer only (this
   // fake gives one answer to every query); full behaviour is covered in
   // lib/public-content-cache.test.ts.
