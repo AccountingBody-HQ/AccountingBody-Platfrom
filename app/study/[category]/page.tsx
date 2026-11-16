@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { cache } from 'react'
 import ScrollToTop from '@/components/ScrollToTop'
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { getArticlesByCategory } from '@/lib/db'
 import { canonicalMetadata } from '@/lib/canonical'
 import { OTHER_KEY, groupAlphabetically, pickLetter, letterHref } from '@/lib/study-letter'
@@ -44,6 +45,11 @@ function getCategoryDisplay(slug: string) {
   }
 }
 
+function isKnownCategory(slug: string): boolean {
+  const key = slug.toLowerCase()
+  return Object.prototype.hasOwnProperty.call(EXAM_BODY_META, key) || Object.prototype.hasOwnProperty.call(SUBJECT_META, key)
+}
+
 export const dynamicParams = true
 
 export async function generateStaticParams() {
@@ -56,6 +62,7 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
   const query      = await searchParams
   const meta       = getCategoryDisplay(category)
   const articles   = await readArticles(category)
+  if (articles.length === 0 && !isKnownCategory(category)) notFound()
   const available  = groupAlphabetically(articles).map(g => g.letter)
   const defaultKey = available[0] ?? ''
   const chosen     = pickLetter(query?.letter, available)
@@ -72,6 +79,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
   const query        = await searchParams
   const meta         = getCategoryDisplay(category)
   const articles     = await readArticles(category)
+  if (articles.length === 0 && !isKnownCategory(category)) notFound()
   const groups       = groupAlphabetically(articles)
   const letters      = groups.map(g => g.letter)
   const defaultKey   = letters[0] ?? ''
