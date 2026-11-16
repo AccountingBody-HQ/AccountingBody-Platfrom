@@ -201,10 +201,9 @@ export async function getPagesSitemapContent(): Promise<PagesSitemapContent> {
 
 const QUALIFICATION_SLUGS = ['acca', 'cima', 'aat', 'icaew', 'eticpa', 'eticpa-atq', 'eticpa-cpa']
 
-// Returns an empty list only for a genuine empty result. Any failure is
-// thrown, so the page renders its error page with a 500 instead of an
-// empty category.
-export async function getArticlesByCategory(categorySlug: string): Promise<ArticleSummary[]> {
+// The uncached query behind getArticlesByCategory. It throws on any error,
+// so unstable_cache never stores a failure as an empty category.
+async function fetchArticlesByCategory(categorySlug: string): Promise<ArticleSummary[]> {
   const supabase = getSupabase()
   const isQualification = QUALIFICATION_SLUGS.includes(categorySlug.toLowerCase())
   let query = supabase
@@ -224,6 +223,30 @@ export async function getArticlesByCategory(categorySlug: string): Promise<Artic
   if (error) throw readProblem(`getArticlesByCategory: articles query failed (status ${status})`, error)
   if (!data) return []
   return data as ArticleSummary[]
+}
+
+// Cached the same way as getArticleBySlug: the category list was read from
+// the database on every request, the slowest part of a /study/<category>
+// page. unstable_cache keeps it for an hour; the cache key is keyParts +
+// JSON.stringify([categorySlug]), so one category can never return another's
+// rows, and each entry carries its own `articles-category:<slug>` tag. No
+// platform in the key because none varies in the query (it always reads
+// show_on_sites 'ab'). A newly published article can take up to an hour to
+// appear in its category list; that lag is accepted (FINDINGS DT).
+const ARTICLES_BY_CATEGORY_KEY = ['articles-by-category', 'published', 'ab']
+
+const guardedArticlesByCategory = guardCachedRead(ARTICLES_BY_CATEGORY_KEY, (categorySlug: string) =>
+  unstable_cache(fetchArticlesByCategory, ARTICLES_BY_CATEGORY_KEY, {
+    revalidate: 3600,
+    tags: ['articles', `articles-category:${categorySlug}`],
+  })(categorySlug)
+)
+
+// Returns an empty list only for a genuine empty result. Any failure is
+// thrown, so the page renders its error page with a 500 instead of an
+// empty category.
+export async function getArticlesByCategory(categorySlug: string): Promise<ArticleSummary[]> {
+  return guardedArticlesByCategory(categorySlug)
 }
 
 export async function getAllArticleSlugs(): Promise<string[]> {
