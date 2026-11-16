@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 // The unused Careerjet route, the Fixie proxy code, old one-off scripts and
 // unused packages were retired on 16 Nov 2026. They stay in git history only.
 // The unused Sanity Studio, its config and schemas, an unused Portable Text component and their packages were retired on 16 Nov 2026.
+// The unused Clerk sign-in integration (its account pages and package) was retired on 16 Nov 2026.
 
 const ROOT = process.cwd()
 
@@ -49,6 +50,9 @@ const RETIRED_FILES = [
   'sanity/schemas/quizbankQuiz.ts',
   'sanity/schemas/tableBlock.ts',
   'components/course/ArticleBody.tsx',
+  'app/dashboard/page.tsx',
+  'app/sign-in/[[...sign-in]]/page.tsx',
+  'app/sign-up/[[...sign-up]]/page.tsx',
 ]
 
 const RETIRED_PACKAGES = [
@@ -67,12 +71,13 @@ const RETIRED_PACKAGES = [
   '@portabletext/react',
   'styled-components',
   'react-is',
+  '@clerk/nextjs',
 ]
 
 describe('retired files and packages', () => {
   it('lists each file once', () => {
     expect(new Set(RETIRED_FILES).size).toBe(RETIRED_FILES.length)
-    expect(RETIRED_FILES.length).toBe(40)
+    expect(RETIRED_FILES.length).toBe(43)
   })
 
   it('none of the retired files is back', () => {

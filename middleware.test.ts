@@ -7,21 +7,12 @@ import { signedOutResponse } from '@/lib/admin-auth'
 import { signTestSession, TEST_ADMIN_SECRET, TEST_SESSION_SECRET } from '@/lib/admin-session-fixtures'
 import middleware, { config } from './middleware'
 
-// The wrapper hands the request straight to the inner handler, the same way
-// the real wrapper calls it, so these tests cover the site's own routing.
-vi.mock('@clerk/nextjs/server', () => ({
-  clerkMiddleware:
-    (handler: (auth: () => object, req: NextRequest, event: NextFetchEvent) => Promise<Response>) =>
-    (req: NextRequest, event: NextFetchEvent) =>
-      handler(() => ({}), req, event),
-}))
-
 const ORIGIN = 'https://accountingbody.com'
 const ADMIN = 'test-admin-area'
 
 async function run(path: string, headers: Record<string, string> = {}): Promise<Response> {
   const req = new NextRequest(ORIGIN + path, { headers })
-  const result = await middleware(req, {} as NextFetchEvent)
+  const result = await middleware(req)
   return result as Response
 }
 

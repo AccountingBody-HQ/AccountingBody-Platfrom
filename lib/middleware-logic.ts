@@ -57,7 +57,7 @@ export async function sha256Hex(message: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
-// The account and login system is not in use and is kept for future use only.
+// The old account and login pages were retired on 16 Nov 2026; their addresses still go home.
 export function isRetiredAccountPath(pathname: string): boolean {
   return (
     pathname.startsWith('/sign-in') ||

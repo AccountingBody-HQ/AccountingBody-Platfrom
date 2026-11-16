@@ -1,4 +1,3 @@
-import { clerkMiddleware } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import {
@@ -9,7 +8,7 @@ import {
   getAdminPath,
 } from "./lib/middleware-logic"
 
-export default clerkMiddleware(async (auth, req: NextRequest) => {
+export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   const adminPath = getAdminPath()
@@ -53,7 +52,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     httpOnly: false,
   })
   return response
-})
+}
 
 export const config = {
   matcher: [

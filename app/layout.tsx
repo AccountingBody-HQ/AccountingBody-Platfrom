@@ -1,7 +1,7 @@
 // app/layout.tsx
 // AccountingBody.com — Root Layout
 // Includes: GTM, AdSense meta, Open Graph, Navigation, Footer, NewsTicker, CookieConsent
-// Added: Vercel Analytics, Vercel Speed Insights, Clerk Auth
+// Added: Vercel Analytics, Vercel Speed Insights
 
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
