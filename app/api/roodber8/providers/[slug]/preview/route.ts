@@ -23,13 +23,14 @@ type Verdict = 'would_insert' | 'would_deduplicate' | 'would_reject'
 // job_providers update.
 export async function POST(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   if (!(await isAuthenticated(req))) {
     return signedOutResponse()
   }
 
-  const provider = await getProvider(params.slug)
+  const { slug } = await params
+  const provider = await getProvider(slug)
   if (!provider) {
     return Response.json({ ok: false, error: 'Provider not found' }, { status: 404 })
   }

@@ -5,7 +5,7 @@ export const maxDuration = 300
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   const secret = process.env.CRON_SECRET
   if (!secret) {
@@ -17,7 +17,7 @@ export async function POST(
     return new Response('Unauthorized', { status: 401 })
   }
 
-  const { slug } = params
+  const { slug } = await params
 
   // 'manual' only when a call asks for it via ?trigger=manual; any other call
   // to this route keeps recording 'cron'. Neither the admin Run now button nor

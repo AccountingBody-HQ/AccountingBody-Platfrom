@@ -74,7 +74,7 @@ function parseJsonField(v: unknown, fallback: Record<string, unknown> = {}): Rec
   return fallback
 }
 
-type RouteParams = { params: { slug: string } }
+type RouteParams = { params: Promise<{ slug: string }> }
 
 // ── PATCH /api/roodber8/providers/[slug]/edit ── update an existing provider
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
@@ -82,7 +82,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     return signedOutResponse()
   }
 
-  const { slug } = params
+  const { slug } = await params
   const existing = await getProvider(slug)
   if (!existing) {
     return NextResponse.json({ ok: false, error: 'Provider not found' }, { status: 404 })
@@ -181,7 +181,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     return signedOutResponse()
   }
 
-  const { slug } = params
+  const { slug } = await params
   const existing = await getProvider(slug)
   if (!existing) {
     return NextResponse.json({ ok: false, error: 'Provider not found' }, { status: 404 })

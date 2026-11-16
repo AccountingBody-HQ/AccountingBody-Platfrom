@@ -147,7 +147,7 @@ const fakeFetch: typeof fetch = async (input, init) => {
     const headers = new Headers(init?.headers)
     net.dispatches.push(headers.get('authorization'))
     const slug = url.pathname.split('/').pop() ?? ''
-    return ingest(new NextRequest(url.href, { method: init?.method ?? 'POST', headers }), { params: { slug } })
+    return ingest(new NextRequest(url.href, { method: init?.method ?? 'POST', headers }), { params: Promise.resolve({ slug }) })
   }
   if (url.origin !== DB_URL) throw new Error(`unexpected request to ${url.href}`)
 
@@ -303,7 +303,7 @@ const SCHEDULED: {
   },
   {
     name: 'ingest/[slug]',
-    run: (a) => ingest(request('/api/ingest/example', { method: 'POST', headers: authHeaders(a) }), { params: { slug: 'example' } }),
+    run: (a) => ingest(request('/api/ingest/example', { method: 'POST', headers: authHeaders(a) }), { params: Promise.resolve({ slug: 'example' }) }),
     log: 'ingest: not configured',
     refused: { status: 401, headers: { 'content-type': 'text/plain;charset=UTF-8' }, body: 'Unauthorized' },
     healthy: { status: 404, body: { ok: false, error: 'Provider not found' } },

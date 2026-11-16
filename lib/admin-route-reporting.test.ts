@@ -290,7 +290,7 @@ type Route = {
 const call = (suffix: string, method: string, context?: unknown) => async (load: Loader, req: NextRequest) =>
   (await load(suffix))[method](req, context)
 
-const slugParams = { params: { slug: 'example' } }
+const slugParams = { params: Promise.resolve({ slug: 'example' }) }
 const promisedSlug = () => ({ params: Promise.resolve({ slug: 'example' }) })
 
 function route(
@@ -398,23 +398,23 @@ const ROUTES: Route[] = [
     ['missing title', { method: 'POST', body: {} }, 400],
     ['database error', { method: 'POST', body: { title: 'Course', slug: 'course-a' } }, 500, () => { db.failing = true }],
   ]),
-  route('course update', '/courses/[courseId]', 'PATCH', () => ({ params: { courseId: COURSE_ID } }), [
+  route('course update', '/courses/[courseId]', 'PATCH', () => ({ params: Promise.resolve({ courseId: COURSE_ID }) }), [
     {
       label: 'admin course update request unreadable',
       log: null,
-      run: bodyProblem('/courses/[courseId]', 'PATCH', () => ({ params: { courseId: COURSE_ID } })),
+      run: bodyProblem('/courses/[courseId]', 'PATCH', () => ({ params: Promise.resolve({ courseId: COURSE_ID }) })),
       answer: { status: 400, body: error('Invalid JSON') },
     },
   ], [
     ['unknown action', { method: 'PATCH', body: { action: 'unknown' } }, 400],
   ]),
-  route('course delete', '/courses/[courseId]', 'DELETE', () => ({ params: { courseId: COURSE_ID } }), [
+  route('course delete', '/courses/[courseId]', 'DELETE', () => ({ params: Promise.resolve({ courseId: COURSE_ID }) }), [
     {
       label: 'admin course delete failed',
       log: null,
       run: (load, problem) => {
         state.brokenClient = problem
-        return call('/courses/[courseId]', 'DELETE', { params: { courseId: COURSE_ID } })(load, request({ method: 'DELETE' }))
+        return call('/courses/[courseId]', 'DELETE', { params: Promise.resolve({ courseId: COURSE_ID }) })(load, request({ method: 'DELETE' }))
       },
       answer: { status: 500, body: error(PROBLEM) },
     },

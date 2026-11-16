@@ -336,7 +336,7 @@ describe('course save', () => {
 
 const deleteProvider = async () =>
   (await api('providers/[slug]/edit/route.ts')).DELETE(request('DELETE', 'providers/example/edit'), {
-    params: { slug: 'example' },
+    params: Promise.resolve({ slug: 'example' }),
   })
 const JOBS_CHECK_FAILED = { ok: false, error: "Could not check this provider's jobs. Nothing was deleted." }
 
@@ -614,14 +614,14 @@ const OTHER_CHAPTER = '2c5e39cb-3fb2-12e3-994f-1127e4ddb538'
 const OTHER_LESSON = '7ab56afb-ff9b-4db5-9a5f-ec88f271466f'
 
 const addQuestion = (body: Row = { question_text: 'Question?' }) => async () =>
-  (await api('questions/[setId]/route.ts')).POST(request('POST', `questions/${ID}`, body), { params: { setId: ID } })
+  (await api('questions/[setId]/route.ts')).POST(request('POST', `questions/${ID}`, body), { params: Promise.resolve({ setId: ID }) })
 const addReference = async () =>
   (await api('studio/references/route.ts')).POST(
     request('POST', 'studio/references', { label: 'BBC', url: 'https://bbc.com' }),
     { params: {} },
   )
 const courseAction = (body: Row) => async () =>
-  (await api('courses/[courseId]/route.ts')).PATCH(request('PATCH', `courses/${ID}`, body), { params: { courseId: ID } })
+  (await api('courses/[courseId]/route.ts')).PATCH(request('PATCH', `courses/${ID}`, body), { params: Promise.resolve({ courseId: ID }) })
 
 const chapterRow = { id: CHAPTER, chapter_order: 2 }
 const lessonRow = { id: LESSON }
