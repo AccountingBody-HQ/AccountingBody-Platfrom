@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
-import type { NextFetchEvent } from 'next/server'
 import { getMiddlewareMatchers } from 'next/dist/build/analysis/get-page-static-info'
 import { getMiddlewareRouteMatcher } from 'next/dist/shared/lib/router/utils/middleware-route-matcher'
 import { signedOutResponse } from '@/lib/admin-auth'
@@ -178,7 +177,7 @@ describe('admin API routes', () => {
 
   it('every method without a session is answered signed out', async () => {
     for (const method of ['POST', 'PATCH', 'DELETE']) {
-      const res = await middleware(new NextRequest(`${ORIGIN}/api/${ADMIN}/jobs`, { method }), {} as NextFetchEvent)
+      const res = await middleware(new NextRequest(`${ORIGIN}/api/${ADMIN}/jobs`, { method }))
       await expectSignedOut(res as Response)
     }
   })
