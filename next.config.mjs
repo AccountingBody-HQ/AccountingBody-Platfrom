@@ -1,4 +1,5 @@
 import { withSentryConfig } from '@sentry/nextjs/config'
+import { LEGACY_WORDPRESS_REDIRECTS } from './lib/legacy-wordpress-redirects.mjs'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -66,6 +67,9 @@ const nextConfig = {
       // /hire-talent is the legacy, orphaned route — /jobs/hire-talent is current
       { source: '/hire-talent', destination: '/jobs/hire-talent', permanent: true },
       { source: '/hire-talent/:path*', destination: '/jobs/hire-talent/:path*', permanent: true },
+
+      // Old WordPress attachment, category, author and tag addresses (frozen list)
+      ...LEGACY_WORDPRESS_REDIRECTS.map(({ source, destination }) => ({ source, destination, permanent: true })),
     ]
   },
 }
