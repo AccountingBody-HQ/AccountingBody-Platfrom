@@ -1,8 +1,18 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { getServerSupabase } from './supabase-server'
 import { getPublishedArticlesForSite } from './articles-list'
+import { resetCacheGuard } from './cache-guard'
 
 vi.mock('./supabase-server', () => ({ getServerSupabase: vi.fn() }))
+// Same reasons as lib/study-category-read.test.ts: no real React cache() or
+// Next incremental cache outside a Next server.
+vi.mock('react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react')>()),
+  cache: <T extends (...args: never[]) => unknown>(fn: T): T => fn,
+}))
+vi.mock('next/cache', () => ({
+  unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
+}))
 
 type Result = { data: unknown; error: unknown; status: number }
 type Call = [method: string, ...args: unknown[]]
@@ -48,6 +58,10 @@ const ROWS = [
 
 beforeEach(() => {
   vi.mocked(getServerSupabase).mockReset()
+  resetCacheGuard()
+})
+afterEach(() => {
+  resetCacheGuard()
 })
 
 describe('getPublishedArticlesForSite: a failed read is thrown, not shown as an empty list', () => {
@@ -106,7 +120,7 @@ describe('getPublishedArticlesForSite: answers that are not failures', () => {
   it('a normal result is returned unchanged', async () => {
     use({ data: ROWS, error: null, status: 200 })
     const articles = await getPublishedArticlesForSite('ab')
-    expect(articles).toBe(ROWS)
+    expect(articles).toStrictEqual(ROWS)
     expect(articles).toStrictEqual([
       { id: 'a1', title: 'Accruals', slug: 'accruals', excerpt: 'Seed excerpt', category: 'financial-accounting', published_at: '2026-01-02T00:00:00Z' },
       { id: 'a2', title: 'Budgets', slug: 'budgets' },
