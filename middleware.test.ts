@@ -1,27 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
-import type { NextFetchEvent } from 'next/server'
 import { getMiddlewareMatchers } from 'next/dist/build/analysis/get-page-static-info'
 import { getMiddlewareRouteMatcher } from 'next/dist/shared/lib/router/utils/middleware-route-matcher'
 import { signedOutResponse } from '@/lib/admin-auth'
 import { signTestSession, TEST_ADMIN_SECRET, TEST_SESSION_SECRET } from '@/lib/admin-session-fixtures'
 import middleware, { config } from './middleware'
 
-// The wrapper hands the request straight to the inner handler, the same way
-// the real wrapper calls it, so these tests cover the site's own routing.
-vi.mock('@clerk/nextjs/server', () => ({
-  clerkMiddleware:
-    (handler: (auth: () => object, req: NextRequest, event: NextFetchEvent) => Promise<Response>) =>
-    (req: NextRequest, event: NextFetchEvent) =>
-      handler(() => ({}), req, event),
-}))
-
 const ORIGIN = 'https://accountingbody.com'
 const ADMIN = 'test-admin-area'
 
 async function run(path: string, headers: Record<string, string> = {}): Promise<Response> {
   const req = new NextRequest(ORIGIN + path, { headers })
-  const result = await middleware(req, {} as NextFetchEvent)
+  const result = await middleware(req)
   return result as Response
 }
 
@@ -187,7 +177,7 @@ describe('admin API routes', () => {
 
   it('every method without a session is answered signed out', async () => {
     for (const method of ['POST', 'PATCH', 'DELETE']) {
-      const res = await middleware(new NextRequest(`${ORIGIN}/api/${ADMIN}/jobs`, { method }), {} as NextFetchEvent)
+      const res = await middleware(new NextRequest(`${ORIGIN}/api/${ADMIN}/jobs`, { method }))
       await expectSignedOut(res as Response)
     }
   })
