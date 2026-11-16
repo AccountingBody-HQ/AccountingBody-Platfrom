@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// app/[slug]/page.tsx: an old WordPress article address /<slug> answers a
-// permanent redirect to /articles/<slug> when that published article exists,
-// and 404 otherwise. A path that is not slug-shaped never reaches the
-// database, and a database error reaches the error page (500), never a 404.
+// app/[slug]/page.tsx (v2): an old root address /<slug> answers ONE permanent
+// (308) redirect to the published article's canonical path; failing that, to
+// a published practice-question set; failing that, through the frozen
+// renamed-slug map; otherwise 404. A path that is not slug-shaped never reads
+// the database, and a reader error reaches the error page (500), never a 404.
 
 const NOT_FOUND = vi.hoisted(() => new Error('NEXT_NOT_FOUND'))
 const PERMANENT = vi.hoisted(() => new Error('NEXT_PERMANENT_REDIRECT'))
@@ -245,5 +246,73 @@ describe('article pages read the stored slug', () => {
     await expect(articlesMetadata({ params: Promise.resolve({ slug }) })).resolves.toEqual({})
     await expect(studyMetadata({ params: Promise.resolve({ category: 'x', slug }) })).resolves.toEqual({})
     expect(reader).not.toHaveBeenCalled()
+  })
+})
+
+describe('article pages follow renamed slugs', () => {
+  const capitalTarget = withCategory('equity-and-debt-capital', 'acca')
+
+  it('/articles/capital redirects permanently to the target canonical path', async () => {
+    reader.mockImplementation(articlesOnly([capitalTarget]))
+    await expect(ArticlesPage({ params: Promise.resolve({ slug: 'capital' }) })).rejects.toBe(PERMANENT)
+    expect(reader).toHaveBeenNthCalledWith(1, 'capital')
+    expect(reader).toHaveBeenNthCalledWith(2, 'equity-and-debt-capital')
+    expect(permanentRedirect).toHaveBeenCalledTimes(1)
+    expect(permanentRedirect).toHaveBeenCalledWith('/study/acca/equity-and-debt-capital')
+    expect(notFound).not.toHaveBeenCalled()
+  })
+
+  it('/study/<category>/capital redirects permanently to the same canonical path', async () => {
+    reader.mockImplementation(articlesOnly([capitalTarget]))
+    await expect(StudyArticlePage({ params: Promise.resolve({ category: 'x', slug: 'capital' }) })).rejects.toBe(PERMANENT)
+    expect(permanentRedirect).toHaveBeenCalledTimes(1)
+    expect(permanentRedirect).toHaveBeenCalledWith('/study/acca/equity-and-debt-capital')
+    expect(notFound).not.toHaveBeenCalled()
+  })
+
+  it('follows a renamed question-set slug on both pages', async () => {
+    const target = 'coding-and-classification-of-accounting-data-practice-questions'
+    setReader.mockImplementation(setsOnly([questionSet(target)]))
+    const old = 'coding-and-classification-of-data-practice-questions'
+    await expect(ArticlesPage({ params: Promise.resolve({ slug: old }) })).rejects.toBe(PERMANENT)
+    await expect(StudyArticlePage({ params: Promise.resolve({ category: 'x', slug: old }) })).rejects.toBe(PERMANENT)
+    expect(vi.mocked(permanentRedirect).mock.calls).toEqual([['/practice-questions/' + target], ['/practice-questions/' + target]])
+  })
+
+  it('answers 404 for an unknown slug on both pages, with one read each', async () => {
+    await expect(ArticlesPage({ params: Promise.resolve({ slug: 'no-such-article-zz' }) })).rejects.toBe(NOT_FOUND)
+    await expect(StudyArticlePage({ params: Promise.resolve({ category: 'x', slug: 'no-such-article-zz' }) })).rejects.toBe(NOT_FOUND)
+    expect(reader).toHaveBeenCalledTimes(2)
+    expect(setReader).not.toHaveBeenCalled()
+    expect(permanentRedirect).not.toHaveBeenCalled()
+  })
+
+  it('answers 404 when the map target is not published', async () => {
+    await expect(ArticlesPage({ params: Promise.resolve({ slug: 'capital' }) })).rejects.toBe(NOT_FOUND)
+    await expect(StudyArticlePage({ params: Promise.resolve({ category: 'x', slug: 'capital' }) })).rejects.toBe(NOT_FOUND)
+    expect(permanentRedirect).not.toHaveBeenCalled()
+  })
+
+  it('lets a current article win: the page renders and no map lookup or redirect happens', async () => {
+    // The page files use the classic JSX runtime here, as in
+    // lib/course-section-pages.test.ts.
+    const React = await vi.importActual<typeof import('react')>('react')
+    vi.stubGlobal('React', React)
+    reader.mockImplementation(articlesOnly([withCategory('capital', 'acca'), capitalTarget]))
+    await expect(ArticlesPage({ params: Promise.resolve({ slug: 'capital' }) })).resolves.toBeTruthy()
+    await expect(StudyArticlePage({ params: Promise.resolve({ category: 'acca', slug: 'capital' }) })).resolves.toBeTruthy()
+    expect(reader).toHaveBeenCalledTimes(2)
+    expect(reader).not.toHaveBeenCalledWith('equity-and-debt-capital')
+    expect(permanentRedirect).not.toHaveBeenCalled()
+    expect(notFound).not.toHaveBeenCalled()
+  })
+
+  it('lets a database error on the map target reach the error page on both pages', async () => {
+    const dbError = new Error('getArticleBySlug: articles query failed (status 504)')
+    reader.mockImplementation(async (slug: string) => { if (slug === 'capital') return null; throw dbError })
+    await expect(ArticlesPage({ params: Promise.resolve({ slug: 'capital' }) })).rejects.toBe(dbError)
+    await expect(StudyArticlePage({ params: Promise.resolve({ category: 'x', slug: 'capital' }) })).rejects.toBe(dbError)
+    expect(notFound).not.toHaveBeenCalled()
+    expect(permanentRedirect).not.toHaveBeenCalled()
   })
 })
