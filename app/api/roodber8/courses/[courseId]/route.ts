@@ -70,12 +70,12 @@ interface ArticleRow {
 // ── GET /api/roodber8/courses/[courseId]
 export async function GET(
   req: NextRequest,
-  { params }: { params: { courseId: string } }
+  { params }: { params: Promise<{ courseId: string }> }
 ) {
   if (!(await isAuthenticated(req)))
     return signedOutResponse()
 
-  const { courseId } = params
+  const { courseId } = await params
   const supabase = getClient()
 
   // Query 1 — course
@@ -191,12 +191,12 @@ export async function GET(
 // body: { action: string, ...actionFields }
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { courseId: string } }
+  { params }: { params: Promise<{ courseId: string }> }
 ) {
   if (!(await isAuthenticated(req)))
     return signedOutResponse()
 
-  const { courseId } = params
+  const { courseId } = await params
   const supabase = getClient()
 
   let body: Record<string, unknown>
@@ -596,12 +596,12 @@ export async function PATCH(
 // ── DELETE /api/roodber8/courses/[courseId]
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { courseId: string } }
+  { params }: { params: Promise<{ courseId: string }> }
 ) {
   if (!(await isAuthenticated(req)))
     return signedOutResponse()
 
-  const { courseId } = params
+  const { courseId } = await params
   const supabase = getClient()
 
   try {

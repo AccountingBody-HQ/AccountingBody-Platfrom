@@ -101,18 +101,19 @@ async function getArticles(
 export default async function ArticlesLibraryPage({
   searchParams,
 }: {
-  searchParams?: { search?: string; letter?: string; page?: string; pqFilter?: string }
+  searchParams?: Promise<{ search?: string; letter?: string; page?: string; pqFilter?: string }>
 }) {
   await requireAdmin()
-  const search = searchParams?.search ?? ''
-  const letter = searchParams?.letter ?? ''
+  const urlQuery = await searchParams
+  const search = urlQuery?.search ?? ''
+  const letter = urlQuery?.letter ?? ''
   const safeSearch = search.replace(/[,()%]/g, '')
   const safeLetter = letter.replace(/[,()%]/g, '').slice(0, 1).toUpperCase()
-  const pqFilterParam = searchParams?.pqFilter ?? 'all'
+  const pqFilterParam = urlQuery?.pqFilter ?? 'all'
   const pqFilter: 'all' | 'with_pq' | 'without_pq' =
     pqFilterParam === 'with_pq' || pqFilterParam === 'without_pq' ? pqFilterParam : 'all'
 
-  const pageParam = parseInt(searchParams?.page ?? '1', 10)
+  const pageParam = parseInt(urlQuery?.page ?? '1', 10)
   const page = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
 
   const supabase = getServerSupabase('admin')

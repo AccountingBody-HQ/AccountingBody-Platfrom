@@ -320,7 +320,7 @@ const scenarios: Scenario[] = [
     rows: { job_providers: [provider], provider_runs: [run], provider_errors: [] },
     call: async () =>
       (await api('providers/[slug]/route.ts')).GET(request('GET', adminPath('providers/example')), {
-        params: { slug: 'example' },
+        params: Promise.resolve({ slug: 'example' }),
       }),
     healthy: { status: 200, body: { provider, runs: [run], errors: [], active_job_count: 3 }, dbRequests: 4 },
     stalled: {
@@ -337,7 +337,7 @@ const scenarios: Scenario[] = [
     rows: { job_providers: [provider] },
     call: async () =>
       (await api('providers/[slug]/route.ts')).GET(request('GET', adminPath('providers/example')), {
-        params: { slug: 'example' },
+        params: Promise.resolve({ slug: 'example' }),
       }),
     healthy: { status: 200, body: { provider, runs: [], errors: [], active_job_count: 3 }, dbRequests: 4 },
     stalled: { waits: 1, status: 404, body: { error: 'Provider not found' }, dbRequests: 1 },
@@ -551,7 +551,7 @@ const scenarios: Scenario[] = [
     context: 'ingest',
     rows: { job_providers: [provider] },
     call: async () =>
-      (await load('app/api/ingest/[slug]/route.ts')).POST(cron('/api/ingest/example'), { params: { slug: 'example' } }),
+      (await load('app/api/ingest/[slug]/route.ts')).POST(cron('/api/ingest/example'), { params: Promise.resolve({ slug: 'example' }) }),
     healthy: { status: 200, body: { ...imported, inserted: 1, durationMs: 0 }, emails: 1, dbRequests: 11 },
     stalled: {
       // Only the job inserts get no answer: the batch insert, then the
@@ -576,7 +576,7 @@ const scenarios: Scenario[] = [
     context: 'admin',
     rows: { job_providers: [provider] },
     call: async () =>
-      (await load('app/api/ingest/[slug]/route.ts')).POST(cron('/api/ingest/example'), { params: { slug: 'example' } }),
+      (await load('app/api/ingest/[slug]/route.ts')).POST(cron('/api/ingest/example'), { params: Promise.resolve({ slug: 'example' }) }),
     healthy: { status: 200, emails: 1, dbRequests: 11 },
     stalled: { waits: 1, status: 503, body: { ok: false, error: 'Provider could not be read' }, dbRequests: 1 },
   },
@@ -686,7 +686,7 @@ describe('admin, scheduled and import routes', () => {
     ['provider import', 'app/api/ingest/[slug]/route.ts', '/api/ingest/example', 'POST'],
   ])('%s checks the scheduler password before any database request', async (_name, path, url, method) => {
     const result = await answer(async () =>
-      (await load(path))[method](cron(url, 'wrong-value'), { params: { slug: 'example' } }),
+      (await load(path))[method](cron(url, 'wrong-value'), { params: Promise.resolve({ slug: 'example' }) }),
     )
     expect(result.status).toBe(401)
     expect(result.dbRequests).toBe(0)

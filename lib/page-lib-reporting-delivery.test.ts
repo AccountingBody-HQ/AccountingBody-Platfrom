@@ -141,7 +141,7 @@ describe('page and shared code problem reports as Sentry receives them', () => {
   it('reports a provider that cannot be read without the provider name', async () => {
     const url = `${SITE}/api/ingest/${SLUG}`
     const events = await during(url, () =>
-      ingest(new NextRequest(url, { method: 'POST', headers: { authorization: `Bearer ${CRON_TEST_VALUE}` } }), { params: { slug: SLUG } }),
+      ingest(new NextRequest(url, { method: 'POST', headers: { authorization: `Bearer ${CRON_TEST_VALUE}` } }), { params: Promise.resolve({ slug: SLUG }) }),
     )
     expectReport(events, 'job import provider read failed', 'ingest')
     expect(events).toHaveLength(1)

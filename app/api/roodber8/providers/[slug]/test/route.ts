@@ -14,13 +14,14 @@ function strField(cfg: Record<string, unknown>, key: string): string | undefined
 // ── POST /api/roodber8/providers/[slug]/test ── read-only connectivity check, never inserts jobs
 export async function POST(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   if (!(await isAuthenticated(req))) {
     return signedOutResponse()
   }
 
-  const provider = await getProvider(params.slug)
+  const { slug } = await params
+  const provider = await getProvider(slug)
   if (!provider) {
     return Response.json({ error: 'Provider not found' }, { status: 404 })
   }

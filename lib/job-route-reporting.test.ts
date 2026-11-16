@@ -339,21 +339,21 @@ const ROUTES: Route[] = [
     log: '[ingest/example] Fatal error:',
     file: 'app/api/ingest/[slug]/route.ts',
     seed: () => { db.tables.job_providers = [{ ...provider }] },
-    healthy: () => ingest(cron('/api/ingest/example', 'POST'), { params: { slug: 'example' } }),
+    healthy: () => ingest(cron('/api/ingest/example', 'POST'), { params: Promise.resolve({ slug: 'example' }) }),
     healthyStatus: 200,
     caught: (problem) => {
       state.failing.set('getAdapter', problem)
-      return ingest(cron('/api/ingest/example', 'POST'), { params: { slug: 'example' } })
+      return ingest(cron('/api/ingest/example', 'POST'), { params: Promise.resolve({ slug: 'example' }) })
     },
     caughtAnswer: { status: 500, body: { ok: false, error: 'Import failed (Error)', durationMs: 0 } },
     refusals: [
-      ['cron auth refusal', () => ingest(request('/api/ingest/example', { method: 'POST' }), { params: { slug: 'example' } }), 401],
-      ['no row', () => ingest(cron('/api/ingest/unknown', 'POST'), { params: { slug: 'unknown' } }), 404],
+      ['cron auth refusal', () => ingest(request('/api/ingest/example', { method: 'POST' }), { params: Promise.resolve({ slug: 'example' }) }), 401],
+      ['no row', () => ingest(cron('/api/ingest/unknown', 'POST'), { params: Promise.resolve({ slug: 'unknown' }) }), 404],
       [
         'provider inactive',
         () => {
           db.tables.job_providers = [{ ...provider, status: 'paused' }]
-          return ingest(cron('/api/ingest/example', 'POST'), { params: { slug: 'example' } })
+          return ingest(cron('/api/ingest/example', 'POST'), { params: Promise.resolve({ slug: 'example' }) })
         },
         200,
       ],

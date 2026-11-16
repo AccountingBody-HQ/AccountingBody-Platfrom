@@ -97,7 +97,7 @@ const fakeFetch: typeof fetch = async (input, init) => {
   const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url)
   if (url.origin === SITE && url.pathname.startsWith('/api/ingest/')) {
     const slug = url.pathname.split('/').pop() ?? ''
-    return ingest(new NextRequest(url, { method: 'POST', headers: new Headers(init?.headers) }), { params: { slug } })
+    return ingest(new NextRequest(url, { method: 'POST', headers: new Headers(init?.headers) }), { params: Promise.resolve({ slug }) })
   }
   if (url.origin !== DB_URL) throw new Error(`unexpected request to ${url.href}`)
   const method = (init?.method ?? 'GET').toUpperCase()
@@ -182,7 +182,7 @@ const provider = {
 }
 
 describe('provider import', () => {
-  const run = () => ingest(cron('/api/ingest/example', 'POST'), { params: { slug: 'example' } })
+  const run = () => ingest(cron('/api/ingest/example', 'POST'), { params: Promise.resolve({ slug: 'example' }) })
 
   it('keeps the not-found answer for a provider that does not exist', async () => {
     expect(await answerOf(await run())).toStrictEqual({ status: 404, headers: JSON_HEADERS, body: { ok: false, error: 'Provider not found' } })

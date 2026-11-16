@@ -60,7 +60,7 @@ function call(path = '/api/ingest/example', authorization: string | null = `Bear
   const headers: Record<string, string> = {}
   if (authorization !== null) headers.authorization = authorization
   const req = new NextRequest(`https://accountingbody.com${path}`, { method: 'POST', headers })
-  return POST(req, { params: { slug: 'example' } })
+  return POST(req, { params: Promise.resolve({ slug: 'example' }) })
 }
 
 async function answer(res: Response) {

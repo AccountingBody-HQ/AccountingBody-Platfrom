@@ -92,16 +92,17 @@ async function getQuestionSets(safeSearch: string, letter: string, page: number)
 export default async function QuestionsLibraryPage({
   searchParams,
 }: {
-  searchParams?: { search?: string; letter?: string; page?: string }
+  searchParams?: Promise<{ search?: string; letter?: string; page?: string }>
 }) {
   await requireAdmin()
   noStore()
-  const search = searchParams?.search ?? ''
-  const letter = searchParams?.letter ?? ''
+  const urlQuery = await searchParams
+  const search = urlQuery?.search ?? ''
+  const letter = urlQuery?.letter ?? ''
   const safeSearch = search.replace(/[,()%]/g, '')
   const safeLetter = letter.replace(/[,()%]/g, '').slice(0, 1).toUpperCase()
 
-  const pageParam = parseInt(searchParams?.page ?? '1', 10)
+  const pageParam = parseInt(urlQuery?.page ?? '1', 10)
   const page = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
 
   const supabaseForCount = getServerSupabase('admin')

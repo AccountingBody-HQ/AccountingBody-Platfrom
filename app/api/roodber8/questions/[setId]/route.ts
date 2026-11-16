@@ -14,12 +14,12 @@ function getClient() {
 // Returns the full question set with all questions ordered by question_order
 export async function GET(
   req: NextRequest,
-  { params }: { params: { setId: string } }
+  { params }: { params: Promise<{ setId: string }> }
 ) {
   if (!(await isAuthenticated(req)))
     return signedOutResponse()
 
-  const { setId } = params
+  const { setId } = await params
   const supabase = getClient()
 
   const { data: set, error: setError } = await supabase
@@ -49,12 +49,12 @@ export async function GET(
 //     | { action: 'reorder_questions', order: string[] }
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { setId: string } }
+  { params }: { params: Promise<{ setId: string }> }
 ) {
   if (!(await isAuthenticated(req)))
     return signedOutResponse()
 
-  const { setId } = params
+  const { setId } = await params
   const body = await req.json()
   const { action } = body
   const supabase = getClient()
@@ -124,12 +124,12 @@ export async function PATCH(
 //     | { action: 'delete_question', questionId: string }
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { setId: string } }
+  { params }: { params: Promise<{ setId: string }> }
 ) {
   if (!(await isAuthenticated(req)))
     return signedOutResponse()
 
-  const { setId } = params
+  const { setId } = await params
   const body = await req.json()
   const { action, questionId } = body
   const supabase = getClient()
@@ -170,12 +170,12 @@ export async function DELETE(
 // Add a new question manually to an existing set
 export async function POST(
   req: NextRequest,
-  { params }: { params: { setId: string } }
+  { params }: { params: Promise<{ setId: string }> }
 ) {
   if (!(await isAuthenticated(req)))
     return signedOutResponse()
 
-  const { setId } = params
+  const { setId } = await params
   const body = await req.json()
   const supabase = getClient()
 

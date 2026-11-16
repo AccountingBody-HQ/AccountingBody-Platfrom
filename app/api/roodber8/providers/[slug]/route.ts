@@ -10,13 +10,13 @@ function getSupabase() {
 // ── GET /api/roodber8/providers/[slug] ── provider + recent runs + recent errors
 export async function GET(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   if (!(await isAuthenticated(req))) {
     return signedOutResponse()
   }
 
-  const { slug } = params
+  const { slug } = await params
   const provider = await getProvider(slug)
 
   if (!provider) {
