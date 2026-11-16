@@ -16,14 +16,12 @@ const ADMIN = getAdminPath()
 vi.unstubAllEnvs()
 
 const LOCKED = 'AB Press files stay unchanged'
-const RETIRED = 'route kept unchanged while it is retired'
 const STAGE_PUBLIC = 'later stage: public forms and recruitment'
 const TOOL_ANSWER = "the catch gives the tool's answer to the admin's own input"
 const STAGE_SOCIAL = 'later job: social posting tool'
 
 // Paths under app/api; '@admin' stands for the admin folder.
 const NOT_YET_REPORTING: Record<string, string> = {
-  careerjet: RETIRED,
   'confirm-subscription': STAGE_PUBLIC,
   '@admin/ab-press/export-word': LOCKED,
   '@admin/ab-press/generate': LOCKED,

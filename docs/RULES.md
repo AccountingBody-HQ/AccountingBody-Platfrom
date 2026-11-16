@@ -27,8 +27,8 @@ Earlier work on this project used a numbered rule list. The full list was not ke
 | 21–33 | Text lost — not in force unless restored. | — | No record found. | — |
 | 34 | Use Python pathlib for TSX file writes. | RETIRE | Same as rule 20. Confirmed by the owner. | `CLAUDE.md` |
 | 35–37 | Text lost — not in force unless restored. | — | No record found. | — |
-| 38 | Concerned Careerjet. Text lost — not in force unless restored. | RETIRE | Careerjet is retired. | `app/api/careerjet/route.ts` |
-| 39 | Concerned Careerjet. Text lost — not in force unless restored. | RETIRE | Careerjet is retired. | `app/api/careerjet/route.ts` |
+| 38 | Concerned Careerjet. Text lost — not in force unless restored. | RETIRE | Careerjet is retired. | `app/api/careerjet/route.ts` (removed 16 Nov 2026) |
+| 39 | Concerned Careerjet. Text lost — not in force unless restored. | RETIRE | Careerjet is retired. | `app/api/careerjet/route.ts` (removed 16 Nov 2026) |
 | 40–51 | Text lost — not in force unless restored. | — | No record found. | — |
 | 52 | Query tables flat, with no embedded relations. | KEEP | From code. **Possible collision:** original text lost. | `app/api/<admin>/courses/[courseId]/route.ts`, `app/<admin>/courses/page.tsx` |
 | 53 | Text lost — not in force unless restored. | — | No record found. | — |
