@@ -249,7 +249,7 @@ function SearchInner() {
   const [loading,    setLoading]    = useState(false)
   const [searched,   setSearched]   = useState(false)
   const POPULAR_SEARCHES = isEthioTax ? ET_POPULAR_SEARCHES : AB_POPULAR_SEARCHES
-  const debounceRef                 = useRef<ReturnType<typeof setTimeout>>()
+  const debounceRef                 = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const inputRef                    = useRef<HTMLInputElement>(null)
 
   useEffect(() => { inputRef.current?.focus() }, [])
