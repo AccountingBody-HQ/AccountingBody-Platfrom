@@ -12,20 +12,22 @@ export async function generateStaticParams() {
   return courses.map(c => ({ slug: c.slug }))
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
   // Cached public read (lib/coursesNew.ts): visitors may see an edit up to an
   // hour late; admin tools read the uncached getCourseBySlug.
-  const course = await getPublicCourseBySlug(params.slug)
+  const course = await getPublicCourseBySlug(slug)
   if (!course) return { title: 'Course Not Found | Accounting Body' }
   return {
     title: `${course.title} | Accounting Body`,
     description: course.metaDescription ?? course.description ?? '',
-    ...(await canonicalMetadata(`/free-courses/${params.slug}`)),
+    ...(await canonicalMetadata(`/free-courses/${slug}`)),
   }
 }
 
-export default async function FreeCoursesSlugPage({ params }: { params: { slug: string } }) {
-  const course = await getPublicCourseBySlug(params.slug)
+export default async function FreeCoursesSlugPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const course = await getPublicCourseBySlug(slug)
   if (!course) notFound()
 
   const badge        = levelBadge(course.level)

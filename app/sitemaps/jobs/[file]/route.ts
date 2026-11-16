@@ -16,9 +16,10 @@ export const fetchCache = 'force-no-store'
 // getJobSitemapChunk (lib/jobs.ts) for the query and lifecycle filtering.
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { file: string } }
+  { params }: { params: Promise<{ file: string }> }
 ) {
-  const bucket = parseJobChunkFile(params.file)
+  const { file } = await params
+  const bucket = parseJobChunkFile(file)
   if (bucket === null) {
     return new NextResponse('Not Found', {
       status: 404,

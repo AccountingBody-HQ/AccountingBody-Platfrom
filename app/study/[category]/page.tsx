@@ -51,13 +51,14 @@ export async function generateStaticParams() {
   return known.map(category => ({ category }))
 }
 
-export async function generateMetadata({ params, searchParams }: { params: Promise<{ category: string }>; searchParams?: LetterSearchParams }): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: { params: Promise<{ category: string }>; searchParams?: Promise<LetterSearchParams> }): Promise<Metadata> {
   const { category } = await params
+  const query      = await searchParams
   const meta       = getCategoryDisplay(category)
   const articles   = await readArticles(category)
   const available  = groupAlphabetically(articles).map(g => g.letter)
   const defaultKey = available[0] ?? ''
-  const chosen     = pickLetter(searchParams?.letter, available)
+  const chosen     = pickLetter(query?.letter, available)
   const path       = articles.length > 0 ? letterHref(category, chosen, defaultKey) : `/study/${category}`
   return {
     title: `${meta.name} Study Notes | Accounting Body`,
@@ -66,14 +67,15 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
   }
 }
 
-export default async function CategoryPage({ params, searchParams }: { params: Promise<{ category: string }>; searchParams?: LetterSearchParams }) {
+export default async function CategoryPage({ params, searchParams }: { params: Promise<{ category: string }>; searchParams?: Promise<LetterSearchParams> }) {
   const { category } = await params
+  const query        = await searchParams
   const meta         = getCategoryDisplay(category)
   const articles     = await readArticles(category)
   const groups       = groupAlphabetically(articles)
   const letters      = groups.map(g => g.letter)
   const defaultKey   = letters[0] ?? ''
-  const chosen       = pickLetter(searchParams?.letter, letters)
+  const chosen       = pickLetter(query?.letter, letters)
   const shownGroups  = groups.filter(g => g.letter === chosen)
   const barKeys      = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').concat(letters.includes(OTHER_KEY) ? [OTHER_KEY] : [])
 

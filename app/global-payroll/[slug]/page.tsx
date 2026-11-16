@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { notFound } from 'next/navigation'
+import { notFound, useParams } from 'next/navigation'
 import Link from 'next/link'
 import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 
@@ -109,7 +109,8 @@ const allServices = [
   { name: 'Payroll Advisory',               slug: 'payroll-advisory' },
 ]
 
-export default function GlobalPayrollServicePage({ params }: { params: { slug: string } }) {
+export default function GlobalPayrollServicePage() {
+  const params = useParams<{ slug: string }>()
   const service = services[params.slug]
   if (!service) notFound()
 

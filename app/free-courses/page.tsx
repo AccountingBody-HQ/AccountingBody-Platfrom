@@ -34,13 +34,14 @@ const WHY_FREE = [
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 
-export default async function FreeCoursesPage({ searchParams }: { searchParams: { level?: string } }) {
+export default async function FreeCoursesPage({ searchParams }: { searchParams: Promise<{ level?: string }> }) {
+  const query = await searchParams
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
   const allCourses = await getPublishedCoursesOrThrow('ab')
 
-  const activeLevel = searchParams.level
-    ? searchParams.level.charAt(0).toUpperCase() + searchParams.level.slice(1)
+  const activeLevel = query.level
+    ? query.level.charAt(0).toUpperCase() + query.level.slice(1)
     : null
 
   const courses = activeLevel

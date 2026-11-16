@@ -83,14 +83,14 @@ const cases: Case[] = [
   {
     name: 'course',
     reader: vi.mocked(getPublicCourseBySlug),
-    page: () => FreeCoursesSlugPage({ params: { slug: 'cost-accounting' } }),
-    metadata: () => courseMetadata({ params: { slug: 'cost-accounting' } }),
+    page: () => FreeCoursesSlugPage({ params: Promise.resolve({ slug: 'cost-accounting' }) }),
+    metadata: () => courseMetadata({ params: Promise.resolve({ slug: 'cost-accounting' }) }),
   },
   {
     name: 'lesson',
     reader: vi.mocked(getPublicLessonData),
-    page: () => FreeCoursesLessonPage({ params: { slug: 'cost-accounting', lessonSlug: 'costs' } }),
-    metadata: () => lessonMetadata({ params: { slug: 'cost-accounting', lessonSlug: 'costs' } }),
+    page: () => FreeCoursesLessonPage({ params: Promise.resolve({ slug: 'cost-accounting', lessonSlug: 'costs' }) }),
+    metadata: () => lessonMetadata({ params: Promise.resolve({ slug: 'cost-accounting', lessonSlug: 'costs' }) }),
   },
 ]
 

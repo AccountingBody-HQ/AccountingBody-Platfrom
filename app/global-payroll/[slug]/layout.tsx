@@ -13,14 +13,15 @@ import { canonicalMetadata } from '@/lib/canonical'
 // tag is not actionable on a non-200 response, so an unvalidated slug
 // reaching here is inert, not misleading.
 //
-// params matches the plain-object convention page.tsx already uses in this
-// directory (not the Promise<> convention used elsewhere in this codebase).
+// params uses the Promise<> convention used elsewhere in this codebase
+// (page.tsx, a client page, reads its slug with useParams).
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }): Promise<Metadata> {
-  return { ...(await canonicalMetadata(`/global-payroll/${params.slug}`)) }
+  const { slug } = await params
+  return { ...(await canonicalMetadata(`/global-payroll/${slug}`)) }
 }
 
 export default function Layout({ children }: { children: React.ReactNode }) {
