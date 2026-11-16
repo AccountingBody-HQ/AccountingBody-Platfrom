@@ -243,9 +243,7 @@ describe('addresses keep their path by route shape', () => {
   })
 
   it('outside services keep their path without the query; other hosts are read by route shape', () => {
-    expect(browserAddress('https://abc.api.sanity.io/v2021-10-21/data/query/production?query=*[slug=="x"]')).toBe(
-      'https://abc.api.sanity.io/v2021-10-21/data/query/production',
-    )
+    expect(browserAddress('https://fonts.googleapis.com/css2?family=Inter')).toBe('https://fonts.googleapis.com/css2')
     expect(browserAddress('https://www.googletagmanager.com/gtag/js?id=G-123')).toBe('https://www.googletagmanager.com/gtag/js')
     expect(browserAddress('https://example.org/anything?x=1')).toBe('https://example.org/admin-area')
     expect(OUTSIDE_SERVICE_HOSTS).not.toContain('accountingbody.com')
