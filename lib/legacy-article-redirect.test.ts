@@ -19,13 +19,24 @@ vi.mock('react', async (importOriginal) => ({
 }))
 vi.mock('@/lib/db', () => ({
   getArticleBySlug: vi.fn(async () => null),
+  getPublicQuestionSetBySlug: vi.fn(async () => null),
+  getAllArticleSlugs: vi.fn(async () => []),
+}))
+vi.mock('next/headers', () => ({
+  headers: async () => ({ get: () => null }),
+}))
+vi.mock('@/lib/canonical', () => ({
+  resolveArticleCanonical: async () => ({ alternates: {}, openGraph: { url: 'https://example.test/x' } }),
 }))
 
 import { notFound, permanentRedirect, redirect } from 'next/navigation'
-import { getArticleBySlug } from '@/lib/db'
+import { getArticleBySlug, getPublicQuestionSetBySlug } from '@/lib/db'
 import LegacyArticleRedirect from '@/app/[slug]/page'
+import ArticlesPage, { generateMetadata as articlesMetadata } from '@/app/articles/[slug]/page'
+import StudyArticlePage, { generateMetadata as studyMetadata } from '@/app/study/[category]/[slug]/page'
 
 const reader = vi.mocked(getArticleBySlug)
+const setReader = vi.mocked(getPublicQuestionSetBySlug)
 const visit = (slug: string) => LegacyArticleRedirect({ params: { slug } })
 const article = (slug: string) => ({ id: 'a1', title: 'Fixed costs', slug }) as Awaited<ReturnType<typeof getArticleBySlug>>
 
@@ -35,6 +46,8 @@ beforeEach(() => {
   vi.mocked(redirect).mockClear()
   reader.mockReset()
   reader.mockResolvedValue(null)
+  setReader.mockReset()
+  setReader.mockResolvedValue(null)
 })
 
 describe('old WordPress article address', () => {
@@ -96,16 +109,141 @@ describe('old WordPress article address', () => {
     expect(redirect).not.toHaveBeenCalled()
   })
 
-  it('decodes the address once and URL-encodes the redirect target', async () => {
+  it('decodes the address to its stored form and redirects to it as stored', async () => {
     reader.mockResolvedValue(article('caf%c3%a9'))
     await expect(visit('caf%25c3%25a9')).rejects.toBe(PERMANENT)
     expect(reader).toHaveBeenCalledWith('caf%c3%a9')
-    expect(permanentRedirect).toHaveBeenCalledWith('/articles/caf%25c3%25a9')
+    expect(permanentRedirect).toHaveBeenCalledWith('/articles/caf%c3%a9')
   })
 
   it('redirects to the slug stored on the article row', async () => {
     reader.mockResolvedValue(article('fixed-costs-explained'))
     await expect(visit('fixed-costs')).rejects.toBe(PERMANENT)
     expect(permanentRedirect).toHaveBeenCalledWith('/articles/fixed-costs-explained')
+  })
+})
+
+// Version 2: one hop to the canonical page; practice sets; renamed slugs.
+
+type Article = Awaited<ReturnType<typeof getArticleBySlug>>
+type QuestionSetRow = Awaited<ReturnType<typeof getPublicQuestionSetBySlug>>
+const withCategory = (slug: string, category: string) => ({ id: 'a2', title: 'T', slug, category }) as Article
+const questionSet = (slug: string) => ({ id: 's1', title: 'S', slug }) as QuestionSetRow
+const articlesOnly = (rows: Article[]) => async (slug: string) => rows.find((row) => row?.slug === slug) ?? null
+const setsOnly = (rows: QuestionSetRow[]) => async (slug: string) => rows.find((row) => row?.slug === slug) ?? null
+
+describe('old address v2', () => {
+  it('redirects an article with a category to /study/<category>/<slug> in one hop', async () => {
+    reader.mockResolvedValue(withCategory('lease-guide', 'IFRS '))
+    await expect(visit('lease-guide')).rejects.toBe(PERMANENT)
+    expect(permanentRedirect).toHaveBeenCalledTimes(1)
+    expect(permanentRedirect).toHaveBeenCalledWith('/study/ifrs/lease-guide')
+    expect(setReader).not.toHaveBeenCalled()
+  })
+
+  it('redirects an article without a category to /articles/<slug>', async () => {
+    reader.mockResolvedValue(withCategory('lease-guide', ''))
+    await expect(visit('lease-guide')).rejects.toBe(PERMANENT)
+    expect(permanentRedirect).toHaveBeenCalledWith('/articles/lease-guide')
+  })
+
+  it('redirects to /practice-questions/<slug> when no article but a published set has the slug', async () => {
+    setReader.mockResolvedValue(questionSet('budgeting-practice-questions'))
+    await expect(visit('budgeting-practice-questions')).rejects.toBe(PERMANENT)
+    expect(reader).toHaveBeenCalledWith('budgeting-practice-questions')
+    expect(setReader).toHaveBeenCalledWith('budgeting-practice-questions')
+    expect(permanentRedirect).toHaveBeenCalledTimes(1)
+    expect(permanentRedirect).toHaveBeenCalledWith('/practice-questions/budgeting-practice-questions')
+  })
+
+  it('follows a renamed article slug from the map to the target canonical path', async () => {
+    reader.mockImplementation(articlesOnly([withCategory('lease-guide', 'financial-reporting')]))
+    await expect(visit('lease-accounting-2')).rejects.toBe(PERMANENT)
+    expect(reader).toHaveBeenNthCalledWith(1, 'lease-accounting-2')
+    expect(setReader).toHaveBeenCalledWith('lease-accounting-2')
+    expect(reader).toHaveBeenNthCalledWith(2, 'lease-guide')
+    expect(permanentRedirect).toHaveBeenCalledTimes(1)
+    expect(permanentRedirect).toHaveBeenCalledWith('/study/financial-reporting/lease-guide')
+  })
+
+  it('follows a renamed question-set slug from the map', async () => {
+    const target = 'coding-and-classification-of-accounting-data-practice-questions'
+    setReader.mockImplementation(setsOnly([questionSet(target)]))
+    await expect(visit('coding-and-classification-of-data-practice-questions')).rejects.toBe(PERMANENT)
+    expect(setReader).toHaveBeenLastCalledWith(target)
+    expect(permanentRedirect).toHaveBeenCalledWith('/practice-questions/' + target)
+  })
+
+  it.each([['lease-accounting-2'], ['coding-and-classification-of-data-practice-questions']])(
+    'answers 404 when the map target is not published (%s)', async (old) => {
+      await expect(visit(old)).rejects.toBe(NOT_FOUND)
+      expect(permanentRedirect).not.toHaveBeenCalled()
+      expect(redirect).not.toHaveBeenCalled()
+    })
+
+  it('lets a current article win over a map row with the same old slug', async () => {
+    reader.mockImplementation(articlesOnly([withCategory('lease', 'ifrs'), withCategory('lease-accounting', 'ifrs')]))
+    await expect(visit('lease')).rejects.toBe(PERMANENT)
+    expect(reader).toHaveBeenCalledTimes(1)
+    expect(permanentRedirect).toHaveBeenCalledWith('/study/ifrs/lease')
+  })
+
+  it.each([['beta-β'], ['beta-%CE%B2'], ['beta-%ce%b2'], ['beta-%25ce%25b2']])(
+    'reads the %%xx article by its stored slug and redirects to its canonical path (%s)', async (param) => {
+      reader.mockImplementation(articlesOnly([withCategory('beta-%ce%b2', 'financial-management')]))
+      await expect(visit(param)).rejects.toBe(PERMANENT)
+      expect(reader).toHaveBeenCalledWith('beta-%ce%b2')
+      expect(permanentRedirect).toHaveBeenCalledWith('/study/financial-management/beta-%ce%b2')
+    })
+
+  it('sends the old beta address through the map to the stored %xx slug', async () => {
+    reader.mockImplementation(articlesOnly([withCategory('beta-%ce%b2', 'financial-management')]))
+    await expect(visit('beta-b')).rejects.toBe(PERMANENT)
+    expect(reader).toHaveBeenLastCalledWith('beta-%ce%b2')
+    expect(permanentRedirect).toHaveBeenCalledWith('/study/financial-management/beta-%ce%b2')
+  })
+
+  it('lets a question-set reader error reach the error page', async () => {
+    const dbError = new Error('question_sets query failed (status 504)')
+    setReader.mockRejectedValue(dbError)
+    await expect(visit('lease-accounting-2')).rejects.toBe(dbError)
+    expect(notFound).not.toHaveBeenCalled()
+    expect(permanentRedirect).not.toHaveBeenCalled()
+  })
+
+  it.each([['fixed%2Fcosts'], ['fixed%20costs'], ['fixed%252Fcosts'], ['%zz'], ['%e0%a4']])(
+    'refuses reserved or bad escapes without any read (%s)', async (param) => {
+      await expect(visit(param)).rejects.toBe(NOT_FOUND)
+      expect(reader).not.toHaveBeenCalled()
+      expect(setReader).not.toHaveBeenCalled()
+    })
+})
+
+describe('article pages read the stored slug', () => {
+  const forms = [['beta-β'], ['beta-%CE%B2'], ['beta-%ce%b2'], ['beta-%25ce%25b2']]
+
+  it.each(forms)('/articles/<slug> page and metadata read beta-%%ce%%b2 (%s)', async (slug) => {
+    await expect(ArticlesPage({ params: Promise.resolve({ slug }) })).rejects.toBe(NOT_FOUND)
+    expect(reader).toHaveBeenLastCalledWith('beta-%ce%b2')
+    reader.mockClear()
+    await expect(articlesMetadata({ params: Promise.resolve({ slug }) })).resolves.toEqual({})
+    expect(reader).toHaveBeenLastCalledWith('beta-%ce%b2')
+  })
+
+  it.each(forms)('/study/<category>/<slug> page and metadata read beta-%%ce%%b2 (%s)', async (slug) => {
+    const params = Promise.resolve({ category: 'financial-management', slug })
+    await expect(StudyArticlePage({ params })).rejects.toBe(NOT_FOUND)
+    expect(reader).toHaveBeenLastCalledWith('beta-%ce%b2')
+    reader.mockClear()
+    await expect(studyMetadata({ params })).resolves.toEqual({})
+    expect(reader).toHaveBeenLastCalledWith('beta-%ce%b2')
+  })
+
+  it.each([['fixed%2Fcosts'], ['Fixed-Costs'], ['%zz']])('gives a 404 and empty metadata without a read (%s)', async (slug) => {
+    await expect(ArticlesPage({ params: Promise.resolve({ slug }) })).rejects.toBe(NOT_FOUND)
+    await expect(StudyArticlePage({ params: Promise.resolve({ category: 'x', slug }) })).rejects.toBe(NOT_FOUND)
+    await expect(articlesMetadata({ params: Promise.resolve({ slug }) })).resolves.toEqual({})
+    await expect(studyMetadata({ params: Promise.resolve({ category: 'x', slug }) })).resolves.toEqual({})
+    expect(reader).not.toHaveBeenCalled()
   })
 })

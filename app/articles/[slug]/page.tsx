@@ -6,12 +6,15 @@ import { getArticleBySlug } from '@/lib/db'
 import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 import { resolveArticleCanonical } from '@/lib/canonical'
+import { toStoredSlug } from '@/lib/slug-param'
 
 export const revalidate = 0
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const article = await getArticleBySlug(slug)
+  const stored = toStoredSlug(slug)
+  if (stored === null) return {}
+  const article = await getArticleBySlug(stored)
   if (!article) return {}
   const { alternates, openGraph } = await resolveArticleCanonical(article)
   const canonicalUrl = openGraph.url
@@ -44,7 +47,9 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const { slug } = await params
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
-  const article = await getArticleBySlug(slug)
+  const stored = toStoredSlug(slug)
+  if (stored === null) notFound()
+  const article = await getArticleBySlug(stored)
   if (!article) notFound()
   if (!article) return null
 
