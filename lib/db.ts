@@ -372,6 +372,50 @@ export async function getCasesBySetId(setId: string): Promise<QuestionCase[]> {
   return data as QuestionCase[]
 }
 
+// Cached versions of the three reads above, for the public question-set page
+// only (same two-layer approach as getArticleBySlug: unstable_cache for an
+// hour across requests, react's cache() on the outside so metadata and the
+// page share one read per render). The uncached functions stay as they are
+// for every other caller, so admin tools always see fresh data; visitors may
+// see an edit up to an hour late. Each entry carries its own per-set tag. A
+// failure is thrown and never stored; a genuine not-found (null or []) is.
+const PUBLIC_QUESTION_SET_KEY = ['public-question-set-by-slug']
+const PUBLIC_QUESTIONS_KEY = ['public-questions-by-set']
+const PUBLIC_CASES_KEY = ['public-cases-by-set']
+
+const guardedPublicQuestionSet = guardCachedRead(PUBLIC_QUESTION_SET_KEY, (slug: string) =>
+  unstable_cache(getQuestionSetBySlug, PUBLIC_QUESTION_SET_KEY, {
+    revalidate: 3600,
+    tags: ['question-sets', `question-set:${slug}`],
+  })(slug)
+)
+
+const guardedPublicQuestions = guardCachedRead(PUBLIC_QUESTIONS_KEY, (setId: string) =>
+  unstable_cache(getQuestionsBySetId, PUBLIC_QUESTIONS_KEY, {
+    revalidate: 3600,
+    tags: ['question-sets', `question-set-id:${setId}`],
+  })(setId)
+)
+
+const guardedPublicCases = guardCachedRead(PUBLIC_CASES_KEY, (setId: string) =>
+  unstable_cache(getCasesBySetId, PUBLIC_CASES_KEY, {
+    revalidate: 3600,
+    tags: ['question-sets', `question-set-id:${setId}`],
+  })(setId)
+)
+
+export const getPublicQuestionSetBySlug = cache(async (slug: string): Promise<QuestionSet | null> =>
+  guardedPublicQuestionSet(slug)
+)
+
+export const getPublicQuestionsBySetId = cache(async (setId: string): Promise<Question[]> =>
+  guardedPublicQuestions(setId)
+)
+
+export const getPublicCasesBySetId = cache(async (setId: string): Promise<QuestionCase[]> =>
+  guardedPublicCases(setId)
+)
+
 export async function getQuestionSets(params: {
   difficulty?: string
   search?: string

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
-import { getQuestionSetBySlug, getQuestionsBySetId, getCasesBySetId, getArticleBySlug } from '@/lib/db'
+import { getPublicQuestionSetBySlug, getPublicQuestionsBySetId, getPublicCasesBySetId, getArticleBySlug } from '@/lib/db'
 import QuizRenderer from '@/components/QuizRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
@@ -11,7 +11,9 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const qset = await getQuestionSetBySlug(slug)
+  // Cached public reads (lib/db.ts): visitors may see an edit up to an hour
+  // late; admin tools read the uncached functions.
+  const qset = await getPublicQuestionSetBySlug(slug)
   if (!qset) return {}
   return {
     title:       `${qset.title} | Accounting Body Practice Questions`,
@@ -30,11 +32,11 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
   const { slug } = await params
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
-  const qset = await getQuestionSetBySlug(slug)
+  const qset = await getPublicQuestionSetBySlug(slug)
   if (!qset) notFound()
   const [questions, cases, relatedArticleData] = await Promise.all([
-    getQuestionsBySetId(qset.id),
-    getCasesBySetId(qset.id),
+    getPublicQuestionsBySetId(qset.id),
+    getPublicCasesBySetId(qset.id),
     // The related-article link is secondary here, so a failed article lookup
     // (already logged by getArticleBySlug) just hides the link rather than
     // failing the whole question page.

@@ -8,6 +8,15 @@ import { getLessonData } from './coursesNew'
 // instead of returning a lesson without its text.
 
 vi.mock('@supabase/supabase-js', () => ({ createClient: vi.fn() }))
+// Pass-through: lib/coursesNew.ts uses React cache() and Next's incremental
+// cache, which do not exist outside a Next server.
+vi.mock('react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react')>()),
+  cache: <T extends (...args: never[]) => unknown>(fn: T): T => fn,
+}))
+vi.mock('next/cache', () => ({
+  unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
+}))
 
 type Result = { data: unknown; error: unknown; status?: number }
 type Call = { table: string; select: string; filters: Array<[string, string, unknown]> }

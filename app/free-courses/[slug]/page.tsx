@@ -1,7 +1,7 @@
 // app/free-courses/[slug]/page.tsx
 // Serves the course landing page at /free-courses/[slug]
 
-import { getCourseBySlug, getPublishedCourses, levelBadge, capitalize } from '@/lib/coursesNew'
+import { getPublicCourseBySlug, getPublishedCourses, levelBadge, capitalize } from '@/lib/coursesNew'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
@@ -13,7 +13,9 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const course = await getCourseBySlug(params.slug)
+  // Cached public read (lib/coursesNew.ts): visitors may see an edit up to an
+  // hour late; admin tools read the uncached getCourseBySlug.
+  const course = await getPublicCourseBySlug(params.slug)
   if (!course) return { title: 'Course Not Found | Accounting Body' }
   return {
     title: `${course.title} | Accounting Body`,
@@ -23,7 +25,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 export default async function FreeCoursesSlugPage({ params }: { params: { slug: string } }) {
-  const course = await getCourseBySlug(params.slug)
+  const course = await getPublicCourseBySlug(params.slug)
   if (!course) notFound()
 
   const badge        = levelBadge(course.level)

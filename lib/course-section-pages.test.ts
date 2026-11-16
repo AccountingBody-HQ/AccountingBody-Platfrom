@@ -5,6 +5,15 @@ import React, { isValidElement, type ReactNode } from 'react'
 // read. If the read fails, the page still renders, without that section.
 // The lesson pages' build-time list skips a course whose read fails.
 
+// Pass-through: lib/coursesNew.ts uses React cache() and Next's incremental
+// cache, which do not exist outside a Next server.
+vi.mock('react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react')>()),
+  cache: <T extends (...args: never[]) => unknown>(fn: T): T => fn,
+}))
+vi.mock('next/cache', () => ({
+  unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
+}))
 vi.mock('next/navigation', () => ({
   notFound: vi.fn(() => {
     throw new Error('NEXT_NOT_FOUND')

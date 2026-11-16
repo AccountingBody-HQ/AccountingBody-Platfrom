@@ -1,4 +1,7 @@
+import { cache } from 'react'
+import { unstable_cache } from 'next/cache'
 import { getServerSupabase, type DbContext } from '@/lib/supabase-server'
+import { guardCachedRead } from '@/lib/cache-guard'
 import { reportServerError } from '@/lib/report-error'
 
 // Public pages use the public read limit (the default). getCourseBySlug's
@@ -219,10 +222,23 @@ async function readPublishedCourses(site?: string): Promise<CourseSummary[]> {
   })
 }
 
+// The published course list, cached for an hour per site (key parts plus the
+// JSON of the argument). A failure is thrown, so unstable_cache never stores
+// it; an empty list is a genuine answer and is stored.
+const PUBLISHED_COURSES_KEY = ['published-courses']
+
+export const getPublishedCoursesCached = guardCachedRead(PUBLISHED_COURSES_KEY, (site?: string) =>
+  unstable_cache(readPublishedCourses, PUBLISHED_COURSES_KEY, {
+    revalidate: 3600,
+    tags: ['courses'],
+  })(site)
+)
+
 // For request-time pages: a failed read throws, so the page shows its error
-// page with a 500 instead of an empty or wrong list.
+// page with a 500 instead of an empty or wrong list. Served from the cached
+// list above: visitors may see a change up to an hour late.
 export async function getPublishedCoursesOrThrow(site?: string): Promise<CourseSummary[]> {
-  return readPublishedCourses(site)
+  return getPublishedCoursesCached(site)
 }
 
 // For build-time callers (generateStaticParams): a failed read is reported
@@ -441,6 +457,39 @@ export async function getLessonData(courseSlug: string, lessonSlug: string): Pro
     throw err
   }
 }
+
+// Cached versions of getCourseBySlug (public mode only) and getLessonData,
+// for the public course and lesson pages (same two-layer approach as
+// getArticleBySlug in lib/db.ts: unstable_cache for an hour across requests,
+// react's cache() on the outside so metadata and the page share one read per
+// render). Public-only on purpose: admin tools call the uncached functions
+// and always see fresh data; visitors may see an edit up to an hour late.
+// Each entry carries a per-course tag. A failure is thrown and never stored;
+// a genuine not-found (null) is.
+const PUBLIC_COURSE_KEY = ['public-course-by-slug']
+const PUBLIC_LESSON_KEY = ['public-lesson-data']
+
+const guardedPublicCourse = guardCachedRead(PUBLIC_COURSE_KEY, (slug: string) =>
+  unstable_cache((s: string) => getCourseBySlug(s, false), PUBLIC_COURSE_KEY, {
+    revalidate: 3600,
+    tags: ['courses', `course:${slug}`],
+  })(slug)
+)
+
+const guardedPublicLesson = guardCachedRead(PUBLIC_LESSON_KEY, (courseSlug: string, lessonSlug: string) =>
+  unstable_cache(getLessonData, PUBLIC_LESSON_KEY, {
+    revalidate: 3600,
+    tags: ['courses', `course:${courseSlug}`],
+  })(courseSlug, lessonSlug)
+)
+
+export const getPublicCourseBySlug = cache(async (slug: string): Promise<Course | null> =>
+  guardedPublicCourse(slug)
+)
+
+export const getPublicLessonData = cache(async (courseSlug: string, lessonSlug: string) =>
+  guardedPublicLesson(courseSlug, lessonSlug)
+)
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 // (Pure presentation helpers, unrelated to the Sanity→Supabase data-layer swap —

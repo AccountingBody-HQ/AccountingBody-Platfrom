@@ -24,6 +24,9 @@ vi.mock('@/lib/db', () => ({
   getQuestionSetBySlug: vi.fn(),
   getQuestionsBySetId: vi.fn(async () => []),
   getCasesBySetId: vi.fn(async () => []),
+  getPublicQuestionSetBySlug: vi.fn(),
+  getPublicQuestionsBySetId: vi.fn(async () => []),
+  getPublicCasesBySetId: vi.fn(async () => []),
   getArticleBySlug: vi.fn(async () => null),
 }))
 vi.mock('@/lib/jobs', async (importOriginal) => ({
@@ -36,13 +39,15 @@ vi.mock('@/lib/coursesNew', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/coursesNew')>()),
   getCourseBySlug: vi.fn(),
   getLessonData: vi.fn(),
+  getPublicCourseBySlug: vi.fn(),
+  getPublicLessonData: vi.fn(),
   getPublishedCourses: vi.fn(async () => []),
 }))
 
 import { notFound } from 'next/navigation'
-import { getQuestionSetBySlug } from '@/lib/db'
+import { getPublicQuestionSetBySlug } from '@/lib/db'
 import { getJobBySlug, getJobById } from '@/lib/jobs'
-import { getCourseBySlug, getLessonData } from '@/lib/coursesNew'
+import { getPublicCourseBySlug, getPublicLessonData } from '@/lib/coursesNew'
 import PracticePostPage, { generateMetadata as practiceMetadata } from '@/app/practice-questions/[slug]/page'
 import JobDetailPage, { generateMetadata as jobMetadata } from '@/app/jobs/[slug]/page'
 import ApplyToJobPage from '@/app/jobs/apply/[id]/page'
@@ -60,7 +65,7 @@ type Case = {
 const cases: Case[] = [
   {
     name: 'practice set',
-    reader: vi.mocked(getQuestionSetBySlug),
+    reader: vi.mocked(getPublicQuestionSetBySlug),
     page: () => PracticePostPage({ params: Promise.resolve({ slug: 'budgeting' }) }),
     metadata: () => practiceMetadata({ params: Promise.resolve({ slug: 'budgeting' }) }),
   },
@@ -77,13 +82,13 @@ const cases: Case[] = [
   },
   {
     name: 'course',
-    reader: vi.mocked(getCourseBySlug),
+    reader: vi.mocked(getPublicCourseBySlug),
     page: () => FreeCoursesSlugPage({ params: { slug: 'cost-accounting' } }),
     metadata: () => courseMetadata({ params: { slug: 'cost-accounting' } }),
   },
   {
     name: 'lesson',
-    reader: vi.mocked(getLessonData),
+    reader: vi.mocked(getPublicLessonData),
     page: () => FreeCoursesLessonPage({ params: { slug: 'cost-accounting', lessonSlug: 'costs' } }),
     metadata: () => lessonMetadata({ params: { slug: 'cost-accounting', lessonSlug: 'costs' } }),
   },

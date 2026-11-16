@@ -1,10 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { getServerSupabase } from './supabase-server'
 import { reportServerError } from './report-error'
+import { resetCacheGuard } from './cache-guard'
 import { getPublishedCourses, getPublishedCoursesOrThrow } from './coursesNew'
 
 vi.mock('./supabase-server', () => ({ getServerSupabase: vi.fn() }))
 vi.mock('./report-error', () => ({ reportServerError: vi.fn() }))
+// Pass-through: lib/coursesNew.ts uses React cache() and Next's incremental
+// cache, which do not exist outside a Next server.
+vi.mock('react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react')>()),
+  cache: <T extends (...args: never[]) => unknown>(fn: T): T => fn,
+}))
+vi.mock('next/cache', () => ({
+  unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
+}))
 
 type Result = { data: unknown; error: unknown; status: number }
 
@@ -61,6 +71,7 @@ const EXPECTED = [
 beforeEach(() => {
   vi.mocked(getServerSupabase).mockReset()
   vi.mocked(reportServerError).mockReset()
+  resetCacheGuard()
 })
 
 async function thrown(p: Promise<unknown>): Promise<Error & { code?: string }> {
