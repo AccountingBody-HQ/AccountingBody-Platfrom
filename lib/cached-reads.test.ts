@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
 import {
   getArticleBySlug, getCategoryCounts, getQuestionSetCount, getPublishedQuestionCount, getPublishedArticleCount,
+  getArticlesByCategory,
 } from './db'
 import {
   getCachedListingJobs, getCachedListingJobsCount, getBrowsableJobsCount,
@@ -39,7 +40,7 @@ function fakeClient() {
   const builder: Record<string, unknown> = {
     from: () => builder, select: () => builder, eq: () => builder, in: () => builder,
     or: () => builder, textSearch: () => builder, order: () => builder, range: () => builder,
-    contains: () => builder, like: () => builder,
+    contains: () => builder, like: () => builder, limit: () => builder,
     single: settle,
     rpc: settle,
     then: (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) => settle().then(resolve, reject),
@@ -89,6 +90,7 @@ type Reader = {
 }
 const readers: Reader[] = [
   { name: 'getArticleBySlug', run: () => getArticleBySlug('fixed-costs'), healthy: () => ok({ data: article }), expected: article, fallback: { throws: 'status 504' } },
+  { name: 'getArticlesByCategory', run: () => getArticlesByCategory('acca'), healthy: () => ok({ data: [{ id: 'a1', title: 'Accruals', slug: 'accruals' }] }), expected: [{ id: 'a1', title: 'Accruals', slug: 'accruals' }], fallback: { throws: 'getArticlesByCategory: articles query failed (status 504)' } },
   { name: 'getQuestionSetCount', run: () => getQuestionSetCount(), healthy: () => ok({ count: 181 }), expected: 181, fallback: { value: 0 } },
   { name: 'getPublishedQuestionCount', run: () => getPublishedQuestionCount(), healthy: () => ok({ count: 24531 }), expected: 24531, fallback: { value: 0 } },
   { name: 'getPublishedArticleCount', run: () => getPublishedArticleCount('ab'), healthy: () => ok({ count: 2017 }), expected: 2017, fallback: { value: 0 } },
@@ -182,6 +184,14 @@ describe('cache settings are unchanged', () => {
     expect(cacheCalls[0].keyParts).toEqual(['article-by-slug', 'published'])
     expect(cacheCalls[0].args).toEqual(['fixed-costs'])
     expect(cacheCalls[0].options).toEqual({ revalidate: 3600, tags: ['articles', 'article:fixed-costs'] })
+  })
+
+  it('getArticlesByCategory keeps its key parts, duration and per-category tag', async () => {
+    ok({ data: [] })
+    await getArticlesByCategory('acca')
+    expect(cacheCalls[0].keyParts).toEqual(['articles-by-category', 'published', 'ab'])
+    expect(cacheCalls[0].args).toEqual(['acca'])
+    expect(cacheCalls[0].options).toEqual({ revalidate: 3600, tags: ['articles', 'articles-category:acca'] })
   })
 
   it('listing readers keep their key parts, duration and tags', async () => {

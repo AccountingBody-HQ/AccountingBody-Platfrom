@@ -116,7 +116,8 @@ describe('getArticlesByCategory: answers that are not failures', () => {
   it('a normal result is returned unchanged', async () => {
     use({ data: ROWS, error: null, status: 200 })
     const articles = await getArticlesByCategory('acca')
-    expect(articles).toBe(ROWS)
+    expect(articles).toStrictEqual(ROWS)
+    expect(articles).not.toBe(ROWS)
     expect(articles).toStrictEqual([
       { id: 'a1', title: 'Accruals', slug: 'accruals', excerpt: 'Seed excerpt', category: 'financial-accounting', category_title: 'Financial Accounting', exam_body: ['acca'], read_time: 4, published_at: '2026-01-02T00:00:00Z', author_name: 'Seed Author' },
       { id: 'a2', title: 'Budgets', slug: 'budgets', category: 'financial-accounting', exam_body: ['acca', 'cima'] },
