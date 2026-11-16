@@ -199,6 +199,29 @@ function removeWebOnlySections(html: string, warnings: string[]): string {
     ranges.push({ from: h.start, to, label: pattern.label })
   })
 
+  // Many articles start a web-only section with a bold-only paragraph instead
+  // of a heading: `<p><strong>Further Reading:</strong></p>`. Such a section
+  // runs to the next bold-only paragraph (of any text), the next heading, or
+  // the end of content, whichever comes first.
+  const bolds: { start: number; text: string }[] = []
+  const boldRe = /<p\b[^>]*>\s*<(strong|b)\b[^>]*>((?:(?!<\/?(?:p|strong|b)\b)[\s\S])*?)<\/\1\s*>\s*:?\s*<\/p\s*>/gi
+  let bm: RegExpExecArray | null
+  while ((bm = boldRe.exec(html))) {
+    bolds.push({
+      start: bm.index,
+      text: normaliseHeadingText(stripTags(bm[2])).replace(/\s*:$/, '').trim(),
+    })
+  }
+  bolds.forEach((b, i) => {
+    const pattern = SECTION_PATTERNS.find((p) => p.re.test(b.text))
+    if (!pattern) return
+    const nextBold = i + 1 < bolds.length ? bolds[i + 1].start : html.length
+    const nextHeading = headings.find((h) => h.start > b.start)
+    const to = Math.min(nextBold, nextHeading ? nextHeading.start : html.length)
+    if (pattern.onlyIfLast && to !== html.length) return
+    ranges.push({ from: b.start, to, label: pattern.label })
+  })
+
   // Keep only maximal ranges — a matched heading nested inside another
   // removed section (e.g. "Share this" under "Further Reading") must not
   // be removed a second time against already-shifted offsets.

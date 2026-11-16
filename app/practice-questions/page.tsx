@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { getQuestionSets } from '@/lib/db'
+import { getPublicQuestionSets } from '@/lib/db'
 import { headers } from 'next/headers'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 import { PracticeQuestionsPagination } from './PracticeQuestionsPagination'
@@ -45,7 +45,7 @@ export default async function PracticeQuestionsPage({
   // Build search term — letter filter takes priority over text search
   const searchTerm = letter ? letter : (search || undefined)
 
-  const { sets: posts, total } = await getQuestionSets({
+  const { sets: posts, total } = await getPublicQuestionSets({
     difficulty: difficulty || undefined,
     search:     searchTerm,
     page,

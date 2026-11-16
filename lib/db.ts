@@ -451,6 +451,45 @@ export async function getQuestionSets(params: {
   return { sets: data as QuestionSet[], total: count ?? 0 }
 }
 
+// Cached list read for the public /practice-questions page only. Plain list
+// pages (no search, page 1-20, a known difficulty, 12 per page) are kept for
+// an hour; every other request reads fresh through getQuestionSets. The key
+// holds primitives only. getQuestionSets itself stays uncached for its other
+// caller. A failure is thrown and never stored.
+const PUBLIC_QUESTION_SETS_LIST_KEY = ['public-question-sets-list']
+const PUBLIC_LIST_DIFFICULTIES = ['', 'beginner', 'intermediate', 'advanced']
+
+function fetchPublicQuestionSetsList(difficulty: string, page: number, sort: 'newest' | 'alpha') {
+  return getQuestionSets({ difficulty: difficulty || undefined, page, perPage: 12, sortBy: sort })
+}
+
+const guardedPublicQuestionSetsList = guardCachedRead(
+  PUBLIC_QUESTION_SETS_LIST_KEY,
+  (difficulty: string, page: number, sort: 'newest' | 'alpha') =>
+    unstable_cache(fetchPublicQuestionSetsList, PUBLIC_QUESTION_SETS_LIST_KEY, {
+      revalidate: 3600,
+      tags: ['question-sets', 'question-sets-list'],
+    })(difficulty, page, sort)
+)
+
+export async function getPublicQuestionSets(params: {
+  difficulty?: string
+  search?: string
+  category?: string
+  page?: number
+  perPage?: number
+  sortBy?: string
+}): Promise<{ sets: QuestionSet[]; total: number }> {
+  const { difficulty = '', search, page = 1, perPage = 12, sortBy } = params
+  const cacheable =
+    !search &&
+    Number.isInteger(page) && page >= 1 && page <= 20 &&
+    PUBLIC_LIST_DIFFICULTIES.includes(difficulty) &&
+    perPage === 12
+  if (!cacheable) return getQuestionSets(params)
+  return guardedPublicQuestionSetsList(difficulty, page, sortBy === 'newest' ? 'newest' : 'alpha')
+}
+
 async function fetchQuestionSetCount(): Promise<number> {
   const supabase = getSupabase('publicHeavyRead')
   const { count, error, status } = await supabase

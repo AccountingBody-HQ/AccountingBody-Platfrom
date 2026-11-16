@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { getArticleBySlug } from '@/lib/db'
+import { resolveLegacyRenamedPath } from '@/lib/legacy-renamed-path'
 import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 import { resolveArticleCanonical } from '@/lib/canonical'
@@ -50,7 +51,11 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const stored = toStoredSlug(slug)
   if (stored === null) notFound()
   const article = await getArticleBySlug(stored)
-  if (!article) notFound()
+  if (!article) {
+    const path = await resolveLegacyRenamedPath(stored)
+    if (path) permanentRedirect(path)
+    notFound()
+  }
   if (!article) return null
 
   const accentBar  = EXAM_BODY_ACCENT[article.exam_body?.[0] ?? ''] ?? 'bg-navy-950'
