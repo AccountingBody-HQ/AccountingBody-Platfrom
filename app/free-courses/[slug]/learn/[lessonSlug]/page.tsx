@@ -30,19 +30,21 @@ export async function generateStaticParams() {
   return params
 }
 
-export async function generateMetadata({ params }: { params: { slug: string; lessonSlug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string; lessonSlug: string }> }): Promise<Metadata> {
+  const { slug, lessonSlug } = await params
   // Cached public read (lib/coursesNew.ts): visitors may see an edit up to an
   // hour late; admin tools read the uncached functions.
-  const data = await getPublicLessonData(params.slug, params.lessonSlug)
+  const data = await getPublicLessonData(slug, lessonSlug)
   if (!data) return { title: 'Lesson Not Found | Accounting Body' }
   return {
     title: `${data.lesson.title} — ${data.course.title} | Accounting Body`,
     description: data.lesson.articles?.[0]?.excerpt ?? data.course.description ?? '',
-    ...(await canonicalMetadata(`/free-courses/${params.slug}/learn/${params.lessonSlug}`)),
+    ...(await canonicalMetadata(`/free-courses/${slug}/learn/${lessonSlug}`)),
   }
 }
 
-export default async function FreeCoursesLessonPage({ params }: { params: { slug: string; lessonSlug: string } }) {
+export default async function FreeCoursesLessonPage({ params }: { params: Promise<{ slug: string; lessonSlug: string }> }) {
+  const { slug, lessonSlug } = await params
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
   const brand = isEthioTax ? '#1A4731' : '#0C1A3D'
@@ -50,7 +52,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
   const brandDark = isEthioTax ? '#163d28' : '#0e2048'
   const brandAlpha = isEthioTax ? 'rgba(26,71,49,0.08)' : 'rgba(12,26,61,0.08)'
 
-  const data = await getPublicLessonData(params.slug, params.lessonSlug)
+  const data = await getPublicLessonData(slug, lessonSlug)
   if (!data) notFound()
   const { course, lesson, prevLesson, nextLesson } = data
 
@@ -60,12 +62,12 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
       if (l.slug) allLessons.push(l.slug)
     }
   }
-  const currentIdx   = allLessons.indexOf(params.lessonSlug)
+  const currentIdx   = allLessons.indexOf(lessonSlug)
   const totalLessons = allLessons.length
   const isLastLesson = !nextLesson
 
   const currentChapter = course.chapters?.find(ch =>
-    ch.lessons?.some(l => l.slug === params.lessonSlug)
+    ch.lessons?.some(l => l.slug === lessonSlug)
   )
   const chapterTitle = currentChapter?.title ?? ''
   const currentChapterLessonSlugs = currentChapter?.lessons?.map(l => l.slug) ?? []
@@ -170,7 +172,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
           courseSlug={course.slug}
           chapters={sidebarChapters}
           totalLessons={totalLessons}
-          currentLessonSlug={params.lessonSlug}
+          currentLessonSlug={lessonSlug}
           allLessons={allLessons}
           brandBg={isEthioTax ? '#0d2b1a' : '#081428'}
         />
@@ -324,7 +326,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
             <div className="mb-3 flex justify-end">
               <ResetLessonButton
                 courseSlug={course.slug}
-                lessonSlug={params.lessonSlug}
+                lessonSlug={lessonSlug}
                 allLessonSlugs={allLessons}
               />
             </div>
@@ -348,7 +350,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
                 <div className="shrink-0">
                   <MarkCompleteButton
                     courseSlug={course.slug}
-                    lessonSlug={params.lessonSlug}
+                    lessonSlug={lessonSlug}
                     allLessonSlugs={allLessons}
                     nextHref={nextLesson ? `/free-courses/${course.slug}/learn/${nextLesson.slug}` : undefined}
                   />
@@ -440,7 +442,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
         courseSlug={course.slug}
         chapters={sidebarChapters}
         totalLessons={totalLessons}
-        currentLessonSlug={params.lessonSlug}
+        currentLessonSlug={lessonSlug}
         allLessons={allLessons}
         prevLesson={prevLesson}
         nextLesson={nextLesson}

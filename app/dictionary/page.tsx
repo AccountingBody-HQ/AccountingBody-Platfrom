@@ -20,10 +20,11 @@ const LETTERS = [
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: { letter?: string; category?: string }
+  searchParams: Promise<{ letter?: string; category?: string }>
 }): Promise<Metadata> {
-  const letter   = searchParams.letter?.toUpperCase() ?? ''
-  const category = searchParams.category ?? ''
+  const query    = await searchParams
+  const letter   = query.letter?.toUpperCase() ?? ''
+  const category = query.category ?? ''
   if (category) {
     const title = category.replace(/-/g, ' ').replace(/\w/g, c => c.toUpperCase())
     return {
@@ -105,11 +106,12 @@ function ArticleRow({ article }: { article: DictionaryArticle }) {
 export default async function DictionaryPage({
   searchParams,
 }: {
-  searchParams: { letter?: string; category?: string }
+  searchParams: Promise<{ letter?: string; category?: string }>
 }) {
-  const rawLetter      = searchParams.letter?.toUpperCase() ?? ''
+  const query          = await searchParams
+  const rawLetter      = query.letter?.toUpperCase() ?? ''
   const activeLetter   = LETTERS.includes(rawLetter) ? rawLetter : ''
-  const activeCategory = searchParams.category ?? ''
+  const activeCategory = query.category ?? ''
 
   let articles: DictionaryArticle[] = []
   let categoryTitle = ''

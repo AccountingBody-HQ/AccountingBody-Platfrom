@@ -27,8 +27,9 @@ import { LEGACY_SLUG_RE, toStoredSlug } from '@/lib/slug-param'
 
 const MAX_SLUG_LENGTH = 200
 
-export default async function LegacyArticleRedirect({ params }: { params: { slug: string } }) {
-  const stored = toStoredSlug(params.slug)
+export default async function LegacyArticleRedirect({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const stored = toStoredSlug(slug)
   if (stored === null || stored.length > MAX_SLUG_LENGTH || !LEGACY_SLUG_RE.test(stored)) notFound()
 
   const article = await getArticleBySlug(stored)

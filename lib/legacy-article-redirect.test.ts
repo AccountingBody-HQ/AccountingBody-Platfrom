@@ -38,7 +38,7 @@ import StudyArticlePage, { generateMetadata as studyMetadata } from '@/app/study
 
 const reader = vi.mocked(getArticleBySlug)
 const setReader = vi.mocked(getPublicQuestionSetBySlug)
-const visit = (slug: string) => LegacyArticleRedirect({ params: { slug } })
+const visit = (slug: string) => LegacyArticleRedirect({ params: Promise.resolve({ slug }) })
 const article = (slug: string) => ({ id: 'a1', title: 'Fixed costs', slug }) as Awaited<ReturnType<typeof getArticleBySlug>>
 
 beforeEach(() => {
