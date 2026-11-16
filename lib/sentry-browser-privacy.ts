@@ -67,7 +67,6 @@ export const PUBLIC_PAGE_SEGMENTS: readonly string[] = [
 
 // Second path segments of public /api/ addresses.
 export const PUBLIC_API_SEGMENTS: readonly string[] = [
-  'careerjet',
   'confirm-subscription',
   'contact',
   'cron',

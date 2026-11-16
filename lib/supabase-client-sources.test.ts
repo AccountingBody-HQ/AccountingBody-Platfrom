@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { getAdminPath } from './middleware-logic'
 
 // Server code creates supabase-js clients only through lib/supabase-server.ts.
-// The three files below create their own on purpose. This list may only
+// The two files below create their own on purpose. This list may only
 // shrink: a file that stops creating its own client must be removed from it,
 // and no new file may be added.
 
@@ -18,10 +18,9 @@ const ADMIN = getAdminPath()
 vi.unstubAllEnvs()
 
 const LEGACY = [
-  // Kept on purpose: AB Press (locked) and a route due for removal.
+  // Kept on purpose: AB Press (locked).
   'lib/ab-press-builder.ts',
   `app/api/${ADMIN}/ab-press/preview/route.ts`,
-  'app/api/careerjet/route.ts',
 ]
 
 const ROOT = process.cwd()
@@ -106,9 +105,9 @@ describe('server database clients come from one place', () => {
     expect(new Set(LEGACY).size).toBe(LEGACY.length)
   })
 
-  it('only the factory and the three kept files create their own client', () => {
+  it('only the factory and the two kept files create their own client', () => {
     expect(users).toEqual(
-      [FACTORY, 'lib/ab-press-builder.ts', `app/api/${ADMIN}/ab-press/preview/route.ts`, 'app/api/careerjet/route.ts'].sort(),
+      [FACTORY, 'lib/ab-press-builder.ts', `app/api/${ADMIN}/ab-press/preview/route.ts`].sort(),
     )
   })
 
