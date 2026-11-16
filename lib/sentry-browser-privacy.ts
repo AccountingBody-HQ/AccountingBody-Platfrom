@@ -28,6 +28,8 @@ type Breadcrumb = Parameters<NonNullable<InitOptions['beforeBreadcrumb']>>[0]
 
 // First path segments of public pages (the home page has none).
 export const PUBLIC_PAGE_SEGMENTS: readonly string[] = [
+  // app/[slug]: old WordPress article addresses redirect to /articles/<slug> (FINDINGS DX)
+  '[slug]',
   'about',
   'about-ethiotax',
   'accessibility',
