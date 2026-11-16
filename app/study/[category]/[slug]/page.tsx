@@ -7,6 +7,7 @@ import type { ArticleFull } from '@/lib/db'
 import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 import { resolveArticleCanonical } from '@/lib/canonical'
+import { toStoredSlug } from '@/lib/slug-param'
 
 export async function generateStaticParams() {
   const slugs = await getAllArticleSlugs()
@@ -19,7 +20,9 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string; slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const article = await getArticleBySlug(slug)
+  const stored = toStoredSlug(slug)
+  if (stored === null) return {}
+  const article = await getArticleBySlug(stored)
   if (!article) return {}
   const { alternates, openGraph } = await resolveArticleCanonical(article)
   return {
@@ -116,7 +119,9 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
   const { category, slug } = await params
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
-  const article = await getArticleBySlug(slug)
+  const stored = toStoredSlug(slug)
+  if (stored === null) notFound()
+  const article = await getArticleBySlug(stored)
   if (!article) notFound()
 
   const accentBar = EXAM_BODY_ACCENT[article.exam_body?.[0]?.toUpperCase() ?? ''] ?? 'bg-navy-950'
