@@ -10,7 +10,7 @@ export default function RouteProgressBar() {
   const timers = useRef<ReturnType<typeof setTimeout>[]>([])
   const started = useRef(false)
   const touchStart = useRef<{x: number, y: number} | null>(null)
-  const safetyTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
+  const safetyTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const clearAll = useCallback(() => {
     timers.current.forEach(clearTimeout)
