@@ -2,8 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createClient } from '@supabase/supabase-js'
 import {
   getArticleBySlug, getCategoryCounts, getQuestionSetCount, getPublishedQuestionCount, getPublishedArticleCount,
-  getArticlesByCategory,
+  getArticlesByCategory, getPublicQuestionSetBySlug, getPublicQuestionsBySetId, getPublicCasesBySetId,
 } from './db'
+import { getPublishedCoursesCached, getPublicCourseBySlug, getPublicLessonData } from './coursesNew'
 import {
   getCachedListingJobs, getCachedListingJobsCount, getBrowsableJobsCount,
   getCachedActiveJobCountries, COUNTRY_LIST_LOG,
@@ -50,6 +51,8 @@ function fakeClient() {
 
 const ok = (fields: { data?: unknown; count?: number | null }) => { answer = { error: null, status: 200, ...fields } }
 const fail = () => { answer = { data: null, count: null, error: { message: 'upstream request timeout', code: '' }, status: 504 } }
+// .single() with zero rows: a genuine not-found.
+const noRow = () => { answer = { data: null, error: { code: 'PGRST116', message: 'no rows' }, status: 406 } }
 
 beforeEach(() => {
   // The estimate path: these tests cover one guarded read per reader. The
@@ -99,6 +102,15 @@ const readers: Reader[] = [
   { name: 'getCachedListingJobs (default order)', run: () => getCachedListingJobs({ platform: 'ab', limit: 24, offset: 24 }), healthy: () => ok({ data: [row] }), expected: [row], fallback: { throws: 'default jobs list query failed' } },
   { name: 'getCachedListingJobsCount', run: () => getCachedListingJobsCount({ platform: 'ab' }), healthy: () => ok({ count: 640 }), expected: 640, fallback: { throws: 'count query failed' } },
   { name: 'getCachedActiveJobCountries', run: () => getCachedActiveJobCountries('ab'), healthy: () => ok({ data: countries }), expected: [{ country: 'United Kingdom', count: 12 }, { country: 'Ethiopia', count: 3 }], fallback: { value: [] } },
+  { name: 'getPublicQuestionSetBySlug', run: () => getPublicQuestionSetBySlug('budgeting'), healthy: () => ok({ data: { id: 's1', slug: 'budgeting', title: 'Budgeting' } }), expected: { id: 's1', slug: 'budgeting', title: 'Budgeting' }, fallback: { throws: 'getQuestionSetBySlug: question_sets query failed (status 504)' } },
+  { name: 'getPublicQuestionsBySetId', run: () => getPublicQuestionsBySetId('s1'), healthy: () => ok({ data: [{ id: 'q1', set_id: 's1' }] }), expected: [{ id: 'q1', set_id: 's1' }], fallback: { throws: 'getQuestionsBySetId: questions query failed (status 504)' } },
+  { name: 'getPublicCasesBySetId', run: () => getPublicCasesBySetId('s1'), healthy: () => ok({ data: [{ id: 'k1', set_id: 's1' }] }), expected: [{ id: 'k1', set_id: 's1' }], fallback: { throws: 'getCasesBySetId: question_cases query failed (status 504)' } },
+  // The multi-stage course readers, with their not-found answer only (this
+  // fake gives one answer to every query); full behaviour is covered in
+  // lib/public-content-cache.test.ts.
+  { name: 'getPublishedCoursesCached (no courses)', run: () => getPublishedCoursesCached('ab'), healthy: () => ok({ data: [] }), expected: [], fallback: { throws: 'getPublishedCourses: courses query failed (status 504)' } },
+  { name: 'getPublicCourseBySlug (not found)', run: () => getPublicCourseBySlug('missing'), healthy: noRow, expected: null, fallback: { throws: 'getCourseBySlug: courses query failed (status 504)' } },
+  { name: 'getPublicLessonData (course not found)', run: () => getPublicLessonData('missing', 'costs'), healthy: noRow, expected: null, fallback: { throws: 'getCourseBySlug: courses query failed (status 504)' } },
 ]
 
 async function outcome(run: () => Promise<unknown>) {

@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
-import { getLessonData, getCourseBySlug, getPublishedCourses } from '@/lib/coursesNew'
+import { getPublicLessonData, getCourseBySlug, getPublishedCourses } from '@/lib/coursesNew'
 import MarkCompleteButton, { CourseProgressBar, ResetLessonButton, ResetChapterInlineButton } from '@/components/course/ProgressTracker'
 import CourseSidebar from '@/components/course/CourseSidebar'
 import MobileNavDrawer from '@/components/course/MobileNavDrawer'
@@ -31,7 +31,9 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: { params: { slug: string; lessonSlug: string } }): Promise<Metadata> {
-  const data = await getLessonData(params.slug, params.lessonSlug)
+  // Cached public read (lib/coursesNew.ts): visitors may see an edit up to an
+  // hour late; admin tools read the uncached functions.
+  const data = await getPublicLessonData(params.slug, params.lessonSlug)
   if (!data) return { title: 'Lesson Not Found | Accounting Body' }
   return {
     title: `${data.lesson.title} — ${data.course.title} | Accounting Body`,
@@ -48,7 +50,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: { slug
   const brandDark = isEthioTax ? '#163d28' : '#0e2048'
   const brandAlpha = isEthioTax ? 'rgba(26,71,49,0.08)' : 'rgba(12,26,61,0.08)'
 
-  const data = await getLessonData(params.slug, params.lessonSlug)
+  const data = await getPublicLessonData(params.slug, params.lessonSlug)
   if (!data) notFound()
   const { course, lesson, prevLesson, nextLesson } = data
 
