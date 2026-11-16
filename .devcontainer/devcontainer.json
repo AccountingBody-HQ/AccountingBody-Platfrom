@@ -1,7 +1,3 @@
 {
-  "name": "AccountingBody Platform",
-  "postCreateCommand": "pip install -r requirements.txt --break-system-packages",
-  "remoteEnv": {
-    "SANITY_API_TOKEN": "${localEnv:SANITY_API_TOKEN}"
-  }
+  "name": "AccountingBody Platform"
 }

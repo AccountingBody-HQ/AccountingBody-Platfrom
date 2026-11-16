@@ -59,7 +59,6 @@ export const PUBLIC_PAGE_SEGMENTS: readonly string[] = [
   'sign-up',
   'sitemap.xml',
   'sitemaps',
-  'studio',
   'study',
   'terms',
   'wa',
@@ -88,7 +87,6 @@ export const PUBLIC_API_SEGMENTS: readonly string[] = [
 // Outside services the pages call (from the site's content security policy).
 // Their paths keep their shape; every other host is read like our own pages.
 export const OUTSIDE_SERVICE_HOSTS: readonly string[] = [
-  'sanity.io',
   'google-analytics.com',
   'googletagmanager.com',
   'clerk.accounts.dev',

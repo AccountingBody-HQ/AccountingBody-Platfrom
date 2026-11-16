@@ -21,7 +21,7 @@ Earlier work on this project used a numbered rule list. The full list was not ke
 | 7–9 | Text lost — not in force unless restored. | — | No record found. | — |
 | 10 | Admin queries filter by site, using the column that table has (`platform` or `show_on_sites`). A screen meant to show all sites says so in a comment. | REWRITE | The site column differs by table. See rule 57. | `app/<admin>/`, `app/api/<admin>/` |
 | 11 | Text lost — not in force unless restored. | — | No record found. | — |
-| 12 | Concerned Sanity. Text lost — not in force unless restored. | RETIRE | Sanity is retired. | `sanity/` |
+| 12 | Concerned Sanity. Text lost — not in force unless restored. | RETIRE | Sanity is retired. | `sanity/` (removed 16 Nov 2026) |
 | 13–19 | Text lost — not in force unless restored. | — | No record found. | — |
 | 20 | Use Python pathlib for TSX file writes. | RETIRE | Replaced by the edit tools, which handle bracketed paths safely. Confirmed by the owner. | `CLAUDE.md` |
 | 21–33 | Text lost — not in force unless restored. | — | No record found. | — |
@@ -33,7 +33,7 @@ Earlier work on this project used a numbered rule list. The full list was not ke
 | 52 | Query tables flat, with no embedded relations. | KEEP | From code. **Possible collision:** original text lost. | `app/api/<admin>/courses/[courseId]/route.ts`, `app/<admin>/courses/page.tsx` |
 | 53 | Text lost — not in force unless restored. | — | No record found. | — |
 | 54 | Copy code into a self-contained page rather than importing it from another page. | RETIRE | From code. Conflicts with single sources. Confirmed by the owner. **Possible collision:** original text lost. | `app/<admin>/content-factory/page.tsx` |
-| 55 | Concerned Sanity. Text lost — not in force unless restored. | RETIRE | Sanity is retired. | `sanity/` |
+| 55 | Concerned Sanity. Text lost — not in force unless restored. | RETIRE | Sanity is retired. | `sanity/` (removed 16 Nov 2026) |
 | 56 | Text lost — not in force unless restored. | — | No record found. | — |
 | 57 | An exception to rule 10. Text lost — not in force unless restored. | REWRITE | Exceptions are now stated in a comment on each screen. | `app/<admin>/`, `app/api/<admin>/` |
 | 58 | Text lost — not in force unless restored. | — | No record found. | — |

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 // The unused Careerjet route, the Fixie proxy code, old one-off scripts and
 // unused packages were retired on 16 Nov 2026. They stay in git history only.
+// The unused Sanity Studio, its config and schemas, an unused Portable Text component and their packages were retired on 16 Nov 2026.
 
 const ROOT = process.cwd()
 
@@ -28,6 +29,26 @@ const RETIRED_FILES = [
   'scripts/wipe_sanity.py',
   'scripts/migration_log.json',
   'scripts/quiz_migration_log.json',
+  'app/studio/[[...tool]]/page.tsx',
+  'app/studio/layout.tsx',
+  'sanity.config.ts',
+  'sanity.cli.ts',
+  'sanity/client.ts',
+  'sanity/schemas/_quizFields.ts',
+  'sanity/schemas/article.ts',
+  'sanity/schemas/author.ts',
+  'sanity/schemas/category.ts',
+  'sanity/schemas/course.ts',
+  'sanity/schemas/firmProfile.ts',
+  'sanity/schemas/jobListing.ts',
+  'sanity/schemas/lesson.ts',
+  'sanity/schemas/manualCard.ts',
+  'sanity/schemas/page.ts',
+  'sanity/schemas/practicePost.ts',
+  'sanity/schemas/quizbankBlock.ts',
+  'sanity/schemas/quizbankQuiz.ts',
+  'sanity/schemas/tableBlock.ts',
+  'components/course/ArticleBody.tsx',
 ]
 
 const RETIRED_PACKAGES = [
@@ -38,12 +59,20 @@ const RETIRED_PACKAGES = [
   'tailwind-merge',
   '@tailwindcss/typography',
   'undici',
+  'sanity',
+  'next-sanity',
+  '@sanity/client',
+  '@sanity/image-url',
+  '@sanity/vision',
+  '@portabletext/react',
+  'styled-components',
+  'react-is',
 ]
 
 describe('retired files and packages', () => {
   it('lists each file once', () => {
     expect(new Set(RETIRED_FILES).size).toBe(RETIRED_FILES.length)
-    expect(RETIRED_FILES.length).toBe(20)
+    expect(RETIRED_FILES.length).toBe(40)
   })
 
   it('none of the retired files is back', () => {
