@@ -12,6 +12,9 @@ function getSupabase() {
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+// force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
+// handlers (Data Cache, up to 1 year, survives deploys). Do not remove.
+export const fetchCache = 'force-no-store'
 
 interface QuizQuestion {
   questionText: string
