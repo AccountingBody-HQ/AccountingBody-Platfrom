@@ -7,6 +7,14 @@ import { checkEmailSend } from "@/lib/email-check"
 import { escapeHtml, withoutLineBreaks } from "@/lib/html-escape"
 import { reportServerError } from "@/lib/report-error"
 
+// Every answer depends on the link's token, so this route must never be
+// pre-built: a build without the e-mail key would otherwise freeze the
+// "invalid" answer for every link.
+export const dynamic = "force-dynamic"
+// force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
+// handlers (Data Cache, up to 1 year, survives deploys). Do not remove.
+export const fetchCache = "force-no-store"
+
 export async function GET(req: NextRequest) {
   try {
     const supabase = getServerSupabase("publicWrite")
