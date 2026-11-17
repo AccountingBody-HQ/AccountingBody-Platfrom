@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { jobRetentionDays, jobRetentionMode, runJobRetention, type JobRetentionStore } from '@/lib/job-retention'
+import {
+  RETENTION_DUE_STATUS,
+  RETENTION_KEEP_SOURCE,
+  jobRetentionDays,
+  jobRetentionMode,
+  runJobRetention,
+  type JobRetentionStore,
+} from '@/lib/job-retention'
 import { reportServerError } from '@/lib/report-error'
 import { getServerSupabase } from '@/lib/supabase-server'
 
@@ -29,8 +36,8 @@ function databaseStore(): JobRetentionStore {
       let query = supabase
         .from('jobs')
         .select('id')
-        .neq('source', 'employer')
-        .eq('status', 'expired')
+        .neq('source', RETENTION_KEEP_SOURCE)
+        .eq('status', RETENTION_DUE_STATUS)
         .not('closed_at', 'is', null)
         .lt('closed_at', cutoff)
       if (after !== null) query = query.gt('id', after)
@@ -60,8 +67,8 @@ function databaseStore(): JobRetentionStore {
         .from('jobs')
         .delete()
         .in('id', ids)
-        .neq('source', 'employer')
-        .eq('status', 'expired')
+        .neq('source', RETENTION_KEEP_SOURCE)
+        .eq('status', RETENTION_DUE_STATUS)
         .lt('closed_at', cutoff)
         .select('id')
       if (error) throw error

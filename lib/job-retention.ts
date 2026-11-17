@@ -32,6 +32,13 @@ export const PART_SIZE = 100
 export const MAX_BATCHES = 20
 export const TIME_BUDGET_MS = 40_000
 
+// The filter values for a due job: source is not RETENTION_KEEP_SOURCE,
+// status is RETENTION_DUE_STATUS, and closed_at is set and before the cutoff.
+// The cron route and the /api/ops-status retention check both use these, so
+// the alarm looks for exactly the jobs the cron would remove.
+export const RETENTION_KEEP_SOURCE = 'employer'
+export const RETENTION_DUE_STATUS = 'expired'
+
 const DAY_MS = 24 * 60 * 60 * 1000
 
 export type JobRetentionMode = 'off' | 'dry-run' | 'on'
