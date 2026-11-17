@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { signTestSession, TEST_ADMIN_SECRET, TEST_SESSION_SECRET } from './admin-session-fixtures'
 import {
   decideRequest,
+  findExternalRedirect,
   findStaticRedirect,
   getAdminPath,
   isAdminAddress,
@@ -51,9 +52,12 @@ describe('findStaticRedirect', () => {
     ['/accountants-freelancers', '/firms-freelancers'],
     ['/about-us', '/about'],
     ['/cookie-policy-uk', '/cookie-policy'],
-    ['/ethiotax.com', '/ethiotax'],
   ])('sends %s to %s', (from, to) => {
     expect(findStaticRedirect(from)).toBe(to)
+  })
+
+  it('leaves the EthioTax address to the external list', () => {
+    expect(findStaticRedirect('/ethiotax.com')).toBeUndefined()
   })
 
   it('finds an address with a trailing slash', () => {
@@ -62,6 +66,16 @@ describe('findStaticRedirect', () => {
 
   it.each(['/', '/jobs', '/about'])('has no entry for %s', (path) => {
     expect(findStaticRedirect(path)).toBeUndefined()
+  })
+})
+
+describe('findExternalRedirect', () => {
+  it.each(['/ethiotax.com', '/ethiotax.com/'])('sends %s to the EthioTax website', (path) => {
+    expect(findExternalRedirect(path)).toBe('https://ethiotax.com/')
+  })
+
+  it.each(['/', '/ethiotax', '/about-us'])('has no entry for %s', (path) => {
+    expect(findExternalRedirect(path)).toBeUndefined()
   })
 })
 
@@ -361,6 +375,13 @@ describe('decideRequest', () => {
     expect(await decideRequest(facts({ pathname: '/courses' }))).toEqual({
       action: 'redirect-permanent',
       pathname: '/free-courses',
+    })
+  })
+
+  it('sends the old EthioTax address to the EthioTax website', async () => {
+    expect(await decideRequest(facts({ pathname: '/ethiotax.com' }))).toEqual({
+      action: 'redirect-external',
+      url: 'https://ethiotax.com/',
     })
   })
 

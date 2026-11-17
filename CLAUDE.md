@@ -17,7 +17,7 @@ A change here can reach both sites, and markup changes can affect the Worker eve
 
 | Area | Technology |
 |---|---|
-| Framework | Next.js 14.2.35 App Router, React 18, TypeScript strict mode |
+| Framework | Next.js 15.5.29 App Router, React 19, TypeScript strict mode |
 | Styling | Tailwind CSS, `app/globals.css` |
 | Database | Supabase through supabase-js over HTTPS; no direct Postgres driver in the app |
 | Email | Resend |
