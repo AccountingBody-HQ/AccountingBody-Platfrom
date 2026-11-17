@@ -1,0 +1,33 @@
+-- ============================================================================
+-- 0018_retired_areas_removed.sql
+-- Date: 17 Nov 2026
+--
+-- RECORD ONLY. Two changes, each ONE self-checking transaction, both
+-- APPLIED on 17 Nov 2026. Do not run this file: the guard below stops it.
+--
+-- Owner decision D214: only AccountingBody and EthioTax remain; HRLake,
+-- BirrBank and GPE are retired (D217, D218).
+--
+-- 1. HRLake (approval D219, applied D220 at 14:05:21 UTC, backup run
+--    44097947560 first). Before the change the owner took the hrlake and
+--    birrbank areas out of Supabase's exposed schemas.
+--    - dropped the 13 views in area et that read HRLake data, the foreign
+--      key et.birr_tax_rates_tax_bracket_id_fkey and the function
+--      public.match_hrlake_embeddings;
+--    - DROP SCHEMA hrlake CASCADE (28 tables, 2,603 rows);
+--    - deleted the 1 HRLake row in public.email_subscribers (kept in a
+--      private before-image outside the repository).
+-- 2. BirrBank, the empty ab/et areas and the GPE rows (approval D221,
+--    applied D222 at 14:27:14 UTC, backup run 44101786437 first). Before
+--    the change the owner took ab and et out of the exposed schemas (only
+--    public and graphql_public remain).
+--    - DROP SCHEMA birrbank CASCADE (30 tables, 3,423 rows), DROP SCHEMA ab
+--      CASCADE (12 empty tables), DROP SCHEMA et CASCADE (5 empty tables);
+--    - deleted the GPE rows: public.data_sources 47, public.platform_memberships
+--      1, public.scheduled_jobs 3 (the two person rows are kept in private
+--      before-images outside the repository).
+--
+-- Undo (owner decision only): restore the areas and rows from the backup
+-- run named above (docs/RUNBOOK.md).
+
+DO $$ BEGIN RAISE EXCEPTION '0018 is a record of changes already applied on 17 Nov 2026 - do not run it'; END $$;
