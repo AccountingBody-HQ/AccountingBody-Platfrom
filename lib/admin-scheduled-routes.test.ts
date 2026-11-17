@@ -598,7 +598,7 @@ const scenarios: Scenario[] = [
     rows: { job_providers: [provider], provider_runs: [run] },
     call: async () => (await page('providers/[slug]/page.tsx')).default!({ params: Promise.resolve({ slug: 'example' }) }),
     healthy: { status: 'page', dbRequests: 4 },
-    stalled: { waits: 1, status: 'thrown', body: 'NEXT_NOT_FOUND', dbRequests: 1 },
+    stalled: { waits: 1, status: 'thrown', body: 'NEXT_HTTP_ERROR_FALLBACK;404', dbRequests: 1 },
   },
   {
     name: 'dashboard',

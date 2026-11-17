@@ -1,10 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
-import { getMiddlewareMatchers } from 'next/dist/build/analysis/get-page-static-info'
+import * as pageStaticInfo from 'next/dist/build/analysis/get-page-static-info'
+import type { MiddlewareMatcher } from 'next/dist/build/analysis/get-page-static-info'
 import { getMiddlewareRouteMatcher } from 'next/dist/shared/lib/router/utils/middleware-route-matcher'
 import { signedOutResponse } from '@/lib/admin-auth'
 import { signTestSession, TEST_ADMIN_SECRET, TEST_SESSION_SECRET } from '@/lib/admin-session-fixtures'
 import middleware, { config } from './middleware'
+
+// Next 15 still exports getMiddlewareMatchers at runtime but no longer declares it in its types.
+const { getMiddlewareMatchers } = pageStaticInfo as unknown as {
+  getMiddlewareMatchers: (matcher: unknown, nextConfig: unknown) => MiddlewareMatcher[]
+}
 
 const ORIGIN = 'https://accountingbody.com'
 const ADMIN = 'test-admin-area'
