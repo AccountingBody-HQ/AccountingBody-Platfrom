@@ -100,7 +100,6 @@ describe('permanent redirects', () => {
     ['/accountants-freelancers', '/firms-freelancers'],
     ['/about-us', '/about'],
     ['/cookie-policy-uk', '/cookie-policy'],
-    ['/ethiotax.com', '/ethiotax'],
   ])('%s moves permanently to %s', async (from, to) => {
     expectRedirect(await run(from), 301, ORIGIN + to)
   })
@@ -111,6 +110,10 @@ describe('permanent redirects', () => {
 
   it('keeps the query string', async () => {
     expectRedirect(await run('/courses?level=beginner'), 301, ORIGIN + '/free-courses?level=beginner')
+  })
+
+  it.each(['/ethiotax.com', '/ethiotax.com/', '/ethiotax.com?x=1'])('%s moves permanently to the EthioTax website', async (from) => {
+    expectRedirect(await run(from), 301, 'https://ethiotax.com/')
   })
 
   it('applies on the EthioTax host too', async () => {

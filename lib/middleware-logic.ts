@@ -25,7 +25,11 @@ const STATIC_REDIRECTS: Record<string, string> = {
   "/accountants-freelancers": "/firms-freelancers",
   "/about-us": "/about",
   "/cookie-policy-uk": "/cookie-policy",
-  "/ethiotax.com": "/ethiotax",
+}
+
+// Old addresses that belong to another site: a permanent move to that site.
+const EXTERNAL_REDIRECTS: Record<string, string> = {
+  "/ethiotax.com": "https://ethiotax.com/",
 }
 
 export type SitePlatform = 'ethiotax' | 'accountingbody'
@@ -42,6 +46,7 @@ export type RequestFacts = {
 export type RequestDecision =
   | { action: 'redirect-home' }
   | { action: 'redirect-permanent'; pathname: string }
+  | { action: 'redirect-external'; url: string }
   | { action: 'redirect-admin-login'; pathname: string }
   | { action: 'admin-api-signed-out' }
   | { action: 'continue'; platform: SitePlatform }
@@ -69,6 +74,11 @@ export function isRetiredAccountPath(pathname: string): boolean {
 export function findStaticRedirect(pathname: string): string | undefined {
   const clean = pathname.replace(/\/$/, "")
   return STATIC_REDIRECTS[clean]
+}
+
+export function findExternalRedirect(pathname: string): string | undefined {
+  const clean = pathname.replace(/\/$/, "")
+  return EXTERNAL_REDIRECTS[clean]
 }
 
 export function isAdminPagePath(pathname: string, adminPath: string): boolean {
@@ -237,6 +247,11 @@ export async function decideRequest(facts: RequestFacts): Promise<RequestDecisio
 
   if (isRetiredAccountPath(pathname)) {
     return { action: 'redirect-home' }
+  }
+
+  const externalTarget = findExternalRedirect(pathname)
+  if (externalTarget) {
+    return { action: 'redirect-external', url: externalTarget }
   }
 
   const redirectTarget = findStaticRedirect(pathname)

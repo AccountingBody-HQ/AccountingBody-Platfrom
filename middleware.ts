@@ -31,6 +31,10 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(url, 301)
   }
 
+  if (decision.action === "redirect-external") {
+    return NextResponse.redirect(decision.url, 301)
+  }
+
   if (decision.action === "redirect-admin-login") {
     const loginUrl = req.nextUrl.clone()
     loginUrl.pathname = decision.pathname
