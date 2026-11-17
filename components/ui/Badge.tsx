@@ -274,8 +274,8 @@ export function SubjectBadge({ code, examBody, size = 'sm', className = '' }: Su
         className,
       ].join(' ')}
     >
-      {examBody && <span className="text-white/50">{examBody}</span>}
-      {examBody && <span className="text-white/30">·</span>}
+      {examBody && <span className="text-white/70">{examBody}</span>}
+      {examBody && <span className="text-white/70">·</span>}
       {code}
     </span>
   )

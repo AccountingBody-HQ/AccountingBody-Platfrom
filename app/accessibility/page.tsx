@@ -60,7 +60,7 @@ export default async function AccessibilityPage() {
         <div className="container-site relative z-10">
           <span className="eyebrow text-gold-400 mb-4 block">Accessibility</span>
           <h1 className="font-display text-white mb-3 leading-tight">Accessibility Statement</h1>
-          <p className="text-white/50 text-sm">Last updated: March 2026</p>
+          <p className="text-white/70 text-sm">Last updated: March 2026</p>
         </div>
       </section>
 
@@ -114,7 +114,7 @@ export default async function AccessibilityPage() {
 
             <div className="bg-navy-950 rounded-xl p-6 relative overflow-hidden mb-10">
               <div className="absolute inset-0 opacity-10 pointer-events-none"
-                style={{ background: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 60%)' }} />
+                style={{ background: 'radial-gradient(circle at 80% 20%, #C9982A 0%, transparent 60%)' }} />
               <div className="relative z-10">
                 <h3 className="font-display text-white text-lg mb-2">Report an accessibility issue</h3>
                 <p className="text-white/60 text-sm leading-relaxed mb-4">

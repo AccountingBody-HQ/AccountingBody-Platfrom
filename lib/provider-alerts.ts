@@ -104,7 +104,7 @@ function buildAlertEmail(
   const html = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
 <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
   <div style="background:${isRecovery ? '#16a34a' : '#0C1A3D'};padding:24px 32px;">
-    <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 6px;">Provider Alert</p>
+    <p style="color:#C9982A;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 6px;">Provider Alert</p>
     <h1 style="color:#fff;font-size:20px;margin:0;">${isRecovery ? 'Provider recovered' : justAutoPaused ? 'Provider auto-paused' : `Provider needs attention: ${stateLabel(newState)}`}</h1>
   </div>
   <div style="padding:24px 32px;">

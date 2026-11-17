@@ -242,7 +242,7 @@ function EmailSignupSection({ isEthioTax = false }: { isEthioTax?: boolean }) {
           </p>
           <EmailSignupForm isEthioTax={isEthioTax} />
           <div className="w-full flex justify-center mt-4">
-            <p className="text-white/35 text-xs text-center">Join accounting and finance professionals. Unsubscribe any time.</p>
+            <p className="text-white/70 text-xs text-center">Join accounting and finance professionals. Unsubscribe any time.</p>
           </div>
         </div>
       </div>
@@ -491,7 +491,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           'ETICPA · ACCA · CIMA · AAT',
           'UK · USA · Canada · UAE · Ethiopia',
         ].map(label => (
-          <span key={label} className="flex items-center gap-1.5 text-xs font-medium text-white/50">
+          <span key={label} className="flex items-center gap-1.5 text-xs font-medium text-white/70">
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
             </svg>
@@ -546,7 +546,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
               >
                 <p className="text-white/80 text-xs font-semibold">{item.label}</p>
-                <p className="text-white/40 text-xs leading-snug mt-0.5">{item.desc}</p>
+                <p className="text-white/70 text-xs leading-snug mt-0.5">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -587,7 +587,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 <span className={`text-xs font-bold px-2 py-0.5 rounded shrink-0 ${item.badgeBg} ${item.badgeText}`} translate="no">
                   {item.badge}
                 </span>
-                <p className="text-white/55 text-xs leading-snug">{item.body}</p>
+                <p className="text-white/70 text-xs leading-snug">{item.body}</p>
               </div>
             ))}
           </div>
@@ -712,11 +712,11 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
   <div className="container-site relative z-10">
     <div className="max-w-3xl mb-16">
-      <p className="text-[#C9982A] text-[11px] font-bold uppercase tracking-[0.15em] mb-4">Why EthioTax</p>
+      <p className="text-gold-400 text-[11px] font-bold uppercase tracking-[0.15em] mb-4">Why EthioTax</p>
       <h2 className="font-display text-white text-4xl md:text-5xl leading-tight mb-5" style={{ letterSpacing: '-0.02em' }}>
         Not a directory.<br />Not a marketplace.<br />A managed service.
       </h2>
-      <p className="text-white/55 text-lg leading-relaxed max-w-2xl">
+      <p className="text-white/70 text-lg leading-relaxed max-w-2xl">
         EthioTax is built exclusively for the Ethiopian community — every professional vetted, every deliverable reviewed, every engagement managed end to end.
       </p>
     </div>
@@ -730,10 +730,10 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             style={{ backgroundColor: '#C9982A' }} />
           <p className="font-display text-[48px] leading-none font-bold mb-5 opacity-20 text-white" translate="no">{point.number}</p>
           <h3 className="font-display text-white text-[17px] font-bold mb-3 leading-snug">{point.title}</h3>
-          <p className="text-white/55 text-sm leading-relaxed flex-1 mb-6">{point.body}</p>
+          <p className="text-white/70 text-sm leading-relaxed flex-1 mb-6">{point.body}</p>
           <div className="pt-5 border-t border-white/10 flex items-baseline gap-2">
             <span className="font-display text-2xl font-bold" style={{ color: '#C9982A' }}>{point.stat}</span>
-            <span className="text-white/40 text-xs font-medium uppercase tracking-wider">{point.statLabel}</span>
+            <span className="text-white/70 text-xs font-medium uppercase tracking-wider">{point.statLabel}</span>
           </div>
         </div>
       ))}
@@ -837,7 +837,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           <div className="px-7 pt-7 pb-6" style={{ background: '#1A4731' }}>
             <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#C9982A' }}>Question bank</p>
             <p className="font-display text-white text-2xl">Exam-standard questions</p>
-            <p className="text-white/50 text-sm mt-1">ETICPA · ACCA · CIMA · AAT — all in one place</p>
+            <p className="text-white/70 text-sm mt-1">ETICPA · ACCA · CIMA · AAT — all in one place</p>
           </div>
 
           <div className="divide-y divide-slate-100">
@@ -985,7 +985,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white" style={{ backgroundColor: '#1A4731' }} translate="no">{t.initials}</div>
             <div>
               <p className="font-semibold text-gray-900 text-sm">{t.name}</p>
-              <p className="text-gray-400 text-xs">{t.role}</p>
+              <p className="text-slate-500 text-xs">{t.role}</p>
             </div>
           </div>
         </div>
@@ -1058,7 +1058,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       </p>
       <EmailSignupForm isEthioTax={isEthioTax} />
       <div className="w-full flex justify-center mt-4">
-        <p className="text-white/35 text-xs text-center">Join the EthioTax community. Unsubscribe any time.</p>
+        <p className="text-white/70 text-xs text-center">Join the EthioTax community. Unsubscribe any time.</p>
       </div>
     </div>
   </div>
@@ -1160,7 +1160,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               Expert placement.
             </h1>
 
-            <p className="text-white/55 text-lg leading-relaxed mb-10 max-w-xl">
+            <p className="text-white/70 text-lg leading-relaxed mb-10 max-w-xl">
               The dedicated platform for accounting and finance professionals. Live job listings, exam practice questions, and expert managed placement — all in one place.
             </p>
 
@@ -1168,7 +1168,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-6 w-full max-w-2xl">
               {['Live job listings', 'Exam-standard practice questions', 'Free to start'].map(label => (
-                <span key={label} className="flex items-center gap-1.5 text-xs font-medium text-white/50">
+                <span key={label} className="flex items-center gap-1.5 text-xs font-medium text-white/70">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="#C9982A" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
@@ -1226,7 +1226,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                       <span className={`text-xs font-bold px-2 py-0.5 rounded shrink-0 ${item.badgeBg} ${item.badgeText}`} translate="no">
                         {item.badge}
                       </span>
-                      <p className="text-white/55 text-xs leading-snug">{item.body}</p>
+                      <p className="text-white/70 text-xs leading-snug">{item.body}</p>
                     </div>
                   ))}
                 </div>
@@ -1268,7 +1268,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                           <path strokeLinecap="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
-                      <p className="text-white/55 text-xs leading-snug">{point}</p>
+                      <p className="text-white/70 text-xs leading-snug">{point}</p>
                     </div>
                   ))}
                 </div>
@@ -1307,7 +1307,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             </div>
             <Link
               href="/jobs/listings"
-              className="hidden md:flex items-center gap-1.5 text-sm font-semibold text-navy-700 hover:text-gold-500 transition-colors whitespace-nowrap"
+              className="hidden md:flex items-center gap-1.5 text-sm font-semibold text-navy-700 hover:text-gold-600 transition-colors whitespace-nowrap"
             >
               Browse all jobs →
             </Link>
@@ -1350,7 +1350,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   <span className="text-xs text-slate-400">Global</span>
                 </div>
                 <div className="mt-4 pt-3 border-t border-slate-100">
-                  <span className="text-xs font-semibold text-navy-700 group-hover:text-gold-500 transition-colors">
+                  <span className="text-xs font-semibold text-navy-700 group-hover:text-gold-600 transition-colors">
                     Search roles →
                   </span>
                 </div>
@@ -1657,7 +1657,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 <div className="bg-navy-950 px-7 pt-7 pb-6">
                   <p className="text-xs font-bold uppercase tracking-widest text-gold-400 mb-2">Question bank</p>
                   <p className="font-display text-white text-2xl">Exam-standard questions</p>
-                  <p className="text-white/50 text-sm mt-1">ACCA · CIMA · AAT · ICAEW — all in one place</p>
+                  <p className="text-white/70 text-sm mt-1">ACCA · CIMA · AAT · ICAEW — all in one place</p>
                 </div>
 
                 <div className="divide-y divide-slate-100">
@@ -1678,7 +1678,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
                 <div className="px-7 py-5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
                   <p className="text-xs text-slate-500">Instant marking · Detailed solutions · Free to start</p>
-                  <Link href="/practice-questions" className="text-xs font-semibold text-navy-700 hover:text-gold-500 transition-colors">
+                  <Link href="/practice-questions" className="text-xs font-semibold text-navy-700 hover:text-gold-600 transition-colors">
                     Browse questions →
                   </Link>
                 </div>
@@ -1711,7 +1711,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             </div>
             <Link
               href="/articles"
-              className={`shrink-0 flex items-center gap-1.5 text-sm font-semibold transition-colors whitespace-nowrap ${isEthioTax ? 'text-[#1A4731] hover:text-[#C9982A]' : 'text-navy-700 hover:text-gold-500'}`}
+              className={`shrink-0 flex items-center gap-1.5 text-sm font-semibold transition-colors whitespace-nowrap ${isEthioTax ? 'text-[#1A4731] hover:text-gold-600' : 'text-navy-700 hover:text-gold-600'}`}
             >
               View all
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1843,7 +1843,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 )}
 
                 <div className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full bg-white border-2 border-gold-500 mb-6 shadow-sm">
-                  <span className="font-display text-xl font-bold text-gold-500" translate="no">{step.step}</span>
+                  <span className="font-display text-xl font-bold text-gold-600" translate="no">{step.step}</span>
                 </div>
 
                 <h3 className="font-display text-lg text-navy-950 mb-3">{step.title}</h3>
@@ -2012,7 +2012,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               </div>
               <div>
                 <span className="text-white text-sm font-semibold block">James T.</span>
-                <span className="text-white/50 text-xs">Financial Controller, placed via Accounting Body</span>
+                <span className="text-white/70 text-xs">Financial Controller, placed via Accounting Body</span>
               </div>
             </div>
           </div>

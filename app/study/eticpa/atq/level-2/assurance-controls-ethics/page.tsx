@@ -48,7 +48,7 @@ export default async function AssuranceControlsEthicsPage() {
             style={{ background: 'radial-gradient(ellipse at center top, #C9982A 0%, transparent 70%)' }} />
         </div>
         <div className="container-site relative z-10">
-          <nav className="flex items-center gap-2 text-white/40 text-sm mb-8 flex-wrap">
+          <nav className="flex items-center gap-2 text-white/70 text-sm mb-8 flex-wrap">
             <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <Link href="/study/eticpa" className="hover:text-white/70 transition-colors"><span translate="no">ETICPA</span></Link>
@@ -60,7 +60,7 @@ export default async function AssuranceControlsEthicsPage() {
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-6">
               <span className="text-xs font-bold px-3 py-1.5 rounded-md" style={{ backgroundColor: '#C9982A', color: '#1A4731' }}><span translate="no">ATQ Level 2</span></span>
-              <span className="text-xs font-semibold text-white/50">Advanced Technician</span>
+              <span className="text-xs font-semibold text-white/70">Advanced Technician</span>
             </div>
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.025em' }}>
               Assurance, Controls
@@ -155,7 +155,7 @@ export default async function AssuranceControlsEthicsPage() {
                           <span className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold shrink-0"
                             style={{ borderColor: '#1A4731', color: '#1A4731' }}>{lessonIndex + 1}</span>
                           <span className="text-sm text-slate-700 group-hover:text-[#1A4731] transition-colors">{lesson.title}</span>
-                          <svg className="w-4 h-4 ml-auto text-slate-300 group-hover:text-[#1A4731] transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 ml-auto text-slate-500 group-hover:text-[#1A4731] transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                           </svg>
                         </Link>
@@ -194,7 +194,7 @@ export default async function AssuranceControlsEthicsPage() {
               ].map(stat => (
                 <div key={stat.label} className="text-center">
                   <p className="font-display text-3xl font-bold mb-1" style={{ color: '#C9982A' }}><span translate="no"><span translate="no">{stat.value}</span></span></p>
-                  <p className="text-white/50 text-xs">{stat.label}</p>
+                  <p className="text-white/70 text-xs">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -203,7 +203,7 @@ export default async function AssuranceControlsEthicsPage() {
               style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '48px', width: '220px', boxSizing: 'border-box' }}>
               Start Mock Exam
             </Link>
-            <p className="text-white/40 text-xs mt-4 text-center mx-auto">
+            <p className="text-white/70 text-xs mt-4 text-center mx-auto">
               Questions are added automatically as new practice sets are published.
             </p>
           </div>

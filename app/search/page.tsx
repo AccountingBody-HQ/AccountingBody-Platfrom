@@ -316,13 +316,13 @@ function SearchInner() {
             <h1 className="font-display text-white mb-3 leading-tight" style={{ letterSpacing: '-0.025em' }}>
               Find what you need
             </h1>
-            <p className="text-white/55 text-lg">
+            <p className="text-white/70 text-lg">
               Search across articles, practice questions, and courses.
             </p>
           </div>
           <div className="max-w-2xl mx-auto">
             <div className="relative">
-              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40 pointer-events-none"
+              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/70 pointer-events-none"
                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -332,7 +332,7 @@ function SearchInner() {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder={isEthioTax ? "Search for ETICPA ATQ, VAT Ethiopia, income tax…" : "Search for double entry, cash flow, depreciation…"}
-                className="w-full h-14 pl-12 pr-12 rounded-xl text-base bg-white/10 border border-white/20 text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
+                className="w-full h-14 pl-12 pr-12 rounded-xl text-base bg-white/10 border border-white/20 text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
                 aria-label="Search Accounting Body"
                 autoComplete="off"
               />
@@ -344,7 +344,7 @@ function SearchInner() {
                   </svg>
                 ) : query ? (
                   <button onClick={() => { setQuery(''); inputRef.current?.focus() }}
-                    className="text-white/40 hover:text-white/80 transition-colors" aria-label="Clear search">
+                    className="text-white/70 hover:text-white/80 transition-colors" aria-label="Clear search">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>

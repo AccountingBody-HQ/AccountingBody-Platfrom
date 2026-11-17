@@ -20,7 +20,7 @@ const standards = [
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#ECFDF5"/>
         <circle cx="20" cy="20" r="9" stroke="#0C1A3D" strokeWidth="1.6"/>
-        <path d="M15 20l3 3 7-7" stroke="#D4A017" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M15 20l3 3 7-7" stroke="#C9982A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
   },
@@ -31,8 +31,8 @@ const standards = [
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#FFF7ED"/>
         <rect x="11" y="10" width="18" height="20" rx="2" stroke="#0C1A3D" strokeWidth="1.6"/>
-        <path d="M15 17l2 2 4-4" stroke="#D4A017" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M15 23l2 2 4-4" stroke="#D4A017" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M15 17l2 2 4-4" stroke="#C9982A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M15 23l2 2 4-4" stroke="#C9982A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
         <path d="M23 18h2M23 24h2" stroke="#0C1A3D" strokeWidth="1.4" strokeLinecap="round"/>
       </svg>
     ),
@@ -44,7 +44,7 @@ const standards = [
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#EFF6FF"/>
         <circle cx="20" cy="20" r="9" stroke="#0C1A3D" strokeWidth="1.6"/>
-        <path d="M20 11c-2 3-3 5.5-3 9s1 6 3 9M20 11c2 3 3 5.5 3 9s-1 6-3 9M11 20h18" stroke="#D4A017" strokeWidth="1.4" strokeLinecap="round"/>
+        <path d="M20 11c-2 3-3 5.5-3 9s1 6 3 9M20 11c2 3 3 5.5 3 9s-1 6-3 9M11 20h18" stroke="#C9982A" strokeWidth="1.4" strokeLinecap="round"/>
       </svg>
     ),
   },
@@ -55,7 +55,7 @@ const standards = [
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#EEF2FF"/>
         <path d="M20 11l2.5 5 5.5.8-4 3.9.9 5.5L20 23.5l-4.9 2.7.9-5.5-4-3.9 5.5-.8z" stroke="#0C1A3D" strokeWidth="1.5" strokeLinejoin="round"/>
-        <path d="M20 15v5l3 2" stroke="#D4A017" strokeWidth="1.4" strokeLinecap="round"/>
+        <path d="M20 15v5l3 2" stroke="#C9982A" strokeWidth="1.4" strokeLinecap="round"/>
       </svg>
     ),
   },
@@ -97,7 +97,7 @@ export default async function FirmsFreelancersPage() {
             style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         </div>
         <div className="container-site relative z-10">
-          <nav className="flex items-center gap-2 text-white/40 text-sm mb-10">
+          <nav className="flex items-center gap-2 text-white/70 text-sm mb-10">
             <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">Firms &amp; Freelancers</span>
@@ -110,7 +110,7 @@ export default async function FirmsFreelancersPage() {
             <p className="text-white/60 text-xl leading-relaxed mb-4 max-w-3xl">
               {platformName} operates a carefully managed global network of accounting firms and independent professionals. We oversee every client engagement — from initial brief through to final delivery — ensuring a consistent, high-quality service experience.
             </p>
-            <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
+            <p className="text-white/70 text-base leading-relaxed mb-10 max-w-2xl">
               Professionals within our network do not operate independently on this platform. All client relationships, communications, pricing, and quality oversight are managed directly by {platformName}.
             </p>
           </div>
@@ -179,7 +179,7 @@ export default async function FirmsFreelancersPage() {
               </div>
               <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#C9982A' }}>For Firms</p>
               <h3 className="font-display text-2xl text-white mb-3 leading-snug">Accounting Firms</h3>
-              <p className="text-white/55 text-sm leading-relaxed mb-6 flex-1">Established practices looking to extend their reach through a managed engagement channel. We represent your firm professionally and manage all client interaction on your behalf.</p>
+              <p className="text-white/70 text-sm leading-relaxed mb-6 flex-1">Established practices looking to extend their reach through a managed engagement channel. We represent your firm professionally and manage all client interaction on your behalf.</p>
               <ul className="space-y-3 mb-8">
                 {firmBenefits.map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-white/70">
@@ -207,7 +207,7 @@ export default async function FirmsFreelancersPage() {
               </div>
               <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#C9982A' }}>For Independents</p>
               <h3 className="font-display text-2xl text-white mb-3 leading-snug">Independent Professionals</h3>
-              <p className="text-white/55 text-sm leading-relaxed mb-6 flex-1">Qualified independent accountants, bookkeepers, tax advisors, and finance professionals who wish to receive managed client engagements through the {platformName} network.</p>
+              <p className="text-white/70 text-sm leading-relaxed mb-6 flex-1">Qualified independent accountants, bookkeepers, tax advisors, and finance professionals who wish to receive managed client engagements through the {platformName} network.</p>
               <ul className="space-y-3 mb-8">
                 {independentBenefits.map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-white/70">
@@ -239,7 +239,7 @@ export default async function FirmsFreelancersPage() {
                   <h3 className="font-display text-2xl text-white mb-3 leading-snug">
                     {isEthioTax ? 'Not yet freelancing? Explore how it works.' : 'Thinking about freelancing? Start here.'}
                   </h3>
-                  <p className="text-white/55 text-sm leading-relaxed mb-8 flex-1">
+                  <p className="text-white/70 text-sm leading-relaxed mb-8 flex-1">
                     {isEthioTax
                       ? 'Whether you are looking for work, recently graduated, or employed full-time — if you have accounting or finance skills, freelancing could be your next step. EthioTax will guide you through the process and match you to opportunities.'
                       : 'If you are qualified but not yet freelancing — or employed and curious about building your own practice on the side — our Freelancing Pathways programme is designed for you. Register your interest and we will take it from there.'}

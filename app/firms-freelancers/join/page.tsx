@@ -119,7 +119,7 @@ export default function JoinNetworkPage() {
             style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         </div>
         <div className="container-site relative z-10">
-          <nav className="flex items-center gap-2 text-white/40 text-sm mb-8">
+          <nav className="flex items-center gap-2 text-white/70 text-sm mb-8">
             <a href="/" className="hover:text-white/70 transition-colors">Home</a>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <a href="/firms-freelancers" className="hover:text-white/70 transition-colors">Firms &amp; Freelancers</a>
@@ -433,7 +433,7 @@ export default function JoinNetworkPage() {
                         By submitting this application you confirm that all information provided is accurate and complete. Accounting Body reserves the right to verify all credentials independently. Submission of this form does not guarantee acceptance into the network.
                       </p>
                     </div>
-                    {status === 'error' && <p className="text-red-500 text-sm mb-4">Something went wrong. Please try again.</p>}
+                    {status === 'error' && <p className="text-red-700 text-sm mb-4">Something went wrong. Please try again.</p>}
                     {/* Honeypot — hidden from real users, bots fill it */}
                     <input type="text" value={form._h} onChange={(e) => setForm({ ...form, _h: e.target.value })} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
                     {/* Turnstile invisible widget */}

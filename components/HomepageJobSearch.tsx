@@ -51,7 +51,7 @@ export default function HomepageJobSearch() {
           <button
             onClick={handleSearch}
             className="w-full py-3.5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-80"
-            style={{ background: '#D4A017', color: '#0C1A3D' }}
+            style={{ background: '#C9982A', color: '#0C1A3D' }}
           >
             Find jobs
           </button>
@@ -91,7 +91,7 @@ export default function HomepageJobSearch() {
             <button
               onClick={handleSearch}
               className="px-5 py-3.5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-80 whitespace-nowrap"
-              style={{ background: '#D4A017', color: '#0C1A3D' }}
+              style={{ background: '#C9982A', color: '#0C1A3D' }}
             >
               Find jobs
             </button>
@@ -99,7 +99,7 @@ export default function HomepageJobSearch() {
         </div>
 
       </div>
-      <p className="text-white/40 text-xs mt-3">
+      <p className="text-white/70 text-xs mt-3">
         Live accounting &amp; finance roles &mdash;{' '}
         <a href="/jobs/listings" className="text-white/60 hover:text-white underline underline-offset-2 transition-colors">browse all</a>
       </p>

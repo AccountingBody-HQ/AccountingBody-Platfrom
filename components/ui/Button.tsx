@@ -86,7 +86,7 @@ const variantStyles: Record<ButtonVariant, string> = {
 
   link: [
     'bg-transparent text-navy-700 border-transparent p-0 h-auto',
-    'hover:text-gold-500 underline underline-offset-2',
+    'hover:text-gold-600 underline underline-offset-2',
     'active:text-gold-600',
   ].join(' '),
 }

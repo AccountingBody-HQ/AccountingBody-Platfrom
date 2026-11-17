@@ -46,7 +46,7 @@ export default async function MockExamsPage() {
             style={{ background: 'radial-gradient(ellipse at center top, #C9982A 0%, transparent 70%)' }} />
         </div>
         <div className="container-site relative z-10">
-          <nav className="flex items-center gap-2 text-white/40 text-sm mb-8">
+          <nav className="flex items-center gap-2 text-white/70 text-sm mb-8">
             <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <Link href="/study" className="hover:text-white/70 transition-colors">Study</Link>

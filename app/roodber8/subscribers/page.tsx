@@ -67,7 +67,7 @@ export default async function SubscribersPage({
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {[
-          { label: 'Total Subscribers', value: total,             color: '#D4A017', bg: 'rgba(212,160,23,0.08)',  border: 'rgba(212,160,23,0.2)'  },
+          { label: 'Total Subscribers', value: total,             color: '#C9982A', bg: 'rgba(212,160,23,0.08)',  border: 'rgba(212,160,23,0.2)'  },
           { label: 'Subscribed',        value: subscribedCount,   color: '#34d399', bg: 'rgba(16,185,129,0.08)',  border: 'rgba(16,185,129,0.2)'  },
           { label: 'Unsubscribed',      value: unsubscribedCount, color: '#f87171', bg: 'rgba(239,68,68,0.08)',   border: 'rgba(239,68,68,0.2)'   },
         ].map(s => (
@@ -102,7 +102,7 @@ export default async function SubscribersPage({
             {sources.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
           <button type="submit" className="px-4 py-2 rounded-xl text-sm font-semibold"
-            style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+            style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }}>
             Filter
           </button>
           {(status || source) && (

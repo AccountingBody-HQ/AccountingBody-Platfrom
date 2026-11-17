@@ -104,7 +104,7 @@ function QuestionButtons({ article }: { article: ArticleFull }) {
               </p>
               <p className="text-xs text-slate-400">{btn.sublabel}</p>
             </div>
-            <svg className="w-4 h-4 text-slate-300 group-hover:text-slate-500 group-hover:translate-x-0.5 transition-all ml-auto shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-slate-500 group-hover:text-slate-500 group-hover:translate-x-0.5 transition-all ml-auto shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </a>
@@ -158,7 +158,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
 
         <div className="container-site relative z-10">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-white/40 text-sm mb-8 flex-wrap">
+          <nav className="flex items-center gap-2 text-white/70 text-sm mb-8 flex-wrap">
             <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
@@ -202,7 +202,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
           </h1>
 
           {/* Meta row */}
-          <div className="flex flex-wrap items-center gap-4 text-sm text-white/50">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-white/70">
             {article.author_name && (
               <span className="flex items-center gap-1.5">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -337,7 +337,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                         <p className="font-display text-white text-sm mb-1 leading-snug">
                           Find jobs in this field
                         </p>
-                        <p className="text-white/50 text-xs leading-relaxed mb-3">
+                        <p className="text-white/70 text-xs leading-relaxed mb-3">
                           Live accounting and finance vacancies — updated daily.
                         </p>
                         <Link
@@ -357,13 +357,13 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
               <div className="bg-navy-950 rounded-xl p-5 relative overflow-hidden">
                 <div
                   className="absolute inset-0 opacity-10"
-                  style={{ background: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 60%)' }}
+                  style={{ background: 'radial-gradient(circle at 80% 20%, #C9982A 0%, transparent 60%)' }}
                 />
                 <div className="relative z-10">
                   <p className="font-display text-white text-base mb-2 leading-snug">Test your knowledge</p>
                   {article.mcq_url ? (
                     <>
-                      <p className="text-white/55 text-xs leading-relaxed mb-3">
+                      <p className="text-white/70 text-xs leading-relaxed mb-3">
                         Practice questions for this exact topic.
                       </p>
                       <Link
@@ -384,7 +384,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                     </>
                   ) : (
                     <>
-                      <p className="text-white/55 text-xs leading-relaxed mb-3">
+                      <p className="text-white/70 text-xs leading-relaxed mb-3">
                         Topic-specific questions are being developed for this study note. Browse all available question sets in the meantime.
                       </p>
                       <Link

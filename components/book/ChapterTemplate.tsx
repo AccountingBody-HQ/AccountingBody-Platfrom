@@ -60,7 +60,7 @@ const s = StyleSheet.create({
   },
   chapterWrap: { marginBottom: 24 },
   chapterLabel: {
-    fontSize: 8, color: "#D4A017", fontFamily: "BookSans-Bold",
+    fontSize: 8, color: "#C9982A", fontFamily: "BookSans-Bold",
     textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6,
   },
   chapterTitle: {
@@ -68,12 +68,12 @@ const s = StyleSheet.create({
     marginBottom: 8, lineHeight: 1.2,
   },
   chapterRule: {
-    borderBottomWidth: 2, borderBottomColor: "#D4A017", marginBottom: 20,
+    borderBottomWidth: 2, borderBottomColor: "#C9982A", marginBottom: 20,
   },
   lessonTitle: {
     fontSize: 13, fontFamily: "BookSans-Bold", color: "#0C1A3D",
     marginTop: 20, marginBottom: 10,
-    borderLeftWidth: 3, borderLeftColor: "#D4A017", paddingLeft: 8,
+    borderLeftWidth: 3, borderLeftColor: "#C9982A", paddingLeft: 8,
   },
   articleTitle: {
     fontSize: 11, fontFamily: "BookSans-Bold", color: "#0C1A3D",
@@ -92,7 +92,7 @@ const s = StyleSheet.create({
   },
   noContent: { fontSize: 9, color: "#aaaaaa", marginBottom: 6 },
   listRow: { flexDirection: "row", marginBottom: 6, paddingLeft: 6 },
-  listDot: { fontSize: 10, color: "#D4A017", width: 16, marginTop: 1 },
+  listDot: { fontSize: 10, color: "#C9982A", width: 16, marginTop: 1 },
   listText: { fontSize: 10, color: "#1a1a1a", lineHeight: 1.8, flex: 1 },
   finTable: {
     marginVertical: 8, marginLeft: 6,
@@ -124,7 +124,7 @@ const s = StyleSheet.create({
   },
   questionWrap: {
     marginBottom: 14, paddingLeft: 10, paddingTop: 8, paddingBottom: 8,
-    borderLeftWidth: 2.5, borderLeftColor: "#D4A017",
+    borderLeftWidth: 2.5, borderLeftColor: "#C9982A",
   },
   questionLabel: {
     fontSize: 8, color: "#0C1A3D", fontFamily: "BookSans-Bold",

@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
         <body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
           <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
             <div style="background:${brand.color};padding:32px 40px;">
-              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name}</p>
+              <p style="color:#C9982A;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name}</p>
               <h1 style="color:#fff;font-size:22px;margin:0;line-height:1.3;">New Contact Submission</h1>
             </div>
             <div style="padding:32px 40px;">
@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
                   </td>
                 </tr>
               </table>
-              <div style="margin-top:32px;padding:16px;background:#f8fafc;border-radius:8px;border-left:3px solid #D4A017;">
+              <div style="margin-top:32px;padding:16px;background:#f8fafc;border-radius:8px;border-left:3px solid #C9982A;">
                 <p style="margin:0;color:#475569;font-size:13px;">Reply directly to this email to respond, or log in to the admin panel to manage this submission.</p>
               </div>
             </div>
@@ -158,19 +158,19 @@ export async function POST(req: NextRequest) {
         <body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
           <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
             <div style="background:${brand.color};padding:32px 40px;">
-              <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name}</p>
+              <p style="color:#C9982A;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name}</p>
               <h1 style="color:#fff;font-size:22px;margin:0;line-height:1.3;">We have received your message.</h1>
             </div>
             <div style="padding:32px 40px;">
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear ${escapeHtml(name)},</p>
               <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Thank you for contacting us. We have received your message and will get back to you as soon as possible.</p>
-              <div style="background:#f8fafc;border-radius:8px;border-left:3px solid #D4A017;padding:16px 20px;margin:0 0 24px;">
+              <div style="background:#f8fafc;border-radius:8px;border-left:3px solid #C9982A;padding:16px 20px;margin:0 0 24px;">
                 <p style="margin:0 0 8px;color:#0C1A3D;font-size:13px;font-weight:600;">Your message:</p>
                 <p style="margin:0;color:#475569;font-size:13px;line-height:1.6;">${escapeHtml(message).split('\n').join('<br>')}</p>
               </div>
               <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 28px;">If you have anything to add, simply reply to this email.</p>
               <a href="https://${brand.domain}"
-                style="display:inline-block;background:#D4A017;color:#0a0f2e;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;">
+                style="display:inline-block;background:#C9982A;color:#0a0f2e;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;">
                 Visit ${brand.name} \u2192
               </a>
             </div>

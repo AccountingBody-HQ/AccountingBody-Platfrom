@@ -460,14 +460,14 @@ export default function AbPressPage() {
 
           {/* Step 1 - Course */}
           <div className="bg-[#081428] rounded-xl p-6 border border-slate-700">
-            <h2 className="text-sm font-semibold text-[#D4A017] uppercase tracking-wide mb-4">Step 1 — Select Course</h2>
+            <h2 className="text-sm font-semibold text-[#C9982A] uppercase tracking-wide mb-4">Step 1 — Select Course</h2>
 
             <label className="block text-xs text-slate-400 mb-1">Published Course</label>
             <select
               value={slug}
               onChange={handleCourseSelect}
               disabled={generating}
-              className="w-full bg-[#0C1A3D] border border-slate-600 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#D4A017] disabled:opacity-50"
+              className="w-full bg-[#0C1A3D] border border-slate-600 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#C9982A] disabled:opacity-50"
             >
               <option value="">-- Select a course --</option>
               {courses.map((c: any) => (
@@ -478,7 +478,7 @@ export default function AbPressPage() {
             <button
               onClick={handlePreview}
               disabled={loading || !slug || generating}
-              className="mt-4 w-full bg-[#D4A017] hover:bg-yellow-500 disabled:opacity-50 text-[#0C1A3D] font-semibold text-sm py-2 rounded-lg transition-colors"
+              className="mt-4 w-full bg-[#C9982A] hover:bg-yellow-500 disabled:opacity-50 text-[#0C1A3D] font-semibold text-sm py-2 rounded-lg transition-colors"
             >
               {loading ? 'Loading...' : 'Load Course Preview'}
             </button>
@@ -486,13 +486,13 @@ export default function AbPressPage() {
 
           {/* Step 2 - Book Type */}
           <div className="bg-[#081428] rounded-xl p-6 border border-slate-700">
-            <h2 className="text-sm font-semibold text-[#D4A017] uppercase tracking-wide mb-4">Step 2 — Book Type</h2>
+            <h2 className="text-sm font-semibold text-[#C9982A] uppercase tracking-wide mb-4">Step 2 — Book Type</h2>
             <div className="space-y-2">
               {BOOK_TYPES.map(bt => (
                 <label
                   key={bt.value}
                   className={"flex items-start gap-3 p-3 rounded-lg border cursor-pointer " +
-                    (bookType === bt.value ? "border-[#D4A017] bg-[#0C1A3D]" : "border-slate-700")}
+                    (bookType === bt.value ? "border-[#C9982A] bg-[#0C1A3D]" : "border-slate-700")}
                 >
                   <input
                     type="radio" name="bookType" value={bt.value}
@@ -512,7 +512,7 @@ export default function AbPressPage() {
 
           {/* Step 3 - Metadata */}
           <div className="bg-[#081428] rounded-xl p-6 border border-slate-700">
-            <h2 className="text-sm font-semibold text-[#D4A017] uppercase tracking-wide mb-4">Step 3 — Book Metadata</h2>
+            <h2 className="text-sm font-semibold text-[#C9982A] uppercase tracking-wide mb-4">Step 3 — Book Metadata</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-xs text-slate-400 mb-1">Book Title</label>
@@ -521,7 +521,7 @@ export default function AbPressPage() {
                   onChange={e => setSubtitle(e.target.value)}
                   disabled={generating}
                   placeholder="e.g. Financial Accounting"
-                  className="w-full bg-[#0C1A3D] border border-slate-600 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#D4A017] disabled:opacity-50"
+                  className="w-full bg-[#0C1A3D] border border-slate-600 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#C9982A] disabled:opacity-50"
                 />
               </div>
               <div>
@@ -530,7 +530,7 @@ export default function AbPressPage() {
                   value={edition}
                   onChange={e => setEdition(e.target.value)}
                   disabled={generating}
-                  className="w-full bg-[#0C1A3D] border border-slate-600 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#D4A017] disabled:opacity-50"
+                  className="w-full bg-[#0C1A3D] border border-slate-600 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#C9982A] disabled:opacity-50"
                 >
                   {EDITIONS.map(ed => <option key={ed} value={ed}>{ed}</option>)}
                 </select>
@@ -552,7 +552,7 @@ export default function AbPressPage() {
 
           {/* Course Preview */}
           <div className="bg-[#081428] rounded-xl p-6 border border-slate-700 min-h-[200px]">
-            <h2 className="text-sm font-semibold text-[#D4A017] uppercase tracking-wide mb-4">Course Preview</h2>
+            <h2 className="text-sm font-semibold text-[#C9982A] uppercase tracking-wide mb-4">Course Preview</h2>
             {!preview && !loading
               ? <p className="text-slate-500 text-sm">Select a course and click Load Course Preview</p>
               : null}
@@ -571,7 +571,7 @@ export default function AbPressPage() {
                     { val: stats.questionCount, label: 'Practice Qs' },
                   ].map(({ val, label }) => (
                     <div key={label} className="bg-[#0C1A3D] rounded-lg p-3 border border-slate-700">
-                      <p className="text-2xl font-bold text-[#D4A017]">{val}</p>
+                      <p className="text-2xl font-bold text-[#C9982A]">{val}</p>
                       <p className="text-xs text-slate-400">{label}</p>
                     </div>
                   ))}
@@ -591,7 +591,7 @@ export default function AbPressPage() {
           {/* Content Health */}
           {health ? (
             <div className="bg-[#081428] rounded-xl p-6 border border-slate-700">
-              <h2 className="text-sm font-semibold text-[#D4A017] uppercase tracking-wide mb-4">Content Health</h2>
+              <h2 className="text-sm font-semibold text-[#C9982A] uppercase tracking-wide mb-4">Content Health</h2>
 
               <div
                 className="flex items-center gap-2 rounded-lg px-4 py-3 mb-4 text-sm font-medium"
@@ -634,7 +634,7 @@ export default function AbPressPage() {
                   { val: health.mcqLinked,               label: 'Practice Links' },
                 ].map(({ val, label, alert }) => (
                   <div key={label} className="bg-[#0C1A3D] rounded-lg p-3 border border-slate-700">
-                    <p className={"text-2xl font-bold " + (alert ? "text-red-400" : "text-[#D4A017]")}>{val}</p>
+                    <p className={"text-2xl font-bold " + (alert ? "text-red-400" : "text-[#C9982A]")}>{val}</p>
                     <p className="text-xs text-slate-400">{label}</p>
                   </div>
                 ))}
@@ -701,7 +701,7 @@ export default function AbPressPage() {
           {/* Step 4 - Generate */}
           {preview ? (
             <div className="bg-[#081428] rounded-xl p-6 border border-slate-700">
-              <h2 className="text-sm font-semibold text-[#D4A017] uppercase tracking-wide mb-2">Step 4 — Generate Book</h2>
+              <h2 className="text-sm font-semibold text-[#C9982A] uppercase tracking-wide mb-2">Step 4 — Generate Book</h2>
               <p className="text-slate-400 text-xs mb-4">Generates a KDP-ready ZIP: interior.pdf + cover.pdf + metadata.txt</p>
               <div className="bg-[#0C1A3D] rounded-lg p-3 border border-slate-700 text-xs text-slate-300 mb-4 space-y-1">
                 <p><span className="text-slate-500">Title: </span>{subtitle}</p>
@@ -711,7 +711,7 @@ export default function AbPressPage() {
               </div>
               {generating && generationPhase ? (
                 <div className="bg-[#0C1A3D] rounded-lg p-3 border border-slate-700 mb-3">
-                  <p className="text-xs text-[#D4A017]">{generationPhase}</p>
+                  <p className="text-xs text-[#C9982A]">{generationPhase}</p>
                   {generationProgress ? (
                     <p className="text-xs text-slate-500 mt-1">
                       Chapter {generationProgress.current} of {generationProgress.total}
@@ -732,7 +732,7 @@ export default function AbPressPage() {
                 <button
                   onClick={handleGenerate}
                   disabled={generating}
-                  className="w-full bg-[#D4A017] hover:bg-yellow-500 disabled:opacity-50 text-[#0C1A3D] font-semibold text-sm py-3 rounded-lg transition-colors"
+                  className="w-full bg-[#C9982A] hover:bg-yellow-500 disabled:opacity-50 text-[#0C1A3D] font-semibold text-sm py-3 rounded-lg transition-colors"
                 >
                   {generating ? 'Generating PDF — please wait...' : 'Generate Book'}
                 </button>
@@ -765,7 +765,7 @@ export default function AbPressPage() {
                 onClick={() => setShowHistory(!showHistory)}
                 className="w-full flex items-center justify-between px-6 py-4 text-left"
               >
-                <h2 className="text-sm font-semibold text-[#D4A017] uppercase tracking-wide">Publication History</h2>
+                <h2 className="text-sm font-semibold text-[#C9982A] uppercase tracking-wide">Publication History</h2>
                 <div className="flex items-center gap-3">
                   {history.length > 0 && !showHistory ? (
                     <span className="text-slate-400 text-xs">

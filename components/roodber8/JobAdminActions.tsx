@@ -42,7 +42,7 @@ export function ApproveJobButton({ id }: { id: string }) {
       onClick={handleApprove}
       disabled={loading}
       className="flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-      style={{ background: 'rgba(212,160,23,0.12)', color: '#D4A017', border: '1px solid rgba(212,160,23,0.3)' }}>
+      style={{ background: 'rgba(212,160,23,0.12)', color: '#C9982A', border: '1px solid rgba(212,160,23,0.3)' }}>
       {loading ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
       {error ? 'Failed — retry' : 'Approve'}
     </button>
@@ -134,9 +134,9 @@ export function ToggleFeaturedButton({ id, isFeatured }: { id: string; isFeature
         border: '1px solid ' + (isFeatured ? 'rgba(212,160,23,0.4)' : '#1a2238'),
       }}>
       {loading ? (
-        <Loader2 size={12} className="animate-spin" style={{ color: '#D4A017' }} />
+        <Loader2 size={12} className="animate-spin" style={{ color: '#C9982A' }} />
       ) : (
-        <Star size={12} fill={isFeatured ? '#D4A017' : 'none'} style={{ color: '#D4A017' }} />
+        <Star size={12} fill={isFeatured ? '#C9982A' : 'none'} style={{ color: '#C9982A' }} />
       )}
     </button>
   )

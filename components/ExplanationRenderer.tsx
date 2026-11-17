@@ -93,7 +93,7 @@ function renderStepLines(content: string, dark: boolean): React.ReactNode[] {
       return (
         <div key={i} className="flex items-start gap-2 py-1">
           <span className="shrink-0 font-bold text-xs mt-0.5 min-w-[52px]"
-            style={{ color: dark ? '#D4A017' : '#0C1A3D' }}>{label}</span>
+            style={{ color: dark ? '#C9982A' : '#0C1A3D' }}>{label}</span>
           <span className="text-sm font-mono" style={{ color: dark ? '#e2e8f0' : '#1e293b' }}>{calc}</span>
         </div>
       )
@@ -149,7 +149,7 @@ const SECTION_CONFIG: Record<string, { label: string; accent: string; accentDark
   'APPLY TO THIS CASE':          { label: 'Applied to This Case', accent: '#7c3aed', accentDark: '#c4b5fd', bg: 'rgba(124,58,237,0.05)', bgDark: 'rgba(124,58,237,0.08)' },
   'RESULT':                      { label: 'Result',               accent: '#059669', accentDark: '#6ee7b7', bg: 'rgba(5,150,105,0.05)',  bgDark: 'rgba(5,150,105,0.08)'  },
   'PITFALL NOTE':                { label: 'Pitfall Note',          accent: '#dc2626', accentDark: '#fca5a5', bg: 'rgba(220,38,38,0.04)',  bgDark: 'rgba(220,38,38,0.08)'  },
-  'KEY TAKEAWAY':                { label: 'Key Takeaway',         accent: '#D4A017', accentDark: '#D4A017', bg: 'rgba(212,160,23,0.08)',  bgDark: 'rgba(212,160,23,0.12)' },
+  'KEY TAKEAWAY':                { label: 'Key Takeaway',         accent: '#C9982A', accentDark: '#C9982A', bg: 'rgba(212,160,23,0.08)',  bgDark: 'rgba(212,160,23,0.12)' },
 }
 
 export default function ExplanationRenderer({ explanation, dark = false }: Props) {

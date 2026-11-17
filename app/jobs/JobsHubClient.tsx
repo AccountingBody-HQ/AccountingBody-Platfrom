@@ -106,7 +106,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
             </button>
           </div>
 
-          <Link href="/jobs/listings" className="text-white/40 text-sm mt-4 inline-block hover:text-white/70 transition-colors">
+          <Link href="/jobs/listings" className="text-white/70 text-sm mt-4 inline-block hover:text-white/70 transition-colors">
             or browse all live jobs →
           </Link>
 
@@ -140,7 +140,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
               </div>
               <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: gold }}>Live Vacancies</p>
               <h2 className="font-display text-white text-2xl mb-3 leading-snug">Browse live jobs</h2>
-              <p className="text-white/50 text-sm leading-relaxed mb-6">
+              <p className="text-white/70 text-sm leading-relaxed mb-6">
                 Search {jobCount ? `${jobCount} ` : ''}live accounting and finance vacancies from employers across the UK and beyond. New roles posted daily.
               </p>
               <ul className="space-y-3 mb-8 flex-1">
@@ -175,7 +175,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
               </div>
               <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: gold }}>Managed Service</p>
               <h2 className="font-display text-white text-2xl mb-3 leading-snug">Get matched by our team</h2>
-              <p className="text-white/50 text-sm leading-relaxed mb-6">
+              <p className="text-white/70 text-sm leading-relaxed mb-6">
                 Register with us and we will personally match you to permanent or contract roles. You never deal with employers directly. Every profile reviewed personally.
               </p>
               <ul className="space-y-3 mb-8 flex-1">

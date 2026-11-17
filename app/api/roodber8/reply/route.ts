@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     const replyToAddress = isET ? undefined : 'info@accountingbody.com'
     const brandName      = brand.name
     const primaryColour  = brand.color
-    const accentColour   = isET ? '#C9982A' : '#D4A017'
+    const accentColour   = isET ? '#C9982A' : '#C9982A'
     const disclaimer     = isET
       ? 'EthioTax is an independent accounting, tax and business consulting platform serving the Ethiopian community in Ethiopia and worldwide. We are not affiliated with any government tax authority.'
       : 'Accounting Body · Professional Services Network'

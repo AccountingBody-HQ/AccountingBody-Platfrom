@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 <body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
     <div style="background:${brand.color};padding:32px 40px;">
-      <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name}</p>
+      <p style="color:#C9982A;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name}</p>
       <h1 style="color:#fff;font-size:22px;margin:0;line-height:1.3;">Application approved.</h1>
     </div>
     <div style="padding:32px 40px;">
@@ -101,14 +101,14 @@ export async function POST(req: NextRequest) {
 <body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
   <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
     <div style="background:${brand.color};padding:32px 40px;">
-      <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name}</p>
+      <p style="color:#C9982A;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${brand.name}</p>
       <h1 style="color:#fff;font-size:22px;margin:0;line-height:1.3;">Application update.</h1>
     </div>
     <div style="padding:32px 40px;">
       <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Dear ${contact_name || displayName},</p>
       <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Thank you for taking the time to apply to join the ${brand.name} professional network. We have carefully reviewed your application.</p>
       <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 24px;">After consideration, we are unable to proceed with your application at this time. This decision is not a reflection of your professional standing — we review all applications against the current needs and capacity of the network.</p>
-      <div style="background:#f8fafc;border-radius:8px;border-left:3px solid #D4A017;padding:16px 20px;margin:0 0 24px;">
+      <div style="background:#f8fafc;border-radius:8px;border-left:3px solid #C9982A;padding:16px 20px;margin:0 0 24px;">
         <p style="margin:0;color:#475569;font-size:13px;line-height:1.6;">You are welcome to reapply in the future if circumstances change. If you would like feedback on your application, please reply to this email.</p>
       </div>
       <p style="color:#475569;font-size:14px;line-height:1.7;margin:0;">Thank you again for your interest in ${brand.name}.</p>

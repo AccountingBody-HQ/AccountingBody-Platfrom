@@ -169,7 +169,7 @@ function ChevronDownIcon() {
 
 function Spinner({ className = 'w-6 h-6' }: { className?: string }) {
   return (
-    <svg className={`${className} animate-spin text-gold-500`} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg className={`${className} animate-spin text-gold-600`} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
     </svg>
@@ -185,7 +185,7 @@ function CheckboxRow({ label, checked, onChange }: { label: string; checked: boo
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="w-4 h-4 rounded border-slate-300 text-gold-500 focus:ring-gold-400 focus:ring-offset-0 cursor-pointer"
+        className="w-4 h-4 rounded border-slate-300 text-gold-600 focus:ring-gold-400 focus:ring-offset-0 cursor-pointer"
       />
       <span className="text-sm text-navy-700 group-hover:text-navy-950 transition-colors">{label}</span>
     </label>
@@ -308,7 +308,7 @@ function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
                 name="posted-within"
                 checked={filters.postedWithin === opt.value}
                 onChange={() => onChange({ ...filters, postedWithin: opt.value })}
-                className="w-4 h-4 border-slate-300 text-gold-500 focus:ring-gold-400 cursor-pointer"
+                className="w-4 h-4 border-slate-300 text-gold-600 focus:ring-gold-400 cursor-pointer"
               />
               <span className="text-sm text-navy-700 group-hover:text-navy-950 transition-colors">{opt.label}</span>
             </label>
@@ -452,17 +452,17 @@ function JobAlertBanner({ search, filters, onDismiss }: {
     <div className="bg-navy-950 rounded-2xl px-5 py-4 mb-6">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="w-8 h-8 rounded-full bg-gold-500/20 flex items-center justify-center shrink-0 text-gold-500">
+          <div className="w-8 h-8 rounded-full bg-gold-500/20 flex items-center justify-center shrink-0 text-gold-600">
             <BellIcon />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white text-sm font-semibold mb-0.5">Get notified about new jobs</p>
-            <p className="text-white/50 text-xs">
+            <p className="text-white/70 text-xs">
               {search ? `New "${search}" jobs` : 'New accounting jobs'} matching your filters
             </p>
           </div>
         </div>
-        <button type="button" onClick={onDismiss} aria-label="Dismiss" className="text-white/40 hover:text-white/70 shrink-0 mt-0.5">
+        <button type="button" onClick={onDismiss} aria-label="Dismiss" className="text-white/70 hover:text-white/70 shrink-0 mt-0.5">
           <CloseIcon />
         </button>
       </div>
@@ -474,7 +474,7 @@ function JobAlertBanner({ search, filters, onDismiss }: {
           aria-label="Email address"
           value={email}
           onChange={e => setEmail(e.target.value)}
-          className="flex-1 min-w-0 h-10 px-3 rounded-lg bg-white/10 border border-white/20 text-white text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-gold-400"
+          className="flex-1 min-w-0 h-10 px-3 rounded-lg bg-white/10 border border-white/20 text-white text-sm placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-gold-400"
         />
         <button
           type="submit"
@@ -546,7 +546,7 @@ function JobCard({ job, saved, pending, onSave }: {
               aria-pressed={saved}
               aria-busy={pending}
               aria-label={saved ? 'Remove from saved jobs' : 'Save job'}
-              className={`relative z-10 shrink-0 p-1.5 rounded-lg transition-colors mt-0.5 disabled:opacity-50 disabled:cursor-not-allowed ${saved ? 'text-gold-500 bg-gold-50' : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50'}`}
+              className={`relative z-10 shrink-0 p-1.5 rounded-lg transition-colors mt-0.5 disabled:opacity-50 disabled:cursor-not-allowed ${saved ? 'text-gold-600 bg-gold-50' : 'text-slate-500 hover:text-slate-500 hover:bg-slate-50'}`}
             >
               <BookmarkIcon saved={saved} />
             </button>

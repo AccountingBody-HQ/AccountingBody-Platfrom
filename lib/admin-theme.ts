@@ -6,7 +6,7 @@ export const ADMIN_COLORS = {
   text: '#ffffff',
   textMuted: '#94a3b8',
   textDim: '#64748b',
-  gold: '#D4A017',
+  gold: '#C9982A',
   goldMuted: '#b8860b',
   danger: '#ef4444',
   dangerBg: 'rgba(239,68,68,0.1)',

@@ -65,7 +65,7 @@ export default function HeroSearch({ placeholder = 'Search study notes, practice
 
       {/* Popular searches */}
       <div className="flex flex-wrap items-center gap-2 mt-4">
-        <span className="text-white/35 text-xs">Popular:</span>
+        <span className="text-white/70 text-xs">Popular:</span>
         {popularTerms.map(term => (
           <button
             key={term}
@@ -75,7 +75,7 @@ export default function HeroSearch({ placeholder = 'Search study notes, practice
               router.push('/search?q=' + encodeURIComponent(term))
             }}
             translate="no"
-            className="text-xs text-white/50 hover:text-white/90 border border-white/15 hover:border-white/35 rounded-full px-3 py-1 transition-all"
+            className="text-xs text-white/70 hover:text-white/90 border border-white/15 hover:border-white/35 rounded-full px-3 py-1 transition-all"
           >
             {term}
           </button>

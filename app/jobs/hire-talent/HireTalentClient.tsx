@@ -247,7 +247,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
               style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
           </div>
           <div className="container-site relative z-10">
-            <nav className="flex items-center gap-2 text-white/40 text-sm mb-8">
+            <nav className="flex items-center gap-2 text-white/70 text-sm mb-8">
               <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
               <Link href="/jobs" className="hover:text-white/70 transition-colors">Jobs</Link>
@@ -502,7 +502,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                       <div className="bg-slate-50 rounded-lg border border-slate-200 p-4">
                         <p className="text-xs text-slate-500 leading-relaxed">By submitting this brief you confirm that you have authority to engage a recruitment service on behalf of your organisation. We will contact you within 2 working days to discuss your requirement and send a Fee Agreement Letter before any search begins.</p>
                       </div>
-                      {status === 'error' && <p className="text-red-500 text-sm">Something went wrong. Please try again or contact us directly.</p>}
+                      {status === 'error' && <p className="text-red-700 text-sm">Something went wrong. Please try again or contact us directly.</p>}
                       <input type="text" value={form._h} onChange={e => setForm({...form, _h: e.target.value})} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
                       <PersonCheck ref={personCheck} onToken={setPersonCheckToken} isEthioTax={isEthioTax} />
                       <div className="flex justify-between pt-2">

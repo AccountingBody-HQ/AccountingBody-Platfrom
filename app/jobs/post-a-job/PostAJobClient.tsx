@@ -264,7 +264,7 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
             style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         </div>
         <div className="container-site relative z-10">
-          <nav className="flex items-center gap-2 text-white/40 text-sm mb-8">
+          <nav className="flex items-center gap-2 text-white/70 text-sm mb-8">
             <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <Link href="/jobs" className="hover:text-white/70 transition-colors">Jobs</Link>
@@ -290,7 +290,7 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
             <ProgressBar currentStep={step} brand={brand} />
 
             {stepError && (
-              <p className="text-red-500 text-sm mb-6">{stepError}</p>
+              <p className="text-red-700 text-sm mb-6">{stepError}</p>
             )}
 
             {step === 1 && (
@@ -445,11 +445,11 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
                 <div className="rounded-xl p-6 mb-6" style={{ background: brand }}>
                   <p className="text-white font-display text-4xl mb-2">£9.00</p>
                   <p className="text-white/70 text-sm mb-1">60-day listing · Hiring Direct badge · Top placement</p>
-                  <p className="text-white/40 text-xs">All taxes handled · Secure payment via Lemon Squeezy</p>
+                  <p className="text-white/70 text-xs">All taxes handled · Secure payment via Lemon Squeezy</p>
                 </div>
 
                 {submitError && (
-                  <p className="text-red-500 text-sm mb-4">{submitError}</p>
+                  <p className="text-red-700 text-sm mb-4">{submitError}</p>
                 )}
 
                 <button

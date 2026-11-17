@@ -56,7 +56,7 @@ interface ImportResult {
 const C = {
   card:    { background: '#0d1424', border: '1px solid #1a2238', borderRadius: 16 },
   input:   { background: '#111827', border: '1px solid #1f2937', borderRadius: 10, color: '#fff' },
-  active:  { background: 'rgba(212,160,23,0.12)', border: '1px solid #D4A017', color: '#fff' },
+  active:  { background: 'rgba(212,160,23,0.12)', border: '1px solid #C9982A', color: '#fff' },
   idle:    { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#64748b' },
   danger:  { background: 'rgba(239,68,68,0.08)',  border: '1px solid rgba(239,68,68,0.25)',   color: '#ef4444' },
   success: { background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)',  color: '#10b981' },
@@ -248,7 +248,7 @@ export default function ImportArticlePage() {
       <div className="flex items-center gap-3 mb-8">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: 'rgba(212,160,23,0.12)' }}>
-          <FileJson size={20} style={{ color: '#D4A017' }} />
+          <FileJson size={20} style={{ color: '#C9982A' }} />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">Import Article</h1>
@@ -264,7 +264,7 @@ export default function ImportArticlePage() {
           <div key={s} className="flex items-center gap-2">
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl"
               style={i === Math.min(step, 2)
-                ? { background: '#0C1A3D', color: '#fff', border: '1px solid #D4A017' }
+                ? { background: '#0C1A3D', color: '#fff', border: '1px solid #C9982A' }
                 : i < step
                   ? { background: 'rgba(16,185,129,0.12)', color: '#10b981' }
                   : { background: 'rgba(255,255,255,0.03)', color: '#334155' }}>
@@ -272,7 +272,7 @@ export default function ImportArticlePage() {
                 style={i < step
                   ? { background: '#10b981', color: '#fff' }
                   : i === Math.min(step, 2)
-                    ? { background: '#D4A017', color: '#0C1A3D' }
+                    ? { background: '#C9982A', color: '#0C1A3D' }
                     : { background: 'rgba(255,255,255,0.04)', color: '#334155' }}>
                 {i < step ? '✓' : i + 1}
               </span>
@@ -344,7 +344,7 @@ export default function ImportArticlePage() {
           <div className="flex justify-end">
             <button onClick={handleParse} disabled={parsing || !rawJson.trim()}
               className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl disabled:opacity-40"
-              style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #D4A017' }}>
+              style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #C9982A' }}>
               {parsing
                 ? <><Loader2 size={14} className="animate-spin" /> Parsing…</>
                 : <><Upload size={14} /> Parse & Preview</>}
@@ -361,7 +361,7 @@ export default function ImportArticlePage() {
 
           {/* Stats row */}
           <div className="grid grid-cols-4 gap-3">
-            <StatPill label="Word Count"  value={words}                                        color="#D4A017" bg="rgba(212,160,23,0.08)" />
+            <StatPill label="Word Count"  value={words}                                        color="#C9982A" bg="rgba(212,160,23,0.08)" />
             <StatPill label="Read Time"   value={result.article.read_time ?? 'estimated'}       color="#10b981" bg="rgba(16,185,129,0.08)" />
             <StatPill label="Exam Bodies" value={result.article.exam_body.join(', ') || 'None'} color="#3b82f6" bg="rgba(59,130,246,0.08)" />
             <StatPill label="Status"      value={result.article.status}                         color="#8b5cf6" bg="rgba(139,92,246,0.08)" />
@@ -592,7 +592,7 @@ export default function ImportArticlePage() {
                 />
                 {content.length > 500 && (
                   <button onClick={() => setShowFullContent(v => !v)}
-                    className="text-xs font-semibold mt-3" style={{ color: '#D4A017' }}>
+                    className="text-xs font-semibold mt-3" style={{ color: '#C9982A' }}>
                     {showFullContent ? 'Show less' : 'Show full content'}
                   </button>
                 )}
@@ -647,14 +647,14 @@ export default function ImportArticlePage() {
           </p>
           {publishedSlug && (
             <a href={`/articles/${publishedSlug}`} target="_blank" rel="noopener noreferrer"
-              className="text-sm font-semibold inline-block mb-6" style={{ color: '#D4A017' }}>
+              className="text-sm font-semibold inline-block mb-6" style={{ color: '#C9982A' }}>
               View live → /articles/{publishedSlug}
             </a>
           )}
           <div className="flex items-center justify-center gap-3 mt-6">
             <button onClick={handleReset}
               className="flex items-center gap-2 text-sm font-bold px-8 py-3 rounded-xl"
-              style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #D4A017' }}>
+              style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #C9982A' }}>
               <Sparkles size={14} /> Import Another Article
             </button>
             <Link href="/roodber8/articles"

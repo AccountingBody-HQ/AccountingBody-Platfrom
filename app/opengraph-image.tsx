@@ -41,7 +41,7 @@ export default async function OGImage() {
   return new ImageResponse(
     (
       <div style={{ width: "1200px", height: "630px", background: "#0C1A3D", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif", position: "relative" }}>
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "8px", background: "#D4A017", display: "flex" }} />
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "8px", background: "#C9982A", display: "flex" }} />
         <div style={{ display: "flex", alignItems: "center", marginBottom: "32px" }}>
           <svg width="52" height="40" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
             <rect x="0" y="0" width="9" height="20" fill="#ffffff" />
@@ -56,13 +56,13 @@ export default async function OGImage() {
         <div style={{ color: "#ffffff", fontSize: "48px", fontWeight: "700", textAlign: "center", lineHeight: 1.2, maxWidth: "900px", marginBottom: "20px" }}>
           Everything You Need for Accounting & Finance
         </div>
-        <div style={{ color: "#D4A017", fontSize: "22px", fontWeight: "500", textAlign: "center", marginBottom: "12px" }}>
+        <div style={{ color: "#C9982A", fontSize: "22px", fontWeight: "500", textAlign: "center", marginBottom: "12px" }}>
           The Global Accounting &amp; Finance Platform
         </div>
         <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "18px", textAlign: "center" }}>
           Professional Services · Study Platform · Expert Network
         </div>
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "8px", background: "#D4A017", display: "flex" }} />
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "8px", background: "#C9982A", display: "flex" }} />
       </div>
     ),
     { width: 1200, height: 630 }

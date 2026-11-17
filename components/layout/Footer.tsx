@@ -279,7 +279,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
   
   return (
     <div>
-      <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">
+      <p className="text-xs font-semibold text-white/70 uppercase tracking-widest mb-3">
         Stay Updated
       </p>
       <h3 className="font-display text-white text-lg mb-1.5">
@@ -311,7 +311,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="your@email.com"
-              className="w-full h-14 px-4 rounded-lg text-base bg-white/10 border border-white/30 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all" style={{ fontSize: "16px", WebkitAppearance: "none" }}
+              className="w-full h-14 px-4 rounded-lg text-base bg-white/10 border border-white/30 text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all" style={{ fontSize: "16px", WebkitAppearance: "none" }}
               required
               autoComplete="email"
             />
@@ -336,7 +336,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
           {status === 'error' && (
             <p role="alert" className="text-xs text-red-400">{errorMsg || 'Something went wrong. Please try again.'}</p>
           )}
-          <p className="text-xs text-white/35">
+          <p className="text-xs text-white/70">
             By subscribing you agree to our{' '}
             <Link href="/privacy-policy" className="text-[#C9982A] underline hover:text-[#e0b84e]">Privacy Policy</Link>.
           </p>
@@ -495,7 +495,7 @@ export function Footer({
                 <span className="font-display text-2xl text-white leading-none mb-1 whitespace-nowrap">
                   {stat.value}
                 </span>
-                <span className="text-xs text-white/50 font-medium">
+                <span className="text-xs text-white/70 font-medium">
                   {stat.label}
                 </span>
               </div>
@@ -527,7 +527,7 @@ export function Footer({
               <span className="font-sans font-semibold" style={{ color: '#ffffff', fontSize: '21px', lineHeight: '24px' }}>{isEthioTax ? <>EthioTax<sup style={{ fontSize: '20px', verticalAlign: 'top', position: 'relative', top: '4px' }}>®</sup></> : <>Accounting Body<sup style={{ fontSize: '20px', verticalAlign: 'top', position: 'relative', top: '4px' }}>®</sup></>}</span>
             </Link>
 
-            <p className="text-sm text-white/55 leading-relaxed max-w-xs">
+            <p className="text-sm text-white/70 leading-relaxed max-w-xs">
               {isEthioTax
                 ? (jobCountLabel
                     ? `Expert accounting and tax services, ETICPA and ACCA exam practice, and ${jobCountLabel} accounting and finance jobs — built for the Ethiopian community worldwide.`
@@ -542,7 +542,7 @@ export function Footer({
 
             {/* Social links */}
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">
+              <p className="text-xs font-semibold text-white/70 uppercase tracking-widest mb-3">
                 Follow Us
               </p>
               <div className="flex items-center gap-1.5">
@@ -551,7 +551,7 @@ export function Footer({
                     key={social.label}
                     href={social.href}
                     aria-label={social.label}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-all duration-150"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all duration-150"
                   >
                     {social.icon}
                   </Link>
@@ -564,7 +564,7 @@ export function Footer({
           <div className="lg:col-span-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
             {(isEthioTax ? [jobsColumn, professionalsColumn, studyColumn, companyColumn] : [jobsColumn, practiceQuestionsColumn, studyColumn, servicesColumn]).map(column => (
               <div key={column.title}>
-                <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">
+                <h4 className="text-xs font-semibold text-white/70 uppercase tracking-widest mb-4">
                   {column.title}
                 </h4>
                 <ul className="space-y-2.5">
@@ -606,11 +606,11 @@ export function Footer({
         <div className="container-wide py-5">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="space-y-1">
-              <p className="text-xs text-white/35">
+              <p className="text-xs text-white/70">
                 © {new Date().getFullYear()} AccountingBody Ltd. All rights reserved.{' '}
                 Registered in England &amp; Wales.
               </p>
-              <p className="text-xs text-white/25">
+              <p className="text-xs text-white/70">
                 Accounting Body — jobs, placement and practice for accounting and finance professionals.
               </p>
             </div>
@@ -619,7 +619,7 @@ export function Footer({
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-xs transition-colors ${isEthioTax ? "text-green-100/70 hover:text-green-100" : "text-white/35 hover:text-white/70"}`}
+                  className={`text-xs transition-colors ${isEthioTax ? "text-green-100/70 hover:text-green-100" : "text-white/70 hover:text-white/70"}`}
                 >
                   {link.label}
                 </Link>

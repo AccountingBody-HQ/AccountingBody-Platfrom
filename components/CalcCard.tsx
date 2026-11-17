@@ -25,7 +25,7 @@ export default function CalcCard({ title, tag, description, fields, calculate }:
 
   return (
     <div style={{ background: '#fff', borderRadius: 20, border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ height: 4, background: 'linear-gradient(to right, #D4A017, rgba(212,160,23,0.3))' }} />
+      <div style={{ height: 4, background: 'linear-gradient(to right, #C9982A, rgba(212,160,23,0.3))' }} />
       <div style={{ padding: 24 }}>
         <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#B8860B', background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.25)', borderRadius: 20, padding: '3px 10px' }}>{tag}</span>
         <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '1.25rem', color: '#0C1A3D', margin: '12px 0 6px', lineHeight: 1.2 }}>{title}</h2>
@@ -49,7 +49,7 @@ export default function CalcCard({ title, tag, description, fields, calculate }:
             {results.map((r, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: i > 0 ? 8 : 0, borderTop: i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none', marginTop: i > 0 ? 8 : 0 }}>
                 <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{r.label}</span>
-                <span style={{ fontSize: 15, fontWeight: 800, color: '#D4A017' }}>{r.value}</span>
+                <span style={{ fontSize: 15, fontWeight: 800, color: '#C9982A' }}>{r.value}</span>
               </div>
             ))}
           </div>

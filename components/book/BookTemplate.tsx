@@ -67,7 +67,7 @@ const s = StyleSheet.create({
   bookTypeLabel: { fontSize: 12, color: "#555555", textAlign: "center", marginBottom: 20 },
   editionText: { fontSize: 9, color: "#888888", textAlign: "center" },
   titleDivider: {
-    borderBottomWidth: 1, borderBottomColor: "#D4A017",
+    borderBottomWidth: 1, borderBottomColor: "#C9982A",
     marginVertical: 18, width: "50%", alignSelf: "center",
   },
   // Copyright page
@@ -86,7 +86,7 @@ const s = StyleSheet.create({
   // Chapter header
   chapterWrap: { marginBottom: 24 },
   chapterLabel: {
-    fontSize: 8, color: "#D4A017", fontFamily: "BookSans-Bold",
+    fontSize: 8, color: "#C9982A", fontFamily: "BookSans-Bold",
     textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6,
   },
   chapterTitle: {
@@ -94,13 +94,13 @@ const s = StyleSheet.create({
     marginBottom: 8, lineHeight: 1.2,
   },
   chapterRule: {
-    borderBottomWidth: 2, borderBottomColor: "#D4A017", marginBottom: 20,
+    borderBottomWidth: 2, borderBottomColor: "#C9982A", marginBottom: 20,
   },
   // Lesson
   lessonTitle: {
     fontSize: 13, fontFamily: "BookSans-Bold", color: "#0C1A3D",
     marginTop: 20, marginBottom: 10,
-    borderLeftWidth: 3, borderLeftColor: "#D4A017", paddingLeft: 8,
+    borderLeftWidth: 3, borderLeftColor: "#C9982A", paddingLeft: 8,
   },
   // Article
   articleTitle: {
@@ -122,7 +122,7 @@ const s = StyleSheet.create({
   noContent: { fontSize: 9, color: "#aaaaaa", marginBottom: 6 },
   // Lists
   listRow: { flexDirection: "row", marginBottom: 6, paddingLeft: 6 },
-  listDot: { fontSize: 10, color: "#D4A017", width: 16, marginTop: 1 },
+  listDot: { fontSize: 10, color: "#C9982A", width: 16, marginTop: 1 },
   listText: { fontSize: 10, color: "#1a1a1a", lineHeight: 1.8, flex: 1 },
   // Financial tables (auto-detected from label: amount list runs)
   finTable: {
@@ -156,7 +156,7 @@ const s = StyleSheet.create({
   },
   questionWrap: {
     marginBottom: 14, paddingLeft: 10, paddingTop: 8, paddingBottom: 8,
-    borderLeftWidth: 2.5, borderLeftColor: "#D4A017",
+    borderLeftWidth: 2.5, borderLeftColor: "#C9982A",
   },
   questionLabel: {
     fontSize: 8, color: "#0C1A3D", fontFamily: "BookSans-Bold",
@@ -171,7 +171,7 @@ const s = StyleSheet.create({
   // Answer key
   answerWrap: { marginBottom: 10 },
   answerLabel: {
-    fontSize: 9, color: "#D4A017", fontFamily: "BookSans-Bold", marginBottom: 2,
+    fontSize: 9, color: "#C9982A", fontFamily: "BookSans-Bold", marginBottom: 2,
   },
   answerText: { fontSize: 9, color: "#333333", lineHeight: 1.6 },
 })

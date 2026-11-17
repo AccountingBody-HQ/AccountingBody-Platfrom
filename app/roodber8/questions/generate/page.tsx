@@ -41,7 +41,7 @@ const STEPS = ['Configure', 'Generate', 'Review', 'Publish']
 const C = {
   card:   { background: '#0d1424', border: '1px solid #1a2238', borderRadius: 16 },
   input:  { background: '#111827', border: '1px solid #1f2937' },
-  active: { background: 'rgba(212,160,23,0.12)', border: '1px solid #D4A017', color: '#ffffff' },
+  active: { background: 'rgba(212,160,23,0.12)', border: '1px solid #C9982A', color: '#ffffff' },
   idle:   { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#64748b' },
 }
 
@@ -199,7 +199,7 @@ export default function GenerateQuestionsPage() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(212,160,23,0.12)' }}>
-          <Sparkles size={20} style={{ color: '#D4A017' }} />
+          <Sparkles size={20} style={{ color: '#C9982A' }} />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">Question Generator</h1>
@@ -212,9 +212,9 @@ export default function GenerateQuestionsPage() {
         {STEPS.map((s, i) => (
           <div key={s} className="flex items-center">
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl"
-              style={i === step ? { background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' } : i < step ? { background: 'rgba(16,185,129,0.12)', color: '#10b981' } : { background: 'rgba(255,255,255,0.03)', color: '#334155' }}>
+              style={i === step ? { background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' } : i < step ? { background: 'rgba(16,185,129,0.12)', color: '#10b981' } : { background: 'rgba(255,255,255,0.03)', color: '#334155' }}>
               <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-                style={i < step ? { background: '#10b981', color: '#ffffff' } : i === step ? { background: '#D4A017', color: '#0C1A3D' } : { background: 'rgba(255,255,255,0.04)', color: '#334155' }}>
+                style={i < step ? { background: '#10b981', color: '#ffffff' } : i === step ? { background: '#C9982A', color: '#0C1A3D' } : { background: 'rgba(255,255,255,0.04)', color: '#334155' }}>
                 {i < step ? '✓' : i + 1}
               </span>
               <span className="text-sm font-semibold">{s}</span>
@@ -375,7 +375,7 @@ export default function GenerateQuestionsPage() {
           <div className="flex justify-end">
             <button onClick={() => setStep(1)} disabled={!configValid}
               className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl disabled:opacity-40"
-              style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+              style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }}>
               Continue <ChevronRight size={15} />
             </button>
           </div>
@@ -414,7 +414,7 @@ export default function GenerateQuestionsPage() {
               style={{ background: 'rgba(255,255,255,0.04)', color: '#64748b', border: '1px solid #1f2937' }}>Back</button>
             <button onClick={handleGenerate} disabled={generating}
               className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl disabled:opacity-40"
-              style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+              style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }}>
               {generating ? <><Loader2 size={14} className="animate-spin" /> Generating…</> : <><Sparkles size={14} /> Generate {config.count} Questions</>}
             </button>
           </div>
@@ -428,7 +428,7 @@ export default function GenerateQuestionsPage() {
             {[
               { label: 'Questions', value: bundle.questions.length, color: '#10b981' },
               { label: 'Type',      value: bundle.questionType,     color: '#8b5cf6' },
-              { label: 'Difficulty',value: bundle.difficulty,       color: '#D4A017' },
+              { label: 'Difficulty',value: bundle.difficulty,       color: '#C9982A' },
             ].map(s => (
               <div key={s.label} className="rounded-2xl border p-4" style={C.card}>
                 <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#334155' }}>{s.label}</p>
@@ -439,10 +439,10 @@ export default function GenerateQuestionsPage() {
 
           <div className="rounded-2xl border overflow-hidden" style={C.card}>
             <div className="px-5 py-4 border-b flex items-center gap-2" style={{ borderColor: '#1a2238' }}>
-              <Eye size={14} style={{ color: '#D4A017' }} />
+              <Eye size={14} style={{ color: '#C9982A' }} />
               <p className="text-white font-bold text-sm">Review & Edit Questions</p>
               <span className="text-xs px-2 py-0.5 rounded-full ml-auto font-semibold"
-                style={{ background: 'rgba(212,160,23,0.12)', color: '#D4A017' }}>
+                style={{ background: 'rgba(212,160,23,0.12)', color: '#C9982A' }}>
                 {bundle.questions.length} questions — click Edit to modify any question
               </span>
             </div>
@@ -453,12 +453,12 @@ export default function GenerateQuestionsPage() {
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-                        style={{ background: '#0C1A3D', color: '#D4A017', border: '1px solid #D4A017' }}>
+                        style={{ background: '#0C1A3D', color: '#C9982A', border: '1px solid #C9982A' }}>
                         {idx + 1}
                       </span>
                       {bq.difficulty && (
                         <span className="text-xs font-semibold px-2 py-0.5 rounded capitalize"
-                          style={{ background: 'rgba(212,160,23,0.1)', color: '#D4A017' }}>{bq.difficulty}</span>
+                          style={{ background: 'rgba(212,160,23,0.1)', color: '#C9982A' }}>{bq.difficulty}</span>
                       )}
                       {bq.primaryTopic && (
                         <span className="text-xs px-2 py-0.5 rounded"
@@ -519,7 +519,7 @@ export default function GenerateQuestionsPage() {
                   {editingIdx === idx && editDraft && (
                     <div className="space-y-4 mt-2">
                       <div>
-                        <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#D4A017' }}>Question Stem</p>
+                        <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#C9982A' }}>Question Stem</p>
                         <textarea rows={4} value={editDraft.questionText ?? ''}
                           onChange={e => setEditDraft({ ...editDraft, questionText: e.target.value })}
                           className="w-full rounded-xl px-4 py-3 text-white text-sm focus:outline-none resize-none" style={C.input} />
@@ -600,7 +600,7 @@ export default function GenerateQuestionsPage() {
             </button>
             <button onClick={() => setStep(3)} disabled={editingIdx !== null}
               className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl disabled:opacity-40"
-              style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+              style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }}>
               Continue to Publish <ChevronRight size={15} />
             </button>
           </div>
@@ -624,8 +624,8 @@ export default function GenerateQuestionsPage() {
                   className="rounded-xl p-4 text-left transition-all" style={showOnSites.includes(site) ? C.active : C.idle}>
                   <div className="flex items-center justify-between mb-1">
                     <p className="font-semibold text-sm capitalize">{site}</p>
-                    {showOnSites.includes(site) && <Check size={13} style={{ color: '#D4A017' }} />}
-                    {site === 'accountingbody' && !config.qualification.startsWith('ETICPA') && <span className="text-xs" style={{ color: '#D4A017' }}>Required</span>}
+                    {showOnSites.includes(site) && <Check size={13} style={{ color: '#C9982A' }} />}
+                    {site === 'accountingbody' && !config.qualification.startsWith('ETICPA') && <span className="text-xs" style={{ color: '#C9982A' }}>Required</span>}
                   </div>
                 </button>
               ))}
@@ -688,13 +688,13 @@ export default function GenerateQuestionsPage() {
           {docId && <p className="text-xs mb-2" style={{ color: '#334155' }}>Document ID: <span className="text-white font-mono">{docId}</span></p>}
           {docSlug && (
             <a href={'/practice-questions/' + docSlug} target="_blank" rel="noopener noreferrer"
-              className="text-sm font-semibold mb-6 inline-block" style={{ color: '#D4A017' }}>
+              className="text-sm font-semibold mb-6 inline-block" style={{ color: '#C9982A' }}>
               View live → /practice-questions/{docSlug}
             </a>
           )}
           <div className="flex items-center justify-center gap-3 mt-6">
             <button onClick={reset} className="flex items-center gap-2 text-sm font-bold px-8 py-3 rounded-xl"
-              style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+              style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }}>
               <Sparkles size={14} /> Generate Another Set
             </button>
             <a href="/roodber8/questions" className="flex items-center gap-2 text-sm font-bold px-8 py-3 rounded-xl"

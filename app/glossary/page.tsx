@@ -78,7 +78,7 @@ export default async function GlossaryPage() {
           />
           <div
             className="absolute bottom-0 right-0 w-1/2 h-1/2 opacity-10"
-            style={{ background: 'radial-gradient(ellipse at bottom right, #D4A017 0%, transparent 60%)' }}
+            style={{ background: 'radial-gradient(ellipse at bottom right, #C9982A 0%, transparent 60%)' }}
           />
         </div>
 
@@ -94,7 +94,7 @@ export default async function GlossaryPage() {
               and professionals.
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              <span className="text-white/35 text-xs font-semibold uppercase tracking-widest">Jump to:</span>
+              <span className="text-white/70 text-xs font-semibold uppercase tracking-widest">Jump to:</span>
               {['A','B','C','D'].map(l => (
                 <Link
                   key={l}
@@ -104,7 +104,7 @@ export default async function GlossaryPage() {
                   <span translate="no">{l}</span>
                 </Link>
               ))}
-              <span className="text-white/25 text-xs">…</span>
+              <span className="text-white/70 text-xs">…</span>
               <Link
                 href="/dictionary"
                 className="px-3 py-1.5 rounded-md text-xs font-semibold bg-gold-500/20 text-gold-400 border border-gold-500/30 hover:bg-gold-500/30 transition-all"
@@ -150,7 +150,7 @@ export default async function GlossaryPage() {
                 className="group w-12 h-12 flex flex-col items-center justify-center rounded-xl bg-white border border-slate-200 hover:border-navy-950 hover:bg-navy-950 transition-all duration-150 shadow-sm hover:shadow"
               >
                 <span className="text-base font-bold text-slate-400 group-hover:text-white transition-colors">#</span>
-                <span className="text-[9px] text-slate-300 group-hover:text-white/50 transition-colors leading-none">0-9</span>
+                <span className="text-[9px] text-slate-500 group-hover:text-white/70 transition-colors leading-none">0-9</span>
               </Link>
               {LETTERS.map(letter => (
                 <Link
@@ -166,7 +166,7 @@ export default async function GlossaryPage() {
             </div>
             <p className="text-xs text-slate-400">
               Can&apos;t find what you&apos;re looking for?{' '}
-              <Link href="/articles" className="text-navy-700 font-medium hover:text-gold-500 transition-colors">
+              <Link href="/articles" className="text-navy-700 font-medium hover:text-gold-600 transition-colors">
                 Search {articleCountLabel ? `all ${articleCountLabel}` : 'our'} articles
               </Link>.
             </p>
@@ -200,7 +200,7 @@ export default async function GlossaryPage() {
                       </h3>
                       <p className="text-xs text-slate-400 mt-0.5">articles &amp; definitions</p>
                     </div>
-                    <svg className="w-4 h-4 text-slate-300 group-hover:text-navy-700 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-slate-500 group-hover:text-navy-700 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                     </svg>
                   </Link>
@@ -220,7 +220,7 @@ export default async function GlossaryPage() {
             <div className="bg-navy-950 rounded-2xl p-8 md:p-10 relative overflow-hidden">
               <div
                 className="absolute inset-0 opacity-10"
-                style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 50%)' }}
+                style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #C9982A 0%, transparent 50%)' }}
               />
               <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-8">
                 <div className="flex-1">
@@ -241,12 +241,12 @@ export default async function GlossaryPage() {
                   {articleCountLabel && (
                     <div className="flex items-center gap-3 bg-white/8 border border-white/10 rounded-xl px-4 py-3">
                       <span className="font-display text-2xl text-white">{articleCountLabel}</span>
-                      <span className="text-white/50 text-xs">study articles</span>
+                      <span className="text-white/70 text-xs">study articles</span>
                     </div>
                   )}
                   <div className="flex items-center gap-3 bg-white/8 border border-white/10 rounded-xl px-4 py-3">
                     <span className="font-display text-2xl text-white">Since 2018</span>
-                    <span className="text-white/50 text-xs">trusted by educators</span>
+                    <span className="text-white/70 text-xs">trusted by educators</span>
                   </div>
                 </div>
               </div>

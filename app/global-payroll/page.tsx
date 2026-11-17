@@ -9,7 +9,7 @@ const services = [
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#EEF2FF"/>
         <rect x="10" y="10" width="20" height="20" rx="2" stroke="#0C1A3D" strokeWidth="1.6"/>
-        <path d="M15 20h10M20 15v10" stroke="#D4A017" strokeWidth="1.8" strokeLinecap="round"/>
+        <path d="M15 20h10M20 15v10" stroke="#C9982A" strokeWidth="1.8" strokeLinecap="round"/>
         <path d="M13 10v2M27 10v2M13 28v2M27 28v2" stroke="#0C1A3D" strokeWidth="1.6" strokeLinecap="round"/>
       </svg>
     ),
@@ -22,8 +22,8 @@ const services = [
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#FFFBEB"/>
         <circle cx="20" cy="20" r="9" stroke="#0C1A3D" strokeWidth="1.6"/>
-        <path d="M20 11c0 0 4 3 4 9s-4 9-4 9" stroke="#D4A017" strokeWidth="1.4" strokeLinecap="round"/>
-        <path d="M20 11c0 0-4 3-4 9s4 9 4 9" stroke="#D4A017" strokeWidth="1.4" strokeLinecap="round"/>
+        <path d="M20 11c0 0 4 3 4 9s-4 9-4 9" stroke="#C9982A" strokeWidth="1.4" strokeLinecap="round"/>
+        <path d="M20 11c0 0-4 3-4 9s4 9 4 9" stroke="#C9982A" strokeWidth="1.4" strokeLinecap="round"/>
         <path d="M11 20h18" stroke="#0C1A3D" strokeWidth="1.4" strokeLinecap="round"/>
         <path d="M12.5 16h15M12.5 24h15" stroke="#0C1A3D" strokeWidth="1.2" strokeLinecap="round" strokeDasharray="2 2"/>
       </svg>
@@ -38,7 +38,7 @@ const services = [
         <rect width="40" height="40" rx="10" fill="#F0FDF4"/>
         <path d="M20 12c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z" stroke="#0C1A3D" strokeWidth="1.6"/>
         <path d="M12 28c0-4.42 3.58-8 8-8s8 3.58 8 8" stroke="#0C1A3D" strokeWidth="1.6" strokeLinecap="round"/>
-        <path d="M28 18l2 2 4-4" stroke="#D4A017" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M28 18l2 2 4-4" stroke="#C9982A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
   },
@@ -50,8 +50,8 @@ const services = [
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#F5F3FF"/>
         <rect x="11" y="10" width="18" height="20" rx="2" stroke="#0C1A3D" strokeWidth="1.6"/>
-        <path d="M15 17l2 2 4-4" stroke="#D4A017" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M15 23l2 2 4-4" stroke="#D4A017" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M15 17l2 2 4-4" stroke="#C9982A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M15 23l2 2 4-4" stroke="#C9982A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
         <path d="M23 18h2M23 24h2" stroke="#0C1A3D" strokeWidth="1.4" strokeLinecap="round"/>
       </svg>
     ),
@@ -66,7 +66,7 @@ const services = [
         <rect x="9" y="14" width="10" height="13" rx="1.5" stroke="#0C1A3D" strokeWidth="1.6"/>
         <rect x="21" y="10" width="10" height="17" rx="1.5" stroke="#0C1A3D" strokeWidth="1.6"/>
         <path d="M19 27h2" stroke="#0C1A3D" strokeWidth="1.4" strokeLinecap="round"/>
-        <path d="M11 20h6M23 17h6M23 21h6" stroke="#D4A017" strokeWidth="1.4" strokeLinecap="round"/>
+        <path d="M11 20h6M23 17h6M23 21h6" stroke="#C9982A" strokeWidth="1.4" strokeLinecap="round"/>
       </svg>
     ),
   },
@@ -77,7 +77,7 @@ const services = [
     icon: (
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#FFF7ED"/>
-        <path d="M11 29l6-8 4 4 8-11" stroke="#D4A017" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M11 29l6-8 4 4 8-11" stroke="#C9982A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
         <circle cx="29" cy="14" r="2.5" fill="#0C1A3D"/>
         <path d="M11 12v17h18" stroke="#0C1A3D" strokeWidth="1.6" strokeLinecap="round"/>
       </svg>
@@ -112,7 +112,7 @@ export default function GlobalPayrollPage() {
         </div>
         <div className="container-site relative z-10">
           <div className="max-w-3xl">
-            <nav className="flex items-center gap-2 text-white/40 text-sm mb-10">
+            <nav className="flex items-center gap-2 text-white/70 text-sm mb-10">
               <a href="/" className="hover:text-white/70 transition-colors">Home</a>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
               <span className="text-white/70">Global Payroll</span>
@@ -124,7 +124,7 @@ export default function GlobalPayrollPage() {
             <p className="text-white/60 text-xl leading-relaxed mb-4 max-w-2xl">
               Accounting Body delivers end-to-end global payroll and entity setup services through our managed network of verified specialists across 150+ countries. You engage us — we handle everything.
             </p>
-            <p className="text-white/40 text-base leading-relaxed mb-10 max-w-2xl">
+            <p className="text-white/70 text-base leading-relaxed mb-10 max-w-2xl">
               Whether you are establishing a new entity abroad or running payroll across multiple countries, every engagement is managed directly by Accounting Body — from brief to delivery.
             </p>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -146,7 +146,7 @@ export default function GlobalPayrollPage() {
             {stats.map((s) => (
               <div key={s.label} className="border-l border-white/10 pl-5 first:border-0 first:pl-0">
                 <div className="font-display text-2xl text-gold-400 mb-1">{s.value}</div>
-                <div className="text-xs text-white/40 leading-snug">{s.label}</div>
+                <div className="text-xs text-white/70 leading-snug">{s.label}</div>
               </div>
             ))}
           </div>
@@ -234,7 +234,7 @@ export default function GlobalPayrollPage() {
                   {item.step}
                 </div>
                 <h3 className="font-display text-white text-lg mb-3">{item.title}</h3>
-                <p className="text-white/55 text-sm leading-relaxed">{item.desc}</p>
+                <p className="text-white/70 text-sm leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -323,13 +323,13 @@ export default function GlobalPayrollPage() {
                     style={{ borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none' }}>
                     <span className="font-display text-xl font-bold text-white block mb-1"><span translate="no">{stat.value}</span></span>
                     <span className="text-xs font-semibold block mb-0.5" style={{ color: '#C9982A' }}>{stat.label}</span>
-                    <span className="text-xs text-white/35">{stat.sub}</span>
+                    <span className="text-xs text-white/70">{stat.sub}</span>
                   </div>
                 ))}
               </div>
               <div className="px-7 py-4 flex items-center justify-between"
                 style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(201,152,42,0.06)' }}>
-                <p className="text-xs text-white/40">Accounting Body manages every placement.</p>
+                <p className="text-xs text-white/70">Accounting Body manages every placement.</p>
                 <a href="/jobs/how-it-works" className="text-xs font-semibold ml-4 hover:opacity-80 transition-opacity" style={{ color: '#C9982A' }}>How it works →</a>
               </div>
             </div>

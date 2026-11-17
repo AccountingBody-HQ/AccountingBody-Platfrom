@@ -51,7 +51,7 @@ const s = StyleSheet.create({
   bookTypeLabel: { fontSize: 12, color: "#555555", textAlign: "center", marginBottom: 20 },
   editionText: { fontSize: 9, color: "#888888", textAlign: "center" },
   titleDivider: {
-    borderBottomWidth: 1, borderBottomColor: "#D4A017",
+    borderBottomWidth: 1, borderBottomColor: "#C9982A",
     marginVertical: 18, width: "50%", alignSelf: "center",
   },
   copyrightPage: { flex: 1, justifyContent: "flex-end" },

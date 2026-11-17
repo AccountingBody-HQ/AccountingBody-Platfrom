@@ -441,7 +441,7 @@ export function PracticeCard({
 
         {/* Subject */}
         {subject && (
-          <p className="text-2xs font-semibold text-gold-500 uppercase tracking-widest mb-1">
+          <p className="text-2xs font-semibold text-gold-600 uppercase tracking-widest mb-1">
             {subject}
           </p>
         )}
@@ -557,7 +557,7 @@ export function StatCard({
       </p>
       {sublabel && (
         <p className={`text-xs mt-1 ${
-          variant === 'navy' ? 'text-white/50' :
+          variant === 'navy' ? 'text-white/70' :
           variant === 'gold' ? 'text-navy-600' :
           'text-slate-400'
         }`}>

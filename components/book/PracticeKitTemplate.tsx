@@ -197,18 +197,18 @@ const s = StyleSheet.create({
   },
   editionText: { fontSize: 9, color: "#888888", textAlign: "center" },
   titleDivider: {
-    borderBottomWidth: 1, borderBottomColor: "#D4A017",
+    borderBottomWidth: 1, borderBottomColor: "#C9982A",
     marginVertical: 18, width: "50%", alignSelf: "center",
   },
   htuHeading: { fontSize: 18, fontFamily: "BookSans-Bold", color: "#0C1A3D", marginBottom: 8 },
-  htuRule: { borderBottomWidth: 2, borderBottomColor: "#D4A017", marginBottom: 18 },
+  htuRule: { borderBottomWidth: 2, borderBottomColor: "#C9982A", marginBottom: 18 },
   htuBody: { fontSize: 10, color: "#1a1a1a", lineHeight: 1.8, marginBottom: 10 },
   htuSubheading: {
     fontSize: 10, fontFamily: "BookSans-Bold", color: "#0C1A3D",
     textTransform: "uppercase", letterSpacing: 1, marginTop: 16, marginBottom: 8,
   },
   bulletRow: { flexDirection: "row", marginBottom: 5, paddingLeft: 4 },
-  bulletDot: { fontSize: 10, color: "#D4A017", width: 14 },
+  bulletDot: { fontSize: 10, color: "#C9982A", width: 14 },
   bulletText: { fontSize: 10, color: "#1a1a1a", flex: 1, lineHeight: 1.6 },
   tocTitle: { fontSize: 18, fontFamily: "BookSans-Bold", color: "#0C1A3D", marginBottom: 20 },
   tocChapterRow: { marginBottom: 8 },
@@ -222,14 +222,14 @@ const s = StyleSheet.create({
   },
   chapterWrap: { marginBottom: 24 },
   chapterLabel: {
-    fontSize: 8, color: "#D4A017", fontFamily: "BookSans-Bold",
+    fontSize: 8, color: "#C9982A", fontFamily: "BookSans-Bold",
     textTransform: "uppercase", letterSpacing: 2, marginBottom: 6,
   },
   chapterTitle: {
     fontSize: 22, fontFamily: "BookSans-Bold", color: "#0C1A3D",
     marginBottom: 8, lineHeight: 1.2,
   },
-  chapterRule: { borderBottomWidth: 2, borderBottomColor: "#D4A017", marginBottom: 20 },
+  chapterRule: { borderBottomWidth: 2, borderBottomColor: "#C9982A", marginBottom: 20 },
   chapterIntro: { fontSize: 10, color: "#555555" },
   tableHeaderRow: {
     flexDirection: "row", backgroundColor: "#0C1A3D",
@@ -250,15 +250,15 @@ const s = StyleSheet.create({
   },
   tableFooterCell: { fontSize: 9, color: "#0C1A3D", fontFamily: "BookSans-Bold" },
   topicLabel: {
-    fontSize: 7, color: "#D4A017", fontFamily: "BookSans-Bold",
+    fontSize: 7, color: "#C9982A", fontFamily: "BookSans-Bold",
     textTransform: "uppercase", letterSpacing: 2, marginBottom: 3,
   },
   topicTitle: { fontSize: 13, fontFamily: "BookSans-Bold", color: "#0C1A3D", marginBottom: 4 },
   topicMeta: { fontSize: 9, color: "#777777", marginBottom: 6 },
-  topicRule: { borderBottomWidth: 0.5, borderBottomColor: "#D4A017", marginBottom: 14 },
+  topicRule: { borderBottomWidth: 0.5, borderBottomColor: "#C9982A", marginBottom: 14 },
   questionOuter: {
     marginBottom: 6, paddingLeft: 10, paddingTop: 5, paddingBottom: 5,
-    borderLeftWidth: 2.5, borderLeftColor: "#D4A017", backgroundColor: "#ffffff",
+    borderLeftWidth: 2.5, borderLeftColor: "#C9982A", backgroundColor: "#ffffff",
   },
   questionOuterScenario: { borderLeftColor: "#C9982A" },
   scenarioLabel: {
@@ -276,14 +276,14 @@ const s = StyleSheet.create({
   endChapterText: { fontSize: 9, color: "#aaaaaa", textAlign: "center" },
   ansIntro: { fontSize: 10, color: "#555555", lineHeight: 1.7, marginBottom: 16 },
   ansChapterHeader: { fontSize: 11, fontFamily: "BookSans-Bold", color: "#0C1A3D", marginTop: 20, marginBottom: 8 },
-  ansChapterRule: { borderBottomWidth: 0.5, borderBottomColor: "#D4A017", marginBottom: 12 },
+  ansChapterRule: { borderBottomWidth: 0.5, borderBottomColor: "#C9982A", marginBottom: 12 },
   ansTopicHeader: {
     fontSize: 9, fontFamily: "BookSans-Bold", color: "#555555", marginTop: 14, marginBottom: 8,
     textTransform: "uppercase", letterSpacing: 0.5,
   },
   ansBlockWrap: { marginBottom: 14 },
   ansHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
-  ansQNum: { fontSize: 9, color: "#D4A017", fontFamily: "BookSans-Bold", width: 32 },
+  ansQNum: { fontSize: 9, color: "#C9982A", fontFamily: "BookSans-Bold", width: 32 },
   ansCircle: {
     backgroundColor: "#0C1A3D", borderRadius: 6, width: 16, height: 13,
     alignItems: "center", justifyContent: "center",
@@ -299,7 +299,7 @@ const s = StyleSheet.create({
     paddingLeft: 8, borderLeftWidth: 1.5, borderLeftColor: "#dddddd",
   },
   keyTakeawayLabel: {
-    fontSize: 7, color: "#D4A017", fontFamily: "BookSans-Bold",
+    fontSize: 7, color: "#C9982A", fontFamily: "BookSans-Bold",
     textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2,
   },
   keyTakeawayText: { fontSize: 8.5, color: "#444444", lineHeight: 1.55, marginBottom: 4 },

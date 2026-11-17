@@ -97,7 +97,7 @@ export default async function AboutPage() {
               backgroundSize: '60px 60px',
             }} />
           <div className="absolute bottom-0 right-0 w-1/2 h-1/2 opacity-10"
-            style={{ background: 'radial-gradient(ellipse at bottom right, #D4A017 0%, transparent 60%)' }} />
+            style={{ background: 'radial-gradient(ellipse at bottom right, #C9982A 0%, transparent 60%)' }} />
         </div>
         <div className="container-site relative z-10">
           <div className="max-w-3xl">
@@ -105,7 +105,7 @@ export default async function AboutPage() {
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.02em' }}>
               Education and professional services,{' '}
               <span style={{
-                background: 'linear-gradient(135deg, #D4A017 0%, #e8c050 100%)',
+                background: 'linear-gradient(135deg, #C9982A 0%, #e8c050 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -116,7 +116,7 @@ export default async function AboutPage() {
             <p className="text-white/65 text-xl leading-relaxed mb-4 max-w-2xl">
               Accounting Body is a dual-purpose platform — a world-class accounting study resource for students pursuing ACCA, CIMA, ICAEW and AAT, and a managed professional services network for businesses and individuals who need expert accounting support.
             </p>
-            <p className="text-white/40 text-base leading-relaxed max-w-2xl">
+            <p className="text-white/70 text-base leading-relaxed max-w-2xl">
               Both pillars are built to the same standard: qualified professionals, rigorous quality control, and a commitment to delivering genuine value to everyone we serve.
             </p>
           </div>

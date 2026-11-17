@@ -48,7 +48,7 @@ export default async function IntroductionToAccountingPage() {
             style={{ background: 'radial-gradient(ellipse at center top, #C9982A 0%, transparent 70%)' }} />
         </div>
         <div className="container-site relative z-10">
-          <nav className="flex items-center gap-2 text-white/40 text-sm mb-8 flex-wrap">
+          <nav className="flex items-center gap-2 text-white/70 text-sm mb-8 flex-wrap">
             <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <Link href="/study/eticpa" className="hover:text-white/70 transition-colors"><span translate="no">ETICPA</span></Link>
@@ -60,7 +60,7 @@ export default async function IntroductionToAccountingPage() {
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-6">
               <span className="text-xs font-bold px-3 py-1.5 rounded-md" style={{ backgroundColor: '#C9982A', color: '#1A4731' }}><span translate="no">ATQ Level 1</span></span>
-              <span className="text-xs font-semibold text-white/50">Foundation Technician</span>
+              <span className="text-xs font-semibold text-white/70">Foundation Technician</span>
             </div>
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.025em' }}>
               Introduction to<br />
@@ -206,7 +206,7 @@ export default async function IntroductionToAccountingPage() {
               Start Mock Exam
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
             </Link>
-            <p className="text-white/40 text-xs mt-4 text-center mx-auto">More questions are added automatically as new practice sets are published.</p>
+            <p className="text-white/70 text-xs mt-4 text-center mx-auto">More questions are added automatically as new practice sets are published.</p>
           </div>
         </div>
       </section>

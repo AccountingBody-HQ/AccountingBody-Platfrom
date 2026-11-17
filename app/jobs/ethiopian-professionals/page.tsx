@@ -29,7 +29,7 @@ export default async function EthiopianProfessionalsPage() {
             style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         </div>
         <div className="container-site relative z-10">
-          <nav className="flex items-center gap-2 text-white/40 text-sm mb-8">
+          <nav className="flex items-center gap-2 text-white/70 text-sm mb-8">
             <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <Link href="/jobs" className="hover:text-white/70 transition-colors">Jobs</Link>
@@ -188,9 +188,9 @@ export default async function EthiopianProfessionalsPage() {
               How It Works
             </Link>
           </div>
-          <p className="text-white/30 text-sm mt-6">
+          <p className="text-white/70 text-sm mt-6">
             Questions? Email us at{' '}
-            <a href="mailto:info@ethiotax.com" className="text-white/50 hover:text-white/70 underline">info@ethiotax.com</a>
+            <a href="mailto:info@ethiotax.com" className="text-white/70 hover:text-white/70 underline">info@ethiotax.com</a>
           </p>
         </div>
       </section>

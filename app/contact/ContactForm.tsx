@@ -294,14 +294,14 @@ export default function ContactForm() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label htmlFor="name" className="block text-xs font-semibold text-navy-950 mb-1.5 uppercase tracking-wide">
-                    Full name <span className="text-red-500">*</span>
+                    Full name <span className="text-red-700">*</span>
                   </label>
                   <input id="name" name="name" type="text" required placeholder="Jane Smith"
                     className="w-full h-11 px-4 rounded-lg border border-slate-300 text-sm text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition" />
                 </div>
                 <div>
                   <label htmlFor="email" className="block text-xs font-semibold text-navy-950 mb-1.5 uppercase tracking-wide">
-                    Email address <span className="text-red-500">*</span>
+                    Email address <span className="text-red-700">*</span>
                   </label>
                   <input id="email" name="email" type="email" required placeholder="jane@example.com"
                     className="w-full h-11 px-4 rounded-lg border border-slate-300 text-sm text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition" />
@@ -309,7 +309,7 @@ export default function ContactForm() {
               </div>
               <div>
                 <label htmlFor="subject" className="block text-xs font-semibold text-navy-950 mb-1.5 uppercase tracking-wide">
-                  Subject <span className="text-red-500">*</span>
+                  Subject <span className="text-red-700">*</span>
                 </label>
                 <select id="subject" name="subject" required defaultValue=""
                   className="w-full h-11 px-4 rounded-lg border border-slate-300 text-sm text-navy-950 bg-white focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition">
@@ -319,7 +319,7 @@ export default function ContactForm() {
               </div>
               <div>
                 <label htmlFor="message" className="block text-xs font-semibold text-navy-950 mb-1.5 uppercase tracking-wide">
-                  Message <span className="text-red-500">*</span>
+                  Message <span className="text-red-700">*</span>
                 </label>
                 <textarea id="message" name="message" required rows={6} placeholder="How can we help you?"
                   className="w-full px-4 py-3 rounded-lg border border-slate-300 text-sm text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition resize-none" />
@@ -333,7 +333,7 @@ export default function ContactForm() {
               </div>
               {formState === 'error' && (
                 <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
-                  <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-red-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeWidth="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <p className="text-sm text-red-700">{errorMsg || 'Something went wrong. Please try again.'}</p>
@@ -371,7 +371,7 @@ export default function ContactForm() {
         {/* NEWSLETTER-ONLY */}
         <div className="bg-navy-950 rounded-xl p-8 relative overflow-hidden">
           <div className="absolute inset-0 opacity-10 pointer-events-none"
-            style={{ background: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 60%)' }} />
+            style={{ background: 'radial-gradient(circle at 80% 20%, #C9982A 0%, transparent 60%)' }} />
           <div className="relative z-10">
             <span className="eyebrow text-gold-400 mb-3 block">Stay Ahead</span>
             <h2 className="font-display text-2xl text-white mb-2 leading-tight">Free exam tips, straight to your inbox</h2>
@@ -393,7 +393,7 @@ export default function ContactForm() {
             ) : (
               <form onSubmit={handleSubscribeSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md">
                 <input name="sub-email" type="email" required aria-label="Email address" placeholder="your@email.com"
-                  className="flex-1 w-full h-12 px-4 rounded-lg text-sm bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" />
+                  className="flex-1 w-full h-12 px-4 rounded-lg text-sm bg-white/10 border border-white/20 text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" />
                 {/* Turnstile invisible widget for subscribe */}
                 <div ref={subscribeContainer} />
                 <button type="submit" disabled={subscribeState === 'loading'}
@@ -405,7 +405,7 @@ export default function ContactForm() {
             {subscribeState === 'error' && (
               <p role="alert" className="text-red-400 text-xs mt-2">{subErrorMsg || 'Something went wrong. Please try again.'}</p>
             )}
-            <p className="text-white/30 text-xs mt-4">No spam, ever. Unsubscribe any time.</p>
+            <p className="text-white/70 text-xs mt-4">No spam, ever. Unsubscribe any time.</p>
           </div>
         </div>
 

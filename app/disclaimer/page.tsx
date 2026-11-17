@@ -78,7 +78,7 @@ export default async function DisclaimerPage() {
         <div className="container-site relative z-10">
           <span className="eyebrow text-gold-400 mb-4 block">Legal</span>
           <h1 className="font-display text-white mb-3 leading-tight">Disclaimer</h1>
-          <p className="text-white/50 text-sm">Last updated: March 2026</p>
+          <p className="text-white/70 text-sm">Last updated: March 2026</p>
         </div>
       </section>
 

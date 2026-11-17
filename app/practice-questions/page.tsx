@@ -73,7 +73,7 @@ export default async function PracticeQuestionsPage({
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[80%] opacity-20" style={{ background: 'radial-gradient(ellipse at center top, #3a4f9a 0%, transparent 70%)' }} />
         </div>
         <div className="container-site relative z-10">
-          <nav className="flex items-center gap-2 text-white/40 text-sm mb-8">
+          <nav className="flex items-center gap-2 text-white/70 text-sm mb-8">
             <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">Practice Questions</span>
