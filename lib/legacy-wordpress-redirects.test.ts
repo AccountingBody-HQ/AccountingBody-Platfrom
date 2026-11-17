@@ -70,3 +70,11 @@ describe('next.config.mjs serves the list', () => {
     }
   })
 })
+
+// Slash-form redirects in vercel.json never fire on this site: Next removes the
+// trailing slash first (FINDINGS EK, EL). Old addresses live in next.config.mjs.
+describe('vercel.json holds no redirects', () => {
+  it('has only the crons and headers blocks', () => {
+    expect(Object.keys(JSON.parse(readFileSync('vercel.json', 'utf8')) as object)).toStrictEqual(['crons', 'headers'])
+  })
+})
