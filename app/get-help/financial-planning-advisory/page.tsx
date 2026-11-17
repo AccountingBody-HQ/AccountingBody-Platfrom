@@ -81,7 +81,7 @@ export default function FinancialPlanningPage() {
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"
         strategy="afterInteractive"
       />
-      <main className="min-h-screen bg-[#F7F8F4]">
+      <div className="min-h-screen bg-[#F7F8F4]">
 
       {/* HERO */}
       <section className="bg-[#1A4731] py-20 md:py-28 relative overflow-hidden">
@@ -464,7 +464,7 @@ export default function FinancialPlanningPage() {
           </div>
         </div>
       </section>
-      </main>
+      </div>
     </>
   )
 }

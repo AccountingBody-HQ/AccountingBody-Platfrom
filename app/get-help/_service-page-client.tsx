@@ -189,7 +189,7 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
   }
 
   return (
-    <main className="bg-surface">
+    <div className="bg-surface">
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-navy-950 py-16 md:py-24">
@@ -424,6 +424,6 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
           </div>
         </div>
       </section>
-    </main>
+    </div>
   )
 }

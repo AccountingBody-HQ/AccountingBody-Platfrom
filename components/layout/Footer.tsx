@@ -307,6 +307,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
           <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="email"
+              aria-label="Email address"
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="your@email.com"

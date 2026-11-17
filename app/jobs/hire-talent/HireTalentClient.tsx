@@ -236,7 +236,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
 
   return (
     <>
-      <main className="min-h-screen bg-surface">
+      <div className="min-h-screen bg-surface">
 
         {/* HERO */}
         <section className="relative overflow-hidden py-16 md:py-20" style={{ background: brand }}>
@@ -528,7 +528,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
             )}
           </div>
         </section>
-      </main>
+      </div>
     </>
   )
 }

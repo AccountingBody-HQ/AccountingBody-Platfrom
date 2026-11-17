@@ -478,7 +478,7 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
   ]
 
   return (
-    <main className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-surface">
 
       {/* HERO */}
       <section className="relative overflow-hidden py-20 md:py-28" style={{ background: brand }}>
@@ -626,6 +626,6 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
         </div>
       </section>
 
-    </main>
+    </div>
   )
 }

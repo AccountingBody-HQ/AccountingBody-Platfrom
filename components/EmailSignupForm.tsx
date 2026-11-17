@@ -188,6 +188,7 @@ export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: b
           type="email"
           value={email}
           onChange={e => setEmail(e.target.value)}
+          aria-label="Email address"
           placeholder="your@email.com"
           required
           className="w-full h-13 px-4 rounded-lg text-base text-navy-950 placeholder:text-slate-400 focus:outline-none transition-all"

@@ -11,7 +11,7 @@ export default function HowItWorksPage() {
   }, [])
 
   return (
-    <main className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white">
 
       {/* HERO */}
       <section style={{ backgroundColor: '#1A4731' }} className="py-20">
@@ -199,6 +199,6 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-    </main>
+    </div>
   )
 }

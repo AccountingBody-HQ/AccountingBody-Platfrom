@@ -108,7 +108,7 @@ export default function JoinNetworkPage() {
 
   return (
     <>
-      <main className="min-h-screen bg-surface">
+      <div className="min-h-screen bg-surface">
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-navy-950 py-16 md:py-20">
@@ -454,7 +454,7 @@ export default function JoinNetworkPage() {
           )}
         </div>
       </section>
-    </main>
+    </div>
     </>
   )
 }

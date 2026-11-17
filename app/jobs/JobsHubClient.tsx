@@ -52,7 +52,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
   ]
 
   return (
-    <main className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white">
 
       {/* HERO */}
       <section className="relative overflow-hidden py-20 md:py-28" style={{ background: brand }}>
@@ -79,7 +79,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
               value={role}
               onChange={e => setRole(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleSearch() }}
-              placeholder="Job title, role or keyword"
+              aria-label="Job title, role or keyword" placeholder="Job title, role or keyword"
               className="flex-1 px-5 py-4 text-base border-none outline-none min-w-0"
               autoComplete="off"
             />
@@ -92,7 +92,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
               value={location}
               onChange={e => setLocation(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleSearch() }}
-              placeholder="City or country"
+              aria-label="City or country" placeholder="City or country"
               className="flex-1 px-5 py-4 text-base border-none outline-none min-w-0"
               autoComplete="off"
             />
@@ -350,6 +350,6 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
         </div>
       </section>
 
-    </main>
+    </div>
   )
 }

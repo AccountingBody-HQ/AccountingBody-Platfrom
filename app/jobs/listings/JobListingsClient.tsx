@@ -898,7 +898,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   const summary = summariseResults({ page: displayedPage, pageSize: PAGE_SIZE, rowsLength: jobs.length, total })
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50">
       {/* MOBILE FILTER TRIGGER */}
       <div className="md:hidden container-wide pt-5">
         <button type="button" onClick={() => setDrawerOpen(true)}
@@ -1075,6 +1075,6 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
           </div>
         </div>
       </div>
-    </main>
+    </div>
   )
 }

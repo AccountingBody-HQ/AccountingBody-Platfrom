@@ -6,7 +6,7 @@ export default async function AboutEthioTaxPage() {
   if (!isEthioTax) return null
 
   return (
-    <main className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white">
 
       {/* HERO */}
       <section style={{ backgroundColor: '#1A4731' }} className="py-20">
@@ -233,6 +233,6 @@ export default async function AboutEthioTaxPage() {
         </div>
       </section>
 
-    </main>
+    </div>
   )
 }

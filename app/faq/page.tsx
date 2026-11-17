@@ -14,7 +14,7 @@ export default function FAQPage() {
   const toggle = (i: number) => setOpenIndex(openIndex === i ? null : i)
 
   return (
-    <main className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white">
 
       {/* HERO */}
       <section style={{ backgroundColor: '#1A4731' }} className="py-20">
@@ -318,6 +318,6 @@ export default function FAQPage() {
         </div>
       </section>
 
-    </main>
+    </div>
   )
 }
