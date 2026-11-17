@@ -7,7 +7,7 @@ import { canonicalMetadata } from '@/lib/canonical'
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Privacy Policy',
-    description: 'How we collect, use, and protect your personal data. Last updated June 2026.',
+    description: 'How we collect, use, and protect your personal data. Last updated November 2026.',
     ...(await canonicalMetadata('/privacy-policy')),
   }
 }
@@ -35,7 +35,7 @@ export default async function PrivacyPolicyPage() {
     },
     {
       id: 'third-parties', title: '4. Third parties',
-      body: 'We use: Supabase (database); Vercel (hosting); Clerk (authentication); Lemon Squeezy (payments — we never store card details ourselves); Cloudflare (DNS and security); and Google AdSense (display advertising — Google may use cookies to serve ads based on your visits to this and other websites; you may opt out via Google ad settings at google.com/settings/ads). All processors handle your data in compliance with applicable data protection law.',
+      body: 'We use: Supabase (database); Vercel (hosting); Lemon Squeezy (payments — we never store card details ourselves); Cloudflare (DNS and security); and Google AdSense (display advertising — Google may use cookies to serve ads based on your visits to this and other websites; you may opt out via Google ad settings at google.com/settings/ads). All processors handle your data in compliance with applicable data protection law.',
     },
     {
       id: 'cookies', title: '5. Cookies',
@@ -51,7 +51,7 @@ export default async function PrivacyPolicyPage() {
     },
     {
       id: 'contact', title: '8. Contact us',
-      body: `Email: ${privacyEmail}. Contact form: ${platformUrl}/contact. This policy was last updated June 2026.`,
+      body: `Email: ${privacyEmail}. Contact form: ${platformUrl}/contact. This policy was last updated November 2026.`,
     },
   ]
 
@@ -65,7 +65,7 @@ export default async function PrivacyPolicyPage() {
         <div className="container-site relative z-10">
           <span className="eyebrow text-gold-400 mb-4 block">Legal</span>
           <h1 className="font-display text-white mb-3 leading-tight">Privacy Policy</h1>
-          <p className="text-white/50 text-sm">Last updated: June 2026</p>
+          <p className="text-white/50 text-sm">Last updated: November 2026</p>
         </div>
       </section>
 
