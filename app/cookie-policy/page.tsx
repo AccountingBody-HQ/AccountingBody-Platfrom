@@ -6,7 +6,7 @@ import { canonicalMetadata } from '@/lib/canonical'
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Cookie Policy',
-    description: 'How Accounting Body uses cookies and how to manage your preferences. Last updated March 2026.',
+    description: 'How Accounting Body uses cookies and how to manage your preferences. Last updated November 2026.',
     ...(await canonicalMetadata('/cookie-policy')),
   }
 }
@@ -14,7 +14,6 @@ export async function generateMetadata(): Promise<Metadata> {
 const cookies = [
   { category: 'Necessary',  bar: 'bg-teal-600',  always: true,
     items: [
-      { name: '__session',      provider: 'Clerk',       purpose: 'Maintains your login session.',                     duration: '7 days' },
       { name: '_cf_clearance',  provider: 'Cloudflare',  purpose: 'Security — proves your browser passed a challenge.', duration: '30 mins' },
       { name: 'sb-*',           provider: 'Supabase',    purpose: 'Stores authentication tokens for account data.',    duration: '7 days' },
       { name: 'x-et-platform',  provider: 'Accounting Body', purpose: 'Identifies which platform (Accounting Body or EthioTax) the visitor is using. No personal data stored.', duration: 'Session' },
@@ -40,7 +39,7 @@ export default function CookiePolicyPage() {
         <div className="container-site relative z-10">
           <span className="eyebrow text-gold-400 mb-4 block">Legal</span>
           <h1 className="font-display text-white mb-3 leading-tight">Cookie Policy</h1>
-          <p className="text-white/50 text-sm">Last updated: March 2026</p>
+          <p className="text-white/50 text-sm">Last updated: November 2026</p>
         </div>
       </section>
 
