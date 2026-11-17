@@ -516,7 +516,7 @@ describe('ops status within a minute', () => {
   })
 
   it('answers HEAD with the same check as GET', async () => {
-    const { autoImplementMethods } = await import('next/dist/server/future/route-modules/app-route/helpers/auto-implement-methods')
+    const { autoImplementMethods } = await import('next/dist/server/route-modules/app-route/helpers/auto-implement-methods')
     const methods = autoImplementMethods({ GET } as Parameters<typeof autoImplementMethods>[0])
     expect(methods.HEAD).toBe(GET)
     await call()
