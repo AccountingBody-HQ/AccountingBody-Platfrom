@@ -7,6 +7,7 @@ import Link from 'next/link'
 import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 import { LINK_RETRY_HEADING, VERIFY_LINK_RETRY_TEXT, verifyLinkStatus } from '@/lib/message-rules'
 import { invalidProps, useFocusFirstInvalid, useFocusOnShow, useFormIds } from '@/lib/form-a11y'
+import FormErrorSummary from '@/components/FormErrorSummary'
 
 declare global {
   interface Window {
@@ -336,6 +337,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
 
                     <div ref={topRef} />
                     <ProgressBar currentStep={currentStep} brand={brand} />
+                    <FormErrorSummary show={Object.values(fieldErrors).some(Boolean)} />
 
                     {/* HOW IT WORKS — step 1 only */}
                     {currentStep === 1 && (

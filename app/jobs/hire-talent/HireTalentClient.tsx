@@ -7,6 +7,7 @@ import Link from 'next/link'
 import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 import { BRIEF_LINK_RETRY_TEXT, LINK_RETRY_HEADING, briefLinkStatus } from '@/lib/message-rules'
 import { invalidProps, useFocusFirstInvalid, useFocusOnShow, useFormIds } from '@/lib/form-a11y'
+import FormErrorSummary from '@/components/FormErrorSummary'
 
 declare global {
   interface Window {
@@ -314,6 +315,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
               <div ref={stepsRef} className="lg:grid lg:grid-cols-[1fr_300px] gap-10 items-start">
                 <div>
                   <ProgressBar currentStep={step} brand={brand} />
+                  <FormErrorSummary show={Object.values(fieldErrors).some(Boolean)} className="mb-4" />
 
                   {/* STEP 1 — YOUR DETAILS */}
                   {step === 1 && (

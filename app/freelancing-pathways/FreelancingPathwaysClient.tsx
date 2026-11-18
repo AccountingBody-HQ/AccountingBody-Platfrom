@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import Link from 'next/link'
 import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 import { invalidProps, useFocusFirstInvalid, useFocusOnShow, useFormIds } from '@/lib/form-a11y'
+import FormErrorSummary from '@/components/FormErrorSummary'
 
 function scrollToRegister(e: React.MouseEvent) {
   e.preventDefault()
@@ -269,6 +270,7 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
     <div ref={formTopRef}>
       <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
         <ProgressBar currentStep={currentStep} brand={brand} />
+        <FormErrorSummary show={Object.values(fieldErrors).some(Boolean)} />
 
         {currentStep === 1 && (
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6">

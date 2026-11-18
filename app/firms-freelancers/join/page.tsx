@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useRef } from 'react'
 import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 import { invalidProps, useFocusFirstInvalid, useFocusOnShow, useFormIds } from '@/lib/form-a11y'
+import FormErrorSummary from '@/components/FormErrorSummary'
 
 declare global {
   interface Window {
@@ -210,6 +211,7 @@ export default function JoinNetworkPage() {
               {/* FORM — shown only after type selected */}
               {applicantType && (
                 <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+                  <FormErrorSummary show={Object.values(fieldErrors).some(Boolean)} />
 
                   {/* PRACTICE / PERSONAL DETAILS */}
                   <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6">

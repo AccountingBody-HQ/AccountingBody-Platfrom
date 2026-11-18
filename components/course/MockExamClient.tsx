@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useId, useRef } from 'react'
 import Link from 'next/link'
 
 interface Question {
@@ -32,6 +32,15 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
   // poolTotal removed
   const [secondsLeft, setSecondsLeft] = useState(50 * 90) // 90s per question
   const [reviewIdx, setReviewIdx] = useState<number | null>(null)
+  const qHeadingId = useId()
+  const resultsHeadingRef = useRef<HTMLHeadingElement>(null)
+  const questionHeadingRef = useRef<HTMLHeadingElement>(null)
+
+  // Screen-reader and keyboard users land on the new content when the exam starts and when results appear.
+  useEffect(() => {
+    if (phase === 'results') resultsHeadingRef.current?.focus()
+    if (phase === 'exam') questionHeadingRef.current?.focus()
+  }, [phase])
 
   const loadExam = useCallback(async () => {
     setLoading(true); setError('')
@@ -121,7 +130,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
             style={{ borderColor: passed ? GREEN : GOLD }}>
             <span className="font-display text-3xl" style={{ color: passed ? GREEN : GOLD }}>{pct}%</span>
           </div>
-          <h1 className="font-display text-2xl text-navy-950 mb-2">{passed ? 'Well done — you passed!' : 'Keep practising'}</h1>
+          <h1 ref={resultsHeadingRef} tabIndex={-1} className="font-display text-2xl text-navy-950 mb-2">{passed ? 'Well done — you passed!' : 'Keep practising'}</h1>
           <p className="text-slate-500 mb-6">You scored {score} out of {questions.length} ({answered} answered)</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button onClick={loadExam} className="h-11 px-6 rounded-lg text-sm font-semibold transition-colors" style={{ backgroundColor: GREEN, color: 'white' }}>Take a fresh exam</button>
@@ -136,10 +145,11 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
             const open = reviewIdx === i
             return (
               <div key={i} className="rounded-xl border bg-white overflow-hidden" style={{ borderColor: correct ? '#bbf7d0' : '#fecaca' }}>
-                <button onClick={() => setReviewIdx(open ? null : i)} className="w-full flex items-start gap-3 px-5 py-4 text-left">
-                  <span className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white" style={{ backgroundColor: correct ? '#15803d' : '#b91c1c' }}>
+                <button onClick={() => setReviewIdx(open ? null : i)} aria-expanded={open} className="w-full flex items-start gap-3 px-5 py-4 text-left">
+                  <span aria-hidden="true" className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white" style={{ backgroundColor: correct ? '#15803d' : '#b91c1c' }}>
                     {correct ? '✓' : '✗'}
                   </span>
+                  <span className="sr-only">{correct ? 'Correct: ' : 'Incorrect: '}</span>
                   <span className="flex-1 text-sm font-medium text-navy-950">{i + 1}. {q.questionText}</span>
                   <svg className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                 </button>
@@ -150,9 +160,11 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
                         style={oi === q.correctIndex ? { backgroundColor: '#f0fdf4', borderColor: '#86efac', color: '#15803d' }
                           : oi === userAns ? { backgroundColor: '#fef2f2', borderColor: '#fca5a5', color: '#b91c1c' }
                           : { borderColor: '#e2e8f0', color: '#64748b' }}>
-                        {oi === q.correctIndex && <span className="font-bold mr-1">✓</span>}
-                        {oi === userAns && oi !== q.correctIndex && <span className="font-bold mr-1">✗</span>}
+                        {oi === q.correctIndex && <span aria-hidden="true" className="font-bold mr-1">✓</span>}
+                        {oi === userAns && oi !== q.correctIndex && <span aria-hidden="true" className="font-bold mr-1">✗</span>}
                         {opt}
+                        {oi === q.correctIndex && <span className="sr-only"> (correct answer)</span>}
+                        {oi === userAns && <span className="sr-only"> (your answer)</span>}
                       </div>
                     ))}
                     {q.explanation && <p className="text-xs text-slate-500 leading-relaxed pt-2 border-t border-slate-100 mt-3">{q.explanation}</p>}
@@ -173,7 +185,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
     <div className="max-w-3xl mx-auto">
       {/* Status bar */}
       <div className="flex items-center justify-between mb-6 sticky top-0 bg-slate-50 py-3 z-10">
-        <span className="text-sm font-semibold text-navy-950">Question {current + 1} of {questions.length}</span>
+        <span className="text-sm font-semibold text-navy-950" aria-live="polite">Question {current + 1} of {questions.length}</span>
         <span className="text-sm font-bold px-3 py-1 rounded-lg" style={{ backgroundColor: secondsLeft < 300 ? '#fef2f2' : '#f0f7f4', color: secondsLeft < 300 ? '#dc2626' : GREEN }}>
           {mins}:{secs.toString().padStart(2, '0')}
         </span>
@@ -187,12 +199,12 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
       {/* Question */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 md:p-8 mb-6">
         <p className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: GOLD }}>{q.topic}</p>
-        <h2 className="font-display text-lg md:text-xl text-navy-950 leading-snug mb-6">{q.questionText}</h2>
-        <div className="space-y-3">
+        <h2 id={qHeadingId} ref={questionHeadingRef} tabIndex={-1} className="font-display text-lg md:text-xl text-navy-950 leading-snug mb-6">{q.questionText}</h2>
+        <div className="space-y-3" role="group" aria-labelledby={qHeadingId}>
           {q.options.map((opt, oi) => {
             const sel = answers[current] === oi
             return (
-              <button key={oi} onClick={() => setAnswers(a => ({ ...a, [current]: oi }))}
+              <button key={oi} onClick={() => setAnswers(a => ({ ...a, [current]: oi }))} aria-pressed={sel}
                 className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 text-left text-sm transition-all"
                 style={sel ? { borderColor: GREEN, backgroundColor: '#f0f7f4' } : { borderColor: '#e2e8f0' }}>
                 <span className="w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 text-xs font-bold"
@@ -233,7 +245,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
         <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Jump to question</p>
         <div className="flex flex-wrap gap-2">
           {questions.map((_, i) => (
-            <button key={i} onClick={() => setCurrent(i)}
+            <button key={i} onClick={() => setCurrent(i)} aria-current={i === current ? 'step' : undefined}
               className="w-9 h-9 rounded-lg text-xs font-semibold transition-colors"
               style={i === current ? { backgroundColor: GREEN, color: 'white' }
                 : answers[i] !== undefined ? { backgroundColor: '#d1e8db', color: GREEN }
