@@ -20,7 +20,7 @@ export default function FAQPage() {
       <section style={{ backgroundColor: '#1A4731' }} className="py-20">
         <div className="max-w-5xl mx-auto px-6">
           <div className="mb-4">
-            <a href="/" className="text-sm" style={{ color: '#C9982A' }}>Home</a>
+            <a href="/" className="text-sm" style={{ color: '#e8b030' }}>Home</a>
             <span className="text-green-200 mx-2">/</span>
             <span className="text-green-200 text-sm">FAQ</span>
           </div>
@@ -31,7 +31,7 @@ export default function FAQPage() {
             Everything you need to know about working with EthioTax. If you have a question that is not answered here, contact us directly &mdash; we respond within 24 hours.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
-            <a href="/get-help" className="inline-flex items-center justify-center h-[52px] w-full sm:w-[240px] rounded-xl font-semibold text-sm" style={{ backgroundColor: '#C9982A', color: '#fff' }}>
+            <a href="/get-help" className="inline-flex items-center justify-center h-[52px] w-full sm:w-[240px] rounded-xl font-semibold text-sm" style={{ backgroundColor: '#C9982A', color: '#0f2d1e' }}>
               Enquire about a service
             </a>
             <a href="/wa" className="inline-flex items-center justify-center h-[52px] w-full sm:w-[240px] rounded-xl font-semibold text-sm border-2 border-white text-white">

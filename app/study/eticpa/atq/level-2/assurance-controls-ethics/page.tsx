@@ -49,17 +49,17 @@ export default async function AssuranceControlsEthicsPage() {
         </div>
         <div className="container-site relative z-10">
           <nav className="flex items-center gap-2 text-white/70 text-sm mb-8 flex-wrap">
-            <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
+            <Link href="/" className="text-white/70 hover:text-white transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-            <Link href="/study/eticpa" className="hover:text-white/70 transition-colors"><span translate="no">ETICPA</span></Link>
+            <Link href="/study/eticpa" className="text-white/70 hover:text-white transition-colors"><span translate="no">ETICPA</span></Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-            <Link href="/study/eticpa/atq/level-2" className="hover:text-white/70 transition-colors"><span translate="no"><span translate="no">ATQ Level 2</span></span></Link>
+            <Link href="/study/eticpa/atq/level-2" className="text-white/70 hover:text-white transition-colors"><span translate="no"><span translate="no">ATQ Level 2</span></span></Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">Assurance, Controls & Ethics</span>
           </nav>
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-6">
-              <span className="text-xs font-bold px-3 py-1.5 rounded-md" style={{ backgroundColor: '#C9982A', color: '#1A4731' }}><span translate="no">ATQ Level 2</span></span>
+              <span className="text-xs font-bold px-3 py-1.5 rounded-md" style={{ backgroundColor: '#C9982A', color: '#0f2d1e' }}><span translate="no">ATQ Level 2</span></span>
               <span className="text-xs font-semibold text-white/70">Advanced Technician</span>
             </div>
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.025em' }}>
@@ -73,7 +73,7 @@ export default async function AssuranceControlsEthicsPage() {
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href={`/free-courses/${COURSE_SLUG}`}
                 className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors"
-                style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '48px', width: '220px', boxSizing: 'border-box' }}>
+                style={{ backgroundColor: '#C9982A', color: '#0f2d1e', height: '48px', width: '220px', boxSizing: 'border-box' }}>
                 Start Course
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </Link>
@@ -181,7 +181,7 @@ export default async function AssuranceControlsEthicsPage() {
       <section id="mock-exam" className="section border-t border-slate-100" style={{ backgroundColor: '#1A4731' }}>
         <div className="container-site">
           <div className="max-w-2xl mx-auto text-center">
-            <span className="eyebrow mb-3 block" style={{ color: '#C9982A' }}>Mock Exam</span>
+            <span className="eyebrow mb-3 block text-gold-400">Mock Exam</span>
             <h2 className="font-display text-white mb-4" style={{ fontSize: '2rem' }}>Test your knowledge</h2>
             <p className="text-white/70 text-lg leading-relaxed mb-10">
               Practice with real exam-style questions drawn from the full Assurance, Controls & Ethics question pool.
@@ -200,7 +200,7 @@ export default async function AssuranceControlsEthicsPage() {
             </div>
             <Link href="/study/eticpa/atq/level-2/assurance-controls-ethics/mock-exam"
               className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors"
-              style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '48px', width: '220px', boxSizing: 'border-box' }}>
+              style={{ backgroundColor: '#C9982A', color: '#0f2d1e', height: '48px', width: '220px', boxSizing: 'border-box' }}>
               Start Mock Exam
             </Link>
             <p className="text-white/70 text-xs mt-4 text-center mx-auto">

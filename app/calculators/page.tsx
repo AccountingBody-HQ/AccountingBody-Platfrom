@@ -124,7 +124,7 @@ export default function CalculatorsPage() {
       </Section>
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 24px' }}>
-        <p style={{ fontSize: 12, color: '#94A3B8', textAlign: 'center', lineHeight: 1.7 }}>
+        <p style={{ fontSize: 12, color: '#475569', textAlign: 'center', lineHeight: 1.7 }}>
           These calculators use standard accounting formulas and are suitable for ACCA, CIMA, ICAEW and AAT exam preparation. For professional decisions always consult a qualified accountant.
         </p>
       </div>

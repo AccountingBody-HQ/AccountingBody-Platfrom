@@ -98,7 +98,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
               </div>
             ))}
           </div>
-          {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">{error}</p>}
+          {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">{error}</p>}
           <button onClick={loadExam} disabled={loading}
             className="w-full h-12 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
             style={{ backgroundColor: GOLD, color: GREEN }}>
@@ -137,7 +137,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
             return (
               <div key={i} className="rounded-xl border bg-white overflow-hidden" style={{ borderColor: correct ? '#bbf7d0' : '#fecaca' }}>
                 <button onClick={() => setReviewIdx(open ? null : i)} className="w-full flex items-start gap-3 px-5 py-4 text-left">
-                  <span className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white" style={{ backgroundColor: correct ? '#16a34a' : '#dc2626' }}>
+                  <span className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white" style={{ backgroundColor: correct ? '#15803d' : '#b91c1c' }}>
                     {correct ? '✓' : '✗'}
                   </span>
                   <span className="flex-1 text-sm font-medium text-navy-950">{i + 1}. {q.questionText}</span>
@@ -196,7 +196,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
                 className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 text-left text-sm transition-all"
                 style={sel ? { borderColor: GREEN, backgroundColor: '#f0f7f4' } : { borderColor: '#e2e8f0' }}>
                 <span className="w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 text-xs font-bold"
-                  style={sel ? { borderColor: GREEN, backgroundColor: GREEN, color: 'white' } : { borderColor: '#cbd5e1', color: '#94a3b8' }}>
+                  style={sel ? { borderColor: GREEN, backgroundColor: GREEN, color: 'white' } : { borderColor: '#cbd5e1', color: '#475569' }}>
                   {String.fromCharCode(65 + oi)}
                 </span>
                 <span className={sel ? 'text-navy-950 font-medium' : 'text-slate-600'}>{opt}</span>
@@ -237,7 +237,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
               className="w-9 h-9 rounded-lg text-xs font-semibold transition-colors"
               style={i === current ? { backgroundColor: GREEN, color: 'white' }
                 : answers[i] !== undefined ? { backgroundColor: '#d1e8db', color: GREEN }
-                : { backgroundColor: '#f1f5f9', color: '#94a3b8' }}>
+                : { backgroundColor: '#f1f5f9', color: '#475569' }}>
               {i + 1}
             </button>
           ))}

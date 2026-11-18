@@ -42,13 +42,13 @@ function ProgressBar({ currentStep, brand }: { currentStep: number; brand: strin
           <div key={step.number} className="flex flex-col items-center" style={{ width: '25%' }}>
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mb-1 transition-all"
-              style={{ background: currentStep >= step.number ? brand : '#e2e8f0', color: currentStep >= step.number ? '#fff' : '#94a3b8' }}
+              style={{ background: currentStep >= step.number ? brand : '#e2e8f0', color: currentStep >= step.number ? '#fff' : '#475569' }}
             >
               {currentStep > step.number
                 ? <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
                 : step.number}
             </div>
-            <span className="text-xs font-medium text-center leading-tight" style={{ color: currentStep >= step.number ? brand : '#94a3b8' }}>
+            <span className="text-xs font-medium text-center leading-tight" style={{ color: currentStep >= step.number ? brand : '#475569' }}>
               {step.label}
             </span>
           </div>
@@ -232,7 +232,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
   }
 
   const errStyle = (field: string) => fieldErrors[field] ? { borderColor: '#C9982A' } : {}
-  const errLabel = (field: string) => ({ color: fieldErrors[field] ? '#C9982A' : brand })
+  const errLabel = (field: string) => ({ color: fieldErrors[field] ? '#88671c' : brand })
 
   return (
     <>
@@ -248,9 +248,9 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
           </div>
           <div className="container-site relative z-10">
             <nav className="flex items-center gap-2 text-white/70 text-sm mb-8">
-              <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
+              <Link href="/" className="text-white/70 hover:text-white transition-colors">Home</Link>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-              <Link href="/jobs" className="hover:text-white/70 transition-colors">Jobs</Link>
+              <Link href="/jobs" className="text-white/70 hover:text-white transition-colors">Jobs</Link>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
               <span className="text-white/70">Hire Talent</span>
             </nav>
@@ -322,14 +322,14 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div ref={refs.company_name}>
                           <label className="block text-sm font-semibold mb-2" style={errLabel('company_name')}>Company Name *</label>
-                          {fieldErrors.company_name && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter your company name.</p>}
+                          {fieldErrors.company_name && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your company name.</p>}
                           <input type="text" value={form.company_name} onChange={e => { setForm({...form, company_name: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, company_name: false})) }}
                             className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                             placeholder="Your company name" style={errStyle('company_name')} />
                         </div>
                         <div ref={refs.contact_name}>
                           <label className="block text-sm font-semibold mb-2" style={errLabel('contact_name')}>Your Name *</label>
-                          {fieldErrors.contact_name && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter your name.</p>}
+                          {fieldErrors.contact_name && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your name.</p>}
                           <input type="text" value={form.contact_name} onChange={e => { setForm({...form, contact_name: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, contact_name: false})) }}
                             className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                             placeholder="Full name" style={errStyle('contact_name')} />
@@ -338,7 +338,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div ref={refs.contact_email}>
                           <label className="block text-sm font-semibold mb-2" style={errLabel('contact_email')}>Email Address *</label>
-                          {fieldErrors.contact_email && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter a valid email address.</p>}
+                          {fieldErrors.contact_email && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter a valid email address.</p>}
                           <input type="email" value={form.contact_email} onChange={e => { setForm({...form, contact_email: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, contact_email: false})) }}
                             className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                             placeholder="you@company.com" style={errStyle('contact_email')} />
@@ -371,14 +371,14 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div ref={refs.role_title}>
                           <label className="block text-sm font-semibold mb-2" style={errLabel('role_title')}>Role Title *</label>
-                          {fieldErrors.role_title && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter the role title.</p>}
+                          {fieldErrors.role_title && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter the role title.</p>}
                           <input type="text" value={form.role_title} onChange={e => { setForm({...form, role_title: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, role_title: false})) }}
                             className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                             placeholder="e.g. Senior Accountant" style={errStyle('role_title')} />
                         </div>
                         <div ref={refs.contract_type}>
                           <label className="block text-sm font-semibold mb-2" style={errLabel('contract_type')}>Permanent or Contract *</label>
-                          {fieldErrors.contract_type && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please select a contract type.</p>}
+                          {fieldErrors.contract_type && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select a contract type.</p>}
                           <select value={form.contract_type} onChange={e => { setForm({...form, contract_type: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, contract_type: false})) }}
                             className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
                             style={errStyle('contract_type')}>
@@ -390,7 +390,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div ref={refs.location}>
                           <label className="block text-sm font-semibold mb-2" style={errLabel('location')}>Location *</label>
-                          {fieldErrors.location && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter the role location.</p>}
+                          {fieldErrors.location && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter the role location.</p>}
                           <input type="text" value={form.location} onChange={e => { setForm({...form, location: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, location: false})) }}
                             className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                             placeholder="e.g. London, UK / Remote" style={errStyle('location')} />
@@ -444,7 +444,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                       </div>
                       <div ref={refs.role_description}>
                         <label className="block text-sm font-semibold mb-2" style={errLabel('role_description')}>Role Description *</label>
-                        {fieldErrors.role_description && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please describe the role.</p>}
+                        {fieldErrors.role_description && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please describe the role.</p>}
                         <p className="text-xs text-slate-400 mb-2">Describe the role, responsibilities, and what success looks like.</p>
                         <textarea rows={6} value={form.role_description} onChange={e => { setForm({...form, role_description: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, role_description: false})) }}
                           className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"

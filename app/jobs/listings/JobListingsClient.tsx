@@ -441,7 +441,7 @@ function JobAlertBanner({ search, filters, onDismiss }: {
           </div>
           <p className="text-sm font-semibold text-green-800">Alert set! We will notify you when new matching jobs are posted.</p>
         </div>
-        <button type="button" onClick={onDismiss} aria-label="Dismiss" className="text-green-600 hover:text-green-800 shrink-0">
+        <button type="button" onClick={onDismiss} aria-label="Dismiss" className="text-green-700 hover:text-green-800 shrink-0">
           <CloseIcon />
         </button>
       </div>
@@ -581,7 +581,7 @@ function JobCard({ job, saved, pending, onSave }: {
           </span>
         )}
         {isNew && (
-          <span className="inline-flex items-center rounded-full bg-green-50 border border-green-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-green-600">
+          <span className="inline-flex items-center rounded-full bg-green-50 border border-green-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-green-700">
             New
           </span>
         )}
@@ -656,7 +656,7 @@ function EmptyState({ onClear }: { onClear: () => void }) {
   return (
     <div className="text-center py-20 border border-slate-200 rounded-2xl bg-white">
       <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5 bg-slate-50">
-        <svg className="w-8 h-8" style={{ color: '#cbd5e1' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <svg className="w-8 h-8" style={{ color: '#475569' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <circle cx="11" cy="11" r="8" />
           <path strokeLinecap="round" d="m21 21-4.35-4.35" />
         </svg>
@@ -937,7 +937,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
             )}
 
             {savedJobsError && (
-              <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+              <p role="alert" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
                 {savedJobsError}
               </p>
             )}

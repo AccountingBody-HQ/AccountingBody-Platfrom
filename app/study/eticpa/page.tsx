@@ -209,14 +209,14 @@ export default async function ETICPAStudyPage() {
         </div>
         <div className="container-site relative z-10">
           <nav className="flex items-center gap-2 text-white/70 text-sm mb-8">
-            <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
+            <Link href="/" className="text-white/70 hover:text-white transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-            <Link href="/study" className="hover:text-white/70 transition-colors">Study</Link>
+            <Link href="/study" className="text-white/70 hover:text-white transition-colors">Study</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">ETICPA</span>
           </nav>
           <div className="max-w-3xl">
-            <span className="inline-block text-xs font-bold px-3 py-1.5 rounded-md mb-6" style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>
+            <span className="inline-block text-xs font-bold px-3 py-1.5 rounded-md mb-6" style={{ backgroundColor: '#C9982A', color: '#0f2d1e' }}>
               ETICPA — Ethiopian Institute of Certified Public Accountants
             </span>
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.025em' }}>
@@ -232,7 +232,7 @@ export default async function ETICPAStudyPage() {
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="#modules"
                 className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors"
-                style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '48px', minWidth: '220px', boxSizing: 'border-box' }}>
+                style={{ backgroundColor: '#C9982A', color: '#0f2d1e', height: '48px', minWidth: '220px', boxSizing: 'border-box' }}>
                 Browse modules
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </Link>
@@ -315,7 +315,7 @@ export default async function ETICPAStudyPage() {
                 style={{ borderColor: '#1A4731' }}>
                 {level.badge && (
                   <div className="absolute top-4 right-4">
-                    <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: '#C9982A', color: '#0f2d1e' }}>
                       <span translate="no">{level.badge}</span>
                     </span>
                   </div>
@@ -369,7 +369,7 @@ export default async function ETICPAStudyPage() {
             <div className="px-8 py-6 border-b" style={{ backgroundColor: '#1A4731', borderColor: '#0d2b1f' }}>
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-wide mb-2 block" style={{ color: '#C9982A' }}><span translate="no">CPA</span> — Certified Public Accountant</span>
+                  <span className="text-xs font-bold uppercase tracking-wide mb-2 block" style={{ color: '#e8b030' }}><span translate="no">CPA</span> — Certified Public Accountant</span>
                   <h3 className="font-display text-2xl text-white">The professional summit</h3>
                 </div>
                 <span className="text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 text-white/70">Syllabus under development</span>
@@ -380,7 +380,7 @@ export default async function ETICPAStudyPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 {CPA_STATUS.pathway.map((step) => (
                   <div key={step.step} className="rounded-xl p-4 border" style={{ borderColor: '#d1e8db', backgroundColor: '#f0f7f4' }}>
-                    <p className="font-display text-2xl font-bold mb-2" style={{ color: '#C9982A' }}><span translate="no">{step.step}</span></p>
+                    <p className="font-display text-2xl font-bold mb-2" style={{ color: '#88671c' }}><span translate="no">{step.step}</span></p>
                     <p className="text-sm font-semibold text-navy-950 mb-1">{step.title}</p>
                     <p className="text-xs text-slate-500 leading-relaxed">{step.desc}</p>
                   </div>
@@ -464,7 +464,7 @@ export default async function ETICPAStudyPage() {
                     <span className="text-xs font-bold px-2.5 py-1 rounded-md"
                       style={{ backgroundColor: '#f0f7f4', color: '#1A4731' }}>{exam.level}</span>
                     <span className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md"
-                      style={{ backgroundColor: '#1A4731', color: '#C9982A' }}>
+                      style={{ backgroundColor: '#1A4731', color: '#e8b030' }}>
                       <span className="w-1.5 h-1.5 rounded-full bg-[#C9982A] animate-pulse" />
                       Live
                     </span>
@@ -516,7 +516,7 @@ export default async function ETICPAStudyPage() {
         <div className="container-site relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <span className="eyebrow mb-4 block" style={{ color: '#C9982A' }}>Professional Services</span>
+              <span className="eyebrow mb-4 block text-gold-400">Professional Services</span>
               <h2 className="font-display text-4xl text-white mb-4 leading-tight">
                 Working in Ethiopian finance?
               </h2>
@@ -526,7 +526,7 @@ export default async function ETICPAStudyPage() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/get-help"
                   className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors"
-                  style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '48px', minWidth: '200px', boxSizing: 'border-box' }}>
+                  style={{ backgroundColor: '#C9982A', color: '#0f2d1e', height: '48px', minWidth: '200px', boxSizing: 'border-box' }}>
                   Explore our services
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                 </Link>

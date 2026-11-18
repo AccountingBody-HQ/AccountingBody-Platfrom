@@ -18,7 +18,7 @@ export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: bo
           {/* LEFT */}
           <div className="lg:col-span-6">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-7"
-              style={{ background: 'rgba(0,0,0,0.12)', border: '1px solid rgba(0,0,0,0.15)' }}>
+              style={{ background: 'rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.15)' }}>
               <div className="w-1.5 h-1.5 rounded-full" style={{ background: brand }} />
               <span className="text-xs font-bold uppercase tracking-widest" style={{ color: brand }}>
                 {isEthioTax ? 'EthioTax Recruitment' : 'Accounting Body Recruitment'}
@@ -35,7 +35,7 @@ export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: bo
             </h2>
 
             <p className="text-base leading-relaxed mb-8 max-w-lg"
-              style={{ color: isEthioTax ? 'rgba(15,45,30,0.72)' : 'rgba(12,26,61,0.72)' }}>
+              style={{ color: isEthioTax ? 'rgba(15,45,30,0.9)' : 'rgba(12,26,61,0.9)' }}>
               {isEthioTax
                 ? 'Browse accounting and finance jobs for the Ethiopian diaspora, or register as a candidate and let our team personally match you to the right role.'
                 : 'Browse live accounting and finance jobs yourself, or register as a candidate and let our team find the right match for you. Two paths. One platform.'}
@@ -56,13 +56,13 @@ export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: bo
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5"
-                    style={{ color: isEthioTax ? 'rgba(15,45,30,0.5)' : 'rgba(12,26,61,0.5)' }}>
+                    style={{ color: brand }}>
                     Search independently
                   </p>
                   <p className="text-sm font-semibold" style={{ color: brand }}>
                     Browse live jobs
                   </p>
-                  <p className="text-xs mt-0.5" style={{ color: isEthioTax ? 'rgba(15,45,30,0.5)' : 'rgba(12,26,61,0.5)' }}>
+                  <p className="text-xs mt-0.5" style={{ color: brand }}>
                     Filter by role, location and contract type
                   </p>
                 </div>
@@ -105,7 +105,7 @@ export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: bo
                 'Accounting & finance only',
               ].map(pill => (
                 <span key={pill} className="flex items-center gap-1.5 text-xs font-medium"
-                  style={{ color: isEthioTax ? 'rgba(15,45,30,0.55)' : 'rgba(12,26,61,0.55)' }}>
+                  style={{ color: isEthioTax ? 'rgba(15,45,30,0.9)' : 'rgba(12,26,61,0.9)' }}>
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                     <path strokeLinecap="round" d="M5 13l4 4L19 7"/>
                   </svg>
@@ -126,7 +126,7 @@ export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: bo
                     Two ways to find your next role
                   </p>
                   <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                    style={{ background: 'rgba(201,152,42,0.15)', color: '#C9982A', border: '1px solid rgba(201,152,42,0.3)' }}>
+                    style={{ background: 'rgba(201,152,42,0.15)', color: isEthioTax ? '#e8b030' : '#C9982A', border: '1px solid rgba(201,152,42,0.3)' }}>
                     Finance specialists
                   </span>
                 </div>
@@ -210,6 +210,8 @@ export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: bo
 
 export function JobsRecruitmentBanner({ isEthioTax = false }: { isEthioTax?: boolean }) {
   const brand    = isEthioTax ? '#1A4731' : '#0C1A3D'
+  // Text on the gold uses the darker EthioTax green (#1A4731 on gold is 4.0:1; #0f2d1e is 5.7:1).
+  const textOnGold = isEthioTax ? '#0f2d1e' : '#0C1A3D'
 
   return (
     <section className="border-t border-slate-200 bg-white py-12">
@@ -222,7 +224,7 @@ export function JobsRecruitmentBanner({ isEthioTax = false }: { isEthioTax?: boo
 
               <div className="max-w-xl">
                 <p className="text-xs font-bold uppercase tracking-widest mb-2"
-                  style={{ color: 'rgba(12,26,61,0.5)' }}>
+                  style={{ color: 'rgba(12,26,61,0.9)' }}>
                   {isEthioTax ? 'EthioTax Recruitment' : 'Accounting Body Recruitment'}
                 </p>
                 <h2 className="font-display text-2xl md:text-3xl font-bold mb-3 leading-tight"
@@ -231,7 +233,7 @@ export function JobsRecruitmentBanner({ isEthioTax = false }: { isEthioTax?: boo
                     ? 'Your next finance role starts here.'
                     : 'Your next accounting or finance role starts here.'}
                 </h2>
-                <p className="text-sm leading-relaxed" style={{ color: 'rgba(12,26,61,0.65)' }}>
+                <p className="text-sm leading-relaxed" style={{ color: 'rgba(12,26,61,0.9)' }}>
                   {isEthioTax
                     ? 'Browse diaspora accounting and finance jobs, or register as a candidate and let our team find the right match for you.'
                     : 'Browse live accounting and finance jobs yourself, or register as a candidate and let our team find the right match for you.'}
@@ -249,7 +251,7 @@ export function JobsRecruitmentBanner({ isEthioTax = false }: { isEthioTax?: boo
                 </Link>
                 <Link href="/jobs/find-work"
                   className="min-h-[52px] px-6 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-80 border-2"
-                  style={{ borderColor: brand, color: brand, background: 'transparent' }}>
+                  style={{ borderColor: brand, color: textOnGold, background: 'transparent' }}>
                   Register as a Candidate
                 </Link>
               </div>

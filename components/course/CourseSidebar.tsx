@@ -97,12 +97,12 @@ export default function CourseSidebar({
             >
               <path strokeLinecap="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
             </svg>
-            <span className="text-[0.55rem] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            <span className="text-[0.55rem] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.7)' }}>
               {allOpen ? 'Collapse' : 'Expand'}
             </span>
           </button>
         </div>
-        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
+        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>
           {chapters.length} chapters · {totalLessons} lessons
         </p>
       </div>
@@ -198,7 +198,7 @@ export default function CourseSidebar({
 
       {/* Footer — Course Reset */}
       <div className="px-5 py-3 border-t flex items-center justify-between" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-        <span className="text-[0.6rem] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>
+        <span className="text-[0.6rem] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.7)' }}>
           Progress
         </span>
         <ResetProgressButton courseSlug={courseSlug} allLessonSlugs={allLessons} />

@@ -93,7 +93,7 @@ export default function CompanyFormationClient() {
         </div>
         <div className="max-w-5xl mx-auto px-6 relative z-10">
           <nav className="flex items-center gap-2 text-sm mb-6">
-            <a href="/" style={{ color: '#C9982A' }}>Home</a>
+            <a href="/" style={{ color: '#e8b030' }}>Home</a>
             <span className="text-green-200 mx-1">›</span>
             <a href="/get-help" className="text-green-200">Services</a>
             <span className="text-green-200 mx-1">›</span>
@@ -111,7 +111,7 @@ export default function CompanyFormationClient() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <a href="#enquire"
-                className="inline-flex items-center justify-center h-[52px] w-full sm:w-[240px] font-semibold text-sm rounded-xl" style={{ backgroundColor: '#C9982A', color: '#fff' }}>
+                className="inline-flex items-center justify-center h-[52px] w-full sm:w-[240px] font-semibold text-sm rounded-xl" style={{ backgroundColor: '#C9982A', color: '#0f2d1e' }}>
                 Enquire about this service
               </a>
               <a href="/get-help"
@@ -202,7 +202,7 @@ export default function CompanyFormationClient() {
                 <h3 className="font-display text-xl font-bold text-white mb-2">Not sure what structure you need?</h3>
                 <p className="text-white/65 text-sm leading-relaxed mb-5">Tell us your situation and we will advise on the right structure and jurisdiction — no obligation, no cost.</p>
                 <a href="#enquire"
-                  className="inline-flex items-center justify-center h-[44px] w-full font-semibold text-sm rounded-xl" style={{ backgroundColor: '#C9982A', color: '#fff' }}>
+                  className="inline-flex items-center justify-center h-[44px] w-full font-semibold text-sm rounded-xl" style={{ backgroundColor: '#C9982A', color: '#0f2d1e' }}>
                   Submit a free enquiry
                 </a>
               </div>
@@ -403,7 +403,7 @@ export default function CompanyFormationClient() {
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-10">
             <div className="max-w-xl">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6"
-                style={{ background: 'rgba(0,0,0,0.12)', border: '1px solid rgba(0,0,0,0.15)' }}>
+                style={{ background: 'rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.15)' }}>
                 <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#0f2d1e' }} />
                 <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#0f2d1e' }}>
                   EthioTax Recruitment
@@ -414,7 +414,7 @@ export default function CompanyFormationClient() {
                 Also need to hire Ethiopian<br />
                 <span style={{ opacity: 0.7 }}>finance talent?</span>
               </h2>
-              <p className="text-base leading-relaxed mb-6" style={{ color: 'rgba(15,45,30,0.75)' }}>
+              <p className="text-base leading-relaxed mb-6" style={{ color: 'rgba(15,45,30,0.9)' }}>
                 Submit a hiring brief — we search our vetted pool of Ethiopian finance professionals, manage every introduction, and guarantee every placement for 90 days.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
@@ -437,7 +437,7 @@ export default function CompanyFormationClient() {
               <div className="px-7 pt-6 pb-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>Why EthioTax</p>
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: 'rgba(201,152,42,0.15)', color: '#C9982A', border: '1px solid rgba(201,152,42,0.3)' }}>Not a job board</span>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: 'rgba(201,152,42,0.15)', color: '#e8b030', border: '1px solid rgba(201,152,42,0.3)' }}>Not a job board</span>
                 </div>
               </div>
               <div className="grid grid-cols-2">

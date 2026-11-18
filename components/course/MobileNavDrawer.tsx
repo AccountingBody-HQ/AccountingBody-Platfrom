@@ -124,7 +124,7 @@ export default function MobileNavDrawer({
                 <p className="text-[0.6rem] font-black uppercase tracking-[0.15em]" style={{ color: '#C9982A' }}>
                   Course Content
                 </p>
-                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
                   {chapters.length} chapters · {totalLessons} lessons
                 </p>
               </div>

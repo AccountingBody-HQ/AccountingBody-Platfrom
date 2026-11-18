@@ -30,15 +30,15 @@ export default async function CPAPage() {
         </div>
         <div className="container-site relative z-10">
           <nav className="flex items-center gap-2 text-white/70 text-sm mb-8 flex-wrap">
-            <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
+            <Link href="/" className="text-white/70 hover:text-white transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-            <Link href="/study/eticpa" className="hover:text-white/70 transition-colors">ETICPA</Link>
+            <Link href="/study/eticpa" className="text-white/70 hover:text-white transition-colors">ETICPA</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">CPA</span>
           </nav>
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-6">
-              <span className="text-xs font-bold px-3 py-1.5 rounded-md" style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>
+              <span className="text-xs font-bold px-3 py-1.5 rounded-md" style={{ backgroundColor: '#C9982A', color: '#0f2d1e' }}>
                 CPA — Certified Public Accountant
               </span>
               <span className="text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 text-white/60">
@@ -58,7 +58,7 @@ export default async function CPAPage() {
             <div className="flex flex-col sm:flex-row gap-4">
               <a href="https://www.eticpa.et/our-qualifications/" target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors"
-                style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '48px', width: '220px', boxSizing: 'border-box' }}>
+                style={{ backgroundColor: '#C9982A', color: '#0f2d1e', height: '48px', width: '220px', boxSizing: 'border-box' }}>
                 View on ETICPA website
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
               </a>
@@ -115,7 +115,7 @@ export default async function CPAPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {CPA_PATHWAY.map((step) => (
               <div key={step.step} className="rounded-xl p-6 border" style={{ borderColor: '#d1e8db', backgroundColor: '#f0f7f4' }}>
-                <p className="font-display text-3xl font-bold mb-3" style={{ color: '#C9982A' }}><span translate="no">{step.step}</span></p>
+                <p className="font-display text-3xl font-bold mb-3" style={{ color: '#88671c' }}><span translate="no">{step.step}</span></p>
                 <p className="text-sm font-semibold text-navy-950 mb-2">{step.title}</p>
                 <p className="text-xs text-slate-500 leading-relaxed">{step.desc}</p>
               </div>
@@ -131,7 +131,7 @@ export default async function CPAPage() {
           <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full opacity-10" style={{ backgroundColor: '#C9982A', filter: 'blur(80px)' }} />
         </div>
         <div className="container-site relative z-10 text-center max-w-2xl mx-auto">
-          <span className="eyebrow mb-4 block" style={{ color: '#C9982A' }}>Start your journey now</span>
+          <span className="eyebrow mb-4 block text-gold-400">Start your journey now</span>
           <h2 className="font-display text-4xl text-white mb-4 leading-tight">
             Begin with the ATQ qualification
           </h2>
@@ -141,7 +141,7 @@ export default async function CPAPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/study/eticpa/atq/level-1"
               className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors"
-              style={{ backgroundColor: '#C9982A', color: '#1A4731', height: '48px', width: '220px', boxSizing: 'border-box' }}>
+              style={{ backgroundColor: '#C9982A', color: '#0f2d1e', height: '48px', width: '220px', boxSizing: 'border-box' }}>
               Start ATQ Level 1
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
             </Link>

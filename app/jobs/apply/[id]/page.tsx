@@ -40,7 +40,7 @@ export default async function ApplyToJobPage({
       <section className="py-16">
         <div className="container-site max-w-2xl mx-auto">
           <div className="bg-white rounded-2xl border border-slate-200 p-8 md:p-10">
-            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#2dd4bf' }}>Hiring Direct</span>
+            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#0b7b71' }}>Hiring Direct</span>
             <h1 className="font-display text-navy-950 text-2xl md:text-3xl mt-2 mb-1" style={{ letterSpacing: '-0.02em' }}>
               {job.title}
             </h1>

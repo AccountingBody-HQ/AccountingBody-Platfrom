@@ -153,7 +153,7 @@ export default async function GetHelpPage() {
           <div className="max-w-5xl mx-auto px-6">
             <div className="max-w-3xl">
               <nav className="flex items-center gap-2 text-sm mb-6">
-                <a href="/" style={{ color: '#C9982A' }}>Home</a>
+                <a href="/" style={{ color: '#e8b030' }}>Home</a>
                 <span className="text-green-200 mx-1">›</span>
                 <span className="text-green-200">Our Services</span>
               </nav>
@@ -166,13 +166,13 @@ export default async function GetHelpPage() {
               <div className="flex flex-col sm:flex-row items-stretch gap-3">
                 <a href="/wa" target="_blank" rel="noopener noreferrer"
                   className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 text-sm font-bold rounded-xl hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>
+                  style={{ backgroundColor: '#C9982A', color: '#0f2d1e' }}>
                   Talk to us on WhatsApp
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                 </a>
                 <a href="#services"
                   className="sm:flex-1 inline-flex items-center justify-center h-13 px-7 text-sm font-semibold rounded-xl transition-all hover:opacity-90 whitespace-nowrap"
-                  style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}>
+                  style={{ border: '2px solid #C9982A', color: '#e8b030', background: 'transparent' }}>
                   View all services
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                 </a>
@@ -428,7 +428,7 @@ export default async function GetHelpPage() {
                 <span style={{ opacity: 0.7 }}>accounting & finance</span><br />
                 talent?
               </h2>
-              <p className="text-base leading-relaxed mb-8 max-w-lg" style={{ color: 'rgba(12,26,61,0.75)' }}>
+              <p className="text-base leading-relaxed mb-8 max-w-lg" style={{ color: 'rgba(12,26,61,0.9)' }}>
                 Accounting Body places vetted accounting and finance professionals in permanent and contract roles. Submit a hiring brief — we search our candidate pool, manage every introduction, and guarantee every placement for 90 days.
               </p>
               <div className="flex flex-col gap-3 mb-10">

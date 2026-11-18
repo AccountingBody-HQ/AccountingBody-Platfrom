@@ -63,7 +63,7 @@ const values = [
 
 const qualifications = [
   { name: 'ACCA',  detail: '13 papers covered',  accent: 'border-[#004B8D] text-[#004B8D]', bg: 'bg-[#004B8D]/5' },
-  { name: 'CIMA',  detail: 'Full pathway',        accent: 'border-[#0081C6] text-[#0081C6]', bg: 'bg-[#0081C6]/5' },
+  { name: 'CIMA',  detail: 'Full pathway',        accent: 'border-[#0081C6] text-[#0369a1]', bg: 'bg-[#0081C6]/5' },
   { name: 'AAT',   detail: 'Levels 2–4',          accent: 'border-[#00857A] text-[#00857A]', bg: 'bg-[#00857A]/5' },
   { name: 'ICAEW', detail: 'ACA pathway',         accent: 'border-navy-600  text-navy-700',  bg: 'bg-navy-50' },
 ]
