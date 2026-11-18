@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import type { Job, EmploymentType, SeniorityLevel, ActiveJobCountry } from '@/lib/jobs'
@@ -193,9 +193,11 @@ function CheckboxRow({ label, checked, onChange }: { label: string; checked: boo
 }
 
 function FilterSection({ title, children }: { title: string; children: React.ReactNode }) {
+  // A named group per filter section; useId keeps ids unique when the panel renders twice (sidebar + drawer).
+  const titleId = useId()
   return (
-    <div className="py-4 border-b border-slate-100 last:border-b-0">
-      <h3 className="text-[10px] font-bold uppercase tracking-widest mb-3 text-slate-400" style={{ letterSpacing: '0.08em' }}>{title}</h3>
+    <div role="group" aria-labelledby={titleId} className="py-4 border-b border-slate-100 last:border-b-0">
+      <h3 id={titleId} className="text-[10px] font-bold uppercase tracking-widest mb-3 text-slate-400" style={{ letterSpacing: '0.08em' }}>{title}</h3>
       {children}
     </div>
   )
@@ -207,6 +209,7 @@ function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
   onClear: () => void
   countryOptions: CountryOption[]
 }) {
+  const remoteLabelId = useId()
   return (
     <div>
       <FilterSection title="Country">
@@ -286,11 +289,12 @@ function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
 
       <FilterSection title="Remote">
         <label className="flex items-center justify-between cursor-pointer">
-          <span className="text-sm text-slate-700">Remote only</span>
+          <span id={remoteLabelId} className="text-sm text-slate-700">Remote only</span>
           <button
             type="button"
             role="switch"
             aria-checked={filters.remoteOnly}
+            aria-labelledby={remoteLabelId}
             onClick={() => onChange({ ...filters, remoteOnly: !filters.remoteOnly })}
             className={`relative w-10 h-6 rounded-full transition-colors ${filters.remoteOnly ? 'bg-gold-500' : 'bg-slate-200'}`}
           >

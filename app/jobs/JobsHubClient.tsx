@@ -80,7 +80,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
               onChange={e => setRole(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleSearch() }}
               aria-label="Job title, role or keyword" placeholder="Job title, role or keyword"
-              className="flex-1 px-5 py-4 text-base border-none focus-visible:-outline-offset-2 min-w-0"
+              className="flex-1 px-5 py-4 text-base border-none focus-visible:-outline-offset-4 min-w-0"
               autoComplete="off"
             />
             <div
@@ -93,7 +93,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
               onChange={e => setLocation(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleSearch() }}
               aria-label="City or country" placeholder="City or country"
-              className="flex-1 px-5 py-4 text-base border-none focus-visible:-outline-offset-2 min-w-0"
+              className="flex-1 px-5 py-4 text-base border-none focus-visible:-outline-offset-4 min-w-0"
               autoComplete="off"
             />
             <button

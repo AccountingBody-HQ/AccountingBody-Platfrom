@@ -119,6 +119,32 @@ describe('keyboard focus (A11-F4)', () => {
     expect(src).not.toMatch(/ring-gold-/)
   })
 
+  it('inset focus frames leave a light gap inside the field edge (A11-F5)', () => {
+    // An inset outline of 2px at offset -1/-2 touches the element edge; next to a dark hero it reads as the
+    // field shrinking. Inset frames use -outline-offset-4 or more so a light gap remains.
+    // Pinned: the newsletter field in EmailSignupForm sits on a white card, not a dark hero (left for review).
+    const PINNED: Record<string, number> = { 'components/EmailSignupForm.tsx': 1 }
+    const found: Record<string, number> = {}
+    for (const f of publicTsx) {
+      const n = (read(f).match(/(?<![\w-])(?:focus|focus-visible):-outline-offset-(?:1|2)(?![\w-])/g) || []).length
+      if (n) found[f] = n
+    }
+    expect(found).toEqual(PINNED)
+  })
+
+  it('search-bar submit buttons flush to a clipping edge use an inset frame (A11-F5)', () => {
+    // JobSearchHero: both forms are rounded overflow-hidden boxes and the submit button is flush to the edge,
+    // so an outside outline is clipped. The navy frame is drawn inside the gold button (6.5:1).
+    const src = read('app/jobs/listings/JobSearchHero.tsx')
+    const forms = src.split('<form').slice(1)
+    expect(forms.length).toBe(2)
+    for (const form of forms) {
+      expect(form.slice(0, form.indexOf('>'))).toMatch(/overflow-hidden/)
+      const btn = form.slice(form.indexOf('<button type="submit"'))
+      expect(btn.slice(0, btn.indexOf('>'))).toMatch(/focus-visible:-outline-offset-4/)
+    }
+  })
+
   it('the site logo links keep a visible focus indicator', () => {
     const nav = read('components/layout/Navigation.tsx')
     expect(nav).not.toMatch(/outline-none/)

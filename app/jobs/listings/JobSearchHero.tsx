@@ -76,7 +76,7 @@ export default function JobSearchHero() {
         </div>
         {/* Button */}
         <button type="submit"
-          className="flex items-center justify-center gap-2 font-bold transition-all active:scale-[0.98] shrink-0 px-10 text-navy-950"
+          className="flex items-center justify-center gap-2 font-bold transition-all active:scale-[0.98] shrink-0 px-10 text-navy-950 focus-visible:-outline-offset-4"
           style={{ background: 'linear-gradient(135deg, #C9982A 0%, #c8950e 100%)', fontSize: '15px', letterSpacing: '0.02em', minWidth: '180px' }}>
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="8.5" cy="8.5" r="6" /><line x1="13" y1="13" x2="18" y2="18" strokeLinecap="round" />
@@ -117,7 +117,7 @@ export default function JobSearchHero() {
         </div>
         {/* Button */}
         <button type="submit"
-          className="flex items-center justify-center gap-2.5 font-bold transition-all active:scale-[0.99] text-navy-950"
+          className="flex items-center justify-center gap-2.5 font-bold transition-all active:scale-[0.99] text-navy-950 focus-visible:-outline-offset-4"
           style={{ height: '60px', background: 'linear-gradient(135deg, #C9982A 0%, #c8950e 100%)', fontSize: '16px', letterSpacing: '0.02em' }}>
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="8.5" cy="8.5" r="6" /><line x1="13" y1="13" x2="18" y2="18" strokeLinecap="round" />
