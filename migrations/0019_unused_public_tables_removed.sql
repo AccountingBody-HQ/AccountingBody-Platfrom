@@ -1,0 +1,36 @@
+-- ============================================================================
+-- 0019_unused_public_tables_removed.sql
+-- Date: 17 Nov 2026
+--
+-- RECORD ONLY. Two changes, each ONE self-checking transaction, both
+-- APPLIED on 17 Nov 2026. Do not run this file: the guard below stops it.
+--
+-- After the retired areas went (0018), every public table was checked for
+-- rows, links, functions, views, policies, pg_cron jobs and code use
+-- (FINDINGS FJ, FK). The ones nothing used were removed. public now holds
+-- only the 25 tables the code uses.
+--
+-- 1. RM-5a (approval D225, applied D226 at 19:11:09 UTC, backup run
+--    44154781950 first): dropped 24 empty tables - activity_logs,
+--    ai_conversations, api_keys, api_usage, careerjet_cache, consent_logs,
+--    cost_of_living, cross_platform_sessions, data_changelog,
+--    data_export_requests, data_sources, deletion_requests, embeddings_index,
+--    exchange_rates, feature_flags, knowledge_base, notification_preferences,
+--    platform_conversions, promo_codes, referrals, search_queries,
+--    user_question_attempts, user_quiz_sessions, webhook_events.
+-- 2. RM-5b (approval D229, applied D230 at 20:18:20 UTC, backup run
+--    44166015430 first): dropped scheduled_jobs (3 rows), countries (23),
+--    profiles (2 rows, kept in a private before-image outside the
+--    repository; there were 0 sign-in accounts), notifications,
+--    platform_memberships and subscriptions (0 rows each) and
+--    schema_migrations (1 row); the functions has_active_subscription(text)
+--    and has_platform_membership(text); the empty links
+--    contact_submissions_user_id_fkey and help_requests_user_id_fkey (the
+--    user_id columns stay). The sign-up trigger on auth.users belongs to
+--    Supabase's auth area, which this role may not change, so the trigger
+--    stays and public.handle_new_user() now only returns NEW.
+--
+-- Undo (owner decision only): restore from the backup run named above
+-- (docs/RUNBOOK.md).
+
+DO $$ BEGIN RAISE EXCEPTION '0019 is a record of changes already applied on 17 Nov 2026 - do not run it'; END $$;

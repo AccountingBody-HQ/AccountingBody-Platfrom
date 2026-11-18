@@ -39,10 +39,8 @@ export async function canonicalMetadata(path: string) {
 // canonical_owner values this app actually knows how to serve, and the
 // site code (as written to articles.show_on_sites — see lib/site-codes.ts)
 // that must also be present before a cross-domain canonical is trusted.
-// 'hrlake' is a real, selectable canonical_owner value in the roodber8
-// content-factory UI today (app/roodber8/content-factory/page.tsx:737,758)
-// but has no deployed domain anywhere in this app — it must fall through
-// to the same-host branch below, never have a URL guessed for it.
+// Any other value (unknown, retired or mistyped) has no deployed domain
+// here: it falls through to the same-host branch below, never a guessed URL.
 const OWNER_URL: Record<string, string> = {
   accountingbody: AB_URL,
   ethiotax: ET_URL,
@@ -64,7 +62,7 @@ type CanonicalArticle = Pick<ArticleFull, 'slug' | 'category' | 'canonical_owner
 export function resolveArticleCanonicalUrl(article: CanonicalArticle, homeSiteUrl: string): string {
   // Cross-domain only when canonical_owner names a domain this app can
   // actually serve AND show_on_sites confirms the article is meant to be
-  // reachable there. Anything else (null, 'hrlake', a typo, or
+  // reachable there. Anything else (null, a retired value, a typo, or
   // canonical_owner/show_on_sites disagreeing) falls back to homeSiteUrl —
   // never guess a domain to send readers to.
   const owner = article.canonical_owner ?? undefined

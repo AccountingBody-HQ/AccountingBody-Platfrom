@@ -49,7 +49,7 @@ A change here can reach both sites, and markup changes can affect the Worker eve
 | `migrations/` | Numbered SQL record of database changes; read `migrations/README.md` first |
 | `middleware.ts` | Runs on every matched request. Never rename it |
 | `next.config.mjs` | Next.js config, redirects, Sentry wrapper |
-| `vercel.json` | Redirects, cron schedules, response headers |
+| `vercel.json` | Cron schedules and response headers (no redirects since owner decision D195; never add one here) |
 | `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`, `instrumentation.ts` | Error reporting set-up |
 | `tailwind.config.ts` | Design tokens |
 | `.github/workflows/ci.yml` | CI: lint, type check, tests, production build (placeholder configuration only) |
@@ -61,7 +61,7 @@ A change here can reach both sites, and markup changes can affect the Worker eve
 
 **Tests** sit beside the code they cover, as `*.test.ts`. Unit tests that do not belong beside one file live under `tests/unit/`.
 
-**Redirects** live in three places: `next.config.mjs`, `vercel.json` and `middleware.ts`. Check all three before adding or changing one.
+**Redirects** live in two places: `next.config.mjs` and `middleware.ts` (`vercel.json` holds none since owner decision D195; never add one there). Check both before adding or changing one.
 
 **Large files:** `app/page.tsx` and `lib/jobs.ts` are well over 800 lines, and so are several admin pages. Make targeted edits only; never rewrite a whole file.
 
