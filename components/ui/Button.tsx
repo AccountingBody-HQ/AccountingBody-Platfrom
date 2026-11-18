@@ -159,7 +159,7 @@ export const Button = React.forwardRef<HTMLButtonElement | HTMLAnchorElement, Bu
     const baseStyles = [
       'inline-flex items-center justify-center font-medium',
       'border transition-all duration-150',
-      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2',
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-950 focus-visible:ring-offset-2',
       'disabled:opacity-50 disabled:pointer-events-none',
       'select-none whitespace-nowrap group',
       !isLink && sizeStyles[size],
@@ -280,7 +280,7 @@ export function IconButton({
       className={[
         'inline-flex items-center justify-center',
         'border transition-all duration-150',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-950 focus-visible:ring-offset-2',
         'disabled:opacity-50 disabled:pointer-events-none',
         sizeMap[size],
         variantMap[variant],

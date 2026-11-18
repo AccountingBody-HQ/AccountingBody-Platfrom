@@ -163,22 +163,22 @@ export default function FindWorkManageClient({ isEthioTax: isEthioTaxProp }: { i
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Phone</label>
                   <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
-                    className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none" placeholder="Your phone number" style={{ borderColor: '#e2e8f0' }} />
+                    className="w-full border rounded-lg px-4 py-3 text-sm" placeholder="Your phone number" style={{ borderColor: '#e2e8f0' }} />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>LinkedIn URL</label>
                   <input type="url" value={form.linkedin_url} onChange={e => setForm({...form, linkedin_url: e.target.value})}
-                    className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none" placeholder="https://linkedin.com/in/..." style={{ borderColor: '#e2e8f0' }} />
+                    className="w-full border rounded-lg px-4 py-3 text-sm" placeholder="https://linkedin.com/in/..." style={{ borderColor: '#e2e8f0' }} />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>City</label>
                   <input type="text" value={form.location_city} onChange={e => setForm({...form, location_city: e.target.value})}
-                    className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none" placeholder="Current city" style={{ borderColor: '#e2e8f0' }} />
+                    className="w-full border rounded-lg px-4 py-3 text-sm" placeholder="Current city" style={{ borderColor: '#e2e8f0' }} />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Country</label>
                   <input type="text" value={form.location_country} onChange={e => setForm({...form, location_country: e.target.value})}
-                    className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none" placeholder="Current country" style={{ borderColor: '#e2e8f0' }} />
+                    className="w-full border rounded-lg px-4 py-3 text-sm" placeholder="Current country" style={{ borderColor: '#e2e8f0' }} />
                 </div>
               </div>
             </div>
@@ -197,7 +197,7 @@ export default function FindWorkManageClient({ isEthioTax: isEthioTaxProp }: { i
               <div>
                 <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Salary / Rate Expectation</label>
                 <input type="text" value={form.salary_expectation} onChange={e => setForm({...form, salary_expectation: e.target.value})}
-                  className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none" placeholder="e.g. £45,000 or £300/day" style={{ borderColor: '#e2e8f0' }} />
+                  className="w-full border rounded-lg px-4 py-3 text-sm" placeholder="e.g. £45,000 or £300/day" style={{ borderColor: '#e2e8f0' }} />
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-3" style={{ color: brand }}>Role Types Sought</label>
@@ -231,7 +231,7 @@ export default function FindWorkManageClient({ isEthioTax: isEthioTaxProp }: { i
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
               <h2 className="font-display text-xl mb-6" style={{ color: brand }}>Professional Biography</h2>
               <textarea value={form.biography} onChange={e => setForm({...form, biography: e.target.value})}
-                rows={8} className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none resize-none"
+                rows={8} className="w-full border rounded-lg px-4 py-3 text-sm resize-none"
                 placeholder="Update your professional biography..." style={{ borderColor: '#e2e8f0' }} />
             </div>
 

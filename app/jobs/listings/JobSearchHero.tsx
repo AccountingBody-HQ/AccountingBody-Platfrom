@@ -60,7 +60,7 @@ export default function JobSearchHero() {
           </svg>
           <input type="text" value={role} onChange={e => setRole(e.target.value)}
             aria-label="Job title, skills, keywords" placeholder="Job title, skills, keywords" autoComplete="off"
-            className="flex-1 min-w-0 bg-transparent outline-none text-navy-950 caret-gold-500" style={inputStyle} />
+            className="flex-1 min-w-0 bg-transparent text-navy-950 caret-gold-500" style={inputStyle} />
           {role && clearBtn(() => setRole(''), 'Clear role')}
         </div>
         {/* Location */}
@@ -71,7 +71,7 @@ export default function JobSearchHero() {
           </svg>
           <input type="text" value={location} onChange={e => setLocation(e.target.value)}
             aria-label="Location or remote" placeholder="Location or remote" autoComplete="off"
-            className="flex-1 min-w-0 bg-transparent outline-none text-navy-950 caret-gold-500" style={inputStyle} />
+            className="flex-1 min-w-0 bg-transparent text-navy-950 caret-gold-500" style={inputStyle} />
           {location && clearBtn(() => setLocation(''), 'Clear location')}
         </div>
         {/* Button */}
@@ -100,7 +100,7 @@ export default function JobSearchHero() {
           </svg>
           <input type="text" value={role} onChange={e => setRole(e.target.value)}
             aria-label="Job title, skills, keywords" placeholder="Job title, skills, keywords" autoComplete="off"
-            className="flex-1 min-w-0 bg-transparent outline-none text-navy-950 caret-gold-500" style={{ ...inputStyle, fontSize: '15px' }} />
+            className="flex-1 min-w-0 bg-transparent text-navy-950 caret-gold-500" style={{ ...inputStyle, fontSize: '15px' }} />
           {role && clearBtn(() => setRole(''), 'Clear role')}
         </div>
         {/* Location */}
@@ -112,7 +112,7 @@ export default function JobSearchHero() {
           </svg>
           <input type="text" value={location} onChange={e => setLocation(e.target.value)}
             aria-label="Location or remote" placeholder="Location or remote" autoComplete="off"
-            className="flex-1 min-w-0 bg-transparent outline-none text-navy-950 caret-gold-500" style={{ ...inputStyle, fontSize: '15px' }} />
+            className="flex-1 min-w-0 bg-transparent text-navy-950 caret-gold-500" style={{ ...inputStyle, fontSize: '15px' }} />
           {location && clearBtn(() => setLocation(''), 'Clear location')}
         </div>
         {/* Button */}

@@ -191,7 +191,7 @@ export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: b
           aria-label="Email address"
           placeholder="your@email.com"
           required
-          className="w-full h-13 px-4 rounded-lg text-base text-navy-950 placeholder:text-slate-400 focus:outline-none transition-all"
+          className="w-full h-13 px-4 rounded-lg text-base text-navy-950 placeholder:text-slate-400 focus-visible:-outline-offset-2 transition-all"
           style={{ backgroundColor: 'white', fontSize: '16px', WebkitAppearance: 'none', appearance: 'none', display: 'block' }}
         />
       </div>

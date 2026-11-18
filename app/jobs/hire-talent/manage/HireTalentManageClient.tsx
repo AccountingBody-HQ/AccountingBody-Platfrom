@@ -153,22 +153,22 @@ export default function HireTalentManageClient({ isEthioTax: isEthioTaxProp }: {
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Contact Phone</label>
                   <input type="tel" value={form.contact_phone} onChange={e => setForm({...form, contact_phone: e.target.value})}
-                    className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none" style={{ borderColor: '#e2e8f0' }} placeholder="Phone number" />
+                    className="w-full border rounded-lg px-4 py-3 text-sm" style={{ borderColor: '#e2e8f0' }} placeholder="Phone number" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Salary / Day Rate Budget</label>
                   <input type="text" value={form.salary_budget} onChange={e => setForm({...form, salary_budget: e.target.value})}
-                    className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none" style={{ borderColor: '#e2e8f0' }} placeholder="e.g. £50,000 or £350/day" />
+                    className="w-full border rounded-lg px-4 py-3 text-sm" style={{ borderColor: '#e2e8f0' }} placeholder="e.g. £50,000 or £350/day" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Target Start Date</label>
                   <input type="text" value={form.start_date} onChange={e => setForm({...form, start_date: e.target.value})}
-                    className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none" style={{ borderColor: '#e2e8f0' }} placeholder="e.g. ASAP or January 2027" />
+                    className="w-full border rounded-lg px-4 py-3 text-sm" style={{ borderColor: '#e2e8f0' }} placeholder="e.g. ASAP or January 2027" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Jurisdiction</label>
                   <select value={form.jurisdiction} onChange={e => setForm({...form, jurisdiction: e.target.value})}
-                    className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none" style={{ borderColor: '#e2e8f0' }}>
+                    className="w-full border rounded-lg px-4 py-3 text-sm" style={{ borderColor: '#e2e8f0' }}>
                     <option value="">Select jurisdiction</option>
                     {(isEthioTax ? jurisdictionOptionsET : jurisdictionOptionsAB).map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
@@ -181,19 +181,19 @@ export default function HireTalentManageClient({ isEthioTax: isEthioTaxProp }: {
               <div>
                 <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Role Description</label>
                 <textarea value={form.role_description} onChange={e => setForm({...form, role_description: e.target.value})}
-                  rows={6} className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none resize-none" style={{ borderColor: '#e2e8f0' }}
+                  rows={6} className="w-full border rounded-lg px-4 py-3 text-sm resize-none" style={{ borderColor: '#e2e8f0' }}
                   placeholder="Describe the role, responsibilities, and what success looks like." />
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Must-Haves</label>
                 <textarea value={form.must_haves} onChange={e => setForm({...form, must_haves: e.target.value})}
-                  rows={3} className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none resize-none" style={{ borderColor: '#e2e8f0' }}
+                  rows={3} className="w-full border rounded-lg px-4 py-3 text-sm resize-none" style={{ borderColor: '#e2e8f0' }}
                   placeholder="Non-negotiable requirements." />
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Nice-to-Haves</label>
                 <textarea value={form.nice_to_haves} onChange={e => setForm({...form, nice_to_haves: e.target.value})}
-                  rows={3} className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none resize-none" style={{ borderColor: '#e2e8f0' }}
+                  rows={3} className="w-full border rounded-lg px-4 py-3 text-sm resize-none" style={{ borderColor: '#e2e8f0' }}
                   placeholder="Desirable but not essential." />
               </div>
             </div>

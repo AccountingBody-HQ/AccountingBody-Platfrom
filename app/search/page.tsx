@@ -394,7 +394,7 @@ function SearchInner() {
                   {FILTERS.map(f => (
                     <button key={f.id} type="button" onClick={() => setActiveType(f.id)}
                       aria-pressed={activeType === f.id}
-                      className={`flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-medium border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 ${
+                      className={`flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-medium border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-950 ${
                         activeType === f.id
                           ? 'bg-navy-950 text-white border-navy-950'
                           : 'bg-white text-slate-600 border-slate-200 hover:border-navy-300 hover:text-navy-700'
@@ -419,7 +419,7 @@ function SearchInner() {
                   {jobs.length > 0 && (
                     <button type="button" onClick={() => setActiveType('jobs')}
                       aria-pressed={activeType === 'jobs'}
-                      className={`flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-medium border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 ${
+                      className={`flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-medium border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-950 ${
                         activeType === 'jobs'
                           ? 'bg-navy-950 text-white border-navy-950'
                           : 'bg-white text-slate-600 border-slate-200 hover:border-navy-300 hover:text-navy-700'

@@ -217,9 +217,15 @@
   }
 
   /* ── Focus Visible ────────────────────────────────────────── */
+  /* Two-tone indicator: a white halo next to the element and a navy outline
+     outside it, so one layer reaches 3:1 on white, tinted, navy, green and gold
+     surfaces. The halo goes through Tailwind's ring variable so elements with
+     shadow utilities keep it; the outline stays in forced-colors mode. */
   :focus-visible {
-    outline: 2px solid var(--color-gold-500);
-    outline-offset: 3px;
+    outline: 2px solid var(--color-navy-950);
+    outline-offset: 2px;
+    --tw-ring-offset-shadow: 0 0 0 2px #ffffff;
+    box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow, 0 0 #0000);
     border-radius: var(--radius-sm);
   }
 

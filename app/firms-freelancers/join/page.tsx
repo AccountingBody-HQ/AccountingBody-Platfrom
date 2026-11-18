@@ -215,7 +215,7 @@ export default function JoinNetworkPage() {
                           <label className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.practice_name ? '#88671c' : '#0C1A3D' }}>Firm Name *</label>
                           {fieldErrors.practice_name && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your firm name.</p>}
                           <input type="text" value={form.practice_name} onChange={(e) => { setForm({ ...form, practice_name: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, practice_name: false })) }}
-                            className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" placeholder="Your firm name"
+                            className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent" placeholder="Your firm name"
                             style={{ borderColor: fieldErrors.practice_name ? '#C9982A' : '' }} />
                         </div>
                       )}
@@ -223,7 +223,7 @@ export default function JoinNetworkPage() {
                         <label className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.practice_type ? '#88671c' : '#0C1A3D' }}>{applicantType === 'firm' ? 'Practice Type *' : 'Professional Role *'}</label>
                         {fieldErrors.practice_type && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select an option.</p>}
                         <select value={form.practice_type} onChange={(e) => { setForm({ ...form, practice_type: e.target.value }); if (e.target.value) setFieldErrors(prev => ({ ...prev, practice_type: false })) }}
-                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent bg-white"
+                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent bg-white"
                           style={{ borderColor: fieldErrors.practice_type ? '#C9982A' : '' }}>
                           <option value="">Select</option>
                           {(applicantType === 'firm' ? firmTypes : independentTypes).map((t) => <option key={t} value={t}>{t}</option>)}
@@ -235,14 +235,14 @@ export default function JoinNetworkPage() {
                         <label className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.contact_name ? '#88671c' : '#0C1A3D' }}>{applicantType === 'firm' ? 'Primary Contact Name *' : 'Full Name *'}</label>
                         {fieldErrors.contact_name && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter a name.</p>}
                         <input type="text" value={form.contact_name} onChange={(e) => { setForm({ ...form, contact_name: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, contact_name: false })) }}
-                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" placeholder="Full name"
+                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent" placeholder="Full name"
                           style={{ borderColor: fieldErrors.contact_name ? '#C9982A' : '' }} />
                       </div>
                       <div ref={emailRef}>
                         <label className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.email ? '#88671c' : '#0C1A3D' }}>Email Address *</label>
                         {fieldErrors.email && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter a valid email address.</p>}
                         <input type="email" value={form.email} onChange={(e) => { setForm({ ...form, email: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, email: false })) }}
-                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" placeholder="you@example.com"
+                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent" placeholder="you@example.com"
                           style={{ borderColor: fieldErrors.email ? '#C9982A' : '' }} />
                       </div>
                     </div>
@@ -250,26 +250,26 @@ export default function JoinNetworkPage() {
                       <div>
                         <label className="block text-sm font-semibold text-navy-950 mb-2">Phone Number</label>
                         <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" placeholder="Optional" />
+                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent" placeholder="Optional" />
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-navy-950 mb-2">{applicantType === 'firm' ? 'Firm Website' : 'LinkedIn or Website'}</label>
                         <input type="url" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })}
-                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" placeholder="https://" />
+                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent" placeholder="https://" />
                       </div>
                     </div>
                     <div ref={locationRef}>
                       <label className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.location ? '#88671c' : '#0C1A3D' }}>Location / Country *</label>
                       {fieldErrors.location && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your location.</p>}
                       <input type="text" value={form.location} onChange={(e) => { setForm({ ...form, location: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, location: false })) }}
-                        className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" placeholder="e.g. London, UK / Johannesburg, South Africa / New York, USA"
+                        className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent" placeholder="e.g. London, UK / Johannesburg, South Africa / New York, USA"
                         style={{ borderColor: fieldErrors.location ? '#C9982A' : '' }} />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-semibold text-navy-950 mb-2">Years of Experience</label>
                         <select value={form.years_of_experience} onChange={(e) => setForm({ ...form, years_of_experience: e.target.value })}
-                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent bg-white">
+                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent bg-white">
                           <option value="">Select</option>
                           <option value="0-2 years">0–2 years</option>
                           <option value="3-5 years">3–5 years</option>
@@ -281,7 +281,7 @@ export default function JoinNetworkPage() {
                         <div>
                           <label className="block text-sm font-semibold text-navy-950 mb-2">Languages Spoken</label>
                           <input type="text" value={form.languages} onChange={(e) => setForm({ ...form, languages: e.target.value })}
-                            className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                            className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder={isEthioTax ? "e.g. English, Amharic, Afaan Oromoo" : "e.g. English, French, Spanish"} />
                         </div>
                       )}
@@ -420,7 +420,7 @@ export default function JoinNetworkPage() {
                       <p className="text-xs font-semibold" style={{ color: '#88671c' }}>Please complete this field to continue.</p>
                     )}
                     <textarea rows={5} value={form.about} onChange={(e) => { setForm({ ...form, about: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, about: false })) }}
-                      className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                      className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                       placeholder={applicantType === 'firm'
                         ? 'e.g. We are a mid-sized accounting firm based in Johannesburg with 12 qualified professionals specialising in audit, tax, and advisory services for SMEs...'
                         : 'e.g. I am an ACCA-qualified accountant with 8 years of experience in financial reporting and tax compliance, having worked with clients across the UK and Nigeria...'} />

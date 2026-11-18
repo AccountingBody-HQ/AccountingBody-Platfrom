@@ -171,7 +171,7 @@ export function QuestionTypeButtons({
             onClick={() => onSelect?.(config.id)}
             className={[
               'group flex items-center gap-2 rounded-lg border-2 transition-all duration-150',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-1',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-950 focus-visible:ring-offset-1',
               isCompact ? 'px-3 py-1.5' : layout === 'grid' ? 'flex-col px-3 py-4' : 'px-3 py-2',
               isActive
                 ? `${config.accent} bg-opacity-5 ${config.bg.replace('hover:', '')} shadow-sm`
@@ -219,7 +219,7 @@ export function QuestionTypeButtons({
               href={`/articles/${topicSlug}/${config.id}`}
               className={[
                 'group flex items-center gap-2 rounded-lg border-2 transition-all duration-150 no-underline',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-1',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-950 focus-visible:ring-offset-1',
                 isCompact ? 'px-3 py-1.5' : layout === 'grid' ? 'flex-col items-center px-3 py-4' : 'px-3 py-2',
                 isActive
                   ? `${config.accent} shadow-sm`
@@ -330,7 +330,7 @@ export function QuestionTypeGrid({
               onMouseLeave={() => setHovered(null)}
               className={[
                 'group relative text-left p-5 rounded-xl border-2 transition-all duration-200',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-950 focus-visible:ring-offset-2',
                 isActive
                   ? `${config.accent} bg-white shadow-md`
                   : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm',
@@ -350,7 +350,7 @@ export function QuestionTypeGrid({
             onMouseLeave={() => setHovered(null)}
             className={[
               'group relative block p-5 rounded-xl border-2 transition-all duration-200 no-underline',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-950 focus-visible:ring-offset-2',
               isActive
                 ? `${config.accent} bg-white shadow-md`
                 : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm',
@@ -395,7 +395,7 @@ export function QuestionTypeTabs({
             className={[
               'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold',
               'transition-all duration-150',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-950',
               isActive
                 ? 'bg-white text-navy-950 shadow-xs'
                 : 'text-slate-500 hover:text-navy-950',

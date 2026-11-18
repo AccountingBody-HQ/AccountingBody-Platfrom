@@ -185,7 +185,7 @@ function CheckboxRow({ label, checked, onChange }: { label: string; checked: boo
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="w-4 h-4 rounded border-slate-300 text-gold-600 focus:ring-gold-400 focus:ring-offset-0 cursor-pointer"
+        className="w-4 h-4 rounded border-slate-300 text-gold-600 focus:ring-navy-950 focus:ring-offset-0 cursor-pointer"
       />
       <span className="text-sm text-navy-700 group-hover:text-navy-950 transition-colors">{label}</span>
     </label>
@@ -215,7 +215,7 @@ function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
             value={filters.locationCountry}
             onChange={e => onChange({ ...filters, locationCountry: e.target.value })}
             aria-label="Country"
-            className="w-full h-10 pl-3 pr-8 rounded-lg border border-slate-200 text-sm font-medium text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white appearance-none cursor-pointer"
+            className="w-full h-10 pl-3 pr-8 rounded-lg border border-slate-200 text-sm font-medium text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white appearance-none cursor-pointer"
           >
             {countryOptions.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -269,7 +269,7 @@ function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
             aria-label="Minimum salary"
             value={filters.salaryMin}
             onChange={e => onChange({ ...filters, salaryMin: e.target.value })}
-            className="w-full min-w-0 h-10 px-3 rounded-lg border border-slate-200 text-sm text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-400"
+            className="w-full min-w-0 h-10 px-3 rounded-lg border border-slate-200 text-sm text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-navy-950"
           />
           <span className="text-slate-400 text-sm shrink-0">–</span>
           <input
@@ -279,7 +279,7 @@ function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
             aria-label="Maximum salary"
             value={filters.salaryMax}
             onChange={e => onChange({ ...filters, salaryMax: e.target.value })}
-            className="w-full min-w-0 h-10 px-3 rounded-lg border border-slate-200 text-sm text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-gold-400"
+            className="w-full min-w-0 h-10 px-3 rounded-lg border border-slate-200 text-sm text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-navy-950"
           />
         </div>
       </FilterSection>
@@ -308,7 +308,7 @@ function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
                 name="posted-within"
                 checked={filters.postedWithin === opt.value}
                 onChange={() => onChange({ ...filters, postedWithin: opt.value })}
-                className="w-4 h-4 border-slate-300 text-gold-600 focus:ring-gold-400 cursor-pointer"
+                className="w-4 h-4 border-slate-300 text-gold-600 focus:ring-navy-950 cursor-pointer"
               />
               <span className="text-sm text-navy-700 group-hover:text-navy-950 transition-colors">{opt.label}</span>
             </label>
@@ -526,7 +526,7 @@ function JobCard({ job, saved, pending, onSave }: {
       <Link
         href={`/jobs/${job.slug}`}
         aria-label={`${job.title} at ${job.company_name}`}
-        className="absolute inset-0 z-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
+        className="absolute inset-0 z-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-950"
       />
 
       {/* Header: avatar + title + bookmark */}
@@ -988,7 +988,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                             value={sortMenuValue(sortBy, activeSearch)}
                             onChange={e => navigateToState({ ...urlState, sortBy: e.target.value as SortBy, page: DEFAULT_PAGE })}
                             aria-label="Sort by"
-                            className="h-10 pl-3 pr-8 rounded-lg border border-slate-200 text-sm font-medium text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-400 bg-white appearance-none cursor-pointer"
+                            className="h-10 pl-3 pr-8 rounded-lg border border-slate-200 text-sm font-medium text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white appearance-none cursor-pointer"
                           >
                             {SORT_OPTIONS.map(opt => (
                               <option key={opt.value} value={opt.value}>{opt.label}</option>

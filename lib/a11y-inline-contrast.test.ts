@@ -151,6 +151,12 @@ describe('inline colour contrast (A11-F3)', () => {
     expect(src).not.toMatch(/color: brand, background: 'transparent'/)
   })
 
+  it('muted text on the home page gold recruitment band stays readable (navy or dark green at 0.9)', () => {
+    // A11-F4: rgba(12,26,61,0.75) on #C9982A is 4.35:1; at 0.9 it is 5.69:1 (navy) and 4.86:1 (dark green).
+    const src = read('app/page.tsx')
+    expect(src).not.toMatch(/color:[^,}]*rgba\((?:12,26,61|15,45,30),0\.(?:[1-7]\d?|8[0-4]?)\)/)
+  })
+
   it('gold text on the light job and firm sign-up pages uses the text gold #88671c', () => {
     const files = [
       'app/firms-freelancers/join/page.tsx',

@@ -142,7 +142,7 @@ const NAV_BUTTON_CLASS =
   'border-2 border-navy-950 bg-navy-950 text-sm font-semibold transition-colors ' +
   'hover:bg-navy-900 hover:border-navy-900 ' +
   'disabled:pointer-events-none disabled:border-slate-200 disabled:bg-slate-50 ' +
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gold-500'
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-navy-950'
 
 // `target` is the page Previous/Next would go to, or null at a boundary
 // (see prevPageTarget/nextPageTarget). In onChange mode that null just
@@ -217,7 +217,7 @@ function NavButton({
 // a coincidence of one browser's default <button> rendering.
 const PAGE_BUTTON_BASE =
   'inline-flex items-center justify-center min-w-[44px] h-11 px-2 rounded-lg text-sm transition-colors ' +
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gold-500'
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-navy-950'
 
 // The current page is never marked by colour alone: it also gets a solid
 // fill (vs. the others' outline), a heavier weight, and a visibly thicker
@@ -278,7 +278,7 @@ function GoButton() {
     <button
       type="submit"
       aria-label="Go to page"
-      className="min-w-[44px] h-11 px-4 rounded-lg border-2 border-navy-950 bg-navy-950 text-sm font-semibold transition-colors hover:bg-navy-900 hover:border-navy-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gold-500 inline-flex items-center justify-center gap-1.5"
+      className="min-w-[44px] h-11 px-4 rounded-lg border-2 border-navy-950 bg-navy-950 text-sm font-semibold transition-colors hover:bg-navy-900 hover:border-navy-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-navy-950 inline-flex items-center justify-center gap-1.5"
     >
       <span style={{ color }}>Go</span>
       <GoIcon color={color} />
@@ -397,7 +397,7 @@ export function Pagination({
           value={jumpValue}
           onChange={e => setJumpValue(e.target.value)}
           placeholder={String(page)}
-          className="w-20 h-11 px-2 rounded-lg border border-slate-200 text-sm text-navy-950 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gold-500"
+          className="w-20 h-11 px-2 rounded-lg border border-slate-200 text-sm text-navy-950 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-navy-950"
         />
         <GoButton />
       </form>

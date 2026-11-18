@@ -274,14 +274,14 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
                     <label className="block text-sm font-semibold text-navy-950 mb-1.5">Full Name *</label>
                     <input required type="text" value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
+                      className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition-all"
                       placeholder="Your full name" />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-navy-950 mb-1.5">Email Address *</label>
                     <input required type="email" value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
+                      className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition-all"
                       placeholder="you@example.com" />
                   </div>
                 </div>
@@ -290,7 +290,7 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
                     <label className="block text-sm font-semibold text-navy-950 mb-1.5">Phone Number</label>
                     <input type="tel" value={form.phone}
                       onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
+                      className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition-all"
                       placeholder="Optional" />
                   </div>
                   <div>
@@ -303,7 +303,7 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
                   <label className="block text-sm font-semibold text-navy-950 mb-1.5">Tell us more about what you need *</label>
                   <textarea required rows={5} value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all resize-none"
+                    className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition-all resize-none"
                     placeholder="Please describe your situation, the scope of work required, and any relevant deadlines or jurisdictions..." />
                 </div>
                 {status === 'error' && (
