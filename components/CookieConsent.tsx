@@ -1,122 +1,144 @@
 // components/CookieConsent.tsx
-// UK GDPR compliant cookie consent — centred modal style
+// Cookie banner (CC-1, owner decision D245): a small, non-blocking region at the bottom of the page with
+// two equal choices. Nothing is shown on the server; the stored choice is read after mount. Google Tag
+// Manager and Google AdSense load only through lib/consent.ts, and only after "Accept cookies".
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import Link from 'next/link'
+import {
+  applyConsent,
+  clearGoogleCookies,
+  readConsent,
+  subscribeConsent,
+  thirdPartyLoaded,
+  writeConsent,
+  type ConsentChoice,
+} from '@/lib/consent'
 
-const CONSENT_KEY = 'ab_cookie_consent'
-type ConsentValue = 'accepted' | 'declined'
+type Props = { gtmId: string; adsenseId: string; isEthioTax: boolean }
+type Mode = 'first' | 'settings' | null
 
-function loadGTM(gtmId: string) {
-  if (!gtmId || typeof window === 'undefined') return
-  const w = window as Window & { __gtm_loaded?: boolean; dataLayer?: unknown[] }
-  if (w.__gtm_loaded) return
-  w.__gtm_loaded = true
-  w.dataLayer = w.dataLayer || []
-  w.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' })
-  const script = document.createElement('script')
-  script.async = true
-  script.src = `https://www.googletagmanager.com/gtm.js?id=${gtmId}`
-  document.head.appendChild(script)
-}
-
-export default function CookieConsent({ gtmId }: { gtmId: string }) {
-  const [visible, setVisible] = useState(false)
+export default function CookieConsent({ gtmId, adsenseId, isEthioTax }: Props) {
+  const [mode, setMode] = useState<Mode>(null)
+  const [current, setCurrent] = useState<ConsentChoice | null>(null)
+  const ref = useRef<HTMLDivElement>(null)
+  const titleRef = useRef<HTMLParagraphElement>(null)
+  const returnTo = useRef<HTMLElement | null>(null)
+  const brand = isEthioTax ? 'EthioTax' : 'Accounting Body'
 
   useEffect(() => {
-    const stored = localStorage.getItem(CONSENT_KEY) as ConsentValue | null
-    if (stored === 'accepted') {
-      loadGTM(gtmId)
-    } else if (!stored) {
-      const timer = setTimeout(() => setVisible(true), 1000)
-      return () => clearTimeout(timer)
+    const stored = readConsent()
+    setCurrent(stored)
+    if (stored) applyConsent(stored, { gtmId, adsenseId })
+    else setMode('first')
+    return subscribeConsent((e) => {
+      if (e !== 'open') return
+      returnTo.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+      setCurrent(readConsent())
+      setMode('settings')
+    })
+  }, [gtmId, adsenseId])
+
+  // Opened from "Cookie settings" (a user action): move focus to the banner title. Never on page load.
+  useEffect(() => {
+    if (mode === 'settings') titleRef.current?.focus()
+  }, [mode])
+
+  // While the banner shows, keep its height free at the bottom of the page (app/globals.css).
+  useEffect(() => {
+    const el = ref.current
+    if (!mode || !el) return
+    const root = document.documentElement
+    const set = () => root.style.setProperty('--consent-height', `${Math.ceil(el.getBoundingClientRect().height)}px`)
+    set()
+    root.setAttribute('data-consent-open', '')
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(set) : null
+    ro?.observe(el)
+    return () => {
+      ro?.disconnect()
+      root.removeAttribute('data-consent-open')
+      root.style.removeProperty('--consent-height')
     }
-  }, [gtmId])
+  }, [mode])
 
-  function handleAccept() {
-    localStorage.setItem(CONSENT_KEY, 'accepted')
-    setVisible(false)
-    loadGTM(gtmId)
+  function moveFocusOut() {
+    if (!ref.current?.contains(document.activeElement)) return
+    const back = mode === 'settings' ? returnTo.current : null
+    const target = back && back.isConnected ? back : document.getElementById('main-content')
+    target?.focus({ preventScroll: true })
   }
 
-  function handleDecline() {
-    localStorage.setItem(CONSENT_KEY, 'declined')
-    setVisible(false)
+  function choose(choice: ConsentChoice) {
+    writeConsent(choice)
+    setCurrent(choice)
+    if (choice === 'accepted') {
+      applyConsent('accepted', { gtmId, adsenseId })
+    } else {
+      clearGoogleCookies()
+      // Code already loaded in this page cannot be unloaded: start a clean page without it.
+      if (thirdPartyLoaded()) {
+        window.location.reload()
+        return
+      }
+    }
+    moveFocusOut()
+    setMode(null)
   }
 
-  if (!visible) return null
+  function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    // Escape closes the banner only when it was re-opened from settings (a choice is already stored).
+    if (e.key !== 'Escape' || mode !== 'settings') return
+    e.preventDefault()
+    moveFocusOut()
+    setMode(null)
+  }
+
+  if (!mode) return null
+
+  const buttonClass = `w-full min-h-[44px] rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors ${
+    isEthioTax ? 'bg-[#1A4731] hover:bg-[#0f2d1e]' : 'bg-navy-950 hover:bg-navy-800'
+  }`
 
   return (
-    <>
-      {/* ── Backdrop ── */}
-      <div className="fixed inset-0 z-50 bg-navy-950/60 backdrop-blur-sm" />
-
-      {/* ── Modal ── */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
-
-          {/* Gold top bar */}
-          <div className="h-1 w-full bg-gold-500" />
-
-          <div className="p-8">
-            {/* Icon + Title */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-navy-50 flex items-center justify-center shrink-0">
-                <svg className="w-5 h-5 text-navy-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeWidth="2"
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
-              </div>
-              <h2 className="font-display text-lg text-navy-950">
-                Your privacy matters
-              </h2>
-            </div>
-
-            {/* Body text */}
-            <p className="text-sm text-slate-500 leading-relaxed mb-2">
-              We use cookies to understand how you use AccountingBody and to improve
-              your experience. We never sell your data.
+    <div
+      ref={ref}
+      id="cookie-banner"
+      role="region"
+      aria-labelledby="cookie-banner-title"
+      onKeyDown={onKeyDown}
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white shadow-[0_-6px_20px_-4px_rgba(12,26,61,0.15)]"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+    >
+      <div className="container-wide py-4 lg:flex lg:items-center lg:gap-8">
+        <div className="lg:flex-1">
+          <p id="cookie-banner-title" ref={titleRef} tabIndex={-1} className="text-sm font-semibold text-navy-950">
+            Cookies on {brand}
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-slate-700">
+            We only use what is needed to run this site unless you accept.{' '}
+            {adsenseId
+              ? 'If you accept, we also use analytics and advertising cookies to understand how the site is used and to show ads.'
+              : 'If you accept, we also use analytics cookies to understand how the site is used.'}{' '}
+            <Link
+              href="/cookie-policy"
+              className="font-medium text-navy-950 underline underline-offset-2 hover:text-navy-700"
+            >
+              Read our cookie policy
+            </Link>
+          </p>
+          {mode === 'settings' && current && (
+            <p className="mt-1 text-sm text-slate-700">
+              Your current choice: {current === 'accepted' ? 'accepted' : 'rejected'}.
             </p>
-            <p className="text-sm text-slate-500 leading-relaxed mb-6">
-              Under UK GDPR, we need your consent before loading any analytics.{' '}
-              <Link
-                href="/cookie-policy"
-                className="text-navy-700 hover:text-gold-600 underline underline-offset-2 transition-colors"
-              >
-                Read our cookie policy
-              </Link>
-            </p>
-
-            {/* Buttons */}
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={handleAccept}
-                className="w-full h-12 rounded-xl text-sm font-semibold bg-navy-950 text-white hover:bg-navy-800 transition-colors"
-              >
-                Accept cookies
-              </button>
-              <button
-                onClick={handleDecline}
-                className="w-full h-12 rounded-xl text-sm font-medium text-slate-600 border border-slate-200 hover:border-slate-400 hover:text-slate-800 transition-all"
-              >
-                Decline non-essential cookies
-              </button>
-            </div>
-
-            {/* Fine print */}
-            <p className="text-xs text-slate-400 text-center mt-4 leading-relaxed">
-              You can change your preference at any time in our{' '}
-              <Link href="/privacy-policy" className="underline hover:text-slate-600 transition-colors">
-                privacy policy
-              </Link>
-            </p>
-          </div>
-
+          )}
+        </div>
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:mt-0 lg:w-[30rem] lg:shrink-0">
+          <button type="button" onClick={() => choose('accepted')} className={buttonClass}>Accept cookies</button>
+          <button type="button" onClick={() => choose('declined')} className={buttonClass}>Reject non-essential cookies</button>
         </div>
       </div>
-    </>
+    </div>
   )
 }

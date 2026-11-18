@@ -842,3 +842,10 @@ font { display: inline !important; }
   margin-top: 0.5rem;
   font-style: italic;
 }
+
+/* Cookie banner (CC-1): only while it shows, keep its height free so it never covers the focused item,
+   the end of the page or the bars pinned to the bottom (job apply bar, course bar, back to top). */
+html[data-consent-open] { scroll-padding-bottom: var(--consent-height, 0px); }
+html[data-consent-open] body { padding-bottom: var(--consent-height, 0px); }
+html[data-consent-open] .fixed.bottom-0:not(#cookie-banner),
+html[data-consent-open] .fixed.bottom-\[80px\] { translate: 0 calc(-1 * var(--consent-height, 0px)); }
