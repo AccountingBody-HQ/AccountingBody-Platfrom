@@ -89,7 +89,28 @@ export function thirdPartyLoaded(): boolean {
   return !!(w.__gtm_loaded || w.__ads_loaded)
 }
 
-const GOOGLE_COOKIE = /^(_ga|_ga_.+|_gid|_gat.*|_gcl_.+|__gads|__gpi|__eoi)$/
+/**
+ * How far to scroll the page down so a focused item sits `gap` px above the banner (WCAG 2.2 SC 2.4.11).
+ * Never moves the item's top above `topLimit` (the bottom of the fixed header): an item taller than the
+ * free area ends with its top just below the header. Returns 0 when the item is clear or nothing helps.
+ */
+export function focusScrollDelta(rect: { top: number; bottom: number }, bannerTop: number, topLimit: number, gap = 8): number {
+  if (rect.bottom <= rect.top || rect.bottom <= bannerTop) return 0
+  const room = rect.top - topLimit
+  if (room <= 0) return 0
+  return Math.ceil(Math.min(rect.bottom - bannerTop + gap, room))
+}
+
+/** True when the element or an ancestor is fixed or sticky: scrolling the page does not move it. */
+export function isPinned(el: Element): boolean {
+  for (let n: Element | null = el; n && n.nodeType === 1; n = n.parentElement) {
+    const p = getComputedStyle(n).position
+    if (p === 'fixed' || p === 'sticky') return true
+  }
+  return false
+}
+
+const GOOGLE_COOKIE =/^(_ga|_ga_.+|_gid|_gat.*|_gcl_.+|__gads|__gpi|__eoi)$/
 
 /** Remove first-party Google analytics and ad cookies (on this host and its parent domain). */
 export function clearGoogleCookies(): string[] {

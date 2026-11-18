@@ -201,6 +201,63 @@ describe('the footer "Cookie settings" control (components/layout/Footer.tsx)', 
   })
 })
 
+// RV-66 (WCAG 2.2 SC 2.4.11): while the banner shows, an item reached with the keyboard is moved out from
+// under it. The browser's own focus scroll can leave a tall item partly behind the banner.
+describe('focused items are not hidden behind the banner (lib/consent.ts)', () => {
+  it('works out how far to scroll so the item sits just above the banner', async () => {
+    const { focusScrollDelta } = await freshModule()
+    // [top, bottom, bannerTop, topLimit] -> delta
+    const cases: Array<[number, number, number, number, number]> = [
+      [100, 140, 773, 64, 0], // clear of the banner
+      [700, 773, 773, 64, 0], // touches the top of the banner only
+      [740, 780, 773, 64, 15], // 7 px behind: 7 + 8 px gap
+      [800, 840, 773, 64, 75], // wholly behind
+      [283, 564, 563, 64, 9], // tall card, 1 px behind
+      [352, 633, 563, 64, 78], // tall card, 70 px behind
+      [100, 700, 563, 64, 36], // taller than the free area: top stops just below the header
+      [64, 700, 563, 64, 0], // already at the header: nothing more can help
+      [30, 700, 563, 64, 0], // under the header: never pushed further up
+      [740, 740, 773, 64, 0], // no height
+    ]
+    for (const [top, bottom, bt, limit, want] of cases) {
+      expect(focusScrollDelta({ top, bottom }, bt, limit)).toBe(want)
+    }
+  })
+
+  it('treats items in a fixed or sticky layer as pinned', async () => {
+    const { isPinned } = await freshModule()
+    type N = { nodeType: number; parentElement: N | null; pos: string }
+    const node = (pos: string, parentElement: N | null = null): N => ({ nodeType: 1, parentElement, pos })
+    const style = (n: unknown) => ({ position: (n as N).pos }) as CSSStyleDeclaration
+    vi.stubGlobal('getComputedStyle', style)
+    const body = node('static')
+    expect(isPinned(node('static', node('relative', body)) as unknown as Element)).toBe(false)
+    expect(isPinned(node('static', node('fixed', body)) as unknown as Element)).toBe(true)
+    expect(isPinned(node('static', node('sticky', body)) as unknown as Element)).toBe(true)
+    expect(isPinned(node('fixed') as unknown as Element)).toBe(true)
+  })
+})
+
+describe('the banner moves keyboard focus out from under itself (components/CookieConsent.tsx)', () => {
+  const src = read('components/CookieConsent.tsx')
+  const effect = src.slice(src.indexOf("addEventListener('focusin'") - 1600, src.indexOf("removeEventListener('focusin'") + 80)
+  it('listens for focus only while the banner shows and stops when it closes', () => {
+    expect((src.match(/document\.addEventListener\('focusin', onFocusIn\)/g) || []).length).toBe(1)
+    expect((src.match(/document\.removeEventListener\('focusin', onFocusIn\)/g) || []).length).toBe(1)
+    expect(effect).toMatch(/if \(!mode \|\| !banner\) return/)
+    expect(effect).toMatch(/return \(\) => \{\s*cancelAnimationFrame\(raf\)\s*document\.removeEventListener\('focusin', onFocusIn\)/)
+  })
+  it('skips the banner itself, mouse focus and pinned items, and scrolls instantly', () => {
+    expect(effect).toContain('banner.contains(el)')
+    expect(effect).toContain(":focus-visible")
+    expect(effect).toContain('isPinned(el)')
+    expect(effect).toContain('focusScrollDelta(')
+    expect(effect).toContain("window.scrollBy({ top: delta, behavior: 'instant' })")
+    expect(effect).toContain('requestAnimationFrame(')
+    expect(src).not.toMatch(/scrollIntoView|behavior: 'smooth'/)
+  })
+})
+
 describe('space kept for the banner (app/globals.css)', () => {
   const css = read('app/globals.css')
   it('reserves space and lifts bottom-pinned bars only while the banner shows', () => {

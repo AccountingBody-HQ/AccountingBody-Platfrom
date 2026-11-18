@@ -10,6 +10,8 @@ import Link from 'next/link'
 import {
   applyConsent,
   clearGoogleCookies,
+  focusScrollDelta,
+  isPinned,
   readConsent,
   subscribeConsent,
   thirdPartyLoaded,
@@ -60,6 +62,40 @@ export default function CookieConsent({ gtmId, adsenseId, isEthioTax }: Props) {
       ro?.disconnect()
       root.removeAttribute('data-consent-open')
       root.style.removeProperty('--consent-height')
+    }
+  }, [mode])
+
+  // While the banner shows, an item reached with the keyboard must not be left behind it (WCAG 2.2 SC 2.4.11).
+  // After the browser's own focus scroll has started, move the page just enough to show the item above the
+  // banner. Items in the banner, mouse focus and items in fixed or sticky layers are left alone.
+  useEffect(() => {
+    const banner = ref.current
+    if (!mode || !banner) return
+    let raf = 0
+    const check = (el: HTMLElement, again: boolean) => {
+      if (!el.isConnected || document.activeElement !== el) return
+      const topLimit = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0
+      const delta = focusScrollDelta(el.getBoundingClientRect(), banner.getBoundingClientRect().top, topLimit)
+      if (delta > 0) window.scrollBy({ top: delta, behavior: 'instant' })
+      else if (again) raf = requestAnimationFrame(() => check(el, false))
+    }
+    const onFocusIn = (e: FocusEvent) => {
+      const el = e.target
+      if (!(el instanceof HTMLElement) || banner.contains(el)) return
+      let keyboard = true
+      try {
+        keyboard = el.matches(':focus-visible')
+      } catch {
+        // Older browsers without :focus-visible: treat as keyboard focus.
+      }
+      if (!keyboard || isPinned(el)) return
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => check(el, true))
+    }
+    document.addEventListener('focusin', onFocusIn)
+    return () => {
+      cancelAnimationFrame(raf)
+      document.removeEventListener('focusin', onFocusIn)
     }
   }, [mode])
 
