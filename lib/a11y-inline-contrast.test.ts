@@ -9,7 +9,7 @@ const root = process.cwd()
 const read = (p: string) => readFileSync(join(root, p), 'utf8')
 
 function lum(hex: string): number {
-  const h = hex.length === 4 ? '#' + [...hex.slice(1)].map((c) => c + c).join('') : hex
+  const h = hex.length === 4 ? '#' + hex.slice(1).split('').map((c) => c + c).join('') : hex
   const c = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255)
   const f = (x: number) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)
   return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2])
