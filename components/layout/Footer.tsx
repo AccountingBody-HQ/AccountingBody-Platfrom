@@ -615,7 +615,7 @@ export function Footer({
                 Accounting Body — jobs, placement and practice for accounting and finance professionals.
               </p>
             </div>
-            <nav className="flex flex-wrap items-center gap-x-4 gap-y-1.5 shrink-0" aria-label="Legal navigation">
+            <nav className="footer-legal-nav flex flex-wrap items-center gap-x-4 gap-y-1.5 shrink-0" aria-label="Legal navigation">
               {legalLinks.map(link => (
                 <Link
                   key={link.href}

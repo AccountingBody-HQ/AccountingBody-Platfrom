@@ -110,7 +110,7 @@ export function isPinned(el: Element): boolean {
   return false
 }
 
-const GOOGLE_COOKIE =/^(_ga|_ga_.+|_gid|_gat.*|_gcl_.+|__gads|__gpi|__eoi)$/
+const GOOGLE_COOKIE = /^(_ga|_ga_.+|_gid|_gat.*|_gcl_.+|__gads|__gpi|__eoi)$/
 
 /** Remove first-party Google analytics and ad cookies (on this host and its parent domain). */
 export function clearGoogleCookies(): string[] {

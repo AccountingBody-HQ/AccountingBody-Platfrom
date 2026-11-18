@@ -849,3 +849,14 @@ html[data-consent-open] { scroll-padding-bottom: var(--consent-height, 0px); }
 html[data-consent-open] body { padding-bottom: var(--consent-height, 0px); }
 html[data-consent-open] .fixed.bottom-0:not(#cookie-banner),
 html[data-consent-open] .fixed.bottom-\[80px\] { translate: 0 calc(-1 * var(--consent-height, 0px)); }
+/* Bars stuck to the bottom (quiz action bar) stick just above the banner instead of under or over it. */
+html[data-consent-open] .sticky.bottom-0 { bottom: var(--consent-height, 0px); }
+/* The lg sticky sidebars scroll with the page while the banner shows, so a focused link in them can be
+   moved above the banner like any other item; they are sticky again once a choice is made. */
+html[data-consent-open] .lg\:sticky { position: static; }
+
+/* Footer legal row (CC-2): from lg up, keep the end of the row clear of the fixed "Back to top" button
+   (24px from the edge, 44px wide), only at widths where the container edge is closer than that. */
+@media (min-width: 1024px) {
+  .footer-legal-nav { padding-right: max(0px, calc(3rem - max(0px, (100vw - 90rem) / 2))); }
+}
