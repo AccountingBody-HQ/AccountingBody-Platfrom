@@ -578,7 +578,7 @@ This will permanently delete the course and all its chapters and lessons. This c
           <div className="pt-2 space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#475569' }}>Publish To</p>
             <div className="flex gap-2 flex-wrap">
-              {['accountingbody', 'ethiotax', 'hrlake'].map(site => (
+              {['accountingbody', 'ethiotax'].map(site => (
                 <button
                   key={site}
                   onClick={() => setShowOnSites(prev =>
@@ -598,7 +598,7 @@ This will permanently delete the course and all its chapters and lessons. This c
             <div className="space-y-1 pt-1">
               <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#475569' }}>Canonical Owner</p>
               <div className="flex gap-2 flex-wrap">
-                {['accountingbody', 'ethiotax', 'hrlake'].map(site => (
+                {['accountingbody', 'ethiotax'].map(site => (
                   <button
                     key={site}
                     onClick={() => setCanonical(site)}

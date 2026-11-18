@@ -614,7 +614,7 @@ export default function GenerateQuestionsPage() {
             <h2 className="text-white font-bold text-sm mb-1">Show On Sites</h2>
             <p className="text-xs mb-4" style={{ color: '#334155' }}>AccountingBody is required.</p>
             <div className="grid grid-cols-3 gap-3">
-              {['accountingbody', 'hrlake', 'ethiotax'].map(site => (
+              {['accountingbody', 'ethiotax'].map(site => (
                 <button key={site}
                   onClick={() => {
                     const isEticpa = config.qualification.startsWith('ETICPA')
@@ -636,7 +636,7 @@ export default function GenerateQuestionsPage() {
             <h2 className="text-white font-bold text-sm mb-1">Canonical Owner</h2>
             <p className="text-xs mb-4" style={{ color: '#334155' }}>Which site owns the SEO for this content?</p>
             <div className="grid grid-cols-3 gap-3">
-              {['accountingbody', 'hrlake', 'ethiotax'].map(site => (
+              {['accountingbody', 'ethiotax'].map(site => (
                 <button key={site} onClick={() => setCanonical(site)} className="rounded-xl p-4 text-left transition-all"
                   style={canonical === site ? { background: 'rgba(16,185,129,0.12)', border: '1px solid #10b981', color: '#ffffff' } : C.idle}>
                   <div className="flex items-center justify-between">

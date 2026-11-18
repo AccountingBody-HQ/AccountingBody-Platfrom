@@ -738,7 +738,7 @@ export default function ContentFactoryPage() {
                 <h2 className="text-white font-bold text-sm mb-1">Show On Sites</h2>
                 <p className="text-xs mb-4" style={{ color: '#334155' }}>Which platforms should display this content? Select all that apply.</p>
                 <div className="grid grid-cols-3 gap-3">
-                  {['accountingbody', 'hrlake', 'ethiotax'].map(site => (
+                  {['accountingbody', 'ethiotax'].map(site => (
                     <button key={site}
                       onClick={() => {
                         setShowOnSites(prev => prev.includes(site) ? prev.filter(s => s !== site) : [...prev, site])
@@ -759,7 +759,7 @@ export default function ContentFactoryPage() {
                 <h2 className="text-white font-bold text-sm mb-1">Canonical Owner</h2>
                 <p className="text-xs mb-4" style={{ color: '#334155' }}>Which site owns the SEO ranking for this content?</p>
                 <div className="grid grid-cols-3 gap-3">
-                  {['accountingbody', 'hrlake', 'ethiotax'].map(site => (
+                  {['accountingbody', 'ethiotax'].map(site => (
                     <button key={site} onClick={() => setCanonical(site)}
                       className="rounded-xl p-4 text-left transition-all"
                       style={canonical === site

@@ -1,0 +1,42 @@
+-- ============================================================================
+-- 0017_anon_form_policies_and_truncate.sql
+-- Date: 17 Nov 2026
+--
+-- RECORD ONLY. APPLIED on 17 Nov 2026 at 13:04 UTC (13:03:57-13:04:02, one
+-- transaction). Do not run this file: the guard below stops it. The undo is
+-- at the end.
+--
+-- What: removed the 6 public INSERT rules (role anon, check true) on the
+-- four form tables - contact_submissions ("Public can insert contact
+-- submissions"), email_subscribers ("Public can insert email subscribers"),
+-- firms_applications ("Allow public insert on firms_applications", "Public
+-- can insert firms applications") and help_requests ("Allow public insert
+-- on help_requests", "Public can insert help requests"); took TRUNCATE away
+-- from anon and authenticated on every public table (52 objects each), and
+-- for tables postgres creates later.
+--
+-- Why: the forms write with the server key, so these rules only let anyone
+-- with the public key write or empty those tables directly (FINDINGS FD,
+-- FE). No rows changed.
+--
+-- Owner approval: D215. Applied: D216 (backup run 44087198242 first).
+-- Known limit: tables created by supabase_admin still give TRUNCATE to
+-- anon/authenticated through that role's default privileges; re-check after
+-- any new table.
+
+DO $$ BEGIN RAISE EXCEPTION '0017 is a record of a change already applied on 17 Nov 2026 - do not run it'; END $$;
+
+-- What ran (for the record):
+-- DROP POLICY "Public can insert contact submissions" ON public.contact_submissions;
+-- DROP POLICY "Public can insert email subscribers" ON public.email_subscribers;
+-- DROP POLICY "Allow public insert on firms_applications" ON public.firms_applications;
+-- DROP POLICY "Public can insert firms applications" ON public.firms_applications;
+-- DROP POLICY "Allow public insert on help_requests" ON public.help_requests;
+-- DROP POLICY "Public can insert help requests" ON public.help_requests;
+-- REVOKE TRUNCATE ON ALL TABLES IN SCHEMA public FROM anon, authenticated;
+-- ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE TRUNCATE ON TABLES FROM anon, authenticated;
+
+-- Undo (owner decision only):
+-- CREATE POLICY "<name>" ON public.<table> FOR INSERT TO anon WITH CHECK (true);  -- once per policy above
+-- GRANT TRUNCATE ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+-- ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT TRUNCATE ON TABLES TO anon, authenticated;

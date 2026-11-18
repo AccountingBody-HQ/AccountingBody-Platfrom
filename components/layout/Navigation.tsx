@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { LanguageSwitcher, MobileLangSwitcher } from './LanguageSwitcher'
 import { JOBS_NAV, ET_JOBS_NAV } from './nav-data'
+import { nextOpenSection, shouldCloseOnFocusOut } from '@/lib/nav-disclosure'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -696,6 +697,14 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                   className="relative"
                   onMouseEnter={() => handleMouseEnter(section.id)}
                   onMouseLeave={handleMouseLeave}
+                  onKeyDown={e => {
+                    if (e.key !== 'Escape' || !isActive) return
+                    setActiveDropdown(null)
+                    e.currentTarget.querySelector<HTMLButtonElement>('[data-menu-toggle]')?.focus()
+                  }}
+                  onBlur={e => {
+                    if (shouldCloseOnFocusOut(isActive, e.currentTarget, e.relatedTarget)) setActiveDropdown(null)
+                  }}
                 >
                   <div className={[
                     'flex items-center rounded-lg transition-colors duration-150',
@@ -724,11 +733,11 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                     </Link>
                     <button
                       type="button"
-                      onClick={() => setActiveDropdown(isActive ? null : section.id)}
+                      data-menu-toggle
+                      onClick={e => setActiveDropdown(nextOpenSection(activeDropdown, section.id, e.detail))}
                       className="flex items-center pr-2 py-2 text-navy-950 hover:text-navy-700"
                       aria-label={`${section.label} menu`}
                       aria-expanded={isActive}
-                      aria-haspopup="true"
                     >
                       <ChevronDown open={isActive} />
                     </button>
