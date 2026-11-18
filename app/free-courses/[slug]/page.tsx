@@ -74,7 +74,7 @@ export default async function FreeCoursesSlugPage({ params }: { params: Promise<
               {firstLesson ? (
                 <Link href={`/free-courses/${course.slug}/learn/${firstLesson.slug}`}
                   className="sm:flex-1 inline-flex items-center justify-center gap-2 h-13 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors shadow-gold">
-                  Start Course
+                  Start Course<span className="sr-only">: {course.title}</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                 </Link>
               ) : (

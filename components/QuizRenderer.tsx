@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useId } from 'react'
 import QuizProgress from './QuizProgress'
 import ExplanationRenderer from './ExplanationRenderer'
 
@@ -92,6 +92,12 @@ export default function QuizRenderer({ quizJson }: Props) {
   const [session, setSession]     = useState(0)
   const [showWarning, setShowWarning] = useState(false)
   const actionBarRef = useRef<HTMLDivElement>(null)
+  const submitBtnRef = useRef<HTMLButtonElement>(null)
+  const goBackRef = useRef<HTMLButtonElement>(null)
+  const warnTitleId = useId()
+
+  // The unanswered-questions dialog takes keyboard focus while open.
+  useEffect(() => { if (showWarning) goBackRef.current?.focus() }, [showWarning])
 
   const buildSession = useCallback((data: QuizData) => {
     const qtype = (data.question_type ?? 'mcq').toLowerCase()
@@ -224,6 +230,11 @@ export default function QuizRenderer({ quizJson }: Props) {
         )}
       </div>
 
+      {/* One polite live region per quiz: announces the score once, when the answers are submitted. */}
+      <p className="sr-only" aria-live="polite">
+        {submitted && gradedTotal > 0 ? `${correct}/${gradedTotal} correct — ${pct}%` : ''}
+      </p>
+
       {!submitted && (
         <QuizProgress current={answeredCount} total={selected.length} answered={answeredCount} />
       )}
@@ -314,7 +325,8 @@ export default function QuizRenderer({ quizJson }: Props) {
           {/* Warning dialog */}
           {showWarning && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-              <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6" role="alertdialog" aria-modal="true" aria-labelledby={warnTitleId}
+                onKeyDown={e => { if (e.key === 'Escape') { setShowWarning(false); submitBtnRef.current?.focus() } }}>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
                     <svg className="w-5 h-5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -322,14 +334,15 @@ export default function QuizRenderer({ quizJson }: Props) {
                     </svg>
                   </div>
                   <div>
-                    <p className="font-semibold text-navy-950">Unanswered questions</p>
+                    <p id={warnTitleId} className="font-semibold text-navy-950">Unanswered questions</p>
                     <p className="text-sm text-slate-500">{selected.length - answeredCount} question{selected.length - answeredCount !== 1 ? 's' : ''} left unanswered.</p>
                   </div>
                 </div>
                 <p className="text-sm text-slate-600 mb-6">You can still submit, but unanswered questions will be marked as incorrect. Are you sure you want to continue?</p>
                 <div className="flex gap-3">
                   <button
-                    onClick={() => setShowWarning(false)}
+                    ref={goBackRef}
+                    onClick={() => { setShowWarning(false); submitBtnRef.current?.focus() }}
                     className="flex-1 h-10 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:border-navy-300 transition-colors"
                   >
                     Go back
@@ -352,6 +365,7 @@ export default function QuizRenderer({ quizJson }: Props) {
                   : <span className="text-teal-600 font-medium">All questions answered — ready to submit!</span>}
               </p>
               <button
+                ref={submitBtnRef}
                 onClick={handleSubmitClick}
                 className="h-11 px-7 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors whitespace-nowrap"
               >
@@ -396,6 +410,8 @@ function QuestionItem({ entry, index, submitted, answers, writing, revealed, set
   const userLabel    = opts.find(o => o.value === userVal)?.label ?? userVal ?? ''
   const isCorrect    = submitted && !isWriting && userLabel.trim().toLowerCase() === correctLabel.trim().toLowerCase()
   const isWrong      = submitted && !isWriting && !!userVal && !isCorrect
+  const stemId       = useId()
+  const explId       = useId()
 
   return (
     <div className={`p-6 rounded-xl border transition-all ${
@@ -410,7 +426,7 @@ function QuestionItem({ entry, index, submitted, answers, writing, revealed, set
         <span className="w-7 h-7 rounded-full bg-navy-950 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
           {index + 1}
         </span>
-        <p className="text-sm font-semibold text-navy-950 leading-snug flex-1">{q.question}</p>
+        <p id={stemId} className="text-sm font-semibold text-navy-950 leading-snug flex-1">{q.question}</p>
       </div>
 
       {/* WRITING TYPE */}
@@ -420,6 +436,7 @@ function QuestionItem({ entry, index, submitted, answers, writing, revealed, set
             <p className="text-sm text-slate-600 mb-3 italic">{q.writing.prompt}</p>
           )}
           <textarea
+            aria-labelledby={stemId}
             rows={5}
             value={writing[id] ?? ''}
             onChange={e => setWriting(id, e.target.value)}
@@ -457,7 +474,8 @@ function QuestionItem({ entry, index, submitted, answers, writing, revealed, set
 
       {/* MCQ / SCENARIO OPTIONS */}
       {!isWriting && (
-        <div className="ml-10 space-y-2">
+        <div className="ml-10 space-y-2" role="group" aria-labelledby={stemId}
+          aria-describedby={submitted && q.explanation ? explId : undefined}>
           {opts.map((opt, oi) => {
             const isSelected  = userVal === opt.value
             const isThisRight = submitted && opt.label.trim().toLowerCase() === correctLabel.trim().toLowerCase()
@@ -467,6 +485,7 @@ function QuestionItem({ entry, index, submitted, answers, writing, revealed, set
                 key={oi}
                 onClick={() => setAnswer(id, opt.value)}
                 disabled={submitted}
+                aria-pressed={isSelected}
                 className={`w-full text-left px-4 py-3 rounded-lg border text-sm transition-all ${
                   isThisRight  ? 'bg-teal-50 border-teal-400 text-teal-800 font-semibold' :
                   isThisWrong  ? 'bg-red-50 border-red-400 text-red-800' :
@@ -475,7 +494,7 @@ function QuestionItem({ entry, index, submitted, answers, writing, revealed, set
                 }`}
               >
                 <span className="flex items-center gap-3">
-                  <span translate="no" className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 text-xs font-bold ${
+                  <span translate="no" aria-hidden={isThisRight || isThisWrong ? true : undefined} className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 text-xs font-bold ${
                     isThisRight ? 'bg-teal-600 border-teal-600 text-white' :
                     isThisWrong ? 'bg-red-500 border-red-500 text-white' :
                     isSelected  ? 'bg-navy-950 border-navy-950 text-white' :
@@ -484,6 +503,8 @@ function QuestionItem({ entry, index, submitted, answers, writing, revealed, set
                     {isThisRight ? '✓' : isThisWrong ? '✗' : String.fromCharCode(65 + oi)}
                   </span>
                   {opt.label}
+                  {isThisRight && <span className="sr-only"> (correct answer)</span>}
+                  {submitted && isSelected && <span className="sr-only"> (your answer)</span>}
                 </span>
               </button>
             )
@@ -491,7 +512,7 @@ function QuestionItem({ entry, index, submitted, answers, writing, revealed, set
 
           {/* Explanation */}
           {submitted && q.explanation && (
-            <ExplanationRenderer explanation={q.explanation} dark={false} />
+            <ExplanationRenderer id={explId} explanation={q.explanation} dark={false} />
           )}
 
           {/* No answer warning */}

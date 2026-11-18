@@ -8,6 +8,8 @@
 interface Props {
   explanation: string
   dark?: boolean
+  /** Lets a quiz tie its answer group to this explanation (aria-describedby). */
+  id?: string
 }
 
 const SECTION_HEADINGS = [
@@ -152,7 +154,7 @@ const SECTION_CONFIG: Record<string, { label: string; accent: string; accentDark
   'KEY TAKEAWAY':                { label: 'Key Takeaway',         accent: '#C9982A', accentDark: '#C9982A', bg: 'rgba(212,160,23,0.08)',  bgDark: 'rgba(212,160,23,0.12)' },
 }
 
-export default function ExplanationRenderer({ explanation, dark = false }: Props) {
+export default function ExplanationRenderer({ explanation, dark = false, id }: Props) {
   if (!explanation?.trim()) return null
 
   const sections = parseSections(explanation)
@@ -160,7 +162,7 @@ export default function ExplanationRenderer({ explanation, dark = false }: Props
   // Fallback: if no sections parsed, render as plain text
   if (sections.length === 0) {
     return (
-      <div className="mt-3 p-4 rounded-xl border"
+      <div id={id} className="mt-3 p-4 rounded-xl border"
         style={{
           background: dark ? 'rgba(255,255,255,0.04)' : '#f8fafc',
           borderColor: dark ? 'rgba(255,255,255,0.08)' : '#e2e8f0'
@@ -174,7 +176,7 @@ export default function ExplanationRenderer({ explanation, dark = false }: Props
   }
 
   return (
-    <div className="mt-3 space-y-2">
+    <div id={id} className="mt-3 space-y-2">
       {sections.map((section, i) => {
         const cfg = SECTION_CONFIG[section.heading.toUpperCase()] ?? SECTION_CONFIG['OVERVIEW']
         const isKeyTakeaway = section.heading.toUpperCase() === 'KEY TAKEAWAY'

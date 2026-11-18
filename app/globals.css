@@ -151,6 +151,11 @@
     scroll-behavior: smooth;
   }
 
+  /* Keep focused and scrolled-to elements below the fixed header. */
+  html {
+    scroll-padding-top: var(--nav-height, 64px);
+  }
+
   body {
     font-family: var(--font-sans);
     font-size: 1rem;

@@ -7,6 +7,7 @@ import Link from 'next/link'
 import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 import { LINK_RETRY_HEADING, VERIFY_LINK_RETRY_TEXT, verifyLinkStatus } from '@/lib/message-rules'
 import { invalidProps, useFocusFirstInvalid, useFocusOnShow, useFormIds } from '@/lib/form-a11y'
+import FormErrorSummary from '@/components/FormErrorSummary'
 
 declare global {
   interface Window {
@@ -153,6 +154,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
     return 'idle'
   })
   const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({})
+  const [errorAttempt, setErrorAttempt] = useState(0)
   const ids = useFormIds()
   // The form scrolls itself (scrollTop), so focus moves without a second scroll.
   const [formRef, focusFirstInvalid] = useFocusFirstInvalid<HTMLFormElement>(true)
@@ -192,7 +194,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
 
   const handleNext = () => {
     const errors = validateStep(currentStep)
-    if (Object.keys(errors).length > 0) { setFieldErrors(errors); scrollTop(); focusFirstInvalid(); return }
+    if (Object.keys(errors).length > 0) { setFieldErrors(errors); setErrorAttempt(n => n + 1); scrollTop(); focusFirstInvalid(); return }
     setFieldErrors({})
     setCurrentStep(s => s + 1)
     scrollTop()
@@ -207,7 +209,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const errors = validateStep(5)
-    if (Object.keys(errors).length > 0) { setFieldErrors(errors); focusFirstInvalid(); return }
+    if (Object.keys(errors).length > 0) { setFieldErrors(errors); setErrorAttempt(n => n + 1); focusFirstInvalid(); return }
     setFieldErrors({})
     setStatus('loading')
     const token = personCheckToken
@@ -336,6 +338,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
 
                     <div ref={topRef} />
                     <ProgressBar currentStep={currentStep} brand={brand} />
+                    <FormErrorSummary show={Object.values(fieldErrors).some(Boolean)} attempt={errorAttempt} />
 
                     {/* HOW IT WORKS — step 1 only */}
                     {currentStep === 1 && (

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
 import ExplanationRenderer from './ExplanationRenderer'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -129,6 +129,7 @@ export default function QuizBankRenderer({ data }: Props) {
   const [revealed, setRevealed]       = useState<Record<string, boolean>>({})
   const [elapsed, setElapsed]         = useState(0)
   const [timerActive, setTimerActive] = useState(true)
+  const stemId = useId()
 
   // Use rawJson if present (bulk workflow), otherwise use structured questions
   const parsedRaw  = data.rawJson ? parseRawJson(data.rawJson) : []
@@ -442,7 +443,7 @@ export default function QuizBankRenderer({ data }: Props) {
             )}
 
             {/* Question text */}
-            <p className={`text-base font-semibold leading-snug mb-5 ${T.bodyText}`}>
+            <p id={stemId} className={`text-base font-semibold leading-snug mb-5 ${T.bodyText}`}>
               {q.questionText}
             </p>
 
@@ -450,6 +451,7 @@ export default function QuizBankRenderer({ data }: Props) {
             {q.type === 'writing' && (
               <div className="space-y-3">
                 <textarea
+                  aria-labelledby={stemId}
                   rows={5}
                   value={writing[q.id] ?? ''}
                   onChange={e => setWriting(prev => ({ ...prev, [q.id]: e.target.value }))}
@@ -491,7 +493,7 @@ export default function QuizBankRenderer({ data }: Props) {
 
             {/* ── MCQ / SCENARIO OPTIONS ─────────────────────────── */}
             {q.type !== 'writing' && q.options && (
-              <div className="space-y-2">
+              <div className="space-y-2" role="group" aria-labelledby={stemId}>
                 {q.options.map((opt, oi) => {
                   const isSelected  = answers[q.id] === opt
                   const isThisRight = submitted && oi === q.correctIndex
@@ -518,6 +520,7 @@ export default function QuizBankRenderer({ data }: Props) {
                       key={oi}
                       onClick={() => { if (!submitted) setAnswers(prev => ({ ...prev, [q.id]: opt })) }}
                       disabled={submitted}
+                      aria-pressed={isSelected}
                       className={`w-full text-left px-4 py-3 rounded-lg border text-sm transition-all duration-150 ${btnCls}`}
                     >
                       <span className="flex items-center gap-3">
@@ -525,6 +528,8 @@ export default function QuizBankRenderer({ data }: Props) {
                           {isThisRight ? '✓' : isThisWrong ? '✗' : String.fromCharCode(65 + oi)}
                         </span>
                         {opt}
+                        {isThisRight && <span className="sr-only"> (correct answer)</span>}
+                        {submitted && isSelected && <span className="sr-only"> (your answer)</span>}
                       </span>
                     </button>
                   )
@@ -556,7 +561,7 @@ export default function QuizBankRenderer({ data }: Props) {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2" d="M15 19l-7-7 7-7"/>
             </svg>
-            <span className="hidden sm:inline">Previous</span>
+            <span className="sr-only sm:not-sr-only">Previous</span>
           </button>
 
           {/* Centre: submit or status */}
@@ -586,7 +591,7 @@ export default function QuizBankRenderer({ data }: Props) {
             disabled={currentIdx === total - 1}
             className={`h-10 px-4 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${T.navBtn}`}
           >
-            <span className="hidden sm:inline">Next</span>
+            <span className="sr-only sm:not-sr-only">Next</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7"/>
             </svg>

@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import Link from 'next/link'
 import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 import { invalidProps, useFocusFirstInvalid, useFocusOnShow, useFormIds } from '@/lib/form-a11y'
+import FormErrorSummary from '@/components/FormErrorSummary'
 
 function scrollToRegister(e: React.MouseEvent) {
   e.preventDefault()
@@ -144,6 +145,7 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
   const [dataConsent, setDataConsent] = useState(false)
   const [status, setStatus] = useState<'idle'|'loading'|'success'|'error'>('idle')
   const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({})
+  const [errorAttempt, setErrorAttempt] = useState(0)
   const ids = useFormIds()
   const [formRef, focusFirstInvalid] = useFocusFirstInvalid<HTMLFormElement>()
   const successHeading = useFocusOnShow<HTMLHeadingElement>(status === 'success')
@@ -179,7 +181,7 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
 
   const handleNext = () => {
     const errors = validateStep(currentStep)
-    if (Object.keys(errors).length > 0) { setFieldErrors(errors); focusFirstInvalid(); return }
+    if (Object.keys(errors).length > 0) { setFieldErrors(errors); setErrorAttempt(n => n + 1); focusFirstInvalid(); return }
     setFieldErrors({})
     setCurrentStep(s => s + 1)
     scrollToForm()
@@ -194,7 +196,7 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const errors = validateStep(4)
-    if (Object.keys(errors).length > 0) { setFieldErrors(errors); focusFirstInvalid(); return }
+    if (Object.keys(errors).length > 0) { setFieldErrors(errors); setErrorAttempt(n => n + 1); focusFirstInvalid(); return }
     setStatus('loading')
     const payload = {
       full_name:         form.full_name.trim(),
@@ -269,6 +271,7 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
     <div ref={formTopRef}>
       <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
         <ProgressBar currentStep={currentStep} brand={brand} />
+        <FormErrorSummary show={Object.values(fieldErrors).some(Boolean)} attempt={errorAttempt} />
 
         {currentStep === 1 && (
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6">

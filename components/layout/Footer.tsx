@@ -282,9 +282,9 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
       <p className="text-xs font-semibold text-white/70 uppercase tracking-widest mb-3">
         Stay Updated
       </p>
-      <h3 className="font-display text-white text-lg mb-1.5">
+      <h2 className="font-display text-white text-lg mb-1.5">
         {isEthioTax ? 'Tax updates, exam tips & job alerts' : 'Jobs, placements & exam tips'}
-      </h3>
+      </h2>
       <p className="text-sm text-white/60 mb-4 leading-relaxed">
         {isEthioTax
           ? 'ERCA deadlines, ETICPA news, new practice question releases and finance job alerts. No spam, unsubscribe any time.'
@@ -460,7 +460,7 @@ export function Footer({
     title: 'Practice Questions',
     links: [
       { label: 'Practice Questions',        href: '/practice-questions' },
-      { label: 'Mock Exams',                href: '/mock-exams/acca' },
+      { label: 'Mock Exams',                href: '/mock-exams' },
       { label: 'Accounting Dictionary',     href: '/dictionary' },
       { label: 'Accounting Glossary',       href: '/glossary' },
     ],
@@ -564,9 +564,9 @@ export function Footer({
           <div className="lg:col-span-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
             {(isEthioTax ? [jobsColumn, professionalsColumn, studyColumn, companyColumn] : [jobsColumn, practiceQuestionsColumn, studyColumn, servicesColumn]).map(column => (
               <div key={column.title}>
-                <h4 className="text-xs font-semibold text-white/70 uppercase tracking-widest mb-4">
+                <h3 className="text-xs font-semibold text-white/70 uppercase tracking-widest mb-4">
                   {column.title}
-                </h4>
+                </h3>
                 <ul className="space-y-2.5">
                   {column.links.map(link => (
                     <li key={link.href}>

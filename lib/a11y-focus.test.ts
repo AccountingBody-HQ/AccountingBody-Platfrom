@@ -82,8 +82,7 @@ describe('keyboard focus (A11-F4)', () => {
     // outline-none is allowed only with a focus ring in the same class string.
     // Allowed exceptions, one each:
     // - app/layout.tsx: the skip-link target <main tabIndex={-1}> receives programmatic focus only.
-    // - components/HeroSearch.tsx: the search input's wrapper draws the focus border (focus-within).
-    const ALLOWED: Record<string, number> = { 'app/layout.tsx': 1, 'components/HeroSearch.tsx': 1 }
+    const ALLOWED: Record<string, number> = { 'app/layout.tsx': 1 }
     const found: Record<string, number> = {}
     for (const f of publicTsx) {
       const src = read(f)

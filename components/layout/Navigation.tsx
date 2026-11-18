@@ -11,6 +11,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { LanguageSwitcher, MobileLangSwitcher } from './LanguageSwitcher'
 import { JOBS_NAV, ET_JOBS_NAV } from './nav-data'
 import { nextOpenSection, shouldCloseOnFocusOut } from '@/lib/nav-disclosure'
+import { useDialogFocus } from '@/lib/use-dialog-focus'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -348,6 +349,8 @@ function MegaMenu({ section, onClose, rightAlign }: { section: NavSection; onClo
 // ── Mobile nav ────────────────────────────────────────────────────────────────
 function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: boolean; onClose: () => void; onSearch: () => void; sections: NavSection[]; isEthioTax?: boolean }) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
+  const drawerRef = useRef<HTMLDivElement>(null)
+  useDialogFocus(open, drawerRef, onClose)
 
   return (
     <>
@@ -369,6 +372,8 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
         role="dialog"
         aria-modal="true"
         aria-label="Mobile navigation"
+        ref={drawerRef}
+        inert={!open}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
