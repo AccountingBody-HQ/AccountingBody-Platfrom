@@ -4,51 +4,67 @@ import Link from 'next/link'
 import { headers } from 'next/headers'
 import { canonicalMetadata } from '@/lib/canonical'
 
+// One brand switch for the page and its metadata (the brand is keyed on the x-et-platform request header).
+async function brand() {
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  return {
+    isEthioTax,
+    platformName: isEthioTax ? 'EthioTax' : 'Accounting Body',
+    domain: isEthioTax ? 'ethiotax.com' : 'accountingbody.com',
+  }
+}
+
 export async function generateMetadata(): Promise<Metadata> {
+  const { platformName } = await brand()
   return {
     title: 'Accessibility Statement',
-    description: 'Accounting Body is committed to making its website accessible to everyone. Read our accessibility statement.',
+    description: `${platformName} accessibility statement: the standard we aim to meet, what we have done, known limitations and how to contact us.`,
     ...(await canonicalMetadata('/accessibility')),
   }
 }
 
 const standards = [
   {
-    title: 'Keyboard navigation',
-    body: 'All interactive elements — links, buttons, and form fields — are fully accessible via keyboard. Focus states are clearly visible throughout the site.',
+    title: 'Skip link and page layout',
+    body: 'Every page has a "Skip to main content" link and one clear main area.',
   },
   {
-    title: 'Screen reader support',
-    body: 'We use semantic HTML, proper heading hierarchy, ARIA labels, and descriptive alt text to ensure the site works well with screen readers including NVDA, JAWS, and VoiceOver.',
+    title: 'Headings',
+    body: 'Pages use headings in order, so screen-reader users can move around the page easily.',
   },
   {
-    title: 'Colour contrast',
-    body: 'Text and interactive elements meet or exceed WCAG 2.1 AA contrast ratio requirements. We do not rely on colour alone to convey information.',
+    title: 'Keyboard use',
+    body: 'You can use the site with a keyboard, with a clear frame showing where you are. This includes the menus on phones.',
   },
   {
-    title: 'Responsive design',
-    body: 'Accounting Body works on all screen sizes from mobile to desktop. Text can be resized up to 200% without loss of content or functionality.',
+    title: 'Colours',
+    body: 'Text colours were changed so text is easier to read against its background.',
   },
   {
-    title: 'Forms and inputs',
-    body: 'All form fields have visible labels, clear error messages, and do not rely solely on placeholder text. Required fields are clearly marked.',
+    title: 'Forms',
+    body: 'Every field has a label, errors are explained, and the cursor moves to the first problem.',
   },
   {
-    title: 'Motion and animation',
-    body: 'Animations are subtle and functional. Users who prefer reduced motion will see minimal animation as we respect the prefers-reduced-motion media query.',
+    title: 'Quizzes and mock exams',
+    body: 'The answer you choose and your result are announced to screen readers.',
+  },
+  {
+    title: 'Links',
+    body: 'Links make sense on their own (for example "View all services", not just "View all").',
   },
 ]
 
 const known = [
-  'Some older PDF documents may not be fully accessible to screen readers. We are working to update these.',
-  'Some embedded third-party content (such as video players) may have accessibility limitations outside our direct control.',
-  'The Sanity Studio editor interface (available to content editors only) uses third-party components that may not fully meet all WCAG criteria.',
+  'The cookie notice shown on your first visit is not yet fully accessible: keyboard users can move behind it. We are improving it.',
+  'Some free-course lessons include YouTube or Vimeo videos. These players are run by those companies.',
+  'Our forms use a security check from Cloudflare, which we do not control.',
+  'Some animations do not yet follow the "reduce motion" setting on your device.',
+  'Internal tools used by our staff are not covered by this statement.',
 ]
 
 export default async function AccessibilityPage() {
-  const headersList = await headers()
-  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
-  const platformName = isEthioTax ? 'EthioTax' : 'Accounting Body'
+  const { isEthioTax, platformName, domain } = await brand()
   const heroBg = isEthioTax ? '#1A4731' : '#0C1A3D'
   return (
     <>
@@ -60,7 +76,7 @@ export default async function AccessibilityPage() {
         <div className="container-site relative z-10">
           <span className="eyebrow text-gold-400 mb-4 block">Accessibility</span>
           <h1 className="font-display text-white mb-3 leading-tight">Accessibility Statement</h1>
-          <p className="text-white/70 text-sm">Last updated: March 2026</p>
+          <p className="text-white/70 text-sm">Last reviewed: November 2026</p>
         </div>
       </section>
 
@@ -70,13 +86,13 @@ export default async function AccessibilityPage() {
 
             <div className="border-l-4 border-gold-400 pl-5 mb-10">
               <p className="text-slate-600 text-base leading-relaxed">
-                {platformName} is committed to ensuring that its website is accessible to everyone —
-                including people with disabilities. We aim to conform to the Web Content Accessibility
-                Guidelines (WCAG) 2.1 at Level AA.
+                {platformName} is committed to making its website usable by everyone, including people
+                with disabilities. This statement covers {domain}. {platformName} aims to meet the Web
+                Content Accessibility Guidelines (WCAG) 2.2 at Level AA.
               </p>
             </div>
 
-            <h2 className="font-display text-2xl text-navy-950 mb-6">What we do to support accessibility</h2>
+            <h2 className="font-display text-2xl text-navy-950 mb-6">What we have done</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
               {standards.map(s => (
                 <div key={s.title} className="bg-slate-50 rounded-xl border border-slate-200 p-5">
@@ -91,8 +107,7 @@ export default async function AccessibilityPage() {
 
             <h2 className="font-display text-2xl text-navy-950 mb-4">Known limitations</h2>
             <p className="text-slate-500 text-sm leading-relaxed mb-4">
-              Despite our best efforts, some areas of the site may not yet fully meet WCAG 2.1 AA standards.
-              Known limitations include:
+              These are the limitations we know about:
             </p>
             <ul className="space-y-3 mb-10">
               {known.map((item, i) => (
@@ -107,9 +122,8 @@ export default async function AccessibilityPage() {
 
             <h2 className="font-display text-2xl text-navy-950 mb-4">Feedback and contact</h2>
             <p className="text-slate-500 text-sm leading-relaxed mb-6">
-              We welcome feedback on the accessibility of {platformName}. If you experience any barriers
-              or have suggestions for improvement, please get in touch. We aim to respond to accessibility
-              feedback within 5 business days.
+              We welcome feedback on the accessibility of {platformName}. If you find a barrier, please
+              tell us. We will reply to accessibility feedback as soon as we can.
             </p>
 
             <div className="bg-navy-950 rounded-xl p-6 relative overflow-hidden mb-10">
@@ -118,7 +132,7 @@ export default async function AccessibilityPage() {
               <div className="relative z-10">
                 <h3 className="font-display text-white text-lg mb-2">Report an accessibility issue</h3>
                 <p className="text-white/60 text-sm leading-relaxed mb-4">
-                  If you cannot access any part of this site or need content in a different format,
+                  If you cannot use any part of this site or need content in a different format,
                   contact us and we will do our best to help.
                 </p>
                 <div className="flex flex-wrap gap-3">
@@ -130,15 +144,15 @@ export default async function AccessibilityPage() {
               </div>
             </div>
 
-            <h2 className="font-display text-2xl text-navy-950 mb-4">Technical information</h2>
+            <h2 className="font-display text-2xl text-navy-950 mb-4">How we tested</h2>
             <p className="text-slate-500 text-sm leading-relaxed mb-3">
-              {platformName} is built with Next.js 14 using semantic HTML5, Tailwind CSS, and
-              React. The site is tested using keyboard navigation, the WAVE accessibility tool,
-              and VoiceOver on macOS.
+              In November 2026 we checked key pages of the site on desktop and phone screen sizes. We
+              used automated checks, moved through the pages with a keyboard in a real browser, and ran
+              colour-contrast scans.
             </p>
             <p className="text-slate-500 text-sm leading-relaxed">
-              This statement was prepared in March 2026 and will be reviewed annually or whenever
-              significant changes are made to the site.
+              This statement was last reviewed in November 2026. We will review it at least once a
+              year and after significant changes.
             </p>
 
           </div>
