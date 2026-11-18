@@ -28,7 +28,7 @@ export function LanguageSwitcher() {
           aria-pressed={language === code}
           aria-label={`Switch to ${full}`}
           className={[
-            'relative px-2.5 py-1 rounded-full text-xs font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-500',
+            'relative px-2.5 py-1 rounded-full text-xs font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-950',
             language === code
               ? 'bg-[#1A4731] text-white shadow-sm'
               : 'text-slate-500 hover:text-slate-800',
@@ -59,11 +59,11 @@ export function MobileLangSwitcher() {
             aria-label={`Switch to ${full}`}
             translate="no"
             className={[
-              'flex-1 flex flex-col items-center justify-center py-2.5 text-xs font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-gold-500',
+              'flex-1 flex flex-col items-center justify-center py-2.5 text-xs font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset',
               i > 0 ? 'border-l border-slate-200' : '',
               language === code
-                ? 'bg-[#1A4731] text-white'
-                : 'text-slate-500 hover:bg-slate-100',
+                ? 'bg-[#1A4731] text-white focus-visible:ring-white'
+                : 'text-slate-500 hover:bg-slate-100 focus-visible:ring-navy-950',
             ].join(' ')}
           >
             <span className="text-sm mb-0.5">{label}</span>

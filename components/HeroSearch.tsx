@@ -16,7 +16,7 @@ export default function HeroSearch({ placeholder = 'Search study notes, practice
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-2xl">
-      <div className="flex items-center bg-white rounded-xl shadow-2xl shadow-black/20 overflow-hidden border-2 border-transparent focus-within:border-gold-500 transition-all duration-200">
+      <div className="flex items-center bg-white rounded-xl shadow-2xl shadow-black/20 overflow-hidden border-2 border-transparent focus-within:border-navy-950 transition-all duration-200">
         {/* Search icon */}
         <div className="flex items-center justify-center w-13 shrink-0 pl-4">
           <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

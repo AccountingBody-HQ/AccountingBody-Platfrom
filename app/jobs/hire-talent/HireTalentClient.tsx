@@ -324,14 +324,14 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                           <label className="block text-sm font-semibold mb-2" style={errLabel('company_name')}>Company Name *</label>
                           {fieldErrors.company_name && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your company name.</p>}
                           <input type="text" value={form.company_name} onChange={e => { setForm({...form, company_name: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, company_name: false})) }}
-                            className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                            className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="Your company name" style={errStyle('company_name')} />
                         </div>
                         <div ref={refs.contact_name}>
                           <label className="block text-sm font-semibold mb-2" style={errLabel('contact_name')}>Your Name *</label>
                           {fieldErrors.contact_name && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your name.</p>}
                           <input type="text" value={form.contact_name} onChange={e => { setForm({...form, contact_name: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, contact_name: false})) }}
-                            className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                            className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="Full name" style={errStyle('contact_name')} />
                         </div>
                       </div>
@@ -340,13 +340,13 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                           <label className="block text-sm font-semibold mb-2" style={errLabel('contact_email')}>Email Address *</label>
                           {fieldErrors.contact_email && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter a valid email address.</p>}
                           <input type="email" value={form.contact_email} onChange={e => { setForm({...form, contact_email: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, contact_email: false})) }}
-                            className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                            className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="you@company.com" style={errStyle('contact_email')} />
                         </div>
                         <div>
                           <label className="block text-sm font-semibold text-navy-950 mb-2">Phone Number</label>
                           <input type="tel" value={form.contact_phone} onChange={e => setForm({...form, contact_phone: e.target.value})}
-                            className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                            className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="Optional" />
                         </div>
                       </div>
@@ -373,14 +373,14 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                           <label className="block text-sm font-semibold mb-2" style={errLabel('role_title')}>Role Title *</label>
                           {fieldErrors.role_title && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter the role title.</p>}
                           <input type="text" value={form.role_title} onChange={e => { setForm({...form, role_title: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, role_title: false})) }}
-                            className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                            className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="e.g. Senior Accountant" style={errStyle('role_title')} />
                         </div>
                         <div ref={refs.contract_type}>
                           <label className="block text-sm font-semibold mb-2" style={errLabel('contract_type')}>Permanent or Contract *</label>
                           {fieldErrors.contract_type && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select a contract type.</p>}
                           <select value={form.contract_type} onChange={e => { setForm({...form, contract_type: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, contract_type: false})) }}
-                            className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
+                            className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white"
                             style={errStyle('contract_type')}>
                             <option value="">Select</option>
                             {contractTypeOptions.map(o => <option key={o} value={o}>{o}</option>)}
@@ -392,13 +392,13 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                           <label className="block text-sm font-semibold mb-2" style={errLabel('location')}>Location *</label>
                           {fieldErrors.location && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter the role location.</p>}
                           <input type="text" value={form.location} onChange={e => { setForm({...form, location: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, location: false})) }}
-                            className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                            className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="e.g. London, UK / Remote" style={errStyle('location')} />
                         </div>
                         <div>
                           <label className="block text-sm font-semibold text-navy-950 mb-2">Salary / Day Rate Budget</label>
                           <input type="text" value={form.salary_budget} onChange={e => setForm({...form, salary_budget: e.target.value})}
-                            className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                            className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="e.g. £45,000–£55,000 or £350/day" />
                         </div>
                       </div>
@@ -406,13 +406,13 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                         <div>
                           <label className="block text-sm font-semibold text-navy-950 mb-2">Ideal Start Date</label>
                           <input type="text" value={form.start_date} onChange={e => setForm({...form, start_date: e.target.value})}
-                            className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                            className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="e.g. ASAP / January 2027" />
                         </div>
                         <div>
                           <label className="block text-sm font-semibold text-navy-950 mb-2">Jurisdiction</label>
                           <select value={form.jurisdiction} onChange={e => setForm({...form, jurisdiction: e.target.value})}
-                            className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white">
+                            className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white">
                             <option value="">Select</option>
                             {(isEthioTax ? jurisdictionOptionsET : jurisdictionOptionsAB).map(o => <option key={o} value={o}>{o}</option>)}
                           </select>
@@ -447,20 +447,20 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                         {fieldErrors.role_description && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please describe the role.</p>}
                         <p className="text-xs text-slate-400 mb-2">Describe the role, responsibilities, and what success looks like.</p>
                         <textarea rows={6} value={form.role_description} onChange={e => { setForm({...form, role_description: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, role_description: false})) }}
-                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                          className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                           placeholder="e.g. We are looking for an experienced accountant to manage month-end close, prepare management accounts, and liaise with external auditors..."
                           style={errStyle('role_description')} />
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-navy-950 mb-2">Must-Have Requirements</label>
                         <textarea rows={3} value={form.must_haves} onChange={e => setForm({...form, must_haves: e.target.value})}
-                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                           placeholder="e.g. ACCA qualified, 5+ years experience, UK tax knowledge" />
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-navy-950 mb-2">Nice-to-Have</label>
                         <textarea rows={2} value={form.nice_to_haves} onChange={e => setForm({...form, nice_to_haves: e.target.value})}
-                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                           placeholder="e.g. Experience with Xero, knowledge of Ethiopian business law" />
                       </div>
                       <div className="flex justify-between pt-2">

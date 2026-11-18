@@ -30,7 +30,7 @@ export default function HomepageJobSearch() {
               onChange={e => setRole(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
               aria-label="Job title or keyword" placeholder="Job title or keyword"
-              className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 outline-none bg-transparent"
+              className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 bg-transparent"
             />
           </div>
           <div className="h-px bg-slate-100 mx-4" />
@@ -45,7 +45,7 @@ export default function HomepageJobSearch() {
               onChange={e => setLocation(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
               aria-label="City or country" placeholder="City or country"
-              className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 outline-none bg-transparent"
+              className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 bg-transparent"
             />
           </div>
           <button
@@ -69,7 +69,7 @@ export default function HomepageJobSearch() {
               onChange={e => setRole(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
               aria-label="Job title or keyword" placeholder="Job title or keyword"
-              className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 outline-none bg-transparent"
+              className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 bg-transparent"
             />
           </div>
           <div className="w-px h-10 bg-slate-200 shrink-0" />
@@ -84,7 +84,7 @@ export default function HomepageJobSearch() {
               onChange={e => setLocation(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
               aria-label="City or country" placeholder="City or country"
-              className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 outline-none bg-transparent"
+              className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 bg-transparent"
             />
           </div>
           <div className="p-2 shrink-0">

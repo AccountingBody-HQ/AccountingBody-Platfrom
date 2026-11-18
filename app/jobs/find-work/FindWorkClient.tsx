@@ -350,14 +350,14 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                             <label className="block text-sm font-semibold mb-2" style={errLabel('full_name')}>Full Name *</label>
                             {fieldErrors.full_name && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your full name.</p>}
                             <input type="text" value={form.full_name} onChange={e => { setForm({...form, full_name: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, full_name: false})) }}
-                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                               placeholder="Your full name" style={errStyle('full_name')} />
                           </div>
                           <div>
                             <label className="block text-sm font-semibold mb-2" style={errLabel('email')}>Email Address *</label>
                             {fieldErrors.email && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter a valid email address.</p>}
                             <input type="email" value={form.email} onChange={e => { setForm({...form, email: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, email: false})) }}
-                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                               placeholder="you@example.com" style={errStyle('email')} />
                           </div>
                         </div>
@@ -365,13 +365,13 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                           <div>
                             <label className="block text-sm font-semibold text-navy-950 mb-2">Phone Number</label>
                             <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
-                              className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                              className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                               placeholder="Optional" />
                           </div>
                           <div>
                             <label className="block text-sm font-semibold text-navy-950 mb-2">LinkedIn Profile URL</label>
                             <input type="url" value={form.linkedin_url} onChange={e => setForm({...form, linkedin_url: e.target.value})}
-                              className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                              className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                               placeholder="https://linkedin.com/in/yourprofile" />
                             <p className="text-xs text-slate-400 mt-1">Strongly recommended — helps us match you faster</p>
                           </div>
@@ -381,13 +381,13 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                             <label className="block text-sm font-semibold mb-2" style={errLabel('location_city')}>City *</label>
                             {fieldErrors.location_city && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your city.</p>}
                             <input type="text" value={form.location_city} onChange={e => { setForm({...form, location_city: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, location_city: false})) }}
-                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                               placeholder="e.g. London" style={errStyle('location_city')} />
                           </div>
                           <div>
                             <label className="block text-sm font-semibold text-navy-950 mb-2">Country</label>
                             <select value={form.location_country} onChange={e => setForm({...form, location_country: e.target.value})}
-                              className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white">
+                              className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white">
                               <option value="">Select country</option>
                               {(isEthioTax ? countryOptionsET : countryOptionsAB).map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
@@ -406,7 +406,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                             <label className="block text-sm font-semibold mb-2" style={errLabel('professional_role')}>Professional Role *</label>
                             {fieldErrors.professional_role && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your role.</p>}
                             <select value={form.professional_role} onChange={e => { setForm({...form, professional_role: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, professional_role: false})) }}
-                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
+                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white"
                               style={errStyle('professional_role')}>
                               <option value="">Select your role</option>
                               {roleOptions.map(r => <option key={r} value={r}>{r}</option>)}
@@ -416,7 +416,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                             <label className="block text-sm font-semibold mb-2" style={errLabel('qualification')}>Highest Qualification *</label>
                             {fieldErrors.qualification && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your qualification.</p>}
                             <select value={form.qualification} onChange={e => { setForm({...form, qualification: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, qualification: false})) }}
-                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
+                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white"
                               style={errStyle('qualification')}>
                               <option value="">Select qualification</option>
                               {qualificationOptions.map(q => <option key={q} value={q}>{q}</option>)}
@@ -428,7 +428,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                             <label className="block text-sm font-semibold mb-2" style={errLabel('years_experience')}>Years of Experience *</label>
                             {fieldErrors.years_experience && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your experience level.</p>}
                             <select value={form.years_experience} onChange={e => { setForm({...form, years_experience: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, years_experience: false})) }}
-                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
+                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white"
                               style={errStyle('years_experience')}>
                               <option value="">Select</option>
                               {experienceOptions.map(o => <option key={o} value={o}>{o}</option>)}
@@ -438,7 +438,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                             <label className="block text-sm font-semibold mb-2" style={errLabel('employment_status')}>Current Employment Status *</label>
                             {fieldErrors.employment_status && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your status.</p>}
                             <select value={form.employment_status} onChange={e => { setForm({...form, employment_status: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, employment_status: false})) }}
-                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
+                              className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white"
                               style={errStyle('employment_status')}>
                               <option value="">Select</option>
                               {employmentStatusOptions.map(o => <option key={o} value={o}>{o}</option>)}
@@ -448,7 +448,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                         <div>
                           <label className="block text-sm font-semibold text-navy-950 mb-2">Salary / Day Rate Expectation</label>
                           <input type="text" value={form.salary_expectation} onChange={e => setForm({...form, salary_expectation: e.target.value})}
-                            className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                            className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="e.g. £45,000 per year or £350 per day" />
                         </div>
                         <NavButtons />
@@ -512,7 +512,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                         {fieldErrors.biography && <p className="text-xs font-semibold" style={{ color: '#88671c' }}>Please write at least 50 words about your professional background.</p>}
                         <textarea rows={8} value={form.biography}
                           onChange={e => { setForm({...form, biography: e.target.value}); if (e.target.value.trim().split(/\s+/).length >= 50) setFieldErrors(p => ({...p, biography: false})) }}
-                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                          className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                           placeholder="e.g. I am an ACCA-qualified accountant with 8 years of experience in financial reporting and tax compliance, having worked with clients across the UK and Ethiopia. I specialise in..." />
                         <p className="text-xs text-slate-400">{form.biography.trim() ? form.biography.trim().split(/\s+/).length : 0} words</p>
                         <NavButtons />

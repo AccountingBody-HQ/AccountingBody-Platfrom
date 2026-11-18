@@ -273,14 +273,14 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
                 <label className="block text-sm font-semibold mb-2" style={errLabel('full_name')}>Full Name *</label>
                 {fieldErrors.full_name && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your full name.</p>}
                 <input type="text" value={form.full_name} onChange={e => { setForm({...form, full_name: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, full_name: false})) }}
-                  className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                  className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                   placeholder="Your full name" style={errStyle('full_name')} />
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-2" style={errLabel('email')}>Email Address *</label>
                 {fieldErrors.email && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter a valid email address.</p>}
                 <input type="email" value={form.email} onChange={e => { setForm({...form, email: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, email: false})) }}
-                  className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                  className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                   placeholder="you@example.com" style={errStyle('email')} />
               </div>
             </div>
@@ -288,13 +288,13 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
               <div>
                 <label className="block text-sm font-semibold text-navy-950 mb-2">Phone Number</label>
                 <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
-                  className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                  className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                   placeholder="Optional" />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-navy-950 mb-2">LinkedIn Profile URL</label>
                 <input type="url" value={form.linkedin_url} onChange={e => setForm({...form, linkedin_url: e.target.value})}
-                  className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                  className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                   placeholder="https://linkedin.com/in/yourprofile" />
               </div>
             </div>
@@ -303,13 +303,13 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
                 <label className="block text-sm font-semibold mb-2" style={errLabel('location_city')}>City *</label>
                 {fieldErrors.location_city && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your city.</p>}
                 <input type="text" value={form.location_city} onChange={e => { setForm({...form, location_city: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, location_city: false})) }}
-                  className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                  className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                   placeholder="e.g. London" style={errStyle('location_city')} />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-navy-950 mb-2">Country</label>
                 <select value={form.location_country} onChange={e => setForm({...form, location_country: e.target.value})}
-                  className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white">
+                  className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white">
                   <option value="">Select country</option>
                   {(isEthioTax ? countryOptionsET : countryOptionsAB).map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -327,7 +327,7 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
                 <label className="block text-sm font-semibold mb-2" style={errLabel('professional_role')}>Professional Role *</label>
                 {fieldErrors.professional_role && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your role.</p>}
                 <select value={form.professional_role} onChange={e => { setForm({...form, professional_role: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, professional_role: false})) }}
-                  className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white" style={errStyle('professional_role')}>
+                  className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white" style={errStyle('professional_role')}>
                   <option value="">Select your role</option>
                   {roleOptions.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
@@ -336,7 +336,7 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
                 <label className="block text-sm font-semibold mb-2" style={errLabel('qualification')}>Highest Qualification *</label>
                 {fieldErrors.qualification && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your qualification.</p>}
                 <select value={form.qualification} onChange={e => { setForm({...form, qualification: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, qualification: false})) }}
-                  className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white" style={errStyle('qualification')}>
+                  className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white" style={errStyle('qualification')}>
                   <option value="">Select qualification</option>
                   {qualificationOptions.map(q => <option key={q} value={q}>{q}</option>)}
                 </select>
@@ -347,7 +347,7 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
                 <label className="block text-sm font-semibold mb-2" style={errLabel('years_experience')}>Years of Experience *</label>
                 {fieldErrors.years_experience && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your experience level.</p>}
                 <select value={form.years_experience} onChange={e => { setForm({...form, years_experience: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, years_experience: false})) }}
-                  className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white" style={errStyle('years_experience')}>
+                  className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white" style={errStyle('years_experience')}>
                   <option value="">Select</option>
                   {experienceOptions.map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
@@ -356,7 +356,7 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
                 <label className="block text-sm font-semibold mb-2" style={errLabel('current_status')}>Current Situation *</label>
                 {fieldErrors.current_status && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your current situation.</p>}
                 <select value={form.current_status} onChange={e => { setForm({...form, current_status: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, current_status: false})) }}
-                  className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white" style={errStyle('current_status')}>
+                  className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white" style={errStyle('current_status')}>
                   <option value="">Select</option>
                   {currentStatusOptions.map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
@@ -378,7 +378,7 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
             {fieldErrors.biography && <p className="text-xs font-semibold" style={{ color: '#88671c' }}>Please write at least 30 words about your background and freelancing interest.</p>}
             <textarea rows={7} value={form.biography}
               onChange={e => { setForm({...form, biography: e.target.value}); if (e.target.value.trim().split(/\s+/).length >= 30) setFieldErrors(p => ({...p, biography: false})) }}
-              className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+              className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
               placeholder="e.g. I am an ACCA-qualified accountant currently working full-time in industry. I am interested in taking on bookkeeping and tax clients on the side to build my own practice over time..." />
             <p className="text-xs text-slate-400">{form.biography.trim() ? form.biography.trim().split(/\s+/).length : 0} words</p>
             <NavButtons />

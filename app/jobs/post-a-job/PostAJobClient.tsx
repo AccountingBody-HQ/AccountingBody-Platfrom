@@ -125,7 +125,7 @@ function Field({ label, required, children }: { label: string; required?: boolea
   )
 }
 
-const inputClass = 'w-full border border-slate-200 rounded-lg px-4 py-3 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-colors'
+const inputClass = 'w-full border border-slate-200 rounded-lg px-4 py-3 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition-colors'
 
 export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) {
   const brand = isEthioTax ? '#1A4731' : '#0C1A3D'

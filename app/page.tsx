@@ -1429,7 +1429,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
               {/* Body */}
               <p className="text-base leading-relaxed mb-8 max-w-lg"
-                style={{ color: isEthioTax ? 'rgba(15,45,30,0.75)' : 'rgba(12,26,61,0.75)' }}>
+                style={{ color: isEthioTax ? 'rgba(15,45,30,0.9)' : 'rgba(12,26,61,0.9)' }}>
                 {isEthioTax
                   ? <><span translate="no">ACCA</span>, <span translate="no">CIMA</span>, <span translate="no">ICAEW</span> or <span translate="no">CPA</span> qualified? We place Ethiopian finance professionals in permanent and contract roles across the UK, USA, Canada and beyond. You never deal with employers directly — we manage every step.</>
                   : 'We place accounting and finance professionals in permanent and contract roles across the UK and internationally. Fully managed — we find the right match, negotiate on your behalf, and guarantee every placement for 90 days.'}

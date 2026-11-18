@@ -39,7 +39,7 @@ export default function CalcCard({ title, tag, description, fields, calculate }:
                 value={values[f.id] ?? ''}
                 onChange={e => handleChange(f.id, e.target.value)}
                 placeholder={f.placeholder}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 14, color: '#0C1A3D', background: '#F8F7F4', outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 14, color: '#0C1A3D', background: '#F8F7F4', boxSizing: 'border-box' }}
               />
             </div>
           ))}
