@@ -199,7 +199,7 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
         </div>
         <div className="container-site relative z-10">
           <div className="max-w-3xl">
-            <nav className="flex items-center gap-2 text-white/40 text-sm mb-8 flex-wrap">
+            <nav className="flex items-center gap-2 text-white/70 text-sm mb-8 flex-wrap">
               <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
               <Link href="/get-help" className="hover:text-white/70 transition-colors">Get Help</Link>
@@ -226,7 +226,7 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
             <ul className="space-y-3 mb-10">
               {service.bullets.map((b) => (
                 <li key={b} className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-gold-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-gold-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                   <span className="text-slate-600 text-base">{b}</span>
@@ -411,13 +411,13 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
                     style={{ borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none' }}>
                     <span className="font-display text-xl font-bold text-white block mb-1"><span translate="no">{stat.value}</span></span>
                     <span className="text-xs font-semibold block mb-0.5" style={{ color: '#C9982A' }}>{stat.label}</span>
-                    <span className="text-xs text-white/35">{stat.sub}</span>
+                    <span className="text-xs text-white/70">{stat.sub}</span>
                   </div>
                 ))}
               </div>
               <div className="px-7 py-4 flex items-center justify-between"
                 style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(201,152,42,0.06)' }}>
-                <p className="text-xs text-white/40">{isEthioTax ? 'EthioTax manages every placement.' : 'Accounting Body manages every placement.'}</p>
+                <p className="text-xs text-white/70">{isEthioTax ? 'EthioTax manages every placement.' : 'Accounting Body manages every placement.'}</p>
                 <Link href="/jobs/how-it-works" className="text-xs font-semibold ml-4 hover:opacity-80 transition-opacity" style={{ color: '#C9982A' }}>How it works →</Link>
               </div>
             </div>

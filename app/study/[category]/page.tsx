@@ -94,7 +94,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[80%] opacity-20" style={{ background: 'radial-gradient(ellipse at center top, #3a4f9a 0%, transparent 70%)' }} />
         </div>
         <div className="container-site relative z-10">
-          <nav className="flex items-center gap-2 text-white/40 text-sm mb-8 flex-wrap">
+          <nav className="flex items-center gap-2 text-white/70 text-sm mb-8 flex-wrap">
             <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <Link href="/study" className="hover:text-white/70 transition-colors">Study</Link>
@@ -109,7 +109,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
             </div>
             <div className="shrink-0 text-right">
               <p className="font-display text-4xl text-white">{articles.length.toLocaleString()}</p>
-              <p className="text-white/50 text-sm">articles &amp; study notes</p>
+              <p className="text-white/70 text-sm">articles &amp; study notes</p>
             </div>
           </div>
         </div>
@@ -124,7 +124,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
                 const base = 'w-7 h-7 rounded flex items-center justify-center text-xs font-bold transition-colors'
                 if (!letters.includes(l)) {
                   return (
-                    <span key={l} aria-disabled="true" className={[base, 'text-slate-300 cursor-default'].join(' ')} translate='no'>
+                    <span key={l} aria-disabled="true" className={[base, 'text-slate-500 cursor-default'].join(' ')} translate='no'>
                       {l}
                     </span>
                   )
@@ -182,7 +182,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
                           <div className="flex items-center gap-4 shrink-0 text-xs text-slate-400">
                             {article.read_time && <span className="hidden sm:block">{article.read_time} min</span>}
                             {formattedDate && <span className="hidden">{formattedDate}</span>}
-                            <svg className="w-4 h-4 text-slate-300 group-hover:text-navy-400 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                            <svg className="w-4 h-4 text-slate-500 group-hover:text-navy-400 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
                           </div>
                         </div>
                       )

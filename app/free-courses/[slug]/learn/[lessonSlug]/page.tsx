@@ -204,7 +204,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
                 height: 3,
                 maxWidth: 180,
                 borderRadius: 3,
-                background: 'linear-gradient(to right, #D4A017 0%, rgba(212,160,23,0.3) 60%, transparent 100%)',
+                background: 'linear-gradient(to right, #C9982A 0%, rgba(212,160,23,0.3) 60%, transparent 100%)',
               }} />
             </div>
 
@@ -248,7 +248,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
                     >
                       <div
                         className="absolute left-0 top-0 bottom-0 w-1.5"
-                        style={{ background: ai === 0 ? 'linear-gradient(to bottom, #D4A017, #c49215)' : '#E2E8F0' }}
+                        style={{ background: ai === 0 ? 'linear-gradient(to bottom, #C9982A, #c49215)' : '#E2E8F0' }}
                       />
                       {/* Card top row — badge + title + link icon */}
                       <div className="pl-8 pr-6 pt-6 pb-4 flex items-start gap-5">
@@ -299,7 +299,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
             {lesson.externalQuizUrl && (
               <div className="mb-10 p-5 rounded-2xl" style={{ background: 'rgba(212,160,23,0.07)', border: '1.5px solid rgba(212,160,23,0.2)' }}>
                 <div className="flex items-center gap-4">
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#D4A017' }}>
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#C9982A' }}>
                     <svg className="w-5 h-5" style={{ color: '#0C1A3D' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
@@ -396,7 +396,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
                     <p className="text-[0.6rem] font-black uppercase tracking-[0.12em] mb-1" style={{ color: 'rgba(212,160,23,0.6)' }}>Next Lesson</p>
                     <p className="text-sm font-bold text-white leading-snug">{nextLesson.title}</p>
                   </div>
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#D4A017', boxShadow: '0 4px 12px rgba(212,160,23,0.4)' }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#C9982A', boxShadow: '0 4px 12px rgba(212,160,23,0.4)' }}>
                     <svg className="w-4 h-4" style={{ color: '#0C1A3D' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
                     </svg>
@@ -423,7 +423,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
 
             {/* Footer credit */}
             <div className="flex items-center gap-2 pt-6 border-t border-slate-200">
-              <svg className="w-3.5 h-3.5 shrink-0 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 shrink-0 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
               <p className="text-xs text-slate-400">

@@ -57,7 +57,7 @@ interface ImportResult {
 const C = {
   card:    { background: '#0d1424', border: '1px solid #1a2238', borderRadius: 16 },
   input:   { background: '#111827', border: '1px solid #1f2937', borderRadius: 10, color: '#fff' },
-  active:  { background: 'rgba(212,160,23,0.12)', border: '1px solid #D4A017', color: '#fff' },
+  active:  { background: 'rgba(212,160,23,0.12)', border: '1px solid #C9982A', color: '#fff' },
   idle:    { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#64748b' },
   danger:  { background: 'rgba(239,68,68,0.08)',  border: '1px solid rgba(239,68,68,0.25)',   color: '#ef4444' },
   success: { background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)',  color: '#10b981' },
@@ -91,7 +91,7 @@ function QuestionPreview({ q, index }: { q: NormalisedQuestion; index: number })
         onClick={() => setExpanded(v => !v)}
       >
         <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0 mt-0.5"
-          style={{ background: '#0C1A3D', color: '#D4A017', border: '1px solid #D4A017' }}>
+          style={{ background: '#0C1A3D', color: '#C9982A', border: '1px solid #C9982A' }}>
           {index + 1}
         </span>
 
@@ -339,7 +339,7 @@ export default function ImportQuestionsPage() {
       <div className="flex items-center gap-3 mb-8">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: 'rgba(212,160,23,0.12)' }}>
-          <FileJson size={20} style={{ color: '#D4A017' }} />
+          <FileJson size={20} style={{ color: '#C9982A' }} />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">Import Questions</h1>
@@ -355,7 +355,7 @@ export default function ImportQuestionsPage() {
           <div key={s} className="flex items-center gap-2">
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl"
               style={i === Math.min(step, 2)
-                ? { background: '#0C1A3D', color: '#fff', border: '1px solid #D4A017' }
+                ? { background: '#0C1A3D', color: '#fff', border: '1px solid #C9982A' }
                 : i < step
                   ? { background: 'rgba(16,185,129,0.12)', color: '#10b981' }
                   : { background: 'rgba(255,255,255,0.03)', color: '#334155' }}>
@@ -363,7 +363,7 @@ export default function ImportQuestionsPage() {
                 style={i < step
                   ? { background: '#10b981', color: '#fff' }
                   : i === Math.min(step, 2)
-                    ? { background: '#D4A017', color: '#0C1A3D' }
+                    ? { background: '#C9982A', color: '#0C1A3D' }
                     : { background: 'rgba(255,255,255,0.04)', color: '#334155' }}>
                 {i < step ? '✓' : i + 1}
               </span>
@@ -436,7 +436,7 @@ export default function ImportQuestionsPage() {
           <div className="flex justify-end">
             <button onClick={handleParse} disabled={parsing || !rawJson.trim()}
               className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl disabled:opacity-40"
-              style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #D4A017' }}>
+              style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #C9982A' }}>
               {parsing
                 ? <><Loader2 size={14} className="animate-spin" /> Parsing…</>
                 : <><Upload size={14} /> Parse & Preview</>}
@@ -453,7 +453,7 @@ export default function ImportQuestionsPage() {
 
           {/* Stats row */}
           <div className="grid grid-cols-5 gap-3">
-            <StatPill label="Total"    value={result.stats.total}    color="#D4A017" bg="rgba(212,160,23,0.08)" />
+            <StatPill label="Total"    value={result.stats.total}    color="#C9982A" bg="rgba(212,160,23,0.08)" />
             <StatPill label="MCQ"      value={result.stats.mcq}      color="#10b981" bg="rgba(16,185,129,0.08)" />
             <StatPill label="Scenario" value={result.stats.scenario} color="#8b5cf6" bg="rgba(139,92,246,0.08)" />
             <StatPill label="Writing"  value={result.stats.writing}  color="#ec4899" bg="rgba(236,72,153,0.08)" />
@@ -632,7 +632,7 @@ export default function ImportQuestionsPage() {
                 </span>
               </p>
               <span className="text-xs font-semibold px-2.5 py-1 rounded-lg"
-                style={{ background: 'rgba(212,160,23,0.1)', color: '#D4A017' }}>
+                style={{ background: 'rgba(212,160,23,0.1)', color: '#C9982A' }}>
                 {result.bundle.questions.length} questions
               </span>
             </div>
@@ -690,14 +690,14 @@ export default function ImportQuestionsPage() {
           </p>
           {publishedSlug && (
             <a href={`/practice-questions/${publishedSlug}`} target="_blank" rel="noopener noreferrer"
-              className="text-sm font-semibold inline-block mb-6" style={{ color: '#D4A017' }}>
+              className="text-sm font-semibold inline-block mb-6" style={{ color: '#C9982A' }}>
               View live → /practice-questions/{publishedSlug}
             </a>
           )}
           <div className="flex items-center justify-center gap-3 mt-6">
             <button onClick={handleReset}
               className="flex items-center gap-2 text-sm font-bold px-8 py-3 rounded-xl"
-              style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #D4A017' }}>
+              style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #C9982A' }}>
               <Sparkles size={14} /> Import Another Set
             </button>
             <Link href="/roodber8/questions"

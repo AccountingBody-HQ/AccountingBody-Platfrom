@@ -10,7 +10,7 @@ import {
 const C = {
   card:    { background: '#0d1424', border: '1px solid #1a2238', borderRadius: 16 },
   input:   { background: '#111827', border: '1px solid #1f2937', borderRadius: 10, color: '#fff' },
-  active:  { background: 'rgba(212,160,23,0.12)', border: '1px solid #D4A017', color: '#fff' },
+  active:  { background: 'rgba(212,160,23,0.12)', border: '1px solid #C9982A', color: '#fff' },
   idle:    { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#64748b' },
   success: { background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)', color: '#10b981' },
   warning: { background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#f59e0b' },
@@ -645,7 +645,7 @@ function ArticlePQCard({
         )}
         {examBody && (
           <span className="text-xs font-bold uppercase px-2.5 py-1 rounded-lg"
-            style={{ background: 'rgba(212,160,23,0.1)', color: '#D4A017' }}>
+            style={{ background: 'rgba(212,160,23,0.1)', color: '#C9982A' }}>
             {examBody}
           </span>
         )}
@@ -678,7 +678,7 @@ function ArticlePQCard({
       {!promptText && (
         <button onClick={onBuildPrompt} disabled={building}
           className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl w-fit"
-          style={{ background: '#D4A017', color: '#0C1A3D', opacity: building ? 0.6 : 1 }}>
+          style={{ background: '#C9982A', color: '#0C1A3D', opacity: building ? 0.6 : 1 }}>
           {building
             ? <><Loader2 size={15} className="animate-spin" /> Building…</>
             : <><Sparkles size={15} /> Build Prompt</>}
@@ -691,7 +691,7 @@ function ArticlePQCard({
           <div className="flex items-center gap-2 flex-wrap">
             <button onClick={handleCopy}
               className="flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl"
-              style={copiedFlash ? C.success : { background: '#D4A017', color: '#0C1A3D' }}>
+              style={copiedFlash ? C.success : { background: '#C9982A', color: '#0C1A3D' }}>
               {copiedFlash ? <><Check size={13} /> Copied!</> : <><Copy size={13} /> Copy Prompt</>}
             </button>
             {task.prompt_copied && !task.json_imported && (
@@ -1157,7 +1157,7 @@ export default function StudioPage() {
       <div className="flex items-center gap-3 mb-2">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: 'rgba(212,160,23,0.12)' }}>
-          <Sparkles size={20} style={{ color: '#D4A017' }} />
+          <Sparkles size={20} style={{ color: '#C9982A' }} />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">Content & Prompt Studio</h1>
@@ -1166,7 +1166,7 @@ export default function StudioPage() {
           </p>
         </div>
       </div>
-      <p className="text-sm font-semibold mb-8" style={{ color: '#D4A017' }}>{todayLabel}</p>
+      <p className="text-sm font-semibold mb-8" style={{ color: '#C9982A' }}>{todayLabel}</p>
 
       {/* ── Section 1: Daily Progress Board ────────────────────────────── */}
       <div className="rounded-2xl border p-6 mb-6" style={C.card}>
@@ -1218,7 +1218,7 @@ export default function StudioPage() {
             {sessionLoading
               ? <Skeleton h="h-9" w="w-16" />
               : (
-                <p className="text-3xl font-black" style={{ color: '#D4A017' }}>
+                <p className="text-3xl font-black" style={{ color: '#C9982A' }}>
                   {overallPercent}%
                 </p>
               )}
@@ -1230,7 +1230,7 @@ export default function StudioPage() {
       <div className="rounded-2xl border p-6 mb-6" style={C.card}>
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
-            <HelpCircle size={16} style={{ color: '#D4A017' }} />
+            <HelpCircle size={16} style={{ color: '#C9982A' }} />
             <h2 className="text-white font-bold text-sm">Practice Questions — 4 Articles</h2>
           </div>
           <button
@@ -1258,7 +1258,7 @@ export default function StudioPage() {
             onClick={handleAddManualArticle}
             disabled={manualArticleAdding || !manualArticleId.trim()}
             className="flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl"
-            style={{ background: 'rgba(212,160,23,0.12)', color: '#D4A017', border: '1px solid #D4A017', opacity: manualArticleId.trim() ? 1 : 0.5 }}>
+            style={{ background: 'rgba(212,160,23,0.12)', color: '#C9982A', border: '1px solid #C9982A', opacity: manualArticleId.trim() ? 1 : 0.5 }}>
             {manualArticleAdding
               ? <><Loader2 size={13} className="animate-spin" /> Adding…</>
               : <><Plus size={13} /> Add Article</>}
@@ -1331,7 +1331,7 @@ export default function StudioPage() {
       {/* ── Section 3: Article Prompt Builder ──────────────────────────── */}
       <div className="rounded-2xl border p-6 mb-6" style={C.card}>
         <div className="flex items-center gap-2 mb-1">
-          <FileText size={16} style={{ color: '#D4A017' }} />
+          <FileText size={16} style={{ color: '#C9982A' }} />
           <h2 className="text-white font-bold text-sm">Today&apos;s Article</h2>
         </div>
         <p className="text-xs mb-4" style={{ color: '#475569' }}>
@@ -1403,7 +1403,7 @@ export default function StudioPage() {
           onClick={handleBuildArticlePrompt}
           disabled={!articleInputValue.trim()}
           className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl mb-4"
-          style={{ background: '#D4A017', color: '#0C1A3D', opacity: articleInputValue.trim() ? 1 : 0.4 }}>
+          style={{ background: '#C9982A', color: '#0C1A3D', opacity: articleInputValue.trim() ? 1 : 0.4 }}>
           <Sparkles size={15} /> Build Article Prompt
         </button>
 
@@ -1412,7 +1412,7 @@ export default function StudioPage() {
             <div className="flex items-center gap-2 flex-wrap">
               <button onClick={handleArticleCopy}
                 className="flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl"
-                style={articleCopiedFlash ? C.success : { background: '#D4A017', color: '#0C1A3D' }}>
+                style={articleCopiedFlash ? C.success : { background: '#C9982A', color: '#0C1A3D' }}>
                 {articleCopiedFlash
                   ? <><Check size={13} /> Copied!</>
                   : <><Copy size={13} /> Copy Prompt</>}
@@ -1444,7 +1444,7 @@ export default function StudioPage() {
       <div className="rounded-2xl border p-6 mb-6" style={C.card}>
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
-            <BookOpen size={16} style={{ color: '#D4A017' }} />
+            <BookOpen size={16} style={{ color: '#C9982A' }} />
             <h2 className="text-white font-bold text-sm">Reference Sources</h2>
           </div>
           <div className="flex items-center gap-2">
@@ -1454,18 +1454,18 @@ export default function StudioPage() {
                 onClick={handleStartOpenSources}
                 disabled={references.length === 0}
                 className="text-xs font-bold px-4 py-2 rounded-xl"
-                style={{ background: '#D4A017', color: '#0C1A3D', opacity: references.length === 0 ? 0.4 : 1 }}>
+                style={{ background: '#C9982A', color: '#0C1A3D', opacity: references.length === 0 ? 0.4 : 1 }}>
                 Open Sources
               </button>
             ) : (
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold" style={{ color: '#D4A017' }}>
+                <span className="text-xs font-semibold" style={{ color: '#C9982A' }}>
                   {openSourceIndex + 1} of {references.length} opened
                 </span>
                 {openSourceIndex + 1 < references.length ? (
                   <button onClick={handleOpenNextSource}
                     className="text-xs font-bold px-4 py-2 rounded-xl"
-                    style={{ background: '#D4A017', color: '#0C1A3D' }}>
+                    style={{ background: '#C9982A', color: '#0C1A3D' }}>
                     Open Next →
                   </button>
                 ) : (
@@ -1504,7 +1504,7 @@ export default function StudioPage() {
             <button onClick={handleAddReference}
               disabled={refSaving || !refLabel.trim() || !refUrl.trim()}
               className="text-xs font-bold px-4 py-2 rounded-xl"
-              style={{ background: '#D4A017', color: '#0C1A3D', opacity: refSaving ? 0.6 : 1 }}>
+              style={{ background: '#C9982A', color: '#0C1A3D', opacity: refSaving ? 0.6 : 1 }}>
               {refSaving ? 'Saving…' : 'Save'}
             </button>
             <button onClick={() => setShowAddRef(false)}
@@ -1541,7 +1541,7 @@ export default function StudioPage() {
               <div key={ref.id}
                 className="py-3 flex items-center gap-3"
                 style={openSourceIndex === idx
-                  ? { borderLeft: '2px solid #D4A017', paddingLeft: 8, marginLeft: -8 }
+                  ? { borderLeft: '2px solid #C9982A', paddingLeft: 8, marginLeft: -8 }
                   : {}}>
                 <div className="w-2 h-2 rounded-full shrink-0"
                   style={{ background: CATEGORY_DOT[ref.category] ?? '#64748b' }} />
@@ -1564,7 +1564,7 @@ export default function StudioPage() {
       {/* ── Section 5: Social Posting ──────────────────────────────── */}
       <div className="rounded-2xl border p-6" style={C.card}>
         <div className="flex items-center gap-2 mb-1">
-          <Share2 size={16} style={{ color: '#D4A017' }} />
+          <Share2 size={16} style={{ color: '#C9982A' }} />
           <h2 className="text-white font-bold text-sm">Social Posting</h2>
         </div>
         <p className="text-xs mb-5" style={{ color: '#475569' }}>
@@ -1619,7 +1619,7 @@ export default function StudioPage() {
                 style={{
                   background: socialContentType === 'article'
                     ? 'rgba(212,160,23,0.1)' : 'rgba(20,180,163,0.1)',
-                  color: socialContentType === 'article' ? '#D4A017' : '#14b4a3',
+                  color: socialContentType === 'article' ? '#C9982A' : '#14b4a3',
                 }}>
                 {socialContentType === 'article' ? 'Article post' : 'Practice Questions post'}
               </span>
@@ -1641,7 +1641,7 @@ export default function StudioPage() {
                   setFbError(null)
                 }}
                 className="w-4 h-4 rounded mt-0.5"
-                style={{ accentColor: '#D4A017' }}
+                style={{ accentColor: '#C9982A' }}
               />
               <span>
                 <span className="block text-sm font-semibold text-white">Include link in post</span>
@@ -1658,7 +1658,7 @@ export default function StudioPage() {
               disabled={fbGenerating || !socialContentId.trim()}
               className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl"
               style={{
-                background: '#D4A017',
+                background: '#C9982A',
                 color: '#0C1A3D',
                 opacity: (fbGenerating || !socialContentId.trim()) ? 0.5 : 1,
               }}>

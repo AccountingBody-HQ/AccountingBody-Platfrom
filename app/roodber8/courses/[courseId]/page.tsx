@@ -41,7 +41,7 @@ interface ArticleSearchResult {
 const C = {
   card:    { background: '#0d1424', border: '1px solid #1a2238', borderRadius: 16 },
   input:   { background: '#111827', border: '1px solid #1f2937', borderRadius: 10, color: '#fff' },
-  active:  { background: 'rgba(212,160,23,0.12)', border: '1px solid #D4A017', color: '#fff' },
+  active:  { background: 'rgba(212,160,23,0.12)', border: '1px solid #C9982A', color: '#fff' },
   idle:    { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#64748b' },
   danger:  { background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#ef4444' },
   success: { background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)', color: '#10b981' },
@@ -56,7 +56,7 @@ const CANONICAL_OPTIONS = [{ value: 'accountingbody', label: 'AB' }, { value: 'e
 // ── Small helpers ─────────────────────────────────────────────────────────────
 
 function SaveStatus({ saving, saved, error }: { saving?: boolean; saved?: boolean; error?: string }) {
-  if (saving) return <Loader2 size={12} className="animate-spin" style={{ color: '#D4A017' }} />
+  if (saving) return <Loader2 size={12} className="animate-spin" style={{ color: '#C9982A' }} />
   if (error) return <span className="text-xs" style={{ color: '#ef4444' }}>{error}</span>
   if (saved) return <span className="text-xs font-semibold" style={{ color: '#10b981' }}>✓ Saved</span>
   return null
@@ -171,7 +171,7 @@ function ArticleSearchPanel({ onSelect }: { onSelect: (article: ArticleSearchRes
           placeholder="Search articles to add..."
           className="bg-transparent text-white text-sm flex-1 focus:outline-none placeholder-slate-600"
         />
-        {searching && <Loader2 size={13} className="animate-spin" style={{ color: '#D4A017' }} />}
+        {searching && <Loader2 size={13} className="animate-spin" style={{ color: '#C9982A' }} />}
       </div>
 
       {query.trim() && !searching && results.length === 0 && (
@@ -193,7 +193,7 @@ function ArticleSearchPanel({ onSelect }: { onSelect: (article: ArticleSearchRes
                   {a.category_title ?? ''}{a.category_title && a.read_time ? ' · ' : ''}{a.read_time ? `${a.read_time} min` : ''}
                 </p>
               </div>
-              <Plus size={13} style={{ color: '#D4A017' }} className="shrink-0" />
+              <Plus size={13} style={{ color: '#C9982A' }} className="shrink-0" />
             </button>
           ))}
         </div>
@@ -277,7 +277,7 @@ function ChapterCard({
       {/* Chapter header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ background: '#111827', borderColor: '#1a2238' }}>
         <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-          style={{ background: '#D4A017', color: '#0C1A3D' }}>
+          style={{ background: '#C9982A', color: '#0C1A3D' }}>
           {index + 1}
         </span>
         <input
@@ -392,7 +392,7 @@ function ChapterCard({
             />
             <button onClick={handleConfirmAddLesson} disabled={addingLesson || !newLessonTitle.trim()}
               className="h-9 px-4 rounded-lg text-xs font-bold disabled:opacity-40"
-              style={{ background: '#D4A017', color: '#0C1A3D' }}>
+              style={{ background: '#C9982A', color: '#0C1A3D' }}>
               {addingLesson ? <Loader2 size={13} className="animate-spin" /> : 'Confirm'}
             </button>
             <button onClick={() => { setAddLessonOpen(false); setNewLessonTitle('') }}
@@ -403,7 +403,7 @@ function ChapterCard({
         ) : (
           <button onClick={() => setAddLessonOpen(true)}
             className="text-xs font-bold px-3 py-2 rounded-lg"
-            style={{ background: 'rgba(212,160,23,0.08)', border: '1px solid #D4A017', color: '#D4A017' }}>
+            style={{ background: 'rgba(212,160,23,0.08)', border: '1px solid #C9982A', color: '#C9982A' }}>
             + Add Lesson
           </button>
         )}
@@ -662,7 +662,7 @@ export default function CourseEditorPage() {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center min-h-64">
-        <Loader2 size={28} className="animate-spin" style={{ color: '#D4A017' }} />
+        <Loader2 size={28} className="animate-spin" style={{ color: '#C9982A' }} />
       </div>
     )
   }
@@ -838,7 +838,7 @@ export default function CourseEditorPage() {
               <h2 className="text-lg font-bold text-white">Course Structure</h2>
               <button onClick={handleAddChapter} disabled={addingChapter}
                 className="flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-xl disabled:opacity-40"
-                style={{ background: '#D4A017', color: '#0C1A3D' }}>
+                style={{ background: '#C9982A', color: '#0C1A3D' }}>
                 {addingChapter ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
                 Add Chapter
               </button>
@@ -898,7 +898,7 @@ export default function CourseEditorPage() {
                 </a>
               )}
               <Link href="/roodber8/course-factory"
-                className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#D4A017' }}>
+                className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#C9982A' }}>
                 Open in Course Factory
               </Link>
             </div>

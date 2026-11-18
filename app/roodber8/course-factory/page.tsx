@@ -18,7 +18,7 @@ const C = {
   card:    { background: '#0d1424', border: '1px solid #1a2238', borderRadius: 16 },
   input:   { background: '#111827', border: '1px solid #1f2937', borderRadius: 10, color: '#fff' },
   select:  { background: '#111827', border: '1px solid #1f2937', borderRadius: 10, color: '#fff' },
-  active:  { background: 'rgba(212,160,23,0.12)', border: '1px solid #D4A017', color: '#fff' },
+  active:  { background: 'rgba(212,160,23,0.12)', border: '1px solid #C9982A', color: '#fff' },
   idle:    { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#64748b' },
   danger:  { background: 'rgba(239,68,68,0.08)',  border: '1px solid rgba(239,68,68,0.25)',   color: '#ef4444' },
   success: { background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)',  color: '#10b981' },
@@ -424,7 +424,7 @@ This will permanently delete the course and all its chapters and lessons. This c
       <div className="flex items-center gap-3 mb-8">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: 'rgba(212,160,23,0.12)' }}>
-          <Factory size={20} style={{ color: '#D4A017' }} />
+          <Factory size={20} style={{ color: '#C9982A' }} />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">Course Factory</h1>
@@ -446,7 +446,7 @@ This will permanently delete the course and all its chapters and lessons. This c
             <button
               onClick={handleOpenLoadPanel}
               className="h-9 px-4 rounded-lg text-sm font-semibold"
-              style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #D4A017' }}
+              style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #C9982A' }}
             >
               {showLoadPanel ? 'Hide' : 'Browse Courses'}
             </button>
@@ -487,7 +487,7 @@ This will permanently delete the course and all its chapters and lessons. This c
                   <span className="text-xs font-bold px-2.5 py-1 rounded-full shrink-0"
                     style={{
                       background: c.status === 'published' ? 'rgba(16,185,129,0.1)' : 'rgba(212,160,23,0.1)',
-                      color:      c.status === 'published' ? '#10b981' : '#D4A017',
+                      color:      c.status === 'published' ? '#10b981' : '#C9982A',
                     }}
                   >
                     {c.status}
@@ -508,7 +508,7 @@ This will permanently delete the course and all its chapters and lessons. This c
         <section className="rounded-2xl border p-6 space-y-4" style={C.card}>
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <span className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center"
-              style={{ background: '#D4A017', color: '#0C1A3D' }}>1</span>
+              style={{ background: '#C9982A', color: '#0C1A3D' }}>1</span>
             Course Details
           </h2>
 
@@ -591,7 +591,7 @@ This will permanently delete the course and all its chapters and lessons. This c
                 >
                   {showOnSites.includes(site) && <span className="mr-1">&#10003;</span>}
                   {site}
-                  {site === 'accountingbody' && <span className="ml-2 text-xs" style={{ color: '#D4A017' }}>Required</span>}
+                  {site === 'accountingbody' && <span className="ml-2 text-xs" style={{ color: '#C9982A' }}>Required</span>}
                 </button>
               ))}
             </div>
@@ -620,7 +620,7 @@ This will permanently delete the course and all its chapters and lessons. This c
         <section className="rounded-2xl border p-6 space-y-4" style={C.card}>
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <span className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center"
-              style={{ background: '#D4A017', color: '#0C1A3D' }}>2</span>
+              style={{ background: '#C9982A', color: '#0C1A3D' }}>2</span>
             Add Content by ID
           </h2>
           <p className="text-xs" style={{ color: '#475569' }}>Enter a wpId (e.g. 1999) or contentId (e.g. AB-ART-00001) to fetch an article.</p>
@@ -638,7 +638,7 @@ This will permanently delete the course and all its chapters and lessons. This c
               onClick={handleFetch}
               disabled={fetching || !idInput.trim()}
               className="h-10 px-5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-40 self-start"
-              style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #D4A017' }}
+              style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #C9982A' }}
             >
               {fetching ? 'Fetching...' : 'Fetch All'}
             </button>
@@ -699,7 +699,7 @@ This will permanently delete the course and all its chapters and lessons. This c
               <button
                 onClick={handleAddArticles}
                 className="w-full h-9 rounded-lg text-sm font-semibold transition-colors"
-                style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #D4A017' }}
+                style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #C9982A' }}
               >
                 {targetLesson === 'one-per-chapter' ? `Add ${fetchedArticles.length} Articles as ${fetchedArticles.length} Chapters` : `Add ${fetchedArticles.length} Article${fetchedArticles.length > 1 ? 's' : ''} to Course`}
               </button>
@@ -712,7 +712,7 @@ This will permanently delete the course and all its chapters and lessons. This c
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <span className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center"
-                style={{ background: '#D4A017', color: '#0C1A3D' }}>3</span>
+                style={{ background: '#C9982A', color: '#0C1A3D' }}>3</span>
               Course Structure
             </h2>
             <span className="text-xs" style={{ color: '#475569' }}>{chapters.length} chapters · {totalLessons} lessons</span>
@@ -724,7 +724,7 @@ This will permanently delete the course and all its chapters and lessons. This c
                 {/* Chapter header */}
                 <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ background: '#111827', borderColor: '#1a2238' }}>
                   <span className="w-6 h-6 rounded text-xs font-bold flex items-center justify-center shrink-0"
-                    style={{ background: '#D4A017', color: '#0C1A3D' }}>
+                    style={{ background: '#C9982A', color: '#0C1A3D' }}>
                     {ci + 1}
                   </span>
                   <input
@@ -813,7 +813,7 @@ This will permanently delete the course and all its chapters and lessons. This c
         <section className="rounded-2xl border p-6 space-y-4" style={C.card}>
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <span className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center"
-              style={{ background: '#D4A017', color: '#0C1A3D' }}>4</span>
+              style={{ background: '#C9982A', color: '#0C1A3D' }}>4</span>
             Save Course
           </h2>
 
@@ -837,7 +837,7 @@ This will permanently delete the course and all its chapters and lessons. This c
             onClick={handleSave}
             disabled={saving || !title.trim()}
             className="w-full h-12 rounded-xl text-base font-bold transition-colors disabled:opacity-40"
-            style={{ background: '#D4A017', color: '#0C1A3D' }}
+            style={{ background: '#C9982A', color: '#0C1A3D' }}
           >
             {saving ? 'Saving...' : 'Save Course'}
           </button>

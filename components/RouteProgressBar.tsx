@@ -132,7 +132,7 @@ export default function RouteProgressBar() {
         left: 0,
         width: `${width}%`,
         height: '3px',
-        backgroundColor: '#D4A017',
+        backgroundColor: '#C9982A',
         transition: width === 100 ? 'width 0.15s ease, opacity 0.3s ease' : 'width 0.4s ease',
         opacity: width === 100 ? 0 : 1,
         zIndex: 9999,

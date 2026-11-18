@@ -239,7 +239,7 @@ export function NewsTicker({
       <div className="shrink-0 flex items-center gap-0 border-l border-white/10">
         <button
           onClick={() => setPaused(p => !p)}
-          className="w-8 h-full flex items-center justify-center text-white/40 hover:text-white/80 hover:bg-white/5 transition-colors"
+          className="w-8 h-full flex items-center justify-center text-white/70 hover:text-white/80 hover:bg-white/5 transition-colors"
           aria-label={paused ? 'Resume ticker' : 'Pause ticker'}
         >
           {paused ? (
@@ -255,7 +255,7 @@ export function NewsTicker({
 
         <button
           onClick={handleDismiss}
-          className="w-8 h-full flex items-center justify-center text-white/30 hover:text-white/70 hover:bg-white/5 transition-colors"
+          className="w-8 h-full flex items-center justify-center text-white/70 hover:text-white/70 hover:bg-white/5 transition-colors"
           aria-label="Dismiss ticker"
         >
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -135,7 +135,7 @@ export default function ManageListingClient({ token, isEthioTax }: { token: stri
     <>
       <div style={{ background: brand, padding: '32px 24px 48px' }}>
         <div className="max-w-3xl mx-auto">
-          <p style={{ color: '#D4A017', fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 8 }}>
+          <p style={{ color: '#C9982A', fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 8 }}>
             {platformName} — Job Listings
           </p>
           <h1 style={{ color: '#fff', fontFamily: 'Georgia, serif', fontSize: 28, fontWeight: 700, margin: 0 }}>

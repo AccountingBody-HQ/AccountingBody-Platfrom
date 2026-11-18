@@ -29,21 +29,21 @@ export default function ComingSoonExamCard({ name, level }: { name: string; leve
         <div className="flex items-center gap-4 mb-5">
           <div>
             <p className="font-display text-xl font-bold text-slate-200">—</p>
-            <p className="text-xs text-slate-300">questions in pool</p>
+            <p className="text-xs text-slate-500">questions in pool</p>
           </div>
           <div className="w-px h-8 bg-slate-100" />
           <div>
             <p className="font-display text-xl font-bold text-slate-200">50</p>
-            <p className="text-xs text-slate-300">per attempt</p>
+            <p className="text-xs text-slate-500">per attempt</p>
           </div>
           <div className="w-px h-8 bg-slate-100" />
           <div>
             <p className="font-display text-xl font-bold text-slate-200">∞</p>
-            <p className="text-xs text-slate-300">attempts</p>
+            <p className="text-xs text-slate-500">attempts</p>
           </div>
         </div>
         {/* CTA */}
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold mt-auto text-slate-300">
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold mt-auto text-slate-500">
           Exam not yet available
         </span>
       </div>

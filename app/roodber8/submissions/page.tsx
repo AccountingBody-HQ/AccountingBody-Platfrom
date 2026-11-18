@@ -81,7 +81,7 @@ export default async function SubmissionsPage({
         <div className="flex items-center gap-3">
           <a href={'data:text/csv;charset=utf-8,' + encodeURIComponent(helpCsvContent)} download="help-requests.csv"
             className="flex items-center gap-2 text-sm font-bold px-4 py-2.5 rounded-xl"
-            style={{ background: '#0C1A3D', color: '#D4A017', border: '1px solid #D4A017' }}>
+            style={{ background: '#0C1A3D', color: '#C9982A', border: '1px solid #C9982A' }}>
             Export Help Requests
           </a>
           <a href={'data:text/csv;charset=utf-8,' + encodeURIComponent(contactCsvContent)} download="contact-submissions.csv"
@@ -126,7 +126,7 @@ export default async function SubmissionsPage({
           </select>
           <button type="submit"
             className="px-4 py-2 rounded-xl text-sm font-semibold"
-            style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+            style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }}>
             Filter
           </button>
           {(safeSearch || serviceType || status) && (

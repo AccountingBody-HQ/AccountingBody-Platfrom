@@ -165,7 +165,7 @@ export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: b
               : 'Check your inbox to confirm'}
           </p>
         </div>
-        <button onClick={() => setStatus('idle')} className="text-xs text-white/50 hover:text-white/80 transition-colors">
+        <button onClick={() => setStatus('idle')} className="text-xs text-white/70 hover:text-white/80 transition-colors">
           Subscribe another email
         </button>
       </div>

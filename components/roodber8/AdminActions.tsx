@@ -268,7 +268,7 @@ export function NotesField({ id, table, initialNotes }: NotesFieldProps) {
           onClick={handleSave}
           disabled={saving}
           className="px-3 py-2 rounded-xl text-xs font-bold shrink-0"
-          style={{ background: '#0C1A3D', color: '#D4A017', border: '1px solid #D4A017' }}>
+          style={{ background: '#0C1A3D', color: '#C9982A', border: '1px solid #C9982A' }}>
           {saving ? <Loader2 size={10} className="animate-spin inline" /> : 'Save'}
         </button>
       </div>

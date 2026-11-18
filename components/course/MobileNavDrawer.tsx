@@ -71,7 +71,7 @@ export default function MobileNavDrawer({
           <button
             onClick={() => setOpen(true)}
             className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-sm font-bold transition-all active:scale-95"
-            style={{ background: 'rgba(212,160,23,0.15)', color: '#D4A017', border: '1px solid rgba(212,160,23,0.3)' }}
+            style={{ background: 'rgba(212,160,23,0.15)', color: '#C9982A', border: '1px solid rgba(212,160,23,0.3)' }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" />
@@ -85,7 +85,7 @@ export default function MobileNavDrawer({
               href={`/free-courses/${courseSlug}/learn/${nextLesson.slug}`}
               title={nextLesson.title}
               className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all active:scale-95"
-              style={{ background: '#D4A017', boxShadow: '0 4px 12px rgba(212,160,23,0.4)' }}
+              style={{ background: '#C9982A', boxShadow: '0 4px 12px rgba(212,160,23,0.4)' }}
             >
               <svg className="w-4 h-4" style={{ color: '#0C1A3D' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
@@ -121,7 +121,7 @@ export default function MobileNavDrawer({
             {/* Sheet header */}
             <div className="flex items-center justify-between px-5 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
               <div>
-                <p className="text-[0.6rem] font-black uppercase tracking-[0.15em]" style={{ color: '#D4A017' }}>
+                <p className="text-[0.6rem] font-black uppercase tracking-[0.15em]" style={{ color: '#C9982A' }}>
                   Course Content
                 </p>
                 <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
@@ -154,13 +154,13 @@ export default function MobileNavDrawer({
                   >
                     <div
                       className="w-5 h-5 rounded flex items-center justify-center text-[0.55rem] font-black shrink-0 mt-0.5"
-                      style={{ background: '#D4A017', color: '#0C1A3D' }}
+                      style={{ background: '#C9982A', color: '#0C1A3D' }}
                     >
                       {ci + 1}
                     </div>
                     <p
                       className="text-[0.65rem] font-black uppercase tracking-[0.1em] leading-snug flex-1 min-w-0"
-                      style={{ color: '#D4A017', overflowWrap: 'break-word', wordBreak: 'break-word' }}
+                      style={{ color: '#C9982A', overflowWrap: 'break-word', wordBreak: 'break-word' }}
                     >
                       {chapter.chapterTitle}
                     </p>
@@ -177,7 +177,7 @@ export default function MobileNavDrawer({
                           className="flex items-start gap-3 pl-5 pr-4 py-3 transition-all"
                           style={{
                             background: isActive ? 'rgba(212,160,23,0.1)' : 'transparent',
-                            borderLeft: isActive ? '3px solid #D4A017'    : '3px solid transparent',
+                            borderLeft: isActive ? '3px solid #C9982A'    : '3px solid transparent',
                           }}
                         >
                           <div className="mt-0.5 shrink-0">

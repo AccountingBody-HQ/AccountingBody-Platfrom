@@ -34,8 +34,8 @@ const config: Config = {
           200: '#f5e095',
           300: '#efc85d',
           400: '#e8b030',
-          500: '#D4A017',  // PRIMARY ACCENT
-          600: '#b87d10',
+          500: '#C9982A',  // PRIMARY ACCENT - the one brand gold (D233)
+          600: '#88671c',  // gold for TEXT on light backgrounds (WCAG AA 4.5:1)
           700: '#935c11',
           800: '#794915',
           900: '#663c15',
@@ -49,9 +49,9 @@ const config: Config = {
           100: '#f1f0ec',
           200: '#e4e2db',
           300: '#ccc9bf',
-          400: '#b0ac9f',
-          500: '#928e80',
-          600: '#787367',
+          400: '#6f6d65',  // darkened for text contrast (A11-F2)
+          500: '#66635a',  // darkened for text contrast (A11-F2)
+          600: '#625e55',  // darkened for text contrast (A11-F2)
           700: '#615d53',
           800: '#504d46',
           900: '#433f38',
@@ -67,7 +67,7 @@ const config: Config = {
           300: '#5be8d6',
           400: '#2dd0bc',
           500: '#14b4a3',
-          600: '#0d9185',
+          600: '#0b7b71',  // darkened for text contrast (A11-F2)
           700: '#10736b',
           800: '#125c57',
           900: '#134c47',
@@ -92,7 +92,7 @@ const config: Config = {
 
         // ── Semantic aliases ───────────────────────────────────────
         brand:   '#0C1A3D',
-        accent:  '#D4A017',
+        accent:  '#C9982A',
         surface: '#F8F7F4',
       },
 

@@ -130,7 +130,7 @@ export default async function CourseLibraryPage() {
   ])
 
   const STATS = [
-    { label: 'Total Courses',  value: totalCourses ?? 0,   color: '#D4A017', bg: 'rgba(212,160,23,0.08)', border: 'rgba(212,160,23,0.2)' },
+    { label: 'Total Courses',  value: totalCourses ?? 0,   color: '#C9982A', bg: 'rgba(212,160,23,0.08)', border: 'rgba(212,160,23,0.2)' },
     { label: 'Published',      value: publishedCount ?? 0, color: '#10b981', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)' },
     { label: 'Draft',          value: draftCount ?? 0,     color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)' },
     { label: 'Total Chapters', value: totalChapters ?? 0,  color: '#3b82f6', bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.2)' },
@@ -146,7 +146,7 @@ export default async function CourseLibraryPage() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
             style={{ background: 'rgba(212,160,23,0.12)' }}>
-            <BookOpen size={20} style={{ color: '#D4A017' }} />
+            <BookOpen size={20} style={{ color: '#C9982A' }} />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white">Courses</h1>
@@ -156,7 +156,7 @@ export default async function CourseLibraryPage() {
         <div className="flex items-center gap-3">
           <Link href="/roodber8/course-factory"
             className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl"
-            style={{ background: '#D4A017', color: '#0C1A3D' }}>
+            style={{ background: '#C9982A', color: '#0C1A3D' }}>
             <Plus size={15} /> New Course
           </Link>
         </div>
@@ -189,7 +189,7 @@ export default async function CourseLibraryPage() {
             <p className="text-sm mb-6" style={{ color: '#334155' }}>Create your first course using the button above.</p>
             <Link href="/roodber8/course-factory"
               className="inline-flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl"
-              style={{ background: '#D4A017', color: '#0C1A3D' }}>
+              style={{ background: '#C9982A', color: '#0C1A3D' }}>
               <Plus size={14} /> Create your first course
             </Link>
           </div>
@@ -232,11 +232,11 @@ export default async function CourseLibraryPage() {
                       <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ background: 'rgba(37,99,235,0.1)', color: '#60a5fa' }}>AB</span>
                     )}
                     {sites.includes('et') && (
-                      <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ background: 'rgba(212,160,23,0.1)', color: '#D4A017' }}>ET</span>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ background: 'rgba(212,160,23,0.1)', color: '#C9982A' }}>ET</span>
                     )}
                     <Link href={`/roodber8/courses/${course.id}`}
                       className="text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1"
-                      style={{ background: 'rgba(212,160,23,0.1)', color: '#D4A017', border: '1px solid rgba(212,160,23,0.2)' }}>
+                      style={{ background: 'rgba(212,160,23,0.1)', color: '#C9982A', border: '1px solid rgba(212,160,23,0.2)' }}>
                       Manage
                     </Link>
                     {course.status === 'published' && course.slug && (

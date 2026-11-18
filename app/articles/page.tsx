@@ -26,14 +26,14 @@ export default async function ArticlesPage() {
           </div>
         )}
         <div className="container-site relative z-10">
-          <nav className="flex items-center gap-2 text-white/40 text-sm mb-8">
+          <nav className="flex items-center gap-2 text-white/70 text-sm mb-8">
             <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">Articles</span>
           </nav>
           {isEthioTax ? (
             <>
-              <p className="text-[#C9982A] text-[11px] font-bold uppercase tracking-[0.12em] mb-4">Daily Digest</p>
+              <p className="text-gold-400 text-[11px] font-bold uppercase tracking-[0.12em] mb-4">Daily Digest</p>
               <h1 className="font-display text-white text-4xl md:text-5xl mb-4 leading-tight">Latest from EthioTax</h1>
               <p className="text-white/60 text-xl leading-relaxed max-w-2xl">
                 Industry updates, tax briefs, accounting news and insights — curated for Ethiopian finance professionals and the diaspora.
@@ -91,7 +91,7 @@ export default async function ArticlesPage() {
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       {posted && <span className="hidden md:block text-xs text-slate-400">{posted}</span>}
-                      <svg className="w-4 h-4 text-slate-300 group-hover:text-navy-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-slate-500 group-hover:text-navy-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                       </svg>
                     </div>

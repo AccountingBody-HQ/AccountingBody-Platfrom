@@ -235,20 +235,20 @@ export default function PayrollServicesPage() {
       <section className="py-20 bg-[#1A4731]">
         <div className="container-site">
           <div className="text-center mb-14">
-            <p className="text-[#C9982A] text-[11px] font-bold uppercase tracking-[0.12em] mb-4">How It Works</p>
+            <p className="text-gold-400 text-[11px] font-bold uppercase tracking-[0.12em] mb-4">How It Works</p>
             <h2 className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight mb-4">
               Five steps from enquiry to completion
             </h2>
-            <p className="text-white/55 text-lg max-w-md mx-auto">EthioTax manages every stage. You deal with us — we handle the rest.</p>
+            <p className="text-white/70 text-lg max-w-md mx-auto">EthioTax manages every stage. You deal with us — we handle the rest.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 max-w-5xl mx-auto">
             {processSteps.map(item => (
               <div key={item.step} className="flex flex-col items-center text-center">
-                <div className="w-[52px] h-[52px] rounded-full bg-[#C9982A] flex items-center justify-center text-[#1A4731] font-extrabold text-base mb-4 shrink-0">
+                <div className="w-[52px] h-[52px] rounded-full bg-[#C9982A] flex items-center justify-center text-[#163d2a] font-extrabold text-base mb-4 shrink-0">
                   {item.step}
                 </div>
                 <h3 className="font-display text-white text-[15px] font-bold mb-2">{item.title}</h3>
-                <p className="text-white/50 text-[12px] leading-relaxed">{item.desc}</p>
+                <p className="text-white/70 text-[12px] leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -281,7 +281,7 @@ export default function PayrollServicesPage() {
                   Thank you. EthioTax will review your enquiry and respond within 24 hours. For urgent matters, the WhatsApp button is available at the bottom right of this page.
                 </p>
                 <button onClick={() => setStatus('idle')}
-                  className="text-sm font-semibold text-[#1A4731] hover:text-[#C9982A] transition-colors">
+                  className="text-sm font-semibold text-[#1A4731] hover:text-gold-600 transition-colors">
                   Submit another enquiry
                 </button>
               </div>
@@ -357,7 +357,7 @@ export default function PayrollServicesPage() {
                   }}
                 />
                 <input type="text" value={form._h} onChange={e => setForm({ ...form, _h: e.target.value })} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
-                <p className="text-xs text-gray-400 text-center">
+                <p className="text-xs text-slate-500 text-center">
                   EthioTax will review your enquiry and respond within 24 hours. No work commences without your approval of scope and fee.
                 </p>
               </form>
@@ -369,7 +369,7 @@ export default function PayrollServicesPage() {
       {/* DISCLAIMER */}
       <section className="py-12 bg-white">
         <div className="max-w-5xl mx-auto px-6">
-          <p className="text-gray-400 text-xs leading-relaxed max-w-3xl mx-auto text-center">
+          <p className="text-slate-500 text-xs leading-relaxed max-w-3xl mx-auto text-center">
             All professional work, filings and regulatory submissions are prepared and carried out by qualified specialists. EthioTax manages your engagement and maintains service standards throughout.
           </p>
         </div>
@@ -451,13 +451,13 @@ export default function PayrollServicesPage() {
                     style={{ borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none' }}>
                     <span className="font-display text-xl font-bold text-white block mb-1"><span translate="no">{stat.value}</span></span>
                     <span className="text-xs font-semibold block mb-0.5" style={{ color: '#C9982A' }}>{stat.label}</span>
-                    <span className="text-xs text-white/35">{stat.sub}</span>
+                    <span className="text-xs text-white/70">{stat.sub}</span>
                   </div>
                 ))}
               </div>
               <div className="px-7 py-4 flex items-center justify-between"
                 style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(201,152,42,0.06)' }}>
-                <p className="text-xs text-white/40">EthioTax manages every placement.</p>
+                <p className="text-xs text-white/70">EthioTax manages every placement.</p>
                 <a href="/jobs/how-it-works" className="text-xs font-semibold ml-4 hover:opacity-80 transition-opacity" style={{ color: '#C9982A' }}>How it works →</a>
               </div>
             </div>

@@ -65,7 +65,7 @@ const s = StyleSheet.create({
   },
   chapterWrap: { marginBottom: 24 },
   chapterLabel: {
-    fontSize: 8, color: "#D4A017", fontFamily: "BookSans-Bold",
+    fontSize: 8, color: "#C9982A", fontFamily: "BookSans-Bold",
     textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6,
   },
   chapterTitle: {
@@ -73,14 +73,14 @@ const s = StyleSheet.create({
     marginBottom: 8, lineHeight: 1.2,
   },
   chapterRule: {
-    borderBottomWidth: 2, borderBottomColor: "#D4A017", marginBottom: 20,
+    borderBottomWidth: 2, borderBottomColor: "#C9982A", marginBottom: 20,
   },
   sectionHeader: {
     fontSize: 11, fontFamily: "BookSans-Bold", color: "#0C1A3D", marginBottom: 10,
   },
   answerWrap: { marginBottom: 10 },
   answerLabel: {
-    fontSize: 9, color: "#D4A017", fontFamily: "BookSans-Bold", marginBottom: 2,
+    fontSize: 9, color: "#C9982A", fontFamily: "BookSans-Bold", marginBottom: 2,
   },
   answerText: { fontSize: 9, color: "#333333", lineHeight: 1.6 },
 })

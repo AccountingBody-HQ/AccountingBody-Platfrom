@@ -207,7 +207,7 @@ export default function QuizBankRenderer({ data }: Props) {
         case 'correct':    return 'bg-teal-600 text-white'
         case 'wrong':      return 'bg-crimson-600 text-white'
         case 'answered':   return 'bg-navy-600 text-white'
-        case 'unanswered': return 'bg-navy-800 text-white/40 border border-white/10'
+        case 'unanswered': return 'bg-navy-800 text-white/70 border border-white/10'
       }
     } else {
       switch (state) {
@@ -245,12 +245,12 @@ export default function QuizBankRenderer({ data }: Props) {
     qCard:     dark ? 'bg-navy-900 border border-white/10'             : 'bg-white border border-slate-200 shadow-sm',
     qMeta:     dark ? 'bg-white/5 border-b border-white/10'            : 'bg-slate-50/80 border-b border-slate-100',
     navBtn:    dark ? 'border border-white/20 text-white/80 hover:bg-white/10 disabled:opacity-25' : 'border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-30',
-    label2xs:  dark ? 'text-white/40'  : 'text-slate-400',
+    label2xs:  dark ? 'text-white/70'  : 'text-slate-400',
     bodyText:  dark ? 'text-white'     : 'text-navy-950',
     bodyMuted: dark ? 'text-white/60'  : 'text-slate-500',
     explain:   dark ? 'bg-white/5 border border-white/10'              : 'bg-navy-50 border border-navy-200',
     explainTxt:dark ? 'text-white/70'  : 'text-navy-800',
-    explainHd: dark ? 'text-white/40'  : 'text-navy-500',
+    explainHd: dark ? 'text-white/70'  : 'text-navy-500',
     counter:   dark ? 'bg-white/10 text-white/70 border-transparent'   : 'bg-navy-50 text-navy-600 border border-navy-200',
     timer:     dark ? 'bg-white/10 text-white border-transparent'      : 'bg-navy-50 text-navy-700 border border-navy-200',
   }
@@ -407,7 +407,7 @@ export default function QuizBankRenderer({ data }: Props) {
               </span>
             )}
             {q.timeTargetMinutes && (
-              <span className={`flex items-center gap-1 text-[0.625rem] font-medium px-2 py-0.5 rounded-full border ${dark ? 'bg-white/10 text-white/50 border-white/10' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+              <span className={`flex items-center gap-1 text-[0.625rem] font-medium px-2 py-0.5 rounded-full border ${dark ? 'bg-white/10 text-white/70 border-white/10' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" strokeWidth="2"/>
                   <path strokeLinecap="round" strokeWidth="2" d="M12 6v6l4 2"/>
@@ -416,7 +416,7 @@ export default function QuizBankRenderer({ data }: Props) {
               </span>
             )}
             {q.primaryTopic && (
-              <span className={`text-[0.625rem] px-2 py-0.5 rounded-full border ml-auto ${dark ? 'bg-white/10 text-white/50 border-white/10' : 'bg-navy-50 text-navy-500 border-navy-100'}`}>
+              <span className={`text-[0.625rem] px-2 py-0.5 rounded-full border ml-auto ${dark ? 'bg-white/10 text-white/70 border-white/10' : 'bg-navy-50 text-navy-500 border-navy-100'}`}>
                 {q.primaryTopic}
               </span>
             )}
@@ -428,7 +428,7 @@ export default function QuizBankRenderer({ data }: Props) {
             {q.caseId && caseMap[q.caseId] && (
               <div className={`mb-4 p-4 rounded-lg ${dark ? 'bg-white/5 border border-white/10' : 'bg-navy-50 border border-navy-200'}`}>
                 {caseMap[q.caseId].title && (
-                  <p className={`text-[0.625rem] font-semibold uppercase tracking-widest mb-2 ${dark ? 'text-white/40' : 'text-navy-500'}`}>
+                  <p className={`text-[0.625rem] font-semibold uppercase tracking-widest mb-2 ${dark ? 'text-white/70' : 'text-navy-500'}`}>
                     {caseMap[q.caseId].title}
                   </p>
                 )}
@@ -457,7 +457,7 @@ export default function QuizBankRenderer({ data }: Props) {
                   placeholder="Type your answer here…"
                   className={`w-full text-sm border rounded-lg px-4 py-3 resize-y focus:outline-none focus:ring-2 focus:border-transparent transition ${
                     dark
-                      ? 'bg-white/5 border-white/20 text-white placeholder:text-white/30 focus:ring-gold-500 disabled:opacity-40'
+                      ? 'bg-white/5 border-white/20 text-white placeholder:text-white/70 focus:ring-gold-500 disabled:opacity-40'
                       : 'bg-white border-slate-200 text-slate-800 placeholder:text-slate-400 disabled:bg-slate-50 disabled:text-slate-400 focus:ring-navy-950'
                   }`}
                 />
@@ -510,7 +510,7 @@ export default function QuizBankRenderer({ data }: Props) {
                   const dotCls = isThisRight ? 'bg-teal-500 border-teal-500 text-white'
                     : isThisWrong ? 'bg-crimson-500 border-crimson-500 text-white'
                     : isSelected  ? 'bg-navy-950 border-navy-950 text-white'
-                    : dark        ? 'border-white/30 text-white/50'
+                    : dark        ? 'border-white/30 text-white/70'
                     : 'border-slate-300 text-slate-400'
 
                   return (

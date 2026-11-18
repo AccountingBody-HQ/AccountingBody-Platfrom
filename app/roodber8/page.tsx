@@ -210,7 +210,7 @@ export default async function AdminCommandCentre() {
       label: "Question Sets",
       value: stats.questionSetsCount,
       sub: stats.questionsCount + " total questions",
-      color: "#D4A017",
+      color: "#C9982A",
       bg: "rgba(212,160,23,0.08)",
       border: "rgba(212,160,23,0.2)",
       icon: HelpCircle,
@@ -220,7 +220,7 @@ export default async function AdminCommandCentre() {
       label: "Articles",
       value: stats.articleCount,
       sub: stats.articleCount + " on AB · " + stats.articleEtCount + " on ET",
-      color: "#D4A017",
+      color: "#C9982A",
       bg: "rgba(212,160,23,0.08)",
       border: "rgba(212,160,23,0.2)",
       icon: FileText,
@@ -240,18 +240,18 @@ export default async function AdminCommandCentre() {
 
   const QUICK_ACTIONS = [
     { label: "Provider Pipeline",  sub: "Manage job data sources",  href: "/roodber8/providers",       icon: Server,      color: "#60a5fa" },
-    { label: "Content Studio",     sub: "Daily refresh workflow",   href: "/roodber8/studio",          icon: Sparkles,    color: "#D4A017" },
+    { label: "Content Studio",     sub: "Daily refresh workflow",   href: "/roodber8/studio",          icon: Sparkles,    color: "#C9982A" },
     { label: "View Submissions",   sub: "Help & contact forms",     href: "/roodber8/submissions",     icon: Inbox,       color: "#3b82f6" },
     { label: "Manage Subscribers", sub: "Email list & CSV export",  href: "/roodber8/subscribers",     icon: Users,       color: "#10b981" },
     { label: "Content Factory",    sub: "Generate AI study content",href: "/roodber8/content-factory", icon: Factory,     color: "#f59e0b" },
     { label: "Jobs & Firms",       sub: "Listings & applications",  href: "/roodber8/jobs-firms",      icon: Briefcase,   color: "#8b5cf6" },
     { label: "Manage Jobs",        sub: "Approve, reject & feature listings", href: "/roodber8/jobs",  icon: Briefcase,   color: "#60a5fa" },
-    { label: "Post a Job",         sub: "Public employer posting form", href: "/jobs/post-a-job",      icon: Briefcase,   color: "#D4A017", external: true },
-    { label: "Questions",          sub: "Generate practice questions",href: "/roodber8/questions",       icon: HelpCircle,  color: "#D4A017" },
-    { label: "Articles",           sub: "Manage and import study content", href: "/roodber8/articles",   icon: FileText,    color: "#D4A017" },
+    { label: "Post a Job",         sub: "Public employer posting form", href: "/jobs/post-a-job",      icon: Briefcase,   color: "#C9982A", external: true },
+    { label: "Questions",          sub: "Generate practice questions",href: "/roodber8/questions",       icon: HelpCircle,  color: "#C9982A" },
+    { label: "Articles",           sub: "Manage and import study content", href: "/roodber8/articles",   icon: FileText,    color: "#C9982A" },
     { label: "Courses",            sub: "Manage and publish structured courses", href: "/roodber8/courses", icon: BookOpen, color: "#14b4a3" },
     { label: "Course Factory",     sub: "Assemble structured courses", href: "/roodber8/course-factory",  icon: Factory,     color: "#14b4a3" },
-    { label: "AB Press",           sub: "Generate KDP-ready study books", href: "/roodber8/ab-press",        icon: BookOpen,    color: "#D4A017" },
+    { label: "AB Press",           sub: "Generate KDP-ready study books", href: "/roodber8/ab-press",        icon: BookOpen,    color: "#C9982A" },
   ]
 
   return (
@@ -500,7 +500,7 @@ export default async function AdminCommandCentre() {
             )}
             <Link href="/roodber8/providers/new"
               className="text-xs font-semibold px-2.5 py-1 rounded-lg"
-              style={{ background: "rgba(212,160,23,0.1)", color: "#D4A017", border: "1px solid rgba(212,160,23,0.2)" }}>
+              style={{ background: "rgba(212,160,23,0.1)", color: "#C9982A", border: "1px solid rgba(212,160,23,0.2)" }}>
               + Add Provider
             </Link>
             <Link href="/roodber8/providers"

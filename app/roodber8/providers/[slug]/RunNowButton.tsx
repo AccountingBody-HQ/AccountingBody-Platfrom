@@ -66,7 +66,7 @@ export default function RunNowButton({ slug }: { slug: string }) {
         disabled={isLoading}
         className="flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition-opacity hover:opacity-90"
         style={{
-          background: '#D4A017',
+          background: '#C9982A',
           color: '#0d1424',
           opacity: isLoading ? 0.6 : 1,
         }}

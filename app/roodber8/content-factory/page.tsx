@@ -122,7 +122,7 @@ const IMPORT_DIFF_STYLE: Record<string, { bg: string; color: string; border: str
 // the gold "selected" treatment used on the sibling articles/import page —
 // added here rather than repurposing C.active, which would recolour every
 // existing generate-flow selector.
-const GOLD_ACTIVE  = { background: 'rgba(212,160,23,0.12)', border: '1px solid #D4A017', color: '#ffffff' }
+const GOLD_ACTIVE  = { background: 'rgba(212,160,23,0.12)', border: '1px solid #C9982A', color: '#ffffff' }
 const GREEN_ACTIVE = { background: 'rgba(16,185,129,0.12)', border: '1px solid #10b981', color: '#ffffff' }
 
 function stripHtmlForPreview(html: string): string {
@@ -391,7 +391,7 @@ export default function ContentFactoryPage() {
       <div className="flex items-center gap-3 mb-8">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: 'rgba(212,160,23,0.12)' }}>
-          <Sparkles size={20} style={{ color: '#D4A017' }} />
+          <Sparkles size={20} style={{ color: '#C9982A' }} />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-white">Content Factory</h1>
@@ -405,14 +405,14 @@ export default function ContentFactoryPage() {
         <button onClick={() => switchMode('generate')}
           className={`flex items-center gap-2 px-5 py-2 text-sm ${mode === 'generate' ? 'font-bold' : 'font-semibold'}`}
           style={mode === 'generate'
-            ? { background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017', borderRadius: 10 }
+            ? { background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A', borderRadius: 10 }
             : { background: 'transparent', color: '#475569', border: '1px solid transparent', borderRadius: 10 }}>
           <Sparkles size={14} /> Generate
         </button>
         <button onClick={() => switchMode('import')}
           className={`flex items-center gap-2 px-5 py-2 text-sm ${mode === 'import' ? 'font-bold' : 'font-semibold'}`}
           style={mode === 'import'
-            ? { background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017', borderRadius: 10 }
+            ? { background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A', borderRadius: 10 }
             : { background: 'transparent', color: '#475569', border: '1px solid transparent', borderRadius: 10 }}>
           <FileJson size={14} /> Import JSON
         </button>
@@ -426,7 +426,7 @@ export default function ContentFactoryPage() {
               <div key={s} className="flex items-center">
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl"
                   style={i === step
-                    ? { background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }
+                    ? { background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }
                     : i < step
                       ? { background: 'rgba(16,185,129,0.12)', color: '#10b981' }
                       : { background: 'rgba(255,255,255,0.03)', color: '#334155' }}>
@@ -434,7 +434,7 @@ export default function ContentFactoryPage() {
                     style={i < step
                       ? { background: '#10b981', color: '#ffffff' }
                       : i === step
-                        ? { background: '#D4A017', color: '#0C1A3D' }
+                        ? { background: '#C9982A', color: '#0C1A3D' }
                         : { background: 'rgba(255,255,255,0.04)', color: '#334155' }}>
                     {i < step ? '✓' : i + 1}
                   </span>
@@ -544,7 +544,7 @@ export default function ContentFactoryPage() {
               <div className="flex justify-end">
                 <button onClick={() => setStep(1)} disabled={!step1Valid()}
                   className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl transition-all disabled:opacity-40"
-                  style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+                  style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }}>
                   Continue <ChevronRight size={15} />
                 </button>
               </div>
@@ -601,7 +601,7 @@ export default function ContentFactoryPage() {
                 </button>
                 <button onClick={() => setStep(2)}
                   className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl"
-                  style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+                  style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }}>
                   Continue <ChevronRight size={15} />
                 </button>
               </div>
@@ -635,7 +635,7 @@ export default function ContentFactoryPage() {
 
                 {/* Pipeline info */}
                 <div className="rounded-xl p-3" style={{ background: 'rgba(212,160,23,0.04)', border: '1px solid rgba(212,160,23,0.1)' }}>
-                  <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#D4A017' }}>Two-Pass Pipeline</p>
+                  <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#C9982A' }}>Two-Pass Pipeline</p>
                   <div className="flex gap-3">
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full" style={{ background: '#3b82f6' }} />
@@ -654,7 +654,7 @@ export default function ContentFactoryPage() {
               {generating && (
                 <div className="rounded-xl p-4 mb-4 flex items-center gap-3"
                   style={{ background: 'rgba(212,160,23,0.06)', border: '1px solid rgba(212,160,23,0.2)' }}>
-                  <Loader2 size={15} className="animate-spin" style={{ color: '#D4A017' }} />
+                  <Loader2 size={15} className="animate-spin" style={{ color: '#C9982A' }} />
                   <span className="text-sm font-bold text-white">Generating content… this may take up to 60 seconds</span>
                 </div>
               )}
@@ -674,7 +674,7 @@ export default function ContentFactoryPage() {
                 </button>
                 <button onClick={handleGenerate} disabled={generating}
                   className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl disabled:opacity-40"
-                  style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+                  style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }}>
                   {generating
                     ? <><Loader2 size={14} className="animate-spin" /> Generating...</>
                     : <><Sparkles size={14} /> Generate Content</>}
@@ -691,7 +691,7 @@ export default function ContentFactoryPage() {
                   { label: 'SEO Score',     value: `${seo}%`,          color: seoColor   },
                   { label: 'Word Count',    value: wordCount,           color: '#3b82f6'  },
                   { label: 'Status',        value: 'Critic Approved',   color: '#10b981'  },
-                  { label: 'Qualification', value: config.qualification, color: '#D4A017' },
+                  { label: 'Qualification', value: config.qualification, color: '#C9982A' },
                 ].map(c => (
                   <div key={c.label} className="rounded-2xl border p-4" style={C.card}>
                     <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#334155' }}>{c.label}</p>
@@ -724,7 +724,7 @@ export default function ContentFactoryPage() {
                 </button>
                 <button onClick={() => setStep(4)}
                   className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl"
-                  style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+                  style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }}>
                   Continue to Publish <ChevronRight size={15} />
                 </button>
               </div>
@@ -833,7 +833,7 @@ export default function ContentFactoryPage() {
               </p>
               <button onClick={reset}
                 className="flex items-center gap-2 text-sm font-bold px-8 py-3 rounded-xl mx-auto"
-                style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+                style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }}>
                 <Sparkles size={14} /> Create Another Article
               </button>
             </div>
@@ -849,7 +849,7 @@ export default function ContentFactoryPage() {
               <div key={s} className="flex items-center">
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl"
                   style={i === Math.min(importStep, 2)
-                    ? { background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }
+                    ? { background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }
                     : i < importStep
                       ? { background: 'rgba(16,185,129,0.12)', color: '#10b981' }
                       : { background: 'rgba(255,255,255,0.03)', color: '#334155' }}>
@@ -857,7 +857,7 @@ export default function ContentFactoryPage() {
                     style={i < importStep
                       ? { background: '#10b981', color: '#ffffff' }
                       : i === Math.min(importStep, 2)
-                        ? { background: '#D4A017', color: '#0C1A3D' }
+                        ? { background: '#C9982A', color: '#0C1A3D' }
                         : { background: 'rgba(255,255,255,0.04)', color: '#334155' }}>
                     {i < importStep ? '✓' : i + 1}
                   </span>
@@ -918,7 +918,7 @@ export default function ContentFactoryPage() {
               <div className="flex justify-end">
                 <button onClick={handleImportParse} disabled={importParsing || !importRawJson.trim()}
                   className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl disabled:opacity-40"
-                  style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+                  style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }}>
                   {importParsing
                     ? <><Loader2 size={14} className="animate-spin" /> Parsing…</>
                     : <><Upload size={14} /> Parse & Preview</>}
@@ -1200,14 +1200,14 @@ export default function ContentFactoryPage() {
               </p>
               {importPublishedSlug && (
                 <a href={`/articles/${importPublishedSlug}`} target="_blank" rel="noopener noreferrer"
-                  className="text-sm font-semibold inline-block mb-6" style={{ color: '#D4A017' }}>
+                  className="text-sm font-semibold inline-block mb-6" style={{ color: '#C9982A' }}>
                   View live → /articles/{importPublishedSlug}
                 </a>
               )}
               <div className="flex items-center justify-center gap-3 mt-6">
                 <button onClick={resetImport}
                   className="flex items-center gap-2 text-sm font-bold px-8 py-3 rounded-xl"
-                  style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+                  style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }}>
                   <Sparkles size={14} /> Import Another Article
                 </button>
                 <Link href="/roodber8/articles"

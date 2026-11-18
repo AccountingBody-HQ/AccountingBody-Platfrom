@@ -30,7 +30,7 @@ export default async function GuaranteePage() {
             style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         </div>
         <div className="container-site relative z-10">
-          <nav className="flex items-center gap-2 text-white/40 text-sm mb-8">
+          <nav className="flex items-center gap-2 text-white/70 text-sm mb-8">
             <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <Link href="/jobs" className="hover:text-white/70 transition-colors">Jobs</Link>
@@ -62,7 +62,7 @@ export default async function GuaranteePage() {
                 'The guarantee is void if the role, responsibilities, or terms of employment change materially after placement.',
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-3 text-slate-600 text-sm leading-relaxed">
-                  <svg className="w-5 h-5 text-gold-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-gold-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                   </svg>
                   {item}
@@ -82,7 +82,7 @@ export default async function GuaranteePage() {
                 'Cases where the employer has not notified us within the 90-day period.',
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-3 text-slate-500 text-sm leading-relaxed">
-                  <svg className="w-5 h-5 text-slate-300 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                   {item}

@@ -14,7 +14,7 @@ export default function CalculatorsPage() {
     <div style={{ background: '#F8F7F4', minHeight: '100vh' }}>
       <section style={{ background: '#0C1A3D', padding: '72px 0 56px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-          <span style={{ color: '#D4A017', fontSize: 11, fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Free Tools</span>
+          <span style={{ color: '#C9982A', fontSize: 11, fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Free Tools</span>
           <h1 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#fff', margin: '12px 0 16px', lineHeight: 1.1 }}>Accounting Calculators</h1>
           <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 17, maxWidth: 600, lineHeight: 1.7, margin: 0 }}>24 free instant calculators for ACCA, CIMA, ICAEW and AAT students. Results update as you type. No signup required.</p>
         </div>
@@ -104,7 +104,7 @@ export default function CalculatorsPage() {
         />
       </Section>
 
-      <Section title="Investment Appraisal" color="#D4A017">
+      <Section title="Investment Appraisal" color="#C9982A">
         <CalcCard title="Payback Period" tag="Appraisal" description="How long to recover the initial investment."
           fields={[{id:'invest',label:'Initial Investment (£)',placeholder:'100000'},{id:'cashflow',label:'Annual Cash Inflow (£)',placeholder:'25000'}]}
           calculate={v => { const inv=p(v,'invest'),cf=p(v,'cashflow'); if([inv,cf].some(isNaN)||cf===0)return null; const pb=inv/cf; const yrs=Math.floor(pb),months=Math.round((pb-yrs)*12); return [{label:'Payback Period',value:`${yrs} years ${months} months`},{label:'Annual Return',value:pct(cf/inv)}] }}

@@ -61,11 +61,11 @@ export default async function FreeCoursesPage({ searchParams }: { searchParams: 
           <div className="absolute inset-0 opacity-[0.04]"
             style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
           <div className="absolute bottom-0 right-0 w-1/2 h-1/2 opacity-10"
-            style={{ background: 'radial-gradient(ellipse at bottom right, #D4A017 0%, transparent 60%)' }} />
+            style={{ background: 'radial-gradient(ellipse at bottom right, #C9982A 0%, transparent 60%)' }} />
         </div>
         <div className="container-site relative z-10">
           <div className="max-w-4xl">
-            <nav className="flex items-center gap-2 text-white/40 text-sm mb-8">
+            <nav className="flex items-center gap-2 text-white/70 text-sm mb-8">
               <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
               <span className="text-white/70">Free Courses</span>
@@ -74,7 +74,7 @@ export default async function FreeCoursesPage({ searchParams }: { searchParams: 
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.025em' }}>
               Free accounting courses.
               <br />
-              <span style={{ background: 'linear-gradient(135deg, #D4A017 0%, #e8c050 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              <span style={{ background: 'linear-gradient(135deg, #C9982A 0%, #e8c050 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                 No signup. No paywall.
               </span>
             </h1>

@@ -414,7 +414,7 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
               </div>
             </div>
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
-              {status === 'error' && <p className="text-red-500 text-sm mb-4">Something went wrong. Please try again or contact us directly.</p>}
+              {status === 'error' && <p className="text-red-700 text-sm mb-4">Something went wrong. Please try again or contact us directly.</p>}
               <input type="text" value={form._h} onChange={e => setForm({...form, _h: e.target.value})} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
               <PersonCheck ref={personCheck} onToken={setPersonCheckToken} isEthioTax={isEthioTax} />
               <div className="flex items-center justify-between">
@@ -489,7 +489,7 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
             style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         </div>
         <div className="container-site relative z-10">
-          <nav className="flex items-center gap-2 text-white/40 text-sm mb-10">
+          <nav className="flex items-center gap-2 text-white/70 text-sm mb-10">
             <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">Freelancing Pathways</span>

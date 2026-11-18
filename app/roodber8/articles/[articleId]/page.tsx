@@ -63,7 +63,7 @@ const ALLOWED_FIELDS = [
 const C = {
   card:    { background: '#0d1424', border: '1px solid #1a2238', borderRadius: 16 },
   input:   { background: '#111827', border: '1px solid #1f2937', borderRadius: 10, color: '#fff' },
-  active:  { background: 'rgba(212,160,23,0.12)', border: '1px solid #D4A017', color: '#fff' },
+  active:  { background: 'rgba(212,160,23,0.12)', border: '1px solid #C9982A', color: '#fff' },
   idle:    { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#64748b' },
   danger:  { background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#ef4444' },
   success: { background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)', color: '#10b981' },
@@ -263,7 +263,7 @@ export default function ArticleEditorPage() {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center min-h-64">
-        <Loader2 size={28} className="animate-spin" style={{ color: '#D4A017' }} />
+        <Loader2 size={28} className="animate-spin" style={{ color: '#C9982A' }} />
       </div>
     )
   }
@@ -315,7 +315,7 @@ export default function ArticleEditorPage() {
               <div className="flex items-center gap-3 mb-2 flex-wrap">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                   style={{ background: 'rgba(212,160,23,0.12)' }}>
-                  <FileText size={18} style={{ color: '#D4A017' }} />
+                  <FileText size={18} style={{ color: '#C9982A' }} />
                 </div>
                 <h1 className="text-xl font-black text-white leading-tight">{article.title}</h1>
               </div>
@@ -334,7 +334,7 @@ export default function ArticleEditorPage() {
                 </span>
                 {article.exam_body?.[0] && (
                   <span className="text-xs font-bold uppercase px-2.5 py-1 rounded-lg"
-                    style={{ background: 'rgba(212,160,23,0.1)', color: '#D4A017' }}>
+                    style={{ background: 'rgba(212,160,23,0.1)', color: '#C9982A' }}>
                     {article.exam_body[0]}
                   </span>
                 )}

@@ -332,7 +332,7 @@ function MegaMenu({ section, onClose, rightAlign }: { section: NavSection; onClo
                 <Link
                   href={section.cta.href}
                   onClick={onClose}
-                  className="text-xs font-semibold text-navy-700 hover:text-gold-500 transition-colors whitespace-nowrap"
+                  className="text-xs font-semibold text-navy-700 hover:text-gold-600 transition-colors whitespace-nowrap"
                 >
                   {section.cta.label}
                 </Link>
@@ -450,7 +450,7 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
                             onClick={onClose}
                             className={[
                               'flex items-center gap-2 px-5 py-2 text-sm hover:bg-slate-100 transition-colors',
-                              isPostAJob ? 'text-[#C9982A] hover:text-[#b8871f]' : 'text-slate-700 hover:text-navy-950',
+                              isPostAJob ? 'text-gold-600 hover:text-gold-700' : 'text-slate-700 hover:text-navy-950',
                             ].join(' ')}
                           >
                             {isPostAJob && <span aria-hidden="true" style={{ color: '#C9982A' }}>●</span>}
@@ -478,7 +478,7 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
           <Link
             href="/jobs/post-a-job"
             onClick={onClose}
-            className="flex items-center justify-center gap-2 w-full bg-[#C9982A] hover:bg-[#b8871f] text-white font-semibold text-sm rounded-xl py-3.5 transition-colors duration-200"
+            className="flex items-center justify-center gap-2 w-full bg-[#C9982A] hover:bg-[#b8871f] text-[#0C1A3D] font-semibold text-sm rounded-xl py-3.5 transition-colors duration-200"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
@@ -767,7 +767,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
             {isEthioTax && (
               <Link
                 href="/jobs/post-a-job"
-                className="inline-flex items-center gap-2 bg-[#C9982A] hover:bg-[#C9982A] hover:text-[#1A4731] text-[#1A4731] text-sm font-semibold px-5 py-2 rounded-full transition-colors duration-200 whitespace-nowrap ml-3"
+                className="inline-flex items-center gap-2 bg-[#C9982A] hover:bg-[#C9982A] hover:text-[#163d2a] text-[#163d2a] text-sm font-semibold px-5 py-2 rounded-full transition-colors duration-200 whitespace-nowrap ml-3"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
@@ -785,7 +785,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
             {!isEthioTax && (
               <Link
                 href="/jobs/post-a-job"
-                className="inline-flex items-center gap-2 bg-[#C9982A] hover:bg-[#b8891f] hover:text-white text-[#0C1A3D] text-sm font-semibold px-5 py-2 rounded-full transition-colors duration-200 whitespace-nowrap"
+                className="inline-flex items-center gap-2 bg-[#C9982A] hover:bg-[#b8891f] text-[#0C1A3D] text-sm font-semibold px-5 py-2 rounded-full transition-colors duration-200 whitespace-nowrap"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>

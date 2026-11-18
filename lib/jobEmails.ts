@@ -43,7 +43,7 @@ function wrapEmail(brand: Brand, eyebrow: string, heading: string, bodyHtml: str
   return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8fafc;font-family:Georgia,serif;">
 <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
   <div style="background:${brand.color};padding:32px 40px;">
-    <p style="color:#D4A017;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${eyebrow}</p>
+    <p style="color:#C9982A;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">${eyebrow}</p>
     <h1 style="color:#fff;font-size:22px;margin:0;line-height:1.3;">${heading}</h1>
   </div>
   <div style="padding:32px 40px;">${bodyHtml}</div>
@@ -82,7 +82,7 @@ export async function sendJobConfirmationEmail(job: Job, manageToken: string): P
     `<p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 16px;">Dear ${firstName},</p>
      <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Thank you for your payment. Your job listing has been received and is now with our team for review.</p>
      ${jobSummaryTable(job)}
-     <div style="background:#f8fafc;border-radius:8px;border-left:3px solid #D4A017;padding:16px 20px;margin:0 0 24px;">
+     <div style="background:#f8fafc;border-radius:8px;border-left:3px solid #C9982A;padding:16px 20px;margin:0 0 24px;">
        <p style="margin:0;color:#475569;font-size:13px;line-height:1.6;">Our team will review your listing within 24 hours. You'll receive a confirmation email as soon as it goes live.</p>
      </div>
      ${manageListingButton(brand, manageToken)}
@@ -160,7 +160,7 @@ export async function sendJobRejectionEmail(job: Job): Promise<void> {
     'Update on your job listing.',
     `<p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 16px;">Dear ${firstName},</p>
      <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 20px;">Thank you for submitting your listing for <strong>${job.title}</strong> at ${job.company_name}. After review, we were unable to publish it as submitted.</p>
-     ${job.rejection_reason ? `<div style="background:#f8fafc;border-radius:8px;border-left:3px solid #D4A017;padding:16px 20px;margin:0 0 24px;"><p style="margin:0;color:#475569;font-size:13px;line-height:1.6;"><strong>Reason:</strong> ${job.rejection_reason}</p></div>` : ''}
+     ${job.rejection_reason ? `<div style="background:#f8fafc;border-radius:8px;border-left:3px solid #C9982A;padding:16px 20px;margin:0 0 24px;"><p style="margin:0;color:#475569;font-size:13px;line-height:1.6;"><strong>Reason:</strong> ${job.rejection_reason}</p></div>` : ''}
      <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 24px;">You're welcome to submit a new listing at any time — we're happy to review a revised version.</p>
      <a href="${postUrl}" style="display:inline-block;background:${brand.color};color:#fff;font-weight:700;font-size:14px;padding:12px 24px;border-radius:8px;text-decoration:none;">Post a new listing</a>`
   )

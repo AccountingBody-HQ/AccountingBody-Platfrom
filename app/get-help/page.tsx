@@ -199,7 +199,7 @@ export default async function GetHelpPage() {
                 <div key={stat.value} className="text-center py-4 px-2">
                   <p className="font-display text-[28px] font-extrabold text-[#1A4731] mb-1"><span translate="no"><span translate="no">{stat.value}</span></span></p>
                   <p className="text-[#1A4731] text-[13px] font-semibold mb-0.5">{stat.label}</p>
-                  <p className="text-gray-400 text-[12px]">{stat.sub}</p>
+                  <p className="text-slate-500 text-[12px]">{stat.sub}</p>
                 </div>
               ))}
             </div>
@@ -245,8 +245,8 @@ export default async function GetHelpPage() {
                   ))}
                 </div>
                 <div className="pl-[72px] flex items-center justify-between pt-4 border-t border-gray-100">
-                  <span className="text-[#C9982A] text-[13px] font-bold">Find out more →</span>
-                  <span className="text-gray-400 text-[12px]">Not a job board</span>
+                  <span className="text-gold-600 text-[13px] font-bold">Find out more →</span>
+                  <span className="text-slate-500 text-[12px]">Not a job board</span>
                 </div>
               </a>
               {etServices.map((s) => (
@@ -270,8 +270,8 @@ export default async function GetHelpPage() {
                     ))}
                   </div>
                   <div className="pl-[72px] flex items-center justify-between pt-4 border-t border-gray-100">
-                    <span className="text-[#C9982A] text-[13px] font-bold">Get a free quote →</span>
-                    <span className="text-gray-400 text-[12px]">Opens WhatsApp</span>
+                    <span className="text-gold-600 text-[13px] font-bold">Get a free quote →</span>
+                    <span className="text-slate-500 text-[12px]">Opens WhatsApp</span>
                   </div>
                 </a>
               ))}
@@ -283,22 +283,22 @@ export default async function GetHelpPage() {
         <section className="bg-[#1A4731] py-20 md:py-24">
           <div className="container-site">
             <div className="text-center mb-14">
-              <p className="text-[#C9982A] text-[11px] font-bold uppercase tracking-[0.12em] mb-4">How It Works</p>
+              <p className="text-gold-400 text-[11px] font-bold uppercase tracking-[0.12em] mb-4">How It Works</p>
               <h2 className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight mb-4">
                 Five steps to a managed service
               </h2>
-              <p className="text-white/55 text-lg max-w-md mx-auto">
+              <p className="text-white/70 text-lg max-w-md mx-auto">
                 EthioTax manages every stage. You deal with us — we handle the rest.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 max-w-5xl mx-auto">
               {etProcess.map((item) => (
                 <div key={item.step} className="flex flex-col items-center text-center">
-                  <div className="w-[52px] h-[52px] rounded-full bg-[#C9982A] flex items-center justify-center text-[#1A4731] font-extrabold text-base mb-4 shrink-0">
+                  <div className="w-[52px] h-[52px] rounded-full bg-[#C9982A] flex items-center justify-center text-[#163d2a] font-extrabold text-base mb-4 shrink-0">
                     {item.step}
                   </div>
                   <h3 className="font-display text-white text-[15px] font-bold mb-2">{item.title}</h3>
-                  <p className="text-white/50 text-[12px] leading-relaxed">{item.desc}</p>
+                  <p className="text-white/70 text-[12px] leading-relaxed">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -308,7 +308,7 @@ export default async function GetHelpPage() {
         {/* DISCLAIMER */}
         <section className="py-12 bg-white border-t" style={{ borderColor: '#e8f0eb' }}>
           <div className="max-w-5xl mx-auto px-6">
-            <p className="text-gray-400 text-xs leading-relaxed max-w-3xl">
+            <p className="text-slate-500 text-xs leading-relaxed max-w-3xl">
               All professional work, filings and regulatory submissions are prepared and carried out by qualified specialists. EthioTax manages your engagement and maintains service standards throughout.
             </p>
           </div>
@@ -357,7 +357,7 @@ export default async function GetHelpPage() {
             <div className="flex flex-col sm:grid sm:grid-cols-2 gap-3">
               <a href="#services"
                 className="inline-flex items-center justify-center gap-2 h-13 px-7 text-sm font-semibold rounded-lg transition-all shadow-gold"
-                style={{ backgroundColor: '#D4A017', color: '#0C1A3D' }}>
+                style={{ backgroundColor: '#C9982A', color: '#0C1A3D' }}>
                 View all services
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </a>
@@ -477,12 +477,12 @@ export default async function GetHelpPage() {
                       style={{ borderRight: i % 2 === 0 ? '1px solid rgba(255,255,255,0.08)' : 'none', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.08)' : 'none' }}>
                       <span className="font-display text-2xl font-bold text-white block mb-1"><span translate="no">{stat.value}</span></span>
                       <span className="text-xs font-semibold block mb-0.5" style={{ color: '#C9982A' }}>{stat.label}</span>
-                      <span className="text-xs text-white/35">{stat.sub}</span>
+                      <span className="text-xs text-white/70">{stat.sub}</span>
                     </div>
                   ))}
                 </div>
                 <div className="px-8 py-5 flex items-center justify-between" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(201,152,42,0.06)' }}>
-                  <p className="text-xs text-white/40 leading-relaxed">Candidates and employers never interact directly. <span className="text-white/60 font-medium">Accounting Body manages every placement.</span></p>
+                  <p className="text-xs text-white/70 leading-relaxed">Candidates and employers never interact directly. <span className="text-white/60 font-medium">Accounting Body manages every placement.</span></p>
                   <a href="/jobs/how-it-works" className="text-xs font-semibold whitespace-nowrap ml-4 hover:opacity-80 transition-opacity" style={{ color: '#C9982A' }}>How it works →</a>
                 </div>
               </div>

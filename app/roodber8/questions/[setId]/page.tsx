@@ -56,7 +56,7 @@ interface Question {
 const C = {
   card:    { background: '#0d1424', border: '1px solid #1a2238', borderRadius: 16 },
   input:   { background: '#111827', border: '1px solid #1f2937', borderRadius: 10, color: '#fff' },
-  active:  { background: 'rgba(212,160,23,0.12)', border: '1px solid #D4A017', color: '#fff' },
+  active:  { background: 'rgba(212,160,23,0.12)', border: '1px solid #C9982A', color: '#fff' },
   idle:    { background: 'rgba(255,255,255,0.03)', border: '1px solid #1f2937', color: '#64748b' },
   danger:  { background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#ef4444' },
   success: { background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)', color: '#10b981' },
@@ -253,7 +253,7 @@ function QuestionRow({
         <div className="px-5 py-4 flex items-start gap-3">
           {/* Number */}
           <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shrink-0 mt-0.5"
-            style={{ background: '#0C1A3D', color: '#D4A017', border: '1px solid #D4A017' }}>
+            style={{ background: '#0C1A3D', color: '#C9982A', border: '1px solid #C9982A' }}>
             {index + 1}
           </span>
 
@@ -606,7 +606,7 @@ function AddQuestionForm({
         <div className="flex items-center gap-3 pt-1">
           <button onClick={handleSave} disabled={saving}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold"
-            style={{ background: '#D4A017', color: '#0C1A3D' }}>
+            style={{ background: '#C9982A', color: '#0C1A3D' }}>
             {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
             Add Question
           </button>
@@ -790,7 +790,7 @@ export default function QuestionSetManagerPage() {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center min-h-64">
-        <Loader2 size={28} className="animate-spin" style={{ color: '#D4A017' }} />
+        <Loader2 size={28} className="animate-spin" style={{ color: '#C9982A' }} />
       </div>
     )
   }
@@ -841,7 +841,7 @@ export default function QuestionSetManagerPage() {
               <div className="flex items-center gap-3 mb-2 flex-wrap">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
                   style={{ background: 'rgba(212,160,23,0.12)' }}>
-                  <BookOpen size={18} style={{ color: '#D4A017' }} />
+                  <BookOpen size={18} style={{ color: '#C9982A' }} />
                 </div>
                 <h1 className="text-xl font-black text-white leading-tight">{set.title}</h1>
               </div>
@@ -857,7 +857,7 @@ export default function QuestionSetManagerPage() {
                 )}
                 {set.exam_body?.[0] && (
                   <span className="text-xs font-bold uppercase px-2.5 py-1 rounded-lg"
-                    style={{ background: 'rgba(212,160,23,0.1)', color: '#D4A017' }}>
+                    style={{ background: 'rgba(212,160,23,0.1)', color: '#C9982A' }}>
                     {set.exam_body[0]}
                   </span>
                 )}
@@ -916,7 +916,7 @@ export default function QuestionSetManagerPage() {
           <button
             onClick={() => setShowAddForm(v => !v)}
             className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl"
-            style={{ background: '#D4A017', color: '#0C1A3D' }}>
+            style={{ background: '#C9982A', color: '#0C1A3D' }}>
             <Plus size={13} />
             Add Question
           </button>

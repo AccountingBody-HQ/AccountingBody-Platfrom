@@ -53,7 +53,7 @@ export default function HeroSearch({ placeholder = 'Search study notes, practice
         <div className="p-2 shrink-0">
           <button
             type="submit"
-            className="flex items-center gap-2 bg-gold-500 hover:bg-gold-400 active:bg-gold-600 text-navy-950 font-bold rounded-lg transition-all px-4 py-2.5 text-sm"
+            className="flex items-center gap-2 bg-gold-500 hover:bg-gold-400 active:bg-gold-500 text-navy-950 font-bold rounded-lg transition-all px-4 py-2.5 text-sm"
           >
             <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -65,7 +65,7 @@ export default function HeroSearch({ placeholder = 'Search study notes, practice
 
       {/* Popular searches */}
       <div className="flex flex-wrap items-center gap-2 mt-4">
-        <span className="text-white/35 text-xs">Popular:</span>
+        <span className="text-white/70 text-xs">Popular:</span>
         {popularTerms.map(term => (
           <button
             key={term}
@@ -75,7 +75,7 @@ export default function HeroSearch({ placeholder = 'Search study notes, practice
               router.push('/search?q=' + encodeURIComponent(term))
             }}
             translate="no"
-            className="text-xs text-white/50 hover:text-white/90 border border-white/15 hover:border-white/35 rounded-full px-3 py-1 transition-all"
+            className="text-xs text-white/70 hover:text-white/90 border border-white/15 hover:border-white/35 rounded-full px-3 py-1 transition-all"
           >
             {term}
           </button>

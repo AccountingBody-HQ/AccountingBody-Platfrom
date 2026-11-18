@@ -90,7 +90,7 @@ export default function ContactPage() {
               </div>
               <div className="bg-navy-950 rounded-xl p-6 relative overflow-hidden">
                 <div className="absolute inset-0 opacity-10 pointer-events-none"
-                  style={{ background: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 60%)' }} />
+                  style={{ background: 'radial-gradient(circle at 80% 20%, #C9982A 0%, transparent 60%)' }} />
                 <div className="relative z-10">
                   <p className="text-gold-400 text-xs font-semibold uppercase tracking-widest mb-3">Stay Ahead</p>
                   <h4 className="font-display text-white text-lg mb-2 leading-snug">Get free exam tips by email</h4>

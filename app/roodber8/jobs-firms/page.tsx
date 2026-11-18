@@ -89,7 +89,7 @@ export default async function JobsFirmsPage({
       <div className="rounded-xl px-4 py-3 mb-6 text-sm"
         style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)', color: '#3b82f6' }}>
         Job listings have moved to the new Jobs admin →{' '}
-        <Link href="/roodber8/jobs" className="font-bold" style={{ color: '#D4A017' }}>Manage Jobs</Link>
+        <Link href="/roodber8/jobs" className="font-bold" style={{ color: '#C9982A' }}>Manage Jobs</Link>
       </div>
 
       <div className="flex items-start justify-between mb-8">
@@ -152,7 +152,7 @@ export default async function JobsFirmsPage({
           </select>
           <button type="submit"
             className="px-4 py-2 rounded-xl text-sm font-semibold"
-            style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+            style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }}>
             Filter
           </button>
           {(safeSearch || status || platform) && (

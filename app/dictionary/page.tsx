@@ -92,7 +92,7 @@ function ArticleRow({ article }: { article: DictionaryArticle }) {
       </div>
       <Link
         href={resolveArticlePath(article)}
-        className="shrink-0 self-start sm:self-center inline-flex items-center gap-1 text-xs font-semibold text-navy-700 hover:text-gold-500 transition-colors"
+        className="shrink-0 self-start sm:self-center inline-flex items-center gap-1 text-xs font-semibold text-navy-700 hover:text-gold-600 transition-colors"
       >
         Read
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,7 +166,7 @@ export default async function DictionaryPage({
               <h2 className="font-display text-2xl text-navy-950 mb-3">Select a letter to browse</h2>
               <p className="text-slate-500 text-base leading-relaxed mb-8">
                 Use the A–Z navigation above to browse accounting terms by their first letter, or visit the{" "}
-                <Link href="/glossary" className="text-navy-700 font-semibold hover:text-gold-500 transition-colors">
+                <Link href="/glossary" className="text-navy-700 font-semibold hover:text-gold-600 transition-colors">
                   Glossary hub
                 </Link>{" "}
                 to browse by topic area.
@@ -193,7 +193,7 @@ export default async function DictionaryPage({
               </h2>
               <p className="text-slate-500 leading-relaxed">
                 We are continuously adding new content. Try another letter or{" "}
-                <Link href="/glossary" className="text-navy-700 font-semibold hover:text-gold-500 transition-colors">browse the glossary</Link>.
+                <Link href="/glossary" className="text-navy-700 font-semibold hover:text-gold-600 transition-colors">browse the glossary</Link>.
               </p>
             </div>
           ) : (

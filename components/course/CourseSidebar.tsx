@@ -81,7 +81,7 @@ export default function CourseSidebar({
       {/* Header */}
       <div className="px-5 pt-5 pb-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
         <div className="flex items-center justify-between mb-1">
-          <p className="text-[0.6rem] font-black uppercase tracking-[0.15em]" style={{ color: '#D4A017' }}>
+          <p className="text-[0.6rem] font-black uppercase tracking-[0.15em]" style={{ color: '#C9982A' }}>
             Course Content
           </p>
           <button
@@ -123,13 +123,13 @@ export default function CourseSidebar({
               >
                 <div
                   className="w-5 h-5 rounded flex items-center justify-center text-[0.55rem] font-black shrink-0 mt-0.5"
-                  style={{ background: '#D4A017', color: '#0C1A3D' }}
+                  style={{ background: '#C9982A', color: '#0C1A3D' }}
                 >
                   {ci + 1}
                 </div>
                 <p
                   className="text-[0.65rem] font-black uppercase tracking-[0.1em] leading-snug flex-1 min-w-0 text-left"
-                  style={{ color: '#D4A017', overflowWrap: 'break-word', wordBreak: 'break-word' }}
+                  style={{ color: '#C9982A', overflowWrap: 'break-word', wordBreak: 'break-word' }}
                 >
                   {chapter.chapterTitle}
                 </p>
@@ -163,7 +163,7 @@ export default function CourseSidebar({
                         className="flex items-start gap-3 pl-5 pr-4 py-2.5 transition-all duration-150"
                         style={{
                           background: isActive ? 'rgba(212,160,23,0.1)' : 'transparent',
-                          borderLeft: isActive ? '3px solid #D4A017'    : '3px solid transparent',
+                          borderLeft: isActive ? '3px solid #C9982A'    : '3px solid transparent',
                         }}
                       >
                         <div className="mt-0.5 shrink-0">

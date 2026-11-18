@@ -154,7 +154,7 @@ export default async function CandidatesPage({
           </select>
           <button type="submit"
             className="px-4 py-2 rounded-xl text-sm font-semibold"
-            style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+            style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }}>
             Filter
           </button>
           {(safeSearch || status || platform) && (

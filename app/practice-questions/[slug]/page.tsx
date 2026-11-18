@@ -92,7 +92,7 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
           <div className='absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[80%] opacity-20' style={{ background: 'radial-gradient(ellipse at center top, #3a4f9a 0%, transparent 70%)' }} />
         </div>
         <div className='container-site relative z-10'>
-          <nav className='flex items-center gap-2 text-white/40 text-sm mb-8 flex-wrap'>
+          <nav className='flex items-center gap-2 text-white/70 text-sm mb-8 flex-wrap'>
             <Link href='/' className='hover:text-white/70 transition-colors'>Home</Link>
             <svg className='w-3.5 h-3.5 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeWidth='2' d='M9 5l7 7-7 7' /></svg>
             <Link href='/practice-questions' className='hover:text-white/70 transition-colors'>Practice Questions</Link>
@@ -182,7 +182,7 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
                         <p className='font-display text-white text-sm mb-1 leading-snug'>
                           Find jobs in this field
                         </p>
-                        <p className='text-white/50 text-xs leading-relaxed mb-3'>
+                        <p className='text-white/70 text-xs leading-relaxed mb-3'>
                           Live accounting and finance vacancies — updated daily.
                         </p>
                         <Link
@@ -201,10 +201,10 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
               {/* Study note link — sidebar */}
               {post.relatedArticle && (
                 <div className='bg-navy-950 rounded-xl p-5 relative overflow-hidden'>
-                  <div className='absolute inset-0 opacity-10' style={{ background: 'radial-gradient(circle at 80% 20%, #D4A017 0%, transparent 60%)' }} />
+                  <div className='absolute inset-0 opacity-10' style={{ background: 'radial-gradient(circle at 80% 20%, #C9982A 0%, transparent 60%)' }} />
                   <div className='relative z-10'>
                     <p className='font-display text-white text-sm mb-2 leading-snug'>Study this topic</p>
-                    <p className='text-white/55 text-xs leading-relaxed mb-3'>Read the full study note before attempting the questions.</p>
+                    <p className='text-white/70 text-xs leading-relaxed mb-3'>Read the full study note before attempting the questions.</p>
                     <Link
                       href={post.relatedArticle.href}
                       className='flex items-center justify-center gap-2 w-full h-10 rounded-lg text-sm font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors'

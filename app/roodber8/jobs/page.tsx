@@ -31,7 +31,7 @@ const SOURCE_STYLE: Record<string, { bg: string; color: string; label: string }>
   careerjet: { bg: 'rgba(96,165,250,0.1)',  color: '#60a5fa', label: 'Careerjet' },
   adzuna:    { bg: 'rgba(251,146,60,0.1)',  color: '#fb923c', label: 'Adzuna' },
   scrape:    { bg: 'rgba(148,163,184,0.1)', color: '#94a3b8', label: 'Scrape' },
-  manual:    { bg: 'rgba(212,160,23,0.1)',  color: '#D4A017', label: 'Manual' },
+  manual:    { bg: 'rgba(212,160,23,0.1)',  color: '#C9982A', label: 'Manual' },
 }
 
 const PAYMENT_STYLE: Record<string, { color: string; label: string }> = {
@@ -158,7 +158,7 @@ export default async function AdminJobsPage({
         </div>
         <a href="/jobs/post-a-job" target="_blank" rel="noopener noreferrer"
           className="flex items-center gap-2 text-sm font-bold px-5 py-2.5 rounded-xl"
-          style={{ background: '#D4A017', color: '#0C1A3D' }}>
+          style={{ background: '#C9982A', color: '#0C1A3D' }}>
           Post a Job <ExternalLink size={14} />
         </a>
       </div>
@@ -207,7 +207,7 @@ export default async function AdminJobsPage({
           </select>
           <button type="submit"
             className="px-4 py-2 rounded-xl text-sm font-semibold"
-            style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #D4A017' }}>
+            style={{ background: '#0C1A3D', color: '#ffffff', border: '1px solid #C9982A' }}>
             Filter
           </button>
           {(safeSearch || status || source) && (
@@ -328,12 +328,12 @@ export default async function AdminJobsPage({
               )}
               {page < totalPages ? (
                 <Link href={pageHref(page + 1)} className="text-xs font-bold px-4 py-2 rounded-xl"
-                  style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #D4A017' }}>
+                  style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #C9982A' }}>
                   Next
                 </Link>
               ) : (
                 <span className="text-xs font-bold px-4 py-2 rounded-xl opacity-40"
-                  style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #D4A017' }}>
+                  style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #C9982A' }}>
                   Next
                 </span>
               )}

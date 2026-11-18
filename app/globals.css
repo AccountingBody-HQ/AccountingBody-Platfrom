@@ -28,9 +28,9 @@
   --color-navy-100:   #dde4f2;
   --color-navy-50:    #f0f3fa;
 
-  --color-gold-500:   #D4A017;
+  --color-gold-500:   #C9982A;
   --color-gold-400:   #e8b030;
-  --color-gold-600:   #b87d10;
+  --color-gold-600:   #88671c;
   --color-gold-100:   #faf1cc;
   --color-gold-50:    #fdf9ec;
 
@@ -38,15 +38,15 @@
   --color-slate-900:  #433f38;
   --color-slate-800:  #504d46;
   --color-slate-700:  #615d53;
-  --color-slate-600:  #787367;
-  --color-slate-500:  #928e80;
-  --color-slate-400:  #b0ac9f;
+  --color-slate-600:  #625e55;
+  --color-slate-500:  #66635a;
+  --color-slate-400:  #6f6d65;
   --color-slate-300:  #ccc9bf;
   --color-slate-200:  #e4e2db;
   --color-slate-100:  #f1f0ec;
   --color-slate-50:   #F8F7F4;
 
-  --color-teal-600:   #0d9185;
+  --color-teal-600:   #0b7b71;
   --color-teal-500:   #14b4a3;
   --color-teal-400:   #2dd0bc;
   --color-teal-100:   #ccfbf4;
@@ -191,7 +191,7 @@
   }
 
   a:hover {
-    color: var(--color-gold-500);
+    color: var(--color-gold-600);
   }
 
   /* ── Prose Links ──────────────────────────────────────────── */
@@ -206,8 +206,8 @@
 
   article a:hover,
   .prose a:hover {
-    color: var(--color-gold-500);
-    text-decoration-color: var(--color-gold-500);
+    color: var(--color-gold-600);
+    text-decoration-color: var(--color-gold-600);
   }
 
   /* ── Selection ────────────────────────────────────────────── */
@@ -361,7 +361,7 @@
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--color-gold-500);
+    color: var(--color-gold-600);
   }
 
   /* ── Section title ────────────────────────────────────────────── */

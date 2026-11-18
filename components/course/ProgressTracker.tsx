@@ -107,7 +107,7 @@ export default function MarkCompleteButton({ courseSlug, lessonSlug, allLessonSl
     <button
       onClick={handleClick}
       className="inline-flex items-center gap-2.5 h-12 px-7 rounded-xl text-sm font-bold transition-all duration-200 hover:-translate-y-0.5 active:scale-95"
-      style={{ background: 'linear-gradient(135deg, #D4A017 0%, #c49215 100%)', color: '#0C1A3D', boxShadow: '0 4px 16px rgba(212,160,23,0.35)' }}
+      style={{ background: 'linear-gradient(135deg, #C9982A 0%, #c49215 100%)', color: '#0C1A3D', boxShadow: '0 4px 16px rgba(212,160,23,0.35)' }}
     >
       Mark as complete
       {nextHref && (
@@ -212,7 +212,7 @@ export function LessonStatusDot({ courseSlug, lessonSlug, allLessonSlugs, isActi
     <span
       className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[0.6rem] font-bold"
       style={{
-        background: isActive ? '#D4A017' : 'rgba(255,255,255,0.08)',
+        background: isActive ? '#C9982A' : 'rgba(255,255,255,0.08)',
         color:      isActive ? '#0C1A3D' : 'rgba(255,255,255,0.3)',
         border:     isActive ? 'none'    : '1px solid rgba(255,255,255,0.1)',
       }}
@@ -232,7 +232,7 @@ export function CourseProgressBar({ courseSlug, allLessonSlugs }: CourseProgress
   return (
     <div className="flex items-center gap-2.5">
       <div className="w-28 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
-        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${progressPct}%`, background: '#D4A017' }} />
+        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${progressPct}%`, background: '#C9982A' }} />
       </div>
       <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>{progressPct}% done</span>
     </div>
@@ -283,10 +283,10 @@ export function PositionRing({ current, total }: PositionRingProps) {
     <div className="relative w-10 h-10 shrink-0">
       <svg className="w-10 h-10 -rotate-90" viewBox="0 0 40 40">
         <circle cx="20" cy="20" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
-        <circle cx="20" cy="20" r={r} fill="none" stroke="#D4A017" strokeWidth="3"
+        <circle cx="20" cy="20" r={r} fill="none" stroke="#C9982A" strokeWidth="3"
           strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" />
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-[0.6rem] font-bold" style={{ color: '#D4A017' }}>
+      <span className="absolute inset-0 flex items-center justify-center text-[0.6rem] font-bold" style={{ color: '#C9982A' }}>
         {pct}%
       </span>
     </div>

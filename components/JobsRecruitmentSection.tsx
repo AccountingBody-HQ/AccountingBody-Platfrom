@@ -82,15 +82,15 @@ export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: bo
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5 text-white/50">
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5 text-white/70">
                     Get personally matched
                   </p>
                   <p className="text-sm font-semibold text-white">Register as a candidate</p>
-                  <p className="text-xs text-white/50 mt-0.5">
+                  <p className="text-xs text-white/70 mt-0.5">
                     We find the right role — you never deal with employers directly
                   </p>
                 </div>
-                <svg className="w-4 h-4 shrink-0 text-white/40" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 shrink-0 text-white/70" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                 </svg>
               </Link>
@@ -141,7 +141,7 @@ export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: bo
                     Job board
                   </p>
                   <p className="font-display text-white text-lg mb-2 leading-snug">Browse jobs</p>
-                  <p className="text-xs text-white/45 leading-relaxed mb-4 flex-1">
+                  <p className="text-xs text-white/70 leading-relaxed mb-4 flex-1">
                     Search live vacancies. Filter by role, location and contract type. Apply directly.
                   </p>
                   <Link href="/jobs/listings"
@@ -157,7 +157,7 @@ export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: bo
                     Managed placement
                   </p>
                   <p className="font-display text-white text-lg mb-2 leading-snug">Get matched</p>
-                  <p className="text-xs text-white/45 leading-relaxed mb-4 flex-1">
+                  <p className="text-xs text-white/70 leading-relaxed mb-4 flex-1">
                     Register once. We personally match you to roles and advocate on your behalf.
                   </p>
                   <Link href="/jobs/find-work"
@@ -174,21 +174,21 @@ export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: bo
                 <div className="p-5" style={{ borderRight: '1px solid rgba(255,255,255,0.08)' }}>
                   <span className="font-display text-xl font-bold text-white block mb-0.5">Daily</span>
                   <span className="text-[10px] font-semibold block" style={{ color: '#C9982A' }}>New roles added</span>
-                  <span className="text-[10px] text-white/30">Direct & aggregated</span>
+                  <span className="text-[10px] text-white/70">Direct & aggregated</span>
                 </div>
                 <div className="p-5">
                   <span className="font-display text-xl font-bold text-white block mb-0.5">90 Days</span>
                   <span className="text-[10px] font-semibold block" style={{ color: '#C9982A' }}>Placement guarantee</span>
-                  <span className="text-[10px] text-white/30">Every permanent role</span>
+                  <span className="text-[10px] text-white/70">Every permanent role</span>
                 </div>
               </div>
 
               {/* Footer */}
               <div className="px-8 py-4 flex items-center justify-between"
                 style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(201,152,42,0.05)' }}>
-                <p className="text-xs text-white/35 leading-relaxed">
+                <p className="text-xs text-white/70 leading-relaxed">
                   Your profile is never made public.{' '}
-                  <span className="text-white/55 font-medium">We contact you only when a role matches.</span>
+                  <span className="text-white/70 font-medium">We contact you only when a role matches.</span>
                 </p>
                 <Link href="/jobs/how-it-works"
                   className="text-xs font-semibold whitespace-nowrap ml-4 hover:opacity-80 transition-opacity"

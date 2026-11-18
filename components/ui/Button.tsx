@@ -47,7 +47,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   secondary: [
     'bg-gold-500 text-navy-950 border-transparent font-semibold',
     'hover:bg-gold-400',
-    'active:bg-gold-600',
+    'active:bg-gold-500',
     'shadow-sm hover:shadow-gold',
   ].join(' '),
 
@@ -66,7 +66,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   gold: [
     'bg-gold-500 text-navy-950 border-transparent font-semibold',
     'hover:bg-gold-400',
-    'active:bg-gold-600',
+    'active:bg-gold-500',
     'shadow-gold hover:shadow-gold-lg',
     'relative overflow-hidden',
   ].join(' '),
@@ -86,7 +86,7 @@ const variantStyles: Record<ButtonVariant, string> = {
 
   link: [
     'bg-transparent text-navy-700 border-transparent p-0 h-auto',
-    'hover:text-gold-500 underline underline-offset-2',
+    'hover:text-gold-600 underline underline-offset-2',
     'active:text-gold-600',
   ].join(' '),
 }
