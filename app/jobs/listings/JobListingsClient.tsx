@@ -33,6 +33,7 @@ import {
 import { Pagination, PrevNextPagination } from '@/components/Pagination'
 import { useSavedJobs } from '@/app/jobs/saved/useSavedJobs'
 import { parseTotal, summariseResults } from './resultsSummary'
+import { useDialogFocus } from '@/lib/use-dialog-focus'
 
 interface DirectJobsResponse {
   jobs?: Job[]
@@ -197,7 +198,7 @@ function FilterSection({ title, children }: { title: string; children: React.Rea
   const titleId = useId()
   return (
     <div role="group" aria-labelledby={titleId} className="py-4 border-b border-slate-100 last:border-b-0">
-      <h3 id={titleId} className="text-[10px] font-bold uppercase tracking-widest mb-3 text-slate-400" style={{ letterSpacing: '0.08em' }}>{title}</h3>
+      <p id={titleId} className="font-display leading-[1.2] max-w-none text-[10px] font-bold uppercase tracking-widest mb-3 text-slate-400" style={{ letterSpacing: '0.08em' }}>{title}</p>
       {children}
     </div>
   )
@@ -210,6 +211,8 @@ function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
   countryOptions: CountryOption[]
 }) {
   const remoteLabelId = useId()
+  // One radio group per panel instance (sidebar and drawer), so the two never share a browser group.
+  const postedName = `posted-within-${useId()}`
   return (
     <div>
       <FilterSection title="Country">
@@ -309,7 +312,7 @@ function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
             <label key={opt.value} className="flex items-center gap-2.5 py-1 cursor-pointer group">
               <input
                 type="radio"
-                name="posted-within"
+                name={postedName}
                 checked={filters.postedWithin === opt.value}
                 onChange={() => onChange({ ...filters, postedWithin: opt.value })}
                 className="w-4 h-4 border-slate-300 text-gold-600 focus:ring-navy-950 cursor-pointer"
@@ -722,6 +725,9 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   const [error, setError] = useState<string | null>(null)
 
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const filterDrawerRef = useRef<HTMLDivElement>(null)
+  const closeDrawer = useCallback(() => setDrawerOpen(false), [])
+  useDialogFocus(drawerOpen, filterDrawerRef, closeDrawer)
 
   const { savedIds, pending: savedPending, error: savedJobsError, toggle: toggleSaved } = useSavedJobs()
 
@@ -1062,7 +1068,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
         <div onClick={() => setDrawerOpen(false)}
           className={`absolute inset-0 bg-navy-950/40 transition-opacity duration-300 ${drawerOpen ? 'opacity-100' : 'opacity-0'}`}
         />
-        <div className={[
+        <div ref={filterDrawerRef} role="dialog" aria-modal="true" aria-label="Filters" inert={!drawerOpen} className={[
           'absolute bottom-0 inset-x-0 bg-white rounded-t-2xl max-h-[85vh] overflow-y-auto',
           'transition-transform duration-300 ease-out',
           drawerOpen ? 'translate-y-0' : 'translate-y-full',

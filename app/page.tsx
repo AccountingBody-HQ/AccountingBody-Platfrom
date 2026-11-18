@@ -530,7 +530,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         >
           <div className="px-6 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>Professional Services</p>
-            <h3 className="font-display text-white text-lg mt-1 leading-snug">Fully managed — fixed-fee proposals in 72 hours</h3>
+            <h2 className="font-display text-white text-lg mt-1 leading-snug">Fully managed — fixed-fee proposals in 72 hours</h2>
           </div>
 
           <div className="flex flex-col gap-2 p-5 flex-1">
@@ -569,7 +569,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         >
           <div className="px-6 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>Exam Practice</p>
-            <h3 className="font-display text-white text-lg mt-1 leading-snug">Exam-standard questions — free to start</h3>
+            <h2 className="font-display text-white text-lg mt-1 leading-snug">Exam-standard questions — free to start</h2>
           </div>
 
           <div className="flex flex-col gap-2 p-5 flex-1">
@@ -805,7 +805,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 </svg>
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-navy-950 mb-0.5">{row.title}</h4>
+                <h3 className="text-sm font-semibold text-navy-950 mb-0.5">{row.title}</h3>
                 <p className="text-sm text-slate-500">{row.body}</p>
               </div>
             </div>
@@ -877,13 +877,15 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     <div className="flex items-end justify-between mb-10 gap-4">
       <div>
         <span className="eyebrow mb-3 block">Daily Digest</span>
-        <h2 className="section-title">Latest from EthioTax</h2>
+        <h2 id="home-articles-et-heading" className="section-title">Latest from EthioTax</h2>
         <p className="text-slate-500 text-base leading-relaxed mt-2 max-w-xl">
           Industry updates, tax briefs and insights for Ethiopian finance professionals and the diaspora.
         </p>
       </div>
       <Link
         href="/articles"
+        id="home-articles-et-link"
+        aria-labelledby="home-articles-et-link home-articles-et-heading"
         className="shrink-0 flex items-center gap-1.5 text-sm font-semibold transition-colors whitespace-nowrap"
         style={{ color: '#1A4731' }}
       >
@@ -1208,7 +1210,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               >
                 <div className="px-6 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                   <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>Practice Questions</p>
-                  <h3 className="font-display text-white text-lg mt-1 leading-snug">Exam-standard questions</h3>
+                  <h2 className="font-display text-white text-lg mt-1 leading-snug">Exam-standard questions</h2>
                 </div>
 
                 <div className="flex flex-col gap-2 p-5 flex-1">
@@ -1249,7 +1251,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               >
                 <div className="px-6 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                   <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#C9982A' }}>Managed Recruitment</p>
-                  <h3 className="font-display text-white text-lg mt-1 leading-snug">Get personally matched to roles</h3>
+                  <h2 className="font-display text-white text-lg mt-1 leading-snug">Get personally matched to roles</h2>
                 </div>
 
                 <div className="flex flex-col gap-3 p-5 flex-1">
@@ -1625,7 +1627,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                       </svg>
                     </div>
                     <div>
-                      <h4 className="text-sm font-semibold text-navy-950 mb-0.5">{row.title}</h4>
+                      <h3 className="text-sm font-semibold text-navy-950 mb-0.5">{row.title}</h3>
                       <p className="text-sm text-slate-500">{row.body}</p>
                     </div>
                   </div>
@@ -1700,7 +1702,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               <span className={`eyebrow mb-3 block`}>
                 {isEthioTax ? 'Daily Digest' : 'Daily Digest'}
               </span>
-              <h2 className="section-title">
+              <h2 id="home-articles-ab-heading" className="section-title">
                 {isEthioTax ? 'Latest from EthioTax' : 'Latest from Accounting Body'}
               </h2>
               <p className="text-slate-500 text-base leading-relaxed mt-2 max-w-xl">
@@ -1711,6 +1713,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             </div>
             <Link
               href="/articles"
+              id="home-articles-ab-link"
+              aria-labelledby="home-articles-ab-link home-articles-ab-heading"
               className={`shrink-0 flex items-center gap-1.5 text-sm font-semibold transition-colors whitespace-nowrap ${isEthioTax ? 'text-[#1A4731] hover:text-gold-600' : 'text-navy-700 hover:text-gold-600'}`}
             >
               View all
@@ -1982,7 +1986,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               {point.icon}
             </div>
             <div>
-              <h4 className="font-semibold text-navy-950 mb-1 text-sm">{point.title}</h4>
+              <h3 className="font-semibold text-navy-950 mb-1 text-sm">{point.title}</h3>
               <p className="text-sm text-slate-500 leading-relaxed">{point.body}</p>
             </div>
           </div>

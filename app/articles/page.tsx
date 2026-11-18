@@ -84,7 +84,7 @@ export default async function ArticlesPage() {
                       <div className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${isEthioTax ? 'bg-[#C9982A]' : 'bg-navy-950'}`} />
                       <div className="min-w-0">
                         <Link href={href}>
-                          <h3 className="text-sm font-semibold text-navy-950 leading-snug group-hover:text-navy-700 transition-colors">{article.title}</h3>
+                          <h2 className="text-sm font-semibold text-navy-950 leading-snug group-hover:text-navy-700 transition-colors">{article.title}</h2>
                         </Link>
                         {article.excerpt && <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{article.excerpt}</p>}
                       </div>

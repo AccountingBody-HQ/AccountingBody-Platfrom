@@ -175,7 +175,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
                           <div className="flex items-start gap-3 min-w-0">
                             <div className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${meta.accent}`} />
                             <div className="min-w-0">
-                              <Link href={href}><h3 className="text-sm font-semibold text-navy-950 leading-snug group-hover:text-navy-700 transition-colors">{article.title}</h3></Link>
+                              <Link href={href}><h2 className="text-sm font-semibold text-navy-950 leading-snug group-hover:text-navy-700 transition-colors">{article.title}</h2></Link>
                               {article.excerpt && <p className="text-xs text-slate-500 mt-0.5 line-clamp-1 leading-relaxed">{article.excerpt}</p>}
                             </div>
                           </div>
