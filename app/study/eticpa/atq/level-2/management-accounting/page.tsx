@@ -73,7 +73,7 @@ export default async function ManagementAccountingPage() {
               <Link href={`/free-courses/${COURSE_SLUG}`}
                 className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors"
                 style={{ backgroundColor: '#C9982A', color: '#0f2d1e', height: '48px', width: '220px', boxSizing: 'border-box' }}>
-                Start Course
+                Start Course<span className="sr-only">: {MODULE.name}</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </Link>
               <Link href="#mock-exam"
@@ -168,7 +168,7 @@ export default async function ManagementAccountingPage() {
               <Link href={`/free-courses/${COURSE_SLUG}`}
                 className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-colors"
                 style={{ backgroundColor: '#1A4731', color: 'white', height: '48px', width: '220px', boxSizing: 'border-box' }}>
-                Start Course
+                Start Course<span className="sr-only">: {MODULE.name}</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
               </Link>
             </div>

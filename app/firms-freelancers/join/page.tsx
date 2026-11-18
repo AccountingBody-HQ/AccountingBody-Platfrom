@@ -33,6 +33,7 @@ export default function JoinNetworkPage() {
   const [qualifications, setQualifications] = useState<string[]>([])
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [fieldErrors, setFieldErrors] = useState<{ practice_name?: boolean; practice_type?: boolean; contact_name?: boolean; email?: boolean; location?: boolean; open_to_employment?: boolean; currently_hiring?: boolean; about?: boolean }>({})
+  const [errorAttempt, setErrorAttempt] = useState(0)
   const ids = useFormIds()
   // handleSubmit scrolls the first error into view itself, so focus moves without a second scroll.
   const [formRef, focusFirstInvalid] = useFocusFirstInvalid<HTMLFormElement>(true)
@@ -64,6 +65,7 @@ export default function JoinNetworkPage() {
     if (!form.about.trim()) errors.about = true
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
+      setErrorAttempt(n => n + 1)
       // Scroll to first error in strict visual order
       const firstError = [
         errors.practice_name && practiceNameRef,
@@ -211,7 +213,7 @@ export default function JoinNetworkPage() {
               {/* FORM — shown only after type selected */}
               {applicantType && (
                 <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
-                  <FormErrorSummary show={Object.values(fieldErrors).some(Boolean)} />
+                  <FormErrorSummary show={Object.values(fieldErrors).some(Boolean)} attempt={errorAttempt} />
 
                   {/* PRACTICE / PERSONAL DETAILS */}
                   <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6">

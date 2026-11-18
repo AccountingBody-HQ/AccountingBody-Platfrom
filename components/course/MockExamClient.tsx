@@ -183,6 +183,8 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
   const q = questions[current]
   return (
     <div className="max-w-3xl mx-auto">
+      {/* The page keeps one h1 while the intro title is unmounted (screen readers only). */}
+      <h1 className="sr-only">{moduleName} Mock Exam</h1>
       {/* Status bar */}
       <div className="flex items-center justify-between mb-6 sticky top-0 bg-slate-50 py-3 z-10">
         <span className="text-sm font-semibold text-navy-950" aria-live="polite">Question {current + 1} of {questions.length}</span>

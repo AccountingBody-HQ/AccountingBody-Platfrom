@@ -125,6 +125,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
     return 'idle'
   })
   const [fieldErrors, setFieldErrors] = useState<Record<string,boolean>>({})
+  const [errorAttempt, setErrorAttempt] = useState(0)
   const ids = useFormIds()
   // handleNext scrolls the first error into view itself, so focus moves without a second scroll.
   const [stepsRef, focusFirstInvalid] = useFocusFirstInvalid<HTMLDivElement>(true)
@@ -197,6 +198,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
     const errors = validateStep(step)
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
+      setErrorAttempt(n => n + 1)
       const firstRef = Object.keys(errors).map(k => refs[k as keyof typeof refs]).find(r => r?.current)
       firstRef?.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       focusFirstInvalid()
@@ -315,7 +317,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
               <div ref={stepsRef} className="lg:grid lg:grid-cols-[1fr_300px] gap-10 items-start">
                 <div>
                   <ProgressBar currentStep={step} brand={brand} />
-                  <FormErrorSummary show={Object.values(fieldErrors).some(Boolean)} className="mb-4" />
+                  <FormErrorSummary show={Object.values(fieldErrors).some(Boolean)} attempt={errorAttempt} className="mb-4" />
 
                   {/* STEP 1 — YOUR DETAILS */}
                   {step === 1 && (

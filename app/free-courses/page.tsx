@@ -105,7 +105,7 @@ export default async function FreeCoursesPage({ searchParams }: { searchParams: 
             {WHY_FREE.map((w, i, arr) => (
               <div key={w.title} className={['', i < arr.length - 1 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''].join(' ')}>
                 <div className="w-2 h-2 rounded-full bg-gold-500 mb-3" />
-                <h2 className="font-semibold text-navy-950 text-sm leading-[1.2] mb-1">{w.title}</h2>
+                <h2 className="font-semibold text-navy-950 text-sm mb-1">{w.title}</h2>
                 <p className="text-xs text-slate-500 leading-relaxed">{w.body}</p>
               </div>
             ))}

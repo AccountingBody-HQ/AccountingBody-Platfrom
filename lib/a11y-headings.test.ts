@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs'
+import { execSync } from 'node:child_process'
+import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
@@ -14,7 +15,7 @@ describe('heading outline', () => {
     expect(count(src, /<h[4-6][\s>]/g)).toBe(0)
     expect(count(src, /<h3[\s>]/g)).toBe(1) // link column titles
     expect(count(src, /<h2[\s>]/g)).toBe(1) // newsletter heading
-    expect(src).toMatch(/<h2 className="font-display text-white text-lg leading-\[1\.2\] mb-1\.5">/)
+    expect(src).toMatch(/<h2 className="font-display text-white text-lg mb-1\.5">/)
   })
 
   it('home: hero cards are h2 under the h1, and row/point titles are h3 under their h2', () => {
@@ -35,7 +36,49 @@ describe('heading outline', () => {
     for (const f of ['app/free-courses/page.tsx', 'app/articles/page.tsx', 'app/study/[category]/page.tsx']) {
       expect(count(read(f), /<h3[\s>]/g), f).toBe(0)
     }
-    expect(read('app/free-courses/page.tsx')).toMatch(/<h2 className="font-semibold text-navy-950 text-sm leading-\[1\.2\] mb-1">\{w\.title\}<\/h2>/)
+    expect(read('app/free-courses/page.tsx')).toMatch(/<h2 className="font-semibold text-navy-950 text-sm mb-1">\{w\.title\}<\/h2>/)
+  })
+
+  it('every heading whose level changed keeps the exact class list it had before (same look)', () => {
+    // A named text size (text-xs/sm/base/lg) sets its own line-height, so the base h2/h3 rule never applies
+    // and no extra class is needed. The filter labels became <p>: three classes restore what the h3 base rule
+    // gave (display font, 1.2 line-height, no 70ch max-width) because text-[10px] sets the font size only.
+    const SAME: Array<[string, string, string, number]> = [
+      ['components/layout/Footer.tsx', 'h2', 'font-display text-white text-lg mb-1.5', 1],
+      ['components/layout/Footer.tsx', 'h3', 'text-xs font-semibold text-white/70 uppercase tracking-widest mb-4', 1],
+      ['app/page.tsx', 'h2', 'font-display text-white text-lg mt-1 leading-snug', 4],
+      ['app/page.tsx', 'h3', 'text-sm font-semibold text-navy-950 mb-0.5', 2],
+      ['app/page.tsx', 'h3', 'font-semibold text-navy-950 mb-1 text-sm', 1],
+      ['app/free-courses/page.tsx', 'h2', 'font-semibold text-navy-950 text-sm mb-1', 1],
+      ['app/free-courses/page.tsx', 'h2', 'font-display text-base text-navy-950 leading-snug mb-2 group-hover:text-navy-700 transition-colors flex-1', 1],
+      ['app/articles/page.tsx', 'h2', 'text-sm font-semibold text-navy-950 leading-snug group-hover:text-navy-700 transition-colors', 1],
+      ['app/study/[category]/page.tsx', 'h2', 'text-sm font-semibold text-navy-950 leading-snug group-hover:text-navy-700 transition-colors', 1],
+      ['app/jobs/listings/JobListingsClient.tsx', 'p id={titleId}', 'font-display leading-[1.2] max-w-none text-[10px] font-bold uppercase tracking-widest mb-3 text-slate-400', 1],
+    ]
+    for (const [f, tag, cls, n] of SAME) {
+      expect(read(f).split(`<${tag} className="${cls}"`).length - 1, `${f} <${tag}> ${cls}`).toBe(n)
+    }
+  })
+
+  it('no heading with a named text size also carries an arbitrary leading-[...] value', () => {
+    const adminDirs = readdirSync(join(process.cwd(), 'app')).filter((d) => {
+      try { return read(`app/${d}/layout.tsx`).includes('requireAdmin') } catch { return false }
+    })
+    const isAdmin = (f: string) => adminDirs.some((d) => f.startsWith(`app/${d}/`) || f.startsWith(`app/${d}-`) || f.startsWith(`components/${d}/`))
+    const files = execSync('git ls-files -- app components', { encoding: 'utf8' }).split('\n')
+      .filter((f) => f.endsWith('.tsx') && !f.includes('.test.') && !f.startsWith('app/api/') && !isAdmin(f))
+    expect(files.length).toBeGreaterThan(100)
+    const bad: string[] = []
+    for (const f of files) {
+      const re = /<h[1-6]\b[^>]*?className="([^"]*)"/g
+      const src = read(f)
+      let m: RegExpExecArray | null
+      while ((m = re.exec(src)) !== null) {
+        const cls: string[] = m[1].split(/\s+/)
+        if (cls.some((c: string) => /^text-(2xs|xs|sm|base|lg|xl|[2-8]xl)$/.test(c)) && cls.some((c: string) => /^leading-\[/.test(c))) bad.push(f)
+      }
+    }
+    expect(bad).toEqual([])
   })
 
   it('search: the server-rendered fallback starts with the page h1 (visually hidden)', () => {

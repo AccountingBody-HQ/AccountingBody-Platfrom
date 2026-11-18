@@ -282,7 +282,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
       <p className="text-xs font-semibold text-white/70 uppercase tracking-widest mb-3">
         Stay Updated
       </p>
-      <h2 className="font-display text-white text-lg leading-[1.2] mb-1.5">
+      <h2 className="font-display text-white text-lg mb-1.5">
         {isEthioTax ? 'Tax updates, exam tips & job alerts' : 'Jobs, placements & exam tips'}
       </h2>
       <p className="text-sm text-white/60 mb-4 leading-relaxed">
@@ -460,7 +460,7 @@ export function Footer({
     title: 'Practice Questions',
     links: [
       { label: 'Practice Questions',        href: '/practice-questions' },
-      { label: 'Mock Exams',                href: '/mock-exams/acca' },
+      { label: 'Mock Exams',                href: '/mock-exams' },
       { label: 'Accounting Dictionary',     href: '/dictionary' },
       { label: 'Accounting Glossary',       href: '/glossary' },
     ],
