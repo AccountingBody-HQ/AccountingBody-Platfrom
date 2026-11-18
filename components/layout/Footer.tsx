@@ -8,6 +8,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { formatJobCountLabel, formatCountLabel } from '@/lib/job-format'
 import { safeUserFacingErrorMessage } from '@/lib/turnstile-error'
+import { openConsentSettings } from '@/lib/consent'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -624,6 +625,13 @@ export function Footer({
                   {link.label}
                 </Link>
               ))}
+              <button
+                type="button"
+                onClick={openConsentSettings}
+                className={`text-xs transition-colors ${isEthioTax ? "text-green-100/70 hover:text-green-100" : "text-white/70 hover:text-white/70"}`}
+              >
+                Cookie settings
+              </button>
             </nav>
           </div>
         </div>

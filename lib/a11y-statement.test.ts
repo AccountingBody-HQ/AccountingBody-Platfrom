@@ -20,7 +20,6 @@ const cards: Array<[string, string]> = [
 ]
 
 const limitations = [
-  'The cookie notice shown on your first visit is not yet fully accessible: keyboard users can move behind it. We are improving it.',
   'Some free-course lessons include YouTube or Vimeo videos. These players are run by those companies.',
   'Our forms use a security check from Cloudflare, which we do not control.',
   'Some animations do not yet follow the "reduce motion" setting on your device.',
@@ -37,7 +36,9 @@ describe('accessibility statement text', () => {
     expect(flat).toContain('In November 2026 we checked key pages of the site on desktop and phone screen sizes. We used automated checks, moved through the pages with a keyboard in a real browser, and ran colour-contrast scans.')
   })
 
-  it('lists exactly the seven measured items and the five known limitations', () => {
+  it('lists exactly the seven measured items and the four known limitations', () => {
+    // CC-1: the cookie banner replaced the first-visit box, so its limitation is gone.
+    expect(src).not.toContain('The cookie notice shown on your first visit')
     for (const [title, body] of cards) {
       expect(src).toContain(`title: '${title}'`)
       expect(src).toContain(`body: '${body}'`)

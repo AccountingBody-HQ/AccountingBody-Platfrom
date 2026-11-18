@@ -110,11 +110,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {process.env.NEXT_PUBLIC_ADSENSE_ID && (
             <>
             <meta name="google-adsense-account" content={process.env.NEXT_PUBLIC_ADSENSE_ID} />
-            <script
-              async
-              src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_ID}`}
-              crossOrigin="anonymous"
-            />
             </>
           )}
           <link rel="dns-prefetch" href="//fonts.googleapis.com" />
@@ -122,7 +117,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
           <link rel="dns-prefetch" href="//www.googletagmanager.com" />
-          {/* GTM loaded by CookieConsent only after user consent — GDPR compliant */}
+          {/* GTM and the ads script are loaded by CookieConsent only after the visitor accepts */}
         </head>
         <body className="antialiased bg-surface text-slate-900 min-h-screen flex flex-col">
           <a
@@ -131,15 +126,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           >
             Skip to main content
           </a>
-          {GTM_ID && (
-            <noscript>
-              <iframe
-                src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
-                height="0" width="0"
-                style={{ display: 'none', visibility: 'hidden' }}
-              />
-            </noscript>
-          )}
+          <CookieConsent gtmId={GTM_ID ?? ''} adsenseId={process.env.NEXT_PUBLIC_ADSENSE_ID ?? ''} isEthioTax={isEthioTax} />
           <RouteProgressBar />
           <Script
             id="cf-turnstile-script"
@@ -161,7 +148,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             articleCount={articleCount}
             questionCount={questionCount}
           />
-          <CookieConsent gtmId={GTM_ID ?? ''} />
           <ScrollToTop />
           <Analytics />
           <SpeedInsights />

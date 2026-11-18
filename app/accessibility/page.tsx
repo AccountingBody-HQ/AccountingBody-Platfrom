@@ -56,7 +56,6 @@ const standards = [
 ]
 
 const known = [
-  'The cookie notice shown on your first visit is not yet fully accessible: keyboard users can move behind it. We are improving it.',
   'Some free-course lessons include YouTube or Vimeo videos. These players are run by those companies.',
   'Our forms use a security check from Cloudflare, which we do not control.',
   'Some animations do not yet follow the "reduce motion" setting on your device.',
