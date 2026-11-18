@@ -53,7 +53,7 @@ export default function HeroSearch({ placeholder = 'Search study notes, practice
         <div className="p-2 shrink-0">
           <button
             type="submit"
-            className="flex items-center gap-2 bg-gold-500 hover:bg-gold-400 active:bg-gold-600 text-navy-950 font-bold rounded-lg transition-all px-4 py-2.5 text-sm"
+            className="flex items-center gap-2 bg-gold-500 hover:bg-gold-400 active:bg-gold-500 text-navy-950 font-bold rounded-lg transition-all px-4 py-2.5 text-sm"
           >
             <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />

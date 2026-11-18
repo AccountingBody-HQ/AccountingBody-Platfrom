@@ -74,3 +74,56 @@ describe('colour contrast (A11-F2)', () => {
     expect(bad).toEqual([])
   })
 })
+
+// RV-60 review additions: the stylesheet and the Tailwind palette agree, and the gold buttons,
+// pressed states, the skip-link ring and the navy job-alert icon stay readable.
+const publicTsx = () =>
+  [...walk(join(root, 'app')), ...walk(join(root, 'components'))].filter(
+    (f) => f.endsWith('.tsx') && !isAdmin(f) && !f.startsWith('app/api/'),
+  )
+const GOLD_BG = /(?<![\w:-])(?:bg-gold-(?:500|600)|bg-accent|bg-\[#C9982A\])(?![\w/-])/i
+const WHITE_TEXT = /(?<![\w-])(?:hover:)?text-white(?![\w/-])/
+
+describe('colour contrast (RV-60)', () => {
+  it('stylesheet colour variables equal the Tailwind palette for the changed tokens', () => {
+    const css = read('app/globals.css')
+    for (const [fam, step] of [['gold', '500'], ['gold', '600'], ['slate', '400'], ['slate', '500'], ['slate', '600'], ['teal', '600']]) {
+      const m = css.match(new RegExp('--color-' + fam + '-' + step + ':\\s*(#[0-9a-fA-F]{6});'))
+      expect(m?.[1].toLowerCase(), `--color-${fam}-${step}`).toBe(shade(fam, step).toLowerCase())
+    }
+  })
+
+  it('text on solid gold stays dark, also on hover (white on gold is 2.6:1 to 3.8:1)', () => {
+    const bad: string[] = []
+    for (const f of publicTsx()) {
+      for (const frag of read(f).split(/['"`]|\$\{|\}/)) {
+        if (GOLD_BG.test(frag) && WHITE_TEXT.test(frag)) bad.push(f)
+      }
+    }
+    expect(bad).toEqual([])
+  })
+
+  it('pressed gold buttons keep the brand gold (navy on gold-600 is 3.25:1)', () => {
+    expect(publicTsx().filter((f) => /active:bg-gold-600(?![\w/-])/.test(read(f)))).toEqual([])
+  })
+
+  it('the skip link focus ring is navy, not gold (gold on white is 2.6:1)', () => {
+    const layout = read('app/layout.tsx')
+    const start = layout.indexOf('href="#main-content"')
+    const end = layout.indexOf('Skip to main content')
+    expect(start).toBeGreaterThan(-1)
+    expect(end).toBeGreaterThan(start)
+    const tag = layout.slice(start, end)
+    expect(tag).toContain('focus:ring-navy-950')
+    expect(tag).not.toMatch(/ring-gold-/)
+  })
+
+  it('the job-alert icon on the navy banner uses the brand gold', () => {
+    const src = read('app/jobs/listings/JobListingsClient.tsx')
+    const start = src.indexOf('<div className="bg-navy-950 rounded-2xl px-5 py-4 mb-6">')
+    expect(start).toBeGreaterThan(-1)
+    const head = src.slice(start, start + 600)
+    expect(head).not.toMatch(/text-gold-600/)
+    expect(head).toMatch(/bg-gold-500\/20 [^"]*text-gold-500/)
+  })
+})

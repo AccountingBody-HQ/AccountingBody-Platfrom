@@ -478,7 +478,7 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
           <Link
             href="/jobs/post-a-job"
             onClick={onClose}
-            className="flex items-center justify-center gap-2 w-full bg-[#C9982A] hover:bg-[#b8871f] text-white font-semibold text-sm rounded-xl py-3.5 transition-colors duration-200"
+            className="flex items-center justify-center gap-2 w-full bg-[#C9982A] hover:bg-[#b8871f] text-[#0C1A3D] font-semibold text-sm rounded-xl py-3.5 transition-colors duration-200"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
@@ -785,7 +785,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
             {!isEthioTax && (
               <Link
                 href="/jobs/post-a-job"
-                className="inline-flex items-center gap-2 bg-[#C9982A] hover:bg-[#b8891f] hover:text-white text-[#0C1A3D] text-sm font-semibold px-5 py-2 rounded-full transition-colors duration-200 whitespace-nowrap"
+                className="inline-flex items-center gap-2 bg-[#C9982A] hover:bg-[#b8891f] text-[#0C1A3D] text-sm font-semibold px-5 py-2 rounded-full transition-colors duration-200 whitespace-nowrap"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>

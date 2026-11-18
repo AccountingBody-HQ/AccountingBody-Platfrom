@@ -75,7 +75,7 @@ function ExternalLinkIcon() {
 
 export function ApplyButton({ job, size = 'default' }: { job: Job; size?: keyof typeof sizeClasses }) {
   const label = getApplyLabel(job)
-  const buttonClass = `flex w-full items-center justify-center gap-2 rounded-xl ${sizeClasses[size]} text-base font-semibold transition-colors bg-[#C9982A] text-[#231A02] hover:bg-[#A87C16] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0C1A3D]`
+  const buttonClass = `flex w-full items-center justify-center gap-2 rounded-xl ${sizeClasses[size]} text-base font-semibold transition-colors bg-[#C9982A] text-[#231A02] hover:bg-[#A87C16] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0C1A3D]`
 
   // Tracks every source (employer, adzuna, or any other ingestion
   // provider) — not employer-only. An employer-only restriction would mean

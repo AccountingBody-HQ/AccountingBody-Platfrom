@@ -452,7 +452,7 @@ function JobAlertBanner({ search, filters, onDismiss }: {
     <div className="bg-navy-950 rounded-2xl px-5 py-4 mb-6">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="w-8 h-8 rounded-full bg-gold-500/20 flex items-center justify-center shrink-0 text-gold-600">
+          <div className="w-8 h-8 rounded-full bg-gold-500/20 flex items-center justify-center shrink-0 text-gold-500">
             <BellIcon />
           </div>
           <div className="flex-1 min-w-0">
