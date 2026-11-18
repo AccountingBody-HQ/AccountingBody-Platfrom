@@ -102,7 +102,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
                 <path strokeLinecap="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
               </svg>
             </div>
-            <span className="hidden md:block text-xs font-semibold" style={{ overflowWrap: "break-word", wordBreak: "break-word", maxWidth: "220px", color: 'rgba(255,255,255,0.4)' }}>
+            <span className="hidden md:block text-xs font-semibold" style={{ overflowWrap: "break-word", wordBreak: "break-word", maxWidth: "220px", color: 'rgba(255,255,255,0.7)' }}>
               {course.title}
             </span>
           </Link>
@@ -111,7 +111,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
           <div className="flex-1 flex items-center px-5 min-w-0">
             <div className="min-w-0">
               <p className="text-sm font-bold leading-tight text-white" style={{ overflowWrap: "break-word", wordBreak: "break-word" }}>{lesson.title}</p>
-              <p className="text-[0.65rem] font-medium mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+              <p className="text-[0.65rem] font-medium mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
                 {chapterTitle} · Lesson {currentIdx + 1} of {totalLessons}
               </p>
             </div>
@@ -190,7 +190,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
                 >
                   {chapterTitle}
                 </span>
-                <span className="text-[0.65rem] font-semibold" style={{ color: '#94A3B8' }}>
+                <span className="text-[0.65rem] font-semibold" style={{ color: '#475569' }}>
                   Lesson {currentIdx + 1} of {totalLessons}
                 </span>
               </div>
@@ -233,7 +233,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
                   </div>
                   <div>
                     <h2 className="font-display text-navy-950 text-xl leading-none">Study Notes</h2>
-                    <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>
+                    <p className="text-xs mt-1" style={{ color: '#475569' }}>
                       {lesson.articles.length} {lesson.articles.length === 1 ? 'article' : 'articles'} in this lesson
                     </p>
                   </div>
@@ -254,7 +254,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
                       <div className="pl-8 pr-6 pt-6 pb-4 flex items-start gap-5">
                         <div
                           className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 text-sm font-black transition-all duration-200 group-hover:scale-105"
-                          style={{ background: ai === 0 ? 'rgba(212,160,23,0.1)' : '#F8F7F4', color: ai === 0 ? '#B8860B' : '#94A3B8' }}
+                          style={{ background: ai === 0 ? 'rgba(212,160,23,0.1)' : '#F8F7F4', color: ai === 0 ? '#88671c' : '#475569' }}
                         >
                           {ai + 1}
                         </div>
@@ -269,7 +269,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
                             href={resolveArticlePath(article)}
                             target="_blank"
                             className="inline-flex items-center gap-1.5 text-xs font-semibold transition-all hover:opacity-70"
-                            style={{ color: '#94A3B8' }}
+                            style={{ color: '#475569' }}
                           >
                             View original article
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -306,7 +306,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
                   </div>
                   <div className="flex-1">
                     <p className="font-bold text-navy-950 text-sm">Practice Questions</p>
-                    <p className="text-xs mt-0.5" style={{ color: '#94A3B8' }}>Test your understanding before moving on</p>
+                    <p className="text-xs mt-0.5" style={{ color: '#475569' }}>Test your understanding before moving on</p>
                   </div>
                   <Link
                     href={lesson.externalQuizUrl}
@@ -341,7 +341,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
                   <p className="font-display text-white mb-1.5" style={{ fontSize: '1.35rem', lineHeight: 1.15 }}>
                     Ready to continue?
                   </p>
-                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
                     {isLastLesson
                       ? 'Mark this lesson complete to finish the course.'
                       : 'Mark this lesson complete and move to the next.'}
@@ -380,7 +380,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
                     </svg>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[0.6rem] font-black uppercase tracking-[0.12em] mb-1" style={{ color: '#94A3B8' }}>Previous</p>
+                    <p className="text-[0.6rem] font-black uppercase tracking-[0.12em] mb-1" style={{ color: '#475569' }}>Previous</p>
                     <p className="text-sm font-bold text-navy-950 leading-snug">{prevLesson.title}</p>
                   </div>
                 </Link>
@@ -408,14 +408,14 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
                   className="flex items-center justify-center gap-3 p-5 rounded-2xl border-2 transition-all hover:-translate-y-0.5 hover:shadow-lg"
                   style={{ borderColor: '#14b4a3', background: 'rgba(20,180,163,0.07)' }}
                 >
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#14b4a3' }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#0b7b71' }}>
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-black" style={{ color: '#0d8f82' }}>Course Complete!</p>
-                    <p className="text-xs font-medium" style={{ color: '#14b4a3' }}>View course overview</p>
+                    <p className="text-sm font-black" style={{ color: '#08665e' }}>Course Complete!</p>
+                    <p className="text-xs font-medium" style={{ color: '#08665e' }}>View course overview</p>
                   </div>
                 </Link>
               )}
@@ -426,7 +426,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
               <svg className="w-3.5 h-3.5 shrink-0 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Developed by <strong className="text-slate-500">Accounting Body Editorial Team</strong> · Written and reviewed by qualified accountants · Always free
               </p>
             </div>

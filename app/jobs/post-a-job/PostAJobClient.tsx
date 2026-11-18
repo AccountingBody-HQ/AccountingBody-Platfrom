@@ -90,13 +90,13 @@ function ProgressBar({ currentStep, brand }: { currentStep: number; brand: strin
           <div key={step.number} className="flex flex-col items-center" style={{ width: '33.33%' }}>
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mb-1 transition-all"
-              style={{ background: currentStep >= step.number ? brand : '#e2e8f0', color: currentStep >= step.number ? '#fff' : '#94a3b8' }}
+              style={{ background: currentStep >= step.number ? brand : '#e2e8f0', color: currentStep >= step.number ? '#fff' : '#475569' }}
             >
               {currentStep > step.number
                 ? <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
                 : step.number}
             </div>
-            <span className="text-xs text-center leading-tight" style={{ color: currentStep >= step.number ? brand : '#94a3b8', fontWeight: currentStep === step.number ? 600 : 400 }}>
+            <span className="text-xs text-center leading-tight" style={{ color: currentStep >= step.number ? brand : '#475569', fontWeight: currentStep === step.number ? 600 : 400 }}>
               {step.label}
             </span>
           </div>
@@ -118,7 +118,7 @@ function Field({ label, required, children }: { label: string; required?: boolea
   return (
     <div className="mb-5">
       <label className="block text-sm font-semibold text-navy-950 mb-2">
-        {label}{required && <span style={{ color: '#C9982A' }}> *</span>}
+        {label}{required && <span style={{ color: '#88671c' }}> *</span>}
       </label>
       {children}
     </div>
@@ -265,9 +265,9 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
         </div>
         <div className="container-site relative z-10">
           <nav className="flex items-center gap-2 text-white/70 text-sm mb-8">
-            <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
+            <Link href="/" className="text-white/70 hover:text-white transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-            <Link href="/jobs" className="hover:text-white/70 transition-colors">Jobs</Link>
+            <Link href="/jobs" className="text-white/70 hover:text-white transition-colors">Jobs</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">Post a Job</span>
           </nav>
@@ -319,7 +319,7 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
                   <textarea className={inputClass} rows={8} value={form.description}
                     onChange={e => update('description', e.target.value)}
                     placeholder="Describe the role, responsibilities and what makes it a great opportunity..." />
-                  <p className="text-xs mt-1" style={{ color: descriptionOk ? '#16a34a' : '#94a3b8' }}>
+                  <p className="text-xs mt-1" style={{ color: descriptionOk ? '#15803d' : '#475569' }}>
                     {descriptionLength} / {MIN_DESCRIPTION_LENGTH} characters minimum
                   </p>
                 </Field>

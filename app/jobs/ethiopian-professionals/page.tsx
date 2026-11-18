@@ -30,9 +30,9 @@ export default async function EthiopianProfessionalsPage() {
         </div>
         <div className="container-site relative z-10">
           <nav className="flex items-center gap-2 text-white/70 text-sm mb-8">
-            <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
+            <Link href="/" className="text-white/70 hover:text-white transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-            <Link href="/jobs" className="hover:text-white/70 transition-colors">Jobs</Link>
+            <Link href="/jobs" className="text-white/70 hover:text-white transition-colors">Jobs</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">Ethiopian Professionals</span>
           </nav>
@@ -45,7 +45,7 @@ export default async function EthiopianProfessionalsPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <Link href="/jobs/find-work"
-              className="inline-flex items-center justify-center font-semibold h-11 px-6 rounded-lg text-white transition-colors hover:opacity-90 sm:flex-1"
+              className="inline-flex items-center justify-center font-semibold h-11 px-6 rounded-lg text-[#0f2d1e] transition-colors hover:opacity-90 sm:flex-1"
               style={{ background: '#C9982A' }}>
               Register as a Candidate
             </Link>
@@ -178,7 +178,7 @@ export default async function EthiopianProfessionalsPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/jobs/find-work"
-              className="inline-flex items-center justify-center font-semibold h-11 px-6 rounded-lg text-white transition-colors hover:opacity-90 flex-1"
+              className="inline-flex items-center justify-center font-semibold h-11 px-6 rounded-lg text-[#0f2d1e] transition-colors hover:opacity-90 flex-1"
               style={{ background: '#C9982A' }}>
               Register as a Candidate
             </Link>

@@ -200,9 +200,9 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
         <div className="container-site relative z-10">
           <div className="max-w-3xl">
             <nav className="flex items-center gap-2 text-white/70 text-sm mb-8 flex-wrap">
-              <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
+              <Link href="/" className="text-white/70 hover:text-white transition-colors">Home</Link>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-              <Link href="/get-help" className="hover:text-white/70 transition-colors">Get Help</Link>
+              <Link href="/get-help" className="text-white/70 hover:text-white transition-colors">Get Help</Link>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
               <span className="text-white/70">{service.name}</span>
             </nav>

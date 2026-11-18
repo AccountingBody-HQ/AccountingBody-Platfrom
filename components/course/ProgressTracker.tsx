@@ -82,7 +82,7 @@ export default function MarkCompleteButton({ courseSlug, lessonSlug, allLessonSl
   if (done) {
     return (
       <div className="inline-flex items-center gap-2.5 h-12 px-6 rounded-xl text-sm font-bold"
-        style={{ background: 'rgba(20,180,163,0.12)', color: '#0d8f82', border: '1.5px solid rgba(20,180,163,0.3)' }}>
+        style={{ background: 'rgba(20,180,163,0.12)', color: '#0b7b71', border: '1.5px solid rgba(20,180,163,0.3)' }}>
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
         </svg>
@@ -94,7 +94,7 @@ export default function MarkCompleteButton({ courseSlug, lessonSlug, allLessonSl
   if (completing) {
     return (
       <div className="inline-flex items-center gap-2.5 h-12 px-7 rounded-xl text-sm font-bold"
-        style={{ background: 'linear-gradient(135deg, #14b4a3 0%, #0d8f82 100%)', color: '#fff', boxShadow: '0 4px 16px rgba(20,180,163,0.4)' }}>
+        style={{ background: 'linear-gradient(135deg, #0b7b71 0%, #08665e 100%)', color: '#fff', boxShadow: '0 4px 16px rgba(20,180,163,0.4)' }}>
         <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
@@ -130,7 +130,7 @@ export function ResetProgressButton({ courseSlug, allLessonSlugs }: ResetProgres
 
   if (!hasProgress) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs font-medium" style={{ color: 'rgba(255,255,255,0.2)' }}>
+      <span className="inline-flex items-center gap-1.5 text-xs font-medium" style={{ color: 'rgba(255,255,255,0.7)' }}>
         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
@@ -148,7 +148,7 @@ export function ResetProgressButton({ courseSlug, allLessonSlugs }: ResetProgres
         }
       }}
       className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-150 hover:-translate-y-0.5"
-      style={{ background: 'rgba(244,63,94,0.12)', color: '#f43f5e', border: '1px solid rgba(244,63,94,0.25)' }}
+      style={{ background: 'rgba(244,63,94,0.12)', color: '#be123c', border: '1px solid rgba(244,63,94,0.25)' }}
     >
       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -178,7 +178,7 @@ export function ResetLessonButton({ courseSlug, lessonSlug, allLessonSlugs }: Re
         }
       }}
       className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-150 hover:-translate-y-0.5"
-      style={{ background: 'rgba(244,63,94,0.08)', color: '#f43f5e', border: '1px solid rgba(244,63,94,0.2)' }}
+      style={{ background: 'rgba(244,63,94,0.08)', color: '#be123c', border: '1px solid rgba(244,63,94,0.2)' }}
     >
       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -200,7 +200,7 @@ export function LessonStatusDot({ courseSlug, lessonSlug, allLessonSlugs, isActi
 
   if (done) {
     return (
-      <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: '#14b4a3' }}>
+      <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: '#0b7b71' }}>
         <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
         </svg>
@@ -213,7 +213,7 @@ export function LessonStatusDot({ courseSlug, lessonSlug, allLessonSlugs, isActi
       className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[0.6rem] font-bold"
       style={{
         background: isActive ? '#C9982A' : 'rgba(255,255,255,0.08)',
-        color:      isActive ? '#0C1A3D' : 'rgba(255,255,255,0.3)',
+        color:      isActive ? '#0C1A3D' : 'rgba(255,255,255,0.7)',
         border:     isActive ? 'none'    : '1px solid rgba(255,255,255,0.1)',
       }}
     >
@@ -263,7 +263,7 @@ export function ResetChapterButton({ courseSlug, allLessonSlugs, chapterLessonSl
       className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center transition-all duration-150 hover:scale-110"
       style={{ background: 'rgba(244,63,94,0.15)', border: '1px solid rgba(244,63,94,0.25)' }}
     >
-      <svg className="w-3 h-3" style={{ color: '#f43f5e' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-3 h-3" style={{ color: '#be123c' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
       </svg>
     </button>
@@ -286,7 +286,7 @@ export function PositionRing({ current, total }: PositionRingProps) {
         <circle cx="20" cy="20" r={r} fill="none" stroke="#C9982A" strokeWidth="3"
           strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" />
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-[0.6rem] font-bold" style={{ color: '#C9982A' }}>
+      <span className="absolute inset-0 flex items-center justify-center text-[0.6rem] font-bold" style={{ color: '#88671c' }}>
         {pct}%
       </span>
     </div>
@@ -316,7 +316,7 @@ export function ResetChapterInlineButton({ courseSlug, allLessonSlugs, chapterLe
         }
       }}
       className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-150 hover:-translate-y-0.5"
-      style={{ background: 'rgba(244,63,94,0.08)', color: '#f43f5e', border: '1px solid rgba(244,63,94,0.2)' }}
+      style={{ background: 'rgba(244,63,94,0.08)', color: '#be123c', border: '1px solid rgba(244,63,94,0.2)' }}
     >
       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

@@ -98,7 +98,7 @@ export default async function FirmsFreelancersPage() {
         </div>
         <div className="container-site relative z-10">
           <nav className="flex items-center gap-2 text-white/70 text-sm mb-10">
-            <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
+            <Link href="/" className="text-white/70 hover:text-white transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">Firms &amp; Freelancers</span>
           </nav>

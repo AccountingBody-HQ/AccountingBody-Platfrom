@@ -159,15 +159,15 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
         <div className="container-site relative z-10">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-white/70 text-sm mb-8 flex-wrap">
-            <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
+            <Link href="/" className="text-white/70 hover:text-white transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
             </svg>
-            <Link href="/study" className="hover:text-white/70 transition-colors">Study</Link>
+            <Link href="/study" className="text-white/70 hover:text-white transition-colors">Study</Link>
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
             </svg>
-            <Link href={`/study/${category}`} className="hover:text-white/70 transition-colors">
+            <Link href={`/study/${category}`} className="text-white/70 hover:text-white transition-colors">
               {category.toUpperCase()}
             </Link>
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -253,7 +253,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
 
               {formattedReviewed && (
                 <div className="mt-10 flex items-center gap-2 text-sm text-slate-400 pt-6 border-t border-slate-100">
-                  <svg className="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Last reviewed by a qualified accountant on

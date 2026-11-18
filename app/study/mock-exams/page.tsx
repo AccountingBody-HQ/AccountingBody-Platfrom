@@ -47,17 +47,17 @@ export default async function MockExamsPage() {
         </div>
         <div className="container-site relative z-10">
           <nav className="flex items-center gap-2 text-white/70 text-sm mb-8">
-            <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
+            <Link href="/" className="text-white/70 hover:text-white transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-            <Link href="/study" className="hover:text-white/70 transition-colors">Study</Link>
+            <Link href="/study" className="text-white/70 hover:text-white transition-colors">Study</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-            <Link href="/study/eticpa" className="hover:text-white/70 transition-colors">ETICPA</Link>
+            <Link href="/study/eticpa" className="text-white/70 hover:text-white transition-colors">ETICPA</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">Mock Exams</span>
           </nav>
           <div className="max-w-3xl">
             <span className="inline-block text-xs font-bold px-3 py-1.5 rounded-md mb-6"
-              style={{ backgroundColor: '#C9982A', color: '#1A4731' }}>
+              style={{ backgroundColor: '#C9982A', color: '#0f2d1e' }}>
               <span translate="no">ETICPA ATQ</span> — Practice Exams
             </span>
             <h1 className="font-display text-white mb-6 leading-[1.08]" style={{ letterSpacing: '-0.025em' }}>
@@ -119,7 +119,7 @@ export default async function MockExamsPage() {
                     <span className="text-xs font-bold px-2.5 py-1 rounded-md"
                       style={{ backgroundColor: '#f0f7f4', color: '#1A4731' }}><span translate="no">{exam.level}</span></span>
                     <span className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md"
-                      style={{ backgroundColor: '#1A4731', color: '#C9982A' }}>
+                      style={{ backgroundColor: '#1A4731', color: '#e8b030' }}>
                       <span className="w-1.5 h-1.5 rounded-full bg-[#C9982A] animate-pulse" />
                       Live
                     </span>

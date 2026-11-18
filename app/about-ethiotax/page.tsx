@@ -12,7 +12,7 @@ export default async function AboutEthioTaxPage() {
       <section style={{ backgroundColor: '#1A4731' }} className="py-20">
         <div className="max-w-5xl mx-auto px-6">
           <div className="mb-4">
-            <a href="/" className="text-sm" style={{ color: '#C9982A' }}>Home</a>
+            <a href="/" className="text-sm" style={{ color: '#e8b030' }}>Home</a>
             <span className="text-green-200 mx-2">/</span>
             <span className="text-green-200 text-sm">About EthioTax</span>
           </div>
@@ -23,7 +23,7 @@ export default async function AboutEthioTaxPage() {
             EthioTax is a managed professional services firm built exclusively for the Ethiopian community. We deliver accounting, tax, audit, payroll and business consulting to the highest professional standards &mdash; wherever you are in the world.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
-            <a href="/get-help" className="inline-flex items-center justify-center h-[52px] w-full sm:w-[240px] rounded-xl font-semibold text-sm" style={{ backgroundColor: '#C9982A', color: '#fff' }}>
+            <a href="/get-help" className="inline-flex items-center justify-center h-[52px] w-full sm:w-[240px] rounded-xl font-semibold text-sm" style={{ backgroundColor: '#C9982A', color: '#0f2d1e' }}>
               Enquire about a service
             </a>
             <a href="/how-it-works" className="inline-flex items-center justify-center h-[52px] w-full sm:w-[240px] rounded-xl font-semibold text-sm border-2 border-white text-white">
@@ -59,7 +59,7 @@ export default async function AboutEthioTaxPage() {
         <div className="max-w-5xl mx-auto px-6">
           <p className="text-sm font-semibold tracking-widest uppercase mb-3" style={{ color: '#1A4731' }}>OUR TEAM</p>
           <h2 className="font-display text-3xl md:text-4xl text-gray-900 mb-4">Our team of specialists</h2>
-          <p className="text-gray-500 text-lg mb-12 max-w-3xl">Every EthioTax engagement is handled by a qualified specialist with the credentials, experience and jurisdictional expertise relevant to your specific needs.</p>
+          <p className="text-gray-600 text-lg mb-12 max-w-3xl">Every EthioTax engagement is handled by a qualified specialist with the credentials, experience and jurisdictional expertise relevant to your specific needs.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white rounded-2xl p-8 border" style={{ borderColor: '#d1e8db' }}>
               <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{ backgroundColor: '#1A4731' }}>
@@ -91,7 +91,7 @@ export default async function AboutEthioTaxPage() {
         <div className="max-w-5xl mx-auto px-6">
           <p className="text-sm font-semibold tracking-widest uppercase mb-3" style={{ color: '#1A4731' }}>OUR LANGUAGES</p>
           <h2 className="font-display text-3xl md:text-4xl text-gray-900 mb-4">Professional services in your language</h2>
-          <p className="text-gray-500 text-lg mb-12 max-w-3xl">Every stage of your engagement &mdash; from first contact to final delivery &mdash; can be conducted in the language you are most comfortable with.</p>
+          <p className="text-gray-600 text-lg mb-12 max-w-3xl">Every stage of your engagement &mdash; from first contact to final delivery &mdash; can be conducted in the language you are most comfortable with.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="rounded-2xl p-8 border" style={{ borderColor: '#d1e8db', backgroundColor: '#f0f7f4' }}>
               <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{ backgroundColor: '#1A4731' }}>
@@ -121,7 +121,7 @@ export default async function AboutEthioTaxPage() {
       {/* OUR COMMUNITY */}
       <section className="py-20" style={{ backgroundColor: '#1A4731' }}>
         <div className="max-w-5xl mx-auto px-6">
-          <p className="text-sm font-semibold tracking-widest uppercase mb-3" style={{ color: '#C9982A' }}>OUR COMMUNITY</p>
+          <p className="text-sm font-semibold tracking-widest uppercase mb-3" style={{ color: '#e8b030' }}>OUR COMMUNITY</p>
           <h2 className="font-display text-3xl md:text-4xl text-white mb-4">Ethiopia and its global diaspora</h2>
           <p className="text-green-100 text-lg mb-12 max-w-3xl">EthioTax serves the Ethiopian community wherever they are &mdash; inside Ethiopia and across every major diaspora market worldwide.</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -166,7 +166,7 @@ export default async function AboutEthioTaxPage() {
         <div className="max-w-5xl mx-auto px-6">
           <p className="text-sm font-semibold tracking-widest uppercase mb-3" style={{ color: '#1A4731' }}>OUR VALUES</p>
           <h2 className="font-display text-3xl md:text-4xl text-gray-900 mb-4">What we stand for</h2>
-          <p className="text-gray-500 text-lg mb-12 max-w-3xl">Four values guide every decision EthioTax makes &mdash; from how we select our specialists to how we handle every client engagement.</p>
+          <p className="text-gray-600 text-lg mb-12 max-w-3xl">Four values guide every decision EthioTax makes &mdash; from how we select our specialists to how we handle every client engagement.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex gap-5 p-7 rounded-2xl border" style={{ borderColor: '#e8f0eb' }}>
               <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#1A4731' }}>
@@ -174,7 +174,7 @@ export default async function AboutEthioTaxPage() {
               </div>
               <div>
                 <h3 className="font-display text-xl text-gray-900 mb-2">Quality</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">Every deliverable meets the highest professional standard before it reaches you. We do not release work that falls short of what was agreed. No exceptions.</p>
+                <p className="text-gray-600 text-sm leading-relaxed">Every deliverable meets the highest professional standard before it reaches you. We do not release work that falls short of what was agreed. No exceptions.</p>
               </div>
             </div>
             <div className="flex gap-5 p-7 rounded-2xl border" style={{ borderColor: '#e8f0eb' }}>
@@ -183,7 +183,7 @@ export default async function AboutEthioTaxPage() {
               </div>
               <div>
                 <h3 className="font-display text-xl text-gray-900 mb-2">Transparency</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">Fixed fees agreed in writing before work starts. No hidden charges. No surprises. You always know exactly what you are paying and what you will receive.</p>
+                <p className="text-gray-600 text-sm leading-relaxed">Fixed fees agreed in writing before work starts. No hidden charges. No surprises. You always know exactly what you are paying and what you will receive.</p>
               </div>
             </div>
             <div className="flex gap-5 p-7 rounded-2xl border" style={{ borderColor: '#e8f0eb' }}>
@@ -192,7 +192,7 @@ export default async function AboutEthioTaxPage() {
               </div>
               <div>
                 <h3 className="font-display text-xl text-gray-900 mb-2">Community</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">EthioTax exists to serve the Ethiopian community. Every decision we make is guided by what is best for our clients and the broader community we are proud to be part of.</p>
+                <p className="text-gray-600 text-sm leading-relaxed">EthioTax exists to serve the Ethiopian community. Every decision we make is guided by what is best for our clients and the broader community we are proud to be part of.</p>
               </div>
             </div>
             <div className="flex gap-5 p-7 rounded-2xl border" style={{ borderColor: '#e8f0eb' }}>
@@ -201,7 +201,7 @@ export default async function AboutEthioTaxPage() {
               </div>
               <div>
                 <h3 className="font-display text-xl text-gray-900 mb-2">Trust</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">You share sensitive financial information with us. We protect that trust through confidentiality, professionalism and consistent delivery &mdash; every single time.</p>
+                <p className="text-gray-600 text-sm leading-relaxed">You share sensitive financial information with us. We protect that trust through confidentiality, professionalism and consistent delivery &mdash; every single time.</p>
               </div>
             </div>
           </div>
@@ -221,7 +221,7 @@ export default async function AboutEthioTaxPage() {
       <section className="py-20 border-t bg-white" style={{ borderColor: '#e8f0eb' }}>
         <div className="max-w-5xl mx-auto px-6 text-center">
           <h2 className="font-display text-3xl md:text-4xl text-gray-900 mb-4">Ready to work with EthioTax?</h2>
-          <p className="text-gray-500 text-lg mb-10 max-w-2xl mx-auto">Tell us what you need and we will respond within 24 hours &mdash; in English, Amharic or Afaan Oromoo.</p>
+          <p className="text-gray-600 text-lg mb-10 max-w-2xl mx-auto">Tell us what you need and we will respond within 24 hours &mdash; in English, Amharic or Afaan Oromoo.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="/get-help" className="inline-flex items-center justify-center h-[52px] w-full sm:w-[240px] rounded-xl font-semibold text-sm text-white" style={{ backgroundColor: '#1A4731' }}>
               Enquire about a service

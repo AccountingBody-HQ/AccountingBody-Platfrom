@@ -128,7 +128,7 @@ export default function JobSearchHero() {
 
       {/* ── Popular searches ── */}
       <div className="flex flex-wrap items-center gap-x-2 gap-y-2 mt-5">
-        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.35)' }}>
+        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.7)' }}>
           Popular:
         </span>
         {POPULAR.map(term => (

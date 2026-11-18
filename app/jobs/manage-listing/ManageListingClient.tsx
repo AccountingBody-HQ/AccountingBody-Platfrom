@@ -206,7 +206,7 @@ export default function ManageListingClient({ token, isEthioTax }: { token: stri
                     </button>
                     <button type="button" onClick={() => { setConfirming(false); setWithdrawError(null) }} disabled={withdrawing}
                       className="w-full sm:w-auto text-sm font-semibold h-11 px-6 rounded-lg border-2 disabled:opacity-50"
-                      style={{ borderColor: '#cbd5e1', color: '#64748b', background: 'transparent' }}>
+                      style={{ borderColor: '#cbd5e1', color: '#475569', background: 'transparent' }}>
                       Cancel
                     </button>
                   </div>

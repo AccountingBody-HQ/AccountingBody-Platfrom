@@ -39,7 +39,7 @@ const EXAM_BODY_ACCENT: Record<string, string> = {
 
 const EXAM_BODY_BADGE: Record<string, string> = {
   ACCA:  'bg-blue-50 text-[#004B8D] border-blue-200',
-  CIMA:  'bg-sky-50 text-[#0081C6] border-sky-200',
+  CIMA:  'bg-sky-50 text-[#0369a1] border-sky-200',
   AAT:   'bg-teal-50 text-teal-700 border-teal-200',
   ICAEW: 'bg-red-50 text-red-800 border-red-200',
 }
@@ -80,11 +80,11 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <div className="container-site relative z-10">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-white/70 text-sm mb-8 flex-wrap">
-            <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
+            <Link href="/" className="text-white/70 hover:text-white transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
             </svg>
-            <Link href="/articles" className="hover:text-white/70 transition-colors">Articles</Link>
+            <Link href="/articles" className="text-white/70 hover:text-white transition-colors">Articles</Link>
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
             </svg>
@@ -222,7 +222,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 )}
                 {formattedReviewed && (
                   <div className="flex items-center gap-2 text-sm text-slate-400">
-                    <svg className="w-4 h-4 text-teal-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Last reviewed by a qualified accountant on

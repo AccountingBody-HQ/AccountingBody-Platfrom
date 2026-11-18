@@ -44,13 +44,13 @@ function ProgressBar({ currentStep, brand }: { currentStep: number; brand: strin
           <div key={step.number} className="flex flex-col items-center" style={{ width: '20%' }}>
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mb-1 transition-all"
-              style={{ background: currentStep >= step.number ? brand : '#e2e8f0', color: currentStep >= step.number ? '#fff' : '#94a3b8' }}
+              style={{ background: currentStep >= step.number ? brand : '#e2e8f0', color: currentStep >= step.number ? '#fff' : '#475569' }}
             >
               {currentStep > step.number
                 ? <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
                 : step.number}
             </div>
-            <span className="text-xs text-center leading-tight" style={{ color: currentStep >= step.number ? brand : '#94a3b8', fontWeight: currentStep === step.number ? 600 : 400 }}>
+            <span className="text-xs text-center leading-tight" style={{ color: currentStep >= step.number ? brand : '#475569', fontWeight: currentStep === step.number ? 600 : 400 }}>
               {step.label}
             </span>
           </div>
@@ -233,7 +233,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
   }
 
   const errStyle = (field: string) => fieldErrors[field] ? { borderColor: '#C9982A' } : {}
-  const errLabel = (field: string) => ({ color: fieldErrors[field] ? '#C9982A' : brand })
+  const errLabel = (field: string) => ({ color: fieldErrors[field] ? '#88671c' : brand })
 
   const NavButtons = () => (
     <div className="flex items-center justify-between pt-4">
@@ -268,9 +268,9 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
           </div>
           <div className="container-site relative z-10">
             <nav className="flex items-center gap-2 text-white/70 text-sm mb-8">
-              <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
+              <Link href="/" className="text-white/70 hover:text-white transition-colors">Home</Link>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-              <Link href="/jobs" className="hover:text-white/70 transition-colors">Jobs</Link>
+              <Link href="/jobs" className="text-white/70 hover:text-white transition-colors">Jobs</Link>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
               <span className="text-white/70">Find Work</span>
             </nav>
@@ -348,14 +348,14 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div>
                             <label className="block text-sm font-semibold mb-2" style={errLabel('full_name')}>Full Name *</label>
-                            {fieldErrors.full_name && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter your full name.</p>}
+                            {fieldErrors.full_name && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your full name.</p>}
                             <input type="text" value={form.full_name} onChange={e => { setForm({...form, full_name: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, full_name: false})) }}
                               className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                               placeholder="Your full name" style={errStyle('full_name')} />
                           </div>
                           <div>
                             <label className="block text-sm font-semibold mb-2" style={errLabel('email')}>Email Address *</label>
-                            {fieldErrors.email && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter a valid email address.</p>}
+                            {fieldErrors.email && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter a valid email address.</p>}
                             <input type="email" value={form.email} onChange={e => { setForm({...form, email: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, email: false})) }}
                               className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                               placeholder="you@example.com" style={errStyle('email')} />
@@ -379,7 +379,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div>
                             <label className="block text-sm font-semibold mb-2" style={errLabel('location_city')}>City *</label>
-                            {fieldErrors.location_city && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please enter your city.</p>}
+                            {fieldErrors.location_city && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your city.</p>}
                             <input type="text" value={form.location_city} onChange={e => { setForm({...form, location_city: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, location_city: false})) }}
                               className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
                               placeholder="e.g. London" style={errStyle('location_city')} />
@@ -404,7 +404,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div>
                             <label className="block text-sm font-semibold mb-2" style={errLabel('professional_role')}>Professional Role *</label>
-                            {fieldErrors.professional_role && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please select your role.</p>}
+                            {fieldErrors.professional_role && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your role.</p>}
                             <select value={form.professional_role} onChange={e => { setForm({...form, professional_role: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, professional_role: false})) }}
                               className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
                               style={errStyle('professional_role')}>
@@ -414,7 +414,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                           </div>
                           <div>
                             <label className="block text-sm font-semibold mb-2" style={errLabel('qualification')}>Highest Qualification *</label>
-                            {fieldErrors.qualification && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please select your qualification.</p>}
+                            {fieldErrors.qualification && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your qualification.</p>}
                             <select value={form.qualification} onChange={e => { setForm({...form, qualification: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, qualification: false})) }}
                               className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
                               style={errStyle('qualification')}>
@@ -426,7 +426,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div>
                             <label className="block text-sm font-semibold mb-2" style={errLabel('years_experience')}>Years of Experience *</label>
-                            {fieldErrors.years_experience && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please select your experience level.</p>}
+                            {fieldErrors.years_experience && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your experience level.</p>}
                             <select value={form.years_experience} onChange={e => { setForm({...form, years_experience: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, years_experience: false})) }}
                               className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
                               style={errStyle('years_experience')}>
@@ -436,7 +436,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                           </div>
                           <div>
                             <label className="block text-sm font-semibold mb-2" style={errLabel('employment_status')}>Current Employment Status *</label>
-                            {fieldErrors.employment_status && <p className="text-xs font-semibold mb-1" style={{ color: '#C9982A' }}>Please select your status.</p>}
+                            {fieldErrors.employment_status && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your status.</p>}
                             <select value={form.employment_status} onChange={e => { setForm({...form, employment_status: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, employment_status: false})) }}
                               className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 bg-white"
                               style={errStyle('employment_status')}>
@@ -503,13 +503,13 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                     {currentStep === 4 && (
                       <div className="bg-white rounded-xl border shadow-sm p-8 space-y-4"
                         style={{ borderColor: fieldErrors.biography ? '#C9982A' : '#e2e8f0' }}>
-                        <h2 className="font-display text-xl" style={{ color: fieldErrors.biography ? '#C9982A' : '#0C1A3D' }}>
+                        <h2 className="font-display text-xl" style={{ color: fieldErrors.biography ? '#88671c' : '#0C1A3D' }}>
                           Professional Biography *
                         </h2>
                         <p className="text-sm text-slate-500">
                           Tell us about your experience, specialisms, and what makes you a strong candidate. Minimum 50 words. This is what our team reads when matching you to roles.
                         </p>
-                        {fieldErrors.biography && <p className="text-xs font-semibold" style={{ color: '#C9982A' }}>Please write at least 50 words about your professional background.</p>}
+                        {fieldErrors.biography && <p className="text-xs font-semibold" style={{ color: '#88671c' }}>Please write at least 50 words about your professional background.</p>}
                         <textarea rows={8} value={form.biography}
                           onChange={e => { setForm({...form, biography: e.target.value}); if (e.target.value.trim().split(/\s+/).length >= 50) setFieldErrors(p => ({...p, biography: false})) }}
                           className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent"
@@ -525,7 +525,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                         <div className="bg-white rounded-xl border shadow-sm p-8 space-y-4"
                           style={{ borderColor: fieldErrors.terms ? '#C9982A' : '#e2e8f0' }}>
                           <h2 className="font-display text-xl text-navy-950">Confirmation</h2>
-                          {fieldErrors.terms && <p className="text-xs font-semibold" style={{ color: '#C9982A' }}>Please accept both confirmations to continue.</p>}
+                          {fieldErrors.terms && <p className="text-xs font-semibold" style={{ color: '#88671c' }}>Please accept both confirmations to continue.</p>}
                           <label className="flex items-start gap-3 cursor-pointer">
                             <input type="checkbox" checked={termsAgreed} onChange={e => { setTermsAgreed(e.target.checked); if (e.target.checked) setFieldErrors(p => ({...p, terms: false})) }}
                               className="mt-0.5 accent-gold-500 shrink-0" />

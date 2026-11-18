@@ -221,7 +221,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
               </p>
               <Link
                 href="/jobs/ethiopian-professionals"
-                style={{ background: '#C9982A', color: '#1A4731' }}
+                style={{ background: '#C9982A', color: '#0f2d1e' }}
                 className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
               >
                 See opportunities for you →
@@ -283,7 +283,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
                 )}
                 <div className="relative z-10 flex items-center justify-center w-16 h-16 rounded-full bg-white border-2 mb-6 shadow-sm"
                   style={{ borderColor: gold }}>
-                  <span translate="no" className="font-display text-xl font-bold" style={{ color: gold }}>{s.step}</span>
+                  <span translate="no" className="font-display text-xl font-bold" style={{ color: '#88671c' }}>{s.step}</span>
                 </div>
                 <h3 className="font-display text-lg text-navy-950 mb-3">{s.title}</h3>
                 <p className="text-slate-500 text-sm leading-relaxed max-w-xs">{s.body}</p>
@@ -341,7 +341,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
               <Link
                 href="/freelancing-pathways"
                 className="w-full flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-4 text-center whitespace-nowrap"
-                style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}
+                style={{ border: '2px solid #C9982A', color: '#88671c', background: 'transparent' }}
               >
                 Explore freelancing
               </Link>

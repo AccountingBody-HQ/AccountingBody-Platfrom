@@ -26,7 +26,7 @@ export default async function PostAJobSuccessPage() {
       <div className="max-w-lg mx-auto w-full">
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-10 text-center">
           <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: 'rgba(20,184,166,0.1)' }}>
-            <CheckCircle2 className="w-16 h-16" style={{ color: '#14b8a6' }} strokeWidth={1.5} />
+            <CheckCircle2 className="w-16 h-16" style={{ color: '#0b7b71' }} strokeWidth={1.5} />
           </div>
           <h1 className="font-display text-navy-950 text-2xl md:text-3xl mb-4" style={{ letterSpacing: '-0.02em' }}>
             Your listing is under review

@@ -43,9 +43,9 @@ export default async function FreeCoursesSlugPage({ params }: { params: Promise<
           style={{ backgroundImage: `linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)`, backgroundSize: '60px 60px' }} />
         <div className="container-site relative z-10">
           <nav className="flex items-center gap-2 text-xs text-white/70 mb-6">
-            <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
+            <Link href="/" className="text-white/70 hover:text-white transition-colors">Home</Link>
             <span>/</span>
-            <Link href="/free-courses" className="hover:text-white/70 transition-colors">Courses</Link>
+            <Link href="/free-courses" className="text-white/70 hover:text-white transition-colors">Courses</Link>
             <span>/</span>
             <span className="text-white/60 truncate max-w-[200px]">{course.title}</span>
           </nav>
@@ -56,7 +56,7 @@ export default async function FreeCoursesSlugPage({ params }: { params: Promise<
                   {capitalize(course.level)}
                 </span>
               )}
-              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-teal-500 text-white uppercase tracking-wide">Free</span>
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-teal-600 text-white uppercase tracking-wide">Free</span>
             </div>
             <h1 className="font-display text-white text-3xl md:text-4xl leading-tight mb-4">{course.title}</h1>
             {course.description && <p className="text-white/65 text-lg leading-relaxed mb-6">{course.description}</p>}

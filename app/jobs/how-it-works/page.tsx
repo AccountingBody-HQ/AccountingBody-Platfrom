@@ -69,9 +69,9 @@ export default async function HowItWorksPage() {
         </div>
         <div className="container-site relative z-10">
           <nav className="flex items-center gap-2 text-white/70 text-sm mb-8">
-            <Link href="/" className="hover:text-white/70 transition-colors">Home</Link>
+            <Link href="/" className="text-white/70 hover:text-white transition-colors">Home</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-            <Link href="/jobs" className="hover:text-white/70 transition-colors">Jobs</Link>
+            <Link href="/jobs" className="text-white/70 hover:text-white transition-colors">Jobs</Link>
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">How It Works</span>
           </nav>
@@ -104,7 +104,7 @@ export default async function HowItWorksPage() {
                   <div className="flex items-center gap-3 mb-2">
                     <h2 className="font-display text-xl text-navy-950">{item.title}</h2>
                     <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                      style={{ background: 'rgba(12,26,61,0.06)', color: '#64748b' }}>
+                      style={{ background: 'rgba(12,26,61,0.06)', color: '#475569' }}>
                       {item.forWho}
                     </span>
                   </div>

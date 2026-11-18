@@ -42,7 +42,7 @@ const qualificationPaths = [
     description: 'Operational, Management, and Strategic levels plus Case Study prep.',
     accent:      'bg-[#0081C6]',
     badgeBg:     'bg-sky-50',
-    badgeText:   'text-[#0081C6]',
+    badgeText:   'text-[#0369a1]',
     highlights:  ['Operational level', 'Management level', 'Strategic level', 'Case Study prep'],
   },
   {
@@ -182,7 +182,7 @@ function ArticleCard({ article }: { article: FeaturedArticle }) {
       {isHotTopic && (
         <div className="absolute top-4 right-4 z-10">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-black uppercase tracking-wider"
-            style={{ background: '#f43f5e', color: '#fff' }}>
+            style={{ background: '#be123c', color: '#fff' }}>
             🔥 Hot
           </span>
         </div>
@@ -191,7 +191,7 @@ function ArticleCard({ article }: { article: FeaturedArticle }) {
         <div className="flex flex-wrap items-center gap-2 mb-3">
           {insightTag && (
             <span className="text-[0.6rem] font-black uppercase tracking-wider px-2 py-0.5 rounded-full"
-              style={{ background: 'rgba(212,160,23,0.1)', color: '#B8860B', border: '1px solid rgba(212,160,23,0.25)' }}>
+              style={{ background: 'rgba(212,160,23,0.1)', color: '#88671c', border: '1px solid rgba(212,160,23,0.25)' }}>
               {tagLabels[insightTag] ?? insightTag}
             </span>
           )}
@@ -576,7 +576,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             {[
               { badge: 'ETICPA', badgeBg: 'bg-[#f0f7f4]', badgeText: 'text-[#1A4731]', body: "Ethiopia's national accountancy body — CPA and ATQ qualifications" },
               { badge: 'ACCA', badgeBg: 'bg-blue-50', badgeText: 'text-[#004B8D]', body: 'All 13 papers — Applied Knowledge to Strategic Professional' },
-              { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0081C6]', body: 'Certificate to Strategic level, including Case Study prep' },
+              { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0369a1]', body: 'Certificate to Strategic level, including Case Study prep' },
               { badge: 'AAT', badgeBg: 'bg-teal-50', badgeText: 'text-teal-700', body: 'Level 2 Foundation through Level 4 Professional Diploma' },
             ].map(item => (
               <div
@@ -742,7 +742,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     <div className="mt-14 flex flex-col sm:flex-row items-start gap-4">
       <Link href="/get-help"
         className="inline-flex items-center justify-center gap-2 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
-        style={{ backgroundColor: '#C9982A', color: '#1A4731', width: '280px', minHeight: '56px' }}>
+        style={{ backgroundColor: '#C9982A', color: '#0f2d1e', width: '280px', minHeight: '56px' }}>
         Get a free quote
         <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -823,7 +823,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           <Link
             href="/study/eticpa"
             className="h-12 px-8 inline-flex items-center gap-2 rounded-xl text-sm font-semibold transition-colors"
-            style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}
+            style={{ border: '2px solid #C9982A', color: '#88671c', background: 'transparent' }}
           >
             Explore ETICPA →
           </Link>
@@ -835,7 +835,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         <div className="rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
 
           <div className="px-7 pt-7 pb-6" style={{ background: '#1A4731' }}>
-            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#C9982A' }}>Question bank</p>
+            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#e8b030' }}>Question bank</p>
             <p className="font-display text-white text-2xl">Exam-standard questions</p>
             <p className="text-white/70 text-sm mt-1">ETICPA · ACCA · CIMA · AAT — all in one place</p>
           </div>
@@ -844,7 +844,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             {[
               { badge: 'ETICPA', badgeBg: 'bg-[#f0f7f4]', badgeText: 'text-[#1A4731]', stats: "Ethiopia's national accountancy body — CPA and ATQ" },
               { badge: 'ACCA', badgeBg: 'bg-blue-50', badgeText: 'text-[#004B8D]', stats: 'The global standard for accounting professionals' },
-              { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0081C6]', stats: "The world's largest management accounting body" },
+              { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0369a1]', stats: "The world's largest management accounting body" },
               { badge: 'AAT', badgeBg: 'bg-teal-50', badgeText: 'text-teal-700', stats: 'The practical accounting foundation qualification' },
             ].map(row => (
               <div key={row.badge} className="flex items-center justify-between px-7 py-4">
@@ -1214,7 +1214,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 <div className="flex flex-col gap-2 p-5 flex-1">
                   {[
                     { badge: 'ACCA', badgeBg: 'bg-blue-50', badgeText: 'text-[#004B8D]', body: 'All 13 papers — Applied Knowledge to Strategic Professional' },
-                    { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0081C6]', body: 'Certificate to Strategic level, including Case Study prep' },
+                    { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0369a1]', body: 'Certificate to Strategic level, including Case Study prep' },
                     { badge: 'AAT', badgeBg: 'bg-teal-50', badgeText: 'text-teal-700', body: 'Level 2 Foundation through Level 4 Professional Diploma' },
                     { badge: 'ICAEW', badgeBg: 'bg-red-50', badgeText: 'text-red-800', body: 'ACA — Certificate, Professional and Advanced levels' },
                   ].map(item => (
@@ -1512,7 +1512,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                         Job board
                       </p>
                       <p className="font-display text-white text-lg mb-2 leading-snug">Browse jobs</p>
-                      <p className="text-xs leading-relaxed mb-4 flex-1" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                      <p className="text-xs leading-relaxed mb-4 flex-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
                         Search live vacancies. Filter by role, location and contract type.
                       </p>
                       <Link href="/jobs/listings"
@@ -1528,7 +1528,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                         Managed placement
                       </p>
                       <p className="font-display text-white text-lg mb-2 leading-snug">Get matched</p>
-                      <p className="text-xs leading-relaxed mb-4 flex-1" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                      <p className="text-xs leading-relaxed mb-4 flex-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
                         Register once. We personally match you to roles and advocate on your behalf.
                       </p>
                       <Link href="/jobs/find-work"
@@ -1547,19 +1547,19 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                         Daily
                       </span>
                       <span className="text-[10px] font-semibold block" style={{ color: '#C9982A' }}>New roles added</span>
-                      <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>Direct & aggregated</span>
+                      <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.7)' }}>Direct & aggregated</span>
                     </div>
                     <div className="p-5">
                       <span className="font-display text-xl font-bold text-white block mb-0.5">90 Days</span>
                       <span className="text-[10px] font-semibold block" style={{ color: '#C9982A' }}>Placement guarantee</span>
-                      <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>Every permanent role</span>
+                      <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.7)' }}>Every permanent role</span>
                     </div>
                   </div>
 
                   {/* Footer */}
                   <div className="px-7 py-4 flex items-center justify-between"
                     style={{ borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(201,152,42,0.05)' }}>
-                    <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                    <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>
                       Your profile is never made public.{' '}
                       <span style={{ color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>We contact you only when a role matches.</span>
                     </p>
@@ -1643,7 +1643,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 <Link
                   href="/mock-exams/acca"
                   className="h-12 px-8 inline-flex items-center gap-2 rounded-xl text-sm font-semibold transition-colors"
-                  style={{ border: '2px solid #C9982A', color: '#B8860B', background: 'transparent' }}
+                  style={{ border: '2px solid #C9982A', color: '#88671c', background: 'transparent' }}
                 >
                   Try a mock exam →
                 </Link>
@@ -1663,7 +1663,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 <div className="divide-y divide-slate-100">
                   {[
                     { badge: 'ACCA', badgeBg: 'bg-blue-50', badgeText: 'text-[#004B8D]', stats: 'The global standard for accounting professionals' },
-                    { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0081C6]', stats: "The world's largest management accounting body" },
+                    { badge: 'CIMA', badgeBg: 'bg-sky-50', badgeText: 'text-[#0369a1]', stats: "The world's largest management accounting body" },
                     { badge: 'AAT', badgeBg: 'bg-teal-50', badgeText: 'text-teal-700', stats: 'The practical accounting foundation qualification' },
                     { badge: 'ICAEW', badgeBg: 'bg-red-50', badgeText: 'text-red-800', stats: 'The ACA — one of the most respected finance qualifications' },
                   ].map(row => (
