@@ -53,7 +53,7 @@ export default function CookieConsent({ gtmId, adsenseId, isEthioTax }: Props) {
     const el = ref.current
     if (!mode || !el) return
     const root = document.documentElement
-    const set = () => root.style.setProperty('--consent-height', `${Math.ceil(el.getBoundingClientRect().height)}px`)
+    const set = () => root.style.setProperty('--consent-height', `${el.getBoundingClientRect().height}px`)
     set()
     root.setAttribute('data-consent-open', '')
     const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(set) : null
