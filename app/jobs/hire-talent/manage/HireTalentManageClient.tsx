@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { useFormIds } from '@/lib/form-a11y'
 import Script from 'next/script'
 import { LINK_RETRY_HEADING, MANAGE_LINK_RETRY_TEXT, manageLinkStatus } from '@/lib/message-rules'
 
@@ -21,6 +22,7 @@ export default function HireTalentManageClient({ isEthioTax: isEthioTaxProp }: {
     jurisdiction: '', role_description: '', must_haves: '', nice_to_haves: '',
   })
   const turnstileWidgetId = useRef<string | null>(null)
+  const ids = useFormIds()
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -151,23 +153,23 @@ export default function HireTalentManageClient({ isEthioTax: isEthioTaxProp }: {
               <h2 className="font-display text-xl" style={{ color: brand }}>Contact &amp; Timeline</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Contact Phone</label>
-                  <input type="tel" value={form.contact_phone} onChange={e => setForm({...form, contact_phone: e.target.value})}
+                  <label htmlFor={ids.id('contact_phone')} className="block text-sm font-semibold mb-2" style={{ color: brand }}>Contact Phone</label>
+                  <input id={ids.id('contact_phone')} autoComplete="tel" type="tel" value={form.contact_phone} onChange={e => setForm({...form, contact_phone: e.target.value})}
                     className="w-full border rounded-lg px-4 py-3 text-sm" style={{ borderColor: '#e2e8f0' }} placeholder="Phone number" />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Salary / Day Rate Budget</label>
-                  <input type="text" value={form.salary_budget} onChange={e => setForm({...form, salary_budget: e.target.value})}
+                  <label htmlFor={ids.id('salary_budget')} className="block text-sm font-semibold mb-2" style={{ color: brand }}>Salary / Day Rate Budget</label>
+                  <input id={ids.id('salary_budget')} type="text" value={form.salary_budget} onChange={e => setForm({...form, salary_budget: e.target.value})}
                     className="w-full border rounded-lg px-4 py-3 text-sm" style={{ borderColor: '#e2e8f0' }} placeholder="e.g. £50,000 or £350/day" />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Target Start Date</label>
-                  <input type="text" value={form.start_date} onChange={e => setForm({...form, start_date: e.target.value})}
+                  <label htmlFor={ids.id('start_date')} className="block text-sm font-semibold mb-2" style={{ color: brand }}>Target Start Date</label>
+                  <input id={ids.id('start_date')} type="text" value={form.start_date} onChange={e => setForm({...form, start_date: e.target.value})}
                     className="w-full border rounded-lg px-4 py-3 text-sm" style={{ borderColor: '#e2e8f0' }} placeholder="e.g. ASAP or January 2027" />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Jurisdiction</label>
-                  <select value={form.jurisdiction} onChange={e => setForm({...form, jurisdiction: e.target.value})}
+                  <label htmlFor={ids.id('jurisdiction')} className="block text-sm font-semibold mb-2" style={{ color: brand }}>Jurisdiction</label>
+                  <select id={ids.id('jurisdiction')} value={form.jurisdiction} onChange={e => setForm({...form, jurisdiction: e.target.value})}
                     className="w-full border rounded-lg px-4 py-3 text-sm" style={{ borderColor: '#e2e8f0' }}>
                     <option value="">Select jurisdiction</option>
                     {(isEthioTax ? jurisdictionOptionsET : jurisdictionOptionsAB).map(o => <option key={o} value={o}>{o}</option>)}
@@ -179,20 +181,20 @@ export default function HireTalentManageClient({ isEthioTax: isEthioTaxProp }: {
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6">
               <h2 className="font-display text-xl" style={{ color: brand }}>Role Details</h2>
               <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Role Description</label>
-                <textarea value={form.role_description} onChange={e => setForm({...form, role_description: e.target.value})}
+                <label htmlFor={ids.id('role_description')} className="block text-sm font-semibold mb-2" style={{ color: brand }}>Role Description</label>
+                <textarea id={ids.id('role_description')} value={form.role_description} onChange={e => setForm({...form, role_description: e.target.value})}
                   rows={6} className="w-full border rounded-lg px-4 py-3 text-sm resize-none" style={{ borderColor: '#e2e8f0' }}
                   placeholder="Describe the role, responsibilities, and what success looks like." />
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Must-Haves</label>
-                <textarea value={form.must_haves} onChange={e => setForm({...form, must_haves: e.target.value})}
+                <label htmlFor={ids.id('must_haves')} className="block text-sm font-semibold mb-2" style={{ color: brand }}>Must-Haves</label>
+                <textarea id={ids.id('must_haves')} value={form.must_haves} onChange={e => setForm({...form, must_haves: e.target.value})}
                   rows={3} className="w-full border rounded-lg px-4 py-3 text-sm resize-none" style={{ borderColor: '#e2e8f0' }}
                   placeholder="Non-negotiable requirements." />
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Nice-to-Haves</label>
-                <textarea value={form.nice_to_haves} onChange={e => setForm({...form, nice_to_haves: e.target.value})}
+                <label htmlFor={ids.id('nice_to_haves')} className="block text-sm font-semibold mb-2" style={{ color: brand }}>Nice-to-Haves</label>
+                <textarea id={ids.id('nice_to_haves')} value={form.nice_to_haves} onChange={e => setForm({...form, nice_to_haves: e.target.value})}
                   rows={3} className="w-full border rounded-lg px-4 py-3 text-sm resize-none" style={{ borderColor: '#e2e8f0' }}
                   placeholder="Desirable but not essential." />
               </div>
@@ -203,7 +205,7 @@ export default function HireTalentManageClient({ isEthioTax: isEthioTaxProp }: {
                 ref={el => { if (el && !turnstileWidgetId.current) { turnstileWidgetId.current = window.turnstile?.render(el, { sitekey: el.dataset.sitekey ?? '' }) } }} />
             </div>
 
-            {status === 'error' && <p className="text-center text-sm font-semibold" style={{ color: '#dc2626' }}>Something went wrong. Please try again.</p>}
+            {status === 'error' && <p role="alert" className="text-center text-sm font-semibold" style={{ color: '#dc2626' }}>Something went wrong. Please try again.</p>}
 
             <button type="submit" disabled={status === 'loading'}
               className="w-full py-4 rounded-xl text-white font-bold text-base disabled:opacity-50"

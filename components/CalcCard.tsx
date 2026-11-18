@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 
 interface Field { id: string; label: string; placeholder: string }
 interface Result { label: string; value: string }
@@ -14,6 +14,7 @@ interface CalcCardProps {
 export default function CalcCard({ title, tag, description, fields, calculate }: CalcCardProps) {
   const [values, setValues] = useState<Record<string, string>>({})
   const [results, setResults] = useState<Result[] | null>(null)
+  const uid = useId()
 
   const handleChange = (id: string, val: string) => {
     const next = { ...values, [id]: val }
@@ -33,8 +34,9 @@ export default function CalcCard({ title, tag, description, fields, calculate }:
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
           {fields.map(f => (
             <div key={f.id}>
-              <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>{f.label}</label>
+              <label htmlFor={`${uid}${f.id}`} style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 4 }}>{f.label}</label>
               <input
+                id={`${uid}${f.id}`}
                 type="number"
                 value={values[f.id] ?? ''}
                 onChange={e => handleChange(f.id, e.target.value)}

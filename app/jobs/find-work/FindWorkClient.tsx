@@ -6,6 +6,7 @@ import { useState, useRef } from 'react'
 import Link from 'next/link'
 import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 import { LINK_RETRY_HEADING, VERIFY_LINK_RETRY_TEXT, verifyLinkStatus } from '@/lib/message-rules'
+import { invalidProps, useFocusFirstInvalid, useFocusOnShow, useFormIds } from '@/lib/form-a11y'
 
 declare global {
   interface Window {
@@ -152,6 +153,11 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
     return 'idle'
   })
   const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({})
+  const ids = useFormIds()
+  // The form scrolls itself (scrollTop), so focus moves without a second scroll.
+  const [formRef, focusFirstInvalid] = useFocusFirstInvalid<HTMLFormElement>(true)
+  const successHeading = useFocusOnShow<HTMLHeadingElement>(status === 'success')
+  const fe = (field: string) => invalidProps(fieldErrors[field], ids.errId(field))
   const personCheck = useRef<PersonCheckHandle>(null)
   const [personCheckToken, setPersonCheckToken] = useState('')
   const topRef = useRef<HTMLDivElement>(null)
@@ -186,7 +192,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
 
   const handleNext = () => {
     const errors = validateStep(currentStep)
-    if (Object.keys(errors).length > 0) { setFieldErrors(errors); scrollTop(); return }
+    if (Object.keys(errors).length > 0) { setFieldErrors(errors); scrollTop(); focusFirstInvalid(); return }
     setFieldErrors({})
     setCurrentStep(s => s + 1)
     scrollTop()
@@ -201,7 +207,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const errors = validateStep(5)
-    if (Object.keys(errors).length > 0) { setFieldErrors(errors); return }
+    if (Object.keys(errors).length > 0) { setFieldErrors(errors); focusFirstInvalid(); return }
     setFieldErrors({})
     setStatus('loading')
     const token = personCheckToken
@@ -303,7 +309,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                       }
                     </div>
                     {status === 'success' && <>
-                      <h2 className="font-display text-2xl mb-3" style={{ color: brand }}>Registration Received</h2>
+                      <h2 ref={successHeading} tabIndex={-1} className="font-display text-2xl mb-3" style={{ color: brand }}>Registration Received</h2>
                       <p className="text-slate-500 leading-relaxed mb-4">Thank you for registering. We have sent a verification link to your email address. Please click it to confirm your email — your application will not be reviewed until you do.</p>
                       <p className="text-xs text-slate-400 text-center">Did not receive the email? Check your spam folder.</p>
                     </>}
@@ -326,7 +332,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                     </>}
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit} className="space-y-6">
+                  <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
 
                     <div ref={topRef} />
                     <ProgressBar currentStep={currentStep} brand={brand} />
@@ -347,30 +353,30 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                         <h2 className="font-display text-xl text-navy-950">Personal Details</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div>
-                            <label className="block text-sm font-semibold mb-2" style={errLabel('full_name')}>Full Name *</label>
-                            {fieldErrors.full_name && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your full name.</p>}
-                            <input type="text" value={form.full_name} onChange={e => { setForm({...form, full_name: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, full_name: false})) }}
+                            <label htmlFor={ids.id('full_name')} className="block text-sm font-semibold mb-2" style={errLabel('full_name')}>Full Name <span aria-hidden="true">*</span></label>
+                            {fieldErrors.full_name && <p id={ids.errId('full_name')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your full name.</p>}
+                            <input id={ids.id('full_name')} aria-required="true" autoComplete="name" {...fe('full_name')} type="text" value={form.full_name} onChange={e => { setForm({...form, full_name: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, full_name: false})) }}
                               className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                               placeholder="Your full name" style={errStyle('full_name')} />
                           </div>
                           <div>
-                            <label className="block text-sm font-semibold mb-2" style={errLabel('email')}>Email Address *</label>
-                            {fieldErrors.email && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter a valid email address.</p>}
-                            <input type="email" value={form.email} onChange={e => { setForm({...form, email: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, email: false})) }}
+                            <label htmlFor={ids.id('email')} className="block text-sm font-semibold mb-2" style={errLabel('email')}>Email Address <span aria-hidden="true">*</span></label>
+                            {fieldErrors.email && <p id={ids.errId('email')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter a valid email address.</p>}
+                            <input id={ids.id('email')} aria-required="true" autoComplete="email" {...fe('email')} type="email" value={form.email} onChange={e => { setForm({...form, email: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, email: false})) }}
                               className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                               placeholder="you@example.com" style={errStyle('email')} />
                           </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div>
-                            <label className="block text-sm font-semibold text-navy-950 mb-2">Phone Number</label>
-                            <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
+                            <label htmlFor={ids.id('phone')} className="block text-sm font-semibold text-navy-950 mb-2">Phone Number</label>
+                            <input id={ids.id('phone')} autoComplete="tel" type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
                               className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                               placeholder="Optional" />
                           </div>
                           <div>
-                            <label className="block text-sm font-semibold text-navy-950 mb-2">LinkedIn Profile URL</label>
-                            <input type="url" value={form.linkedin_url} onChange={e => setForm({...form, linkedin_url: e.target.value})}
+                            <label htmlFor={ids.id('linkedin_url')} className="block text-sm font-semibold text-navy-950 mb-2">LinkedIn Profile URL</label>
+                            <input id={ids.id('linkedin_url')} autoComplete="url" type="url" value={form.linkedin_url} onChange={e => setForm({...form, linkedin_url: e.target.value})}
                               className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                               placeholder="https://linkedin.com/in/yourprofile" />
                             <p className="text-xs text-slate-400 mt-1">Strongly recommended — helps us match you faster</p>
@@ -378,15 +384,15 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div>
-                            <label className="block text-sm font-semibold mb-2" style={errLabel('location_city')}>City *</label>
-                            {fieldErrors.location_city && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your city.</p>}
-                            <input type="text" value={form.location_city} onChange={e => { setForm({...form, location_city: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, location_city: false})) }}
+                            <label htmlFor={ids.id('location_city')} className="block text-sm font-semibold mb-2" style={errLabel('location_city')}>City <span aria-hidden="true">*</span></label>
+                            {fieldErrors.location_city && <p id={ids.errId('location_city')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your city.</p>}
+                            <input id={ids.id('location_city')} aria-required="true" autoComplete="address-level2" {...fe('location_city')} type="text" value={form.location_city} onChange={e => { setForm({...form, location_city: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, location_city: false})) }}
                               className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                               placeholder="e.g. London" style={errStyle('location_city')} />
                           </div>
                           <div>
-                            <label className="block text-sm font-semibold text-navy-950 mb-2">Country</label>
-                            <select value={form.location_country} onChange={e => setForm({...form, location_country: e.target.value})}
+                            <label htmlFor={ids.id('location_country')} className="block text-sm font-semibold text-navy-950 mb-2">Country</label>
+                            <select id={ids.id('location_country')} autoComplete="country-name" value={form.location_country} onChange={e => setForm({...form, location_country: e.target.value})}
                               className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white">
                               <option value="">Select country</option>
                               {(isEthioTax ? countryOptionsET : countryOptionsAB).map(c => <option key={c} value={c}>{c}</option>)}
@@ -403,9 +409,9 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                         <h2 className="font-display text-xl text-navy-950">Professional Profile</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div>
-                            <label className="block text-sm font-semibold mb-2" style={errLabel('professional_role')}>Professional Role *</label>
-                            {fieldErrors.professional_role && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your role.</p>}
-                            <select value={form.professional_role} onChange={e => { setForm({...form, professional_role: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, professional_role: false})) }}
+                            <label htmlFor={ids.id('professional_role')} className="block text-sm font-semibold mb-2" style={errLabel('professional_role')}>Professional Role <span aria-hidden="true">*</span></label>
+                            {fieldErrors.professional_role && <p id={ids.errId('professional_role')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your role.</p>}
+                            <select id={ids.id('professional_role')} aria-required="true" {...fe('professional_role')} value={form.professional_role} onChange={e => { setForm({...form, professional_role: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, professional_role: false})) }}
                               className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white"
                               style={errStyle('professional_role')}>
                               <option value="">Select your role</option>
@@ -413,9 +419,9 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                             </select>
                           </div>
                           <div>
-                            <label className="block text-sm font-semibold mb-2" style={errLabel('qualification')}>Highest Qualification *</label>
-                            {fieldErrors.qualification && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your qualification.</p>}
-                            <select value={form.qualification} onChange={e => { setForm({...form, qualification: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, qualification: false})) }}
+                            <label htmlFor={ids.id('qualification')} className="block text-sm font-semibold mb-2" style={errLabel('qualification')}>Highest Qualification <span aria-hidden="true">*</span></label>
+                            {fieldErrors.qualification && <p id={ids.errId('qualification')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your qualification.</p>}
+                            <select id={ids.id('qualification')} aria-required="true" {...fe('qualification')} value={form.qualification} onChange={e => { setForm({...form, qualification: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, qualification: false})) }}
                               className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white"
                               style={errStyle('qualification')}>
                               <option value="">Select qualification</option>
@@ -425,9 +431,9 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           <div>
-                            <label className="block text-sm font-semibold mb-2" style={errLabel('years_experience')}>Years of Experience *</label>
-                            {fieldErrors.years_experience && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your experience level.</p>}
-                            <select value={form.years_experience} onChange={e => { setForm({...form, years_experience: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, years_experience: false})) }}
+                            <label htmlFor={ids.id('years_experience')} className="block text-sm font-semibold mb-2" style={errLabel('years_experience')}>Years of Experience <span aria-hidden="true">*</span></label>
+                            {fieldErrors.years_experience && <p id={ids.errId('years_experience')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your experience level.</p>}
+                            <select id={ids.id('years_experience')} aria-required="true" {...fe('years_experience')} value={form.years_experience} onChange={e => { setForm({...form, years_experience: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, years_experience: false})) }}
                               className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white"
                               style={errStyle('years_experience')}>
                               <option value="">Select</option>
@@ -435,9 +441,9 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                             </select>
                           </div>
                           <div>
-                            <label className="block text-sm font-semibold mb-2" style={errLabel('employment_status')}>Current Employment Status *</label>
-                            {fieldErrors.employment_status && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your status.</p>}
-                            <select value={form.employment_status} onChange={e => { setForm({...form, employment_status: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, employment_status: false})) }}
+                            <label htmlFor={ids.id('employment_status')} className="block text-sm font-semibold mb-2" style={errLabel('employment_status')}>Current Employment Status <span aria-hidden="true">*</span></label>
+                            {fieldErrors.employment_status && <p id={ids.errId('employment_status')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select your status.</p>}
+                            <select id={ids.id('employment_status')} aria-required="true" {...fe('employment_status')} value={form.employment_status} onChange={e => { setForm({...form, employment_status: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, employment_status: false})) }}
                               className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white"
                               style={errStyle('employment_status')}>
                               <option value="">Select</option>
@@ -446,8 +452,8 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-semibold text-navy-950 mb-2">Salary / Day Rate Expectation</label>
-                          <input type="text" value={form.salary_expectation} onChange={e => setForm({...form, salary_expectation: e.target.value})}
+                          <label htmlFor={ids.id('salary_expectation')} className="block text-sm font-semibold text-navy-950 mb-2">Salary / Day Rate Expectation</label>
+                          <input id={ids.id('salary_expectation')} type="text" value={form.salary_expectation} onChange={e => setForm({...form, salary_expectation: e.target.value})}
                             className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="e.g. £45,000 per year or £350 per day" />
                         </div>
@@ -459,11 +465,11 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                     {currentStep === 3 && (
                       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6">
                         <h2 className="font-display text-xl text-navy-950">What You Are Looking For</h2>
-                        <div>
-                          <label className="block text-sm font-semibold text-navy-950 mb-3">Type of Role Sought</label>
+                        <div role="group" aria-labelledby={ids.id('role_types')}>
+                          <p id={ids.id('role_types')} className="block text-sm font-semibold text-navy-950 mb-3">Type of Role Sought</p>
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             {roleTypeOptions.map(opt => (
-                              <button key={opt} type="button" onClick={() => toggleMulti(opt, roleTypes, setRoleTypes)}
+                              <button key={opt} type="button" aria-pressed={roleTypes.includes(opt)} onClick={() => toggleMulti(opt, roleTypes, setRoleTypes)}
                                 className="px-3 py-2.5 rounded-lg border text-sm font-medium transition-all text-left"
                                 style={{ borderColor: roleTypes.includes(opt) ? '#C9982A' : '#e2e8f0', background: roleTypes.includes(opt) ? '#fdf8ee' : '#fff', color: roleTypes.includes(opt) ? '#0C1A3D' : '#475569', fontWeight: roleTypes.includes(opt) ? 600 : 400 }}>
                                 {opt}
@@ -471,11 +477,11 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                             ))}
                           </div>
                         </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-navy-950 mb-3">Jurisdictions You Can Work In</label>
+                        <div role="group" aria-labelledby={ids.id('jurisdictions')}>
+                          <p id={ids.id('jurisdictions')} className="block text-sm font-semibold text-navy-950 mb-3">Jurisdictions You Can Work In</p>
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             {(isEthioTax ? jurisdictionOptionsET : jurisdictionOptionsAB).map(opt => (
-                              <button key={opt} type="button" onClick={() => toggleMulti(opt, jurisdictions, setJurisdictions)}
+                              <button key={opt} type="button" aria-pressed={jurisdictions.includes(opt)} onClick={() => toggleMulti(opt, jurisdictions, setJurisdictions)}
                                 className="px-3 py-2.5 rounded-lg border text-sm font-medium transition-all text-left"
                                 style={{ borderColor: jurisdictions.includes(opt) ? '#C9982A' : '#e2e8f0', background: jurisdictions.includes(opt) ? '#fdf8ee' : '#fff', color: jurisdictions.includes(opt) ? '#0C1A3D' : '#475569', fontWeight: jurisdictions.includes(opt) ? 600 : 400 }}>
                                 {opt}
@@ -483,11 +489,11 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                             ))}
                           </div>
                         </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-navy-950 mb-3">Languages Spoken</label>
+                        <div role="group" aria-labelledby={ids.id('languages')}>
+                          <p id={ids.id('languages')} className="block text-sm font-semibold text-navy-950 mb-3">Languages Spoken</p>
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             {(isEthioTax ? languageOptionsET : languageOptionsAB).map(opt => (
-                              <button key={opt} type="button" onClick={() => toggleMulti(opt, languages, setLanguages)}
+                              <button key={opt} type="button" aria-pressed={languages.includes(opt)} onClick={() => toggleMulti(opt, languages, setLanguages)}
                                 className="px-3 py-2.5 rounded-lg border text-sm font-medium transition-all text-left"
                                 style={{ borderColor: languages.includes(opt) ? '#C9982A' : '#e2e8f0', background: languages.includes(opt) ? '#fdf8ee' : '#fff', color: languages.includes(opt) ? '#0C1A3D' : '#475569', fontWeight: languages.includes(opt) ? 600 : 400 }}>
                                 {opt}
@@ -503,14 +509,14 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                     {currentStep === 4 && (
                       <div className="bg-white rounded-xl border shadow-sm p-8 space-y-4"
                         style={{ borderColor: fieldErrors.biography ? '#C9982A' : '#e2e8f0' }}>
-                        <h2 className="font-display text-xl" style={{ color: fieldErrors.biography ? '#88671c' : '#0C1A3D' }}>
-                          Professional Biography *
+                        <h2 id={ids.id('biography')} className="font-display text-xl" style={{ color: fieldErrors.biography ? '#88671c' : '#0C1A3D' }}>
+                          Professional Biography <span aria-hidden="true">*</span>
                         </h2>
                         <p className="text-sm text-slate-500">
                           Tell us about your experience, specialisms, and what makes you a strong candidate. Minimum 50 words. This is what our team reads when matching you to roles.
                         </p>
-                        {fieldErrors.biography && <p className="text-xs font-semibold" style={{ color: '#88671c' }}>Please write at least 50 words about your professional background.</p>}
-                        <textarea rows={8} value={form.biography}
+                        {fieldErrors.biography && <p id={ids.errId('biography')} className="text-xs font-semibold" style={{ color: '#88671c' }}>Please write at least 50 words about your professional background.</p>}
+                        <textarea aria-labelledby={ids.id('biography')} aria-required="true" {...fe('biography')} rows={8} value={form.biography}
                           onChange={e => { setForm({...form, biography: e.target.value}); if (e.target.value.trim().split(/\s+/).length >= 50) setFieldErrors(p => ({...p, biography: false})) }}
                           className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                           placeholder="e.g. I am an ACCA-qualified accountant with 8 years of experience in financial reporting and tax compliance, having worked with clients across the UK and Ethiopia. I specialise in..." />
@@ -525,9 +531,9 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                         <div className="bg-white rounded-xl border shadow-sm p-8 space-y-4"
                           style={{ borderColor: fieldErrors.terms ? '#C9982A' : '#e2e8f0' }}>
                           <h2 className="font-display text-xl text-navy-950">Confirmation</h2>
-                          {fieldErrors.terms && <p className="text-xs font-semibold" style={{ color: '#88671c' }}>Please accept both confirmations to continue.</p>}
+                          {fieldErrors.terms && <p id={ids.errId('terms')} className="text-xs font-semibold" style={{ color: '#88671c' }}>Please accept both confirmations to continue.</p>}
                           <label className="flex items-start gap-3 cursor-pointer">
-                            <input type="checkbox" checked={termsAgreed} onChange={e => { setTermsAgreed(e.target.checked); if (e.target.checked) setFieldErrors(p => ({...p, terms: false})) }}
+                            <input type="checkbox" aria-required="true" {...invalidProps(fieldErrors.terms && !termsAgreed, ids.errId('terms'))} checked={termsAgreed} onChange={e => { setTermsAgreed(e.target.checked); if (e.target.checked) setFieldErrors(p => ({...p, terms: false})) }}
                               className="mt-0.5 accent-gold-500 shrink-0" />
                             <span className="text-sm text-slate-600">
                               I confirm that I have read and agree to the{' '}
@@ -535,7 +541,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                             </span>
                           </label>
                           <label className="flex items-start gap-3 cursor-pointer">
-                            <input type="checkbox" checked={dataConsent} onChange={e => { setDataConsent(e.target.checked); if (e.target.checked) setFieldErrors(p => ({...p, terms: false})) }}
+                            <input type="checkbox" aria-required="true" {...invalidProps(fieldErrors.terms && !dataConsent, ids.errId('terms'))} checked={dataConsent} onChange={e => { setDataConsent(e.target.checked); if (e.target.checked) setFieldErrors(p => ({...p, terms: false})) }}
                               className="mt-0.5 accent-gold-500 shrink-0" />
                             <span className="text-sm text-slate-600">
                               I consent to {platformName} holding and processing my personal data for the purpose of matching me with suitable roles, in accordance with the{' '}
@@ -549,7 +555,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                           </div>
                         </div>
                         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
-                          {status === 'error' && <p className="text-red-700 text-sm mb-4">Something went wrong. Please try again or contact us directly.</p>}
+                          {status === 'error' && <p role="alert" className="text-red-700 text-sm mb-4">Something went wrong. Please try again or contact us directly.</p>}
                           <input type="text" value={form._h} onChange={e => setForm({...form, _h: e.target.value})} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
                           <PersonCheck ref={personCheck} onToken={setPersonCheckToken} isEthioTax={isEthioTax} />
                           <div className="flex items-center justify-between">

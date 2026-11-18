@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 import { BRIEF_LINK_RETRY_TEXT, LINK_RETRY_HEADING, briefLinkStatus } from '@/lib/message-rules'
+import { invalidProps, useFocusFirstInvalid, useFocusOnShow, useFormIds } from '@/lib/form-a11y'
 
 declare global {
   interface Window {
@@ -123,6 +124,11 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
     return 'idle'
   })
   const [fieldErrors, setFieldErrors] = useState<Record<string,boolean>>({})
+  const ids = useFormIds()
+  // handleNext scrolls the first error into view itself, so focus moves without a second scroll.
+  const [stepsRef, focusFirstInvalid] = useFocusFirstInvalid<HTMLDivElement>(true)
+  const successHeading = useFocusOnShow<HTMLHeadingElement>(status === 'success')
+  const fe = (field: string) => invalidProps(fieldErrors[field], ids.errId(field))
   const [editToken, setEditToken] = useState<string | null>(null)
 
   useEffect(() => {
@@ -192,6 +198,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
       setFieldErrors(errors)
       const firstRef = Object.keys(errors).map(k => refs[k as keyof typeof refs]).find(r => r?.current)
       firstRef?.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      focusFirstInvalid()
       return
     }
     setFieldErrors({})
@@ -280,7 +287,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                   }
                 </div>
                 {status === 'success' && <>
-                  <h2 className="font-display text-2xl mb-3" style={{ color: brand }}>Brief Received</h2>
+                  <h2 ref={successHeading} tabIndex={-1} className="font-display text-2xl mb-3" style={{ color: brand }}>Brief Received</h2>
                   <p className="text-slate-500 leading-relaxed mb-4">Thank you. Please check your inbox — we have sent you a confirmation email with your full brief details. Please review and confirm before we begin our search.</p>
                   <p className="text-xs text-slate-400 text-center">Did not receive the email? Check your spam folder.</p>
                 </>}
@@ -304,7 +311,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                 </>}
               </div>
             ) : (
-              <div className="lg:grid lg:grid-cols-[1fr_300px] gap-10 items-start">
+              <div ref={stepsRef} className="lg:grid lg:grid-cols-[1fr_300px] gap-10 items-start">
                 <div>
                   <ProgressBar currentStep={step} brand={brand} />
 
@@ -321,31 +328,31 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div ref={refs.company_name}>
-                          <label className="block text-sm font-semibold mb-2" style={errLabel('company_name')}>Company Name *</label>
-                          {fieldErrors.company_name && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your company name.</p>}
-                          <input type="text" value={form.company_name} onChange={e => { setForm({...form, company_name: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, company_name: false})) }}
+                          <label htmlFor={ids.id('company_name')} className="block text-sm font-semibold mb-2" style={errLabel('company_name')}>Company Name <span aria-hidden="true">*</span></label>
+                          {fieldErrors.company_name && <p id={ids.errId('company_name')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your company name.</p>}
+                          <input id={ids.id('company_name')} aria-required="true" autoComplete="organization" {...fe('company_name')} type="text" value={form.company_name} onChange={e => { setForm({...form, company_name: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, company_name: false})) }}
                             className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="Your company name" style={errStyle('company_name')} />
                         </div>
                         <div ref={refs.contact_name}>
-                          <label className="block text-sm font-semibold mb-2" style={errLabel('contact_name')}>Your Name *</label>
-                          {fieldErrors.contact_name && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your name.</p>}
-                          <input type="text" value={form.contact_name} onChange={e => { setForm({...form, contact_name: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, contact_name: false})) }}
+                          <label htmlFor={ids.id('contact_name')} className="block text-sm font-semibold mb-2" style={errLabel('contact_name')}>Your Name <span aria-hidden="true">*</span></label>
+                          {fieldErrors.contact_name && <p id={ids.errId('contact_name')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your name.</p>}
+                          <input id={ids.id('contact_name')} aria-required="true" autoComplete="name" {...fe('contact_name')} type="text" value={form.contact_name} onChange={e => { setForm({...form, contact_name: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, contact_name: false})) }}
                             className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="Full name" style={errStyle('contact_name')} />
                         </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div ref={refs.contact_email}>
-                          <label className="block text-sm font-semibold mb-2" style={errLabel('contact_email')}>Email Address *</label>
-                          {fieldErrors.contact_email && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter a valid email address.</p>}
-                          <input type="email" value={form.contact_email} onChange={e => { setForm({...form, contact_email: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, contact_email: false})) }}
+                          <label htmlFor={ids.id('contact_email')} className="block text-sm font-semibold mb-2" style={errLabel('contact_email')}>Email Address <span aria-hidden="true">*</span></label>
+                          {fieldErrors.contact_email && <p id={ids.errId('contact_email')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter a valid email address.</p>}
+                          <input id={ids.id('contact_email')} aria-required="true" autoComplete="email" {...fe('contact_email')} type="email" value={form.contact_email} onChange={e => { setForm({...form, contact_email: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, contact_email: false})) }}
                             className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="you@company.com" style={errStyle('contact_email')} />
                         </div>
                         <div>
-                          <label className="block text-sm font-semibold text-navy-950 mb-2">Phone Number</label>
-                          <input type="tel" value={form.contact_phone} onChange={e => setForm({...form, contact_phone: e.target.value})}
+                          <label htmlFor={ids.id('contact_phone')} className="block text-sm font-semibold text-navy-950 mb-2">Phone Number</label>
+                          <input id={ids.id('contact_phone')} autoComplete="tel" type="tel" value={form.contact_phone} onChange={e => setForm({...form, contact_phone: e.target.value})}
                             className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="Optional" />
                         </div>
@@ -370,16 +377,16 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div ref={refs.role_title}>
-                          <label className="block text-sm font-semibold mb-2" style={errLabel('role_title')}>Role Title *</label>
-                          {fieldErrors.role_title && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter the role title.</p>}
-                          <input type="text" value={form.role_title} onChange={e => { setForm({...form, role_title: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, role_title: false})) }}
+                          <label htmlFor={ids.id('role_title')} className="block text-sm font-semibold mb-2" style={errLabel('role_title')}>Role Title <span aria-hidden="true">*</span></label>
+                          {fieldErrors.role_title && <p id={ids.errId('role_title')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter the role title.</p>}
+                          <input id={ids.id('role_title')} aria-required="true" {...fe('role_title')} type="text" value={form.role_title} onChange={e => { setForm({...form, role_title: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, role_title: false})) }}
                             className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="e.g. Senior Accountant" style={errStyle('role_title')} />
                         </div>
                         <div ref={refs.contract_type}>
-                          <label className="block text-sm font-semibold mb-2" style={errLabel('contract_type')}>Permanent or Contract *</label>
-                          {fieldErrors.contract_type && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select a contract type.</p>}
-                          <select value={form.contract_type} onChange={e => { setForm({...form, contract_type: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, contract_type: false})) }}
+                          <label htmlFor={ids.id('contract_type')} className="block text-sm font-semibold mb-2" style={errLabel('contract_type')}>Permanent or Contract <span aria-hidden="true">*</span></label>
+                          {fieldErrors.contract_type && <p id={ids.errId('contract_type')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select a contract type.</p>}
+                          <select id={ids.id('contract_type')} aria-required="true" {...fe('contract_type')} value={form.contract_type} onChange={e => { setForm({...form, contract_type: e.target.value}); if (e.target.value) setFieldErrors(p => ({...p, contract_type: false})) }}
                             className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white"
                             style={errStyle('contract_type')}>
                             <option value="">Select</option>
@@ -389,29 +396,29 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div ref={refs.location}>
-                          <label className="block text-sm font-semibold mb-2" style={errLabel('location')}>Location *</label>
-                          {fieldErrors.location && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter the role location.</p>}
-                          <input type="text" value={form.location} onChange={e => { setForm({...form, location: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, location: false})) }}
+                          <label htmlFor={ids.id('location')} className="block text-sm font-semibold mb-2" style={errLabel('location')}>Location <span aria-hidden="true">*</span></label>
+                          {fieldErrors.location && <p id={ids.errId('location')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter the role location.</p>}
+                          <input id={ids.id('location')} aria-required="true" {...fe('location')} type="text" value={form.location} onChange={e => { setForm({...form, location: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, location: false})) }}
                             className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="e.g. London, UK / Remote" style={errStyle('location')} />
                         </div>
                         <div>
-                          <label className="block text-sm font-semibold text-navy-950 mb-2">Salary / Day Rate Budget</label>
-                          <input type="text" value={form.salary_budget} onChange={e => setForm({...form, salary_budget: e.target.value})}
+                          <label htmlFor={ids.id('salary_budget')} className="block text-sm font-semibold text-navy-950 mb-2">Salary / Day Rate Budget</label>
+                          <input id={ids.id('salary_budget')} type="text" value={form.salary_budget} onChange={e => setForm({...form, salary_budget: e.target.value})}
                             className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="e.g. £45,000–£55,000 or £350/day" />
                         </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
-                          <label className="block text-sm font-semibold text-navy-950 mb-2">Ideal Start Date</label>
-                          <input type="text" value={form.start_date} onChange={e => setForm({...form, start_date: e.target.value})}
+                          <label htmlFor={ids.id('start_date')} className="block text-sm font-semibold text-navy-950 mb-2">Ideal Start Date</label>
+                          <input id={ids.id('start_date')} type="text" value={form.start_date} onChange={e => setForm({...form, start_date: e.target.value})}
                             className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder="e.g. ASAP / January 2027" />
                         </div>
                         <div>
-                          <label className="block text-sm font-semibold text-navy-950 mb-2">Jurisdiction</label>
-                          <select value={form.jurisdiction} onChange={e => setForm({...form, jurisdiction: e.target.value})}
+                          <label htmlFor={ids.id('jurisdiction')} className="block text-sm font-semibold text-navy-950 mb-2">Jurisdiction</label>
+                          <select id={ids.id('jurisdiction')} value={form.jurisdiction} onChange={e => setForm({...form, jurisdiction: e.target.value})}
                             className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 bg-white">
                             <option value="">Select</option>
                             {(isEthioTax ? jurisdictionOptionsET : jurisdictionOptionsAB).map(o => <option key={o} value={o}>{o}</option>)}
@@ -443,23 +450,23 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                         <p className="text-sm text-slate-500">The more detail you provide, the better we can match you.</p>
                       </div>
                       <div ref={refs.role_description}>
-                        <label className="block text-sm font-semibold mb-2" style={errLabel('role_description')}>Role Description *</label>
-                        {fieldErrors.role_description && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please describe the role.</p>}
+                        <label htmlFor={ids.id('role_description')} className="block text-sm font-semibold mb-2" style={errLabel('role_description')}>Role Description <span aria-hidden="true">*</span></label>
+                        {fieldErrors.role_description && <p id={ids.errId('role_description')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please describe the role.</p>}
                         <p className="text-xs text-slate-400 mb-2">Describe the role, responsibilities, and what success looks like.</p>
-                        <textarea rows={6} value={form.role_description} onChange={e => { setForm({...form, role_description: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, role_description: false})) }}
+                        <textarea id={ids.id('role_description')} aria-required="true" {...fe('role_description')} rows={6} value={form.role_description} onChange={e => { setForm({...form, role_description: e.target.value}); if (e.target.value.trim()) setFieldErrors(p => ({...p, role_description: false})) }}
                           className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                           placeholder="e.g. We are looking for an experienced accountant to manage month-end close, prepare management accounts, and liaise with external auditors..."
                           style={errStyle('role_description')} />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-navy-950 mb-2">Must-Have Requirements</label>
-                        <textarea rows={3} value={form.must_haves} onChange={e => setForm({...form, must_haves: e.target.value})}
+                        <label htmlFor={ids.id('must_haves')} className="block text-sm font-semibold text-navy-950 mb-2">Must-Have Requirements</label>
+                        <textarea id={ids.id('must_haves')} rows={3} value={form.must_haves} onChange={e => setForm({...form, must_haves: e.target.value})}
                           className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                           placeholder="e.g. ACCA qualified, 5+ years experience, UK tax knowledge" />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-navy-950 mb-2">Nice-to-Have</label>
-                        <textarea rows={2} value={form.nice_to_haves} onChange={e => setForm({...form, nice_to_haves: e.target.value})}
+                        <label htmlFor={ids.id('nice_to_haves')} className="block text-sm font-semibold text-navy-950 mb-2">Nice-to-Have</label>
+                        <textarea id={ids.id('nice_to_haves')} rows={2} value={form.nice_to_haves} onChange={e => setForm({...form, nice_to_haves: e.target.value})}
                           className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                           placeholder="e.g. Experience with Xero, knowledge of Ethiopian business law" />
                       </div>
@@ -502,7 +509,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                       <div className="bg-slate-50 rounded-lg border border-slate-200 p-4">
                         <p className="text-xs text-slate-500 leading-relaxed">By submitting this brief you confirm that you have authority to engage a recruitment service on behalf of your organisation. We will contact you within 2 working days to discuss your requirement and send a Fee Agreement Letter before any search begins.</p>
                       </div>
-                      {status === 'error' && <p className="text-red-700 text-sm">Something went wrong. Please try again or contact us directly.</p>}
+                      {status === 'error' && <p role="alert" className="text-red-700 text-sm">Something went wrong. Please try again or contact us directly.</p>}
                       <input type="text" value={form._h} onChange={e => setForm({...form, _h: e.target.value})} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
                       <PersonCheck ref={personCheck} onToken={setPersonCheckToken} isEthioTax={isEthioTax} />
                       <div className="flex justify-between pt-2">

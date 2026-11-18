@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useRef } from 'react'
 import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
+import { invalidProps, useFocusFirstInvalid, useFocusOnShow, useFormIds } from '@/lib/form-a11y'
 
 declare global {
   interface Window {
@@ -31,6 +32,11 @@ export default function JoinNetworkPage() {
   const [qualifications, setQualifications] = useState<string[]>([])
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [fieldErrors, setFieldErrors] = useState<{ practice_name?: boolean; practice_type?: boolean; contact_name?: boolean; email?: boolean; location?: boolean; open_to_employment?: boolean; currently_hiring?: boolean; about?: boolean }>({})
+  const ids = useFormIds()
+  // handleSubmit scrolls the first error into view itself, so focus moves without a second scroll.
+  const [formRef, focusFirstInvalid] = useFocusFirstInvalid<HTMLFormElement>(true)
+  const successHeading = useFocusOnShow<HTMLHeadingElement>(status === 'success')
+  const fe = (field: keyof typeof fieldErrors) => invalidProps(fieldErrors[field], ids.errId(field))
   const empRef = useRef<HTMLDivElement>(null)
   const hiringRef = useRef<HTMLDivElement>(null)
   const aboutRef = useRef<HTMLDivElement>(null)
@@ -69,6 +75,7 @@ export default function JoinNetworkPage() {
         errors.about && aboutRef,
       ].find(Boolean) as React.RefObject<HTMLDivElement> | undefined
       if (firstError?.current) firstError.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      focusFirstInvalid()
       return
     }
     setFieldErrors({})
@@ -140,7 +147,7 @@ export default function JoinNetworkPage() {
               <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-6">
                 <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
               </div>
-              <h2 className="font-display text-2xl text-navy-950 mb-3">Application Received</h2>
+              <h2 ref={successHeading} tabIndex={-1} className="font-display text-2xl text-navy-950 mb-3">Application Received</h2>
               <p className="text-slate-500 leading-relaxed max-w-md mx-auto">Thank you for your application. Our team will review your credentials and professional standing. We aim to review all applications within 5 working days. You will hear from us once your application has been assessed.</p>
               <button onClick={() => { setStatus('idle'); setApplicantType(null); setQualifications([]); setForm({ practice_name: '', contact_name: '', email: '', phone: '', website: '', practice_type: '', location: '', years_of_experience: '', languages: '', specialisms: '', about: '', _h: '', open_to_employment: '', currently_hiring: '' }) }}
                 className="mt-6 text-sm font-medium text-navy-700 hover:text-gold-600 transition-colors">
@@ -202,7 +209,7 @@ export default function JoinNetworkPage() {
 
               {/* FORM — shown only after type selected */}
               {applicantType && (
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
 
                   {/* PRACTICE / PERSONAL DETAILS */}
                   <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6">
@@ -212,17 +219,17 @@ export default function JoinNetworkPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       {applicantType === 'firm' && (
                         <div ref={practiceNameRef}>
-                          <label className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.practice_name ? '#88671c' : '#0C1A3D' }}>Firm Name *</label>
-                          {fieldErrors.practice_name && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your firm name.</p>}
-                          <input type="text" value={form.practice_name} onChange={(e) => { setForm({ ...form, practice_name: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, practice_name: false })) }}
+                          <label htmlFor={ids.id('practice_name')} className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.practice_name ? '#88671c' : '#0C1A3D' }}>Firm Name <span aria-hidden="true">*</span></label>
+                          {fieldErrors.practice_name && <p id={ids.errId('practice_name')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your firm name.</p>}
+                          <input id={ids.id('practice_name')} aria-required="true" autoComplete="organization" {...fe('practice_name')} type="text" value={form.practice_name} onChange={(e) => { setForm({ ...form, practice_name: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, practice_name: false })) }}
                             className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent" placeholder="Your firm name"
                             style={{ borderColor: fieldErrors.practice_name ? '#C9982A' : '' }} />
                         </div>
                       )}
                       <div ref={practiceTypeRef}>
-                        <label className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.practice_type ? '#88671c' : '#0C1A3D' }}>{applicantType === 'firm' ? 'Practice Type *' : 'Professional Role *'}</label>
-                        {fieldErrors.practice_type && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select an option.</p>}
-                        <select value={form.practice_type} onChange={(e) => { setForm({ ...form, practice_type: e.target.value }); if (e.target.value) setFieldErrors(prev => ({ ...prev, practice_type: false })) }}
+                        <label htmlFor={ids.id('practice_type')} className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.practice_type ? '#88671c' : '#0C1A3D' }}>{applicantType === 'firm' ? 'Practice Type' : 'Professional Role'} <span aria-hidden="true">*</span></label>
+                        {fieldErrors.practice_type && <p id={ids.errId('practice_type')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please select an option.</p>}
+                        <select id={ids.id('practice_type')} aria-required="true" {...fe('practice_type')} value={form.practice_type} onChange={(e) => { setForm({ ...form, practice_type: e.target.value }); if (e.target.value) setFieldErrors(prev => ({ ...prev, practice_type: false })) }}
                           className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent bg-white"
                           style={{ borderColor: fieldErrors.practice_type ? '#C9982A' : '' }}>
                           <option value="">Select</option>
@@ -232,43 +239,43 @@ export default function JoinNetworkPage() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div ref={contactNameRef}>
-                        <label className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.contact_name ? '#88671c' : '#0C1A3D' }}>{applicantType === 'firm' ? 'Primary Contact Name *' : 'Full Name *'}</label>
-                        {fieldErrors.contact_name && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter a name.</p>}
-                        <input type="text" value={form.contact_name} onChange={(e) => { setForm({ ...form, contact_name: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, contact_name: false })) }}
+                        <label htmlFor={ids.id('contact_name')} className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.contact_name ? '#88671c' : '#0C1A3D' }}>{applicantType === 'firm' ? 'Primary Contact Name' : 'Full Name'} <span aria-hidden="true">*</span></label>
+                        {fieldErrors.contact_name && <p id={ids.errId('contact_name')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter a name.</p>}
+                        <input id={ids.id('contact_name')} aria-required="true" autoComplete="name" {...fe('contact_name')} type="text" value={form.contact_name} onChange={(e) => { setForm({ ...form, contact_name: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, contact_name: false })) }}
                           className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent" placeholder="Full name"
                           style={{ borderColor: fieldErrors.contact_name ? '#C9982A' : '' }} />
                       </div>
                       <div ref={emailRef}>
-                        <label className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.email ? '#88671c' : '#0C1A3D' }}>Email Address *</label>
-                        {fieldErrors.email && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter a valid email address.</p>}
-                        <input type="email" value={form.email} onChange={(e) => { setForm({ ...form, email: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, email: false })) }}
+                        <label htmlFor={ids.id('email')} className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.email ? '#88671c' : '#0C1A3D' }}>Email Address <span aria-hidden="true">*</span></label>
+                        {fieldErrors.email && <p id={ids.errId('email')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter a valid email address.</p>}
+                        <input id={ids.id('email')} aria-required="true" autoComplete="email" {...fe('email')} type="email" value={form.email} onChange={(e) => { setForm({ ...form, email: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, email: false })) }}
                           className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent" placeholder="you@example.com"
                           style={{ borderColor: fieldErrors.email ? '#C9982A' : '' }} />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-semibold text-navy-950 mb-2">Phone Number</label>
-                        <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                        <label htmlFor={ids.id('phone')} className="block text-sm font-semibold text-navy-950 mb-2">Phone Number</label>
+                        <input id={ids.id('phone')} autoComplete="tel" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
                           className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent" placeholder="Optional" />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-navy-950 mb-2">{applicantType === 'firm' ? 'Firm Website' : 'LinkedIn or Website'}</label>
-                        <input type="url" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })}
+                        <label htmlFor={ids.id('website')} className="block text-sm font-semibold text-navy-950 mb-2">{applicantType === 'firm' ? 'Firm Website' : 'LinkedIn or Website'}</label>
+                        <input id={ids.id('website')} autoComplete="url" type="url" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })}
                           className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent" placeholder="https://" />
                       </div>
                     </div>
                     <div ref={locationRef}>
-                      <label className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.location ? '#88671c' : '#0C1A3D' }}>Location / Country *</label>
-                      {fieldErrors.location && <p className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your location.</p>}
-                      <input type="text" value={form.location} onChange={(e) => { setForm({ ...form, location: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, location: false })) }}
+                      <label htmlFor={ids.id('location')} className="block text-sm font-semibold mb-2" style={{ color: fieldErrors.location ? '#88671c' : '#0C1A3D' }}>Location / Country <span aria-hidden="true">*</span></label>
+                      {fieldErrors.location && <p id={ids.errId('location')} className="text-xs font-semibold mb-1" style={{ color: '#88671c' }}>Please enter your location.</p>}
+                      <input id={ids.id('location')} aria-required="true" {...fe('location')} type="text" value={form.location} onChange={(e) => { setForm({ ...form, location: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, location: false })) }}
                         className="w-full border rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent" placeholder="e.g. London, UK / Johannesburg, South Africa / New York, USA"
                         style={{ borderColor: fieldErrors.location ? '#C9982A' : '' }} />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-semibold text-navy-950 mb-2">Years of Experience</label>
-                        <select value={form.years_of_experience} onChange={(e) => setForm({ ...form, years_of_experience: e.target.value })}
+                        <label htmlFor={ids.id('years_of_experience')} className="block text-sm font-semibold text-navy-950 mb-2">Years of Experience</label>
+                        <select id={ids.id('years_of_experience')} value={form.years_of_experience} onChange={(e) => setForm({ ...form, years_of_experience: e.target.value })}
                           className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent bg-white">
                           <option value="">Select</option>
                           <option value="0-2 years">0–2 years</option>
@@ -279,8 +286,8 @@ export default function JoinNetworkPage() {
                       </div>
                       {(isEthioTax || applicantType === 'independent') && (
                         <div>
-                          <label className="block text-sm font-semibold text-navy-950 mb-2">Languages Spoken</label>
-                          <input type="text" value={form.languages} onChange={(e) => setForm({ ...form, languages: e.target.value })}
+                          <label htmlFor={ids.id('languages')} className="block text-sm font-semibold text-navy-950 mb-2">Languages Spoken</label>
+                          <input id={ids.id('languages')} type="text" value={form.languages} onChange={(e) => setForm({ ...form, languages: e.target.value })}
                             className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                             placeholder={isEthioTax ? "e.g. English, Amharic, Afaan Oromoo" : "e.g. English, French, Spanish"} />
                         </div>
@@ -290,9 +297,9 @@ export default function JoinNetworkPage() {
 
                   {/* QUALIFICATIONS */}
                   <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-4">
-                    <h2 className="font-display text-xl text-navy-950">Professional Qualifications</h2>
+                    <h2 id={ids.id('qualifications')} className="font-display text-xl text-navy-950">Professional Qualifications</h2>
                     <p className="text-sm text-slate-500">Select all professional qualifications held by {applicantType === 'firm' ? 'your team' : 'you'}.</p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div role="group" aria-labelledby={ids.id('qualifications')} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {qualificationOptions.map((q) => (
                         <label key={q} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
                           <input type="checkbox" className="accent-gold-500" checked={qualifications.includes(q)} onChange={() => toggleQualification(q)} />
@@ -304,9 +311,9 @@ export default function JoinNetworkPage() {
 
                   {/* SPECIALISMS */}
                   <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-4">
-                    <h2 className="font-display text-xl text-navy-950">Service Specialisms</h2>
+                    <h2 id={ids.id('specialisms')} className="font-display text-xl text-navy-950">Service Specialisms</h2>
                     <p className="text-sm text-slate-500">Select all service areas {applicantType === 'firm' ? 'your firm' : 'you'} can deliver. We use this to match you with relevant client requests.</p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div role="group" aria-labelledby={ids.id('specialisms')} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {specialismOptions.map((s) => (
                         <label key={s} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
                           <input type="checkbox" className="accent-gold-500"
@@ -327,14 +334,14 @@ export default function JoinNetworkPage() {
                     {applicantType === 'independent' && (
                       <div ref={empRef} className="rounded-lg p-3 -m-3 transition-all"
                         style={fieldErrors.open_to_employment ? { outline: '2px solid #C9982A', outlineOffset: '2px', borderRadius: '8px' } : {}}>
-                        <label className="block text-sm font-semibold mb-3"
+                        <p id={ids.id('open_to_employment')} className="block text-sm font-semibold mb-3"
                           style={{ color: fieldErrors.open_to_employment ? '#88671c' : '#0C1A3D' }}>
-                          Are you currently open to permanent or contract employment opportunities? *
-                        </label>
+                          Are you currently open to permanent or contract employment opportunities? <span aria-hidden="true">*</span>
+                        </p>
                         {fieldErrors.open_to_employment && (
-                          <p className="text-xs font-semibold mb-2" style={{ color: '#88671c' }}>Please select an option to continue.</p>
+                          <p id={ids.errId('open_to_employment')} className="text-xs font-semibold mb-2" style={{ color: '#88671c' }}>Please select an option to continue.</p>
                         )}
-                        <div className="space-y-2">
+                        <div role="radiogroup" aria-labelledby={ids.id('open_to_employment')} aria-required="true" {...fe('open_to_employment')} className="space-y-2">
                           {[
                             { value: 'Yes — actively looking', label: 'Yes — actively looking' },
                             { value: 'Yes — open but not actively searching', label: 'Yes — open but not actively searching' },
@@ -343,6 +350,8 @@ export default function JoinNetworkPage() {
                             <button
                               type="button"
                               key={opt.value}
+                              role="radio"
+                              aria-checked={form.open_to_employment === opt.value}
                               onClick={() => { setForm({ ...form, open_to_employment: form.open_to_employment === opt.value ? '' : opt.value }); setFieldErrors(prev => ({ ...prev, open_to_employment: false })) }}
                               className="flex items-center gap-3 text-sm text-left w-full px-4 py-3 rounded-lg border transition-all"
                               style={{
@@ -367,14 +376,14 @@ export default function JoinNetworkPage() {
                     {/* Q2 — currently hiring — both */}
                     <div ref={hiringRef} className="rounded-lg p-3 -m-3 transition-all"
                       style={fieldErrors.currently_hiring ? { outline: '2px solid #C9982A', outlineOffset: '2px', borderRadius: '8px' } : {}}>
-                      <label className="block text-sm font-semibold mb-3"
+                      <p id={ids.id('currently_hiring')} className="block text-sm font-semibold mb-3"
                         style={{ color: fieldErrors.currently_hiring ? '#88671c' : '#0C1A3D' }}>
-                        {applicantType === 'firm' ? 'Is your firm currently hiring?' : 'Are you or your contacts currently hiring?'} *
-                      </label>
+                        {applicantType === 'firm' ? 'Is your firm currently hiring?' : 'Are you or your contacts currently hiring?'} <span aria-hidden="true">*</span>
+                      </p>
                       {fieldErrors.currently_hiring && (
-                        <p className="text-xs font-semibold mb-2" style={{ color: '#88671c' }}>Please select an option to continue.</p>
+                        <p id={ids.errId('currently_hiring')} className="text-xs font-semibold mb-2" style={{ color: '#88671c' }}>Please select an option to continue.</p>
                       )}
-                      <div className="space-y-2">
+                      <div role="radiogroup" aria-labelledby={ids.id('currently_hiring')} aria-required="true" {...fe('currently_hiring')} className="space-y-2">
                         {[
                           { value: 'Yes — actively hiring now', label: 'Yes — actively hiring now' },
                           { value: 'Possibly — within the next 6 months', label: 'Possibly — within the next 6 months' },
@@ -383,6 +392,8 @@ export default function JoinNetworkPage() {
                           <button
                             type="button"
                             key={opt.value}
+                            role="radio"
+                            aria-checked={form.currently_hiring === opt.value}
                             onClick={() => { setForm({ ...form, currently_hiring: form.currently_hiring === opt.value ? '' : opt.value }); setFieldErrors(prev => ({ ...prev, currently_hiring: false })) }}
                             className="flex items-center gap-3 text-sm text-left w-full px-4 py-3 rounded-lg border transition-all"
                             style={{
@@ -407,9 +418,9 @@ export default function JoinNetworkPage() {
                   {/* ABOUT */}
                   <div ref={aboutRef} className="bg-white rounded-xl border shadow-sm p-8 space-y-4 transition-all"
                     style={{ borderColor: fieldErrors.about ? '#C9982A' : '#e2e8f0' }}>
-                    <h2 className="font-display text-xl"
+                    <h2 id={ids.id('about')} className="font-display text-xl"
                       style={{ color: fieldErrors.about ? '#88671c' : '#0C1A3D' }}>
-                      {applicantType === 'firm' ? 'About Your Firm *' : 'About You *'}
+                      {applicantType === 'firm' ? 'About Your Firm' : 'About You'} <span aria-hidden="true">*</span>
                     </h2>
                     <p className="text-sm text-slate-500">
                       {applicantType === 'firm'
@@ -417,9 +428,9 @@ export default function JoinNetworkPage() {
                         : 'Provide a brief professional biography — your background, experience, areas of expertise, and the types of engagements you are looking to take on.'}
                     </p>
                     {fieldErrors.about && (
-                      <p className="text-xs font-semibold" style={{ color: '#88671c' }}>Please complete this field to continue.</p>
+                      <p id={ids.errId('about')} className="text-xs font-semibold" style={{ color: '#88671c' }}>Please complete this field to continue.</p>
                     )}
-                    <textarea rows={5} value={form.about} onChange={(e) => { setForm({ ...form, about: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, about: false })) }}
+                    <textarea aria-labelledby={ids.id('about')} aria-required="true" {...fe('about')} rows={5} value={form.about} onChange={(e) => { setForm({ ...form, about: e.target.value }); if (e.target.value.trim()) setFieldErrors(prev => ({ ...prev, about: false })) }}
                       className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                       placeholder={applicantType === 'firm'
                         ? 'e.g. We are a mid-sized accounting firm based in Johannesburg with 12 qualified professionals specialising in audit, tax, and advisory services for SMEs...'
@@ -433,7 +444,7 @@ export default function JoinNetworkPage() {
                         By submitting this application you confirm that all information provided is accurate and complete. Accounting Body reserves the right to verify all credentials independently. Submission of this form does not guarantee acceptance into the network.
                       </p>
                     </div>
-                    {status === 'error' && <p className="text-red-700 text-sm mb-4">Something went wrong. Please try again.</p>}
+                    {status === 'error' && <p role="alert" className="text-red-700 text-sm mb-4">Something went wrong. Please try again.</p>}
                     {/* Honeypot — hidden from real users, bots fill it */}
                     <input type="text" value={form._h} onChange={(e) => setForm({ ...form, _h: e.target.value })} style={{ display: 'none' }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
                     {/* Turnstile invisible widget */}
