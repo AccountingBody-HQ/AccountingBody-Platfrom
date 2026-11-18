@@ -53,8 +53,17 @@ describe('accessibility structure (A11-F1)', () => {
   it('every desktop menu arrow button has a name and opens by click', () => {
     const nav = read('components/layout/Navigation.tsx')
     expect(nav).toContain('aria-label={`${section.label} menu`}')
-    expect(nav).toContain('onClick={() => setActiveDropdown(isActive ? null : section.id)}')
+    // Keyboard toggles; a pointer click after hover never closes (lib/nav-disclosure.ts).
+    expect(nav).toMatch(/nextOpenSection\(\s*activeDropdown,\s*section\.id,\s*e\.detail\s*\)/)
     expect(nav).toContain("if (e.key === 'Escape') setActiveDropdown(null)")
+  })
+
+  it('the desktop menu is a disclosure: no menu popup claim, Escape returns focus, focus-out closes', () => {
+    const nav = read('components/layout/Navigation.tsx')
+    expect(nav).not.toContain('aria-haspopup')
+    expect(nav).toMatch(/data-menu-toggle/)
+    expect(nav).toMatch(/querySelector<HTMLButtonElement>\('\[data-menu-toggle\]'\)\?\.focus\(\)/)
+    expect(nav).toMatch(/shouldCloseOnFocusOut\(\s*isActive,\s*e\.currentTarget,\s*e\.relatedTarget\s*\)/)
   })
 
   it('the menu panels contain no headings that come before the page h1', () => {
