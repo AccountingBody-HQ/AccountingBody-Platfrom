@@ -605,7 +605,7 @@ export function Footer({
       {/* ── Legal bar ─────────────────────────────────────────────────────── */}
       <div className="border-t border-white/10">
         <div className="container-wide py-5">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
             <div className="space-y-1">
               <p className="text-xs text-white/70">
                 © {new Date().getFullYear()} AccountingBody Ltd. All rights reserved.{' '}
