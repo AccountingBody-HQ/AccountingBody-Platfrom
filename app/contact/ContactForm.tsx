@@ -4,6 +4,7 @@
 // No third-party email service required.
 
 import { useState, useRef, useEffect } from 'react'
+import { useFocusOnShow } from '@/lib/form-a11y'
 import { safeUserFacingErrorMessage } from '@/lib/turnstile-error'
 import { isMessageTooShort, messageTooShortText } from '@/lib/message-rules'
 
@@ -31,6 +32,7 @@ const subjects = [
 
 export default function ContactForm() {
   const [formState, setFormState]     = useState<FormState>('idle')
+  const successHeading = useFocusOnShow<HTMLHeadingElement>(formState === 'success')
   const [errorMsg, setErrorMsg]       = useState('')
   const [subscribeState, setSubState] = useState<FormState>('idle')
   const [subAlreadySent, setSubAlreadySent] = useState(false)
@@ -280,7 +282,7 @@ export default function ContactForm() {
                   <path strokeLinecap="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h3 className="font-display text-xl text-navy-950 mb-2">Message received</h3>
+              <h3 ref={successHeading} tabIndex={-1} className="font-display text-xl text-navy-950 mb-2">Message received</h3>
               <p className="text-slate-500 text-sm max-w-sm leading-relaxed">
                 Thank you for getting in touch. We will reply within 2 business days.
               </p>
@@ -294,24 +296,24 @@ export default function ContactForm() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label htmlFor="name" className="block text-xs font-semibold text-navy-950 mb-1.5 uppercase tracking-wide">
-                    Full name <span className="text-red-700">*</span>
+                    Full name <span className="text-red-700" aria-hidden="true">*</span>
                   </label>
-                  <input id="name" name="name" type="text" required placeholder="Jane Smith"
+                  <input id="name" name="name" type="text" required autoComplete="name" placeholder="Jane Smith"
                     className="w-full h-11 px-4 rounded-lg border border-slate-300 text-sm text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition" />
                 </div>
                 <div>
                   <label htmlFor="email" className="block text-xs font-semibold text-navy-950 mb-1.5 uppercase tracking-wide">
-                    Email address <span className="text-red-700">*</span>
+                    Email address <span className="text-red-700" aria-hidden="true">*</span>
                   </label>
-                  <input id="email" name="email" type="email" required placeholder="jane@example.com"
+                  <input id="email" name="email" type="email" required autoComplete="email" placeholder="jane@example.com"
                     className="w-full h-11 px-4 rounded-lg border border-slate-300 text-sm text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition" />
                 </div>
               </div>
               <div>
                 <label htmlFor="subject" className="block text-xs font-semibold text-navy-950 mb-1.5 uppercase tracking-wide">
-                  Subject <span className="text-red-700">*</span>
+                  Subject <span className="text-red-700" aria-hidden="true">*</span>
                 </label>
-                <select id="subject" name="subject" required defaultValue=""
+                <select id="subject" name="subject" required aria-required="true" defaultValue=""
                   className="w-full h-11 px-4 rounded-lg border border-slate-300 text-sm text-navy-950 bg-white focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition">
                   <option value="" disabled>Select a subject…</option>
                   {subjects.map(s => <option key={s} value={s}>{s}</option>)}
@@ -319,7 +321,7 @@ export default function ContactForm() {
               </div>
               <div>
                 <label htmlFor="message" className="block text-xs font-semibold text-navy-950 mb-1.5 uppercase tracking-wide">
-                  Message <span className="text-red-700">*</span>
+                  Message <span className="text-red-700" aria-hidden="true">*</span>
                 </label>
                 <textarea id="message" name="message" required rows={6} placeholder="How can we help you?"
                   className="w-full px-4 py-3 rounded-lg border border-slate-300 text-sm text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition resize-none" />
@@ -332,7 +334,7 @@ export default function ContactForm() {
                 </label>
               </div>
               {formState === 'error' && (
-                <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
+                <div role="alert" className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-4">
                   <svg className="w-4 h-4 text-red-700 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeWidth="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>

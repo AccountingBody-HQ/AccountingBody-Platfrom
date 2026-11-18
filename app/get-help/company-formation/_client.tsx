@@ -1,5 +1,6 @@
 'use client'
 import { useState, useRef } from 'react'
+import { useFormIds, useFocusOnShow } from '@/lib/form-a11y'
 import Script from 'next/script'
 
 const countries = [
@@ -49,6 +50,8 @@ const otherServices = [
 export default function CompanyFormationClient() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', country: '', language: '', message: '', _h: '' })
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const ids = useFormIds()
+  const successHeading = useFocusOnShow<HTMLHeadingElement>(status === 'success')
   const turnstileWidgetId = useRef<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -276,7 +279,7 @@ export default function CompanyFormationClient() {
                     <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7"/>
                   </svg>
                 </div>
-                <h3 className="font-display text-2xl font-bold text-[#1A4731] mb-3">Enquiry Received</h3>
+                <h3 ref={successHeading} tabIndex={-1} className="font-display text-2xl font-bold text-[#1A4731] mb-3">Enquiry Received</h3>
                 <p className="text-gray-600 text-base leading-relaxed mb-6">
                   Thank you. EthioTax will review your enquiry and respond within 24 hours. For urgent matters, the WhatsApp button is available at the bottom right of this page.
                 </p>
@@ -289,15 +292,15 @@ export default function CompanyFormationClient() {
               <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-[#e8f0eb] shadow-sm p-8 space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-800 mb-1.5">Full Name *</label>
-                    <input required type="text" value={form.name}
+                    <label htmlFor={ids.id('name')} className="block text-sm font-semibold text-gray-800 mb-1.5">Full Name <span aria-hidden="true">*</span></label>
+                    <input id={ids.id('name')} required autoComplete="name" type="text" value={form.name}
                       onChange={e => setForm({ ...form, name: e.target.value })}
                       className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1A4731] focus:border-transparent transition-all"
                       placeholder="Your full name" />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-800 mb-1.5">Email Address *</label>
-                    <input required type="email" value={form.email}
+                    <label htmlFor={ids.id('email')} className="block text-sm font-semibold text-gray-800 mb-1.5">Email Address <span aria-hidden="true">*</span></label>
+                    <input id={ids.id('email')} required autoComplete="email" type="email" value={form.email}
                       onChange={e => setForm({ ...form, email: e.target.value })}
                       className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1A4731] focus:border-transparent transition-all"
                       placeholder="you@example.com" />
@@ -305,15 +308,15 @@ export default function CompanyFormationClient() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-800 mb-1.5">Phone Number</label>
-                    <input type="tel" value={form.phone}
+                    <label htmlFor={ids.id('phone')} className="block text-sm font-semibold text-gray-800 mb-1.5">Phone Number</label>
+                    <input id={ids.id('phone')} autoComplete="tel" type="tel" value={form.phone}
                       onChange={e => setForm({ ...form, phone: e.target.value })}
                       className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1A4731] focus:border-transparent transition-all"
                       placeholder="Optional — include country code" />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-800 mb-1.5">Country *</label>
-                    <select required value={form.country}
+                    <label htmlFor={ids.id('country')} className="block text-sm font-semibold text-gray-800 mb-1.5">Country <span aria-hidden="true">*</span></label>
+                    <select id={ids.id('country')} required aria-required="true" autoComplete="country-name" value={form.country}
                       onChange={e => setForm({ ...form, country: e.target.value })}
                       className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1A4731] focus:border-transparent transition-all bg-white">
                       <option value="">Select your country</option>
@@ -322,8 +325,8 @@ export default function CompanyFormationClient() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-1.5">Preferred Language</label>
-                  <select value={form.language}
+                  <label htmlFor={ids.id('language')} className="block text-sm font-semibold text-gray-800 mb-1.5">Preferred Language</label>
+                  <select id={ids.id('language')} value={form.language}
                     onChange={e => setForm({ ...form, language: e.target.value })}
                     className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1A4731] focus:border-transparent transition-all bg-white">
                     <option value="">No preference</option>
@@ -333,14 +336,14 @@ export default function CompanyFormationClient() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-1.5">Tell us about your situation *</label>
-                  <textarea required rows={5} value={form.message}
+                  <label htmlFor={ids.id('message')} className="block text-sm font-semibold text-gray-800 mb-1.5">Tell us about your situation <span aria-hidden="true">*</span></label>
+                  <textarea id={ids.id('message')} required rows={5} value={form.message}
                     onChange={e => setForm({ ...form, message: e.target.value })}
                     className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1A4731] focus:border-transparent transition-all resize-none"
                     placeholder="Please describe what type of company you want to form, which country, your business activity and any specific requirements..." />
                 </div>
                 {status === 'error' && (
-                  <p className="text-red-600 text-sm">Something went wrong. Please try again or use WhatsApp to reach us directly.</p>
+                  <p role="alert" className="text-red-600 text-sm">Something went wrong. Please try again or use WhatsApp to reach us directly.</p>
                 )}
                 <button type="submit" disabled={status === 'loading'}
                   className="w-full h-[52px] rounded-xl bg-[#1A4731] text-white font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50">

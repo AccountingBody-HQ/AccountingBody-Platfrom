@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { useFormIds } from '@/lib/form-a11y'
 import Script from 'next/script'
 import { LINK_RETRY_HEADING, MANAGE_LINK_RETRY_TEXT, manageLinkStatus } from '@/lib/message-rules'
 
@@ -27,6 +28,7 @@ export default function FindWorkManageClient({ isEthioTax: isEthioTaxProp }: { i
   const [jurisdictions, setJurisdictions] = useState<string[]>([])
   const [languages, setLanguages] = useState<string[]>([])
   const turnstileWidgetId = useRef<string | null>(null)
+  const ids = useFormIds()
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -161,23 +163,23 @@ export default function FindWorkManageClient({ isEthioTax: isEthioTaxProp }: { i
               <h2 className="font-display text-xl" style={{ color: brand }}>Contact Details</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Phone</label>
-                  <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
+                  <label htmlFor={ids.id('phone')} className="block text-sm font-semibold mb-2" style={{ color: brand }}>Phone</label>
+                  <input id={ids.id('phone')} autoComplete="tel" type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
                     className="w-full border rounded-lg px-4 py-3 text-sm" placeholder="Your phone number" style={{ borderColor: '#e2e8f0' }} />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>LinkedIn URL</label>
-                  <input type="url" value={form.linkedin_url} onChange={e => setForm({...form, linkedin_url: e.target.value})}
+                  <label htmlFor={ids.id('linkedin_url')} className="block text-sm font-semibold mb-2" style={{ color: brand }}>LinkedIn URL</label>
+                  <input id={ids.id('linkedin_url')} autoComplete="url" type="url" value={form.linkedin_url} onChange={e => setForm({...form, linkedin_url: e.target.value})}
                     className="w-full border rounded-lg px-4 py-3 text-sm" placeholder="https://linkedin.com/in/..." style={{ borderColor: '#e2e8f0' }} />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>City</label>
-                  <input type="text" value={form.location_city} onChange={e => setForm({...form, location_city: e.target.value})}
+                  <label htmlFor={ids.id('location_city')} className="block text-sm font-semibold mb-2" style={{ color: brand }}>City</label>
+                  <input id={ids.id('location_city')} autoComplete="address-level2" type="text" value={form.location_city} onChange={e => setForm({...form, location_city: e.target.value})}
                     className="w-full border rounded-lg px-4 py-3 text-sm" placeholder="Current city" style={{ borderColor: '#e2e8f0' }} />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Country</label>
-                  <input type="text" value={form.location_country} onChange={e => setForm({...form, location_country: e.target.value})}
+                  <label htmlFor={ids.id('location_country')} className="block text-sm font-semibold mb-2" style={{ color: brand }}>Country</label>
+                  <input id={ids.id('location_country')} autoComplete="country-name" type="text" value={form.location_country} onChange={e => setForm({...form, location_country: e.target.value})}
                     className="w-full border rounded-lg px-4 py-3 text-sm" placeholder="Current country" style={{ borderColor: '#e2e8f0' }} />
                 </div>
               </div>
@@ -186,42 +188,42 @@ export default function FindWorkManageClient({ isEthioTax: isEthioTaxProp }: { i
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-6">
               <h2 className="font-display text-xl" style={{ color: brand }}>Employment &amp; Availability</h2>
               <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Employment Status</label>
-                <div className="flex flex-wrap gap-2">
+                <p id={ids.id('employment_status')} className="block text-sm font-semibold mb-2" style={{ color: brand }}>Employment Status</p>
+                <div role="radiogroup" aria-labelledby={ids.id('employment_status')} className="flex flex-wrap gap-2">
                   {employmentStatusOptions.map(o => (
-                    <button key={o} type="button" onClick={() => setForm({...form, employment_status: o})}
+                    <button key={o} type="button" role="radio" aria-checked={form.employment_status === o} onClick={() => setForm({...form, employment_status: o})}
                       style={btnStyle(form.employment_status === o)}>{o}</button>
                   ))}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: brand }}>Salary / Rate Expectation</label>
-                <input type="text" value={form.salary_expectation} onChange={e => setForm({...form, salary_expectation: e.target.value})}
+                <label htmlFor={ids.id('salary_expectation')} className="block text-sm font-semibold mb-2" style={{ color: brand }}>Salary / Rate Expectation</label>
+                <input id={ids.id('salary_expectation')} type="text" value={form.salary_expectation} onChange={e => setForm({...form, salary_expectation: e.target.value})}
                   className="w-full border rounded-lg px-4 py-3 text-sm" placeholder="e.g. £45,000 or £300/day" style={{ borderColor: '#e2e8f0' }} />
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-3" style={{ color: brand }}>Role Types Sought</label>
-                <div className="flex flex-wrap gap-2">
+                <p id={ids.id('role_types')} className="block text-sm font-semibold mb-3" style={{ color: brand }}>Role Types Sought</p>
+                <div role="group" aria-labelledby={ids.id('role_types')} className="flex flex-wrap gap-2">
                   {roleTypeOptions.map(o => (
-                    <button key={o} type="button" onClick={() => toggle(o, roleTypes, setRoleTypes)}
+                    <button key={o} type="button" aria-pressed={roleTypes.includes(o)} onClick={() => toggle(o, roleTypes, setRoleTypes)}
                       style={btnStyle(roleTypes.includes(o))}>{o}</button>
                   ))}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-3" style={{ color: brand }}>Jurisdictions</label>
-                <div className="flex flex-wrap gap-2">
+                <p id={ids.id('jurisdictions')} className="block text-sm font-semibold mb-3" style={{ color: brand }}>Jurisdictions</p>
+                <div role="group" aria-labelledby={ids.id('jurisdictions')} className="flex flex-wrap gap-2">
                   {(isEthioTax ? jurisdictionOptionsET : jurisdictionOptionsAB).map(o => (
-                    <button key={o} type="button" onClick={() => toggle(o, jurisdictions, setJurisdictions)}
+                    <button key={o} type="button" aria-pressed={jurisdictions.includes(o)} onClick={() => toggle(o, jurisdictions, setJurisdictions)}
                       style={btnStyle(jurisdictions.includes(o))}>{o}</button>
                   ))}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-3" style={{ color: brand }}>Languages</label>
-                <div className="flex flex-wrap gap-2">
+                <p id={ids.id('languages')} className="block text-sm font-semibold mb-3" style={{ color: brand }}>Languages</p>
+                <div role="group" aria-labelledby={ids.id('languages')} className="flex flex-wrap gap-2">
                   {(isEthioTax ? languageOptionsET : languageOptionsAB).map(o => (
-                    <button key={o} type="button" onClick={() => toggle(o, languages, setLanguages)}
+                    <button key={o} type="button" aria-pressed={languages.includes(o)} onClick={() => toggle(o, languages, setLanguages)}
                       style={btnStyle(languages.includes(o))}>{o}</button>
                   ))}
                 </div>
@@ -229,8 +231,8 @@ export default function FindWorkManageClient({ isEthioTax: isEthioTaxProp }: { i
             </div>
 
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
-              <h2 className="font-display text-xl mb-6" style={{ color: brand }}>Professional Biography</h2>
-              <textarea value={form.biography} onChange={e => setForm({...form, biography: e.target.value})}
+              <h2 id={ids.id('biography')} className="font-display text-xl mb-6" style={{ color: brand }}>Professional Biography</h2>
+              <textarea aria-labelledby={ids.id('biography')} value={form.biography} onChange={e => setForm({...form, biography: e.target.value})}
                 rows={8} className="w-full border rounded-lg px-4 py-3 text-sm resize-none"
                 placeholder="Update your professional biography..." style={{ borderColor: '#e2e8f0' }} />
             </div>
@@ -240,7 +242,7 @@ export default function FindWorkManageClient({ isEthioTax: isEthioTaxProp }: { i
                 ref={el => { if (el && !turnstileWidgetId.current) { turnstileWidgetId.current = window.turnstile?.render(el, { sitekey: el.dataset.sitekey ?? '' }) } }} />
             </div>
 
-            {status === 'error' && <p className="text-center text-sm font-semibold" style={{ color: '#dc2626' }}>Something went wrong. Please try again.</p>}
+            {status === 'error' && <p role="alert" className="text-center text-sm font-semibold" style={{ color: '#dc2626' }}>Something went wrong. Please try again.</p>}
 
             <button type="submit" disabled={status === 'loading'}
               className="w-full py-4 rounded-xl text-white font-bold text-base disabled:opacity-50"

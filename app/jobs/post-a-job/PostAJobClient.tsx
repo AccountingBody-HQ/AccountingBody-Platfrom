@@ -1,7 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { invalidProps, useFocusFirstInvalid, useFormIds } from '@/lib/form-a11y'
 
 type ApplyMethod = 'platform' | 'external' | 'email'
 
@@ -114,16 +115,36 @@ function ProgressBar({ currentStep, brand }: { currentStep: number; brand: strin
   )
 }
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+// A labelled field: `htmlFor` ties the visible label to its control. For a set of checkboxes or radios pass
+// `group`; the same visible text then names the group (role="group" or "radiogroup") instead.
+function Field({ label, required, htmlFor, group, children }: {
+  label: string
+  required?: boolean
+  htmlFor?: string
+  group?: 'group' | 'radiogroup'
+  children: React.ReactNode
+}) {
+  const labelId = useId()
+  const text = <>{label}{required && <span aria-hidden="true" style={{ color: '#88671c' }}> *</span>}</>
+  if (group) {
+    return (
+      <div className="mb-5" role={group} aria-labelledby={labelId} aria-required={group === 'radiogroup' && required ? true : undefined}>
+        <p id={labelId} className="block text-sm font-semibold text-navy-950 mb-2">{text}</p>
+        {children}
+      </div>
+    )
+  }
   return (
     <div className="mb-5">
-      <label className="block text-sm font-semibold text-navy-950 mb-2">
-        {label}{required && <span style={{ color: '#88671c' }}> *</span>}
+      <label htmlFor={htmlFor} className="block text-sm font-semibold text-navy-950 mb-2">
+        {text}
       </label>
       {children}
     </div>
   )
 }
+
+type StepError = { field: keyof FormState; message: string }
 
 const inputClass = 'w-full border border-slate-200 rounded-lg px-4 py-3 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition-colors'
 
@@ -134,9 +155,13 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
 
   const [step, setStep] = useState(1)
   const [form, setForm] = useState<FormState>(INITIAL_STATE)
-  const [stepError, setStepError] = useState<string | null>(null)
+  const [stepError, setStepError] = useState<StepError | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const ids = useFormIds()
+  const [cardRef, focusFirstInvalid] = useFocusFirstInvalid<HTMLDivElement>()
+  // The one step message is tied to the field it is about while it is shown.
+  const inv = (field: keyof FormState) => invalidProps(stepError?.field === field, ids.errId('step'))
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm(f => ({ ...f, [key]: value }))
@@ -154,32 +179,32 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
   const descriptionLength = form.description.trim().length
   const descriptionOk = descriptionLength >= MIN_DESCRIPTION_LENGTH
 
-  function validateStep1(): string | null {
-    if (!form.title.trim()) return 'Job title is required.'
-    if (!form.companyName.trim()) return 'Company name is required.'
-    if (!form.locationText.trim() && !form.locationRemote) return 'Location is required (or mark as remote).'
-    if (!form.employmentType) return 'Please select an employment type.'
-    if (!descriptionOk) return `Job description must be at least ${MIN_DESCRIPTION_LENGTH} characters (currently ${descriptionLength}).`
+  function validateStep1(): StepError | null {
+    if (!form.title.trim()) return { field: 'title', message: 'Job title is required.' }
+    if (!form.companyName.trim()) return { field: 'companyName', message: 'Company name is required.' }
+    if (!form.locationText.trim() && !form.locationRemote) return { field: 'locationText', message: 'Location is required (or mark as remote).' }
+    if (!form.employmentType) return { field: 'employmentType', message: 'Please select an employment type.' }
+    if (!descriptionOk) return { field: 'description', message: `Job description must be at least ${MIN_DESCRIPTION_LENGTH} characters (currently ${descriptionLength}).` }
     return null
   }
 
-  function validateStep2(): string | null {
-    if (form.applyMethod === 'external' && !form.applicationUrl.trim()) return 'Please provide your application page URL.'
-    if (form.applyMethod === 'email' && !form.applicationEmail.trim()) return 'Please provide an application email address.'
-    if (form.applyMethod === 'platform' && !form.applicationInstructions.trim()) return 'Please describe how candidates should apply.'
+  function validateStep2(): StepError | null {
+    if (form.applyMethod === 'external' && !form.applicationUrl.trim()) return { field: 'applicationUrl', message: 'Please provide your application page URL.' }
+    if (form.applyMethod === 'email' && !form.applicationEmail.trim()) return { field: 'applicationEmail', message: 'Please provide an application email address.' }
+    if (form.applyMethod === 'platform' && !form.applicationInstructions.trim()) return { field: 'applicationInstructions', message: 'Please describe how candidates should apply.' }
     return null
   }
 
-  function validateStep3(): string | null {
-    if (!form.employerName.trim()) return 'Your name is required.'
-    if (!form.employerEmail.trim()) return 'Your email is required.'
-    if (!form.companyName.trim()) return 'Company name is required.'
+  function validateStep3(): StepError | null {
+    if (!form.employerName.trim()) return { field: 'employerName', message: 'Your name is required.' }
+    if (!form.employerEmail.trim()) return { field: 'employerEmail', message: 'Your email is required.' }
+    if (!form.companyName.trim()) return { field: 'companyName', message: 'Company name is required.' }
     return null
   }
 
   function goNext() {
     const err = step === 1 ? validateStep1() : step === 2 ? validateStep2() : null
-    if (err) { setStepError(err); return }
+    if (err) { setStepError(err); focusFirstInvalid(); return }
     setStepError(null)
     setStep(s => Math.min(3, s + 1))
   }
@@ -196,7 +221,7 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
 
   async function handleSubmit() {
     const err = validateStep3()
-    if (err) { setStepError(err); return }
+    if (err) { setStepError(err); focusFirstInvalid(); return }
     setStepError(null)
     setSubmitError(null)
     setSubmitting(true)
@@ -286,48 +311,48 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
       {/* MAIN CONTENT */}
       <section className="py-16 px-6">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
+          <div ref={cardRef} className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
             <ProgressBar currentStep={step} brand={brand} />
 
             {stepError && (
-              <p className="text-red-700 text-sm mb-6">{stepError}</p>
+              <p id={ids.errId('step')} role="alert" className="text-red-700 text-sm mb-6">{stepError.message}</p>
             )}
 
             {step === 1 && (
               <div>
-                <Field label="Job title" required>
-                  <input className={inputClass} value={form.title} onChange={e => update('title', e.target.value)} placeholder="e.g. Senior Financial Accountant" />
+                <Field label="Job title" required htmlFor={ids.id('title')}>
+                  <input id={ids.id('title')} aria-required="true" {...inv('title')} className={inputClass} value={form.title} onChange={e => update('title', e.target.value)} placeholder="e.g. Senior Financial Accountant" />
                 </Field>
-                <Field label="Company name" required>
-                  <input className={inputClass} value={form.companyName} onChange={e => update('companyName', e.target.value)} placeholder="e.g. Acme Ltd" />
+                <Field label="Company name" required htmlFor={ids.id('company1')}>
+                  <input id={ids.id('company1')} aria-required="true" autoComplete="organization" {...inv('companyName')} className={inputClass} value={form.companyName} onChange={e => update('companyName', e.target.value)} placeholder="e.g. Acme Ltd" />
                 </Field>
-                <Field label="Location" required>
-                  <input className={inputClass} value={form.locationText} onChange={e => update('locationText', e.target.value)}
+                <Field label="Location" required htmlFor={ids.id('location')}>
+                  <input id={ids.id('location')} aria-required={!form.locationRemote} {...inv('locationText')} className={inputClass} value={form.locationText} onChange={e => update('locationText', e.target.value)}
                     placeholder="e.g. London, UK" disabled={form.locationRemote} />
                   <label className="flex items-center gap-2 mt-2 text-sm text-slate-600">
                     <input type="checkbox" checked={form.locationRemote} onChange={e => update('locationRemote', e.target.checked)} className="accent-gold-500" />
                     This role is fully remote
                   </label>
                 </Field>
-                <Field label="Employment type" required>
-                  <select className={inputClass} value={form.employmentType} onChange={e => update('employmentType', e.target.value)}>
+                <Field label="Employment type" required htmlFor={ids.id('employment')}>
+                  <select id={ids.id('employment')} aria-required="true" {...inv('employmentType')} className={inputClass} value={form.employmentType} onChange={e => update('employmentType', e.target.value)}>
                     <option value="">Select employment type</option>
                     {EMPLOYMENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                 </Field>
-                <Field label="Job description" required>
-                  <textarea className={inputClass} rows={8} value={form.description}
+                <Field label="Job description" required htmlFor={ids.id('description')}>
+                  <textarea id={ids.id('description')} aria-required="true" {...inv('description')} className={inputClass} rows={8} value={form.description}
                     onChange={e => update('description', e.target.value)}
                     placeholder="Describe the role, responsibilities and what makes it a great opportunity..." />
                   <p className="text-xs mt-1" style={{ color: descriptionOk ? '#15803d' : '#475569' }}>
                     {descriptionLength} / {MIN_DESCRIPTION_LENGTH} characters minimum
                   </p>
                 </Field>
-                <Field label="Salary">
-                  <input className={inputClass} value={form.salaryText} onChange={e => update('salaryText', e.target.value)}
+                <Field label="Salary" htmlFor={ids.id('salary')}>
+                  <input id={ids.id('salary')} className={inputClass} value={form.salaryText} onChange={e => update('salaryText', e.target.value)}
                     placeholder="e.g. £40,000 – £50,000 per annum" />
                 </Field>
-                <Field label="Qualifications required">
+                <Field label="Qualifications required" group="group">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {QUALIFICATIONS.map(q => (
                       <label key={q} className="flex items-center gap-2 min-h-[44px] text-sm text-slate-600 px-3 py-2 rounded-lg border border-slate-200 cursor-pointer"
@@ -338,18 +363,18 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
                     ))}
                   </div>
                 </Field>
-                <Field label="Skills required">
-                  <input className={inputClass} value={form.skillsText} onChange={e => update('skillsText', e.target.value)}
+                <Field label="Skills required" htmlFor={ids.id('skills')}>
+                  <input id={ids.id('skills')} className={inputClass} value={form.skillsText} onChange={e => update('skillsText', e.target.value)}
                     placeholder="Comma-separated, e.g. Excel, SAP, IFRS" />
                 </Field>
-                <Field label="Seniority level">
-                  <select className={inputClass} value={form.seniorityLevel} onChange={e => update('seniorityLevel', e.target.value)}>
+                <Field label="Seniority level" htmlFor={ids.id('seniority')}>
+                  <select id={ids.id('seniority')} className={inputClass} value={form.seniorityLevel} onChange={e => update('seniorityLevel', e.target.value)}>
                     <option value="">Select seniority level</option>
                     {SENIORITY_LEVELS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                   </select>
                 </Field>
-                <Field label="Category">
-                  <select className={inputClass} value={form.category} onChange={e => update('category', e.target.value)}>
+                <Field label="Category" htmlFor={ids.id('category')}>
+                  <select id={ids.id('category')} className={inputClass} value={form.category} onChange={e => update('category', e.target.value)}>
                     <option value="">Select a category</option>
                     {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                   </select>
@@ -359,7 +384,7 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
 
             {step === 2 && (
               <div>
-                <Field label="How should candidates apply?" required>
+                <Field label="How should candidates apply?" required group="radiogroup">
                   <div className="space-y-3">
                     <label className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 cursor-pointer"
                       style={form.applyMethod === 'platform' ? { borderColor: gold, background: '#fdf8ee' } : undefined}>
@@ -392,22 +417,22 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
                 </Field>
 
                 {form.applyMethod === 'platform' && (
-                  <Field label="Application instructions" required>
-                    <textarea className={inputClass} rows={4} value={form.applicationInstructions}
+                  <Field label="Application instructions" required htmlFor={ids.id('instructions')}>
+                    <textarea id={ids.id('instructions')} aria-required="true" {...inv('applicationInstructions')} className={inputClass} rows={4} value={form.applicationInstructions}
                       onChange={e => update('applicationInstructions', e.target.value)}
                       placeholder="Tell candidates what to include, e.g. CV and a short cover note." />
                   </Field>
                 )}
                 {form.applyMethod === 'external' && (
-                  <Field label="Application URL" required>
-                    <input className={inputClass} type="url" value={form.applicationUrl}
+                  <Field label="Application URL" required htmlFor={ids.id('appurl')}>
+                    <input id={ids.id('appurl')} aria-required="true" {...inv('applicationUrl')} className={inputClass} type="url" value={form.applicationUrl}
                       onChange={e => update('applicationUrl', e.target.value)}
                       placeholder="https://yourcompany.com/careers/role" />
                   </Field>
                 )}
                 {form.applyMethod === 'email' && (
-                  <Field label="Application email" required>
-                    <input className={inputClass} type="email" value={form.applicationEmail}
+                  <Field label="Application email" required htmlFor={ids.id('appemail')}>
+                    <input id={ids.id('appemail')} aria-required="true" {...inv('applicationEmail')} className={inputClass} type="email" value={form.applicationEmail}
                       onChange={e => update('applicationEmail', e.target.value)}
                       placeholder={form.employerEmail || 'hiring@yourcompany.com'} />
                   </Field>
@@ -417,18 +442,18 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
 
             {step === 3 && (
               <div>
-                <Field label="Your name" required>
-                  <input className={inputClass} value={form.employerName} onChange={e => update('employerName', e.target.value)} placeholder="Full name" />
+                <Field label="Your name" required htmlFor={ids.id('ename')}>
+                  <input id={ids.id('ename')} aria-required="true" autoComplete="name" {...inv('employerName')} className={inputClass} value={form.employerName} onChange={e => update('employerName', e.target.value)} placeholder="Full name" />
                 </Field>
-                <Field label="Your email" required>
-                  <input className={inputClass} type="email" value={form.employerEmail} onChange={e => update('employerEmail', e.target.value)} placeholder="you@company.com" />
+                <Field label="Your email" required htmlFor={ids.id('eemail')}>
+                  <input id={ids.id('eemail')} aria-required="true" autoComplete="email" {...inv('employerEmail')} className={inputClass} type="email" value={form.employerEmail} onChange={e => update('employerEmail', e.target.value)} placeholder="you@company.com" />
                   <p className="text-xs mt-1 text-slate-400">Approval and rejection notifications go here.</p>
                 </Field>
-                <Field label="Your phone">
-                  <input className={inputClass} value={form.employerPhone} onChange={e => update('employerPhone', e.target.value)} placeholder="Optional" />
+                <Field label="Your phone" htmlFor={ids.id('ephone')}>
+                  <input id={ids.id('ephone')} autoComplete="tel" className={inputClass} value={form.employerPhone} onChange={e => update('employerPhone', e.target.value)} placeholder="Optional" />
                 </Field>
-                <Field label="Company name" required>
-                  <input className={inputClass} value={form.companyName} onChange={e => update('companyName', e.target.value)} />
+                <Field label="Company name" required htmlFor={ids.id('company3')}>
+                  <input id={ids.id('company3')} aria-required="true" autoComplete="organization" {...inv('companyName')} className={inputClass} value={form.companyName} onChange={e => update('companyName', e.target.value)} />
                 </Field>
 
                 <div className="rounded-xl border border-slate-200 p-5 mb-6" style={{ background: '#FAFAF8' }}>
@@ -449,7 +474,7 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
                 </div>
 
                 {submitError && (
-                  <p className="text-red-700 text-sm mb-4">{submitError}</p>
+                  <p role="alert" className="text-red-700 text-sm mb-4">{submitError}</p>
                 )}
 
                 <button

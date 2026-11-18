@@ -6,6 +6,7 @@ import { useState, useRef } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
+import { useFormIds, useFocusOnShow } from '@/lib/form-a11y'
 
 const services: Record<string, {
   name: string
@@ -162,6 +163,8 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
     name: '', email: '', phone: '', service_type: service.name, message: '', _h: ''
   })
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const ids = useFormIds()
+  const successHeading = useFocusOnShow<HTMLHeadingElement>(status === 'success')
   const personCheck = useRef<PersonCheckHandle>(null)
   const [personCheckToken, setPersonCheckToken] = useState('')
 
@@ -260,7 +263,7 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
                     <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="font-display text-2xl text-navy-950 mb-3">Brief Received</h3>
+                <h3 ref={successHeading} tabIndex={-1} className="font-display text-2xl text-navy-950 mb-3">Brief Received</h3>
                 <p className="text-slate-600">Your service brief has been received by our team. We will review your requirements and confirm your engagement within one business day.</p>
                 <button onClick={() => setStatus('idle')}
                   className="mt-6 text-sm font-medium text-navy-700 hover:text-gold-600 transition-colors">
@@ -271,15 +274,15 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
               <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-sm font-semibold text-navy-950 mb-1.5">Full Name *</label>
-                    <input required type="text" value={form.name}
+                    <label htmlFor={ids.id('name')} className="block text-sm font-semibold text-navy-950 mb-1.5">Full Name <span aria-hidden="true">*</span></label>
+                    <input id={ids.id('name')} required autoComplete="name" type="text" value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
                       className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition-all"
                       placeholder="Your full name" />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-navy-950 mb-1.5">Email Address *</label>
-                    <input required type="email" value={form.email}
+                    <label htmlFor={ids.id('email')} className="block text-sm font-semibold text-navy-950 mb-1.5">Email Address <span aria-hidden="true">*</span></label>
+                    <input id={ids.id('email')} required autoComplete="email" type="email" value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
                       className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition-all"
                       placeholder="you@example.com" />
@@ -287,27 +290,27 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-sm font-semibold text-navy-950 mb-1.5">Phone Number</label>
-                    <input type="tel" value={form.phone}
+                    <label htmlFor={ids.id('phone')} className="block text-sm font-semibold text-navy-950 mb-1.5">Phone Number</label>
+                    <input id={ids.id('phone')} autoComplete="tel" type="tel" value={form.phone}
                       onChange={(e) => setForm({ ...form, phone: e.target.value })}
                       className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition-all"
                       placeholder="Optional" />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-navy-950 mb-1.5">Service Required</label>
-                    <input type="text" readOnly value={service.name}
+                    <label htmlFor={ids.id('service')} className="block text-sm font-semibold text-navy-950 mb-1.5">Service Required</label>
+                    <input id={ids.id('service')} type="text" readOnly value={service.name}
                       className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 bg-slate-50 cursor-not-allowed" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-navy-950 mb-1.5">Tell us more about what you need *</label>
-                  <textarea required rows={5} value={form.message}
+                  <label htmlFor={ids.id('message')} className="block text-sm font-semibold text-navy-950 mb-1.5">Tell us more about what you need <span aria-hidden="true">*</span></label>
+                  <textarea id={ids.id('message')} required rows={5} value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
                     className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy-950 focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition-all resize-none"
                     placeholder="Please describe your situation, the scope of work required, and any relevant deadlines or jurisdictions..." />
                 </div>
                 {status === 'error' && (
-                  <p className="text-red-600 text-sm">Something went wrong. Please try again or contact us directly.</p>
+                  <p role="alert" className="text-red-600 text-sm">Something went wrong. Please try again or contact us directly.</p>
                 )}
                 <button type="submit" disabled={status === 'loading'}
                   className="w-full h-12 rounded-lg bg-navy-950 text-white font-semibold text-sm hover:bg-navy-900 transition-colors disabled:opacity-50 shadow-sm">
