@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { LanguageSwitcher, MobileLangSwitcher } from './LanguageSwitcher'
 import { JOBS_NAV, ET_JOBS_NAV } from './nav-data'
+import { nextOpenSection, shouldCloseOnFocusOut } from '@/lib/nav-disclosure'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -264,7 +265,7 @@ function MegaMenu({ section, onClose, rightAlign }: { section: NavSection; onClo
             <div className="w-56 bg-gradient-navy p-5 flex flex-col justify-between shrink-0">
               <div>
                 <p className="text-xs font-semibold text-gold-400 uppercase tracking-widest mb-2">Featured</p>
-                <h4 className="font-display text-white text-lg leading-snug mb-2">{section.featured.label}</h4>
+                <p className="font-display text-white text-lg leading-snug mb-2">{section.featured.label}</p>
                 <p className="text-xs text-white/60 leading-relaxed">{section.featured.description}</p>
               </div>
               <Link
@@ -608,6 +609,14 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
   }, [])
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setActiveDropdown(null)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [mobileOpen])
@@ -688,6 +697,14 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                   className="relative"
                   onMouseEnter={() => handleMouseEnter(section.id)}
                   onMouseLeave={handleMouseLeave}
+                  onKeyDown={e => {
+                    if (e.key !== 'Escape' || !isActive) return
+                    setActiveDropdown(null)
+                    e.currentTarget.querySelector<HTMLButtonElement>('[data-menu-toggle]')?.focus()
+                  }}
+                  onBlur={e => {
+                    if (shouldCloseOnFocusOut(isActive, e.currentTarget, e.relatedTarget)) setActiveDropdown(null)
+                  }}
                 >
                   <div className={[
                     'flex items-center rounded-lg transition-colors duration-150',
@@ -715,9 +732,12 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                       )}
                     </Link>
                     <button
+                      type="button"
+                      data-menu-toggle
+                      onClick={e => setActiveDropdown(nextOpenSection(activeDropdown, section.id, e.detail))}
                       className="flex items-center pr-2 py-2 text-navy-950 hover:text-navy-700"
+                      aria-label={`${section.label} menu`}
                       aria-expanded={isActive}
-                      aria-haspopup="true"
                     >
                       <ChevronDown open={isActive} />
                     </button>

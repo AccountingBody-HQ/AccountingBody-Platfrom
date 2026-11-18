@@ -29,7 +29,7 @@ export default function HomepageJobSearch() {
               value={role}
               onChange={e => setRole(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
-              placeholder="Job title or keyword"
+              aria-label="Job title or keyword" placeholder="Job title or keyword"
               className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 outline-none bg-transparent"
             />
           </div>
@@ -44,7 +44,7 @@ export default function HomepageJobSearch() {
               value={location}
               onChange={e => setLocation(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
-              placeholder="City or country"
+              aria-label="City or country" placeholder="City or country"
               className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 outline-none bg-transparent"
             />
           </div>
@@ -68,7 +68,7 @@ export default function HomepageJobSearch() {
               value={role}
               onChange={e => setRole(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
-              placeholder="Job title or keyword"
+              aria-label="Job title or keyword" placeholder="Job title or keyword"
               className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 outline-none bg-transparent"
             />
           </div>
@@ -83,7 +83,7 @@ export default function HomepageJobSearch() {
               value={location}
               onChange={e => setLocation(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
-              placeholder="City or country"
+              aria-label="City or country" placeholder="City or country"
               className="flex-1 min-w-0 text-sm text-slate-800 placeholder-slate-400 outline-none bg-transparent"
             />
           </div>

@@ -178,7 +178,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
         />
 
         {/* LESSON CONTENT */}
-        <main className="flex-1 min-w-0 py-10 px-5 sm:px-8 lg:px-12 pb-28 lg:pb-12">
+        <div className="flex-1 min-w-0 py-10 px-5 sm:px-8 lg:px-12 pb-28 lg:pb-12">
           <div style={{ maxWidth: 900, margin: '0 auto' }}>
 
             {/* Lesson heading */}
@@ -434,7 +434,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
           </div>
 
           <JobsRecruitmentBanner isEthioTax={isEthioTax} />
-        </main>
+        </div>
       </div>
 
       {/* MOBILE BOTTOM NAVIGATION */}

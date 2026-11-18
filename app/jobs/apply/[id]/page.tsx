@@ -36,7 +36,7 @@ export default async function ApplyToJobPage({
   }
 
   return (
-    <main className="min-h-screen" style={{ background: '#F8F7F4' }}>
+    <div className="min-h-screen" style={{ background: '#F8F7F4' }}>
       <section className="py-16">
         <div className="container-site max-w-2xl mx-auto">
           <div className="bg-white rounded-2xl border border-slate-200 p-8 md:p-10">
@@ -65,6 +65,6 @@ export default async function ApplyToJobPage({
           </div>
         </div>
       </section>
-    </main>
+    </div>
   )
 }

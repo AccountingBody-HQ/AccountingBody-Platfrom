@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic'
 
 export default function SavedJobsPage() {
   return (
-    <main className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50">
       <div className="container-wide pt-8 pb-16 max-w-2xl">
         <h1 className="font-display text-2xl md:text-3xl font-medium text-navy-950 mb-1">Saved jobs</h1>
         <p className="text-sm text-slate-500 mb-6">
@@ -25,6 +25,6 @@ export default function SavedJobsPage() {
         </p>
         <SavedJobsClient />
       </div>
-    </main>
+    </div>
   )
 }

@@ -22,7 +22,7 @@ export default async function PostAJobSuccessPage() {
   const gold = '#C9982A'
 
   return (
-    <main className="min-h-screen bg-surface flex items-center justify-center py-16 px-6">
+    <div className="min-h-screen bg-surface flex items-center justify-center py-16 px-6">
       <div className="max-w-lg mx-auto w-full">
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-10 text-center">
           <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: 'rgba(20,184,166,0.1)' }}>
@@ -51,6 +51,6 @@ export default async function PostAJobSuccessPage() {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   )
 }

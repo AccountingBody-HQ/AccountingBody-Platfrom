@@ -146,7 +146,7 @@ export default async function GetHelpPage() {
 
   if (isEthioTax) {
     return (
-      <main className="min-h-screen bg-[#F7F8F4]">
+      <div className="min-h-screen bg-[#F7F8F4]">
 
         {/* HERO */}
         <section className="py-20 bg-[#1A4731]">
@@ -338,12 +338,12 @@ export default async function GetHelpPage() {
           </div>
         </section>
 
-      </main>
+      </div>
     )
   }
 
   return (
-    <main className="bg-surface">
+    <div className="bg-surface">
       <section className="relative overflow-hidden bg-navy-950 py-20 md:py-28">
         <div className="container-site relative z-10">
           <div className="max-w-3xl">
@@ -490,6 +490,6 @@ export default async function GetHelpPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   )
 }

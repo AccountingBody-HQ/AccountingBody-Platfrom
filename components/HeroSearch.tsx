@@ -29,6 +29,7 @@ export default function HeroSearch({ placeholder = 'Search study notes, practice
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
+          aria-label="Search"
           placeholder={placeholder}
           className="flex-1 py-4 px-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 bg-transparent outline-none min-w-0"
           autoComplete="off"

@@ -253,7 +253,7 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
   }
 
   return (
-    <main className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-surface">
 
       {/* HERO */}
       <section className="relative overflow-hidden py-16 md:py-20" style={{ background: brand }}>
@@ -501,6 +501,6 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
           </div>
         </div>
       </section>
-    </main>
+    </div>
   )
 }

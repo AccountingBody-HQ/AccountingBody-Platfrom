@@ -59,7 +59,7 @@ export default function JobSearchHero() {
             <circle cx="8.5" cy="8.5" r="6" /><line x1="13" y1="13" x2="18" y2="18" strokeLinecap="round" />
           </svg>
           <input type="text" value={role} onChange={e => setRole(e.target.value)}
-            placeholder="Job title, skills, keywords" autoComplete="off"
+            aria-label="Job title, skills, keywords" placeholder="Job title, skills, keywords" autoComplete="off"
             className="flex-1 min-w-0 bg-transparent outline-none text-navy-950 caret-gold-500" style={inputStyle} />
           {role && clearBtn(() => setRole(''), 'Clear role')}
         </div>
@@ -70,7 +70,7 @@ export default function JobSearchHero() {
             <path strokeLinecap="round" strokeWidth="1.75" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
           <input type="text" value={location} onChange={e => setLocation(e.target.value)}
-            placeholder="Location or remote" autoComplete="off"
+            aria-label="Location or remote" placeholder="Location or remote" autoComplete="off"
             className="flex-1 min-w-0 bg-transparent outline-none text-navy-950 caret-gold-500" style={inputStyle} />
           {location && clearBtn(() => setLocation(''), 'Clear location')}
         </div>
@@ -99,7 +99,7 @@ export default function JobSearchHero() {
             <circle cx="8.5" cy="8.5" r="6" /><line x1="13" y1="13" x2="18" y2="18" strokeLinecap="round" />
           </svg>
           <input type="text" value={role} onChange={e => setRole(e.target.value)}
-            placeholder="Job title, skills, keywords" autoComplete="off"
+            aria-label="Job title, skills, keywords" placeholder="Job title, skills, keywords" autoComplete="off"
             className="flex-1 min-w-0 bg-transparent outline-none text-navy-950 caret-gold-500" style={{ ...inputStyle, fontSize: '15px' }} />
           {role && clearBtn(() => setRole(''), 'Clear role')}
         </div>
@@ -111,7 +111,7 @@ export default function JobSearchHero() {
             <path strokeLinecap="round" strokeWidth="1.75" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
           <input type="text" value={location} onChange={e => setLocation(e.target.value)}
-            placeholder="Location or remote" autoComplete="off"
+            aria-label="Location or remote" placeholder="Location or remote" autoComplete="off"
             className="flex-1 min-w-0 bg-transparent outline-none text-navy-950 caret-gold-500" style={{ ...inputStyle, fontSize: '15px' }} />
           {location && clearBtn(() => setLocation(''), 'Clear location')}
         </div>

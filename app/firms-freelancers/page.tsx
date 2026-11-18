@@ -86,7 +86,7 @@ export default async function FirmsFreelancersPage() {
   const platformName = isEthioTax ? 'EthioTax' : 'Accounting Body'
 
   return (
-    <main className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-surface">
 
       {/* HERO */}
       <section className="relative overflow-hidden py-20 md:py-28" style={{ background: brand }}>
@@ -285,6 +285,6 @@ export default async function FirmsFreelancersPage() {
 
 
 
-    </main>
+    </div>
   )
 }

@@ -19,7 +19,7 @@ export default async function GuaranteePage() {
   const contactEmail = isEthioTax ? 'info@ethiotax.com' : 'info@accountingbody.com'
 
   return (
-    <main className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-surface">
 
       {/* HERO */}
       <section className="relative overflow-hidden py-16 md:py-20" style={{ background: brand }}>
@@ -122,6 +122,6 @@ export default async function GuaranteePage() {
 
         </div>
       </section>
-    </main>
+    </div>
   )
 }

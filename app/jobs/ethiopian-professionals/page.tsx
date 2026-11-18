@@ -18,7 +18,7 @@ export default async function EthiopianProfessionalsPage() {
   if (!isEthioTax) redirect('/jobs')
 
   return (
-    <main className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-surface">
 
       {/* HERO */}
       <section className="relative overflow-hidden py-16 md:py-24" style={{ background: '#1A4731' }}>
@@ -195,6 +195,6 @@ export default async function EthiopianProfessionalsPage() {
         </div>
       </section>
 
-    </main>
+    </div>
   )
 }

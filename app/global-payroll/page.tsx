@@ -99,7 +99,7 @@ const stats = [
 
 export default function GlobalPayrollPage() {
   return (
-    <main className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-surface">
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-navy-950 py-20 md:py-28">
@@ -337,6 +337,6 @@ export default function GlobalPayrollPage() {
         </div>
       </section>
 
-    </main>
+    </div>
   )
 }

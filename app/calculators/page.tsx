@@ -11,7 +11,7 @@ function p(v: Record<string,string>, k: string) { return parseFloat(v[k] ?? '') 
 
 export default function CalculatorsPage() {
   return (
-    <main style={{ background: '#F8F7F4', minHeight: '100vh' }}>
+    <div style={{ background: '#F8F7F4', minHeight: '100vh' }}>
       <section style={{ background: '#0C1A3D', padding: '72px 0 56px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
           <span style={{ color: '#D4A017', fontSize: 11, fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Free Tools</span>
@@ -128,7 +128,7 @@ export default function CalculatorsPage() {
           These calculators use standard accounting formulas and are suitable for ACCA, CIMA, ICAEW and AAT exam preparation. For professional decisions always consult a qualified accountant.
         </p>
       </div>
-    </main>
+    </div>
   )
 }
 

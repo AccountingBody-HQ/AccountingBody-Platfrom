@@ -140,7 +140,7 @@ export default async function JobDetailPage({
   ].filter((part): part is string => part !== null)
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50">
       <JobPostingStructuredData job={job} brandName={brandName} />
 
       <section className="py-12 md:py-16 pb-[96px] md:pb-16">
@@ -306,6 +306,6 @@ export default async function JobDetailPage({
           </p>
         </div>
       </section>
-    </main>
+    </div>
   )
 }
