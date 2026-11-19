@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { formatJobCountLabel, formatCountLabel } from '@/lib/job-format'
 import { safeUserFacingErrorMessage } from '@/lib/turnstile-error'
 import { openConsentSettings } from '@/lib/consent'
+import { brandName } from '@/lib/brand'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -612,7 +613,7 @@ export function Footer({
                 Registered in England &amp; Wales.
               </p>
               <p className="text-xs text-white/70">
-                Accounting Body — jobs, placement and practice for accounting and finance professionals.
+                {`${brandName(isEthioTax)} — jobs, placement and practice for accounting and finance professionals.`}
               </p>
             </div>
             <nav className="footer-legal-nav flex flex-wrap items-center gap-x-4 gap-y-1.5 shrink-0" aria-label="Legal navigation">

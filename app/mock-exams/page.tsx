@@ -8,7 +8,7 @@ import { canonicalMetadata } from '@/lib/canonical'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'Mock Exams | Accounting Body',
+    title: 'Mock Exams',
     description: 'Free timed mock exams organised by subject. 50 questions per attempt drawn from a live question bank. Unlimited attempts.',
     ...(await canonicalMetadata('/mock-exams')),
   }

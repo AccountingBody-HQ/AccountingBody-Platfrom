@@ -12,6 +12,7 @@ import MobileNavDrawer from '@/components/course/MobileNavDrawer'
 import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
+import { brandName } from '@/lib/brand'
 
 export async function generateStaticParams() {
   const courses = await getPublishedCourses()
@@ -35,9 +36,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // Cached public read (lib/coursesNew.ts): visitors may see an edit up to an
   // hour late; admin tools read the uncached functions.
   const data = await getPublicLessonData(slug, lessonSlug)
-  if (!data) return { title: 'Lesson Not Found | Accounting Body' }
+  if (!data) return { title: 'Lesson Not Found' }
   return {
-    title: `${data.lesson.title} — ${data.course.title} | Accounting Body`,
+    title: `${data.lesson.title} — ${data.course.title}`,
     description: data.lesson.articles?.[0]?.excerpt ?? data.course.description ?? '',
     ...(await canonicalMetadata(`/free-courses/${slug}/learn/${lessonSlug}`)),
   }
@@ -427,7 +428,7 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
                 <path strokeLinecap="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
               <p className="text-xs text-slate-500">
-                Developed by <strong className="text-slate-500">Accounting Body Editorial Team</strong> · Written and reviewed by qualified accountants · Always free
+                Developed by <strong className="text-slate-500">{`${brandName(isEthioTax)} Editorial Team`}</strong> · Written and reviewed by qualified accountants · Always free
               </p>
             </div>
 

@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 import { canonicalMetadata } from '@/lib/canonical'
+import { brandName } from '@/lib/brand'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -12,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-const standards = [
+const standardsFor = (platformName: string) => [
   {
     title: 'Rigorous Vetting',
     desc:  'Every firm and independent professional undergoes a structured review of credentials, qualifications, experience, and professional standing before joining our network. Acceptance is not guaranteed.',
@@ -26,7 +27,7 @@ const standards = [
   },
   {
     title: 'Managed Engagements',
-    desc:  'Accounting Body manages the full client journey. We receive service requests, assess requirements, select the right professional, oversee delivery, and manage client communication throughout.',
+    desc:  `${platformName} manages the full client journey. We receive service requests, assess requirements, select the right professional, oversee delivery, and manage client communication throughout.`,
     icon: (
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#FFF7ED"/>
@@ -50,7 +51,7 @@ const standards = [
   },
   {
     title: 'Quality Assurance',
-    desc:  'All work delivered through Accounting Body is subject to our quality standards. We monitor engagement outcomes, gather client feedback, and maintain the right to remove professionals who do not meet our standards.',
+    desc:  `All work delivered through ${platformName} is subject to our quality standards. We monitor engagement outcomes, gather client feedback, and maintain the right to remove professionals who do not meet our standards.`,
     icon: (
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
         <rect width="40" height="40" rx="10" fill="#EEF2FF"/>
@@ -63,18 +64,18 @@ const standards = [
 
 
 
-const firmBenefits = [
+const firmBenefitsFor = (platformName: string) => [
   'Access to a pipeline of pre-qualified client engagements',
-  'Accounting Body manages all client-facing communication',
+  `${platformName} manages all client-facing communication`,
   'Operate across multiple jurisdictions within one network',
   'Your firm is presented as part of a premium managed service',
   'Structured onboarding and engagement process throughout',
 ]
 
-const independentBenefits = [
+const independentBenefitsFor = (platformName: string) => [
   'Join a credentialled network of independent professionals',
   'Receive matched engagements suited to your specialism',
-  'Accounting Body handles billing and client management',
+  `${platformName} handles billing and client management`,
   'Work flexibly — accept engagements that suit your capacity',
   'Professional representation through an established platform',
 ]
@@ -83,7 +84,10 @@ export default async function FirmsFreelancersPage() {
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
   const brand = isEthioTax ? '#1A4731' : '#0C1A3D'
-  const platformName = isEthioTax ? 'EthioTax' : 'Accounting Body'
+  const platformName = brandName(isEthioTax)
+  const standards = standardsFor(platformName)
+  const firmBenefits = firmBenefitsFor(platformName)
+  const independentBenefits = independentBenefitsFor(platformName)
 
   return (
     <div className="min-h-screen bg-surface">

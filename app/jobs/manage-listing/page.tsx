@@ -2,7 +2,7 @@ import { headers } from 'next/headers'
 import ManageListingClient from './ManageListingClient'
 
 export const metadata = {
-  title: 'Manage Your Job Listing | AccountingBody',
+  title: 'Manage Your Job Listing',
   // Private, token-gated self-service page. Its own content links out to
   // /jobs/listings (already indexable on its own) — keep follow so that
   // link equity still flows, even though this page itself shouldn't rank.

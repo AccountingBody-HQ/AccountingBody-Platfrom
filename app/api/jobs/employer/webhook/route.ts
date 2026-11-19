@@ -4,6 +4,7 @@ import { markJobPaid } from '@/lib/jobs'
 import { sendJobConfirmationEmail, sendAdminJobNotificationEmail } from '@/lib/jobEmails'
 import { Resend } from 'resend'
 import { reportServerError } from '@/lib/report-error'
+import { brandName, isEthioTaxJobPlatform } from '@/lib/brand'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -133,7 +134,7 @@ export async function POST(req: NextRequest) {
           .from('jobs')
           .update({ payment_status: 'refunded', status: 'closed' })
           .eq('id', jobId)
-          .select('employer_email, employer_name, title, company_name')
+          .select('employer_email, employer_name, title, company_name, platform')
           .single()
 
         if (error) {
@@ -141,7 +142,7 @@ export async function POST(req: NextRequest) {
         } else if (job) {
           try {
             await getResend().emails.send({
-              from: 'Accounting Body <noreply@accountingbody.com>',
+              from: `${brandName(isEthioTaxJobPlatform(job.platform))} <noreply@accountingbody.com>`,
               to: job.employer_email,
               subject: 'Your job listing has been refunded',
               html: `<p>Dear ${job.employer_name.split(' ')[0]},</p><p>Your payment for the listing "${job.title}" at ${job.company_name} has been refunded, and the listing has been closed.</p><p>If you believe this is an error, please contact us.</p>`,

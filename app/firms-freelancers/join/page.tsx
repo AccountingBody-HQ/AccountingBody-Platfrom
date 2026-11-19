@@ -2,7 +2,8 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { brandName, isEthioTaxBrowser } from '@/lib/brand'
 import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 import { invalidProps, useFocusFirstInvalid, useFocusOnShow, useFormIds } from '@/lib/form-a11y'
 import FormErrorSummary from '@/components/FormErrorSummary'
@@ -50,6 +51,13 @@ export default function JoinNetworkPage() {
   const personCheck = useRef<PersonCheckHandle>(null)
   const [personCheckToken, setPersonCheckToken] = useState('')
   const isEthioTax = typeof window !== 'undefined' && window.location.hostname.includes('ethiotax.com')
+  // Brand name for the wording (owner decision D248). Set after mount so the
+  // server render and the first client render match (no hydration mismatch).
+  const [isEthioTaxBrand, setIsEthioTaxBrand] = useState(false)
+  useEffect(() => {
+    setIsEthioTaxBrand(isEthioTaxBrowser(document.cookie, window.location.hostname))
+  }, [])
+  const platformName = brandName(isEthioTaxBrand)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -136,9 +144,9 @@ export default function JoinNetworkPage() {
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
             <span className="text-white/70">Apply to Join</span>
           </nav>
-          <span className="eyebrow text-gold-400 mb-4 block">Accounting Body Professionals</span>
+          <span className="eyebrow text-gold-400 mb-4 block">{`${platformName} Professionals`}</span>
           <h1 className="font-display text-white text-4xl md:text-5xl mb-4 leading-tight" style={{ letterSpacing: '-0.02em' }}>Apply to Join Our Network</h1>
-          <p className="text-white/60 text-xl leading-relaxed max-w-2xl">All applications are reviewed individually by our team. Acceptance into the Accounting Body professional network is subject to satisfactory completion of our vetting process.</p>
+          <p className="text-white/60 text-xl leading-relaxed max-w-2xl">{`All applications are reviewed individually by our team. Acceptance into the ${platformName} professional network is subject to satisfactory completion of our vetting process.`}</p>
         </div>
       </section>
 

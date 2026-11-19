@@ -6,6 +6,7 @@ import { getPublicQuestionSetBySlug, getPublicQuestionsBySetId, getPublicCasesBy
 import QuizRenderer from '@/components/QuizRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
+import { getRequestBrand } from '@/lib/brand-server'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,8 +16,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // late; admin tools read the uncached functions.
   const qset = await getPublicQuestionSetBySlug(slug)
   if (!qset) return {}
+  const { name } = await getRequestBrand()
   return {
-    title:       `${qset.title} | Accounting Body Practice Questions`,
+    title:       `${qset.title} | ${name} Practice Questions`,
     description: qset.excerpt,
     ...(await canonicalMetadata(`/practice-questions/${slug}`)),
   }

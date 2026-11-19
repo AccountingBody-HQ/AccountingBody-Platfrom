@@ -8,7 +8,7 @@ import { canonicalMetadata } from '@/lib/canonical'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'Mock Exams | ETICPA ATQ | EthioTax',
+    title: 'Mock Exams | ETICPA ATQ',
     description: 'Free timed mock exams for the ETICPA ATQ qualification. 50 questions per attempt, drawn from a large question bank. Unlimited attempts.',
     ...(await canonicalMetadata('/study/mock-exams')),
   }

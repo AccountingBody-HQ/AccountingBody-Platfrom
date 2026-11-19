@@ -12,6 +12,7 @@ import { LanguageSwitcher, MobileLangSwitcher } from './LanguageSwitcher'
 import { JOBS_NAV, ET_JOBS_NAV } from './nav-data'
 import { nextOpenSection, shouldCloseOnFocusOut } from '@/lib/nav-disclosure'
 import { useDialogFocus } from '@/lib/use-dialog-focus'
+import { brandName } from '@/lib/brand'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -378,7 +379,7 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
           <Link href="/" onClick={onClose}>
-            <span className="font-display text-xl text-navy-950 whitespace-nowrap">Accounting Body</span>
+            <span className="font-display text-xl text-navy-950 whitespace-nowrap">{brandName(Boolean(isEthioTax))}</span>
           </Link>
           <button
             onClick={onClose}

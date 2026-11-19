@@ -1,5 +1,6 @@
 import { Resend, type CreateEmailResponse } from 'resend'
 import type { Job } from '@/lib/jobs'
+import { AB_BRAND_NAME, ET_BRAND_NAME, isEthioTaxJobPlatform } from '@/lib/brand'
 
 // Shared transactional email templates for the direct-employer jobs flow.
 //
@@ -19,12 +20,11 @@ interface Brand {
   color: string
 }
 
-const AB_BRAND: Brand = { name: 'Accounting Body', domain: 'accountingbody.com', color: '#0C1A3D' }
-const ET_BRAND: Brand = { name: 'EthioTax', domain: 'ethiotax.com', color: '#1A4731' }
+const AB_BRAND: Brand = { name: AB_BRAND_NAME, domain: 'accountingbody.com', color: '#0C1A3D' }
+const ET_BRAND: Brand = { name: ET_BRAND_NAME, domain: 'ethiotax.com', color: '#1A4731' }
 
 function brandFor(platform: string[]): Brand {
-  const isEtOnly = platform.includes('et') && !platform.includes('ab')
-  return isEtOnly ? ET_BRAND : AB_BRAND
+  return isEthioTaxJobPlatform(platform) ? ET_BRAND : AB_BRAND
 }
 
 function siteUrl(brand: Brand): string {

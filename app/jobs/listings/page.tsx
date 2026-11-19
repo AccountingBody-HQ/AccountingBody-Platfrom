@@ -9,7 +9,7 @@ import { getCachedActiveJobCountries } from '@/lib/jobs'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'Accounting & Finance Jobs | Accounting Body',
+    title: 'Accounting & Finance Jobs',
     description: 'Find accounting and finance jobs globally. Search roles for ACCA, CIMA, ICAEW, CPA and AAT qualified professionals across UK, US, Australia, Canada, Singapore and Africa.',
     ...(await canonicalMetadata('/jobs/listings')),
   }
@@ -27,7 +27,7 @@ export default async function JobListingsPage() {
   const countryOptions = await getCachedActiveJobCountries(isEthioTax ? 'et' : 'ab')
   return (
     <>
-      <JobListingsStructuredData />
+      <JobListingsStructuredData isEthioTax={isEthioTax} />
       {/* HERO — matches /study page pattern exactly */}
       <section className="relative overflow-hidden bg-navy-950 py-10 md:py-16">
         {/* Background effects — identical to study page */}

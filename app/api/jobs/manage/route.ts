@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { getJobByManageToken, closeJobByManageToken, type Job, type JobStatus } from '@/lib/jobs'
 import { reportServerError } from '@/lib/report-error'
+import { brandName, compactBrandName, isEthioTaxJobPlatform } from '@/lib/brand'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -85,12 +86,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Listing already closed', job: toPublicJob(job) })
     }
 
+    // The job's own brand (lib/brand.ts); the sending address is the same for both.
+    const isEthioTaxJob = isEthioTaxJobPlatform(job.platform)
+    const name = brandName(isEthioTaxJob)
+    const compactName = compactBrandName(isEthioTaxJob)
     try {
       await getResend().emails.send({
-        from: 'Accounting Body <noreply@accountingbody.com>',
+        from: `${name} <noreply@accountingbody.com>`,
         to: job.employer_email,
-        subject: 'Your job listing has been withdrawn — AccountingBody',
-        html: `<p>Your listing for ${job.title} at ${job.company_name} has been withdrawn from AccountingBody.</p><p>If this was a mistake, please contact us at info@accountingbody.com.</p>`,
+        subject: `Your job listing has been withdrawn — ${compactName}`,
+        html: `<p>Your listing for ${job.title} at ${job.company_name} has been withdrawn from ${compactName}.</p><p>If this was a mistake, please contact us at info@accountingbody.com.</p>`,
       })
     } catch (emailErr: unknown) {
       console.error('jobs/manage POST: withdrawal email failed (non-fatal):', emailErr)

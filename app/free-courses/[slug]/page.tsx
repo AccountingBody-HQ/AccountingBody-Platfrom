@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { canonicalMetadata } from '@/lib/canonical'
+import { getRequestBrand } from '@/lib/brand-server'
 
 export async function generateStaticParams() {
   const courses = await getPublishedCourses()
@@ -17,9 +18,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // Cached public read (lib/coursesNew.ts): visitors may see an edit up to an
   // hour late; admin tools read the uncached getCourseBySlug.
   const course = await getPublicCourseBySlug(slug)
-  if (!course) return { title: 'Course Not Found | Accounting Body' }
+  if (!course) return { title: 'Course Not Found' }
   return {
-    title: `${course.title} | Accounting Body`,
+    title: course.title,
     description: course.metaDescription ?? course.description ?? '',
     ...(await canonicalMetadata(`/free-courses/${slug}`)),
   }
@@ -29,6 +30,7 @@ export default async function FreeCoursesSlugPage({ params }: { params: Promise<
   const { slug } = await params
   const course = await getPublicCourseBySlug(slug)
   if (!course) notFound()
+  const { name } = await getRequestBrand()
 
   const badge        = levelBadge(course.level)
   const firstLesson  = course.chapters?.[0]?.lessons?.[0]
@@ -145,7 +147,7 @@ export default async function FreeCoursesSlugPage({ params }: { params: Promise<
               </div>
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-0.5">Developed by</p>
-                <p className="font-display text-navy-950 text-lg">Accounting Body Editorial Team</p>
+                <p className="font-display text-navy-950 text-lg">{`${name} Editorial Team`}</p>
                 <p className="text-sm text-slate-500 mt-0.5">Written and reviewed by qualified accountants. Always free.</p>
               </div>
             </div>

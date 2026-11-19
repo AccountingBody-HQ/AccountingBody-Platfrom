@@ -7,6 +7,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { resolveArticlePath } from '@/lib/article-path'
 import { formatSalary } from '@/lib/job-format'
 import { formatJobLocation } from '@/app/jobs/listings/jobLocation'
+import { brandName } from '@/lib/brand'
 
 type ContentType = 'all' | 'article' | 'practicePost' | 'course'
 
@@ -333,7 +334,7 @@ function SearchInner() {
                 onChange={e => setQuery(e.target.value)}
                 placeholder={isEthioTax ? "Search for ETICPA ATQ, VAT Ethiopia, income tax…" : "Search for double entry, cash flow, depreciation…"}
                 className="w-full h-14 pl-12 pr-12 rounded-xl text-base bg-white/10 border border-white/20 text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
-                aria-label="Search Accounting Body"
+                aria-label={`Search ${brandName(isEthioTax)}`}
                 autoComplete="off"
               />
               <div className="absolute right-4 top-1/2 -translate-y-1/2">
