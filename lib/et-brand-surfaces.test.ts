@@ -131,9 +131,9 @@ describe('one server-rendered brand mechanism (ET-3)', () => {
 
   it('no public component keeps an unbranched navy brand constant; inline navy backgrounds are recorded', () => {
     const KNOWN_INLINE: Record<string, number> = {
-      'app/calculators/page.tsx': 1, 'app/get-help/page.tsx': 4, 'app/global-payroll/page.tsx': 3,
-      'app/global-payroll/[slug]/page.tsx': 3, 'app/page.tsx': 2, 'components/CalcCard.tsx': 1,
-      'components/course/MobileNavDrawer.tsx': 1,
+      // ET-3b (F5): the calculators hero, CalcCard and the course phone bar now use var(--brand-surface, #0C1A3D).
+      'app/get-help/page.tsx': 4, 'app/global-payroll/page.tsx': 3,
+      'app/global-payroll/[slug]/page.tsx': 3, 'app/page.tsx': 2,
     }
     const seen: Record<string, number> = {}
     for (const f of publicTsx()) {
@@ -197,7 +197,8 @@ describe('text on the EthioTax green stays readable (ET-3, WCAG 2.2 AA)', () => 
 describe('texts that would fail on the new green get an EthioTax colour (ET-3)', () => {
   it('the set page breadcrumb links take the breadcrumb white/70 on EthioTax (the base link colour is navy)', () => {
     const page = read('app/practice-questions/[slug]/page.tsx')
-    expect(page).toContain("const crumbLink = isEthioTax ? 'text-inherit hover:underline transition-colors' : 'hover:text-white/70 transition-colors'")
+    // ET-3b (F3): one class on both sites now (Accounting Body was 1.76:1 with the base link colour).
+    expect(page).toContain("const crumbLink = 'text-inherit hover:text-white hover:underline transition-colors'")
     expect(page.split('className={crumbLink}').length - 1).toBe(2)
     expect(page).toContain("<nav className='flex items-center gap-2 text-white/70 text-sm mb-8 flex-wrap'>")
     expect(ratio(over(WHITE, 0.7, GREEN), GREEN)).toBeGreaterThanOrEqual(4.5)
@@ -243,7 +244,8 @@ describe('small fixes (ET-3)', () => {
   })
   it('C1: the home role-card header row wraps instead of widening the page', () => {
     const home = read('app/page.tsx')
-    const i = home.indexOf('<div className="flex flex-wrap items-start justify-between gap-3 mb-3">')
+    // ET-3b (F1): the wrap is bounded to 768-786 px, the widths where the row widened the page.
+    const i = home.indexOf('<div className="flex md:max-[786px]:flex-wrap items-start justify-between gap-3 mb-3">')
     expect(i).toBeGreaterThan(-1)
     expect(home.slice(i, i + 400)).toContain('shrink-0 whitespace-nowrap bg-slate-100 text-slate-600')
   })

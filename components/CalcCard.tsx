@@ -47,11 +47,11 @@ export default function CalcCard({ title, tag, description, fields, calculate }:
           ))}
         </div>
         {results && results.length > 0 && (
-          <div style={{ background: '#0C1A3D', borderRadius: 12, padding: 16, marginBottom: 12 }}>
+          <div style={{ background: 'var(--brand-surface, #0C1A3D)', borderRadius: 12, padding: 16, marginBottom: 12 }}>
             {results.map((r, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: i > 0 ? 8 : 0, borderTop: i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none', marginTop: i > 0 ? 8 : 0 }}>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{r.label}</span>
-                <span style={{ fontSize: 15, fontWeight: 800, color: '#C9982A' }}>{r.value}</span>
+                <span style={{ fontSize: 12, color: 'var(--brand-muted-text, rgba(255,255,255,0.5))' }}>{r.label}</span>
+                <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--brand-gold-text, #C9982A)' }}>{r.value}</span>
               </div>
             ))}
           </div>

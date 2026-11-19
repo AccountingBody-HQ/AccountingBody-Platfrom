@@ -877,4 +877,19 @@ html[data-brand="ethiotax"] .bg-gradient-navy { background-image: linear-gradien
 html[data-brand="ethiotax"] .hover\:bg-navy-950:hover,
 html[data-brand="ethiotax"] .hover\:bg-navy-900:hover,
 html[data-brand="ethiotax"] .hover\:bg-navy-800:hover { background-color: #0d2b1f; }
+/* ET-3b: values that inline styles read as var(--name, <Accounting Body value>). Only this <html> defines
+   them, so Accounting Body always uses the fallback. Hero glow #256a49 = half the OKLCH step navy-950 -> navy-600
+   applied to #1A4731, so hero text keeps 4.5:1 at the glow's brightest point. Texts on the green: gold #e8b030
+   (D238), gold-300 on the gold tint, white/60. */
+html[data-brand="ethiotax"] {
+  --hero-glow: #256a49;
+  --brand-surface: #1A4731;
+  --brand-gold-text: #e8b030;
+  --brand-gold-tint-text: #efc85d;
+  --brand-muted-text: rgba(255, 255, 255, 0.6);
+}
+/* Content table headers and code blocks: element weight, so a utility background on the element still wins. */
+:where(html[data-brand="ethiotax"]) th,
+:where(html[data-brand="ethiotax"]) pre,
+:where(html[data-brand="ethiotax"]) .html-content table th { background-color: #1A4731; }
 /* End of EthioTax brand surfaces */

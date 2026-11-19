@@ -136,7 +136,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
             {/* Card A — Browse Live Jobs */}
             <div className="flex flex-col rounded-2xl p-8 border" style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}>
               <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-5">
-                <svg className="w-6 h-6" fill="none" stroke={gold} viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke={goldText} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
                 </svg>
@@ -170,7 +170,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
             {/* Card B — Managed Placement */}
             <div className="flex flex-col rounded-2xl p-8 border" style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}>
               <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-5">
-                <svg className="w-6 h-6" fill="none" stroke={gold} viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke={goldText} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M12 11a4 4 0 100-8 4 4 0 000 8z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M17 11l2 2 4-4" />

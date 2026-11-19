@@ -307,7 +307,7 @@ function SearchInner() {
       <section className="bg-navy-950 pt-16 pb-14 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full opacity-20"
-            style={{ background: 'radial-gradient(ellipse at top, #3a4f9a 0%, transparent 65%)' }} />
+            style={{ background: 'radial-gradient(ellipse at top, var(--hero-glow, #3a4f9a) 0%, transparent 65%)' }} />
           <div className="absolute inset-0 opacity-[0.03]"
             style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         </div>
