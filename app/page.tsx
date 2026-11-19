@@ -178,7 +178,7 @@ function ArticleCard({ article }: { article: FeaturedArticle }) {
 
   return (
     <article className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative">
-      <div className="h-1" style={{ backgroundColor: bodyColor }} />
+      <div className="h-1 brand-accent-bar" style={{ backgroundColor: bodyColor }} />
       {isHotTopic && (
         <div className="absolute top-4 right-4 z-10">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.6rem] font-black uppercase tracking-wider"
@@ -1015,7 +1015,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           href={`/study/${q.slug}`}
           className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
         >
-          <div className={`h-1.5 ${q.accent}`} />
+          <div className={`h-1.5 brand-accent-bar ${q.accent}`} />
           <div className="p-6 flex flex-col flex-1">
             <div className="flex items-start justify-between mb-4">
               <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${q.badgeBg} ${q.badgeText}`} translate="no">{q.code}</span>
@@ -1893,7 +1893,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 href={`/study/${q.slug}`}
                 className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
               >
-                <div className={`h-1.5 ${q.accent}`} />
+                <div className={`h-1.5 brand-accent-bar ${q.accent}`} />
                 <div className="p-6 flex flex-col flex-1">
                   <div className="flex items-start justify-between mb-4">
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${q.badgeBg} ${q.badgeText}`}>

@@ -47,9 +47,9 @@ export function JobsRecruitmentSection({ isEthioTax = false }: { isEthioTax?: bo
               {/* Path 1 — Job board */}
               <Link href="/jobs/listings"
                 className="flex items-center gap-4 rounded-xl px-5 py-4 transition-opacity hover:opacity-90"
-                style={{ background: 'rgba(12,26,61,0.1)', border: '1.5px solid rgba(12,26,61,0.2)' }}>
+                style={{ background: isEthioTax ? 'rgba(15,45,30,0.1)' : 'rgba(12,26,61,0.1)', border: isEthioTax ? '1.5px solid rgba(15,45,30,0.2)' : '1.5px solid rgba(12,26,61,0.2)' }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: 'rgba(12,26,61,0.12)' }}>
+                  style={{ background: isEthioTax ? 'rgba(15,45,30,0.12)' : 'rgba(12,26,61,0.12)' }}>
                   <svg className="w-5 h-5" fill="none" stroke={brand} strokeWidth="1.75" viewBox="0 0 24 24">
                     <path strokeLinecap="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                   </svg>

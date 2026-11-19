@@ -19,6 +19,8 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
   const brandText    = '#0C1A3D'
   const gold         = '#C9982A'
   const goldText     = isEthioTax ? '#e8b030' : gold
+  // Small gold text on the card tint, where the glow is brightest: the pale gold keeps 4.5:1 there (ET-4, D238).
+  const goldOnCard   = isEthioTax ? '#efc85d' : gold
   const platformName = brandName(isEthioTax)
   const jobCount      = formatJobCountLabel(jobCountRaw)
 
@@ -61,7 +63,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
       <section className="relative overflow-hidden py-20 md:py-28" style={{ background: brand }}>
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-20"
-            style={{ background: 'radial-gradient(ellipse at center top, rgba(212,160,23,0.3) 0%, transparent 70%)' }} />
+            style={{ background: 'radial-gradient(ellipse at center top, var(--hero-glow, rgba(212,160,23,0.3)) 0%, transparent 70%)' }} />
           <div className="absolute inset-0 opacity-[0.03]"
             style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         </div>
@@ -141,7 +143,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
                 </svg>
               </div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: goldText }}>Live Vacancies</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: goldOnCard }}>Live Vacancies</p>
               <h2 className="font-display text-white text-2xl mb-3 leading-snug">Browse live jobs</h2>
               <p className="text-white/70 text-sm leading-relaxed mb-6">
                 Search {jobCount ? `${jobCount} ` : ''}live accounting and finance vacancies from employers across the UK and beyond. New roles posted daily.
@@ -176,7 +178,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M17 11l2 2 4-4" />
                 </svg>
               </div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: goldText }}>Managed Service</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: goldOnCard }}>Managed Service</p>
               <h2 className="font-display text-white text-2xl mb-3 leading-snug">Get matched by our team</h2>
               <p className="text-white/70 text-sm leading-relaxed mb-6">
                 Register with us and we will personally match you to permanent or contract roles. You never deal with employers directly. Every profile reviewed personally.
@@ -195,7 +197,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
               </ul>
               <Link
                 href="/jobs/find-work"
-                style={{ border: '2px solid #C9982A', color: goldText, background: 'transparent' }}
+                style={{ border: '2px solid #C9982A', color: goldOnCard, background: 'transparent' }}
                 className="mt-auto inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
               >
                 Register as a candidate →
@@ -211,7 +213,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
         <section className="relative overflow-hidden py-16 md:py-20" style={{ background: '#1A4731' }}>
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-20"
-              style={{ background: 'radial-gradient(ellipse at center top, rgba(212,160,23,0.4) 0%, transparent 70%)' }} />
+              style={{ background: 'radial-gradient(ellipse at center top, var(--hero-glow, rgba(212,160,23,0.4)) 0%, transparent 70%)' }} />
           </div>
           <div className="container-site relative z-10">
             <div className="max-w-2xl mx-auto text-center">
@@ -302,7 +304,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, i) => (
               <div key={stat.label} className={i < 3 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}>
-                <span className="font-display text-3xl block mb-1" style={{ color: brandText }}><span translate="no">{stat.value}</span></span>
+                <span className="font-display text-3xl block mb-1" style={{ color: brand }}><span translate="no">{stat.value}</span></span>
                 <span className="text-sm font-semibold text-navy-950 block">{stat.label}</span>
                 <span className="text-xs text-slate-400 mt-0.5 block">{stat.sub}</span>
               </div>
@@ -330,14 +332,14 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
               <Link
                 href="/jobs/find-work"
                 className="w-full flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-4 text-center whitespace-nowrap"
-                style={{ border: '2px solid #0C1A3D', color: '#0C1A3D', background: 'transparent' }}
+                style={{ border: `2px solid ${brand}`, color: brand, background: 'transparent' }}
               >
                 Register as candidate
               </Link>
               <Link
                 href="/jobs/hire-talent"
                 className="w-full flex items-center justify-center rounded-xl text-sm font-semibold transition-colors py-3 px-4 text-center whitespace-nowrap"
-                style={{ border: '2px solid #0C1A3D', color: '#0C1A3D', background: 'transparent' }}
+                style={{ border: `2px solid ${brand}`, color: brand, background: 'transparent' }}
               >
                 I am looking to hire
               </Link>

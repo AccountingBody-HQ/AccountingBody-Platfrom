@@ -893,3 +893,75 @@ html[data-brand="ethiotax"] {
 :where(html[data-brand="ethiotax"]) pre,
 :where(html[data-brand="ethiotax"]) .html-content table th { background-color: #1A4731; }
 /* End of EthioTax brand surfaces */
+/* ET-4 (Group 3 Part A): the rest of the EthioTax look. Navy text, borders and shades use the EthioTax green
+   family: #1A4731 for navy-950/900, and #335f48 for navy-800/700/600/500 (the OKLCH lightness step navy-950 ->
+   navy-N at 3/4 applied to #1A4731, capped at 4.6:1 on every light surface incl. the navy-100/200 tints).
+   Text on gold surfaces stays navy (navy on gold 6.51:1; green on gold is below 4.5:1). Rules use :where() on
+   the <html> so each keeps the specificity of the rule it replaces and hover, focus and state utilities still win. */
+html[data-brand="ethiotax"] {
+  --brand-ink: #1A4731;
+  --brand-sheet: #0d2b1f;
+}
+/* G2: decorative exam-body stripes and section bars are the one gold (D233); exam badges are not hooked. */
+html[data-brand="ethiotax"] .brand-accent-bar { background-color: #C9982A !important; }
+/* G4: navy text. */
+:where(html[data-brand="ethiotax"]) .text-navy-950,
+:where(html[data-brand="ethiotax"]) .text-navy-900,
+:where(html[data-brand="ethiotax"]) .text-\[\#0C1A3D\] { color: #1A4731; }
+:where(html[data-brand="ethiotax"]) .text-navy-800,
+:where(html[data-brand="ethiotax"]) .text-navy-700,
+:where(html[data-brand="ethiotax"]) .text-navy-600,
+:where(html[data-brand="ethiotax"]) .text-navy-500 { color: #335f48; }
+:where(html[data-brand="ethiotax"]) .hover\:text-navy-950:hover,
+:where(html[data-brand="ethiotax"]) .group:hover .group-hover\:text-navy-950,
+:where(html[data-brand="ethiotax"]) .focus\:text-navy-950:focus,
+:where(html[data-brand="ethiotax"]) .hover\:text-\[\#0C1A3D\]:hover { color: #1A4731; }
+:where(html[data-brand="ethiotax"]) .hover\:text-navy-700:hover,
+:where(html[data-brand="ethiotax"]) .group:hover .group-hover\:text-navy-700,
+:where(html[data-brand="ethiotax"]) .group\/link:hover .group-hover\/link\:text-navy-700,
+:where(html[data-brand="ethiotax"]) .group:hover .group-hover\:text-navy-600 { color: #335f48; }
+:where(html[data-brand="ethiotax"]) :is(h1, h2, h3, h4, h5, h6) { color: #1A4731; }
+:where(html[data-brand="ethiotax"]) a { color: #335f48; }
+:where(html[data-brand="ethiotax"]) article a { color: #335f48; text-decoration-color: #c2d6cb; }
+:where(html[data-brand="ethiotax"]) .prose a { color: #335f48; text-decoration-color: #c2d6cb; }
+:where(html[data-brand="ethiotax"]) code { color: #335f48; }
+:where(html[data-brand="ethiotax"]) blockquote { color: #335f48; }
+:where(html[data-brand="ethiotax"]) .section-title { color: #1A4731; }
+:where(html[data-brand="ethiotax"]) .stat-number { color: #1A4731; }
+:where(html[data-brand="ethiotax"]) .prose-ab :is(h1, h2, h3, h4) { color: #1A4731; }
+:where(html[data-brand="ethiotax"]) .prose-ab strong { color: #335f48; }
+:where(html[data-brand="ethiotax"]) .html-content :is(h1, h2, h3, h4, h5, h6, .wp-block-heading) { color: #1A4731; }
+:where(html[data-brand="ethiotax"]) .html-content :is(strong, b) { color: #1A4731; }
+:where(html[data-brand="ethiotax"]) .html-content a { color: #335f48; }
+:where(html[data-brand="ethiotax"]) .html-content code { color: #335f48; }
+:where(html[data-brand="ethiotax"]) .html-content :is(.wp-block-group[class*="has-background"], p[class*="has-background"]) a { color: #335f48 !important; }
+/* G4: text on gold surfaces (at rest, on hover or pressed) keeps its navy. */
+:where(html[data-brand="ethiotax"]) :is(.text-navy-950, .text-\[\#0C1A3D\]):where(.bg-gold-500, .bg-gold-400, .bg-\[\#C9982A\], .surface-gold, [style*="background:#C9982A" i], [style*="background: rgb(201, 152, 42)"], [style*="background:linear-gradient(135deg, #C9982A" i], [style*="background: linear-gradient(135deg, rgb(201, 152, 42)"], .hover\:bg-gold-400:hover, .hover\:bg-gold-500:hover, .hover\:bg-\[\#C9982A\]:hover, .active\:bg-gold-500:active, .bg-gold-500 *, .bg-gold-400 *, .bg-\[\#C9982A\] *, .surface-gold *, [style*="background:#C9982A" i] *, [style*="background: rgb(201, 152, 42)"] *, [style*="background:linear-gradient(135deg, #C9982A" i] *, [style*="background: linear-gradient(135deg, rgb(201, 152, 42)"] *) { color: #0C1A3D; }
+:where(html[data-brand="ethiotax"]) .text-navy-900:where(.bg-gold-500, .bg-gold-400, .bg-\[\#C9982A\], .surface-gold, .bg-gold-500 *, .bg-gold-400 *, .bg-\[\#C9982A\] *, .surface-gold *) { color: #1a2346; }
+:where(html[data-brand="ethiotax"]) .text-navy-800:where(.bg-gold-500, .bg-gold-400, .bg-\[\#C9982A\], .surface-gold, .bg-gold-500 *, .bg-gold-400 *, .bg-\[\#C9982A\] *, .surface-gold *) { color: #2b3768; }
+:where(html[data-brand="ethiotax"]) .text-navy-700:where(.bg-gold-500, .bg-gold-400, .bg-\[\#C9982A\], .surface-gold, .bg-gold-500 *, .bg-gold-400 *, .bg-\[\#C9982A\] *, .surface-gold *) { color: #30407e; }
+:where(html[data-brand="ethiotax"]) :is(h1, h2, h3, h4, h5, h6):where(.bg-gold-500 *, .bg-gold-400 *, .bg-\[\#C9982A\] *, .surface-gold *, [style*="background:#C9982A" i] *, [style*="background: rgb(201, 152, 42)"] *, [style*="background:linear-gradient(135deg, #C9982A" i] *, [style*="background: linear-gradient(135deg, rgb(201, 152, 42)"] *) { color: #0C1A3D; }
+:where(html[data-brand="ethiotax"]) a:where(.bg-gold-500, .bg-gold-400, .bg-\[\#C9982A\], .surface-gold, .bg-gold-500 *, .bg-gold-400 *, .bg-\[\#C9982A\] *, .surface-gold *, [style*="background:#C9982A" i], [style*="background: rgb(201, 152, 42)"], [style*="background:#C9982A" i] *, [style*="background: rgb(201, 152, 42)"] *) { color: #30407e; }
+/* G3: navy borders. */
+:where(html[data-brand="ethiotax"]) .border-navy-950,
+:where(html[data-brand="ethiotax"]) .border-navy-900,
+:where(html[data-brand="ethiotax"]) .hover\:border-navy-950:hover { border-color: #1A4731; }
+:where(html[data-brand="ethiotax"]) .hover\:border-navy-900:hover { border-color: #0d2b1f; }
+:where(html[data-brand="ethiotax"]) .border-navy-800,
+:where(html[data-brand="ethiotax"]) .border-navy-600,
+:where(html[data-brand="ethiotax"]) .border-navy-500 { border-color: #335f48; }
+:where(html[data-brand="ethiotax"]) .border-l-navy-500 { border-left-color: #335f48; }
+/* G5: the last navy shades (phone-menu backdrop, dark quiz and table shades, navy tints and states). */
+:where(html[data-brand="ethiotax"]) .bg-navy-950\/50 { background-color: rgb(13 43 31 / 0.5); }
+:where(html[data-brand="ethiotax"]) .bg-navy-900 { background-color: #0d2b1f; }
+:where(html[data-brand="ethiotax"]) .bg-navy-800 { background-color: #1A4731; }
+:where(html[data-brand="ethiotax"]) .bg-navy-900\/70 { background-color: rgb(13 43 31 / 0.7); }
+:where(html[data-brand="ethiotax"]) .bg-navy-900\/60 { background-color: rgb(13 43 31 / 0.6); }
+:where(html[data-brand="ethiotax"]) .bg-navy-950\/40 { background-color: rgb(26 71 49 / 0.4); }
+:where(html[data-brand="ethiotax"]) .bg-navy-950\/15 { background-color: rgb(26 71 49 / 0.15); }
+:where(html[data-brand="ethiotax"]) .bg-navy-950\/10,
+:where(html[data-brand="ethiotax"]) .hover\:bg-navy-950\/10:hover { background-color: rgb(26 71 49 / 0.1); }
+:where(html[data-brand="ethiotax"]) .group:hover .group-hover\:bg-navy-950,
+:where(html[data-brand="ethiotax"]) .active\:bg-navy-950:active { background-color: #1A4731; }
+:where(html[data-brand="ethiotax"]) .active\:bg-navy-900:active { background-color: #0d2b1f; }
+/* End of ET-4 */
