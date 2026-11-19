@@ -198,7 +198,7 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
       <section className="relative overflow-hidden bg-navy-950 py-16 md:py-24">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-20"
-            style={{ background: 'radial-gradient(ellipse at center top, #3a4f9a 0%, transparent 70%)' }} />
+            style={{ background: 'radial-gradient(ellipse at center top, var(--hero-glow, #3a4f9a) 0%, transparent 70%)' }} />
         </div>
         <div className="container-site relative z-10">
           <div className="max-w-3xl">

@@ -30,7 +30,7 @@ const subjects = [
   'Other',
 ]
 
-export default function ContactForm() {
+export default function ContactForm({ isEthioTax = false }: { isEthioTax?: boolean } = {}) {
   const [formState, setFormState]     = useState<FormState>('idle')
   const successHeading = useFocusOnShow<HTMLHeadingElement>(formState === 'success')
   const [errorMsg, setErrorMsg]       = useState('')
@@ -395,7 +395,7 @@ export default function ContactForm() {
             ) : (
               <form onSubmit={handleSubscribeSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md">
                 <input name="sub-email" type="email" required aria-label="Email address" placeholder="your@email.com"
-                  className="flex-1 w-full h-12 px-4 rounded-lg text-sm bg-white/10 border border-white/20 text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent" />
+                  className={`flex-1 w-full h-12 px-4 rounded-lg text-sm bg-white/10 border ${isEthioTax ? 'border-white/50' : 'border-white/20'} text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent`} />
                 {/* Turnstile invisible widget for subscribe */}
                 <div ref={subscribeContainer} />
                 <button type="submit" disabled={subscribeState === 'loading'}

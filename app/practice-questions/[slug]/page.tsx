@@ -34,6 +34,9 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
   const { slug } = await params
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  // Hero breadcrumb links take the breadcrumb's white/70 on both sites (the base link colour is navy);
+  // on hover white and underlined (the base hover colour is gold-600, too dark on the hero).
+  const crumbLink = 'text-inherit hover:text-white hover:underline transition-colors'
   const qset = await getPublicQuestionSetBySlug(slug)
   if (!qset) notFound()
   const [questions, cases, relatedArticleData] = await Promise.all([
@@ -91,13 +94,13 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
       {/* HERO */}
       <section className='relative overflow-hidden bg-navy-950 py-14 md:py-20'>
         <div className='absolute inset-0 pointer-events-none'>
-          <div className='absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[80%] opacity-20' style={{ background: 'radial-gradient(ellipse at center top, #3a4f9a 0%, transparent 70%)' }} />
+          <div className='absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[80%] opacity-20' style={{ background: 'radial-gradient(ellipse at center top, var(--hero-glow, #3a4f9a) 0%, transparent 70%)' }} />
         </div>
         <div className='container-site relative z-10'>
           <nav className='flex items-center gap-2 text-white/70 text-sm mb-8 flex-wrap'>
-            <Link href='/' className='hover:text-white/70 transition-colors'>Home</Link>
+            <Link href='/' className={crumbLink}>Home</Link>
             <svg className='w-3.5 h-3.5 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeWidth='2' d='M9 5l7 7-7 7' /></svg>
-            <Link href='/practice-questions' className='hover:text-white/70 transition-colors'>Practice Questions</Link>
+            <Link href='/practice-questions' className={crumbLink}>Practice Questions</Link>
             <svg className='w-3.5 h-3.5 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeWidth='2' d='M9 5l7 7-7 7' /></svg>
             <span className='text-white/70 line-clamp-1'>{post.title}</span>
           </nav>

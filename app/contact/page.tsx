@@ -42,7 +42,7 @@ const faqsFor = (name: string) => [
 ]
 
 export default async function ContactPage() {
-  const { name } = await getRequestBrand()
+  const { name, isEthioTax } = await getRequestBrand()
   const faqs = faqsFor(name)
   return (
     <>
@@ -50,7 +50,7 @@ export default async function ContactPage() {
       <section className="relative overflow-hidden bg-navy-950 py-20 md:py-28">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[80%] opacity-25"
-            style={{ background: 'radial-gradient(ellipse at center top, #3a4f9a 0%, transparent 70%)' }} />
+            style={{ background: 'radial-gradient(ellipse at center top, var(--hero-glow, #3a4f9a) 0%, transparent 70%)' }} />
           <div className="absolute inset-0 opacity-[0.03]"
             style={{
               backgroundImage: `linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
@@ -74,7 +74,7 @@ export default async function ContactPage() {
         <div className="container-site">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2">
-              <ContactForm />
+              <ContactForm isEthioTax={isEthioTax} />
             </div>
             <div className="space-y-6">
               <div className="bg-white rounded-xl border border-slate-200 p-6">

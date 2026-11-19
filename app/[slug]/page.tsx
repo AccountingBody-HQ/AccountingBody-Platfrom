@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound, permanentRedirect } from 'next/navigation'
 import { getArticleBySlug, getPublicQuestionSetBySlug } from '@/lib/db'
 import { resolveArticlePath } from '@/lib/article-path'
@@ -26,6 +27,9 @@ import { LEGACY_SLUG_RE, toStoredSlug } from '@/lib/slug-param'
 // must give the 500 error page, never a 404.
 
 const MAX_SLUG_LENGTH = 200
+
+// This route only redirects or answers 404, so its one title is the 404 title (the root template adds the brand).
+export const metadata: Metadata = { title: 'Page Not Found' }
 
 export default async function LegacyArticleRedirect({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params

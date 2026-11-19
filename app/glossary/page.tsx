@@ -48,7 +48,7 @@ export default async function GlossaryPage() {
   const articleCount = await getCachedPublishedArticleCount('ab')
   const articleCountLabel = formatCountLabel(articleCount)
   // Brand name only (owner decision D248); the content above stays shared.
-  const { name: platformName } = await getRequestBrand()
+  const { name: platformName, isEthioTax } = await getRequestBrand()
   const categories = [
     { slug: 'financial-accounting',  title: 'Financial Accounting',  count: 714 },
     { slug: 'financial-management',  title: 'Financial Management',  count: 742 },
@@ -69,7 +69,7 @@ export default async function GlossaryPage() {
         <div className="absolute inset-0 pointer-events-none">
           <div
             className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-20"
-            style={{ background: 'radial-gradient(ellipse at center top, #3a4f9a 0%, transparent 70%)' }}
+            style={{ background: 'radial-gradient(ellipse at center top, var(--hero-glow, #3a4f9a) 0%, transparent 70%)' }}
           />
           <div
             className="absolute inset-0 opacity-[0.03]"
@@ -110,7 +110,7 @@ export default async function GlossaryPage() {
               <span className="text-white/70 text-xs">…</span>
               <Link
                 href="/dictionary"
-                className="px-3 py-1.5 rounded-md text-xs font-semibold bg-gold-500/20 text-gold-400 border border-gold-500/30 hover:bg-gold-500/30 transition-all"
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold bg-gold-500/20 ${isEthioTax ? 'text-gold-300' : 'text-gold-400'} border border-gold-500/30 hover:bg-gold-500/30 transition-all`}
               >
                 View full A–Z →
               </Link>

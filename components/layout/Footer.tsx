@@ -313,7 +313,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="your@email.com"
-              className={`w-full h-14 px-4 rounded-lg text-base bg-white/10 border ${isEthioTax ? 'border-white/50' : 'border-white/30'} text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all`} style={{ fontSize: "16px", WebkitAppearance: "none" }}
+              className={`w-full h-14 px-4 rounded-lg text-base bg-white/10 border ${isEthioTax ? 'border-white/50' : 'border-white/40'} text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all`} style={{ fontSize: "16px", WebkitAppearance: "none" }}
               required
               autoComplete="email"
             />
@@ -607,7 +607,7 @@ export function Footer({
       <div className="border-t border-white/10">
         <div className="container-wide py-5">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-            <div className="space-y-1">
+            <div className="space-y-1 pr-14 lg:pr-0">
               <p className="text-xs text-white/70">
                 {isEthioTax ? `© ${new Date().getFullYear()} EthioTax. All rights reserved.` : (
                   <>

@@ -851,6 +851,7 @@ html[data-consent-open] .fixed.bottom-0:not(#cookie-banner),
 html[data-consent-open] .fixed.bottom-\[80px\] { translate: 0 calc(-1 * var(--consent-height, 0px)); }
 /* Bars stuck to the bottom (quiz action bar) stick just above the banner instead of under or over it. */
 html[data-consent-open] .sticky.bottom-0 { bottom: var(--consent-height, 0px); }
+html[data-consent-open] .sticky.bottom-0.shadow-lg { box-shadow: none; }
 /* The lg sticky sidebars scroll with the page while the banner shows, so a focused link in them can be
    moved above the banner like any other item; they are sticky again once a choice is made. */
 html[data-consent-open] .lg\:sticky { position: static; }
@@ -860,3 +861,35 @@ html[data-consent-open] .lg\:sticky { position: static; }
 @media (min-width: 1024px) {
   .footer-legal-nav { padding-right: max(0px, calc(3rem - max(0px, (100vw - 90rem) / 2))); }
 }
+
+/* EthioTax brand surfaces (ET-3): the root layout sets data-brand="ethiotax" on the server-rendered <html>
+   of EthioTax pages only. There, the navy surface classes render in the EthioTax green; backgrounds only,
+   text colours are unchanged. Accounting Body pages have no attribute, so nothing here applies to them. */
+html[data-brand="ethiotax"] .bg-navy-950,
+html[data-brand="ethiotax"] .surface-navy { background-color: #1A4731; }
+html[data-brand="ethiotax"] .section-navy {
+  background-color: #1A4731;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"),
+    linear-gradient(135deg, #1A4731 0%, #0d2b1f 100%);
+}
+html[data-brand="ethiotax"] .bg-gradient-navy { background-image: linear-gradient(135deg, #1A4731 0%, #0d2b1f 100%); }
+html[data-brand="ethiotax"] .hover\:bg-navy-950:hover,
+html[data-brand="ethiotax"] .hover\:bg-navy-900:hover,
+html[data-brand="ethiotax"] .hover\:bg-navy-800:hover { background-color: #0d2b1f; }
+/* ET-3b: values that inline styles read as var(--name, <Accounting Body value>). Only this <html> defines
+   them, so Accounting Body always uses the fallback. Hero glow #256a49 = half the OKLCH step navy-950 -> navy-600
+   applied to #1A4731, so hero text keeps 4.5:1 at the glow's brightest point. Texts on the green: gold #e8b030
+   (D238), gold-300 on the gold tint, white/60. */
+html[data-brand="ethiotax"] {
+  --hero-glow: #256a49;
+  --brand-surface: #1A4731;
+  --brand-gold-text: #e8b030;
+  --brand-gold-tint-text: #efc85d;
+  --brand-muted-text: rgba(255, 255, 255, 0.6);
+}
+/* Content table headers and code blocks: element weight, so a utility background on the element still wins. */
+:where(html[data-brand="ethiotax"]) th,
+:where(html[data-brand="ethiotax"]) pre,
+:where(html[data-brand="ethiotax"]) .html-content table th { background-color: #1A4731; }
+/* End of EthioTax brand surfaces */

@@ -15,8 +15,10 @@ function CheckIcon({ color = '#C9982A' }: { color?: string }) {
 }
 
 export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { isEthioTax: boolean; jobCount: number }) {
-  const brand        = '#0C1A3D'
+  const brand        = isEthioTax ? '#1A4731' : '#0C1A3D'
+  const brandText    = '#0C1A3D'
   const gold         = '#C9982A'
+  const goldText     = isEthioTax ? '#e8b030' : gold
   const platformName = brandName(isEthioTax)
   const jobCount      = formatJobCountLabel(jobCountRaw)
 
@@ -100,7 +102,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
             <button
               type="button"
               onClick={handleSearch}
-              style={{ background: gold, color: brand }}
+              style={{ background: gold, color: brandText }}
               className="m-2 px-6 py-3 rounded-xl font-semibold text-sm whitespace-nowrap shrink-0 transition-opacity hover:opacity-90"
             >
               Search Jobs
@@ -121,7 +123,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
               <div
                 key={pill}
                 className="flex items-center justify-center rounded-full py-2 px-3 text-xs font-medium text-center"
-                style={{ border: '1px solid rgba(212,160,23,0.4)', color: gold }}
+                style={{ border: '1px solid rgba(212,160,23,0.4)', color: goldText }}
               >
                 {pill}
               </div>
@@ -134,12 +136,12 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
             {/* Card A — Browse Live Jobs */}
             <div className="flex flex-col rounded-2xl p-8 border" style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}>
               <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-5">
-                <svg className="w-6 h-6" fill="none" stroke={gold} viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke={goldText} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
                 </svg>
               </div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: gold }}>Live Vacancies</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: goldText }}>Live Vacancies</p>
               <h2 className="font-display text-white text-2xl mb-3 leading-snug">Browse live jobs</h2>
               <p className="text-white/70 text-sm leading-relaxed mb-6">
                 Search {jobCount ? `${jobCount} ` : ''}live accounting and finance vacancies from employers across the UK and beyond. New roles posted daily.
@@ -158,7 +160,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
               </ul>
               <Link
                 href="/jobs/listings"
-                style={{ backgroundColor: gold, color: brand }}
+                style={{ backgroundColor: gold, color: brandText }}
                 className="mt-auto inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
               >
                 Browse jobs →
@@ -168,13 +170,13 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
             {/* Card B — Managed Placement */}
             <div className="flex flex-col rounded-2xl p-8 border" style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)' }}>
               <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-5">
-                <svg className="w-6 h-6" fill="none" stroke={gold} viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke={goldText} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M12 11a4 4 0 100-8 4 4 0 000 8z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.75" d="M17 11l2 2 4-4" />
                 </svg>
               </div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: gold }}>Managed Service</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: goldText }}>Managed Service</p>
               <h2 className="font-display text-white text-2xl mb-3 leading-snug">Get matched by our team</h2>
               <p className="text-white/70 text-sm leading-relaxed mb-6">
                 Register with us and we will personally match you to permanent or contract roles. You never deal with employers directly. Every profile reviewed personally.
@@ -193,7 +195,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
               </ul>
               <Link
                 href="/jobs/find-work"
-                style={{ border: '2px solid #C9982A', color: '#C9982A', background: 'transparent' }}
+                style={{ border: '2px solid #C9982A', color: goldText, background: 'transparent' }}
                 className="mt-auto inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl text-sm font-semibold transition-opacity hover:opacity-90"
               >
                 Register as a candidate →
@@ -248,7 +250,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
                 <ul className="space-y-3">
                   {employerBullets.map(item => (
                     <li key={item} className="flex items-center gap-3 text-sm text-navy-950">
-                      <CheckIcon color={brand} />
+                      <CheckIcon color={brandText} />
                       {item}
                     </li>
                   ))}
@@ -300,7 +302,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, i) => (
               <div key={stat.label} className={i < 3 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''}>
-                <span className="font-display text-3xl block mb-1" style={{ color: brand }}><span translate="no">{stat.value}</span></span>
+                <span className="font-display text-3xl block mb-1" style={{ color: brandText }}><span translate="no">{stat.value}</span></span>
                 <span className="text-sm font-semibold text-navy-950 block">{stat.label}</span>
                 <span className="text-xs text-slate-400 mt-0.5 block">{stat.sub}</span>
               </div>

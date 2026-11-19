@@ -60,7 +60,7 @@ export default async function PrivacyPolicyPage() {
       <section className="relative overflow-hidden py-16 md:py-20" style={{ background: heroBg ?? '#0C1A3D' }}>
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[80%] opacity-20"
-            style={{ background: isEthioTax ? 'radial-gradient(ellipse at center top, rgba(212,160,23,0.3) 0%, transparent 70%)' : 'radial-gradient(ellipse at center top, #3a4f9a 0%, transparent 70%)' }} />
+            style={{ background: 'radial-gradient(ellipse at center top, var(--hero-glow, #3a4f9a) 0%, transparent 70%)' }} />
         </div>
         <div className="container-site relative z-10">
           <span className="eyebrow text-gold-400 mb-4 block">Legal</span>

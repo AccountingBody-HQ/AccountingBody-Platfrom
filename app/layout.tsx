@@ -103,7 +103,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   ])
 
   return (
-      <html lang="en-GB" className="scroll-smooth">
+      <html lang="en-GB" className="scroll-smooth" data-brand={isEthioTax ? 'ethiotax' : undefined}>
         <head>
           {process.env.NEXT_PUBLIC_ADSENSE_ID && (
             <>

@@ -1112,7 +1112,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         <div className="absolute inset-0 pointer-events-none">
           <div
             className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[70%] opacity-30"
-            style={{ background: 'radial-gradient(ellipse at center top, #3a4f9a 0%, transparent 70%)' }}
+            style={{ background: 'radial-gradient(ellipse at center top, var(--hero-glow, #3a4f9a) 0%, transparent 70%)' }}
           />
           <div
             className="absolute inset-0 opacity-[0.04]"
@@ -1338,7 +1338,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 href={`/jobs/listings?role=${job.slug}`}
                 className="rounded-xl border border-slate-200 p-5 bg-white hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group cursor-pointer flex flex-col"
               >
-                <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex md:max-[786px]:flex-wrap items-start justify-between gap-3 mb-3">
                   <span className="font-display text-navy-950 text-base font-semibold leading-snug">{job.title}</span>
                   <span className="text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 whitespace-nowrap bg-slate-100 text-slate-600">
                     Accounting &amp; Finance

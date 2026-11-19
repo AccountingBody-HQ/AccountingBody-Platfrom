@@ -12,11 +12,11 @@ function p(v: Record<string,string>, k: string) { return parseFloat(v[k] ?? '') 
 export default function CalculatorsPage() {
   return (
     <div style={{ background: '#F8F7F4', minHeight: '100vh' }}>
-      <section style={{ background: '#0C1A3D', padding: '72px 0 56px' }}>
+      <section style={{ background: 'var(--brand-surface, #0C1A3D)', padding: '72px 0 56px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-          <span style={{ color: '#C9982A', fontSize: 11, fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Free Tools</span>
+          <span style={{ color: 'var(--brand-gold-text, #C9982A)', fontSize: 11, fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Free Tools</span>
           <h1 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#fff', margin: '12px 0 16px', lineHeight: 1.1 }}>Accounting Calculators</h1>
-          <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 17, maxWidth: 600, lineHeight: 1.7, margin: 0 }}>24 free instant calculators for ACCA, CIMA, ICAEW and AAT students. Results update as you type. No signup required.</p>
+          <p style={{ color: 'var(--brand-muted-text, rgba(255,255,255,0.55))', fontSize: 17, maxWidth: 600, lineHeight: 1.7, margin: 0 }}>24 free instant calculators for ACCA, CIMA, ICAEW and AAT students. Results update as you type. No signup required.</p>
         </div>
       </section>
 
