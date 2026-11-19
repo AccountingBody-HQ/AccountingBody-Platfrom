@@ -16,7 +16,7 @@ import { ApplyButton } from './ApplyButton'
 // bar is `position: fixed`, so it renders correctly regardless of where in
 // this component's JSX it sits; it doesn't need to be a DOM sibling of the
 // element it's tracking.
-export function ApplyBarWithSticky({ job }: { job: Job }) {
+export function ApplyBarWithSticky({ job, isEthioTax }: { job: Job; isEthioTax: boolean }) {
   const inlineRef = useRef<HTMLDivElement>(null)
   // Hidden until the observer actually reports the inline button as
   // out of view — never defaults to visible. A bar that flashes on first
@@ -42,7 +42,7 @@ export function ApplyBarWithSticky({ job }: { job: Job }) {
   return (
     <>
       <div ref={inlineRef} className="mt-10 max-w-[62ch]">
-        <ApplyButton job={job} />
+        <ApplyButton job={job} isEthioTax={isEthioTax} />
       </div>
 
       {/* Sticky mobile apply bar — below 768px only, and only while the
@@ -58,7 +58,7 @@ export function ApplyBarWithSticky({ job }: { job: Job }) {
         }`}
         style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
       >
-        <ApplyButton job={job} size="compact" />
+        <ApplyButton job={job} isEthioTax={isEthioTax} size="compact" />
       </div>
     </>
   )

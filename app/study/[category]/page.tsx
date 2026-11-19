@@ -68,7 +68,7 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
   const chosen     = pickLetter(query?.letter, available)
   const path       = articles.length > 0 ? letterHref(category, chosen, defaultKey) : `/study/${category}`
   return {
-    title: `${meta.name} Study Notes | Accounting Body`,
+    title: `${meta.name} Study Notes`,
     description: meta.description,
     ...(await canonicalMetadata(path)),
   }

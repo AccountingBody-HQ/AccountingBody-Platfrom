@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import type { Job } from '@/lib/jobs'
+import { brandName } from '@/lib/brand'
 
 // The only client-rendered piece of this page — everything else (the job
 // fetch, lifecycle state, description, similar jobs) stays a Server
@@ -29,7 +30,7 @@ function trackApplyClick(jobId: string) {
 // Label states the outcome, not the action — mirrors the branch below it
 // is used in exactly, so a label change here can never drift out of sync
 // with which branch actually renders.
-function getApplyLabel(job: Job): string {
+function getApplyLabel(job: Job, isEthioTax: boolean): string {
   if (job.apply_method === 'external' && job.application_url) {
     const companyName = job.company_name?.trim()
     return companyName ? `Apply on ${companyName}` : "Apply on the employer's site"
@@ -37,7 +38,7 @@ function getApplyLabel(job: Job): string {
   if (job.apply_method === 'email' && job.application_email) {
     return 'Email your application'
   }
-  return 'Apply on Accounting Body'
+  return `Apply on ${brandName(isEthioTax)}`
 }
 
 const sizeClasses = {
@@ -73,8 +74,8 @@ function ExternalLinkIcon() {
   )
 }
 
-export function ApplyButton({ job, size = 'default' }: { job: Job; size?: keyof typeof sizeClasses }) {
-  const label = getApplyLabel(job)
+export function ApplyButton({ job, isEthioTax, size = 'default' }: { job: Job; isEthioTax: boolean; size?: keyof typeof sizeClasses }) {
+  const label = getApplyLabel(job, isEthioTax)
   const buttonClass = `flex w-full items-center justify-center gap-2 rounded-xl ${sizeClasses[size]} text-base font-semibold transition-colors bg-[#C9982A] text-[#231A02] hover:bg-[#A87C16] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0C1A3D]`
 
   // Tracks every source (employer, adzuna, or any other ingestion

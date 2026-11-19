@@ -28,7 +28,7 @@ export async function generateMetadata({
   if (category) {
     const title = category.replace(/-/g, ' ').replace(/\w/g, c => c.toUpperCase())
     return {
-      title: `${title} — Accounting Dictionary | Accounting Body`,
+      title: `${title} — Accounting Dictionary`,
       description: `Browse accounting terms and study notes in ${title}.`,
       // Filter/letter query params consolidate onto the base path — they
       // don't each get their own canonical.
@@ -37,8 +37,8 @@ export async function generateMetadata({
   }
   return {
     title: letter
-      ? `Accounting Dictionary — ${letter} | Accounting Body`
-      : 'Accounting Dictionary & Glossary | Accounting Body',
+      ? `Accounting Dictionary — ${letter}`
+      : 'Accounting Dictionary & Glossary',
     description: letter
       ? `Browse accounting terms starting with ${letter} — definitions, study notes, and exam guides.`
       : 'Browse our complete accounting dictionary — terms explained clearly for students and professionals.',

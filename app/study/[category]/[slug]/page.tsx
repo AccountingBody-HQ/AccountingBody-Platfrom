@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   if (!article) return {}
   const { alternates, openGraph } = await resolveArticleCanonical(article)
   return {
-    title:       `${article.title} | Accounting Body`,
+    title:       article.title,
     description: article.excerpt,
     alternates,
     openGraph: { title: article.title, description: article.excerpt, type: 'article', url: openGraph.url },

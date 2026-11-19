@@ -7,6 +7,8 @@
 // ethiotax.com, a domain Resend's free plan has never verified, so it
 // silently failed to send whenever it was actually reached.
 
+import { AB_BRAND_NAME, ET_BRAND_NAME } from '@/lib/brand'
+
 // Resend's free plan has exactly one verified sending domain. Every
 // outbound contact-enquiry email — for both brands — must use this
 // address; only the display name differs.
@@ -20,14 +22,14 @@ export interface ContactBrand {
 }
 
 export const AB_CONTACT_BRAND: ContactBrand = {
-  name: 'Accounting Body',
+  name: AB_BRAND_NAME,
   domain: 'accountingbody.com',
   email: CONTACT_SENDER_EMAIL,
   color: '#0C1A3D',
 }
 
 export const ET_CONTACT_BRAND: ContactBrand = {
-  name: 'EthioTax',
+  name: ET_BRAND_NAME,
   domain: 'ethiotax.com',
   email: CONTACT_SENDER_EMAIL,
   color: '#1A4731',

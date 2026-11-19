@@ -1,8 +1,10 @@
-export function JobListingsStructuredData({ total }: { total?: number }) {
+import { brandName } from '@/lib/brand'
+
+export function JobListingsStructuredData({ total, isEthioTax = false }: { total?: number; isEthioTax?: boolean }) {
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: 'Accounting & Finance Jobs | Accounting Body',
+    name: `Accounting & Finance Jobs | ${brandName(isEthioTax)}`,
     description: 'Find accounting and finance jobs globally. Roles for ACCA, CIMA, ICAEW, CPA and AAT qualified professionals.',
     url: 'https://accountingbody.com/jobs/listings',
     ...(total != null ? {

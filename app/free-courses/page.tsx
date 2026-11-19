@@ -12,7 +12,7 @@ import { canonicalMetadata } from '@/lib/canonical'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'Free Accounting Courses | Accounting Body',
+    title: 'Free Accounting Courses',
     description: 'Free online accounting courses for accounting and finance students. Structured lessons, worked examples, and built-in practice questions. No signup required.',
     ...(await canonicalMetadata('/free-courses')),
   }

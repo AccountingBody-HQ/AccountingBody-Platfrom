@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   const cat = filters.categories.find(c => c.slug === category)
   const title = cat?.title ?? 'Mock Exam'
   return {
-    title: `${title} Mock Exam | Accounting Body`,
+    title: `${title} Mock Exam`,
     description: `Free timed mock exam for ${title}. 50 questions, 75 minutes, 60% pass mark. Unlimited attempts.`,
     ...(await canonicalMetadata(`/mock-exams/${category}`)),
   }

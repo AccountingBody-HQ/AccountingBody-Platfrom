@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatJobCountLabel } from '@/lib/job-format'
+import { brandName } from '@/lib/brand'
 
 function CheckIcon({ color = '#C9982A' }: { color?: string }) {
   return (
@@ -16,7 +17,7 @@ function CheckIcon({ color = '#C9982A' }: { color?: string }) {
 export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { isEthioTax: boolean; jobCount: number }) {
   const brand        = '#0C1A3D'
   const gold         = '#C9982A'
-  const platformName = 'Accounting Body'
+  const platformName = brandName(isEthioTax)
   const jobCount      = formatJobCountLabel(jobCountRaw)
 
   const [role, setRole] = useState('')

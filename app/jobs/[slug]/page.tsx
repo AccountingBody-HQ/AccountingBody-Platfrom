@@ -248,7 +248,7 @@ export default async function JobDetailPage({
               the sticky mobile apply bar below 768px. Both live inside one
               client component so the bar can watch the inline button's own
               viewport visibility and the two are never on screen together. */}
-          <ApplyBarWithSticky job={job} />
+          <ApplyBarWithSticky job={job} isEthioTax={isEthioTax} />
 
           {/* 7. Qualifications — 1.8% of jobs have any; kept quiet and last
               so its near-total absence is never load-bearing for whether

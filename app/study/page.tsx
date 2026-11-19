@@ -9,7 +9,7 @@ export const revalidate = 3600
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'Study Notes | Accounting Body',
+    title: 'Study Notes',
     description: 'Comprehensive study notes for ACCA, CIMA, AAT, and ICAEW — the four leading professional accounting qualifications.',
     ...(await canonicalMetadata('/study')),
   }
