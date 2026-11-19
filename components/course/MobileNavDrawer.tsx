@@ -111,7 +111,7 @@ export default function MobileNavDrawer({
           {/* Sheet */}
           <div
             className="relative rounded-t-2xl flex flex-col"
-            style={{ background: '#081428', maxHeight: '82vh' }}
+            style={{ background: 'var(--brand-sheet, #081428)', maxHeight: '82vh' }}
           >
             {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-1">

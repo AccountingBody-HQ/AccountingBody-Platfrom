@@ -29,7 +29,7 @@ export default function CalcCard({ title, tag, description, fields, calculate }:
       <div style={{ height: 4, background: 'linear-gradient(to right, #C9982A, rgba(212,160,23,0.3))' }} />
       <div style={{ padding: 24 }}>
         <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#88671c', background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.25)', borderRadius: 20, padding: '3px 10px' }}>{tag}</span>
-        <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '1.25rem', color: '#0C1A3D', margin: '12px 0 6px', lineHeight: 1.2 }}>{title}</h2>
+        <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '1.25rem', color: 'var(--brand-ink, #0C1A3D)', margin: '12px 0 6px', lineHeight: 1.2 }}>{title}</h2>
         <p style={{ fontSize: 13, color: '#64748B', lineHeight: 1.6, marginBottom: 20 }}>{description}</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
           {fields.map(f => (
@@ -41,7 +41,7 @@ export default function CalcCard({ title, tag, description, fields, calculate }:
                 value={values[f.id] ?? ''}
                 onChange={e => handleChange(f.id, e.target.value)}
                 placeholder={f.placeholder}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 14, color: '#0C1A3D', background: '#F8F7F4', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 14, color: 'var(--brand-ink, #0C1A3D)', background: '#F8F7F4', boxSizing: 'border-box' }}
               />
             </div>
           ))}

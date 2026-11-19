@@ -149,7 +149,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       </section>
 
       {/* Qualification accent bar */}
-      <div className={`h-1 w-full ${accentBar}`} />
+      <div className={`h-1 w-full brand-accent-bar ${accentBar}`} />
 
       {/* ── Body ──────────────────────────────────────────────────────────── */}
       <section className="section bg-white">

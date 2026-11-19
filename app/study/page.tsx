@@ -261,7 +261,7 @@ export default async function StudyPage() {
               return (
                 <Link key={body.slug} href={`/study/${body.slug}`}
                   className="group flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
-                  <div className={`h-1.5 ${body.accent}`} />
+                  <div className={`h-1.5 brand-accent-bar ${body.accent}`} />
                   <div className="p-6 flex flex-col flex-1">
                     <div className="flex items-start justify-between mb-4">
                       <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${body.badgeBg} ${body.badgeText}`} translate="no">{body.code}</span>

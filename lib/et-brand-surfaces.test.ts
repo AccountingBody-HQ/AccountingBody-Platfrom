@@ -160,8 +160,10 @@ describe('the /jobs hub on EthioTax (ET-3)', () => {
     expect(et).toContain('style="background:#C9982A;color:#0C1A3D"')
   })
   it('uses the EthioTax gold for the small gold text on the green (D238), the one gold elsewhere', () => {
-    // Three stat pills, the two card labels and the "Register as a candidate" outline link, all small text.
-    expect((et.match(/(?<![-\w])color:#e8b030/g) || []).length).toBe(6)
+    // Three stat pills use #e8b030; ET-4: the two card labels and the "Register as a candidate" outline link
+    // sit on the card tint under the glow and use the pale gold #efc85d (same D238 family), all small text.
+    expect((et.match(/(?<![-\w])color:#e8b030/g) || []).length).toBe(3)
+    expect((et.match(/(?<![-\w])color:#efc85d/g) || []).length).toBe(3)
     expect(et).not.toMatch(/(?<![-\w])color:#C9982A/)
     expect(ratio(rgb('#e8b030'), GREEN)).toBeGreaterThanOrEqual(4.5)
     expect(ratio(rgb('#C9982A'), GREEN)).toBeLessThan(4.5)

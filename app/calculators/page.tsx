@@ -136,8 +136,8 @@ function Section({ title, color, children }: { title: string; color: string; chi
   return (
     <section style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 24px 0' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <div style={{ width: 4, height: 28, borderRadius: 4, background: color }} />
-        <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '1.5rem', color: '#0C1A3D', margin: 0 }}>{title}</h2>
+        <div className="brand-accent-bar" style={{ width: 4, height: 28, borderRadius: 4, background: color }} />
+        <h2 style={{ fontFamily: 'DM Serif Display, serif', fontSize: '1.5rem', color: 'var(--brand-ink, #0C1A3D)', margin: 0 }}>{title}</h2>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
         {children}
