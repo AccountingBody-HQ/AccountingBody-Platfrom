@@ -295,7 +295,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
 
       {status === 'success' ? (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-teal-500/20 border border-teal-500/30">
-          <svg className="w-4 h-4 text-teal-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className={`w-4 h-4 ${isEthioTax ? 'text-teal-300' : 'text-teal-400'} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
           </svg>
           <span className="text-sm text-teal-300 font-medium">
@@ -313,7 +313,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="your@email.com"
-              className="w-full h-14 px-4 rounded-lg text-base bg-white/10 border border-white/30 text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all" style={{ fontSize: "16px", WebkitAppearance: "none" }}
+              className={`w-full h-14 px-4 rounded-lg text-base bg-white/10 border ${isEthioTax ? 'border-white/50' : 'border-white/30'} text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all`} style={{ fontSize: "16px", WebkitAppearance: "none" }}
               required
               autoComplete="email"
             />
@@ -336,11 +336,11 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
           </div>
           <div ref={turnstileContainer} />
           {status === 'error' && (
-            <p role="alert" className="text-xs text-red-400">{errorMsg || 'Something went wrong. Please try again.'}</p>
+            <p role="alert" className={`text-xs ${isEthioTax ? 'text-red-300' : 'text-red-400'}`}>{errorMsg || 'Something went wrong. Please try again.'}</p>
           )}
           <p className="text-xs text-white/70">
             By subscribing you agree to our{' '}
-            <Link href="/privacy-policy" className="text-[#C9982A] underline hover:text-[#e0b84e]">Privacy Policy</Link>.
+            <Link href="/privacy-policy" className={isEthioTax ? 'text-gold-400 underline hover:decoration-2' : 'text-[#C9982A] underline hover:text-[#e0b84e]'}>Privacy Policy</Link>.
           </p>
         </form>
       )}
@@ -480,7 +480,7 @@ export function Footer({
   }
 
   return (
-    <footer className="bg-navy-950 text-white" aria-label="Site footer">
+    <footer className={isEthioTax ? 'bg-[#1A4731] text-white' : 'bg-navy-950 text-white'} aria-label="Site footer">
 
       {/* ── Stats bar ──────────────────────────────────────────────────────── */}
       {/* P7 centred this (flex+justify-center) reasoning that a fixed grid
@@ -583,12 +583,12 @@ export function Footer({
                           : link.label}
                         {link.external && <ExtIcon />}
                         {link.badge && (
-                          <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-teal-500/20 text-teal-400 border border-teal-500/30">
+                          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full bg-teal-500/20 ${isEthioTax ? 'text-teal-300' : 'text-teal-400'} border border-teal-500/30`}>
                             {link.badge}
                           </span>
                         )}
                         {link.new && (
-                          <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-gold-500/20 text-gold-400 border border-gold-500/30">
+                          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full bg-gold-500/20 ${isEthioTax ? 'text-gold-300' : 'text-gold-400'} border border-gold-500/30`}>
                             New
                           </span>
                         )}
@@ -609,8 +609,12 @@ export function Footer({
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
             <div className="space-y-1">
               <p className="text-xs text-white/70">
-                © {new Date().getFullYear()} AccountingBody Ltd. All rights reserved.{' '}
-                Registered in England &amp; Wales.
+                {isEthioTax ? `© ${new Date().getFullYear()} EthioTax. All rights reserved.` : (
+                  <>
+                    © {new Date().getFullYear()} AccountingBody Ltd. All rights reserved.{' '}
+                    Registered in England &amp; Wales.
+                  </>
+                )}
               </p>
               <p className="text-xs text-white/70">
                 {`${brandName(isEthioTax)} — jobs, placement and practice for accounting and finance professionals.`}

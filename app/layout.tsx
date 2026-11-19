@@ -76,10 +76,8 @@ export async function generateMetadata(): Promise<Metadata> {
       googleBot: { index: true, follow: true, 'max-video-preview': -1, 'max-image-preview': 'large', 'max-snippet': -1 },
     },
     icons: {
-      icon: [{ url: '/favicon.ico', sizes: 'any' }, { url: '/icon.svg', type: 'image/svg+xml' }],
-      apple: '/apple-touch-icon.png',
+      icon: [{ url: isEthioTax ? '/ethiotax-icon.svg' : '/icon.svg', type: 'image/svg+xml' }],
     },
-    manifest: '/site.webmanifest',
     verification: { google: process.env.NEXT_PUBLIC_ADSENSE_VERIFICATION },
   }
 }
