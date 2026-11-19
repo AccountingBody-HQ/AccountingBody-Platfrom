@@ -146,10 +146,11 @@ describe('page titles carry one brand suffix (the root template adds it)', () =>
 })
 
 describe('items left as they are (OUT of ET-1)', () => {
-  it('keeps the footer legal line', () => {
+  it('keeps the Accounting Body footer legal line; EthioTax reads the D253 line (ET-2)', () => {
     const src = read('components/layout/Footer.tsx')
     expect(src).toContain('© {new Date().getFullYear()} AccountingBody Ltd. All rights reserved.{\' \'}')
     expect(src).toContain('Registered in England &amp; Wales.')
+    expect(src).toContain('{isEthioTax ? `© ${new Date().getFullYear()} EthioTax. All rights reserved.` : (')
   })
   it('keeps the join-page declaration', () => {
     expect(read('app/firms-freelancers/join/page.tsx')).toContain('Accounting Body reserves the right to verify all credentials independently.')
@@ -157,8 +158,10 @@ describe('items left as they are (OUT of ET-1)', () => {
   it('keeps the jobs-listing JSON-LD address', () => {
     expect(read('app/jobs/listings/structured-data.tsx')).toContain("url: 'https://accountingbody.com/jobs/listings',")
   })
-  it('keeps the find-work description that names both brands', () => {
-    expect(read('app/jobs/find-work/page.tsx')).toContain("description: 'Register as a candidate with Accounting Body or EthioTax.")
+  it('keeps the Accounting Body find-work description that names both brands; EthioTax names EthioTax only (ET-2)', () => {
+    const src = read('app/jobs/find-work/page.tsx')
+    expect(src).toContain(": 'Register as a candidate with Accounting Body or EthioTax.")
+    expect(src).toContain("? 'Register as a candidate with EthioTax. We place")
   })
   it('keeps every sending and contact address in the two e-mail routes', () => {
     const manage = read('app/api/jobs/manage/route.ts')
