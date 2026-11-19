@@ -83,7 +83,8 @@ describe('EthioTax footer (ET-2)', () => {
     expect(html).toContain('<footer class="bg-navy-950 text-white" aria-label="Site footer">')
     expect(html).toContain(`<p class="text-xs text-white/70">© ${year} AccountingBody Ltd. All rights reserved. Registered in England &amp; Wales.</p>`)
     expect(html).toContain('class="text-[#C9982A] underline hover:text-[#e0b84e]"')
-    expect(html).toContain('bg-white/10 border border-white/30 text-white')
+    // ET-3 (C4): the Accounting Body field border is white/40 (3.73:1 on navy; white/30 was 2.66:1).
+    expect(html).toContain('bg-white/10 border border-white/40 text-white')
     // The badges and the error/success states do not render on the Accounting Body footer at rest:
     // their Accounting Body classes are pinned in the source instead.
     const src = read('components/layout/Footer.tsx')

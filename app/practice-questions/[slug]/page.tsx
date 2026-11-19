@@ -95,9 +95,9 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
         </div>
         <div className='container-site relative z-10'>
           <nav className='flex items-center gap-2 text-white/70 text-sm mb-8 flex-wrap'>
-            <Link href='/' className='hover:text-white/70 transition-colors'>Home</Link>
+            <Link href='/' className={isEthioTax ? 'text-white/70 hover:text-white transition-colors' : 'hover:text-white/70 transition-colors'}>Home</Link>
             <svg className='w-3.5 h-3.5 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeWidth='2' d='M9 5l7 7-7 7' /></svg>
-            <Link href='/practice-questions' className='hover:text-white/70 transition-colors'>Practice Questions</Link>
+            <Link href='/practice-questions' className={isEthioTax ? 'text-white/70 hover:text-white transition-colors' : 'hover:text-white/70 transition-colors'}>Practice Questions</Link>
             <svg className='w-3.5 h-3.5 shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path strokeLinecap='round' strokeWidth='2' d='M9 5l7 7-7 7' /></svg>
             <span className='text-white/70 line-clamp-1'>{post.title}</span>
           </nav>

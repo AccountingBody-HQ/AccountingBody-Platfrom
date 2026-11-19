@@ -42,7 +42,7 @@ const faqsFor = (name: string) => [
 ]
 
 export default async function ContactPage() {
-  const { name } = await getRequestBrand()
+  const { name, isEthioTax } = await getRequestBrand()
   const faqs = faqsFor(name)
   return (
     <>
@@ -74,7 +74,7 @@ export default async function ContactPage() {
         <div className="container-site">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2">
-              <ContactForm />
+              <ContactForm isEthioTax={isEthioTax} />
             </div>
             <div className="space-y-6">
               <div className="bg-white rounded-xl border border-slate-200 p-6">
