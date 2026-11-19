@@ -195,10 +195,11 @@ describe('text on the EthioTax green stays readable (ET-3, WCAG 2.2 AA)', () => 
 })
 
 describe('texts that would fail on the new green get an EthioTax colour (ET-3)', () => {
-  it('the set page breadcrumb links are white/70 on EthioTax (they inherited the navy link colour)', () => {
+  it('the set page breadcrumb links take the breadcrumb white/70 on EthioTax (the base link colour is navy)', () => {
     const page = read('app/practice-questions/[slug]/page.tsx')
-    const arm = "className={isEthioTax ? 'text-white/70 hover:text-white transition-colors' : 'hover:text-white/70 transition-colors'}"
-    expect(page.split(arm).length - 1).toBe(2)
+    expect(page).toContain("const crumbLink = isEthioTax ? 'text-inherit hover:underline transition-colors' : 'hover:text-white/70 transition-colors'")
+    expect(page.split('className={crumbLink}').length - 1).toBe(2)
+    expect(page).toContain("<nav className='flex items-center gap-2 text-white/70 text-sm mb-8 flex-wrap'>")
     expect(ratio(over(WHITE, 0.7, GREEN), GREEN)).toBeGreaterThanOrEqual(4.5)
     expect(ratio(rgb('#30407e'), GREEN)).toBeLessThan(4.5)
   })
