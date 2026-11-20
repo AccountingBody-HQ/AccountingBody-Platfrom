@@ -227,7 +227,7 @@ describe('article pages read the stored slug', () => {
     await expect(ArticlesPage({ params: Promise.resolve({ slug }) })).rejects.toBe(NOT_FOUND)
     expect(reader).toHaveBeenLastCalledWith('beta-%ce%b2')
     reader.mockClear()
-    await expect(articlesMetadata({ params: Promise.resolve({ slug }) })).resolves.toEqual({})
+    await expect(articlesMetadata({ params: Promise.resolve({ slug }) })).resolves.toEqual({ title: 'Page Not Found' })
     expect(reader).toHaveBeenLastCalledWith('beta-%ce%b2')
   })
 
@@ -236,15 +236,15 @@ describe('article pages read the stored slug', () => {
     await expect(StudyArticlePage({ params })).rejects.toBe(NOT_FOUND)
     expect(reader).toHaveBeenLastCalledWith('beta-%ce%b2')
     reader.mockClear()
-    await expect(studyMetadata({ params })).resolves.toEqual({})
+    await expect(studyMetadata({ params })).resolves.toEqual({ title: 'Page Not Found' })
     expect(reader).toHaveBeenLastCalledWith('beta-%ce%b2')
   })
 
-  it.each([['fixed%2Fcosts'], ['Fixed-Costs'], ['%zz']])('gives a 404 and empty metadata without a read (%s)', async (slug) => {
+  it.each([['fixed%2Fcosts'], ['Fixed-Costs'], ['%zz']])('gives a 404 and the not-found metadata without a read (%s)', async (slug) => {
     await expect(ArticlesPage({ params: Promise.resolve({ slug }) })).rejects.toBe(NOT_FOUND)
     await expect(StudyArticlePage({ params: Promise.resolve({ category: 'x', slug }) })).rejects.toBe(NOT_FOUND)
-    await expect(articlesMetadata({ params: Promise.resolve({ slug }) })).resolves.toEqual({})
-    await expect(studyMetadata({ params: Promise.resolve({ category: 'x', slug }) })).resolves.toEqual({})
+    await expect(articlesMetadata({ params: Promise.resolve({ slug }) })).resolves.toEqual({ title: 'Page Not Found' })
+    await expect(studyMetadata({ params: Promise.resolve({ category: 'x', slug }) })).resolves.toEqual({ title: 'Page Not Found' })
     expect(reader).not.toHaveBeenCalled()
   })
 })
