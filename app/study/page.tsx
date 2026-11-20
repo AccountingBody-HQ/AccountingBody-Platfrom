@@ -49,11 +49,11 @@ const SUBJECT_AREAS = [
     description: 'Financial statements, bookkeeping, accounting standards and reporting practices.',
     count: '714+',
     icon: (
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8">
-        <rect x="8" y="6" width="24" height="36" rx="3" stroke="#0C1A3D" strokeWidth="2"/>
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-navy-950">
+        <rect x="8" y="6" width="24" height="36" rx="3" stroke="currentColor" strokeWidth="2"/>
         <path d="M14 16h12M14 22h12M14 28h8" stroke="#C9982A" strokeWidth="2" strokeLinecap="round"/>
-        <path d="M28 6v8h8" stroke="#0C1A3D" strokeWidth="2" strokeLinejoin="round"/>
-        <rect x="28" y="14" width="12" height="16" rx="2" fill="#EEF2FF" stroke="#0C1A3D" strokeWidth="1.5"/>
+        <path d="M28 6v8h8" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+        <rect x="28" y="14" width="12" height="16" rx="2" fill="#EEF2FF" stroke="currentColor" strokeWidth="1.5"/>
         <path d="M31 20h6M31 24h4" stroke="#C9982A" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>
     ),
@@ -64,11 +64,11 @@ const SUBJECT_AREAS = [
     description: 'Investment strategies, corporate finance, risk analysis and financial markets.',
     count: '742+',
     icon: (
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8">
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-navy-950">
         <path d="M8 36l9-10 6 6 10-14 7 7" stroke="#C9982A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-        <circle cx="40" cy="25" r="3" fill="#0C1A3D"/>
-        <path d="M8 14v22h32" stroke="#0C1A3D" strokeWidth="2" strokeLinecap="round"/>
-        <rect x="10" y="8" width="8" height="6" rx="1.5" fill="#EEF2FF" stroke="#0C1A3D" strokeWidth="1.5"/>
+        <circle cx="40" cy="25" r="3" fill="currentColor"/>
+        <path d="M8 14v22h32" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        <rect x="10" y="8" width="8" height="6" rx="1.5" fill="#EEF2FF" stroke="currentColor" strokeWidth="1.5"/>
       </svg>
     ),
   },
@@ -78,10 +78,10 @@ const SUBJECT_AREAS = [
     description: 'Budgeting, cost analysis, performance measurement and decision-making techniques.',
     count: '446+',
     icon: (
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8">
-        <rect x="8" y="28" width="8" height="12" rx="1.5" fill="#EEF2FF" stroke="#0C1A3D" strokeWidth="1.5"/>
-        <rect x="20" y="20" width="8" height="20" rx="1.5" fill="#EEF2FF" stroke="#0C1A3D" strokeWidth="1.5"/>
-        <rect x="32" y="10" width="8" height="30" rx="1.5" fill="#EEF2FF" stroke="#0C1A3D" strokeWidth="1.5"/>
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-navy-950">
+        <rect x="8" y="28" width="8" height="12" rx="1.5" fill="#EEF2FF" stroke="currentColor" strokeWidth="1.5"/>
+        <rect x="20" y="20" width="8" height="20" rx="1.5" fill="#EEF2FF" stroke="currentColor" strokeWidth="1.5"/>
+        <rect x="32" y="10" width="8" height="30" rx="1.5" fill="#EEF2FF" stroke="currentColor" strokeWidth="1.5"/>
         <path d="M12 22l8-8 8 6 8-12" stroke="#C9982A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
@@ -92,9 +92,9 @@ const SUBJECT_AREAS = [
     description: 'Stocks, bonds, derivatives and investment instruments that shape the global economy.',
     count: '211+',
     icon: (
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8">
-        <circle cx="24" cy="24" r="16" stroke="#0C1A3D" strokeWidth="2"/>
-        <path d="M24 8v4M24 36v4M8 24h4M36 24h4" stroke="#0C1A3D" strokeWidth="2" strokeLinecap="round"/>
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-navy-950">
+        <circle cx="24" cy="24" r="16" stroke="currentColor" strokeWidth="2"/>
+        <path d="M24 8v4M24 36v4M8 24h4M36 24h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
         <path d="M16 24c0-4.4 3.6-8 8-8s8 3.6 8 8-3.6 8-8 8" stroke="#C9982A" strokeWidth="2" strokeLinecap="round"/>
         <circle cx="24" cy="24" r="3" fill="#C9982A"/>
       </svg>
@@ -106,11 +106,11 @@ const SUBJECT_AREAS = [
     description: 'Organisational structures, strategy, operations and leadership for growing businesses.',
     count: '187+',
     icon: (
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8">
-        <rect x="16" y="24" width="16" height="16" rx="2" stroke="#0C1A3D" strokeWidth="2"/>
-        <rect x="6" y="30" width="12" height="10" rx="2" stroke="#0C1A3D" strokeWidth="1.5"/>
-        <rect x="30" y="30" width="12" height="10" rx="2" stroke="#0C1A3D" strokeWidth="1.5"/>
-        <circle cx="24" cy="16" r="6" stroke="#0C1A3D" strokeWidth="2"/>
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-navy-950">
+        <rect x="16" y="24" width="16" height="16" rx="2" stroke="currentColor" strokeWidth="2"/>
+        <rect x="6" y="30" width="12" height="10" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+        <rect x="30" y="30" width="12" height="10" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+        <circle cx="24" cy="16" r="6" stroke="currentColor" strokeWidth="2"/>
         <path d="M24 24v-2M12 30v-4M36 30v-4" stroke="#C9982A" strokeWidth="2" strokeLinecap="round"/>
       </svg>
     ),
@@ -121,9 +121,9 @@ const SUBJECT_AREAS = [
     description: 'Audit procedures, internal controls, risk assessment and financial reporting assurance.',
     count: '61+',
     icon: (
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8">
-        <circle cx="22" cy="22" r="12" stroke="#0C1A3D" strokeWidth="2"/>
-        <path d="M30 30l8 8" stroke="#0C1A3D" strokeWidth="2.5" strokeLinecap="round"/>
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-navy-950">
+        <circle cx="22" cy="22" r="12" stroke="currentColor" strokeWidth="2"/>
+        <path d="M30 30l8 8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
         <path d="M17 22l3 3 6-6" stroke="#C9982A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
@@ -134,10 +134,10 @@ const SUBJECT_AREAS = [
     description: 'Tax principles, compliance requirements and how taxation impacts financial decisions.',
     count: '40+',
     icon: (
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8">
-        <rect x="10" y="8" width="28" height="32" rx="3" stroke="#0C1A3D" strokeWidth="2"/>
-        <path d="M17 18h14M17 24h14M17 30h8" stroke="#0C1A3D" strokeWidth="1.5" strokeLinecap="round"/>
-        <circle cx="35" cy="13" r="6" fill="#0C1A3D"/>
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-navy-950">
+        <rect x="10" y="8" width="28" height="32" rx="3" stroke="currentColor" strokeWidth="2"/>
+        <path d="M17 18h14M17 24h14M17 30h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        <circle cx="35" cy="13" r="6" fill="currentColor"/>
         <path d="M32 13h6M35 10v6" stroke="#C9982A" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>
     ),
@@ -148,10 +148,10 @@ const SUBJECT_AREAS = [
     description: 'Macroeconomics, microeconomics, inflation and global policies that impact financial systems.',
     count: '120+',
     icon: (
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8">
-        <path d="M8 40h32" stroke="#0C1A3D" strokeWidth="2" strokeLinecap="round"/>
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-navy-950">
+        <path d="M8 40h32" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
         <path d="M12 40V28M20 40V20M28 40V24M36 40V14" stroke="#C9982A" strokeWidth="2.5" strokeLinecap="round"/>
-        <path d="M12 20c0-6.6 5.4-12 12-12s12 5.4 12 12" stroke="#0C1A3D" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="3 3"/>
+        <path d="M12 20c0-6.6 5.4-12 12-12s12 5.4 12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="3 3"/>
       </svg>
     ),
   },
@@ -161,10 +161,10 @@ const SUBJECT_AREAS = [
     description: 'Full exam simulations to test your knowledge and build exam confidence.',
     count: '181+',
     icon: (
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8">
-        <rect x="8" y="8" width="32" height="32" rx="3" stroke="#0C1A3D" strokeWidth="2"/>
-        <path d="M16 18h16M16 24h16M16 30h10" stroke="#0C1A3D" strokeWidth="1.5" strokeLinecap="round"/>
-        <circle cx="36" cy="36" r="8" fill="#0C1A3D"/>
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-navy-950">
+        <rect x="8" y="8" width="32" height="32" rx="3" stroke="currentColor" strokeWidth="2"/>
+        <path d="M16 18h16M16 24h16M16 30h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        <circle cx="36" cy="36" r="8" fill="currentColor"/>
         <path d="M33 36l2 2 4-4" stroke="#C9982A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
@@ -175,9 +175,9 @@ const SUBJECT_AREAS = [
     description: 'Blockchain fundamentals, Bitcoin, Ethereum and the impact of crypto on modern finance.',
     count: '7+',
     icon: (
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8">
-        <circle cx="24" cy="24" r="16" stroke="#0C1A3D" strokeWidth="2"/>
-        <path d="M20 16v16M28 16v16" stroke="#0C1A3D" strokeWidth="1.5" strokeLinecap="round"/>
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-navy-950">
+        <circle cx="24" cy="24" r="16" stroke="currentColor" strokeWidth="2"/>
+        <path d="M20 16v16M28 16v16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
         <path d="M18 20h8c2.2 0 4 1.8 4 4s-1.8 4-4 4h-8" stroke="#C9982A" strokeWidth="2" strokeLinecap="round"/>
         <path d="M18 24h9" stroke="#C9982A" strokeWidth="2" strokeLinecap="round"/>
       </svg>
@@ -189,11 +189,11 @@ const SUBJECT_AREAS = [
     description: 'Practical calculators, templates and downloadable tools to support your studies.',
     count: '3+',
     icon: (
-      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8">
-        <rect x="8" y="16" width="20" height="24" rx="2" stroke="#0C1A3D" strokeWidth="2"/>
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-navy-950">
+        <rect x="8" y="16" width="20" height="24" rx="2" stroke="currentColor" strokeWidth="2"/>
         <path d="M14 22h8M14 27h8M14 32h5" stroke="#C9982A" strokeWidth="1.5" strokeLinecap="round"/>
-        <path d="M28 12l8 8-12 12-8-8z" stroke="#0C1A3D" strokeWidth="1.5" strokeLinejoin="round"/>
-        <path d="M36 20l2 2-4 4-2-2" stroke="#0C1A3D" strokeWidth="1.5" strokeLinejoin="round"/>
+        <path d="M28 12l8 8-12 12-8-8z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+        <path d="M36 20l2 2-4 4-2-2" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
       </svg>
     ),
   },

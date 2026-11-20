@@ -83,7 +83,7 @@ describe('heading outline', () => {
 
   it('search: the server-rendered fallback starts with the page h1 (visually hidden)', () => {
     const src = read('app/search/page.tsx')
-    const fallback = src.slice(src.indexOf('<Suspense fallback'), src.indexOf('<SearchInner />'))
+    const fallback = src.slice(src.indexOf('<Suspense fallback'), src.indexOf('<SearchInner '))
     expect(fallback).toMatch(/<h1 className="sr-only">Find what you need<\/h1>/)
   })
 })

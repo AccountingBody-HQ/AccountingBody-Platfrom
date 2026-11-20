@@ -965,3 +965,7 @@ html[data-brand="ethiotax"] .brand-accent-bar { background-color: #C9982A !impor
 :where(html[data-brand="ethiotax"]) .active\:bg-navy-950:active { background-color: #1A4731; }
 :where(html[data-brand="ethiotax"]) .active\:bg-navy-900:active { background-color: #0d2b1f; }
 /* End of ET-4 */
+/* ET-5: text selection on EthioTax in the green family (#1A4731 on #d6e7dd, 8.21:1); Accounting Body keeps the
+   shared ::selection rule above. */
+html[data-brand="ethiotax"] ::selection { background-color: #d6e7dd; color: #1A4731; }
+/* End of ET-5 */

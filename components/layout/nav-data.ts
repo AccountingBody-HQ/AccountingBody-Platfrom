@@ -76,7 +76,7 @@ export const ET_COMPANY_LINKS = {
       title: 'Get Started',
       links: [
         { label: 'Enquire About a Service', href: '/get-help',     description: 'Tell us what you need — we respond within 24 hours' },
-        { label: 'Talk to Us on WhatsApp',  href: '/wa',           description: 'Speak to our team directly' },
+        { label: 'Talk to Us on WhatsApp',  href: '/wa',           description: 'Speak to our team directly', noPrefetch: true },
         { label: 'Join as a Provider',      href: '/firms-freelancers', description: 'Apply to join the EthioTax specialist network' },
       ],
     },

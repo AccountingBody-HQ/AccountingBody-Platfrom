@@ -60,11 +60,8 @@ export function ETLanguageProvider({ children }: { children: React.ReactNode }) 
   const [language, setLanguageState] = useState<Language>('en')
 
   useEffect(() => {
-    // Detect language from googtrans cookie on load
-    const current = detectCurrentLanguage()
-    setLanguageState(current)
-    // Also sync our own cookie
-    setCookie(COOKIE_NAME, current)
+    // Detect language from googtrans cookie on load (et_language is written only when the visitor picks)
+    setLanguageState(detectCurrentLanguage())
   }, [])
 
   const setLanguage = (lang: Language) => {

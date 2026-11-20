@@ -49,7 +49,7 @@ describe('template text names the brand through lib/brand.ts', () => {
     ['app/jobs/[slug]/page.tsx',
       ['<ApplyBarWithSticky job={job} />'],
       ['<ApplyBarWithSticky job={job} isEthioTax={isEthioTax} />']],
-    ['app/search/page.tsx',
+    ['app/search/SearchClient.tsx',
       ['aria-label="Search Accounting Body"'],
       ['aria-label={`Search ${brandName(isEthioTax)}`}']],
     ['app/glossary/page.tsx',
