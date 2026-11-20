@@ -100,7 +100,7 @@ This repository is public. Anything committed can be read by anyone, and stays i
 ### Before calling a job finished
 
 - Record the commit and how to undo it.
-- Preview before live. Check both hosts: accountingbody.com and ethiotax.com. Scripts check them on the Vercel deployment address, using the `x-et-platform: ethiotax` header for the ethiotax.com view, and never request the two domains directly (`docs/RELEASE.md`, "Hands-free checks").
+- Preview before live. Check both hosts: accountingbody.com and ethiotax.com. Scripts check them on the Vercel deployment address, using the `x-et-platform: ethiotax` header for the ethiotax.com view, and never request the two domains directly (`docs/RELEASE.md`, "Hands-free checks"). The one exception is GET-only proofs of `ethiotax.com` for the proxy tidy-up, as `docs/AGENT-RULES.md` (Secrets) allows.
 - Report your own slips honestly.
 
 ## 4. How to check a change

@@ -6,7 +6,7 @@ Owner decisions D126 (hands-free) and D163 (streamlined working). Every hands-fr
 - Never print, log or write any part of `VERCEL_AUTOMATION_BYPASS_SECRET` or `AB_DB_URL`. Check presence only: `[ -n "$NAME" ] && echo NAME:set || echo NAME:MISSING`. If one is missing, stop: the owner reloads the Codespace.
 - Never use `curl -v`, `set -x`, `env` or `printenv`.
 - Database: `U="$(printf %s "$AB_DB_URL" | tr -d '\r\n')"`, then `psql "$U" -X -v ON_ERROR_STOP=1`.
-- Deployment checks: send the protection-bypass header through stdin on every request to a `*.vercel.app` address: `printf 'x-vercel-protection-bypass: %s\n' "$VERCEL_AUTOMATION_BYPASS_SECRET" | curl -sS -H @- …`. EthioTax view: add `-H "x-et-platform: ethiotax"`. Never request the two live domains.
+- Deployment checks: send the protection-bypass header through stdin on every request to a `*.vercel.app` address: `printf 'x-vercel-protection-bypass: %s\n' "$VERCEL_AUTOMATION_BYPASS_SECRET" | curl -sS -H @- …`. EthioTax view: add `-H "x-et-platform: ethiotax"`. Never request the two live domains. One dated exception (owner, 19 Nov 2026): a brief for the EthioTax proxy tidy-up may allow GET requests to public `ethiotax.com` addresses only — never another method, never a redirect followed, never an admin address, never `accountingbody.com`, within the brief's request cap, bodies hashed in memory and never saved, the domain printed as `<live-et>`.
 - Never send a cron secret or an `Authorization` header to any cron address.
 
 ## Output
