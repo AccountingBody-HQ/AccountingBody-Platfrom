@@ -252,7 +252,7 @@ export default function JobsHubClient({ isEthioTax, jobCount: jobCountRaw }: { i
                 <ul className="space-y-3">
                   {employerBullets.map(item => (
                     <li key={item} className="flex items-center gap-3 text-sm text-navy-950">
-                      <CheckIcon color={brandText} />
+                      <CheckIcon color={brand} />
                       {item}
                     </li>
                   ))}

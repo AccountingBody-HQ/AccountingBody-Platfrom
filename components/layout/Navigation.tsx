@@ -23,6 +23,7 @@ interface NavLink {
   description?: string
   external?:    boolean
   noTranslate?: boolean
+  noPrefetch?:  boolean // a link that redirects off the site (e.g. /wa): no background prefetch
 }
 
 interface NavSection {
@@ -296,6 +297,7 @@ function MegaMenu({ section, onClose, rightAlign }: { section: NavSection; onClo
                       <li key={link.href}>
                         <Link
                           href={link.href}
+                          {...(link.noPrefetch ? { prefetch: false } : {})}
                           target={link.external ? '_blank' : undefined}
                           rel={link.external ? 'noopener noreferrer' : undefined}
                           onClick={onClose}
@@ -451,6 +453,7 @@ function MobileMenu({ open, onClose, onSearch, sections, isEthioTax }: { open: b
                           <Link
                             key={link.href}
                             href={link.href}
+                            {...(link.noPrefetch ? { prefetch: false } : {})}
                             target={link.external ? '_blank' : undefined}
                             rel={link.external ? 'noopener noreferrer' : undefined}
                             onClick={onClose}

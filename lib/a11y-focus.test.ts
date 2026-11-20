@@ -100,7 +100,7 @@ describe('keyboard focus (A11-F4)', () => {
     const PINNED: Record<string, number> = {
       'app/contact/ContactForm.tsx': 1, // newsletter field on the navy band
       'app/jobs/listings/JobListingsClient.tsx': 1, // alert field on the navy panel (gold-400, 8.7:1)
-      'app/search/page.tsx': 1, // search field in the navy hero
+      'app/search/SearchClient.tsx': 1, // search field in the navy hero
       'components/QuizBankRenderer.tsx': 1, // writing answer field, dark variant only (the light variant is navy)
       'components/layout/Footer.tsx': 2, // newsletter field and EthioTax footer logo
     }
