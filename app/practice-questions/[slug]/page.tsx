@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // Cached public reads (lib/db.ts): visitors may see an edit up to an hour
   // late; admin tools read the uncached functions.
   const qset = await getPublicQuestionSetBySlug(slug)
-  if (!qset) return {}
+  if (!qset) return { title: 'Page Not Found' }
   const { name } = await getRequestBrand()
   return {
     title:       `${qset.title} | ${name} Practice Questions`,

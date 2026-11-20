@@ -14,9 +14,9 @@ export const revalidate = 0
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const stored = toStoredSlug(slug)
-  if (stored === null) return {}
+  if (stored === null) return { title: 'Page Not Found' }
   const article = await getArticleBySlug(stored)
-  if (!article) return {}
+  if (!article) return { title: 'Page Not Found' }
   const { alternates, openGraph } = await resolveArticleCanonical(article)
   const canonicalUrl = openGraph.url
   const metaTitle = article.seo_title || article.title

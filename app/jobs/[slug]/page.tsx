@@ -52,7 +52,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params
   const resolved = await resolveJob(slug)
-  if (!resolved) return {}
+  if (!resolved) return { title: 'Page Not Found' }
   const { job, isEthioTax } = resolved
   const lifecycle = getJobLifecycleState(job)
 

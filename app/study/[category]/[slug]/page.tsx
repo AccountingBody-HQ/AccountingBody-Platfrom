@@ -22,9 +22,9 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ category: string; slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const stored = toStoredSlug(slug)
-  if (stored === null) return {}
+  if (stored === null) return { title: 'Page Not Found' }
   const article = await getArticleBySlug(stored)
-  if (!article) return {}
+  if (!article) return { title: 'Page Not Found' }
   const { alternates, openGraph } = await resolveArticleCanonical(article)
   return {
     title:       article.title,
