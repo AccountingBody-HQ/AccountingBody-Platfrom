@@ -48,6 +48,7 @@ When the owner's hands-free arrangement applies, Claude Code runs the preview an
 - Checks on the preview, and after the merge on the new production deployment: `/api/version` shows the expected commit; `/jobs/listings` returns 200, and also with the header `x-et-platform: ethiotax` (the ethiotax.com view); `/api/jobs/direct?platform=ab&limit=20&offset=0` and `platform=et` return 200 with a total; plus any page the change touches. The "jobs found" text on the page is drawn in the browser, so use the `/api/jobs/direct` totals.
 - Production proof after a merge: the GitHub deployments for the merge commit (`gh api repos/AccountingBody-HQ/AccountingBody-Platfrom/deployments?sha=<merge commit>`) show a Production deployment whose latest status is success; then the rows above on that deployment's address.
 - Scripts never request accountingbody.com or ethiotax.com directly. The bot protection answers them with a challenge, which is correct; never weaken it to make a script pass. The owner can look at the two sites in a browser.
+- One dated exception: a brief for the EthioTax proxy tidy-up may allow GET-only checks of public `ethiotax.com` addresses, as `docs/AGENT-RULES.md` (Secrets) describes. In practice the bot protection challenges those scripts too, so proofs of proxy changes come from the owner's browser.
 - Owner only, never by script: Instant Rollback, Promote, cache purges, Vercel, Cloudflare and Supabase settings, and environment variables.
 
 ## Undo
