@@ -64,7 +64,7 @@ const values = [
 const qualifications = [
   { name: 'ACCA',  detail: '13 papers covered',  accent: 'border-[#004B8D] text-[#004B8D]', bg: 'bg-[#004B8D]/5' },
   { name: 'CIMA',  detail: 'Full pathway',        accent: 'border-[#0081C6] text-[#0369a1]', bg: 'bg-[#0081C6]/5' },
-  { name: 'AAT',   detail: 'Levels 2–4',          accent: 'border-[#00857A] text-[#00857A]', bg: 'bg-[#00857A]/5' },
+  { name: 'AAT',   detail: 'Levels 2–4',          accent: 'border-[#00857A] text-teal-700', bg: 'bg-[#00857A]/5' },
   { name: 'ICAEW', detail: 'ACA pathway',         accent: 'border-navy-600  text-navy-700',  bg: 'bg-navy-50' },
 ]
 
@@ -203,7 +203,7 @@ export default async function AboutPage() {
               <div key={q.name}
                 className={`rounded-xl border-2 p-5 ${q.accent} ${q.bg} hover:shadow-md transition-shadow`}>
                 <span className="font-display text-2xl font-bold block mb-1">{q.name}</span>
-                <span className="text-xs opacity-70">{q.detail}</span>
+                <span className="text-xs">{q.detail}</span>
               </div>
             ))}
           </div>
