@@ -18,7 +18,8 @@ export default async function GuaranteePage() {
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
   const brand = isEthioTax ? '#1A4731' : '#0C1A3D'
   const platformName = isEthioTax ? 'EthioTax' : 'Accounting Body'
-  const contactEmail = isEthioTax ? 'info@ethiotax.com' : 'info@accountingbody.com'
+  // One address on both views until an EthioTax mailbox exists (D274).
+  const contactEmail = 'info@accountingbody.com'
 
   return (
     <div className="min-h-screen bg-surface">

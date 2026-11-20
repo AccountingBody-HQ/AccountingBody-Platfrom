@@ -34,6 +34,7 @@ import { Pagination, PrevNextPagination } from '@/components/Pagination'
 import { useSavedJobs } from '@/app/jobs/saved/useSavedJobs'
 import { parseTotal, summariseResults } from './resultsSummary'
 import { useDialogFocus } from '@/lib/use-dialog-focus'
+import { brandText } from '@/lib/et-wording'
 
 interface DirectJobsResponse {
   jobs?: Job[]
@@ -204,11 +205,12 @@ function FilterSection({ title, children }: { title: string; children: React.Rea
   )
 }
 
-function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
+function FiltersPanel({ filters, onChange, onClear, countryOptions, isEthioTax }: {
   filters: Filters
   onChange: (next: Filters) => void
   onClear: () => void
   countryOptions: CountryOption[]
+  isEthioTax: boolean
 }) {
   const remoteLabelId = useId()
   // One radio group per panel instance (sidebar and drawer), so the two never share a browser group.
@@ -237,7 +239,7 @@ function FiltersPanel({ filters, onChange, onClear, countryOptions }: {
         {QUALIFICATIONS.map(q => (
           <CheckboxRow
             key={q}
-            label={q}
+            label={brandText(isEthioTax, q)}
             checked={filters.qualifications.includes(q)}
             onChange={() => onChange({ ...filters, qualifications: toggleInArray(filters.qualifications, q) })}
           />
@@ -929,7 +931,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
         <div className="flex gap-8 items-start">
           {/* DESKTOP SIDEBAR */}
           <aside className="hidden md:block w-[240px] lg:w-[280px] shrink-0 bg-white rounded-2xl border border-slate-100 p-5 sticky top-24">
-            <FiltersPanel filters={filters} onChange={handleFiltersChange} onClear={handleClearFilters} countryOptions={countryOptions} />
+            <FiltersPanel filters={filters} onChange={handleFiltersChange} onClear={handleClearFilters} countryOptions={countryOptions} isEthioTax={isEthioTax} />
           </aside>
 
           {/* MAIN CONTENT */}
@@ -1081,7 +1083,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
             </button>
           </div>
           <div className="px-5 pb-6">
-            <FiltersPanel filters={filters} onChange={handleFiltersChange} onClear={handleClearFilters} countryOptions={countryOptions} />
+            <FiltersPanel filters={filters} onChange={handleFiltersChange} onClear={handleClearFilters} countryOptions={countryOptions} isEthioTax={isEthioTax} />
           </div>
         </div>
       </div>

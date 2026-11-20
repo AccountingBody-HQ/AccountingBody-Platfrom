@@ -191,7 +191,7 @@ export default async function EthiopianProfessionalsPage() {
           </div>
           <p className="text-white/70 text-sm mt-6">
             Questions? Email us at{' '}
-            <a href="mailto:info@ethiotax.com" className="text-white/70 hover:text-white/70 underline">info@ethiotax.com</a>
+            <a href="mailto:info@accountingbody.com" className="text-white/70 hover:text-white/70 underline">info@accountingbody.com</a>
           </p>
         </div>
       </section>

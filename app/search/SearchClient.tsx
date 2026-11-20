@@ -463,7 +463,7 @@ export function SearchInner({ isEthioTax }: { isEthioTax: boolean }) {
                           Try a shorter term, check your spelling, or browse by qualification.
                         </p>
                         <div className="flex flex-wrap justify-center gap-2">
-                          {['ACCA', 'CIMA', 'AAT', 'ICAEW'].map(body => (
+                          {(isEthioTax ? ['ACCA', 'CIMA', 'AAT', 'ETICPA'] : ['ACCA', 'CIMA', 'AAT', 'ICAEW']).map(body => (
                             <Link key={body} href={`/study/${body.toLowerCase()}`}
                               className="h-9 px-4 rounded-lg text-sm font-medium bg-white text-navy-950 border border-slate-200 hover:border-navy-300 transition-all">
                               Browse {body}

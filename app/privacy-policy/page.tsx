@@ -17,7 +17,8 @@ export default async function PrivacyPolicyPage() {
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
   const platformName = isEthioTax ? 'EthioTax' : 'Accounting Body'
   const platformUrl  = isEthioTax ? 'ethiotax.com' : 'accountingbody.com'
-  const privacyEmail = isEthioTax ? 'privacy@ethiotax.com' : 'privacy@accountingbody.com'
+  // One address on both views until an EthioTax mailbox exists (D274).
+  const privacyEmail = 'privacy@accountingbody.com'
   const heroBg       = isEthioTax ? '#1A4731' : undefined
 
   const sections = [

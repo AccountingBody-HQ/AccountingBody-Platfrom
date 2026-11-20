@@ -1,5 +1,7 @@
 'use client'
 import CalcCard from '@/components/CalcCard'
+import { useIsEthioTaxView } from '@/components/EthioTaxViewContext'
+import { brandText } from '@/lib/et-wording'
 
 function fmt(n: number) { return isNaN(n) ? 'N/A' : '£' + n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }
 function pct(n: number) { return isNaN(n) ? 'N/A' : (n * 100).toFixed(2) + '%' }
@@ -10,13 +12,14 @@ function uts(n: number) { return isNaN(n) ? 'N/A' : Math.ceil(n) + ' units' }
 function p(v: Record<string,string>, k: string) { return parseFloat(v[k] ?? '') }
 
 export default function CalculatorsPage() {
+  const isEthioTax = useIsEthioTaxView()
   return (
     <div style={{ background: '#F8F7F4', minHeight: '100vh' }}>
       <section style={{ background: 'var(--brand-surface, #0C1A3D)', padding: '72px 0 56px' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
           <span style={{ color: 'var(--brand-gold-text, #C9982A)', fontSize: 11, fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Free Tools</span>
           <h1 style={{ fontFamily: 'DM Serif Display, serif', fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#fff', margin: '12px 0 16px', lineHeight: 1.1 }}>Accounting Calculators</h1>
-          <p style={{ color: 'var(--brand-muted-text, rgba(255,255,255,0.55))', fontSize: 17, maxWidth: 600, lineHeight: 1.7, margin: 0 }}>24 free instant calculators for ACCA, CIMA, ICAEW and AAT students. Results update as you type. No signup required.</p>
+          <p style={{ color: 'var(--brand-muted-text, rgba(255,255,255,0.55))', fontSize: 17, maxWidth: 600, lineHeight: 1.7, margin: 0 }}>{brandText(isEthioTax, '24 free instant calculators for ACCA, CIMA, ICAEW and AAT students. Results update as you type. No signup required.')}</p>
         </div>
       </section>
 
@@ -125,7 +128,7 @@ export default function CalculatorsPage() {
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 24px' }}>
         <p style={{ fontSize: 12, color: '#475569', textAlign: 'center', lineHeight: 1.7 }}>
-          These calculators use standard accounting formulas and are suitable for ACCA, CIMA, ICAEW and AAT exam preparation. For professional decisions always consult a qualified accountant.
+          {brandText(isEthioTax, 'These calculators use standard accounting formulas and are suitable for ACCA, CIMA, ICAEW and AAT exam preparation. For professional decisions always consult a qualified accountant.')}
         </p>
       </div>
     </div>

@@ -4,13 +4,16 @@ import { headers } from 'next/headers'
 import { getCategoryCounts, getQuestionSetCount } from '@/lib/db'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 import { ownerCanonical } from '@/lib/canonical'
+import { getRequestBrand } from '@/lib/brand-server'
+import { brandText } from '@/lib/et-wording'
 
 export const revalidate = 3600
 
 export async function generateMetadata(): Promise<Metadata> {
+  const { isEthioTax } = await getRequestBrand()
   return {
     title: 'Study Notes',
-    description: 'Comprehensive study notes for ACCA, CIMA, AAT, and ICAEW — the four leading professional accounting qualifications.',
+    description: brandText(isEthioTax, 'Comprehensive study notes for ACCA, CIMA, AAT, and ICAEW — the four leading professional accounting qualifications.'),
     ...ownerCanonical('accountingbody', '/study'),
   }
 }

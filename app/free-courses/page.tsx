@@ -9,6 +9,7 @@ import { headers } from 'next/headers'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 import { getPublishedCoursesOrThrow } from '@/lib/coursesNew'
 import { ownerCanonical } from '@/lib/canonical'
+import { brandText } from '@/lib/et-wording'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -106,7 +107,7 @@ export default async function FreeCoursesPage({ searchParams }: { searchParams: 
               <div key={w.title} className={['', i < arr.length - 1 ? 'lg:border-r lg:border-slate-200 lg:pr-8' : ''].join(' ')}>
                 <div className="w-2 h-2 rounded-full bg-gold-500 mb-3" />
                 <h2 className="font-semibold text-navy-950 text-sm mb-1">{w.title}</h2>
-                <p className="text-xs text-slate-500 leading-relaxed">{w.body}</p>
+                <p className="text-xs text-slate-500 leading-relaxed">{brandText(isEthioTax, w.body)}</p>
               </div>
             ))}
           </div>

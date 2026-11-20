@@ -9,6 +9,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { NavigationWrapper } from '@/components/layout/NavigationWrapper'
 import { Footer } from '@/components/layout/Footer'
+import { EthioTaxWhatsAppButton } from '@/components/layout/EthioTaxWhatsAppButton'
 import { getCachedBrowsableJobsCount } from '@/lib/jobs'
 import { getCachedPublishedArticleCount, getCachedPublishedQuestionCount } from '@/lib/db'
 import CookieConsent from '@/components/CookieConsent'
@@ -148,6 +149,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ScrollToTop />
           <Analytics />
           <SpeedInsights />
+          {isEthioTax && <EthioTaxWhatsAppButton />}
         </body>
       </html>
   )

@@ -2,11 +2,14 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ownerCanonical } from '@/lib/canonical'
+import { getRequestBrand } from '@/lib/brand-server'
+import { brandText } from '@/lib/et-wording'
 
 export async function generateMetadata(): Promise<Metadata> {
+  const { isEthioTax } = await getRequestBrand()
   return {
     title: 'Cookie Policy',
-    description: 'How Accounting Body uses cookies and how to manage your preferences. Last updated November 2026.',
+    description: brandText(isEthioTax, 'How Accounting Body uses cookies and how to manage your preferences. Last updated November 2026.'),
     ...ownerCanonical('accountingbody', '/cookie-policy'),
   }
 }
@@ -28,7 +31,8 @@ const cookies = [
 
 ]
 
-export default function CookiePolicyPage() {
+export default async function CookiePolicyPage() {
+  const { isEthioTax } = await getRequestBrand()
   return (
     <>
       <section className="relative overflow-hidden bg-navy-950 py-16 md:py-20">
@@ -48,8 +52,7 @@ export default function CookiePolicyPage() {
           <div className="max-w-3xl">
             <div className="border-l-4 border-gold-400 pl-5 mb-10">
               <p className="text-slate-600 text-base leading-relaxed">
-                Cookies are small text files stored on your device. This policy explains every cookie
-                Accounting Body uses and how to control your preferences.
+                {brandText(isEthioTax, 'Cookies are small text files stored on your device. This policy explains every cookie Accounting Body uses and how to control your preferences.')}
               </p>
             </div>
 
@@ -67,7 +70,7 @@ export default function CookiePolicyPage() {
                       <div key={item.name} className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-5">
                         <div>
                           <code className="text-xs text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">{item.name}</code>
-                          <span className="text-xs text-slate-400 block mt-1">{item.provider}</span>
+                          <span className="text-xs text-slate-400 block mt-1">{brandText(isEthioTax, item.provider)}</span>
                         </div>
                         <p className="text-xs text-slate-500 leading-relaxed">{item.purpose}</p>
                         <p className="text-xs text-slate-500">{item.duration}</p>
