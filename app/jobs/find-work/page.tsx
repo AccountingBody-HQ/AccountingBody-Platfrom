@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import FindWorkClient from './FindWorkClient'
-import { canonicalMetadata } from '@/lib/canonical'
+import { ownerCanonical } from '@/lib/canonical'
 import { getRequestBrand } from '@/lib/brand-server'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: isEthioTax
       ? 'Register as a candidate with EthioTax. We place accounting and finance professionals in permanent and contract roles.'
       : 'Register as a candidate with Accounting Body or EthioTax. We place accounting and finance professionals in permanent and contract roles.',
-    ...(await canonicalMetadata('/jobs/find-work')),
+    ...ownerCanonical('accountingbody', '/jobs/find-work'),
   }
 }
 

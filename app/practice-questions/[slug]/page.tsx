@@ -5,7 +5,7 @@ import { headers } from 'next/headers'
 import { getPublicQuestionSetBySlug, getPublicQuestionsBySetId, getPublicCasesBySetId, getArticleBySlug } from '@/lib/db'
 import QuizRenderer from '@/components/QuizRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
-import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
+import { ownerCanonical, resolveArticlePath } from '@/lib/canonical'
 import { getRequestBrand } from '@/lib/brand-server'
 
 export const dynamic = 'force-dynamic'
@@ -20,7 +20,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title:       `${qset.title} | ${name} Practice Questions`,
     description: qset.excerpt,
-    ...(await canonicalMetadata(`/practice-questions/${slug}`)),
+    // Question sets have no owner field: owned by accountingbody.com (D272).
+    ...ownerCanonical('accountingbody', `/practice-questions/${slug}`),
   }
 }
 

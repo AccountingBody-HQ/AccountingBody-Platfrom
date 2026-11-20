@@ -5,7 +5,7 @@
 import React from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { canonicalMetadata } from '@/lib/canonical'
+import { ownerCanonical } from '@/lib/canonical'
 import { getCachedPublishedArticleCount } from '@/lib/db'
 import { formatCountLabel } from '@/lib/job-format'
 import { getRequestBrand } from '@/lib/brand-server'
@@ -17,7 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Accounting Glossary',
     description: 'Your complete reference for accounting and finance terminology. Browse accounting and finance terms by letter or topic — written and reviewed by qualified accountants.',
-    ...(await canonicalMetadata('/glossary')),
+    ...ownerCanonical('accountingbody', '/glossary'),
   }
 }
 

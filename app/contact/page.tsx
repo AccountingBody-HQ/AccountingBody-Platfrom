@@ -1,7 +1,7 @@
 // app/contact/page.tsx
 import type { Metadata } from 'next'
 import ContactForm from './ContactForm'
-import { canonicalMetadata } from '@/lib/canonical'
+import { ownerCanonical } from '@/lib/canonical'
 import { getRequestBrand } from '@/lib/brand-server'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: `Contact ${name} — Get in Touch`,
     description:
       `Have a question about our study platform or professional services? Get in touch with the ${name} team — we reply within 2 business days.`,
-    ...(await canonicalMetadata('/contact')),
+    ...ownerCanonical('accountingbody', '/contact'),
   }
 }
 

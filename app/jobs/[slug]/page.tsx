@@ -10,9 +10,9 @@ import {
   seniorityLabel,
   formatRelativeDate,
   formatAbsoluteDate,
-  getJobCanonicalUrl,
   getCompanyInitials,
 } from '@/lib/job-format'
+import { getJobCanonicalUrl, ownerUrl } from '@/lib/canonical'
 import { formatJobLocation } from '@/app/jobs/listings/jobLocation'
 import { JobPostingStructuredData } from './structured-data'
 import { ApplyBarWithSticky } from './ApplyBarWithSticky'
@@ -53,7 +53,7 @@ export async function generateMetadata({
   const { slug } = await params
   const resolved = await resolveJob(slug)
   if (!resolved) return { title: 'Page Not Found' }
-  const { job, isEthioTax } = resolved
+  const { job } = resolved
   const lifecycle = getJobLifecycleState(job)
 
   // No manual brand suffix here — the root layout's title.template ('%s |
@@ -69,7 +69,8 @@ export async function generateMetadata({
   // sitewide default (alternates.canonical: the homepage), which tells
   // Google every job page's authoritative version is the homepage. See the
   // job-page-fixes report for how many other route types have the same gap.
-  const canonicalUrl = getJobCanonicalUrl(job, isEthioTax)
+  // One owner per job on both views (owner rule D272, lib/canonical.ts).
+  const canonicalUrl = getJobCanonicalUrl(job)
 
   return {
     title,
@@ -112,7 +113,9 @@ export default async function JobDetailPage({
   const brandName = isEthioTax ? 'EthioTax' : 'Accounting Body'
   const brandColor = isEthioTax ? '#1A4731' : '#0C1A3D'
   const lifecycle = getJobLifecycleState(job)
-  const canonicalUrl = getJobCanonicalUrl(job, isEthioTax)
+  // The share link copies the address of the site the visitor is on (not
+  // the canonical), exactly as before.
+  const shareUrl = ownerUrl(isEthioTax ? 'ethiotax' : 'accountingbody', `/jobs/${job.slug}`)
 
   const similarJobs = await getSimilarJobs({
     excludeId: job.id,
@@ -148,7 +151,7 @@ export default async function JobDetailPage({
           {/* 1. Top bar */}
           <div className="flex items-center justify-between pb-[26px]">
             <BackToListingsLink />
-            <ShareButton url={canonicalUrl} jobTitle={job.title} brandColor={brandColor} />
+            <ShareButton url={shareUrl} jobTitle={job.title} brandColor={brandColor} />
           </div>
 
           {/* 2. Identity block */}

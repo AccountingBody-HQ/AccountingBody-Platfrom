@@ -4,14 +4,14 @@ import { headers } from 'next/headers'
 import JobListingsClient from './JobListingsClient'
 import JobSearchHero from './JobSearchHero'
 import { JobListingsStructuredData } from './structured-data'
-import { canonicalMetadata } from '@/lib/canonical'
+import { ownerCanonical } from '@/lib/canonical'
 import { getCachedActiveJobCountries } from '@/lib/jobs'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Accounting & Finance Jobs',
     description: 'Find accounting and finance jobs globally. Search roles for ACCA, CIMA, ICAEW, CPA and AAT qualified professionals across UK, US, Australia, Canada, Singapore and Africa.',
-    ...(await canonicalMetadata('/jobs/listings')),
+    ...ownerCanonical('accountingbody', '/jobs/listings'),
   }
 }
 

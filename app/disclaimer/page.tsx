@@ -2,13 +2,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
-import { canonicalMetadata } from '@/lib/canonical'
+import { ownerCanonical } from '@/lib/canonical'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Disclaimer',
     description: 'Important disclaimers regarding the accuracy and use of content on this platform. Last updated March 2026.',
-    ...(await canonicalMetadata('/disclaimer')),
+    ...ownerCanonical('accountingbody', '/disclaimer'),
   }
 }
 

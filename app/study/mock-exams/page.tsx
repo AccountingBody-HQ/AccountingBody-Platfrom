@@ -4,13 +4,14 @@ import { headers } from 'next/headers'
 import ComingSoonExamCard from '@/components/course/ComingSoonExamCard'
 import type { Metadata } from 'next'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
-import { canonicalMetadata } from '@/lib/canonical'
+import { ownerCanonical } from '@/lib/canonical'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Mock Exams | ETICPA ATQ',
     description: 'Free timed mock exams for the ETICPA ATQ qualification. 50 questions per attempt, drawn from a large question bank. Unlimited attempts.',
-    ...(await canonicalMetadata('/study/mock-exams')),
+    // EthioTax-only page (the Accounting Body view redirects): owned by ethiotax.com (D272).
+    ...ownerCanonical('ethiotax', '/study/mock-exams'),
   }
 }
 

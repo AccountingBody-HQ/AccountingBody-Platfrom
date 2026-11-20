@@ -2,10 +2,10 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import JobsHubClient from './JobsHubClient'
 import { getCachedBrowsableJobsCount } from '@/lib/jobs'
-import { canonicalMetadata } from '@/lib/canonical'
+import { ownerCanonical } from '@/lib/canonical'
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { ...(await canonicalMetadata('/jobs')) }
+  return { ...ownerCanonical('accountingbody', '/jobs') }
 }
 
 export default async function JobsHubPage() {

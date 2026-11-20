@@ -5,7 +5,7 @@ import { getPublicCourseBySlug, getPublishedCourses, levelBadge, capitalize } fr
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { canonicalMetadata } from '@/lib/canonical'
+import { contentOwner, ownerCanonical } from '@/lib/canonical'
 import { getRequestBrand } from '@/lib/brand-server'
 
 export async function generateStaticParams() {
@@ -22,7 +22,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: course.title,
     description: course.metaDescription ?? course.description ?? '',
-    ...(await canonicalMetadata(`/free-courses/${slug}`)),
+    // One owner per course (D272): its confirmed owner, else accountingbody.com.
+    ...ownerCanonical(
+      contentOwner({ canonical_owner: course.canonicalOwner, show_on_sites: course.showOnSites }),
+      `/free-courses/${slug}`,
+    ),
   }
 }
 

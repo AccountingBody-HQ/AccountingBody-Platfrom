@@ -128,15 +128,9 @@ export function getCompanyColor(name: string): string {
   return COMPANY_AVATAR_COLORS[Math.abs(hash) % COMPANY_AVATAR_COLORS.length]
 }
 
-// The single source for a job's canonical URL — app/jobs/[slug]/page.tsx
-// calls this from both generateMetadata (for <link rel="canonical"> /
-// openGraph.url) and the page body (to hand the exact same string to
-// ShareButton), rather than each computing its own copy of the
-// baseUrl+slug template and risking the two silently drifting apart.
-export function getJobCanonicalUrl(job: Pick<Job, 'slug'>, isEthioTax: boolean): string {
-  const baseUrl = isEthioTax ? 'https://ethiotax.com' : 'https://accountingbody.com'
-  return `${baseUrl}/jobs/${job.slug}`
-}
+// A job's canonical URL lives in lib/canonical.ts (getJobCanonicalUrl, owner
+// rule D272). It is not here because this file is also imported by client
+// components and lib/canonical.ts is server-only.
 
 // Rounds a real job count DOWN to a round display figure — never up, so the
 // displayed number is never a claim the true count doesn't back up (e.g. an

@@ -20,7 +20,7 @@ vi.mock('react', async (importOriginal) => ({
   cache: <T extends (...args: never[]) => unknown>(fn: T): T => fn,
 }))
 vi.mock('@/lib/canonical', () => ({
-  canonicalMetadata: async () => ({}),
+  ownerCanonical: () => ({}),
 }))
 vi.mock('@/lib/db', () => ({
   getArticlesByCategory: vi.fn(async () => []),

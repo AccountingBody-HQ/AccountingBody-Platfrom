@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { getJobSitemapEntries } from '@/lib/jobs'
-import { resolveArticleCanonicalUrl } from '@/lib/canonical'
+import { contentOwner, jobCanonicalOwner, resolveArticleCanonicalUrl } from '@/lib/canonical'
 
 const ET_BASE_URL = 'https://ethiotax.com'
 
@@ -37,6 +37,11 @@ function url(path: string, priority: number, changefreq: string, lastmod?: Date)
   </url>`
 }
 
+// Lists only what ethiotax.com owns (owner rule D272): the EthioTax pages,
+// the owner-pending pages (get-help, firms-freelancers, terms — unchanged
+// until their owner is decided), EthioTax-owned articles and EthioTax-owned
+// jobs. Shared Accounting Body pages are listed in accountingbody.com's
+// sitemaps only.
 export async function GET() {
   const staticUrls = [
     // Core
@@ -50,15 +55,11 @@ export async function GET() {
     url('/get-help/company-formation',             0.9,  'weekly'),
     url('/get-help/audit-assurance',               0.9,  'weekly'),
     url('/get-help/financial-planning-advisory',   0.9,  'weekly'),
-    // Jobs
-    url('/jobs',                                   0.8,  'weekly'),
-    url('/jobs/listings',                          0.9,  'daily'),
     // About & info
     url('/how-it-works',                           0.8,  'monthly'),
     url('/about-ethiotax',                         0.7,  'monthly'),
     url('/faq',                                    0.7,  'monthly'),
     // Study
-    url('/study',                                  0.8,  'weekly'),
     url('/study/eticpa',                           0.85, 'weekly'),
     // ETICPA ATQ Level 1
     url('/study/eticpa/atq/level-1',                              0.85, 'weekly'),
@@ -75,34 +76,12 @@ export async function GET() {
     url('/study/eticpa/atq/level-2/ethiopian-public-sector-accounting',   0.85, 'weekly'),
     // ETICPA CPA
     url('/study/eticpa/cpa',                       0.8,  'monthly'),
-    url('/study/acca',                             0.8,  'weekly'),
-    url('/study/cima',                             0.8,  'weekly'),
-    url('/study/aat',                              0.8,  'weekly'),
-    // Learning
-    url('/free-courses',                           0.75, 'weekly'),
-    url('/practice-questions',                     0.8,  'daily'),
-    url('/mock-exams',                             0.65, 'monthly'),
-    // Content
-    url('/articles',                               0.8,  'daily'),
-    url('/glossary',                               0.7,  'monthly'),
-    url('/dictionary',                             0.65, 'monthly'),
-    url('/calculators',                            0.7,  'monthly'),
-    url('/search',                                 0.6,  'monthly'),
-    // Firms & talent
+    // Firms & freelancers
     url('/firms-freelancers',                      0.7,  'weekly'),
     url('/firms-freelancers/join',                 0.65, 'monthly'),
     url('/firms-freelancers/directory',            0.6,  'monthly'),
-    url('/hire-talent',                            0.7,  'weekly'),
-    url('/hire-talent/jobs',                       0.65, 'weekly'),
-    url('/hire-talent/post-a-job',                 0.6,  'monthly'),
-    // Contact
-    url('/contact',                                0.5,  'monthly'),
     // Legal
-    url('/privacy-policy',                         0.3,  'yearly'),
     url('/terms',                                  0.3,  'yearly'),
-    url('/cookie-policy',                          0.3,  'yearly'),
-    url('/accessibility',                          0.3,  'yearly'),
-    url('/disclaimer',                             0.3,  'yearly'),
   ]
 
   const supabase = getServerSupabase('publicRead')
@@ -113,9 +92,11 @@ export async function GET() {
     .eq('canonical_owner', 'ethiotax')
     .order('updated_at', { ascending: false })
 
-  const articleUrls = (etArticles ?? []).map(a =>
+  // Only articles whose one owner is ethiotax.com (the same rule the article
+  // pages use), so the sitemap and the page always agree.
+  const articleUrls = (etArticles ?? []).filter(a => contentOwner(a) === 'ethiotax').map(a =>
     `  <url>
-    <loc>${resolveArticleCanonicalUrl(a, ET_BASE_URL)}</loc>
+    <loc>${resolveArticleCanonicalUrl(a)}</loc>
     <lastmod>${new Date(a.updated_at).toISOString()}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
@@ -131,7 +112,10 @@ export async function GET() {
       headers: { 'Cache-Control': 'no-store' },
     })
   }
-  const jobUrls = jobResult.entries.map(j => url(`/jobs/${j.slug}`, 0.7, 'daily', j.lastModified))
+  // Only jobs whose one owner is ethiotax.com (the job page's own rule).
+  const jobUrls = jobResult.entries
+    .filter(j => jobCanonicalOwner(j) === 'ethiotax')
+    .map(j => url(`/jobs/${j.slug}`, 0.7, 'daily', j.lastModified))
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

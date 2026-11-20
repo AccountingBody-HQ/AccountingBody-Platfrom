@@ -2,12 +2,12 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import { getPublishedArticlesForSite, type ArticleSummary } from '@/lib/articles-list'
-import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
+import { ownerCanonical, resolveArticlePath } from '@/lib/canonical'
 
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { ...(await canonicalMetadata('/articles')) }
+  return { ...ownerCanonical('accountingbody', '/articles') }
 }
 
 export default async function ArticlesPage() {
