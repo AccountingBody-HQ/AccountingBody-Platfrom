@@ -472,6 +472,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           </Link>
           <Link
             href="/wa"
+            prefetch={false}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 h-13 px-7 rounded-xl text-base font-semibold transition-all hover:opacity-80 border-2 text-white"
@@ -689,6 +690,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       </Link>
       <Link
         href="/wa"
+        prefetch={false}
         target="_blank"
         rel="noopener noreferrer"
         className="h-12 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-colors w-full"
@@ -748,7 +750,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
         </svg>
       </Link>
-      <Link href="/wa" target="_blank" rel="noopener noreferrer"
+      <Link href="/wa" prefetch={false} target="_blank" rel="noopener noreferrer"
         className="inline-flex items-center justify-center gap-2 rounded-xl text-sm font-semibold border transition-colors hover:bg-white/10"
         style={{ borderColor: 'rgba(255,255,255,0.25)', color: 'white', width: '280px', minHeight: '56px' }}>
         WhatsApp us

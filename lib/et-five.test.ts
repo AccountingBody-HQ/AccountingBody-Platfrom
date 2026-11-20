@@ -103,6 +103,12 @@ describe('E3: the WhatsApp menu item is not prefetched', () => {
     expect(src.match(/\{\.\.\.\(link\.noPrefetch \? \{ prefetch: false \} : \{\}\)\}/g)?.length).toBe(2)
     expect(src).not.toMatch(/prefetch=\{false\}/)
   })
+  it('the three home-page WhatsApp links are not prefetched (WA-1)', () => {
+    const home = read('app/page.tsx')
+    expect(home.match(/href="\/wa"/g)?.length).toBe(3)
+    expect(home.match(/href="\/wa"\s+prefetch=\{false\}/g)?.length).toBe(3)
+    expect(home.match(/prefetch=\{false\}/g)?.length).toBe(3)
+  })
 })
 
 describe('E4: the ETICPA hero glows are the one EthioTax glow', () => {
