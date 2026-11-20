@@ -9,7 +9,7 @@ import { headers } from 'next/headers'
 import { getFeaturedArticlesForSite, type FeaturedArticle } from '@/lib/featured-articles'
 import EmailSignupForm from '@/components/EmailSignupForm'
 import HomepageJobSearch from '@/components/HomepageJobSearch'
-import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
+import { ownerCanonical, resolveArticlePath } from '@/lib/canonical'
 import { getCachedBrowsableJobsCount } from '@/lib/jobs'
 import { getCachedPublishedArticleCount, getCachedPublishedQuestionCount } from '@/lib/db'
 import { formatJobCountLabel, formatCountLabel } from '@/lib/job-format'
@@ -19,8 +19,15 @@ import { formatJobCountLabel, formatCountLabel } from '@/lib/job-format'
 // og:url that app/layout.tsx used to supply sitewide (and was deleted from
 // there deliberately) — the homepage is the one route where that inherited
 // value happened to be correct, so it still needs its own now.
+//
+// The home page is split (owner rule D272): each view shows its own home
+// content, so each names its own domain. It keys on x-et-platform exactly as
+// app/layout.tsx does. A forged header shows the EthioTax home content AND
+// names ethiotax.com, so the tag always matches the content served.
 export async function generateMetadata(): Promise<Metadata> {
-  return { ...(await canonicalMetadata('/')) }
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  return { ...ownerCanonical(isEthioTax ? 'ethiotax' : 'accountingbody', '/') }
 }
 
 

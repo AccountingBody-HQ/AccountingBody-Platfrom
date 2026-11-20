@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getJobSitemapChunk } from '@/lib/jobs'
+import { jobCanonicalOwner } from '@/lib/canonical'
 import { parseJobChunkFile, buildUrlset } from '@/lib/sitemap-chunks'
 
 const AB_BASE_URL = 'https://accountingbody.com'
@@ -37,8 +38,10 @@ export async function GET(
     })
   }
 
+  // Only jobs whose one owner is accountingbody.com (owner rule D272; the
+  // job page's own rule), so a job is never listed by both domains.
   const xml = buildUrlset(
-    result.entries.map(job => ({
+    result.entries.filter(job => jobCanonicalOwner(job) === 'accountingbody').map(job => ({
       url:             `${AB_BASE_URL}/jobs/${job.slug}`,
       lastModified:    job.lastModified,
       changeFrequency: 'daily' as const,

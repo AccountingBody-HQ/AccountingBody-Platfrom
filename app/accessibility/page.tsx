@@ -2,7 +2,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
-import { canonicalMetadata } from '@/lib/canonical'
+import { ownerCanonical } from '@/lib/canonical'
 
 // One brand switch for the page and its metadata (the brand is keyed on the x-et-platform request header).
 async function brand() {
@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Accessibility Statement',
     description: `${platformName} accessibility statement: the standard we aim to meet, what we have done, known limitations and how to contact us.`,
-    ...(await canonicalMetadata('/accessibility')),
+    ...ownerCanonical('accountingbody', '/accessibility'),
   }
 }
 

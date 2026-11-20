@@ -4,7 +4,7 @@ import ScrollToTop from '@/components/ScrollToTop'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getArticlesByCategory } from '@/lib/db'
-import { canonicalMetadata } from '@/lib/canonical'
+import { ownerCanonical } from '@/lib/canonical'
 import { OTHER_KEY, groupAlphabetically, pickLetter, letterHref } from '@/lib/study-letter'
 
 // One database read per request, shared by generateMetadata and the page.
@@ -70,7 +70,7 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
   return {
     title: `${meta.name} Study Notes`,
     description: meta.description,
-    ...(await canonicalMetadata(path)),
+    ...ownerCanonical('accountingbody', path),
   }
 }
 

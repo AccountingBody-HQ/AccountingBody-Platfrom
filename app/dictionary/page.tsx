@@ -5,7 +5,7 @@
 import React from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
+import { ownerCanonical, resolveArticlePath } from '@/lib/canonical'
 import {
   getDictionaryArticlesByLetter,
   getDictionaryArticlesByCategory,
@@ -32,7 +32,7 @@ export async function generateMetadata({
       description: `Browse accounting terms and study notes in ${title}.`,
       // Filter/letter query params consolidate onto the base path — they
       // don't each get their own canonical.
-      ...(await canonicalMetadata('/dictionary')),
+      ...ownerCanonical('accountingbody', '/dictionary'),
     }
   }
   return {
@@ -42,7 +42,7 @@ export async function generateMetadata({
     description: letter
       ? `Browse accounting terms starting with ${letter} — definitions, study notes, and exam guides.`
       : 'Browse our complete accounting dictionary — terms explained clearly for students and professionals.',
-    ...(await canonicalMetadata('/dictionary')),
+    ...ownerCanonical('accountingbody', '/dictionary'),
   }
 }
 

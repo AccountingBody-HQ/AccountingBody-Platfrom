@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import HireTalentClient from './HireTalentClient'
-import { canonicalMetadata } from '@/lib/canonical'
+import { ownerCanonical } from '@/lib/canonical'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Hire Talent | Accounting & Finance Recruitment',
     description: 'Tell us your hiring need. We find vetted accounting and finance professionals for permanent and contract roles. 90-day guarantee on every placement.',
-    ...(await canonicalMetadata('/jobs/hire-talent')),
+    ...ownerCanonical('accountingbody', '/jobs/hire-talent'),
   }
 }
 

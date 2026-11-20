@@ -44,14 +44,14 @@ describe('/et-sitemap GET', () => {
     expect(jobs.getJobSitemapEntries).toHaveBeenCalledWith('et')
   })
 
-  it('lists every job with the usual hourly cache when the read works', async () => {
+  it('lists every job ethiotax.com owns with the usual hourly cache when the read works', async () => {
     const { GET } = await import('./route')
     const jobs = await import('@/lib/jobs')
     vi.mocked(jobs.getJobSitemapEntries).mockResolvedValue({
       ok: true,
       entries: [
-        { slug: 'job-a', lastModified: new Date('2026-11-01T00:00:00.000Z') },
-        { slug: 'job-b', lastModified: new Date('2026-11-02T00:00:00.000Z') },
+        { slug: 'job-a', lastModified: new Date('2026-11-01T00:00:00.000Z'), platform: ['et'], canonical_owner: 'accountingbody' },
+        { slug: 'job-b', lastModified: new Date('2026-11-02T00:00:00.000Z'), platform: ['ab', 'et'], canonical_owner: 'ethiotax' },
       ],
     })
 
@@ -64,7 +64,8 @@ describe('/et-sitemap GET', () => {
     expect(xml).toContain('<loc>https://ethiotax.com/jobs/job-a</loc>')
     expect(xml).toContain('<loc>https://ethiotax.com/jobs/job-b</loc>')
     expect(xml).toContain('<lastmod>2026-11-02T00:00:00.000Z</lastmod>')
-    expect(xml.match(/<url>/g)).toHaveLength(51 + 2)
+    // 29 fixed pages: 17 EthioTax pages + 12 owner-pending pages (ET-9, D272).
+    expect(xml.match(/<url>/g)).toHaveLength(29 + 2)
   })
 
   it('still answers 200 for a real empty job list', async () => {
@@ -75,6 +76,6 @@ describe('/et-sitemap GET', () => {
     const res = await GET()
 
     expect(res.status).toBe(200)
-    expect((await res.text()).match(/<url>/g)).toHaveLength(51)
+    expect((await res.text()).match(/<url>/g)).toHaveLength(29)
   })
 })

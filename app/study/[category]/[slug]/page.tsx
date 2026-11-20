@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   if (stored === null) return { title: 'Page Not Found' }
   const article = await getArticleBySlug(stored)
   if (!article) return { title: 'Page Not Found' }
-  const { alternates, openGraph } = await resolveArticleCanonical(article)
+  const { alternates, openGraph } = resolveArticleCanonical(article)
   return {
     title:       article.title,
     description: article.excerpt,

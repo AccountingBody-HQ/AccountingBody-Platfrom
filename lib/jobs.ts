@@ -649,9 +649,12 @@ export async function getJobById(id: string): Promise<Job | null> {
 // different fetch (out of scope here).
 export async function getJobBySlug(slug: string): Promise<Job | null> {
   const supabase = getSupabase()
+  // canonical_owner is added here only (not to JOB_COLUMNS, which is also
+  // the search RPC's return shape): the job page needs it for its one
+  // canonical owner (lib/canonical.ts jobCanonicalOwner, D272).
   const { data, error, status } = await supabase
     .from('jobs')
-    .select(JOB_COLUMNS)
+    .select(`${JOB_COLUMNS}, canonical_owner`)
     .eq('slug', slug)
     .in('status', ['active', 'expired'])
     .single()
@@ -1553,10 +1556,25 @@ export function getJobLifecycleState(job: Pick<Job, 'expires_at'>): JobLifecycle
   return daysSinceExpiry > ARCHIVE_THRESHOLD_DAYS ? 'archived' : 'stale'
 }
 
+// platform and canonical_owner let each sitemap keep only the jobs its
+// domain owns (lib/canonical.ts jobCanonicalOwner, D272).
 export interface JobSitemapEntry {
   slug: string
   lastModified: Date
+  platform: string[]
+  canonical_owner: string
 }
+
+type JobSitemapRow = {
+  id: string
+  slug: string
+  expires_at: string | null
+  published_at: string | null
+  created_at: string
+  platform: string[]
+  canonical_owner: string
+}
+const JOB_SITEMAP_COLUMNS = 'id, slug, expires_at, published_at, created_at, platform, canonical_owner'
 
 // Shared by app/sitemap.ts (platform 'ab') and app/et-sitemap/route.ts
 // (platform 'et') — reused rather than duplicated so the two sitemaps can't
@@ -1593,13 +1611,13 @@ export async function getJobSitemapEntries(
   platform: string
 ): Promise<{ ok: true; entries: JobSitemapEntry[] } | { ok: false }> {
   const supabase = getSupabase()
-  const allRows: { id: string; slug: string; expires_at: string | null; published_at: string | null; created_at: string }[] = []
+  const allRows: JobSitemapRow[] = []
   let lastId: string | null = null
 
   for (let page = 0; page < JOB_SITEMAP_MAX_PAGES; page++) {
     let query = supabase
       .from('jobs')
-      .select('id, slug, expires_at, published_at, created_at')
+      .select(JOB_SITEMAP_COLUMNS)
       .in('status', ['active', 'expired'])
       .contains('platform', [platform])
 
@@ -1648,6 +1666,8 @@ export async function getJobSitemapEntries(
       .map(job => ({
         slug: job.slug,
         lastModified: new Date(job.published_at ?? job.created_at),
+        platform: job.platform,
+        canonical_owner: job.canonical_owner,
       })),
   }
 }
@@ -1675,13 +1695,13 @@ export async function getJobSitemapChunk(
 ): Promise<{ ok: true; entries: JobSitemapEntry[] } | { ok: false }> {
   const supabase = getSupabase()
   const { lower, upper } = bucketBounds(bucket)
-  const allRows: { id: string; slug: string; expires_at: string | null; published_at: string | null; created_at: string }[] = []
+  const allRows: JobSitemapRow[] = []
   let lastId: string | null = null
 
   for (let page = 0; page < JOB_CHUNK_MAX_PAGES; page++) {
     let query = supabase
       .from('jobs')
-      .select('id, slug, expires_at, published_at, created_at')
+      .select(JOB_SITEMAP_COLUMNS)
       .in('status', ['active', 'expired'])
       .contains('platform', [platform])
       .gte('id', lower)
@@ -1728,6 +1748,8 @@ export async function getJobSitemapChunk(
       .map(job => ({
         slug: job.slug,
         lastModified: new Date(job.published_at ?? job.created_at),
+        platform: job.platform,
+        canonical_owner: job.canonical_owner,
       })),
   }
 }

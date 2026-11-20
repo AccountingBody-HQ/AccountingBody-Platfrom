@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import type { Metadata } from 'next'
-import { canonicalMetadata } from '@/lib/canonical'
+import { ownerCanonical } from '@/lib/canonical'
 import { getRequestBrand } from '@/lib/brand-server'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -9,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `How It Works | ${name} Recruitment`,
     description: 'A fully managed recruitment service. We sit in the middle of every placement — candidates never deal with employers directly.',
-    ...(await canonicalMetadata('/jobs/how-it-works')),
+    ...ownerCanonical('accountingbody', '/jobs/how-it-works'),
   }
 }
 

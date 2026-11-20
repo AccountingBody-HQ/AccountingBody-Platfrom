@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import type { Metadata } from 'next'
-import { canonicalMetadata } from '@/lib/canonical'
+import { ownerCanonical } from '@/lib/canonical'
 import { getRequestBrand } from '@/lib/brand-server'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -9,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `Our Guarantee | ${name} Recruitment`,
     description: 'Every permanent placement carries a 90-day replacement guarantee. If it does not work out, we conduct a replacement search at no additional cost.',
-    ...(await canonicalMetadata('/jobs/guarantee')),
+    ...ownerCanonical('accountingbody', '/jobs/guarantee'),
   }
 }
 

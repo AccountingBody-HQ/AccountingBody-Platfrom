@@ -11,7 +11,7 @@ import CourseSidebar from '@/components/course/CourseSidebar'
 import MobileNavDrawer from '@/components/course/MobileNavDrawer'
 import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
-import { canonicalMetadata, resolveArticlePath } from '@/lib/canonical'
+import { contentOwner, ownerCanonical, resolveArticlePath } from '@/lib/canonical'
 import { brandName } from '@/lib/brand'
 
 export async function generateStaticParams() {
@@ -40,7 +40,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: `${data.lesson.title} — ${data.course.title}`,
     description: data.lesson.articles?.[0]?.excerpt ?? data.course.description ?? '',
-    ...(await canonicalMetadata(`/free-courses/${slug}/learn/${lessonSlug}`)),
+    // A lesson takes its course's one owner (D272).
+    ...ownerCanonical(
+      contentOwner({ canonical_owner: data.course.canonicalOwner, show_on_sites: data.course.showOnSites }),
+      `/free-courses/${slug}/learn/${lessonSlug}`,
+    ),
   }
 }
 

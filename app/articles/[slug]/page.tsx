@@ -6,7 +6,7 @@ import { getArticleBySlug } from '@/lib/db'
 import { resolveLegacyRenamedPath } from '@/lib/legacy-renamed-path'
 import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
-import { resolveArticleCanonical } from '@/lib/canonical'
+import { articleTitleOwner, resolveArticleCanonical } from '@/lib/canonical'
 import { toStoredSlug } from '@/lib/slug-param'
 
 export const revalidate = 0
@@ -17,11 +17,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (stored === null) return { title: 'Page Not Found' }
   const article = await getArticleBySlug(stored)
   if (!article) return { title: 'Page Not Found' }
-  const { alternates, openGraph } = await resolveArticleCanonical(article)
+  const { alternates, openGraph } = resolveArticleCanonical(article)
   const canonicalUrl = openGraph.url
   const metaTitle = article.seo_title || article.title
   const metaDesc  = article.seo_description || article.excerpt
-  const brand     = canonicalUrl.includes('ethiotax.com') ? 'EthioTax' : 'Accounting Body'
+  // The title brand keeps its own rule (unchanged); the canonical follows the owner (D272).
+  const brand     = (await articleTitleOwner(article)) === 'ethiotax' ? 'EthioTax' : 'Accounting Body'
   return {
     title:       `${metaTitle} | ${brand}`,
     description: metaDesc,

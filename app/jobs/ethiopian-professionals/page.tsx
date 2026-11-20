@@ -2,13 +2,14 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { canonicalMetadata } from '@/lib/canonical'
+import { ownerCanonical } from '@/lib/canonical'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Ethiopian Finance Professionals | EthioTax Recruitment',
     description: 'EthioTax places qualified Ethiopian-origin finance professionals in permanent and contract roles across the UK, US, Canada and beyond.',
-    ...(await canonicalMetadata('/jobs/ethiopian-professionals')),
+    // EthioTax-only page (the Accounting Body view redirects): owned by ethiotax.com (D272).
+    ...ownerCanonical('ethiotax', '/jobs/ethiopian-professionals'),
   }
 }
 

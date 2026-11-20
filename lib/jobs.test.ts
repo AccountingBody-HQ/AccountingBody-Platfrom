@@ -146,7 +146,7 @@ describe('getJobSitemapEntries — keyset pagination', () => {
       expect(c.order).toEqual(['id', { ascending: true }])
       expect(c.in).toEqual(['status', ['active', 'expired']])
       expect(c.contains).toEqual(['platform', ['et']])
-      expect(c.select).toBe('id, slug, expires_at, published_at, created_at')
+      expect(c.select).toBe('id, slug, expires_at, published_at, created_at, platform, canonical_owner')
     }
   })
 

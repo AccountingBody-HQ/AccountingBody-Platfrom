@@ -75,7 +75,8 @@ describe('accessibility statement text', () => {
     expect(count(/'accountingbody\.com'/g)).toBe(1)
     expect(count(/'ethiotax\.com'/g)).toBe(1)
     // Brand words anywhere in the file (the isEthioTax flag and the header value aside): only the four switch values.
-    const rest = src.replace(/isEthioTax/g, '').replace("=== 'ethiotax'", '')
+    // The canonical owner id (ET-9, D272) is not a brand mention either.
+    const rest = src.replace(/isEthioTax/g, '').replace("=== 'ethiotax'", '').replace("ownerCanonical('accountingbody', ", '')
     const words = rest.match(/accountingbody\.com|ethiotax\.com|Accounting ?Body|Ethio ?Tax/gi) || []
     expect(words.length).toBe(4)
     expect(flat).toMatch(/isEthioTax \? 'EthioTax' : 'Accounting Body'/)

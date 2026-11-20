@@ -5,7 +5,7 @@ import { headers } from 'next/headers'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 import { PracticeQuestionsPagination } from './PracticeQuestionsPagination'
 import { buildPracticeQuestionsUrl } from './buildUrl'
-import { canonicalMetadata } from '@/lib/canonical'
+import { ownerCanonical } from '@/lib/canonical'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title:       'Practice Questions',
     description: 'Exam-standard practice questions for accounting qualifications. Fresh random sets every session.',
-    ...(await canonicalMetadata('/practice-questions')),
+    ...ownerCanonical('accountingbody', '/practice-questions'),
   }
 }
 

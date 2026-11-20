@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getPagesSitemapContent } from '@/lib/db'
-import { resolveArticleCanonicalUrl } from '@/lib/canonical'
+import { contentOwner, resolveArticleCanonicalUrl } from '@/lib/canonical'
 import { buildUrlset, type UrlsetEntry } from '@/lib/sitemap-chunks'
 
 const AB_BASE_URL = 'https://accountingbody.com'
@@ -56,8 +56,10 @@ export async function GET() {
 
   const entries: UrlsetEntry[] = [
     ...staticPages,
-    ...articles.map(a => ({
-      url:             resolveArticleCanonicalUrl(a, AB_BASE_URL),
+    // Only articles whose one owner is accountingbody.com (owner rule D272;
+    // the same rule the article pages use).
+    ...articles.filter(a => contentOwner(a) === 'accountingbody').map(a => ({
+      url:             resolveArticleCanonicalUrl(a),
       lastModified:    new Date(a.updated_at ?? Date.now()),
       changeFrequency: 'monthly' as const,
       priority:        0.75,

@@ -2,13 +2,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
-import { canonicalMetadata } from '@/lib/canonical'
+import { ownerCanonical } from '@/lib/canonical'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Privacy Policy',
     description: 'How we collect, use, and protect your personal data. Last updated November 2026.',
-    ...(await canonicalMetadata('/privacy-policy')),
+    ...ownerCanonical('accountingbody', '/privacy-policy'),
   }
 }
 
