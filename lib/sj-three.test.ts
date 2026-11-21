@@ -22,8 +22,11 @@ const SALARY_CLASS = [
   "                          similarSalary ? 'text-gold-700' : 'text-slate-400'",
   '                        }`}',
 ].join('\n')
-// The page as it was before SJ-3 (main 6999779): 314 lines, 14,684 bytes.
-const BEFORE_SHA16 = 'ccecb3ea74edc96c'
+// The page without SJ-3's one addition. Was 'ccecb3ea74edc96c' (main
+// 6999779, 314 lines, before SJ-3); re-pinned by JP-1 (owner decision D55:
+// the closed-job notice, no apply block or JobPosting on closed pages),
+// 354 lines, 16,564 bytes with SJ-3's addition.
+const BEFORE_SHA16 = '564bbf106d0030f7'
 
 function similarBlock(src: string): string {
   const start = src.indexOf('Similar current roles')

@@ -681,10 +681,12 @@ export async function getJobBySlug(slug: string): Promise<Job | null> {
   const supabase = getSupabase()
   // canonical_owner is added here only (not to JOB_COLUMNS, which is also
   // the search RPC's return shape): the job page needs it for its one
-  // canonical owner (lib/canonical.ts jobCanonicalOwner, D272).
+  // canonical owner (lib/canonical.ts jobCanonicalOwner, D272). status and
+  // closed_at likewise, for getJobLifecycleState only; the page does not
+  // hand them on.
   const { data, error, status } = await supabase
     .from('jobs')
-    .select(`${JOB_COLUMNS}, canonical_owner`)
+    .select(`${JOB_COLUMNS}, canonical_owner, status, closed_at`)
     .eq('slug', slug)
     .in('status', ['active', 'expired'])
     .single()
@@ -1463,26 +1465,58 @@ export async function createJob(data: JobInsert): Promise<Job> {
 
 // ── Lifecycle state (derived, read-only — no cron, no stored state) ────────
 //
-// Distinct from the `status` column's own 'active'/'expired'/'closed'/etc
-// values (see JobStatus above) — this is purely a function of expires_at at
-// the moment it's called, for the public job detail page to decide what to
-// render. Named 'stale' rather than 'closed' specifically so it's never
-// confused with the DB status value 'closed' (employer self-withdrawal via
-// closeJobByManageToken), which this function does not look at at all. A
-// future provider re-verification feature that wants to change how state is
-// decided should edit only this function.
+// The one rule (owner decision D55) for whether a job is open, used by the
+// job page (notice, apply block, JobPosting data, robots) and by both job
+// sitemaps. Nothing else may decide that for those uses.
+//
+//  - 'open': status is 'active' AND it has no end date yet (expires_at null
+//    or still in the future).
+//  - 'closed': anything else, for the first CLOSED_NOINDEX_AFTER_DAYS days
+//    after its end date (still indexable; the page says it has closed).
+//  - 'closed_noindex': closed for longer than that.
+//
+// The DB status value 'closed' (employer self-withdrawal) never reaches the
+// job page: getJobBySlug reads only 'active' and 'expired' rows. `now` is a
+// parameter so the rule is computed at request time, never inside a cache.
 
-export type JobLifecycleState = 'active' | 'stale' | 'archived'
+export type JobLifecycleState = 'open' | 'closed' | 'closed_noindex'
 
-const ARCHIVE_THRESHOLD_DAYS = 365
+export const CLOSED_NOINDEX_AFTER_DAYS = 14
 
-export function getJobLifecycleState(job: Pick<Job, 'expires_at'>): JobLifecycleState {
-  if (!job.expires_at) return 'active'
-  const expiryMs = new Date(job.expires_at).getTime()
-  const nowMs = Date.now()
-  if (expiryMs > nowMs) return 'active'
-  const daysSinceExpiry = (nowMs - expiryMs) / (1000 * 60 * 60 * 24)
-  return daysSinceExpiry > ARCHIVE_THRESHOLD_DAYS ? 'archived' : 'stale'
+type JobLifecycleFields = Pick<Job, 'status' | 'expires_at' | 'closed_at'>
+
+const DAY_MS = 24 * 60 * 60 * 1000
+
+function isOpenJob(job: JobLifecycleFields, now: number): boolean {
+  return job.status === 'active' && (job.expires_at === null || Date.parse(job.expires_at) > now)
+}
+
+// When a closed job stopped taking applications, or null for an open job or
+// one with no known date.
+//  - status 'active' but past its expiry: expires_at (a closed_at left over
+//    from an earlier listing period is not this one's end).
+//  - any other status: the earliest of expires_at (when already passed) and
+//    closed_at. After a normal expiry closed_at is the expiry run's stamp a
+//    little after expires_at, so this is expires_at; after an early close
+//    (admin or provider withdrawal) it is closed_at.
+export function getJobEndDate(job: JobLifecycleFields, now: number = Date.now()): string | null {
+  if (isOpenJob(job, now)) return null
+  const expiresAt = job.expires_at
+  const passedExpiry = expiresAt !== null && Date.parse(expiresAt) <= now ? expiresAt : null
+  if (job.status === 'active') return passedExpiry
+  const closedAt = job.closed_at
+  if (passedExpiry !== null && closedAt !== null) {
+    return Date.parse(closedAt) < Date.parse(passedExpiry) ? closedAt : passedExpiry
+  }
+  return passedExpiry ?? closedAt
+}
+
+export function getJobLifecycleState(job: JobLifecycleFields, now: number = Date.now()): JobLifecycleState {
+  if (isOpenJob(job, now)) return 'open'
+  const endDate = getJobEndDate(job, now)
+  // No known end date (none today): closed, but it cannot be aged.
+  if (endDate === null) return 'closed'
+  return now - Date.parse(endDate) > CLOSED_NOINDEX_AFTER_DAYS * DAY_MS ? 'closed_noindex' : 'closed'
 }
 
 // platform and canonical_owner let each sitemap keep only the jobs its
@@ -1497,23 +1531,27 @@ export interface JobSitemapEntry {
 type JobSitemapRow = {
   id: string
   slug: string
+  status: JobStatus
   expires_at: string | null
+  closed_at: string | null
   published_at: string | null
   created_at: string
   platform: string[]
   canonical_owner: string
 }
-const JOB_SITEMAP_COLUMNS = 'id, slug, expires_at, published_at, created_at, platform, canonical_owner'
+const JOB_SITEMAP_COLUMNS = 'id, slug, status, expires_at, closed_at, published_at, created_at, platform, canonical_owner'
 
-// Shared by app/sitemap.ts (platform 'ab') and app/et-sitemap/route.ts
-// (platform 'et') — reused rather than duplicated so the two sitemaps can't
-// drift on the lifecycle rule. Same status-filter broadening as
-// getJobBySlug: the daily expire-jobs cron flips a job's status to
-// 'expired' once expires_at passes, so a 'stale' job (still meant to be
-// indexable) will very often already be status='expired' — filtering to
-// status='active' alone would silently drop every stale job from the
-// sitemap. 'archived' jobs are excluded here (not just left to the page's
-// own noindex) so the sitemap itself never contradicts what the page says.
+// Both job sitemaps list OPEN jobs only (owner decision D55: a job leaves
+// the sitemap as soon as it closes). The query asks for status 'active' and
+// no passed expiry, so closed rows are not even read; getJobLifecycleState,
+// with the same `now`, then has the final say, so the sitemaps and the job
+// page always agree.
+function openJobsExpiryFilter(nowMs: number): string {
+  return `expires_at.is.null,expires_at.gt.${new Date(nowMs).toISOString()}`
+}
+
+// getJobSitemapEntries is used by app/et-sitemap/route.ts (platform 'et');
+// the Accounting Body job sitemaps use getJobSitemapChunk below.
 // Page size is deliberately 1,000 — the documented PostgREST default —
 // rather than whatever this Supabase project's "Max Rows" API setting
 // happens to be today (observed: 5,000, itself just a dashboard value
@@ -1540,6 +1578,7 @@ export async function getJobSitemapEntries(
   platform: string
 ): Promise<{ ok: true; entries: JobSitemapEntry[] } | { ok: false }> {
   const supabase = getSupabase()
+  const nowMs = Date.now()
   const allRows: JobSitemapRow[] = []
   let lastId: string | null = null
 
@@ -1547,7 +1586,8 @@ export async function getJobSitemapEntries(
     let query = supabase
       .from('jobs')
       .select(JOB_SITEMAP_COLUMNS)
-      .in('status', ['active', 'expired'])
+      .eq('status', 'active')
+      .or(openJobsExpiryFilter(nowMs))
       .contains('platform', [platform])
 
     if (lastId !== null) {
@@ -1591,7 +1631,7 @@ export async function getJobSitemapEntries(
   return {
     ok: true,
     entries: allRows
-      .filter(job => getJobLifecycleState(job) !== 'archived')
+      .filter(job => getJobLifecycleState(job, nowMs) === 'open')
       .map(job => ({
         slug: job.slug,
         lastModified: new Date(job.published_at ?? job.created_at),
@@ -1624,6 +1664,7 @@ export async function getJobSitemapChunk(
 ): Promise<{ ok: true; entries: JobSitemapEntry[] } | { ok: false }> {
   const supabase = getSupabase()
   const { lower, upper } = bucketBounds(bucket)
+  const nowMs = Date.now()
   const allRows: JobSitemapRow[] = []
   let lastId: string | null = null
 
@@ -1631,7 +1672,8 @@ export async function getJobSitemapChunk(
     let query = supabase
       .from('jobs')
       .select(JOB_SITEMAP_COLUMNS)
-      .in('status', ['active', 'expired'])
+      .eq('status', 'active')
+      .or(openJobsExpiryFilter(nowMs))
       .contains('platform', [platform])
       .gte('id', lower)
 
@@ -1673,7 +1715,7 @@ export async function getJobSitemapChunk(
   return {
     ok: true,
     entries: allRows
-      .filter(job => getJobLifecycleState(job) !== 'archived')
+      .filter(job => getJobLifecycleState(job, nowMs) === 'open')
       .map(job => ({
         slug: job.slug,
         lastModified: new Date(job.published_at ?? job.created_at),

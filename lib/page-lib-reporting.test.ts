@@ -110,7 +110,7 @@ const fakeFetch: typeof fetch = async (input, init) => {
   if (method === 'HEAD') return new Response(null, { status: 200, headers: { 'content-range': `0-0/${found.length}` } })
   if (method === 'GET') {
     if (net.fullPages && table === 'jobs') {
-      return json(Array.from({ length: 1000 }, () => ({ id: `id-${String(nextId++).padStart(8, '0')}`, slug: 's', expires_at: null, published_at: null, created_at: '2026-11-01T00:00:00Z' })))
+      return json(Array.from({ length: 1000 }, () => ({ id: `id-${String(nextId++).padStart(8, '0')}`, slug: 's', status: 'active', expires_at: null, closed_at: null, published_at: null, created_at: '2026-11-01T00:00:00Z' })))
     }
     if (!single) return json(found, 200, prefer.includes('count=') ? { 'content-range': `0-0/${found.length}` } : {})
     if (found.length === 1) return json(found[0])
@@ -314,7 +314,7 @@ describe('sitemaps', () => {
   }, 30_000)
 
   it('makes no report for a short list', async () => {
-    net.rows.jobs = [{ id: JOB_ID, slug: 'a', expires_at: null, published_at: null, created_at: '2026-11-01T00:00:00Z' }]
+    net.rows.jobs = [{ id: JOB_ID, slug: 'a', status: 'active', expires_at: null, closed_at: null, published_at: null, created_at: '2026-11-01T00:00:00Z' }]
     const entries = await jobs.getJobSitemapEntries('et')
     expect(entries.ok && entries.entries).toHaveLength(1)
     expect(await jobs.getJobSitemapChunk('ab', 0)).toMatchObject({ ok: true })

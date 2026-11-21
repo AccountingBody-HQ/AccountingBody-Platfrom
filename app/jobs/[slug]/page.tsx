@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import Link from 'next/link'
-import { getJobBySlug, getJobLifecycleState, getSimilarJobs, type Job } from '@/lib/jobs'
+import { getJobBySlug, getJobEndDate, getJobLifecycleState, getSimilarJobs, type Job } from '@/lib/jobs'
 import {
   formatSalary,
   employmentTypeLabel,
@@ -77,9 +77,10 @@ export async function generateMetadata({
     description,
     alternates: { canonical: canonicalUrl },
     openGraph: { title, description, url: canonicalUrl, type: 'website' },
-    // noindex only once a listing is old enough to be archived — active and
-    // stale listings both stay indexable.
-    robots: lifecycle === 'archived'
+    // noindex once a job has been closed for more than
+    // CLOSED_NOINDEX_AFTER_DAYS (lib/jobs.ts); open and recently closed jobs
+    // stay indexable (owner decision D55).
+    robots: lifecycle === 'closed_noindex'
       ? { index: false, follow: true }
       : { index: true, follow: true },
   }
@@ -101,6 +102,16 @@ function SkillList({ title, items }: { title: string; items: string[] }) {
   )
 }
 
+// status and closed_at decide the page's state only. The job handed to the
+// page's parts (and serialised into the client apply bar's props) keeps
+// exactly the public fields it had before, in the same order.
+function withoutLifecycleFields(row: Job): Job {
+  const job: Partial<Job> = { ...row }
+  delete job.status
+  delete job.closed_at
+  return job as Job
+}
+
 export default async function JobDetailPage({
   params,
 }: {
@@ -109,10 +120,13 @@ export default async function JobDetailPage({
   const { slug } = await params
   const resolved = await resolveJob(slug)
   if (!resolved) notFound()
-  const { job, isEthioTax } = resolved
+  const { job: jobRow, isEthioTax } = resolved
   const brandName = isEthioTax ? 'EthioTax' : 'Accounting Body'
   const brandColor = isEthioTax ? '#1A4731' : '#0C1A3D'
-  const lifecycle = getJobLifecycleState(job)
+  const now = Date.now()
+  const isOpen = getJobLifecycleState(jobRow, now) === 'open'
+  const endDate = getJobEndDate(jobRow, now)
+  const job = withoutLifecycleFields(jobRow)
   // The share link copies the address of the site the visitor is on (not
   // the canonical), exactly as before.
   const shareUrl = ownerUrl(isEthioTax ? 'ethiotax' : 'accountingbody', `/jobs/${job.slug}`)
@@ -137,16 +151,35 @@ export default async function JobDetailPage({
   const paragraphs = bodyText.split('\n').map(p => p.trim()).filter(Boolean)
   const locationDisplay = formatJobLocation(job.location_text, job.location_country)
 
-  const closingLineParts = [
-    `Posted ${formatAbsoluteDate(postedDate)}`,
-    job.expires_at ? `Expires ${formatAbsoluteDate(job.expires_at)}` : null,
-  ].filter((part): part is string => part !== null)
+  const closingLineParts = (isOpen
+    ? [
+        `Posted ${formatAbsoluteDate(postedDate)}`,
+        job.expires_at ? `Expires ${formatAbsoluteDate(job.expires_at)}` : null,
+      ]
+    : [
+        `Posted ${formatAbsoluteDate(postedDate)}`,
+        endDate ? `Closed ${formatAbsoluteDate(endDate)}` : null,
+      ]
+  ).filter((part): part is string => part !== null)
+
+  // One text node, so the wording reaches the page exactly as approved.
+  const closedNoticeText = [
+    'This job is no longer taking applications.',
+    endDate
+      ? `It was posted on ${formatAbsoluteDate(postedDate)} and closed on ${formatAbsoluteDate(endDate)}.`
+      : `It was posted on ${formatAbsoluteDate(postedDate)}.`,
+    similarJobs.length > 0 ? 'You can also look at similar current roles below.' : null,
+  ].filter((part): part is string => part !== null).join(' ')
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <JobPostingStructuredData job={job} brandName={brandName} />
+      {/* JobPosting data for open jobs only: a closed job's page stays but
+          no longer describes a posting (owner decision D55). */}
+      {isOpen && <JobPostingStructuredData job={job} brandName={brandName} />}
 
-      <section className="py-12 md:py-16 pb-[96px] md:pb-16">
+      {/* The extra phone bottom padding makes room for the sticky apply bar,
+          which only open jobs have. */}
+      <section className={isOpen ? 'py-12 md:py-16 pb-[96px] md:pb-16' : 'py-12 md:py-16'}>
         <div className="max-w-[760px] mx-auto px-4 sm:px-6">
           {/* 1. Top bar */}
           <div className="flex items-center justify-between pb-[26px]">
@@ -215,14 +248,19 @@ export default async function JobDetailPage({
             </dl>
           </div>
 
-          {/* Stale / archived notice — unchanged copy, positioned above the
+          {/* Closed notice (owner decision D55), positioned above the
               description. */}
-          {lifecycle !== 'active' && (
+          {!isOpen && (
             <div className="rounded-xl p-5 mt-8" style={{ background: 'rgba(12,26,61,0.04)' }}>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                This listing was posted on {formatAbsoluteDate(postedDate)} and is no longer being updated.
-                Please check directly with the employer to confirm whether the role is still available, or
-                explore similar current roles below.
+              <h2 className="font-display font-medium text-[21px] text-navy-950 mb-2">This job has closed</h2>
+              <p className="text-sm text-slate-600 leading-relaxed">{closedNoticeText}</p>
+              <p className="mt-3 text-sm">
+                <Link
+                  href="/jobs/listings"
+                  className="font-semibold text-navy-950 underline underline-offset-2 rounded hover:text-[#0C1A3D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0C1A3D]"
+                >
+                  See open jobs
+                </Link>
               </p>
             </div>
           )}
@@ -250,8 +288,9 @@ export default async function JobDetailPage({
               decision, a change from the original mockup position), plus
               the sticky mobile apply bar below 768px. Both live inside one
               client component so the bar can watch the inline button's own
-              viewport visibility and the two are never on screen together. */}
-          <ApplyBarWithSticky job={job} isEthioTax={isEthioTax} />
+              viewport visibility and the two are never on screen together.
+              Open jobs only: a closed job takes no applications. */}
+          {isOpen && <ApplyBarWithSticky job={job} isEthioTax={isEthioTax} />}
 
           {/* 7. Qualifications — 1.8% of jobs have any; kept quiet and last
               so its near-total absence is never load-bearing for whether

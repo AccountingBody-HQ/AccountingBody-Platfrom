@@ -1,8 +1,11 @@
 import type { Job, EmploymentType } from '@/lib/jobs'
+import { realCountry } from '@/lib/job-country'
 
 // schema.org/JobPosting field mapping, kept to Google's documented
 // required + recommended properties
 // (developers.google.com/search/docs/appearance/structured-data/job-posting).
+// The page renders this for OPEN jobs only (lib/jobs.ts
+// getJobLifecycleState); a closed job's page carries no JobPosting at all.
 // Fields we have no reliable source for are omitted, never guessed:
 //  - baseSalary: Google requires a unitText of HOUR/DAY/WEEK/MONTH/YEAR: the
 //    `jobs` table has salary_min/max/currency but no pay-period column at
@@ -11,8 +14,13 @@ import type { Job, EmploymentType } from '@/lib/jobs'
 //    stub /jobs/apply/[id] flow, so asserting a direct-apply flag would be
 //    false for that case; omitted for all apply methods rather than guessing
 //    which ones "count".
-//  - applicantLocationRequirements: no country-list data exists for where a
-//    remote applicant may be based.
+//  - jobLocation / addressCountry: only when location_country is one real
+//    country (lib/job-country.ts realCountry), given as its ISO 3166-1
+//    alpha-2 code. "Worldwide", an empty value or several countries give no
+//    jobLocation at all.
+//  - applicantLocationRequirements: only for a remote job with one real
+//    country, naming that country. A remote job without one gets
+//    jobLocationType TELECOMMUTE alone.
 
 // Our `employment_type` enum has no independent full-time/part-time axis for
 // permanent roles (a "permanent" listing could in principle be part-time) —
@@ -42,7 +50,7 @@ function descriptionToHtml(description: string): string {
     .join('')
 }
 
-function buildJobPostingSchema(job: Job, brandName: string): Record<string, unknown> {
+export function buildJobPostingSchema(job: Job, brandName: string): Record<string, unknown> {
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'JobPosting',
@@ -63,32 +71,34 @@ function buildJobPostingSchema(job: Job, brandName: string): Record<string, unkn
     },
   }
 
-  if (job.location_country) {
+  const country = realCountry(job.location_country)
+
+  if (country) {
     schema.jobLocation = {
       '@type': 'Place',
       address: {
         '@type': 'PostalAddress',
         ...(job.location_city ? { addressLocality: job.location_city } : {}),
-        addressCountry: job.location_country,
+        addressCountry: country.code,
       },
     }
   }
 
-  // Kept alongside jobLocation (not instead of it) — we don't have real
-  // applicantLocationRequirements data to justify Google's fully-remote
-  // exception that would let jobLocation be omitted entirely.
+  // A remote job keeps its jobLocation (when it has a real country) and,
+  // with that country, says where applicants may be based.
   if (job.location_remote) {
     schema.jobLocationType = 'TELECOMMUTE'
+    if (country) {
+      schema.applicantLocationRequirements = { '@type': 'Country', name: country.name }
+    }
   }
 
   if (job.employment_type) {
     schema.employmentType = EMPLOYMENT_TYPE_SCHEMA_MAP[job.employment_type]
   }
 
-  // A past validThrough is Google's own documented way to represent an
-  // expired posting (rather than removing the markup) — correct for both
-  // the 'stale' and 'archived' lifecycle states, where expires_at is
-  // already in the past.
+  // Open jobs only reach this builder, so validThrough is the job's future
+  // end date (or absent when it has none).
   if (job.expires_at) {
     schema.validThrough = new Date(job.expires_at).toISOString()
   }
