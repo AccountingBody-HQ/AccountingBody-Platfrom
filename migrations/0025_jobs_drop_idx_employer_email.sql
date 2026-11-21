@@ -1,0 +1,21 @@
+-- ============================================================================
+-- 0025_jobs_drop_idx_employer_email.sql
+-- Date: 21 Nov 2026
+--
+-- NOT APPLIED — record; applied by M-85 after the merge, after a fresh
+-- backup and the owner's approval.
+--
+-- What: removes the index public.idx_jobs_employer_email (0001_baseline).
+--
+-- Why (D287): no code filters, orders or upserts jobs by employer_email (it
+-- is only selected and inserted), and the index had 0 scans since the
+-- statistics began. idx_jobs_stripe_session stays.
+--
+-- Run alone, outside a transaction (BEGIN/COMMIT): DROP INDEX CONCURRENTLY
+-- cannot run inside a transaction. It waits for running queries on jobs
+-- instead of blocking them.
+--
+-- UNDO: CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_jobs_employer_email ON public.jobs USING btree (employer_email);
+-- ============================================================================
+
+DROP INDEX CONCURRENTLY IF EXISTS public.idx_jobs_employer_email;

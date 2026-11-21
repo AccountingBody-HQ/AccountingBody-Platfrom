@@ -13,6 +13,7 @@ import {
   RETENTION_GUARD_ROWS,
   SAVED_JOB_MAX_AGE_MS,
   cutoffs,
+  judgeDatabaseSize,
   judgeDue,
   judgeRetention,
   judgeRuns,
@@ -77,12 +78,26 @@ async function retentionWord(supabase: ReturnType<typeof getServerSupabase>, now
   return judgeRetention(dueIds, guarded === null ? null : guarded.map((row) => String(row.job_id)))
 }
 
+// The database size check: one read of public.ops_database_size()
+// (migrations/0023, service_role only) as a GET. A failed read, or one that
+// throws, answers unknown; the size itself never leaves this function.
+async function databaseSizeWord(supabase: ReturnType<typeof getServerSupabase>): Promise<CheckWord> {
+  try {
+    const read = checkRead(await supabase.rpc('ops_database_size', {}, { get: true }), READ_LABEL)
+    return judgeDatabaseSize(read.ok ? read.data : null)
+  } catch (error) {
+    console.error(`${READ_LABEL} failed`)
+    reportServerError(READ_LABEL, error)
+    return 'unknown'
+  }
+}
+
 async function computeAnswer(): Promise<StatusAnswer> {
   const now = Date.now()
   const at = cutoffs(now)
   const supabase = getServerSupabase('publicRead')
 
-  const [runs, expiring, pending, saved, retention] = await Promise.all([
+  const [runs, expiring, pending, saved, retention, databaseSize] = await Promise.all([
     // 'completed' sorts before 'failed', so one row tells whether any
     // run in the window completed.
     supabase
@@ -112,6 +127,7 @@ async function computeAnswer(): Promise<StatusAnswer> {
       .lt('last_seen_at', at.savedJobBefore)
       .limit(1),
     retentionWord(supabase, now),
+    databaseSizeWord(supabase),
   ])
 
   return summarise({
@@ -125,6 +141,7 @@ async function computeAnswer(): Promise<StatusAnswer> {
     ),
     'saved-jobs-cleanup': judgeDue(rowsOf(saved), 'last_seen_at', now, SAVED_JOB_MAX_AGE_MS + DAILY_GRACE_MS),
     'job-retention': retention,
+    'database-size': databaseSize,
   })
 }
 

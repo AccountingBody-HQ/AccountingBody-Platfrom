@@ -28,8 +28,11 @@ const db = {
   tables: {} as Record<string, Row[]>,
   failing: new Set<string>(),
   failCode: 'XX000',
+  // What the database size function answers (bytes).
+  size: 120 * 1024 * 1024 as unknown,
   requests: [] as { table: string; method: string; params: [string, string][] }[],
 }
+const SIZE_READ = 'rpc/ops_database_size'
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
@@ -54,6 +57,7 @@ const fakeFetch: typeof fetch = async (input, init) => {
   db.requests.push({ table, method, params: Array.from(url.searchParams.entries()) })
   if (method !== 'GET') throw new Error(`unexpected ${method} to ${table}`)
   if (db.failing.has(table)) return json({ message: 'database detail 7f3a', code: db.failCode, details: null, hint: null }, 500)
+  if (table === SIZE_READ) return json(db.size)
 
   let rows = [...(db.tables[table] ?? [])]
   let limit = Infinity
@@ -121,6 +125,7 @@ beforeEach(() => {
   db.tables = healthyTables()
   db.failing = new Set()
   db.failCode = 'XX000'
+  db.size = 120 * 1024 * 1024
   db.requests = []
   opsStatusHold.clear()
 })
@@ -138,7 +143,7 @@ describe('ops status', () => {
     expect(result.status).toBe(200)
     expect(result.body).toStrictEqual({
       status: 'ok',
-      checks: { 'job-import': 'ok', 'job-expiry': 'ok', 'subscriber-cleanup': 'ok', 'saved-jobs-cleanup': 'ok', 'job-retention': 'ok' },
+      checks: { 'job-import': 'ok', 'job-expiry': 'ok', 'subscriber-cleanup': 'ok', 'saved-jobs-cleanup': 'ok', 'job-retention': 'ok', 'database-size': 'ok' },
     })
     expect(state.reports).toStrictEqual([])
   })
@@ -189,7 +194,7 @@ describe('ops status', () => {
     expect(result.status).toBe(200)
     expect(result.body).toStrictEqual({
       status: 'ok',
-      checks: { 'job-import': 'ok', 'job-expiry': 'late', 'subscriber-cleanup': 'ok', 'saved-jobs-cleanup': 'ok', 'job-retention': 'ok' },
+      checks: { 'job-import': 'ok', 'job-expiry': 'late', 'subscriber-cleanup': 'ok', 'saved-jobs-cleanup': 'ok', 'job-retention': 'ok', 'database-size': 'ok' },
     })
   })
 
@@ -206,6 +211,7 @@ describe('ops status', () => {
     ['email_subscribers', 'subscriber-cleanup', 503],
     ['saved_jobs', 'saved-jobs-cleanup', 503],
     ['jobs', 'job-expiry', 200],
+    [SIZE_READ, 'database-size', 503],
   ] as const)('answers unknown when %s cannot be read', async (table, name, status) => {
     db.failing.add(table)
     const result = await call()
@@ -224,11 +230,36 @@ describe('ops status', () => {
   })
 
   it('answers 503 when nothing can be read', async () => {
-    for (const table of ['provider_runs', 'jobs', 'email_subscribers', 'saved_jobs']) db.failing.add(table)
+    for (const table of ['provider_runs', 'jobs', 'email_subscribers', 'saved_jobs', SIZE_READ]) db.failing.add(table)
     const result = await call()
     expect(result.status).toBe(503)
     // job-retention is off here, so it reads nothing and stays ok.
-    expect(Object.values(result.body.checks)).toStrictEqual(['unknown', 'unknown', 'unknown', 'unknown', 'ok'])
+    expect(Object.values(result.body.checks)).toStrictEqual(['unknown', 'unknown', 'unknown', 'unknown', 'ok', 'unknown'])
+  })
+
+  it('answers failing and 503 when the database is above the size limit', async () => {
+    db.size = 300 * 1024 * 1024 + 1
+    const result = await call()
+    expect(result.status).toBe(503)
+    expect(result.body.status).toBe('attention')
+    expect(result.body.checks['database-size']).toBe('failing')
+    db.size = 300 * 1024 * 1024
+    opsStatusHold.clear()
+    expect((await call()).status).toBe(200)
+  })
+
+  it('answers unknown, never the number, for a size answer it cannot use', async () => {
+    db.size = '12a'
+    const result = await call()
+    expect(result.body.checks['database-size']).toBe('unknown')
+    expect(result.status).toBe(503)
+  })
+
+  it('reads the size once, as a GET, and never shows a number', async () => {
+    db.size = 499 * 1024 * 1024
+    const { text } = await call()
+    expect(db.requests.filter((request) => request.table === SIZE_READ)).toStrictEqual([{ table: SIZE_READ, method: 'GET', params: [] }])
+    expect(text).not.toMatch(/[0-9]/)
   })
 
   it('answers a neutral 503 and reports once when the check cannot run', async () => {
@@ -250,11 +281,14 @@ describe('ops status', () => {
       () => { db.tables.jobs = [{ status: 'active', expires_at: at(9 * DAY) }] },
       () => { db.tables.saved_jobs = [{ last_seen_at: at(30 * DAY) }] },
       () => { for (const table of ['provider_runs', 'jobs', 'email_subscribers', 'saved_jobs']) db.failing.add(table) },
+      () => { db.failing.add(SIZE_READ) },
+      () => { db.size = 400 * 1024 * 1024 + 7 },
       () => { vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', '') },
     ]
     for (const scenario of scenarios) {
       db.tables = healthyTables()
       db.failing = new Set()
+      db.size = 120 * 1024 * 1024
       vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', DB_URL)
       opsStatusHold.clear()
       scenario()
@@ -266,8 +300,9 @@ describe('ops status', () => {
   it('makes one small read per check with only the columns it needs', async () => {
     await call()
     const byTable = Object.fromEntries(db.requests.map((request) => [request.table, request]))
-    expect(db.requests).toHaveLength(4)
+    expect(db.requests).toHaveLength(5)
     expect(db.requests.every((request) => request.method === 'GET')).toBe(true)
+    expect(byTable[SIZE_READ].params).toStrictEqual([])
     expect(byTable.provider_runs.params).toStrictEqual([
       ['select', 'status,started_at'],
       ['trigger', 'eq.cron'],
@@ -335,7 +370,7 @@ describe('job retention check', () => {
     const result = await call()
     expect(result.status).toBe(200)
     expect(result.body.checks['job-retention']).toBe('ok')
-    expect(db.requests).toHaveLength(4)
+    expect(db.requests).toHaveLength(5)
     expect(retentionReads()).toStrictEqual([])
   })
 
@@ -344,7 +379,7 @@ describe('job retention check', () => {
     const result = await call()
     expect(result.status).toBe(200)
     expect(result.body.checks['job-retention']).toBe('ok')
-    expect(db.requests).toHaveLength(5)
+    expect(db.requests).toHaveLength(6)
     expect(retentionReads().map((r) => r.params)).toStrictEqual([[
       ['select', 'id'],
       ['source', 'neq.employer'],
@@ -363,7 +398,7 @@ describe('job retention check', () => {
     expect(result.status).toBe(503)
     expect(result.body.status).toBe('attention')
     expect(result.body.checks['job-retention']).toBe('late')
-    expect(db.requests).toHaveLength(6)
+    expect(db.requests).toHaveLength(7)
     const guard = retentionReads()[1]
     expect(guard.table).toBe('job_applications')
     expect(guard.params).toStrictEqual([['select', 'job_id'], ['job_id', 'in.(r1,r2)'], ['limit', '1000']])
@@ -377,7 +412,7 @@ describe('job retention check', () => {
     const result = await call()
     expect(result.status).toBe(200)
     expect(result.body.checks['job-retention']).toBe('ok')
-    expect(db.requests).toHaveLength(6)
+    expect(db.requests).toHaveLength(7)
   })
 
   it('when on, leaves out employer jobs and jobs that are not expired', async () => {
@@ -389,7 +424,7 @@ describe('job retention check', () => {
     )
     const result = await call()
     expect(result.body.checks['job-retention']).toBe('ok')
-    expect(db.requests).toHaveLength(5)
+    expect(db.requests).toHaveLength(6)
   })
 
   it('when on, does not count a job just inside the grace and counts one just past it', async () => {
@@ -412,9 +447,9 @@ describe('job retention check', () => {
   })
 
   it.each([
-    // A failed read 1 means no read 2: 4 checks + read 1. A failed read 2 follows read 1.
-    ['jobs', 5],
-    ['job_applications', 6],
+    // A failed read 1 means no read 2: 5 check reads + read 1. A failed read 2 follows read 1.
+    ['jobs', 6],
+    ['job_applications', 7],
   ] as const)('when on, answers unknown and 503 when %s cannot be read', async (table, reads) => {
     vi.stubEnv('JOB_RETENTION', 'on')
     withOverdue()
@@ -447,7 +482,7 @@ describe('ops status within a minute', () => {
     const first = await call()
     later(OPS_STATUS_HOLD_MS - 1)
     const second = await call()
-    expect(db.requests).toHaveLength(4)
+    expect(db.requests).toHaveLength(5)
     expect(second.status).toBe(first.status)
     expect(second.text).toBe(first.text)
     expect(second.response.headers.get('cache-control')).toBe('no-store')
@@ -455,7 +490,7 @@ describe('ops status within a minute', () => {
 
   it('shares one check between calls that arrive together', async () => {
     const results = await Promise.all([call(), call(), call(), call(), call()])
-    expect(db.requests).toHaveLength(4)
+    expect(db.requests).toHaveLength(5)
     expect(new Set(results.map((result) => result.text)).size).toBe(1)
   })
 
@@ -464,7 +499,7 @@ describe('ops status within a minute', () => {
     later(OPS_STATUS_HOLD_MS)
     db.tables.saved_jobs = [{ last_seen_at: at(30 * DAY) }]
     const result = await call()
-    expect(db.requests).toHaveLength(8)
+    expect(db.requests).toHaveLength(10)
     expect(result.status).toBe(503)
     expect(result.body.checks['saved-jobs-cleanup']).toBe('late')
   })
@@ -478,7 +513,7 @@ describe('ops status within a minute', () => {
     const second = await call()
     expect(second.status).toBe(503)
     expect(second.body.checks['job-import']).toBe('unknown')
-    expect(db.requests).toHaveLength(4)
+    expect(db.requests).toHaveLength(5)
     expect(state.reports.map((args) => args[0])).toStrictEqual(['ops status read'])
   })
 
@@ -488,7 +523,7 @@ describe('ops status within a minute', () => {
     for (const table of ['provider_runs', 'jobs', 'email_subscribers', 'saved_jobs']) db.failing.add(table)
     const failed = await call()
     expect(failed.status).toBe(503)
-    expect(Object.values(failed.body.checks)).toStrictEqual(['unknown', 'unknown', 'unknown', 'unknown', 'ok'])
+    expect(Object.values(failed.body.checks)).toStrictEqual(['unknown', 'unknown', 'unknown', 'unknown', 'ok', 'ok'])
     later(OPS_STATUS_HOLD_MS + 1)
     expect((await call()).status).toBe(503)
   })
@@ -504,7 +539,7 @@ describe('ops status within a minute', () => {
     later(OPS_STATUS_HOLD_MS + 1)
     const next = await call()
     expect(next.status).toBe(200)
-    expect(db.requests).toHaveLength(8)
+    expect(db.requests).toHaveLength(10)
   })
 
   it('gives every caller the neutral answer when a shared check cannot run', async () => {
@@ -523,7 +558,7 @@ describe('ops status within a minute', () => {
     later(10_000)
     const head = await (methods.HEAD as typeof GET)()
     expect(head.status).toBe(200)
-    expect(db.requests).toHaveLength(4)
+    expect(db.requests).toHaveLength(5)
   })
 })
 
