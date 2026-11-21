@@ -19,7 +19,7 @@ const TOTAL_GRACE_MS = 1_000
 
 // How long the /jobs/listings page waits for its first page of jobs before
 // it is sent without them (the browser then loads them, as it always did).
-export const FIRST_PAGE_WAIT_MS = 3_000
+export const FIRST_PAGE_WAIT_MS = 1_500
 
 // The total if it arrives within the grace time, otherwise null. The count
 // itself is not stopped: it finishes on its own and fills the cache for the
@@ -182,11 +182,17 @@ export async function loadDirectJobsPage({ baseParams, limit, offset }: DirectJo
 // any error, and never rejects. With null the page is sent without cards
 // and the browser loads them exactly as it did before. A late load keeps
 // running and fills the cache for the browser's own request.
+//
+// A view with search words gets no server first page at all (null at once,
+// nothing loaded): word searches can be slow, and the browser loads them
+// exactly as before. `search` is already trimmed by parseDirectJobsQuery,
+// so spaces alone are no search.
 export async function loadFirstListingsPage<T = Awaited<ReturnType<typeof loadDirectJobsPage>>>(
   query: DirectJobsQuery,
   boundMs: number = FIRST_PAGE_WAIT_MS,
   load: (query: DirectJobsQuery) => Promise<T> = loadDirectJobsPage as unknown as (query: DirectJobsQuery) => Promise<T>,
 ): Promise<T | null> {
+  if (query.baseParams.search) return null
   let timer: ReturnType<typeof setTimeout> | undefined
   const late = new Promise<'late'>(resolve => { timer = setTimeout(() => resolve('late'), boundMs) })
   const loaded = load(query).catch((): 'failed' => {

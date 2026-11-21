@@ -22,6 +22,7 @@ import {
   buildListingsSearchString,
   buildDirectJobsParams,
   listingsViewKey,
+  listingsScrollKey,
   shouldAdoptInitial,
   sortMenuValue,
   EMPTY_FILTERS,
@@ -729,8 +730,14 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   // useSearchParams take the new URL without a server render
   // (next/dist/client/components/app-router.js), so a filter or page change
   // costs one /api/jobs/direct request only. Replace, as before: no new
-  // Back entries, and the scroll position is left alone.
+  // Back entries, and the scroll position is left alone. The new view is
+  // marked as already restored first, so the scroll restoration below runs
+  // only when the list mounts (Back, Forward, reload, arrival), never for a
+  // change made on the page: the URL changes before the page's own scroll
+  // (scrollToResults) has finished, and positions saved during it must not
+  // be restored when the new rows arrive.
   function navigateToState(next: ListingsUrlState) {
+    restoredKeyRef.current = listingsScrollKey(pathname, next)
     window.history.replaceState(null, '', pathname + buildListingsSearchString(next))
   }
 
@@ -897,7 +904,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   const restoredKeyRef = useRef('')
 
   useEffect(() => {
-    scrollKeyRef.current = `jobs-listings-scroll:${pathname}${buildListingsSearchString(urlState)}`
+    scrollKeyRef.current = listingsScrollKey(pathname, urlState)
   }, [pathname, urlState])
 
   useEffect(() => {

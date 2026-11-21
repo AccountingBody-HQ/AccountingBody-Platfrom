@@ -184,6 +184,12 @@ export function listingsViewKey(platform: 'ab' | 'et', state: ListingsUrlState):
   return `${platform}|${buildListingsSearchString(state)}`
 }
 
+// The sessionStorage key under which JobListingsClient keeps the scroll
+// position of one view of the list (its path and canonical search string).
+export function listingsScrollKey(pathname: string, state: ListingsUrlState): string {
+  return `jobs-listings-scroll:${pathname}${buildListingsSearchString(state)}`
+}
+
 // How old a server-rendered first page may be when the browser takes it
 // over without asking again. A page restored later (for example by Back
 // from a job) is older than this, so the browser refreshes it once.

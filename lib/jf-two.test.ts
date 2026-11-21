@@ -270,7 +270,7 @@ describe('G3 one loader for the page and the route', () => {
 
   it('the first-page wait gives null on a timeout or an error, the page on success, and never rejects', async () => {
     const { loadFirstListingsPage, FIRST_PAGE_WAIT_MS } = await import('@/app/api/jobs/direct/load')
-    expect(FIRST_PAGE_WAIT_MS).toBe(3000)
+    expect(FIRST_PAGE_WAIT_MS).toBe(1500)
     const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
     const query = { baseParams: { platform: 'ab' }, limit: 24, offset: 0, countOnly: false } as never
     vi.useFakeTimers()
@@ -484,12 +484,12 @@ describe('G7 scope and identity', () => {
     expect(touched.filter((file) => !ALLOWED.includes(file))).toStrictEqual([])
   })
 
-  it('no new visible text in the touched .tsx files (checked where the history is available)', () => {
+  it('no new visible text in the touched .tsx files (checked where the history is available)', (ctx) => {
     const commits = jf2Commits()
-    if (commits.length === 0) return
+    if (commits.length === 0) ctx.skip()
     const base = `${commits[commits.length - 1]}^`
     // A shallow checkout (CI) may not hold the commit before the first JF-2 one.
-    try { execFileSync('git', ['cat-file', '-e', `${base}{commit}`], { stdio: 'ignore' }) } catch { return }
+    try { execFileSync('git', ['cat-file', '-e', `${base}^{commit}`], { stdio: 'ignore' }) } catch { ctx.skip() }
     // Non-visible strings this job adds: class names, a path, a locale, props.
     const NON_VISIBLE = new Set<string>(['en-GB', 'Page {page.toLocaleString(\'en-GB\')}'])
     for (const file of ['app/jobs/listings/page.tsx', 'app/jobs/listings/JobListingsClient.tsx', 'components/Pagination.tsx']) {
@@ -518,5 +518,100 @@ describe('G7 scope and identity', () => {
       "}\n",
     )
     expect(page).toContain('<JobListingsStructuredData isEthioTax={isEthioTax} />')
+  })
+})
+
+// ── JF-2b follow-up guards ──────────────────────────────────────────────────
+
+// The body of a function in a source file, from its signature to the first
+// line that closes it at the same indent.
+function functionBody(src: string, signature: string, indent = '  '): string {
+  const start = src.indexOf(signature)
+  if (start < 0) return ''
+  const end = src.indexOf(`\n${indent}}\n`, start)
+  return end < 0 ? '' : src.slice(start, end)
+}
+
+describe('JF-2b', () => {
+  it('H1 the visible-text guard checks the parent of the first JF-2 commit', () => {
+    const self = read('lib/jf-two.test.ts')
+    const oldSpelling = '`${base}' + '{commit}`'
+    const newSpelling = '`${base}' + '^{commit}`'
+    expect(self.split(oldSpelling)).toHaveLength(1)
+    expect(self.split(newSpelling)).toHaveLength(2)
+  })
+
+  it('H2 one scroll key for the effect and navigateToState; in-page changes mark their key as restored first', async () => {
+    const { listingsScrollKey, parseListingsUrlState } = await import('@/app/jobs/listings/urlState')
+    expect(listingsScrollKey('/jobs/listings', parseListingsUrlState(new URLSearchParams('')))).toBe('jobs-listings-scroll:/jobs/listings')
+    expect(listingsScrollKey('/jobs/listings', parseListingsUrlState(new URLSearchParams('page=2&remote=true')))).toBe('jobs-listings-scroll:/jobs/listings?remote=true&page=2')
+    const client = read('app/jobs/listings/JobListingsClient.tsx')
+    const url = read('app/jobs/listings/urlState.ts')
+    expect(client.split('jobs-listings-scroll:')).toHaveLength(1)
+    expect(url.split('jobs-listings-scroll:')).toHaveLength(2)
+    expect(client).toContain('scrollKeyRef.current = listingsScrollKey(pathname, urlState)')
+    const nav = functionBody(client, 'function navigateToState(next: ListingsUrlState) {')
+    const mark = nav.indexOf('restoredKeyRef.current = listingsScrollKey(pathname, next)')
+    const replace = nav.indexOf("window.history.replaceState(null, '', pathname + buildListingsSearchString(next))")
+    expect(mark).toBeGreaterThan(0)
+    expect(replace).toBeGreaterThan(mark)
+    expect(client).toContain(
+      '  useEffect(() => {\n' +
+      '    if (loading) return\n' +
+      '    const key = scrollKeyRef.current\n' +
+      '    if (restoredKeyRef.current === key) return\n' +
+      '    restoredKeyRef.current = key\n' +
+      '    let saved: string | null = null\n' +
+      '    try { saved = sessionStorage.getItem(key) } catch {}\n' +
+      '    if (saved) window.scrollTo(0, parseInt(saved, 10))\n' +
+      '  }, [loading])\n',
+    )
+    expect(client).toContain("function handlePageChange(next: number) { navigateToState({ ...urlState, page: next }); scrollToResults() }")
+  })
+
+  it('H3 no server first page for search words; filters-only and the plain list still load it', async () => {
+    const { loadFirstListingsPage, parseDirectJobsQuery } = await import('@/app/api/jobs/direct/load')
+    const q = (qs: string) => parseDirectJobsQuery(new URLSearchParams(`platform=ab&limit=24&offset=0&${qs}`))
+    for (const qs of ['search=accountant', 'search=%20tax%20', 'search=tax&remote=true']) {
+      const load = vi.fn(() => Promise.resolve({ jobs: [], total: 0 }))
+      await expect(loadFirstListingsPage(q(qs), 1500, load), qs).resolves.toBeNull()
+      expect(load, qs).not.toHaveBeenCalled()
+    }
+    for (const qs of ['search=%20%20', 'remote=true', 'employment_types=permanent', 'employment_types=full-time', '']) {
+      const load = vi.fn(() => Promise.resolve({ jobs: [], total: 0 }))
+      await expect(loadFirstListingsPage(q(qs), 1500, load), qs).resolves.toEqual({ jobs: [], total: 0 })
+      expect(load, qs).toHaveBeenCalledTimes(1)
+    }
+  })
+
+  it('H3 the first-page wait is 1,500 ms and a late page gives null', async () => {
+    const { loadFirstListingsPage, FIRST_PAGE_WAIT_MS } = await import('@/app/api/jobs/direct/load')
+    expect(FIRST_PAGE_WAIT_MS).toBe(1500)
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.useFakeTimers()
+    const query = { baseParams: { platform: 'ab' }, limit: 24, offset: 0, countOnly: false } as never
+    let settled = false
+    const slow = loadFirstListingsPage(query, undefined, () => new Promise(() => {}))
+    slow.then(() => { settled = true })
+    await vi.advanceTimersByTimeAsync(1499)
+    expect(settled).toBe(false)
+    await vi.advanceTimersByTimeAsync(1)
+    await expect(slow).resolves.toBeNull()
+  })
+
+  it('H4 the list is rendered without a Suspense boundary', () => {
+    const page = read('app/jobs/listings/page.tsx')
+    expect(page).not.toContain('<Suspense')
+    expect(page).not.toMatch(/import\s*\{[^}]*\bSuspense\b/)
+    expect(page).not.toContain('requires that inside a Suspense boundary')
+    expect(page).toContain('      <JobListingsClient isEthioTax={isEthioTax} countryOptions={countryOptions} initial={initial} />\n    </>\n')
+  })
+
+  it('H5 JF-2b commits touch only their five files (checked where the history is available)', (ctx) => {
+    const commits = execFileSync('git', ['log', '--format=%H', '--grep=^JF-2b:', 'HEAD'], { encoding: 'utf8' }).split('\n').filter(Boolean)
+    if (commits.length === 0) ctx.skip()
+    const allowed = ['lib/jf-two.test.ts', 'app/jobs/listings/JobListingsClient.tsx', 'app/jobs/listings/page.tsx', 'app/api/jobs/direct/load.ts', 'app/jobs/listings/urlState.ts']
+    const touched = commits.flatMap((sha) => execFileSync('git', ['diff-tree', '-r', '--name-only', '--no-commit-id', sha], { encoding: 'utf8' }).split('\n').filter(Boolean))
+    expect(touched.filter((file) => !allowed.includes(file))).toStrictEqual([])
   })
 })

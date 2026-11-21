@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import JobListingsClient from './JobListingsClient'
@@ -90,15 +89,14 @@ export default async function JobListingsPage({ searchParams }: { searchParams: 
         </div>
       </section>
       {/* LISTINGS */}
-      {/* JobListingsClient calls useSearchParams() (see urlState.ts) — Next
-          requires that inside a Suspense boundary, otherwise the whole
-          route de-opts to fully client-side rendering. Falling back to
-          nothing: the page is rendered per request, so the client component
-          renders here straight away — with the first page's cards when
-          `initial` is set, else its own loading skeleton (isFirstLoad). */}
-      <Suspense>
-        <JobListingsClient isEthioTax={isEthioTax} countryOptions={countryOptions} initial={initial} />
-      </Suspense>
+      {/* No Suspense boundary here. JobListingsClient calls useSearchParams(),
+          which needs a boundary only when a page is prerendered at build
+          time; this page is rendered per request (it reads headers() and
+          searchParams), so the list renders straight into the first HTML —
+          with the first page's cards when `initial` is set, else its own
+          loading skeleton (isFirstLoad). A boundary would stream the list
+          as a hidden block that only script reveals. */}
+      <JobListingsClient isEthioTax={isEthioTax} countryOptions={countryOptions} initial={initial} />
     </>
   )
 }
