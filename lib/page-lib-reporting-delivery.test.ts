@@ -120,8 +120,9 @@ describe('page and shared code problem reports as Sentry receives them', () => {
 
   it('reports similar jobs without the job title', async () => {
     const events = await during(`${SITE}/jobs/${SLUG}`, () => getSimilarJobs({ excludeId: VISITOR, platform: 'ab', title: TITLE, locationCountry: 'United Kingdom' }))
-    const event = expectReport(events, 'similar jobs country fallback read failed', 'public')
+    const event = expectReport(events, 'similar jobs saved list read failed', 'public')
     expect(value(event)).toBe('similar jobs query failed')
+    expect(events).toHaveLength(1)
   })
 
   it('reports a saved jobs save without the visitor', async () => {

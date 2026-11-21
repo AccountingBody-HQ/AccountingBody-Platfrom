@@ -243,28 +243,30 @@ describe('similar jobs', () => {
 
   const params = { excludeId: JOB_ID, platform: 'ab', title: SEED_TITLE, locationCountry: 'United Kingdom' }
 
-  it('reports each step that cannot read jobs with its own label and a fixed problem', async () => {
-    net.fail = (call) => call.table === 'jobs'
+  const savedList = () => {
+    net.rows.job_similar = [{ job_id: JOB_ID, platform: 'ab', similar_ids: ['seed-similar-1'] }]
+    net.rows.jobs = [{ id: 'seed-similar-1', status: 'active', title: SEED_TITLE }]
+  }
+
+  it.each(['job_similar', 'jobs'])('reports a %s read it cannot make once, with its label and a fixed problem', async (table) => {
+    savedList()
+    net.fail = (call) => call.table === table
     expect(await jobs.getSimilarJobs(params)).toStrictEqual([])
-    expectReports([
-      ['similar jobs strong match read failed', 'public', 'getSimilarJobs (and, same country) error:'],
-      ['similar jobs same country read failed', 'public', 'getSimilarJobs (or, same country) error:'],
-      ['similar jobs worldwide read failed', 'public', 'getSimilarJobs (or, worldwide) error:'],
-      ['similar jobs country fallback read failed', 'public', 'getSimilarJobs (fallback) error:'],
-    ])
+    expectReports([['similar jobs saved list read failed', 'public', 'getSimilarJobs (saved list) error:']])
     for (const args of state.reports) {
       expect(args[1]).toStrictEqual(new Error('similar jobs query failed'))
       expect(JSON.stringify(args)).not.toMatch(/seedtitle|payroll/i)
     }
   })
 
-  it('reports a title it cannot split with a fixed problem', async () => {
+  it('a title it cannot split makes no report: the saved list does not read the title', async () => {
     expect(await jobs.getSimilarJobs({ ...params, title: null as never })).toStrictEqual([])
-    expectReports([['similar jobs title words failed', 'public', 'getSimilarJobs (similarTitleTokens) error:']])
+    expect(state.reports).toStrictEqual([])
   })
 
   it('makes no report when the reads work', async () => {
-    await jobs.getSimilarJobs(params)
+    savedList()
+    expect((await jobs.getSimilarJobs(params)).map((job) => job.id)).toStrictEqual(['seed-similar-1'])
     expect(state.reports).toStrictEqual([])
   })
 })
@@ -532,11 +534,7 @@ const REPORTING: Record<string, string[]> = {
   'lib/db.ts:getPublishedArticleCount': ["reportServerError('article count read failed', error, { area: 'public' })"],
   'lib/db.ts:getPagesSitemapContent': ["reportServerError('sitemap pages read failed', error, { area: 'public' })"],
   'lib/jobs.ts:getSimilarJobs': [
-    "reportServerError('similar jobs title words failed', new Error('similar jobs title words failed'), { area: 'public' })",
-    "reportServerError('similar jobs strong match read failed', new Error('similar jobs query failed'), { area: 'public' })",
-    "reportServerError('similar jobs same country read failed', new Error('similar jobs query failed'), { area: 'public' })",
-    "reportServerError('similar jobs worldwide read failed', new Error('similar jobs query failed'), { area: 'public' })",
-    "reportServerError('similar jobs country fallback read failed', new Error('similar jobs query failed'), { area: 'public' })",
+    "reportServerError('similar jobs saved list read failed', new Error('similar jobs query failed'), { area: 'public' })",
   ],
   'lib/jobs.ts:getAdminJobs': [
     "reportServerError('admin job list read failed', new Error('admin job list read failed'), { area: 'admin' })",

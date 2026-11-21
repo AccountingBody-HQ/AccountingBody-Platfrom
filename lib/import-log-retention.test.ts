@@ -473,6 +473,7 @@ describe('import log clean-up setup', () => {
       { path: '/api/cron/prune-saved-jobs', schedule: '0 7 * * *' },
       { path: '/api/cron/prune-expired-jobs', schedule: '30 7 * * *' },
       { path: '/api/cron/prune-import-logs', schedule: '45 7 * * *' },
+      { path: '/api/cron/similar-jobs', schedule: '4 3 * * *' },
     ])
   })
 

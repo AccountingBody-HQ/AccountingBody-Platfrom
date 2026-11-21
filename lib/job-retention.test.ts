@@ -299,7 +299,7 @@ describe('prune-expired-jobs route', () => {
 describe('job retention set-up', () => {
   const read = (path: string) => readFileSync(join(process.cwd(), path), 'utf8')
 
-  it('vercel.json has exactly the six crons, the new one daily at 07:30 UTC', () => {
+  it('vercel.json has exactly the seven crons, this one daily at 07:30 UTC', () => {
     expect((JSON.parse(read('vercel.json')) as { crons: unknown[] }).crons).toStrictEqual([
       { path: '/api/cron/expire-jobs', schedule: '0 6 * * *' },
       { path: '/api/ingest/orchestrator', schedule: '*/15 * * * *' },
@@ -307,6 +307,7 @@ describe('job retention set-up', () => {
       { path: '/api/cron/prune-saved-jobs', schedule: '0 7 * * *' },
       { path: '/api/cron/prune-expired-jobs', schedule: '30 7 * * *' },
       { path: '/api/cron/prune-import-logs', schedule: '45 7 * * *' },
+      { path: '/api/cron/similar-jobs', schedule: '4 3 * * *' },
     ])
   })
 

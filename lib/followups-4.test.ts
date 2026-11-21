@@ -359,21 +359,23 @@ describe('job read problems', () => {
     expect(problem.message).toBe('getJobBySlug: empty response')
   })
 
-  it('similar jobs: each step logs fixed text and the code', async () => {
+  it('similar jobs: each read logs fixed text and the code', async () => {
     vi.stubEnv('SIMILAR_JOBS_ENABLED', 'true')
-    state.db.jobs = failedRead()
-
-    const result = await getSimilarJobs({
+    const read = () => getSimilarJobs({
       excludeId: 'job-1', platform: 'ab', title: 'Senior Practice Accountant', locationCountry: 'United Kingdom',
     })
 
-    expect(result).toStrictEqual([])
+    state.db.job_similar = failedRead()
+    expect(await read()).toStrictEqual([])
+    resetCacheGuard()
+    state.db.job_similar = { data: [{ similar_ids: ['job-2'] }], error: null, status: 200 }
+    state.db.jobs = failedRead()
+    expect(await read()).toStrictEqual([])
+
     const problems = state.logs.map((line) => line[1] as Error & { code?: string })
     expect(problems.map((problem) => problem.message)).toStrictEqual([
-      'getSimilarJobs: and query failed',
-      'getSimilarJobs: or query failed',
-      'getSimilarJobs: or query failed',
-      'getSimilarJobs: fallback query failed',
+      'getSimilarJobs: saved list query failed',
+      'getSimilarJobs: jobs query failed',
     ])
     for (const problem of problems) expectFixedProblem(problem, problem.message)
   })

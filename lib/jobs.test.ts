@@ -528,14 +528,14 @@ describe('cached listings wrappers', () => {
   })
 })
 
-// ── getSimilarJobs: indexed newest-first steps ───────────────────────────────
+// ── getSimilarJobs: the saved list ───────────────────────────────────────────
 
 type QueryResult = { data: unknown[] | null; error: unknown }
 type QueryRecord = Record<string, unknown[][]>
 
 // Every query getSimilarJobs makes ends in .limit(), which resolves the
 // next scripted result. Each .from() starts a new record of every chained
-// call, so tests can check which step ran and with which filters.
+// call, so tests can check which read ran and with which filters.
 function fakeSimilarClient(results: QueryResult[]) {
   const queries: QueryRecord[] = []
   const client = {
@@ -543,7 +543,7 @@ function fakeSimilarClient(results: QueryResult[]) {
       const record: QueryRecord = { from: [[table]] }
       queries.push(record)
       const builder: Record<string, (...args: unknown[]) => unknown> = {}
-      for (const method of ['select', 'eq', 'contains', 'or', 'not', 'textSearch', 'neq', 'order']) {
+      for (const method of ['select', 'eq', 'in', 'contains', 'or', 'not', 'textSearch', 'neq', 'order']) {
         builder[method] = (...args: unknown[]) => {
           ;(record[method] ??= []).push(args)
           return builder
@@ -572,9 +572,9 @@ function job(id: string, title = 'Senior Practice Accountant') {
   }
 }
 
-const searchTermOf = (q: QueryRecord) => (q.textSearch?.[0]?.[1] as string | undefined) ?? null
-const countryOf = (q: QueryRecord) =>
-  (q.eq?.find(args => args[0] === 'location_country')?.[1] as string | undefined) ?? null
+// The saved list row (public.job_similar) for the viewed job.
+const saved = (ids: string[]): QueryResult => ({ data: [{ similar_ids: ids }], error: null })
+const tableOf = (q: QueryRecord) => q.from[0][0]
 
 describe('getSimilarJobs — kill switch', () => {
   const params = { excludeId: 'self', platform: 'ab', title: 'Senior Practice Accountant', locationCountry: 'United Kingdom' }
@@ -599,118 +599,99 @@ describe('getSimilarJobs — kill switch', () => {
   it('runs the normal lookup when SIMILAR_JOBS_ENABLED is exactly "true"', async () => {
     setSimilarJobsEnabled('true')
     const { queries } = mockSimilarClient([
-      { data: [job('self'), ...['a', 'b', 'c', 'd', 'e', 'f'].map(id => job(id))], error: null },
+      saved(['a', 'b', 'c', 'd', 'e', 'f']),
+      { data: ['a', 'b', 'c', 'd', 'e', 'f'].map(id => job(id)), error: null },
     ])
 
     const result = await getSimilarJobs(params)
 
     expect(result.map(j => j.id)).toEqual(['a', 'b', 'c', 'd', 'e', 'f'])
-    expect(queries).toHaveLength(1)
+    expect(queries).toHaveLength(2)
   })
 })
 
-describe('getSimilarJobs — indexed steps', () => {
+describe('getSimilarJobs — saved list', () => {
   beforeEach(() => setSimilarJobsEnabled('true'))
 
-  it('stops after step 1 when the AND match fills the list (no OR query)', async () => {
+  it('reads the saved list by key, then those jobs by id with the live filters, in the saved order', async () => {
     const { queries } = mockSimilarClient([
-      { data: [job('self'), ...['a', 'b', 'c', 'd', 'e', 'f'].map(id => job(id))], error: null },
+      saved(['f', 'e', 'd', 'c', 'b', 'a']),
+      { data: ['a', 'b', 'c', 'd', 'e', 'f'].map(id => job(id)), error: null },
     ])
 
     const result = await getSimilarJobs({
       excludeId: 'self', platform: 'ab', title: 'Senior Practice Accountant', locationCountry: 'United Kingdom',
     })
 
-    expect(result.map(j => j.id)).toEqual(['a', 'b', 'c', 'd', 'e', 'f'])
-    expect(queries).toHaveLength(1)
-    expect(searchTermOf(queries[0])).toBe('accountant practice senior')
-    expect(queries[0].textSearch[0][2]).toEqual({ type: 'websearch', config: 'english' })
-    expect(countryOf(queries[0])).toBe('United Kingdom')
-    expect(queries[0].not).toEqual([['published_at', 'is', null]])
-    expect(queries[0].order).toEqual([['published_at', { ascending: false }]])
-    expect(queries[0].limit).toEqual([[7]])
+    expect(result.map(j => j.id)).toEqual(['f', 'e', 'd', 'c', 'b', 'a'])
+    expect(queries.map(tableOf)).toEqual(['job_similar', 'jobs'])
+    expect(queries[0].select).toEqual([['similar_ids']])
+    expect(queries[0].eq).toEqual([['job_id', 'self'], ['platform', 'ab']])
+    expect(queries[0].limit).toEqual([[1]])
+    expect(queries[1].in).toEqual([['id', ['f', 'e', 'd', 'c', 'b', 'a']]])
+    expect(queries[1].eq).toEqual([['status', 'active']])
+    expect(queries[1].contains).toEqual([['platform', ['ab']]])
+    expect(String(queries[1].or[0][0])).toMatch(/^expires_at\.is\.null,expires_at\.gt\./)
+    expect(queries[1].limit).toEqual([[6]])
+    for (const q of queries) expect(q.textSearch).toBeUndefined()
   })
 
-  it('pads a short AND result with OR candidates ranked by shared title words, then recency', async () => {
-    const { queries } = mockSimilarClient([
-      // step 1 (AND): the viewed job and one strong match
-      { data: [job('self'), job('a')], error: null },
-      // step 2 (OR, same country), newest first
-      {
-        data: [
-          job('b', 'Senior Developer'),        // 1 shared word
-          job('a'),                            // duplicate of step 1
-          job('c', 'Practice Accountant'),     // 2 shared words
-          job('self'),                         // the viewed job
-          job('d', 'Payroll Clerk'),           // matched on description only
-          job('e', 'Senior Tax Advisor'),      // 1 shared word, older than b
-        ],
-        error: null,
-      },
+  it('drops saved jobs that are no longer live, keeping the saved order', async () => {
+    mockSimilarClient([
+      saved(['a', 'gone', 'c', 'b']),
+      { data: [job('b'), job('c'), job('a')], error: null },
     ])
 
     const result = await getSimilarJobs({
       excludeId: 'self', platform: 'ab', title: 'Senior Practice Accountant', locationCountry: 'United Kingdom',
     })
 
-    expect(result.map(j => j.id)).toEqual(['a', 'c', 'b', 'e', 'd'])
-    expect(searchTermOf(queries[1])).toBe('accountant OR practice OR senior')
-    expect(countryOf(queries[1])).toBe('United Kingdom')
-    expect(queries[1].limit).toEqual([[40]])
+    expect(result.map(j => j.id)).toEqual(['a', 'c', 'b'])
   })
 
-  it('searches worldwide when the same-country steps come up short', async () => {
-    const { queries } = mockSimilarClient([
-      { data: [], error: null },                          // step 1: AND, same country
-      { data: [job('uk-1')], error: null },               // step 2: OR, same country
-      { data: [job('us-1'), job('us-2')], error: null },  // step 3: OR, worldwide
-      { data: [], error: null },                          // phase C fallback
-    ])
+  it('no saved list: [] and no jobs read', async () => {
+    const { queries } = mockSimilarClient([{ data: [], error: null }])
 
     const result = await getSimilarJobs({
       excludeId: 'self', platform: 'ab', title: 'Senior Practice Accountant', locationCountry: 'United Kingdom',
     })
 
-    expect(result.map(j => j.id)).toEqual(['uk-1', 'us-1', 'us-2'])
-    expect(searchTermOf(queries[2])).toBe('accountant OR practice OR senior')
-    expect(countryOf(queries[2])).toBeNull()
+    expect(result).toEqual([])
+    expect(queries.map(tableOf)).toEqual(['job_similar'])
   })
 
-  it('goes straight to the country fallback when the title has no usable words', async () => {
-    const { queries } = mockSimilarClient([{ data: [job('x', 'Anything')], error: null }])
+  it('does not read the title: a title with no usable words still gets its saved list', async () => {
+    const { queries } = mockSimilarClient([saved(['x']), { data: [job('x', 'Anything')], error: null }])
 
     const result = await getSimilarJobs({
       excludeId: 'self', platform: 'ab', title: 'Remote Full Time UK Job', locationCountry: 'United Kingdom',
     })
 
     expect(result.map(j => j.id)).toEqual(['x'])
-    expect(queries).toHaveLength(1)
+    expect(queries).toHaveLength(2)
     expect(queries[0].textSearch).toBeUndefined()
     expect(queries[0].neq).toBeUndefined()
-    expect(queries[0].limit).toEqual([[7]])
   })
 
-  it('logs a failed step (thrown, so never cached) and carries on with the next', async () => {
+  it('logs a failed read (thrown, so never cached) and returns []', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
     mockSimilarClient([
-      { data: null, error: { message: 'upstream request timeout' } },   // step 1 fails
-      { data: [job('a'), job('b')], error: null },                       // step 2 still runs
+      { data: null, error: { message: 'upstream request timeout' } },   // the saved list read fails
     ])
 
     const result = await getSimilarJobs({
       excludeId: 'self', platform: 'ab', title: 'Senior Practice Accountant', locationCountry: null,
     })
 
-    expect(result.map(j => j.id)).toEqual(['a', 'b'])
+    expect(result).toEqual([])
     const [label, err] = consoleError.mock.calls[0]
-    expect(label).toContain('and, same country')
-    expect((err as Error).message).toBe('getSimilarJobs: and query failed')
+    expect(label).toContain('saved list')
+    expect((err as Error).message).toBe('getSimilarJobs: saved list query failed')
   })
 
-  it('returns [] when every step fails, so the page just hides the section', async () => {
+  it('returns [] when the jobs read fails, so the page just hides the section', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
-    const failure = { data: null, error: { message: 'connection refused' } }
-    mockSimilarClient([failure, failure, failure, failure])
+    mockSimilarClient([saved(['a']), { data: null, error: { message: 'connection refused' } }])
 
     const result = await getSimilarJobs({
       excludeId: 'self', platform: 'ab', title: 'Senior Practice Accountant', locationCountry: 'United Kingdom',
@@ -720,17 +701,15 @@ describe('getSimilarJobs — indexed steps', () => {
   })
 
   it('never selects search_vector, description or raw_source_data', async () => {
-    const { queries } = mockSimilarClient([{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }])
+    const { queries } = mockSimilarClient([saved(['a']), { data: [job('a')], error: null }])
 
     await getSimilarJobs({ excludeId: 'self', platform: 'ab', title: 'Senior Practice Accountant', locationCountry: 'United Kingdom' })
 
-    const titleSteps = queries.filter(q => q.textSearch)
-    expect(titleSteps).toHaveLength(3)
-    for (const q of titleSteps) {
-      const columns = String(q.select[0][0])
-      expect(columns).toBe(SIMILAR_JOB_COLUMNS)
-      expect(columns).not.toMatch(/search_vector|description|raw_source_data/)
-    }
+    expect(queries).toHaveLength(2)
+    expect(queries[0].select).toEqual([['similar_ids']])
+    const columns = String(queries[1].select[0][0])
+    expect(columns).toBe(SIMILAR_JOB_COLUMNS)
+    expect(columns).not.toMatch(/search_vector|description|raw_source_data/)
   })
 })
 
@@ -738,75 +717,63 @@ describe('getSimilarJobs — cache keys', () => {
   beforeEach(() => setSimilarJobsEnabled('true'))
 
   const similarCacheArgs = () =>
-    cacheCalls.filter(c => c.keyParts[0] === 'similar-jobs-candidates').map(c => c.args)
+    cacheCalls.filter(c => c.keyParts[0] === 'similar-jobs-saved').map(c => c.args)
 
-  it('keys on platform, mode, term, country and limit only, with the similar-jobs tags', async () => {
+  it('keys on the viewed job and platform only, with the similar-jobs tags', async () => {
     cacheCalls.length = 0
-    mockSimilarClient([{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }])
+    mockSimilarClient([{ data: [], error: null }])
 
     await getSimilarJobs({ excludeId: 'viewed-123', platform: 'et', title: 'Senior Practice Accountant', locationCountry: 'Ethiopia' })
 
-    expect(similarCacheArgs()).toEqual([
-      ['et', 'and', 'accountant practice senior', 'Ethiopia', 7],
-      ['et', 'or', 'accountant OR practice OR senior', 'Ethiopia', 40],
-      ['et', 'or', 'accountant OR practice OR senior', null, 40],
-    ])
-    expect(JSON.stringify(similarCacheArgs())).not.toContain('viewed-123')
-    const call = cacheCalls.find(c => c.keyParts[0] === 'similar-jobs-candidates')
-    expect(call?.options).toEqual({ revalidate: 21600, tags: ['jobs', 'related-jobs'] })
+    expect(similarCacheArgs()).toEqual([['viewed-123', 'et']])
+    const call = cacheCalls.find(c => c.keyParts[0] === 'similar-jobs-saved')
+    expect(call?.options).toEqual({ revalidate: 3600, tags: ['jobs', 'related-jobs'] })
+    expect(cacheCalls.map(c => c.keyParts[0])).toEqual(['similar-jobs-saved'])
   })
 
-  it('shares entries between different viewed jobs with the same title', async () => {
+  it('the title and country are not part of the key', async () => {
     cacheCalls.length = 0
-    mockSimilarClient([{ data: [job('a')], error: null }, { data: [], error: null }])
+    mockSimilarClient([{ data: [], error: null }])
     await getSimilarJobs({ excludeId: 'job-1', platform: 'ab', title: 'Senior Practice Accountant', locationCountry: null })
     const first = similarCacheArgs()
 
     cacheCalls.length = 0
-    mockSimilarClient([{ data: [job('a')], error: null }, { data: [], error: null }])
-    await getSimilarJobs({ excludeId: 'job-2', platform: 'ab', title: 'Senior Practice Accountant', locationCountry: null })
+    resetCacheGuard()
+    mockSimilarClient([{ data: [], error: null }])
+    await getSimilarJobs({ excludeId: 'job-1', platform: 'ab', title: 'Practice Accountant, Senior', locationCountry: 'Ireland' })
 
     expect(similarCacheArgs()).toEqual(first)
   })
 
-  it('shares entries between titles with the same words in a different order', async () => {
-    cacheCalls.length = 0
-    mockSimilarClient([{ data: [], error: null }, { data: [], error: null }])
-    await getSimilarJobs({ excludeId: 'job-1', platform: 'ab', title: 'Senior Practice Accountant', locationCountry: null })
-    const first = similarCacheArgs()
-
-    cacheCalls.length = 0
-    mockSimilarClient([{ data: [], error: null }, { data: [], error: null }])
-    await getSimilarJobs({ excludeId: 'job-2', platform: 'ab', title: 'Practice Accountant, Senior', locationCountry: null })
-
-    expect(similarCacheArgs()).toEqual(first)
-  })
-
-  it('keys the country fallback without the viewed job, and removes that job from the shared list', async () => {
-    cacheCalls.length = 0
-    mockSimilarClient([{ data: [job('viewed-123', 'Anything'), job('x', 'Anything')], error: null }])
+  it('removes the viewed job even if a saved list held it', async () => {
+    mockSimilarClient([saved(['viewed-123', 'x']), { data: [job('viewed-123', 'Anything'), job('x', 'Anything')], error: null }])
 
     const result = await getSimilarJobs({ excludeId: 'viewed-123', platform: 'ab', title: 'Remote Job', locationCountry: 'United Kingdom' })
 
     expect(result.map(j => j.id)).toEqual(['x'])
-    const call = cacheCalls.find(c => c.keyParts[0] === 'similar-jobs-country-fallback')
-    expect(call?.args).toEqual(['ab', 'United Kingdom', 7])
-    expect(call?.options).toEqual({ revalidate: 21600, tags: ['jobs', 'related-jobs'] })
   })
 
-  it('gives different keys for a different platform, country or title', async () => {
-    const keysFor = async (platform: string, country: string | null, title: string, limit = 6) => {
+  it('gives different keys for a different job or platform; the limit is applied after the cache', async () => {
+    const keysFor = async (excludeId: string, platform: string, limit = 6) => {
       cacheCalls.length = 0
-      mockSimilarClient([{ data: [], error: null }, { data: [], error: null }, { data: [], error: null }])
-      await getSimilarJobs({ excludeId: 'self', platform, title, locationCountry: country, limit })
+      resetCacheGuard()
+      mockSimilarClient([{ data: [], error: null }])
+      await getSimilarJobs({ excludeId, platform, title: 'Senior Practice Accountant', locationCountry: 'United Kingdom', limit })
       return JSON.stringify(similarCacheArgs())
     }
 
-    const base = await keysFor('ab', 'United Kingdom', 'Senior Practice Accountant')
-    expect(await keysFor('et', 'United Kingdom', 'Senior Practice Accountant')).not.toBe(base)
-    expect(await keysFor('ab', 'Ireland', 'Senior Practice Accountant')).not.toBe(base)
-    expect(await keysFor('ab', 'United Kingdom', 'Senior Audit Accountant')).not.toBe(base)
-    expect(await keysFor('ab', 'United Kingdom', 'Senior Practice Accountant', 3)).not.toBe(base)
+    const base = await keysFor('self', 'ab')
+    expect(await keysFor('self', 'et')).not.toBe(base)
+    expect(await keysFor('other', 'ab')).not.toBe(base)
+    expect(await keysFor('self', 'ab', 3)).toBe(base)
+  })
+
+  it('applies the limit to the saved list', async () => {
+    mockSimilarClient([saved(['a', 'b', 'c', 'd']), { data: ['a', 'b', 'c', 'd'].map(id => job(id)), error: null }])
+
+    const result = await getSimilarJobs({ excludeId: 'self', platform: 'ab', title: 'Tax Manager', limit: 2 })
+
+    expect(result.map(j => j.id)).toEqual(['a', 'b'])
   })
 })
 
