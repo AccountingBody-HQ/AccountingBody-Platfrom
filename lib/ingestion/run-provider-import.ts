@@ -348,7 +348,6 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
       pagesFetched,
       durationMs,
       responseMs:        fetchMs,
-      rawResponseSample: rawJobs[0] as Record<string, unknown> | undefined,
       relevanceRate:        qualityMetrics?.relevanceRate,
       avgDescriptionLength: qualityMetrics?.avgDescriptionLength,
       fieldCoverage:        qualityMetrics?.fieldCoverage,
