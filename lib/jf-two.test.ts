@@ -488,6 +488,8 @@ describe('G7 scope and identity', () => {
     const commits = jf2Commits()
     if (commits.length === 0) return
     const base = `${commits[commits.length - 1]}^`
+    // A shallow checkout (CI) may not hold the commit before the first JF-2 one.
+    try { execFileSync('git', ['cat-file', '-e', `${base}{commit}`], { stdio: 'ignore' }) } catch { return }
     // Non-visible strings this job adds: class names, a path, a locale, props.
     const NON_VISIBLE = new Set<string>(['en-GB', 'Page {page.toLocaleString(\'en-GB\')}'])
     for (const file of ['app/jobs/listings/page.tsx', 'app/jobs/listings/JobListingsClient.tsx', 'components/Pagination.tsx']) {
