@@ -285,7 +285,7 @@ export default async function JobDetailPage({
                       href={`/jobs/${similar.slug}`}
                       className="flex items-center justify-between gap-4 bg-white px-[18px] py-[14px] min-h-[64px] hover:bg-slate-50 transition-colors max-[520px]:flex-col max-[520px]:items-start max-[520px]:gap-[5px] max-[520px]:min-h-0"
                     >
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-1 max-[520px]:self-stretch">
                         <p className="text-[15.5px] font-medium text-navy-950 truncate">{similar.title}</p>
                         <p className="text-[13.5px] text-slate-500 truncate">{similar.company_name} · {similarLocation}</p>
                       </div>
