@@ -440,7 +440,7 @@ describe('G4 import error events', () => {
       error_type: 'VALIDATE_FAILED',
       error_code: 'VALIDATION_REJECT',
       error_message: 'Job "Rejected role" at "https://apply.example/8" failed validation',
-      raw_job_data: null,
+      raw_job_data: { source_job_id: 'p-8' },
     }])
   })
 
@@ -450,8 +450,8 @@ describe('G4 import error events', () => {
     state.singleErrors = [{ code: 'XX002', message: 'row problem' }, { message: 'no code problem' }]
     await runProviderImport('example', 'cron')
     expect(errorRows()).toStrictEqual([
-      { provider_id: 'provider-1', run_id: 'run-1', error_type: 'INSERT_FAILED', error_code: 'XX002', error_message: 'row problem', raw_job_data: null },
-      { provider_id: 'provider-1', run_id: 'run-1', error_type: 'INSERT_FAILED', error_code: 'INSERT_ERROR', error_message: 'no code problem', raw_job_data: null },
+      { provider_id: 'provider-1', run_id: 'run-1', error_type: 'INSERT_FAILED', error_code: 'XX002', error_message: 'row problem', raw_job_data: { source_job_id: 'p-10' } },
+      { provider_id: 'provider-1', run_id: 'run-1', error_type: 'INSERT_FAILED', error_code: 'INSERT_ERROR', error_message: 'no code problem', raw_job_data: { source_job_id: 'p-11' } },
     ])
   })
 
@@ -460,7 +460,7 @@ describe('G4 import error events', () => {
     state.batchError = SLUG_CLASH
     state.singleErrors = [SLUG_CLASH, SLUG_CLASH, SLUG_CLASH]
     await runProviderImport('example', 'cron')
-    expect(errorRows().map((row) => [row.error_type, row.error_code, row.raw_job_data])).toStrictEqual([['INSERT_FAILED', 'SLUG_CONFLICT', null]])
+    expect(errorRows().map((row) => [row.error_type, row.error_code, row.raw_job_data])).toStrictEqual([['INSERT_FAILED', 'SLUG_CONFLICT', { source_job_id: 'p-12' }]])
   })
 
   it('a dedup conflict logs no error row', async () => {
@@ -472,11 +472,11 @@ describe('G4 import error events', () => {
     expect(errorRows()).toStrictEqual([])
   })
 
-  it('a raw record that does carry a source_job_id keeps only that id', async () => {
+  it('the row keeps the normalised job\'s own id, never a key of the raw record (JF-1)', async () => {
     const raw = { ...providerRecord(14, 'Rejected fourteen'), source_job_id: 'sj-14' }
     feed([raw])
     await runProviderImport('example', 'cron')
-    expect(errorRows().map((row) => row.raw_job_data)).toStrictEqual([{ source_job_id: 'sj-14' }])
+    expect(errorRows().map((row) => row.raw_job_data)).toStrictEqual([{ source_job_id: 'p-14' }])
   })
 })
 

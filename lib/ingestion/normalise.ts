@@ -42,15 +42,17 @@ export const VALID_EMPLOYMENT_TYPES = new Set([
  * will have location_country set to 'Worldwide' and location_remote = true.
  * Covers all known conventions across global job APIs.
  * Add new terms here — never in provider-specific code.
+ * Not remote words: "global" (a scope, as in "Global Payroll Manager"),
+ * an empty location, "multiple locations", "various locations" and a bare
+ * "flexible". A job that says "hybrid" is never remote (see saysHybrid).
  */
 const REMOTE_LOCATION_TERMS = new Set([
-  'worldwide', 'remote', 'anywhere', 'global', 'distributed',
+  'worldwide', 'remote', 'anywhere', 'distributed',
   'fully remote', 'remote worldwide', 'remote global', 'remote-first',
   'remote first', 'work from anywhere', 'work from home', 'wfh',
   'location independent', 'location-independent', 'virtual',
   'home based', 'home-based', 'home office', 'any location',
-  'multiple locations', 'various locations', 'flexible location',
-  'flexible', 'no office', '',
+  'flexible location', 'no office',
 ])
 
 /**
@@ -230,7 +232,13 @@ function detectSeniority(title: string): string {
 
 function detectRemote(title: string, locationText: string): boolean {
   const combined = `${title} ${locationText}`.toLowerCase()
-  return /\b(remote|hybrid|wfh|work from home|anywhere|worldwide|global|distributed|virtual|home.?based|location.?independent|flexible location)\b/.test(combined)
+  return /\b(remote|wfh|work from home|anywhere|worldwide|distributed|virtual|home.?based|location.?independent|flexible location)\b/.test(combined)
+}
+
+// Hybrid means some office attendance: a title or location that says
+// "hybrid" never makes the job remote or Worldwide, even beside a remote word.
+function saysHybrid(title: string, locationText: string): boolean {
+  return /\bhybrid\b/.test(`${title} ${locationText}`.toLowerCase())
 }
 
 // ── HTML stripper ──────────────────────────────────────────────────────────
@@ -633,6 +641,8 @@ export function normalise(rawJob: RawJob, provider: JobProvider): NormalisedJob 
     ? COUNTRY_CODES[mappedCode.toUpperCase()] ?? null
     : null
 
+  const hybrid = saysHybrid(title, locationText)
+
   let locationCountry: string | null = null
   if (mappedLocationCountry && KNOWN_COUNTRIES[mappedLocationCountry.toLowerCase().trim()]) {
     // 1a. Mapping points at a genuine, recognised country value — trust it.
@@ -647,13 +657,13 @@ export function normalise(rawJob: RawJob, provider: JobProvider): NormalisedJob 
   } else {
     // 3. Universal remote inference — any provider using these terms gets Worldwide
     const lt = locationText.toLowerCase().trim()
-    if (REMOTE_LOCATION_TERMS.has(lt) || lt.includes('remote') || lt.includes('worldwide')) {
+    if (!hybrid && (REMOTE_LOCATION_TERMS.has(lt) || lt.includes('remote') || lt.includes('worldwide'))) {
       locationCountry = 'Worldwide'
     }
     // 4. Otherwise locationCountry stays null.
   }
 
-  const locationRemote = locationCountry === 'Worldwide' || detectRemote(title, locationText)
+  const locationRemote = !hybrid && (locationCountry === 'Worldwide' || detectRemote(title, locationText))
 
   // ── Salary extraction ─────────────────────────────────────────────────────
   let salaryMin: number | null = null
