@@ -8,6 +8,28 @@ import { ADZUNA_QUERY_KEYWORDS } from '@/lib/ingestion/keywords'
 const KEYWORDS_PER_RUN = 12
 
 /**
+ * The search words a run takes from: the provider's saved keywords (the
+ * admin setting) — strings only, trimmed, blanks dropped, case-insensitive
+ * duplicates dropped, first spelling and order kept — or, when none remain,
+ * the built-in ADZUNA_QUERY_KEYWORDS.
+ */
+export function adzunaKeywordList(saved: unknown): string[] {
+  const words: string[] = []
+  const seen = new Set<string>()
+  if (Array.isArray(saved)) {
+    for (const value of saved) {
+      if (typeof value !== 'string') continue
+      const word = value.trim()
+      const key = word.toLowerCase()
+      if (!word || seen.has(key)) continue
+      seen.add(key)
+      words.push(word)
+    }
+  }
+  return words.length > 0 ? words : ADZUNA_QUERY_KEYWORDS
+}
+
+/**
  * Fetch every page for a single keyword.
  *
  * Mirrors generic-rest's fetchAllPages:
@@ -91,8 +113,11 @@ export const adzunaAdapter: ProviderAdapter = {
     const baseUrl = provider.base_url
     if (!baseUrl) throw new Error(`No base_url configured for provider ${provider.slug}`)
 
-    const cursor = provider.keyword_cursor ?? 0
-    const total = ADZUNA_QUERY_KEYWORDS.length
+    // The cursor is taken modulo the list in use, so a list that changed
+    // length since the cursor was stored never indexes out of range.
+    const list = adzunaKeywordList(provider.keywords)
+    const cursor = Number.isSafeInteger(provider.keyword_cursor) ? provider.keyword_cursor as number : 0
+    const total = list.length
     const start = ((cursor % total) + total) % total
 
     let keywords: string[]
@@ -102,7 +127,7 @@ export const adzunaAdapter: ProviderAdapter = {
       const count = Math.min(opts?.maxKeywords ?? KEYWORDS_PER_RUN, total)
       keywords = []
       for (let i = 0; i < count; i++) {
-        keywords.push(ADZUNA_QUERY_KEYWORDS[(start + i) % total])
+        keywords.push(list[(start + i) % total])
       }
     }
 

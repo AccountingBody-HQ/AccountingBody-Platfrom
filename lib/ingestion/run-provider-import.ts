@@ -179,7 +179,7 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
         'VALIDATE_FAILED',
         'VALIDATION_REJECT',
         `Job "${job.title}" at "${job.application_url}" failed validation`,
-        job.raw_source_data as Record<string, unknown>
+        { source_job_id: job.source_job_id }
       )
     }
 
@@ -324,7 +324,7 @@ async function importProvider(slug: string, trigger: ImportTrigger): Promise<Pro
                 provider.id, run.id, 'INSERT_FAILED',
                 isSlugConflict(singleError) ? 'SLUG_CONFLICT' : (singleError.code ?? 'INSERT_ERROR'),
                 singleError.message,
-                job.raw_source_data as Record<string, unknown>
+                { source_job_id: job.source_job_id }
               )
             }
           } else {
