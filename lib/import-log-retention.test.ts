@@ -440,7 +440,7 @@ describe('import log clean-up problems', () => {
     net.deletes = ['ok', 'fail']
     await run()
     const text = JSON.stringify([logs, state.reports.map(([label, error, extra]) => [label, String(error), (error as { code?: unknown }).code, extra])])
-    for (const seed of ['seed-', SEED_MESSAGE, ...net.selected, '2026-08-09', 'provider_errors']) expect(text).not.toContain(seed)
+    for (const seed of ['seed-', SEED_MESSAGE, ...net.selected, '2026-10-24', 'provider_errors']) expect(text).not.toContain(seed)
   })
 
   it('sends one report with only its label, area and code (real SDK)', async () => {
@@ -458,7 +458,7 @@ describe('import log clean-up problems', () => {
       { type: 'Error', value: 'import log retention failed', mechanism: { type: 'generic', handled: true } },
     ])
     for (const field of ['request', 'user', 'breadcrumbs', 'server_name']) expect(event).not.toHaveProperty(field)
-    for (const seed of ['seed-', SEED_MESSAGE, ...net.selected, '2026-08-09', 'provider_errors']) expect(events[0]).not.toContain(seed)
+    for (const seed of ['seed-', SEED_MESSAGE, ...net.selected, '2026-10-24', 'provider_errors']) expect(events[0]).not.toContain(seed)
   })
 })
 

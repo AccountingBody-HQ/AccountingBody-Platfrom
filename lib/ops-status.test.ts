@@ -4,11 +4,13 @@ import { describe, expect, it } from 'vitest'
 import {
   CHECKS,
   DAILY_GRACE_MS,
+  DATABASE_SIZE_WARN_BYTES,
   IMPORT_WINDOW_MS,
   PENDING_SUBSCRIBER_MAX_AGE_MS,
   RETENTION_GUARD_ROWS,
   SAVED_JOB_MAX_AGE_MS,
   cutoffs,
+  judgeDatabaseSize,
   judgeDue,
   judgeRetention,
   judgeRuns,
@@ -32,6 +34,7 @@ const ALL_OK: Record<CheckName, CheckWord> = {
   'subscriber-cleanup': 'ok',
   'saved-jobs-cleanup': 'ok',
   'job-retention': 'ok',
+  'database-size': 'ok',
 }
 const WORDS: CheckWord[] = ['ok', 'late', 'failing', 'unknown']
 
@@ -162,6 +165,26 @@ describe('job retention', () => {
   })
 })
 
+describe('database size', () => {
+  const MB = 1024 * 1024
+
+  it('warns above 300 MB', () => {
+    expect(DATABASE_SIZE_WARN_BYTES).toBe(300 * MB)
+  })
+
+  it('answers ok at or below the limit and failing above it', () => {
+    expect(judgeDatabaseSize(0)).toBe('ok')
+    expect(judgeDatabaseSize(DATABASE_SIZE_WARN_BYTES)).toBe('ok')
+    expect(judgeDatabaseSize(DATABASE_SIZE_WARN_BYTES + 1)).toBe('failing')
+    expect(judgeDatabaseSize(String(DATABASE_SIZE_WARN_BYTES))).toBe('ok')
+    expect(judgeDatabaseSize(String(DATABASE_SIZE_WARN_BYTES + 1))).toBe('failing')
+  })
+
+  it('answers unknown for anything that is not a whole, non-negative size', () => {
+    for (const value of [null, undefined, Number.NaN, -1, 0.5, '1.5', '12a', '', {}, false]) expect(judgeDatabaseSize(value)).toBe('unknown')
+  })
+})
+
 describe('the overall answer', () => {
   it('answers 200 ok when every check is ok', () => {
     expect(summarise(ALL_OK)).toStrictEqual({ httpStatus: 200, body: { status: 'ok', checks: ALL_OK } })
@@ -172,12 +195,12 @@ describe('the overall answer', () => {
 
   it('lists the job expiry check as shown but not alerting', () => {
     expect(quiet).toStrictEqual(['job-expiry'])
-    expect(alerting).toStrictEqual(['job-import', 'subscriber-cleanup', 'saved-jobs-cleanup', 'job-retention'])
+    expect(alerting).toStrictEqual(['job-import', 'subscriber-cleanup', 'saved-jobs-cleanup', 'job-retention', 'database-size'])
   })
 
-  it('keeps the four existing checks in their order and adds job-retention last', () => {
+  it('keeps the five existing checks in their order and adds database-size last', () => {
     expect(CHECKS.map((check) => check.name)).toStrictEqual([
-      'job-import', 'job-expiry', 'subscriber-cleanup', 'saved-jobs-cleanup', 'job-retention',
+      'job-import', 'job-expiry', 'subscriber-cleanup', 'saved-jobs-cleanup', 'job-retention', 'database-size',
     ])
   })
 

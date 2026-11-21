@@ -9,6 +9,9 @@
 // - failing: the job ran within its time allowance and every run failed.
 // - unknown: the rows could not be read.
 //
+// database-size is not a job: it is failing when the database is above
+// DATABASE_SIZE_WARN_BYTES. The answer shows the word, never the size.
+//
 // A check with alerting: false is shown but never changes the overall answer.
 
 import { jobRetentionCutoff } from './job-retention'
@@ -40,6 +43,7 @@ export const CHECKS = [
   { name: 'subscriber-cleanup', alerting: true },
   { name: 'saved-jobs-cleanup', alerting: true },
   { name: 'job-retention', alerting: true },
+  { name: 'database-size', alerting: true },
 ] as const
 
 export type CheckName = (typeof CHECKS)[number]['name']
@@ -106,6 +110,22 @@ export function judgeRetention(due: string[] | null, guarded: string[] | null, g
   if (guarded.length >= guardRows) return 'ok'
   const kept = new Set(guarded)
   return due.some((id) => !kept.has(id)) ? 'late' : 'ok'
+}
+
+// The free database plan allows 500 MB; the alarm leaves room to act.
+export const DATABASE_SIZE_WARN_BYTES = 300 * 1024 * 1024
+
+// The database size in bytes, as the size function returns it (a number, or
+// a digit string for a large bigint): above the limit → failing; at or below
+// → ok; anything else (a failed read, a non-whole or negative number, any
+// other text) → unknown.
+export function judgeDatabaseSize(bytes: unknown): CheckWord {
+  let size: number
+  if (typeof bytes === 'number') size = bytes
+  else if (typeof bytes === 'string' && /^[0-9]{1,20}$/.test(bytes)) size = Number(bytes)
+  else return 'unknown'
+  if (!Number.isFinite(size) || !Number.isInteger(size) || size < 0) return 'unknown'
+  return size > DATABASE_SIZE_WARN_BYTES ? 'failing' : 'ok'
 }
 
 export type StatusAnswer = {

@@ -597,6 +597,7 @@ const LOG_ONLY: Record<string, string> = {
   'lib/jobs.ts:jobsTotalSource': 'an unrecognised setting falls back to the default total source',
   'lib/jobs.ts:getCachedListingJobs': 'relevance order with no search words falls back to the default order',
   'lib/jobs.ts:getPrecountedFilterTotal': 'a missing, stale or unreadable pre-counted row falls back to a live count',
+  'lib/providers.ts:logProviderError': 'a failed error log write is logged with its code and the import goes on; it runs once per job, so no report per row',
 }
 
 describe('log lines in server pages and shared code', () => {

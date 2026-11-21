@@ -103,7 +103,6 @@ export interface ProviderRun {
   response_ms_avg: number | null
   error_message: string | null
   error_code: string | null
-  raw_response_sample: Record<string, unknown> | null
   relevance_rate: number | null
   avg_description_length: number | null
   field_coverage: Record<string, number> | null
@@ -221,7 +220,6 @@ export async function completeProviderRun(
     pagesFetched: number
     durationMs: number
     responseMs?: number
-    rawResponseSample?: Record<string, unknown>
     relevanceRate?: number | null
     avgDescriptionLength?: number | null
     fieldCoverage?: Record<string, number>
@@ -240,7 +238,6 @@ export async function completeProviderRun(
       jobs_rejected: metrics.jobsRejected,
       pages_fetched: metrics.pagesFetched,
       response_ms_avg: metrics.responseMs ?? null,
-      raw_response_sample: metrics.rawResponseSample ?? null,
       relevance_rate: metrics.relevanceRate ?? null,
       avg_description_length: metrics.avgDescriptionLength ?? null,
       field_coverage: metrics.fieldCoverage ?? null,
@@ -411,7 +408,8 @@ export function errorLogContext(raw: unknown): { source_job_id: string } | null 
   }
 }
 
-// Log a provider error (job-level)
+// Log a provider error (job-level). A failed write is logged with the
+// database's short code only; the import goes on.
 export async function logProviderError(
   providerId: string,
   runId: string | null,
@@ -421,7 +419,7 @@ export async function logProviderError(
   rawJobData?: Record<string, unknown>
 ): Promise<void> {
   const supabase = getSupabase()
-  await supabase.from('provider_errors').insert({
+  const { error } = await supabase.from('provider_errors').insert({
     provider_id: providerId,
     run_id: runId,
     error_type: errorType,
@@ -429,6 +427,7 @@ export async function logProviderError(
     error_message: errorMessage,
     raw_job_data: errorLogContext(rawJobData),
   })
+  if (error) console.error('[logProviderError] error log save failed:', shortCode(error))
 }
 
 // Update the jobs_today and requests_today counters on provider.

@@ -32,6 +32,7 @@ Words for each check:
 | `job-expiry` | job expiry | daily 06:00 | an active listing 26 h past its end date | no (shown only) |
 | `subscriber-cleanup` | unconfirmed subscriber clean-up | daily 06:30 | an unconfirmed sign-up 7 days + 26 h old | yes |
 | `saved-jobs-cleanup` | saved jobs clean-up | daily 07:00 | a saved job unused for 7 days + 26 h | yes |
+| `database-size` | database size (not a job; read on each check) | — | `failing` above 300 MB (the free plan allows 500 MB); `unknown` if the size cannot be read | yes |
 
 A check that is not alerting is shown in the answer but never turns it to 503.
 `job-expiry` is shown only for now; to make it alert, set `alerting: true` for
