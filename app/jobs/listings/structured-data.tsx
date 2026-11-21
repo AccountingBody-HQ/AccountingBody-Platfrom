@@ -1,11 +1,12 @@
 import { brandName } from '@/lib/brand'
+import { brandText } from '@/lib/et-wording'
 
 export function JobListingsStructuredData({ total, isEthioTax = false }: { total?: number; isEthioTax?: boolean }) {
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     name: `Accounting & Finance Jobs | ${brandName(isEthioTax)}`,
-    description: 'Find accounting and finance jobs globally. Roles for ACCA, CIMA, ICAEW, CPA and AAT qualified professionals.',
+    description: brandText(isEthioTax, 'Find accounting and finance jobs globally. Roles for ACCA, CIMA, ICAEW, CPA and AAT qualified professionals.'),
     url: 'https://accountingbody.com/jobs/listings',
     ...(total != null ? {
       mainEntity: {

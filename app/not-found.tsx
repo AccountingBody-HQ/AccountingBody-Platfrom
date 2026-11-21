@@ -1,11 +1,14 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { getRequestBrand } from '@/lib/brand-server'
+import { brandText } from '@/lib/et-wording'
 
 export const metadata: Metadata = {
   title: 'Page Not Found',
 }
 
-export default function NotFound() {
+export default async function NotFound() {
+  const { isEthioTax } = await getRequestBrand()
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
       <div className="max-w-lg w-full text-center">
@@ -42,7 +45,7 @@ export default function NotFound() {
             {[
               { label: 'ACCA',             href: '/study/acca' },
               { label: 'CIMA',             href: '/study/cima' },
-              { label: 'ICAEW',            href: '/study/icaew' },
+              { label: brandText(isEthioTax, 'ICAEW'), href: brandText(isEthioTax, '/study/icaew') },
               { label: 'AAT',              href: '/study/aat' },
               { label: 'Practice Questions', href: '/practice-questions' },
               { label: 'Get Help',         href: '/get-help' },
