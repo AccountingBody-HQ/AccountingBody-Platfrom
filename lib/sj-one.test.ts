@@ -404,7 +404,7 @@ describe('G4 compute parity with the step rules (method B)', () => {
     const source = read('lib/similar-jobs.ts')
     expect(source).toMatch(/^import \{ similarTitleTokens \} from '@\/lib\/jobs'$/m)
     const imports = source.match(/^import .* from '([^']+)'$/gm) ?? []
-    expect(imports.map((line) => line.replace(/^.* from '([^']+)'$/, '$1'))).toStrictEqual(['@/lib/jobs'])
+    expect(imports.map((line) => line.replace(/^.* from '([^']+)'$/, '$1'))).toStrictEqual(['@/lib/jobs', '@/lib/job-duplicates'])
     for (const banned of ['next/', '@supabase/', 'process.env', 'SIMILAR_QUERY_NOISE_TOKENS', 'SINGLE_WORD_COUNTRY_NAMES', 'SALARY_TOKEN', "'hybrid'", 'toLowerCase']) {
       expect(source).not.toContain(banned)
     }
@@ -593,14 +593,14 @@ describe('G5 the cron route', () => {
     }
     const answer = await bodyOf(await GET(request(`Bearer ${CRON_VALUE}`)))
     expect(answer.status).toBe(200)
-    expect(Object.keys(answer.body)).toStrictEqual(['ok', 'live', 'pairs', 'written', 'deleted', 'ms'])
+    expect(Object.keys(answer.body)).toStrictEqual(['ok', 'live', 'pairs', 'written', 'deleted', 'ms', 'marks'])
     expect(answer.body).toMatchObject({ ok: true, live: 3, pairs: 3, written: 3, deleted: 4 })
     expect(typeof answer.body.ms).toBe('number')
     expect(new Set(state.contexts)).toStrictEqual(new Set(['cron']))
 
     const [readJobs, write, remove] = state.queries
     expect(state.queries.map((query) => query.table)).toStrictEqual(['jobs', 'job_similar', 'job_similar'])
-    expect(argsOf(readJobs, 'select')).toStrictEqual([['id,title,location_country,platform,published_at,created_at']])
+    expect(argsOf(readJobs, 'select')).toStrictEqual([['id,title,location_country,platform,published_at,created_at,company_name,provider_id,source,ai_duplicate_of']])
     expect(argsOf(readJobs, 'eq')).toStrictEqual([['status', 'active']])
     expect(String(argsOf(readJobs, 'or')[0][0])).toMatch(/^expires_at\.is\.null,expires_at\.gt\.\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
     expect(argsOf(readJobs, 'gt')).toStrictEqual([])

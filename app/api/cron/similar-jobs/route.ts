@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { duplicatesHidden } from '@/lib/jobs'
 import { reportServerError } from '@/lib/report-error'
 import {
   LIVE_JOB_COLUMNS,
   runSimilarJobsRefresh,
+  type DuplicateMarksStore,
   type LiveJobRow,
   type SimilarJobsStore,
 } from '@/lib/similar-jobs'
@@ -24,9 +26,9 @@ function errorCode(error: unknown): string | undefined {
   return typeof code === 'string' && SHORT_CODE.test(code) ? code : undefined
 }
 
-function databaseStore(): SimilarJobsStore {
+function databaseStores(): { store: SimilarJobsStore; marks: DuplicateMarksStore } {
   const supabase = getServerSupabase('cron')
-  return {
+  const store: SimilarJobsStore = {
     readLivePage: async (after, limit, nowIso) => {
       let query = supabase
         .from('jobs')
@@ -50,12 +52,36 @@ function databaseStore(): SimilarJobsStore {
       return count ?? 0
     },
   }
+  // Duplicate-advert marks (D283). Called only when JOB_DUPLICATE_MARKING
+  // is exactly "on"; a mark is only ever set on a live imported row.
+  const marks: DuplicateMarksStore = {
+    markCopies: async (primaryId, ids) => {
+      const { error } = await supabase
+        .from('jobs')
+        .update({ ai_duplicate_of: primaryId })
+        .in('id', ids)
+        .eq('status', 'active')
+        .neq('source', 'employer')
+      if (error) throw error
+    },
+    clearMarks: async (ids) => {
+      const { error } = await supabase.from('jobs').update({ ai_duplicate_of: null }).in('id', ids)
+      if (error) throw error
+    },
+  }
+  return { store, marks }
 }
 
 // Nightly (vercel.json, 03:04 UTC): computes every live job's "Similar
 // current roles" list and saves it to public.job_similar (lib/similar-jobs.ts,
 // D277). The only writer of that table. Job pages read the saved lists, and
 // show them only when SIMILAR_JOBS_ENABLED is "true".
+//
+// Before the lists it plans the duplicate-advert marks (D283) and writes
+// them to jobs.ai_duplicate_of only when JOB_DUPLICATE_MARKING is exactly
+// "on" (the owner's switch, after a backup). With JOB_DUPLICATES_HIDDEN
+// exactly "true" the lists suggest primaries only. A marking problem is
+// reported and the lists are still saved.
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET
   if (!secret) {
@@ -68,13 +94,24 @@ export async function GET(req: NextRequest) {
 
   let step = 'start'
   try {
-    const result = await runSimilarJobsRefresh(databaseStore(), () => Date.now())
+    const marking = process.env.JOB_DUPLICATE_MARKING === 'on'
+    const { store, marks } = databaseStores()
+    const result = await runSimilarJobsRefresh(store, () => Date.now(), {
+      marks: { write: marking, store: marks },
+      hideCopies: duplicatesHidden(),
+    })
     if (!result.ok) {
       step = result.step
       throw result.error
     }
+    if (result.marks?.failed) {
+      const markCode = errorCode(result.markError)
+      console.error(`cron/similar-jobs: marking failed (${markCode ?? 'no code'})`)
+      const markReport = Object.assign(new Error('similar jobs marking failed'), markCode ? { code: markCode } : {})
+      reportServerError('similar jobs marking failed', markReport, { area: 'cron' })
+    }
     const { live, pairs, written, deleted, ms } = result
-    return NextResponse.json({ ok: true, live, pairs, written, deleted, ms })
+    return NextResponse.json({ ok: true, live, pairs, written, deleted, ms, marks: result.marks })
   } catch (err: unknown) {
     const code = errorCode(err)
     console.error(`cron/similar-jobs: ${step} failed (${code ?? 'no code'})`)

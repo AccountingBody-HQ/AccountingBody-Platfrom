@@ -184,6 +184,20 @@ export function slugify(value: string): string {
     .slice(0, 80) || 'job'
 }
 
+// What a visitor sees repeated: the title and company of an advert, as slugs.
+// lib/job-duplicates.ts builds its duplicate key on this (D283).
+export function visibleAdvertKey(title: string, companyName: string): string {
+  return `${slugify(title)}|${slugify(companyName)}`
+}
+
+// Read switch (D283): visitor lists, counts, search and the similar lists
+// hide marked extra copies of an advert only when this is exactly "true".
+// Needs migrations/0021 applied first (the pre-counted primaries and
+// search_jobs_ranked_primary).
+export function duplicatesHidden(): boolean {
+  return process.env.JOB_DUPLICATES_HIDDEN === 'true'
+}
+
 export function randomSuffix(length = 4): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
   let out = ''
@@ -254,6 +268,8 @@ interface GetActiveDirectJobsParams {
   postedWithin?: number
   qualifications?: string[]
   sortBy?: 'relevance' | 'recent' | 'salary_high' | 'salary_low'
+  // Hide marked copies (D283). Absent: the read switch decides.
+  hideCopies?: boolean
 }
 
 // PostgREST's `.or()` syntax uses commas to separate conditions and
@@ -290,6 +306,7 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
     postedWithin,
     qualifications,
     sortBy,
+    hideCopies = duplicatesHidden(),
   } = params
 
   const nowIso = new Date().toISOString()
@@ -305,6 +322,8 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
       .eq('status', 'active')
       .contains('platform', [platform])
       .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+
+    if (hideCopies) countQuery = countQuery.is('ai_duplicate_of', null)
 
     if (sources && sources.length > 0) {
       countQuery = countQuery.in('source', sources)
@@ -355,8 +374,11 @@ export async function getActiveDirectJobs(params: GetActiveDirectJobsParams): Pr
   // against search_vector, normalised to [0,1) and combined with recency/
   // source_score/quality_score/ctr using the same weights the old
   // in-memory compositeScore used) and for 'recent'/'salary_high'/
-  // 'salary_low', each a real ORDER BY inside the function.
-  const { data, error } = await supabase.rpc('search_jobs_ranked', {
+  // 'salary_low', each a real ORDER BY inside the function. With copies
+  // hidden, search_jobs_ranked_primary (migrations/0021) takes the same
+  // arguments and adds only "ai_duplicate_of IS NULL"; its errors take the
+  // same path as today's.
+  const { data, error } = await supabase.rpc(hideCopies ? 'search_jobs_ranked_primary' : 'search_jobs_ranked', {
     p_platform: platform,
     p_search: search && search.trim() ? search.trim() : null,
     p_location: location && location.trim() ? location.trim() : null,
@@ -417,6 +439,9 @@ export interface ListingFilters {
   postedWithin?: number
   qualifications?: string[]
   sources?: JobSource[]
+  // Set (true) only when the read switch is on, so it is part of the cache
+  // key then and the key is exactly as before when it is off.
+  hideCopies?: true
 }
 
 // 'default' is the order used when the visitor has typed no search words and
@@ -532,6 +557,7 @@ async function getDefaultOrderJobs(page: ListingPage): Promise<ListingJob[]> {
     .contains('platform', [page.platform])
     .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
 
+  if (page.hideCopies) query = query.is('ai_duplicate_of', null)
   if (page.sources && page.sources.length > 0) query = query.in('source', page.sources)
   if (page.location) query = query.ilike('location_text', `%${page.location}%`)
   if (page.locationCountry && page.locationCountry !== 'all') query = query.eq('location_country', page.locationCountry)
@@ -563,13 +589,18 @@ export type ListingJob = Omit<Job, 'description'>
 // a genuine empty page, are cached.
 async function fetchListingJobs(page: ListingPage): Promise<ListingJob[]> {
   if (page.sortBy === 'default') return getDefaultOrderJobs(page)
-  const jobs = await getActiveDirectJobs({ ...page, sortBy: page.sortBy, countOnly: false })
+  const jobs = await getActiveDirectJobs({ ...page, sortBy: page.sortBy, hideCopies: page.hideCopies === true, countOnly: false })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return jobs.map(({ description, ...rest }) => rest)
 }
 
 async function fetchListingJobsCount(filters: ListingFilters): Promise<number> {
-  return getActiveDirectJobs({ ...filters, countOnly: true })
+  return getActiveDirectJobs({ ...filters, hideCopies: filters.hideCopies === true, countOnly: true })
+}
+
+// The cached readers' key gains hideCopies only when the read switch is on.
+function withHiddenCopies<T extends ListingFilters>(value: T): T {
+  return duplicatesHidden() ? { ...value, hideCopies: true } : value
 }
 
 const cachedListingJobs = cache(guardCachedRead(['listing-jobs'],
@@ -588,7 +619,7 @@ export const RELEVANCE_FALLBACK_LOG = 'jobs list: relevance order failed with no
 // error. The fallback happens outside the cache, so the relevance entry
 // never stores default-order rows. A search with words is never replaced.
 export async function getCachedListingJobs(params: ListingQuery): Promise<ListingJob[]> {
-  const page = normaliseListingPage(params)
+  const page = withHiddenCopies(normaliseListingPage(params))
   if (page.sortBy !== 'relevance' || page.search) return cachedListingJobs(page)
   try {
     return await cachedListingJobs(page)
@@ -600,7 +631,7 @@ export async function getCachedListingJobs(params: ListingQuery): Promise<Listin
 }
 
 export function getCachedListingJobsCount(params: ListingQuery): Promise<number> {
-  return cachedListingJobsCount(normaliseListingFilters(params))
+  return cachedListingJobsCount(withHiddenCopies(normaliseListingFilters(params)))
 }
 
 // Used by the admin dashboard (app/api/roodber8/jobs/[id]/route.ts, itself
@@ -786,7 +817,9 @@ function savedSimilarIds(data: unknown, excludeId: string): string[] {
 // One key read of the saved list, then one read of those jobs by id with the
 // live filters again (a job may have expired or closed since the nightly
 // run), returned in the saved order. Errors throw, so they are never cached.
-async function fetchSavedSimilarJobs(excludeId: string, platform: string): Promise<SimilarJob[]> {
+// With copies hidden (D283) the jobs read leaves out marked copies and the
+// list keeps the first job of each title and company.
+async function fetchSavedSimilarJobs(excludeId: string, platform: string, hideCopies?: boolean): Promise<SimilarJob[]> {
   const supabase = getSupabase()
   const { data: saved, error: savedError } = await supabase
     .from('job_similar')
@@ -799,17 +832,26 @@ async function fetchSavedSimilarJobs(excludeId: string, platform: string): Promi
   if (ids.length === 0) return []
 
   const nowIso = new Date().toISOString()
-  const { data, error } = await supabase
+  let jobsQuery = supabase
     .from('jobs')
     .select(SIMILAR_JOB_COLUMNS)
     .in('id', ids)
     .eq('status', 'active')
     .contains('platform', [platform])
     .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-    .limit(ids.length)
+  if (hideCopies) jobsQuery = jobsQuery.is('ai_duplicate_of', null)
+  const { data, error } = await jobsQuery.limit(ids.length)
   if (error) throw readProblem('getSimilarJobs: jobs query failed', error)
   const byId = new Map(((data ?? []) as unknown as SimilarJob[]).map(job => [job.id, job]))
-  return ids.flatMap(id => byId.get(id) ?? [])
+  const ordered = ids.flatMap(id => byId.get(id) ?? [])
+  if (!hideCopies) return ordered
+  const shown = new Set<string>()
+  return ordered.filter(job => {
+    const key = visibleAdvertKey(job.title, job.company_name)
+    if (shown.has(key)) return false
+    shown.add(key)
+    return true
+  })
 }
 
 // One hour: the lists change once a night; the re-check of each listed job
@@ -829,7 +871,9 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Simi
 
   const { excludeId, platform, limit = 6 } = params
   try {
-    const saved = await getCachedSavedSimilarJobs(excludeId, platform)
+    const saved = await (duplicatesHidden()
+      ? getCachedSavedSimilarJobs(excludeId, platform, true)
+      : getCachedSavedSimilarJobs(excludeId, platform))
     return saved.filter(job => job.id !== excludeId).slice(0, Math.max(0, limit))
   } catch (error) {
     console.error('getSimilarJobs (saved list) error:', error)
@@ -994,8 +1038,10 @@ export function resetJobsTotalSourceWarning(): void {
   invalidSourceLogged = false
 }
 
-export function siteCountKey(platform: string): string {
-  return `jobs_browsable:${platform}`
+// With copies hidden, the pre-counted primaries that migrations/0021 adds
+// to the same table ('jobs_primary:<platform>' and its country rows).
+export function siteCountKey(platform: string, hideCopies = false): string {
+  return `${hideCopies ? 'jobs_primary' : 'jobs_browsable'}:${platform}`
 }
 
 interface PrecountRow {
@@ -1006,11 +1052,11 @@ interface PrecountRow {
 // One primary-key read. Throws on any error or unexpected shape, so nothing
 // is cached for it; a missing row is a real answer (null) and is cached
 // like any other for the two minutes below.
-async function fetchJobsPrecount(platform: string): Promise<PrecountRow | null> {
+async function fetchJobsPrecount(platform: string, hideCopies?: boolean): Promise<PrecountRow | null> {
   const { data, error, status } = await getSupabase('publicRead')
     .from('site_counts')
     .select('value, updated_at')
-    .eq('key', siteCountKey(platform))
+    .eq('key', siteCountKey(platform, hideCopies === true))
     .maybeSingle()
   if (error) throw new Error(`site_counts read failed (status ${status})`)
   if (data === null || data === undefined) return null
@@ -1033,15 +1079,17 @@ const cachedJobsPrecount = guardCachedRead(['site-counts-jobs-browsable'], unsta
 // The estimate. Failures throw inside the cached function, because
 // unstable_cache stores whatever it returns and nothing when it throws. A
 // missing count with no error counts as a failure too.
-async function fetchBrowsableJobsCount(platform: string): Promise<number> {
+async function fetchBrowsableJobsCount(platform: string, hideCopies?: boolean): Promise<number> {
   const supabase = getSupabase('publicHeavyRead')
   const nowIso = new Date().toISOString()
-  const { count, error, status } = await supabase
+  let query = supabase
     .from('jobs')
     .select('*', { count: 'estimated', head: true })
     .eq('status', 'active')
     .contains('platform', [platform])
     .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+  if (hideCopies) query = query.is('ai_duplicate_of', null)
+  const { count, error, status } = await query
   if (error) throw readProblem(`jobs count query failed (status ${status})`, error)
   if (count === null) throw new Error(`jobs count query returned no count (status ${status})`)
   return count
@@ -1056,10 +1104,11 @@ const cachedBrowsableJobsCount = guardCachedRead(['getBrowsableJobsCount'], unst
 export async function getBrowsableJobsTotal(platform: string): Promise<number | null> {
   const source = jobsTotalSource()
   if (source === 'none') return null
+  const hideCopies = duplicatesHidden()
 
   if (source === 'precount') {
     try {
-      const row = await cachedJobsPrecount(platform)
+      const row = await (hideCopies ? cachedJobsPrecount(platform, true) : cachedJobsPrecount(platform))
       if (row === null) console.warn(JOBS_TOTAL_LOG.precountMissing)
       else if (Date.now() - row.updatedAt > PRECOUNT_MAX_AGE_MS) console.warn(JOBS_TOTAL_LOG.precountStale)
       else return row.value
@@ -1069,7 +1118,7 @@ export async function getBrowsableJobsTotal(platform: string): Promise<number | 
   }
 
   try {
-    return await cachedBrowsableJobsCount(platform)
+    return await (hideCopies ? cachedBrowsableJobsCount(platform, true) : cachedBrowsableJobsCount(platform))
   } catch (error) {
     console.error(JOBS_TOTAL_LOG.estimateFailed)
     reportServerError('job count read failed', error, { area: 'public' })
@@ -1126,11 +1175,11 @@ export const FILTER_TOTAL_LOG = {
 // The site_counts key for this request, or null when it has none: null for
 // the plain list (getBrowsableJobsTotal has its own row) and for anything
 // with search words or any filter other than one country.
-export function filterPrecountKey(params: ListingQuery): string | null {
+export function filterPrecountKey(params: ListingQuery, hideCopies = false): string | null {
   const { platform, locationCountry, search, ...others } = normaliseListingFilters(params)
   if (Object.values(others).some(value => value !== undefined)) return null
   if (locationCountry !== undefined && search === undefined) {
-    return `${siteCountKey(platform)}:country:${locationCountry}`
+    return `${siteCountKey(platform, hideCopies)}:country:${locationCountry}`
   }
   return null
 }
@@ -1143,8 +1192,8 @@ interface FilterPrecountRow extends PrecountRow {
 // at most). LIKE treats '_' as any character, so rows are kept only when
 // the key really starts with the prefix. Throws on any error or unexpected
 // shape, so nothing is cached for it.
-async function fetchFilterPrecounts(platform: string): Promise<FilterPrecountRow[]> {
-  const prefix = `${siteCountKey(platform)}:`
+async function fetchFilterPrecounts(platform: string, hideCopies?: boolean): Promise<FilterPrecountRow[]> {
+  const prefix = `${siteCountKey(platform, hideCopies === true)}:`
   const { data, error, status } = await getSupabase('publicRead')
     .from('site_counts')
     .select('key, value, updated_at')
@@ -1174,10 +1223,12 @@ const cachedFilterPrecounts = guardCachedRead(['site-counts-jobs-filters'], unst
 // reads nothing for any other request (search words included).
 export async function getPrecountedFilterTotal(params: ListingQuery): Promise<number | null> {
   if (jobsTotalSource() !== 'precount') return null
-  const key = filterPrecountKey(params)
+  const hideCopies = duplicatesHidden()
+  const key = filterPrecountKey(params, hideCopies)
   if (key === null) return null
   try {
-    const rows = await cachedFilterPrecounts(normaliseListingFilters(params).platform)
+    const platform = normaliseListingFilters(params).platform
+    const rows = await (hideCopies ? cachedFilterPrecounts(platform, true) : cachedFilterPrecounts(platform))
     const row = rows.find(r => r.key === key)
     if (!row) {
       console.warn(FILTER_TOTAL_LOG.missing)
@@ -1227,8 +1278,9 @@ export function countryListFromPrecounts(
   rows: ReadonlyArray<{ key: string; value: number; updatedAt: number }>,
   platform: string,
   now: number,
+  hideCopies = false,
 ): ActiveJobCountry[] {
-  const prefix = `${siteCountKey(platform)}:country:`
+  const prefix = `${siteCountKey(platform, hideCopies)}:country:`
   const list: ActiveJobCountry[] = []
   for (const row of rows) {
     if (!row.key.startsWith(prefix)) continue
@@ -1245,18 +1297,19 @@ export function countryListFromPrecounts(
 // Never throws. cache() collapses duplicate calls within one render.
 export const getCachedActiveJobCountries = cache(async (platform: string): Promise<ActiveJobCountry[]> => {
   const p = platform.trim()
+  const hideCopies = duplicatesHidden()
   let rows: FilterPrecountRow[]
   try {
-    rows = await cachedFilterPrecounts(p)
+    rows = await (hideCopies ? cachedFilterPrecounts(p, true) : cachedFilterPrecounts(p))
   } catch (error) {
     console.warn(COUNTRY_LIST_LOG.failed)
     reportServerError('job countries cached read failed', error, { area: 'public' })
     return []
   }
   const now = Date.now()
-  const list = countryListFromPrecounts(rows, p, now)
+  const list = countryListFromPrecounts(rows, p, now, hideCopies)
   if (list.length === 0) {
-    const prefix = `${siteCountKey(p)}:country:`
+    const prefix = `${siteCountKey(p, hideCopies)}:country:`
     const countryRows = rows.filter(r => r.key.startsWith(prefix))
     const allStale = countryRows.length > 0 && countryRows.every(r => now - r.updatedAt > PRECOUNT_MAX_AGE_MS)
     console.warn(allStale ? COUNTRY_LIST_LOG.stale : COUNTRY_LIST_LOG.missing)
