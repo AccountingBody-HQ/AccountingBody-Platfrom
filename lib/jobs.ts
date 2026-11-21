@@ -119,7 +119,6 @@ export interface JobInsert {
   source?: JobSource
   source_job_id?: string
   source_url?: string
-  raw_source_data?: Record<string, unknown>
   stripe_session_id?: string
   manage_token?: string
 }
@@ -1446,7 +1445,6 @@ export async function createJob(data: JobInsert): Promise<Job> {
     application_email: data.application_email ?? null,
     source_score: sourceScore,
     quality_score: qualityScore,
-    raw_source_data: data.raw_source_data ?? null,
     dedup_hash: dedupHash,
     expires_at: null,
   }

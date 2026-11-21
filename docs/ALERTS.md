@@ -70,7 +70,7 @@ The monitor recovers by itself once every alerting check is `ok` again.
 ## Import log clean-up
 
 A nightly scheduled run (07:45 UTC, `/api/cron/prune-import-logs`) can delete
-import error log rows (`provider_errors`) older than 90 days. Nothing else is
+import error log rows (`provider_errors`) older than 14 days. Nothing else is
 deleted: import run records and job rows are kept.
 
 - It is off by default. The setting `IMPORT_LOG_RETENTION` decides what it

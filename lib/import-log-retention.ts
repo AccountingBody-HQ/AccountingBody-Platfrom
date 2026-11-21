@@ -15,7 +15,7 @@
 // retried; the first problem ends the run.
 
 export const IMPORT_LOG_TABLE = 'provider_errors'
-export const IMPORT_LOG_RETENTION_DAYS = 90
+export const IMPORT_LOG_RETENTION_DAYS = 14
 export const BATCH_SIZE = 500
 export const DELETE_PART_SIZE = 100
 export const MAX_BATCHES = 20
