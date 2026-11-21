@@ -67,21 +67,19 @@ export async function GET(req: NextRequest) {
   }
 
   let step = 'start'
-  let failure: unknown
   try {
     const result = await runSimilarJobsRefresh(databaseStore(), () => Date.now())
-    if (result.ok) {
-      const { live, pairs, written, deleted, ms } = result
-      return NextResponse.json({ ok: true, live, pairs, written, deleted, ms })
+    if (!result.ok) {
+      step = result.step
+      throw result.error
     }
-    step = result.step
-    failure = result.error
+    const { live, pairs, written, deleted, ms } = result
+    return NextResponse.json({ ok: true, live, pairs, written, deleted, ms })
   } catch (err: unknown) {
-    failure = err
+    const code = errorCode(err)
+    console.error(`cron/similar-jobs: ${step} failed (${code ?? 'no code'})`)
+    const report = Object.assign(new Error('similar jobs refresh failed'), code ? { code } : {})
+    reportServerError('similar jobs refresh failed', report, { area: 'cron' })
+    return NextResponse.json({ error: 'Cron run failed' }, { status: 500 })
   }
-  const code = errorCode(failure)
-  console.error(`cron/similar-jobs: ${step} failed (${code ?? 'no code'})`)
-  const report = Object.assign(new Error('similar jobs refresh failed'), code ? { code } : {})
-  reportServerError('similar jobs refresh failed', report, { area: 'cron' })
-  return NextResponse.json({ error: 'Cron run failed' }, { status: 500 })
 }
