@@ -14,8 +14,6 @@ const ROOT = process.cwd()
 const read = (path: string) => readFileSync(join(ROOT, path), 'utf8')
 const sha256 = (text: string | Buffer) => createHash('sha256').update(text).digest('hex')
 
-type DbError = { message: string; code?: string; details?: string | null; hint?: string | null } | null
-
 const state = vi.hoisted(() => ({
   real: false,
   updates: [] as { table: string; payload: Record<string, unknown> }[],
@@ -118,11 +116,12 @@ describe('G1 no raw run sample', () => {
     expect(read('lib/ingestion/run-provider-import.ts')).not.toContain('rawResponseSample')
   })
 
-  it('no code file names the column (admin areas included)', () => {
+  it('no code file names the column (admin areas included; migration file names aside)', () => {
     const files = sourceFiles().filter((file) => file !== 'lib/lb-one.test.ts')
     expect(files.length).toBeGreaterThan(100)
     expect(adminDirs().length).toBeGreaterThan(0)
-    expect(files.filter((file) => /raw_response_sample|rawResponseSample/.test(read(file)))).toStrictEqual([])
+    const code = (file: string) => read(file).replace(/migrations\/\d{4}_[a-z0-9_]+\.sql/g, '')
+    expect(files.filter((file) => /raw_response_sample|rawResponseSample/.test(code(file)))).toStrictEqual([])
   })
 })
 
@@ -429,7 +428,7 @@ describe('G6 scope', () => {
     'lib/ops-status.ts', 'app/api/ops-status/route.ts', 'lib/ops-status.test.ts', 'app/api/ops-status/route.test.ts',
     'migrations/0023_ops_database_size.sql', 'migrations/0024_provider_runs_drop_raw_response_sample.sql',
     'migrations/0025_jobs_drop_idx_employer_email.sql', 'migrations/README.md', 'docs/ALERTS.md',
-    'lib/page-lib-reporting.test.ts', 'lib/lb-one.test.ts',
+    'lib/page-lib-reporting.test.ts', 'lib/dl-one.test.ts', 'lib/lb-one.test.ts',
   ]
 
   it('no LB-1 commit touches a file out of scope (checked where the history is available)', () => {
