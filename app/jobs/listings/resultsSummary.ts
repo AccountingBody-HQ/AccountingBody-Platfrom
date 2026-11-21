@@ -56,9 +56,11 @@ export function summariseResults({ page, pageSize, rowsLength, total }: ResultsS
   const rangeStart = total === 0 ? 0 : (page - 1) * pageSize + 1
   const rangeEnd = Math.min(page * pageSize, total)
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  // A fixed locale: this text is rendered on the server and again in the
+  // browser, and both must group digits the same way.
   return {
-    headline: `${total.toLocaleString()} job${total === 1 ? '' : 's'} found`,
-    detail: `Showing ${rangeStart}–${rangeEnd} of ${total.toLocaleString()}`,
+    headline: `${total.toLocaleString('en-GB')} job${total === 1 ? '' : 's'} found`,
+    detail: `Showing ${rangeStart}–${rangeEnd} of ${total.toLocaleString('en-GB')}`,
     pager: { kind: 'numbered', total, totalPages },
   }
 }
