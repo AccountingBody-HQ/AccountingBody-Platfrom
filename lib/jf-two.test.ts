@@ -448,10 +448,16 @@ function jf2Touched(): string[] {
 }
 
 // Visible text candidates in a .tsx source: JSX text between tags and quoted
-// literals of three or more characters that contain a letter.
-function textCandidates(src: string): Set<string> {
+// literals of three or more characters that contain a letter. Code between
+// an arrow or a type argument's `>` and the next `<` is not JSX text, so
+// spans holding code punctuation are skipped.
+function textCandidates(raw: string): Set<string> {
+  // Comments are never shown.
+  const src = raw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1')
   const out = new Set<string>()
-  for (const m of Array.from(src.matchAll(/>([^<>{}]*[A-Za-z][^<>{}]*)</g))) out.add(m[1].trim())
+  for (const m of Array.from(src.matchAll(/(?<!=)>([^<>{}]*[A-Za-z][^<>{}]*)</g))) {
+    if (!/[()=;[\]]/.test(m[1])) out.add(m[1].trim())
+  }
   for (const m of Array.from(src.matchAll(/'([^'\n]{3,})'|"([^"\n]{3,})"|`([^`\n]{3,})`/g))) {
     const s = (m[1] ?? m[2] ?? m[3]).trim()
     if (/[A-Za-z]/.test(s)) out.add(s)
