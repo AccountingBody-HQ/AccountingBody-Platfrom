@@ -33,7 +33,7 @@ function databaseStore(): RetentionStore {
   }
 }
 
-// Deletes import error log rows older than 90 days (lib/import-log-retention.ts).
+// Deletes import error log rows older than 14 days (lib/import-log-retention.ts).
 // Off unless IMPORT_LOG_RETENTION is exactly "on" (delete) or "dry-run" (count).
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET

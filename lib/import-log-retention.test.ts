@@ -44,7 +44,7 @@ const DB_URL = 'https://example.supabase.co'
 const SITE = 'https://accountingbody.com'
 const NOW = Date.parse('2026-11-07T12:00:00.000Z')
 const DAY = 24 * 60 * 60 * 1000
-const CUTOFF = '2026-08-09T12:00:00.000Z'
+const CUTOFF = '2026-10-24T12:00:00.000Z'
 const CRON_TEST_VALUE = 'cron-test-value'
 const LABEL = 'import log retention run failed'
 const TABLE = 'provider_errors'
@@ -208,10 +208,10 @@ describe('import log clean-up rules', () => {
     expect(retentionMode(value)).toBe(mode)
   })
 
-  it('keeps import error logs for 90 days', () => {
-    expect(IMPORT_LOG_RETENTION_DAYS).toBe(90)
+  it('keeps import error logs for 14 days', () => {
+    expect(IMPORT_LOG_RETENTION_DAYS).toBe(14)
     expect(retentionCutoff(new Date(NOW))).toBe(CUTOFF)
-    expect(retentionCutoff(new Date(NOW))).toBe(new Date(NOW - 90 * DAY).toISOString())
+    expect(retentionCutoff(new Date(NOW))).toBe(new Date(NOW - 14 * DAY).toISOString())
   })
 
   it('uses small batches and fixed limits', () => {

@@ -391,6 +391,26 @@ export async function updateProviderDataQuality(
   }
 }
 
+const ERROR_LOG_ID_MAX_CHARS = 200
+const ERROR_LOG_ID_MAX_JSON_BYTES = 256
+
+// What the import error log keeps from a job's record: only its
+// source_job_id (the one value the admin provider screen shows), cut to at
+// most 200 characters, else null. Never another key. Never throws.
+export function errorLogContext(raw: unknown): { source_job_id: string } | null {
+  try {
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null
+    const id = (raw as { source_job_id?: unknown }).source_job_id
+    if (typeof id !== 'string' || id.length === 0) return null
+    const chars = Array.from(id.slice(0, ERROR_LOG_ID_MAX_CHARS * 2)).slice(0, ERROR_LOG_ID_MAX_CHARS)
+    const encoder = new TextEncoder()
+    while (chars.length > 0 && encoder.encode(JSON.stringify(chars.join(''))).length > ERROR_LOG_ID_MAX_JSON_BYTES) chars.pop()
+    return chars.length > 0 ? { source_job_id: chars.join('') } : null
+  } catch {
+    return null
+  }
+}
+
 // Log a provider error (job-level)
 export async function logProviderError(
   providerId: string,
@@ -407,7 +427,7 @@ export async function logProviderError(
     error_type: errorType,
     error_code: errorCode,
     error_message: errorMessage,
-    raw_job_data: rawJobData ?? null,
+    raw_job_data: errorLogContext(rawJobData),
   })
 }
 
