@@ -675,21 +675,18 @@ export async function getJobBySlug(slug: string): Promise<Job | null> {
 // getActiveDirectJobs rather than getJobBySlug's broadened
 // active-or-expired filter.
 //
-// Similarity comes from the job's own title words (similarTitleTokens
-// below), matched against search_vector with cheap newest-first indexed
-// queries rather than search_jobs_ranked, whose ts_rank_cd over every
-// match cost ~4 s per call: jobs sharing every title word first, then the
-// newest jobs sharing any, re-ranked in the app by shared title words.
-// Country is a preference, applied by searching the same country first and
-// worldwide second to pad an underfilled list, rather than a hard filter
-// that could exclude an otherwise-relevant match. A plain country +
-// recency query is kept as a last-resort fallback for when the title
-// yields no usable search term, or the title steps still come up short —
-// strictly better than an empty section, but deliberately never
+// The list is computed once a night for every live job and saved in
+// public.job_similar (lib/similar-jobs.ts, written only by
+// /api/cron/similar-jobs, D277). Similarity still comes from the job's own
+// title words (similarTitleTokens below): jobs sharing every title word
+// first, then the newest jobs sharing any, re-ranked by shared title words.
+// Country is a preference (same country first, worldwide to pad), and a
+// plain country + recency list is the last resort — deliberately never
 // seniority-only: seniority alone (an earlier version's second pass) let a
 // same-bucket match on the other side of the world fill the entire list
-// even when it had nothing to do with the job being viewed, which is what
-// produced the cross-country contamination this replaces.
+// even when it had nothing to do with the job being viewed. A page reads
+// the saved list by key and re-checks that each listed job is still live;
+// no text search runs per page view.
 
 // Job-board boilerplate that carries no topical signal for similarity
 // matching — left in, it only widens the candidate set without narrowing
@@ -773,191 +770,72 @@ export type SimilarJob = Pick<
 export const SIMILAR_JOB_COLUMNS =
   'id,slug,title,company_name,location_text,location_country,salary_text,salary_min,salary_max,salary_currency,published_at'
 
-// How many newest OR-matching candidates to re-rank in the app.
-const SIMILAR_CANDIDATE_POOL = 40
+// The saved list's ids, in order: strings only, each once, never the viewed
+// job (the table's check already refuses that).
+function savedSimilarIds(data: unknown, excludeId: string): string[] {
+  const row = Array.isArray(data) ? data[0] : null
+  const ids = row && typeof row === 'object' ? (row as { similar_ids?: unknown }).similar_ids : null
+  if (!Array.isArray(ids)) return []
+  const kept: string[] = []
+  for (const id of ids) {
+    if (typeof id === 'string' && id !== excludeId && !kept.includes(id)) kept.push(id)
+  }
+  return kept
+}
 
-type SimilarMode = 'and' | 'or'
+// One key read of the saved list, then one read of those jobs by id with the
+// live filters again (a job may have expired or closed since the nightly
+// run), returned in the saved order. Errors throw, so they are never cached.
+async function fetchSavedSimilarJobs(excludeId: string, platform: string): Promise<SimilarJob[]> {
+  const supabase = getSupabase()
+  const { data: saved, error: savedError } = await supabase
+    .from('job_similar')
+    .select('similar_ids')
+    .eq('job_id', excludeId)
+    .eq('platform', platform)
+    .limit(1)
+  if (savedError) throw readProblem('getSimilarJobs: saved list query failed', savedError)
+  const ids = savedSimilarIds(saved, excludeId)
+  if (ids.length === 0) return []
 
-// One newest-first, index-friendly lookup: live jobs on this platform whose
-// search_vector matches the term, optionally in one country. The @@ match
-// runs against the GIN index or during a walk of idx_jobs_active_platform
-// (status, published_at DESC) that stops at `limit` rows; nothing is
-// ranked, so no row's search_vector has to be read out of TOAST.
-// `published_at IS NOT NULL` keeps that walk newest-first: DESC puts NULLs
-// first, and only rows dated at ingestion or approval (see
-// lib/ingestion/normalise.ts) have one; older undated rows age out within
-// their 30-day expiry and the country fallback covers short lists.
-// Its arguments are the whole cache key below — never the viewed job's
-// id, so jobs whose titles reduce to the same term share an entry; the
-// viewed job is removed afterwards by getSimilarJobs. Errors throw, so
-// they are never cached.
-async function fetchSimilarCandidates(
-  platform: string,
-  mode: SimilarMode,
-  term: string,
-  country: string | null,
-  limit: number
-): Promise<SimilarJob[]> {
   const nowIso = new Date().toISOString()
-  let query = getSupabase()
+  const { data, error } = await supabase
     .from('jobs')
     .select(SIMILAR_JOB_COLUMNS)
+    .in('id', ids)
     .eq('status', 'active')
     .contains('platform', [platform])
     .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-    .not('published_at', 'is', null)
-    // 'english' matches search_jobs_ranked's websearch_to_tsquery config.
-    .textSearch('search_vector', term, { type: 'websearch', config: 'english' })
-  if (country) query = query.eq('location_country', country)
-
-  const { data, error } = await query.order('published_at', { ascending: false }).limit(limit)
-  if (error) throw readProblem(`getSimilarJobs: ${mode} query failed`, error)
-  return (data ?? []) as unknown as SimilarJob[]
+    .limit(ids.length)
+  if (error) throw readProblem('getSimilarJobs: jobs query failed', error)
+  const byId = new Map(((data ?? []) as unknown as SimilarJob[]).map(job => [job.id, job]))
+  return ids.flatMap(id => byId.get(id) ?? [])
 }
 
-// 6 hours: similar jobs are crawled far more than they change, and this runs
-// on every /jobs/[slug] render.
-const getCachedSimilarCandidates = cache(
-  unstable_cache(fetchSimilarCandidates, ['similar-jobs-candidates'], { revalidate: 21600, tags: ['jobs', 'related-jobs'] })
-)
-
-// The last-resort list: newest live jobs in one country. Same sharing rule as
-// fetchSimilarCandidates: the viewed job's id is not an input, so every job in
-// a country shares one entry and getSimilarJobs removes the viewed job
-// afterwards. Errors throw, so they are never cached.
-async function fetchSimilarCountryFallback(
-  platform: string,
-  country: string,
-  limit: number
-): Promise<SimilarJob[]> {
-  const nowIso = new Date().toISOString()
-  const { data, error } = await getSupabase()
-    .from('jobs')
-    .select(SIMILAR_JOB_COLUMNS)
-    .eq('status', 'active')
-    .contains('platform', [platform])
-    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
-    .eq('location_country', country)
-    .order('created_at', { ascending: false })
-    .limit(limit)
-  if (error) throw readProblem('getSimilarJobs: fallback query failed', error)
-  return (data ?? []) as unknown as SimilarJob[]
-}
-
-const getCachedSimilarCountryFallback = cache(
-  unstable_cache(fetchSimilarCountryFallback, ['similar-jobs-country-fallback'], { revalidate: 21600, tags: ['jobs', 'related-jobs'] })
-)
-
-// Most shared title words first; ties keep the candidates' newest-first
-// order (Array.prototype.sort is stable).
-function rankByTitleOverlap(candidates: SimilarJob[], titleTokens: string[]): SimilarJob[] {
-  const wanted = new Set(titleTokens)
-  return candidates
-    .map((job, index) => ({
-      job,
-      index,
-      overlap: similarTitleTokens(job.title).filter(token => wanted.has(token)).length,
-    }))
-    .sort((a, b) => b.overlap - a.overlap || a.index - b.index)
-    .map(entry => entry.job)
-}
+// One hour: the lists change once a night; the re-check of each listed job
+// keeps an expired one out within the hour.
+const getCachedSavedSimilarJobs = cache(guardCachedRead(['similar-jobs-saved'],
+  unstable_cache(fetchSavedSimilarJobs, ['similar-jobs-saved'], { revalidate: 3600, tags: ['jobs', 'related-jobs'] })
+))
 
 // seniorityLevel stays part of the public contract (callers already pass
 // it) but is intentionally not read here — see the module comment above
-// for why seniority no longer backfills this list.
+// for why seniority no longer backfills this list. title and
+// locationCountry are used by the nightly computation, not here.
 export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<SimilarJob[]> {
   // Emergency kill switch (incident 2026-11-05): off unless explicitly "true".
   // Returns before any cache or database call, and logs nothing per request.
   if (process.env.SIMILAR_JOBS_ENABLED !== 'true') return []
 
-  const { excludeId, platform, title, locationCountry, limit = 6 } = params
-
-  const picked: SimilarJob[] = []
-  const pickedIds = new Set<string>([excludeId])
-
-  function addRows(rows: SimilarJob[]) {
-    for (const row of rows) {
-      if (picked.length >= limit) break
-      if (pickedIds.has(row.id)) continue
-      pickedIds.add(row.id)
-      picked.push(row)
-    }
-  }
-
-  let tokens: string[] = []
+  const { excludeId, platform, limit = 6 } = params
   try {
-    tokens = similarTitleTokens(title, 6)
+    const saved = await getCachedSavedSimilarJobs(excludeId, platform)
+    return saved.filter(job => job.id !== excludeId).slice(0, Math.max(0, limit))
   } catch (error) {
-    console.error('getSimilarJobs (similarTitleTokens) error:', error)
-    reportServerError('similar jobs title words failed', new Error('similar jobs title words failed'), { area: 'public' })
+    console.error('getSimilarJobs (saved list) error:', error)
+    reportServerError('similar jobs saved list read failed', new Error('similar jobs query failed'), { area: 'public' })
+    return []
   }
-
-  if (tokens.length > 0) {
-    const country = locationCountry ?? null
-    // Sorted because these terms are the cache key, and word order doesn't
-    // change which rows AND or OR match: "Senior Tax Accountant" and "Tax
-    // Accountant Senior" share one entry.
-    const sortedTokens = [...tokens].sort()
-    const orTerm = sortedTokens.join(' OR ')
-
-    // Step 1 — strong matches: every title word (bare words are AND in
-    // websearch), same country, newest first. +1 because the viewed job
-    // matches its own title and is removed by addRows. Skipped for a
-    // one-word title, where it would match exactly the same rows as step 2.
-    if (tokens.length > 1) {
-      try {
-        addRows(await getCachedSimilarCandidates(platform, 'and', sortedTokens.join(' '), country, limit + 1))
-      } catch (error) {
-        console.error('getSimilarJobs (and, same country) error:', error)
-        reportServerError('similar jobs strong match read failed', new Error('similar jobs query failed'), { area: 'public' })
-      }
-    }
-
-    // Step 2 — padding: any title word, same country, the 40 newest
-    // candidates re-ranked by shared title words.
-    if (picked.length < limit) {
-      try {
-        const candidates = await getCachedSimilarCandidates(platform, 'or', orTerm, country, SIMILAR_CANDIDATE_POOL)
-        addRows(rankByTitleOverlap(candidates, tokens))
-      } catch (error) {
-        console.error('getSimilarJobs (or, same country) error:', error)
-        reportServerError('similar jobs same country read failed', new Error('similar jobs query failed'), { area: 'public' })
-      }
-    }
-
-    // Step 3 — the same worldwide, only when country was a real constraint
-    // above (with no known country, step 2 already searched worldwide).
-    if (picked.length < limit && locationCountry) {
-      try {
-        const candidates = await getCachedSimilarCandidates(platform, 'or', orTerm, null, SIMILAR_CANDIDATE_POOL)
-        addRows(rankByTitleOverlap(candidates, tokens))
-      } catch (error) {
-        console.error('getSimilarJobs (or, worldwide) error:', error)
-        reportServerError('similar jobs worldwide read failed', new Error('similar jobs query failed'), { area: 'public' })
-      }
-    }
-  }
-
-  // Phase C — last resort: plain country + recency, unchanged from the
-  // pre-ranking behaviour. Runs whenever steps 1-3 (or the absence of a
-  // usable search term) leave the list short. Deliberately country-only —
-  // never seniority-only worldwide; see the module comment above.
-  if (picked.length < limit && locationCountry) {
-    try {
-      // Same defensive stripping as buildQualificationsOrFilter — this
-      // value originates from the job's own row rather than raw request
-      // input, but there's no cost to keeping the filter construction
-      // consistently safe.
-      const cleanCountry = locationCountry.replace(/[(),]/g, '')
-      // +1 because the viewed job may be in the shared list; addRows removes it.
-      addRows(await getCachedSimilarCountryFallback(platform, cleanCountry, limit + 1))
-    } catch (error) {
-      console.error('getSimilarJobs (fallback) error:', error)
-      reportServerError('similar jobs country fallback read failed', new Error('similar jobs query failed'), { area: 'public' })
-    }
-  }
-
-  return picked.slice(0, limit)
 }
 
 // No status filter — an employer managing their own listing via its unique

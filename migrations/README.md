@@ -53,8 +53,12 @@ Migrations in this directory cover only the AccountingBody-owned tables:
 ```
 jobs  job_providers  provider_runs  job_applications
 employer_briefs  job_seeker_registrations  firms_applications
-site_counts
+site_counts  job_similar
 ```
+
+`job_similar` (saved "Similar current roles" lists, one per job and site) was
+added by `0020`. Its rows are written only by the nightly
+`/api/cron/similar-jobs` route.
 
 `site_counts` (pre-counted totals for public pages) was added by `0009`.
 Its rows are written by `public.refresh_site_counts()`, which pg_cron job 3
@@ -92,6 +96,7 @@ extend a migration here to touch another product's tables.
 | `0017_anon_form_policies_and_truncate.sql` | **Record only - applied 17 Nov 2026, 13:04 UTC (D216).** Removed the 6 public INSERT rules (role anon, check true) on the four form tables and took TRUNCATE away from anon and authenticated on every public table (and for tables postgres creates later). The forms write with the server key. No rows changed. The file stops itself if run. The undo is at the end of the file. |
 | `0018_retired_areas_removed.sql` | **Record only - applied 17 Nov 2026, 14:05 and 14:27 UTC (D220, D222).** Owner decision D214: the retired areas removed - HRLake (its area, the 13 et views and the function that read it, its 1 subscriber row), BirrBank, the empty ab and et areas, and the GPE rows. A backup run before each change. The file stops itself if run. Undo: restore from those backups (docs/RUNBOOK.md). |
 | `0019_unused_public_tables_removed.sql` | **Record only - applied 17 Nov 2026, 19:11 and 20:18 UTC (D226, D230).** The 31 public tables nothing used (24 empty, then 7 more incl. the old account tables), two helper functions and two empty links removed; the sign-up function now only returns NEW. public now holds only the 25 tables the code uses. A backup run before each change. The file stops itself if run. Undo: restore from those backups (docs/RUNBOOK.md). |
+| `0020_job_similar.sql` | **Applied 21 Nov 2026, 02:18:12 UTC (D279)**, from the Codespace (`psql`, one transaction, after a fresh backup). The empty table `job_similar`: one saved similar-jobs list per job and site (up to 6 ids), row level security on with no policy, rights for `service_role` only. Written only by `/api/cron/similar-jobs` (D277). Applied once; do not run it again (it stops itself if run). Undo (owner decision only): `DROP TABLE IF EXISTS public.job_similar;` |
 
 ## Compare with the live database before any replace
 
