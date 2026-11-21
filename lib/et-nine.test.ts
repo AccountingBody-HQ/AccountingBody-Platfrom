@@ -36,7 +36,7 @@ const DB = vi.hoisted(() => ({
 }))
 vi.mock('@/lib/supabase-server', async (importOriginal) => {
   const builder: Record<string, (...args: unknown[]) => unknown> = {}
-  for (const name of ['from', 'select', 'eq', 'in', 'contains', 'gt', 'gte', 'lt']) {
+  for (const name of ['from', 'select', 'eq', 'in', 'or', 'contains', 'gt', 'gte', 'lt']) {
     builder[name] = (...args: unknown[]) => {
       DB.calls.push([name, ...args])
       return builder
@@ -433,7 +433,7 @@ const JOB_BASE = {
   category: null, qualifications_required: [], skills_required: [], skills_nice_to_have: [],
   apply_method: 'external', application_url: 'https://example.test/apply', application_email: null,
   source: 'adzuna', source_url: null, is_featured: false, published_at: '2026-11-01T00:00:00.000Z',
-  created_at: '2026-11-01T00:00:00.000Z', expires_at: null,
+  created_at: '2026-11-01T00:00:00.000Z', expires_at: null, status: 'active', closed_at: null,
 }
 function job(platform: string[], owner: string) {
   return { ...JOB_BASE, platform, canonical_owner: owner }
@@ -604,8 +604,8 @@ describe('G9 /et-sitemap lists only what ethiotax.com owns', () => {
     await actual.getJobSitemapChunk('ab', 0)
     const selects = DB.calls.filter(c => c[0] === 'select').map(c => c[1])
     expect(selects).toEqual([
-      'id, slug, expires_at, published_at, created_at, platform, canonical_owner',
-      'id, slug, expires_at, published_at, created_at, platform, canonical_owner',
+      'id, slug, status, expires_at, closed_at, published_at, created_at, platform, canonical_owner',
+      'id, slug, status, expires_at, closed_at, published_at, created_at, platform, canonical_owner',
     ])
     expect(DB.calls.filter(c => c[0] === 'contains')).toEqual([['contains', 'platform', ['et']], ['contains', 'platform', ['ab']]])
   })

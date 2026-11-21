@@ -53,8 +53,8 @@ function fakeEntriesSupabaseClient(
   pages: Array<{ data: unknown[] | null; error: unknown }>,
   always?: () => { data: unknown[]; error: null },
 ) {
-  const calls: Array<{ gt: string | null; limit: number; order: [string, unknown]; in: [string, unknown]; contains: [string, unknown]; select: string }> = []
-  let current: { gt: string | null; order?: [string, unknown]; in?: [string, unknown]; contains?: [string, unknown]; select?: string } = { gt: null }
+  const calls: Array<{ gt: string | null; limit: number; order: [string, unknown]; eq: [string, unknown]; or: string; contains: [string, unknown]; select: string }> = []
+  let current: { gt: string | null; order?: [string, unknown]; eq?: [string, unknown]; or?: string; contains?: [string, unknown]; select?: string } = { gt: null }
   let call = 0
   const builder = {
     from: () => {
@@ -65,8 +65,15 @@ function fakeEntriesSupabaseClient(
       current.select = cols
       return builder
     },
-    in: (col: string, val: unknown) => {
-      current.in = [col, val]
+    in: () => {
+      throw new Error('in() must not be used: the sitemap reads status = active only')
+    },
+    eq: (col: string, val: unknown) => {
+      current.eq = [col, val]
+      return builder
+    },
+    or: (filter: string) => {
+      current.or = filter
       return builder
     },
     contains: (col: string, val: unknown) => {
@@ -110,12 +117,15 @@ afterEach(() => {
 })
 
 function makeChunkJobs(n: number, startIndex = 0) {
-  // expires_at: null keeps getJobLifecycleState at 'active' for every row,
-  // so the archived-filter never drops any of these test rows — the counts
-  // below are exact, not "at most." Ids sort in the same order as startIndex.
+  // status 'active' with expires_at: null keeps getJobLifecycleState at
+  // 'open' for every row, so the open-jobs filter never drops any of these
+  // test rows — the counts below are exact, not "at most." Ids sort in the
+  // same order as startIndex.
   return Array.from({ length: n }, (_, i) => ({
     id: `id-${String(startIndex + i).padStart(6, '0')}`,
     slug: `job-${startIndex + i}`,
+    status: 'active',
+    closed_at: null,
     expires_at: null,
     published_at: '2024-01-01T00:00:00.000Z',
     created_at: '2024-01-01T00:00:00.000Z',
@@ -144,9 +154,11 @@ describe('getJobSitemapEntries — keyset pagination', () => {
     for (const c of fake.calls) {
       expect(c.limit).toBe(PAGE_SIZE)
       expect(c.order).toEqual(['id', { ascending: true }])
-      expect(c.in).toEqual(['status', ['active', 'expired']])
+      expect(c.eq).toEqual(['status', 'active'])
+      expect(c.or).toMatch(/^expires_at\.is\.null,expires_at\.gt\.\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
+      expect(c.or).toBe(fake.calls[0].or)
       expect(c.contains).toEqual(['platform', ['et']])
-      expect(c.select).toBe('id, slug, expires_at, published_at, created_at, platform, canonical_owner')
+      expect(c.select).toBe('id, slug, status, expires_at, closed_at, published_at, created_at, platform, canonical_owner')
     }
   })
 
@@ -196,17 +208,20 @@ describe('getJobSitemapEntries — keyset pagination', () => {
     expect(await getJobSitemapEntries('et')).toEqual({ ok: false })
   })
 
-  it('still leaves out archived jobs (expired over a year ago) and keeps stale ones', async () => {
+  it('leaves out every closed job (past its expiry, or no longer active) and keeps open ones', async () => {
     const day = 24 * 60 * 60 * 1000
-    const rows = makeChunkJobs(3, 0)
+    const rows = makeChunkJobs(5, 0)
     rows[0].expires_at = new Date(Date.now() - 400 * day).toISOString() as never
     rows[1].expires_at = new Date(Date.now() - 40 * day).toISOString() as never
+    rows[3].status = 'expired'
+    rows[3].expires_at = new Date(Date.now() + 10 * day).toISOString() as never
+    rows[4].expires_at = new Date(Date.now() + 10 * day).toISOString() as never
     const fake = fakeEntriesSupabaseClient([{ data: rows, error: null }])
     useClient(fake)
 
     const result = await getJobSitemapEntries('et')
 
-    expect(result.ok && result.entries.map(e => e.slug)).toEqual(['job-1', 'job-2'])
+    expect(result.ok && result.entries.map(e => e.slug)).toEqual(['job-2', 'job-4'])
     expect(result.ok && result.entries[0].lastModified).toEqual(new Date('2024-01-01T00:00:00.000Z'))
   })
 
@@ -239,7 +254,8 @@ function fakeChunkSupabaseClient(pages: Array<{ data: unknown[] | null; error: u
   const builder = {
     from: () => builder,
     select: () => builder,
-    in: () => builder,
+    eq: () => builder,
+    or: () => builder,
     contains: () => builder,
     gte: (_col: string, val: string) => {
       gteCalls.push(val)
