@@ -1,6 +1,7 @@
 import { Resend, type CreateEmailResponse } from 'resend'
 import type { Job } from '@/lib/jobs'
 import { AB_BRAND_NAME, ET_BRAND_NAME, isEthioTaxJobPlatform } from '@/lib/brand'
+import { getAdminPath } from '@/lib/middleware-logic'
 
 // Shared transactional email templates for the direct-employer jobs flow.
 //
@@ -101,7 +102,7 @@ export async function sendJobConfirmationEmail(job: Job, manageToken: string): P
 
 export async function sendAdminJobNotificationEmail(job: Job): Promise<void> {
   const brand = brandFor(job.platform)
-  const reviewUrl = `${siteUrl(brand)}/roodber8/jobs?status=pending_approval`
+  const reviewUrl = `${siteUrl(brand)}/${getAdminPath()}/jobs?status=pending_approval`
   const html = wrapEmail(
     brand,
     `${brand.name} — Admin`,

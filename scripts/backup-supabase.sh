@@ -145,8 +145,8 @@ cat <<'BANNER'
 ------------------------------------------------------------------------------
  What it does : copies the whole project database into ONE encrypted file:
                 articles, practice questions, courses, jobs, recruitment and
-                contact submissions, subscribers, the archived HRLake and
-                BirrBank areas, Supabase sign-in records (none today) and any
+                contact submissions, subscribers and the rest of the public
+                area, Supabase sign-in records (none today) and any
                 stored files (none today). It only READS your project: nothing
                 there is changed or deleted.
  You need     : 1. the Session pooler connection string (Supabase > Connect)

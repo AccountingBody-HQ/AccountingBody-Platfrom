@@ -10,7 +10,7 @@ AccountingBody runs on Supabase's Free plan, which keeps **no backups for you**.
 
 One backup is **one encrypted file**. It holds:
 
-- every project area of the database: `public` (articles, practice questions, courses, jobs, recruitment and contact submissions, subscribers, and the rest), plus the archived areas `hrlake`, `birrbank`, `ab` and `et`, and any new project area that appears;
+- every project area of the database: `public` (articles, practice questions, courses, jobs, recruitment and contact submissions, subscribers, and the rest), and any new project area that appears;
 - Supabase sign-in records (none today) and stored files and their records (none today);
 - the list of extensions, and the definitions of the scheduled database jobs (pg_cron);
 - a manifest (what is in the backup, with row counts) and checksums.
@@ -132,7 +132,7 @@ Restoring **replaces data**. **Talk it through with your developer first**: most
 
 **Over the live project (a last resort):**
 
-Restoring over live replaces ALL of AccountingBody's and EthioTax's data and every archived area (`hrlake`, `birrbank`, `ab`, `et`). Everything added since the backup was taken is lost. Take a fresh backup first.
+Restoring over live replaces ALL of AccountingBody's and EthioTax's data (the whole `public` area). Everything added since the backup was taken is lost. Take a fresh backup first.
 
 The script refuses the live project unless you type `RESTORE OVER LIVE ACCOUNTINGBODY` exactly. Any target already holding data also needs `REPLACE ALL DATA IN TARGET` typed exactly.
 
