@@ -61,7 +61,7 @@ const P = {
   P5: { source: '/comments/feed/:rest*', destination: '/articles' },
   P6: { source: '/page/:n(\\d+)/:rest*', destination: '/articles' },
   P7: { source: '/:year(\\d{4})/:month(\\d{2})/:rest*', destination: '/articles' },
-  P8: { source: '/:slug/feed/:rest*', destination: '/:slug' },
+  P8: { source: '/:slug((?!(?:comments|tag|category|author|feed)/)[^/#?]+)/feed/:rest*', destination: '/:slug' },
 }
 
 describe('G1 sample old addresses reach the expected next address (first match)', () => {
@@ -168,6 +168,16 @@ describe('G2 the pattern list: frozen, in order, no loops, no dead ends, never t
     expect(steps).toBe(1)
     expect(cur).not.toBe('/')
     expect(LIVE.has(cur) || (name === 'P8' && SINGLE.test(cur))).toBe(true)
+  })
+
+  // The Preview showed /comments/feed taking the article-feed row, so the result
+  // must not depend on pattern order: every sample matches exactly one pattern.
+  it.each([
+    ...SAMPLE_PER_PATTERN,
+    ['P1', '/tag/feed'], ['P2', '/category/feed'], ['P3', '/author/feed'], ['P4', '/feed/feed'],
+  ] as Array<[string, string]>)('%s %s is matched by exactly one pattern', (name, path) => {
+    const hits = patterns.filter((r) => matches(r, path))
+    expect(hits).toEqual([P[name as keyof typeof P]])
   })
 
   it('no destination is the home page', () => {
