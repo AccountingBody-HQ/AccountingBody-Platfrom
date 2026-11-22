@@ -4,7 +4,7 @@ The codebase behind [accountingbody.com](https://accountingbody.com) and [ethiot
 
 ## Stack
 
-- Next.js 14 App Router, React 18, TypeScript in strict mode
+- Next.js 15.5 App Router, React 19, TypeScript in strict mode
 - Tailwind CSS
 - Supabase (through supabase-js)
 - Resend for email

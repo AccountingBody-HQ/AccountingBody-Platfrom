@@ -5,8 +5,8 @@ import { LEGACY_SLUG_RE, toStoredSlug } from '@/lib/slug-param'
 // lib/legacy-redirect-map.ts: the frozen map of renamed old WordPress slugs.
 
 describe('legacy renamed-slug map', () => {
-  it('holds exactly 148 rows', () => {
-    expect(LEGACY_RENAMED_SLUG_COUNT).toBe(148)
+  it('holds exactly 151 rows', () => {
+    expect(LEGACY_RENAMED_SLUG_COUNT).toBe(151)
     expect(LEGACY_RENAMED_SLUGS.size).toBe(LEGACY_RENAMED_SLUG_COUNT)
   })
 
