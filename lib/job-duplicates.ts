@@ -16,9 +16,12 @@ import { visibleAdvertKey } from '@/lib/jobs'
 //     the set of sites. No key (never marked, never a primary) for employer
 //     rows and rows without a provider, source, company or site.
 //   - a group is the live rows with one key; a group of one has no copies.
-//   - primary (sticky): the row the current marks of the group point at, if
-//     they all point at one row that is in the group and itself unmarked;
-//     otherwise the earliest created row (ties: lowest id).
+//   - primary: the row that ends last (expires_at; none = latest, D300), so
+//     a marked copy never ends after its primary. Ties on the end: the
+//     current primary if it is among them (sticky: the row the current
+//     marks of the group point at, if they all point at one row that is in
+//     the group and itself unmarked); otherwise the earliest created of them
+//     (ties: lowest id).
 //   - every other row of a group is marked to its primary; every primary,
 //     single row and keyless row ends unmarked. So there are no chains and
 //     no row points at itself.
@@ -35,6 +38,7 @@ export interface DuplicateCandidateRow {
   platform: string[] | null
   created_at: string
   ai_duplicate_of?: string | null
+  expires_at?: string | null
 }
 
 export interface DuplicatePlan {
@@ -76,7 +80,14 @@ function earliestFirst(a: DuplicateCandidateRow, b: DuplicateCandidateRow): numb
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0
 }
 
-function primaryOf(group: DuplicateCandidateRow[]): DuplicateCandidateRow {
+// No end date, or one that does not parse, counts as no end (latest).
+function endTime(row: DuplicateCandidateRow): number {
+  if (typeof row.expires_at !== 'string') return Number.POSITIVE_INFINITY
+  const parsed = Date.parse(row.expires_at)
+  return Number.isNaN(parsed) ? Number.POSITIVE_INFINITY : parsed
+}
+
+function stickyOf(group: DuplicateCandidateRow[]): DuplicateCandidateRow | null {
   const members = new Map(group.map(row => [row.id, row]))
   const targets = new Set<string>()
   for (const row of group) if (row.ai_duplicate_of) targets.add(row.ai_duplicate_of)
@@ -84,7 +95,16 @@ function primaryOf(group: DuplicateCandidateRow[]): DuplicateCandidateRow {
     const sticky = members.get(Array.from(targets)[0])
     if (sticky && !sticky.ai_duplicate_of) return sticky
   }
-  return [...group].sort(earliestFirst)[0]
+  return null
+}
+
+function primaryOf(group: DuplicateCandidateRow[]): DuplicateCandidateRow {
+  let latest = Number.NEGATIVE_INFINITY
+  for (const row of group) latest = Math.max(latest, endTime(row))
+  const tied = group.filter(row => endTime(row) === latest)
+  const sticky = stickyOf(group)
+  if (sticky && tied.includes(sticky)) return sticky
+  return [...tied].sort(earliestFirst)[0]
 }
 
 export function planDuplicateMarks(rows: DuplicateCandidateRow[]): DuplicatePlan {
