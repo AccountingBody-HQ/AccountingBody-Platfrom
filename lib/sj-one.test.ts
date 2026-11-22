@@ -600,7 +600,7 @@ describe('G5 the cron route', () => {
 
     const [readJobs, write, remove] = state.queries
     expect(state.queries.map((query) => query.table)).toStrictEqual(['jobs', 'job_similar', 'job_similar'])
-    expect(argsOf(readJobs, 'select')).toStrictEqual([['id,title,location_country,platform,published_at,created_at,company_name,provider_id,source,ai_duplicate_of']])
+    expect(argsOf(readJobs, 'select')).toStrictEqual([['id,title,location_country,platform,published_at,created_at,company_name,provider_id,source,ai_duplicate_of,expires_at']])
     expect(argsOf(readJobs, 'eq')).toStrictEqual([['status', 'active']])
     expect(String(argsOf(readJobs, 'or')[0][0])).toMatch(/^expires_at\.is\.null,expires_at\.gt\.\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
     expect(argsOf(readJobs, 'gt')).toStrictEqual([])

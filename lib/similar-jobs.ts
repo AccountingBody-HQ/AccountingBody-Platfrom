@@ -35,9 +35,9 @@ export const SIMILAR_CANDIDATE_POOL = 40
 export const SIMILAR_PLATFORMS = ['ab', 'et'] as const
 export type SimilarPlatform = (typeof SIMILAR_PLATFORMS)[number]
 
-// The light columns the nightly run reads for every live job. The last four
-// are for the duplicate-advert marks (lib/job-duplicates.ts, D283).
-export const LIVE_JOB_COLUMNS = 'id,title,location_country,platform,published_at,created_at,company_name,provider_id,source,ai_duplicate_of'
+// The light columns the nightly run reads for every live job. The last five
+// are for the duplicate-advert marks (lib/job-duplicates.ts, D283, D300).
+export const LIVE_JOB_COLUMNS = 'id,title,location_country,platform,published_at,created_at,company_name,provider_id,source,ai_duplicate_of,expires_at'
 
 export interface LiveJobRow {
   id: string
@@ -50,6 +50,7 @@ export interface LiveJobRow {
   provider_id?: string | null
   source?: string | null
   ai_duplicate_of?: string | null
+  expires_at?: string | null
 }
 
 // With copies hidden (D283): only primaries are suggested, and a list never

@@ -705,7 +705,7 @@ describe('G2 the nightly marking', () => {
 
   it('the nightly read carries the four extra light columns in the same keyset pages', async () => {
     const { LIVE_JOB_COLUMNS } = await import('@/lib/similar-jobs')
-    expect(LIVE_JOB_COLUMNS).toBe('id,title,location_country,platform,published_at,created_at,company_name,provider_id,source,ai_duplicate_of')
+    expect(LIVE_JOB_COLUMNS).toBe('id,title,location_country,platform,published_at,created_at,company_name,provider_id,source,ai_duplicate_of,expires_at')
   })
 
   it('the write switch is read in the route only, exactly "on"; the run takes it as a flag', () => {
