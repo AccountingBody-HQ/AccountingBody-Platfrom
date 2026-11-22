@@ -74,9 +74,12 @@ export function formatSalary(job: Pick<Job, 'salary_text' | 'salary_min' | 'sala
   return fmt(job.salary_min ?? job.salary_max ?? 0)
 }
 
-export function formatRelativeDate(dateStr: string | null | undefined): string {
+// `now` lets a server-rendered list and its first browser render use the
+// same moment (the job list passes its render time); by default it is the
+// clock, as before.
+export function formatRelativeDate(dateStr: string | null | undefined, now: number = Date.now()): string {
   if (!dateStr) return ''
-  const ageMs = Date.now() - new Date(dateStr).getTime()
+  const ageMs = now - new Date(dateStr).getTime()
   const ageMins = Math.floor(ageMs / 60000)
   if (ageMins < 60) return ageMins <= 1 ? 'Just now' : `${ageMins}m ago`
   const ageHrs = Math.floor(ageMins / 60)

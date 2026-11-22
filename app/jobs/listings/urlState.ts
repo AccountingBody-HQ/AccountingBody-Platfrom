@@ -3,7 +3,7 @@
 // parseListingsUrlState(useSearchParams()) directly on every render — it
 // never mirrors these fields into useState — and writes new state by
 // calling buildListingsSearchString(nextState) and handing the result to
-// router.replace(). Keeping the translation itself framework-free means it
+// window.history.replaceState(). Keeping the translation itself framework-free means it
 // can be (and is, see urlState.test.ts) unit-tested without React at all,
 // which is the only way to mechanically verify "a pasted URL reproduces
 // that exact view" rather than just reasoning about it.
@@ -147,4 +147,71 @@ export function buildListingsUrlParams(state: ListingsUrlState): URLSearchParams
 export function buildListingsSearchString(state: ListingsUrlState): string {
   const qs = buildListingsUrlParams(state).toString()
   return qs ? `?${qs}` : ''
+}
+
+// One page of the list, both in the page's first HTML and in the browser.
+export const LISTINGS_PAGE_SIZE = 24
+
+// The /api/jobs/direct query for one view. The page's server render
+// (page.tsx) and JobListingsClient's fetch both build it here, so they ask
+// for exactly the same page and share lib/jobs.ts's cached reads.
+// posted_within goes out in days (POSTED_DAYS), as the route expects.
+export function buildDirectJobsParams(state: ListingsUrlState, platform: 'ab' | 'et', pageSize: number): URLSearchParams {
+  const { search, location, filters, sortBy, page } = state
+  const params = new URLSearchParams({
+    platform,
+    limit: String(pageSize),
+    offset: String((page - 1) * pageSize),
+  })
+  if (search) params.set('search', search)
+  if (location) params.set('location', location)
+  if (filters.employmentTypes.length > 0) params.set('employment_types', filters.employmentTypes.join(','))
+  if (filters.seniority.length > 0) params.set('seniority', filters.seniority.join(','))
+  if (filters.locationCountry !== 'all') params.set('location_country', filters.locationCountry)
+  if (filters.remoteOnly) params.set('remote', 'true')
+  if (filters.salaryMin.trim()) params.set('salary_min', filters.salaryMin.trim())
+  if (filters.salaryMax.trim()) params.set('salary_max', filters.salaryMax.trim())
+  if (filters.postedWithin !== 'all') params.set('posted_within', String(POSTED_DAYS[filters.postedWithin]))
+  if (filters.qualifications.length > 0) params.set('qualifications', filters.qualifications.join(','))
+  if (sortBy !== DEFAULT_SORT) params.set('sort_by', sortBy)
+  return params
+}
+
+// Names one view of the list: its platform and its canonical search string.
+// The server page labels its first page with it, and the browser uses that
+// page only for the view with the same key.
+export function listingsViewKey(platform: 'ab' | 'et', state: ListingsUrlState): string {
+  return `${platform}|${buildListingsSearchString(state)}`
+}
+
+// The sessionStorage key under which JobListingsClient keeps the scroll
+// position of one view of the list (its path and canonical search string).
+export function listingsScrollKey(pathname: string, state: ListingsUrlState): string {
+  return `jobs-listings-scroll:${pathname}${buildListingsSearchString(state)}`
+}
+
+// How old a server-rendered first page may be when the browser takes it
+// over without asking again. A page restored later (for example by Back
+// from a job) is older than this, so the browser refreshes it once.
+export const INITIAL_FRESH_MS = 120_000
+
+export interface InitialListingsPage<J> {
+  key: string
+  jobs: J[]
+  total: number | null
+  renderedAt: number
+}
+
+// True when the browser should show the server's first page for this view
+// instead of fetching it: same view, not already taken over by this list,
+// and fresh (either clock direction, so a wrong device clock just means one
+// fetch, as before).
+export function shouldAdoptInitial({ initial, key, consumed, now }: {
+  initial: { key: string; renderedAt: number } | null | undefined
+  key: string
+  consumed: unknown
+  now: number
+}): boolean {
+  if (!initial || initial.key !== key || initial === consumed) return false
+  return Math.abs(now - initial.renderedAt) <= INITIAL_FRESH_MS
 }

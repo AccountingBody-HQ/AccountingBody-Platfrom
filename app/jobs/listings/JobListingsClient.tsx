@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import type { Job, EmploymentType, SeniorityLevel, ActiveJobCountry } from '@/lib/jobs'
+import type { ListingCard } from '@/app/api/jobs/direct/load'
 import { buildCountryOptions, type CountryOption } from './countryOptions'
 import { formatJobLocation } from './jobLocation'
 import {
@@ -19,11 +20,16 @@ import {
 import {
   parseListingsUrlState,
   buildListingsSearchString,
+  buildDirectJobsParams,
+  listingsViewKey,
+  listingsScrollKey,
+  shouldAdoptInitial,
   sortMenuValue,
   EMPTY_FILTERS,
   DEFAULT_SORT,
   DEFAULT_PAGE,
-  POSTED_DAYS,
+  LISTINGS_PAGE_SIZE,
+  type InitialListingsPage,
   type Filters,
   type PostedWithin,
   type SortBy,
@@ -42,7 +48,7 @@ interface DirectJobsResponse {
   total?: number | null
 }
 
-const PAGE_SIZE = 24
+const PAGE_SIZE = LISTINGS_PAGE_SIZE
 
 // Must match Tailwind's `md` breakpoint (tailwind.config.ts screens.md).
 // The mobile filter drawer's container is `md:hidden`, so at this width CSS
@@ -112,9 +118,9 @@ function countActiveFilters(f: Filters): number {
   )
 }
 
-function isNewJob(dateStr: string | null | undefined): boolean {
+function isNewJob(dateStr: string | null | undefined, now: number): boolean {
   if (!dateStr) return false
-  return Date.now() - new Date(dateStr).getTime() < 24 * 60 * 60 * 1000
+  return now - new Date(dateStr).getTime() < 24 * 60 * 60 * 1000
 }
 
 
@@ -499,12 +505,15 @@ function JobAlertBanner({ search, filters, onDismiss }: {
 
 // ── Job card ──────────────────────────────────────────────────────────────
 
-function JobCard({ job, saved, pending, onSave }: {
-  job: Job
+function JobCard({ job, saved, pending, onSave, now }: {
+  job: ListingCard
   saved: boolean
   pending: boolean
   onSave: (id: string) => void
+  // The moment card dates are measured from; the clock when not given.
+  now?: number
 }) {
+  const clock = now ?? Date.now()
   const salary = formatSalary(job)
   const empLabel = employmentTypeLabel(job.employment_type)
   const seniority = seniorityLabel(job.seniority_level)
@@ -512,7 +521,7 @@ function JobCard({ job, saved, pending, onSave }: {
   const initials = getCompanyInitials(job.company_name)
   const avatarColor = getCompanyColor(job.company_name)
   const dateStr = job.published_at ?? job.created_at
-  const isNew = isNewJob(dateStr)
+  const isNew = isNewJob(dateStr, clock)
 
   return (
     <div
@@ -633,7 +642,7 @@ function JobCard({ job, saved, pending, onSave }: {
           ) : (
             <span className="text-xs text-slate-400">Salary not listed</span>
           )}
-          <p className="text-[11px] text-slate-400 mt-1.5">{formatRelativeDate(dateStr)}</p>
+          <p className="text-[11px] text-slate-400 mt-1.5">{formatRelativeDate(dateStr, clock)}</p>
         </div>
         <span className="shrink-0 inline-flex items-center justify-center h-9 px-4 rounded-lg text-xs font-bold transition-all bg-navy-950 text-white">
           View Job →
@@ -685,9 +694,12 @@ function EmptyState({ onClear }: { onClear: () => void }) {
 
 // ── Main component ────────────────────────────────────────────────────────
 
-export default function JobListingsClient({ isEthioTax, countryOptions: derivedCountryOptions }: {
+export default function JobListingsClient({ isEthioTax, countryOptions: derivedCountryOptions, initial = null }: {
   isEthioTax: boolean
   countryOptions: ActiveJobCountry[]
+  // The server's first page (page.tsx) for the view named by its key, or
+  // null when the server sent none; the list then loads as it always did.
+  initial?: InitialListingsPage<ListingCard> | null
 }) {
   const platform = isEthioTax ? 'et' : 'ab'
   // Computed once per render from the server-fetched derived list (see
@@ -697,13 +709,12 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   // example missing or stale pre-counted rows) — see buildCountryOptions.
   const countryOptions = useMemo(() => buildCountryOptions(derivedCountryOptions), [derivedCountryOptions])
 
-  const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
   // Single source of truth, derived fresh from the URL on every render —
   // never mirrored into useState. navigateToState() (below) is the only
-  // write path, via router.replace(); fetchJobs() is a pure reader of this
+  // write path, via history.replaceState(); fetchJobs() is a pure reader of this
   // value and never writes back to the URL itself — a one-way flow with
   // nothing for the two to ping-pong through. useSearchParams() only
   // changes identity when the URL actually changes, so this useMemo only
@@ -712,19 +723,41 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   // array (below) from re-firing when nothing about the requested view
   // has changed.
   const urlState = useMemo(() => parseListingsUrlState(searchParams), [searchParams])
-  const { search: activeSearch, location: activeLocation, filters, sortBy, page } = urlState
+  const { search: activeSearch, filters, sortBy, page } = urlState
+  const viewKey = useMemo(() => listingsViewKey(platform, urlState), [platform, urlState])
 
+  // Next's App Router follows window.history.replaceState: usePathname and
+  // useSearchParams take the new URL without a server render
+  // (next/dist/client/components/app-router.js), so a filter or page change
+  // costs one /api/jobs/direct request only. Replace, as before: no new
+  // Back entries, and the scroll position is left alone. The new view is
+  // marked as already restored first, so the scroll restoration below runs
+  // only when the list mounts (Back, Forward, reload, arrival), never for a
+  // change made on the page: the URL changes before the page's own scroll
+  // (scrollToResults) has finished, and positions saved during it must not
+  // be restored when the new rows arrive.
   function navigateToState(next: ListingsUrlState) {
-    router.replace(pathname + buildListingsSearchString(next), { scroll: false })
+    restoredKeyRef.current = listingsScrollKey(pathname, next)
+    window.history.replaceState(null, '', pathname + buildListingsSearchString(next))
   }
 
   const [showAlert, setShowAlert] = useState(false)
   const [alertDismissed, setAlertDismissed] = useState(false)
 
-  const [jobs, setJobs] = useState<Job[]>([])
-  const [total, setTotal] = useState<number | null>(0)
-  const [loading, setLoading] = useState(true)
+  // With the server's first page for this view, the first render (on the
+  // server and in the browser) shows its cards straight away.
+  const startPage = initial && initial.key === viewKey ? initial : null
+  const [jobs, setJobs] = useState<ListingCard[]>(() => startPage?.jobs ?? [])
+  const [total, setTotal] = useState<number | null>(() => (startPage ? startPage.total : 0))
+  const [loading, setLoading] = useState(() => startPage === null)
   const [error, setError] = useState<string | null>(null)
+  // Card dates are measured from the server's render time until the list
+  // has mounted, so the server HTML and the first browser render match;
+  // then from the clock, as before.
+  const [clockNow, setClockNow] = useState<number | null>(() => (startPage ? startPage.renderedAt : null))
+  useEffect(() => { setClockNow(null) }, [])
+  // The `initial` object this list has already taken over (once only).
+  const adoptedRef = useRef<unknown>(null)
 
   const [drawerOpen, setDrawerOpen] = useState(false)
   const filterDrawerRef = useRef<HTMLDivElement>(null)
@@ -737,7 +770,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   const resultsRef = useRef<HTMLDivElement>(null)
   // The page `total`/`jobs` actually belong to — not `page` itself, which is
   // read fresh from the URL every render and updates as soon as
-  // router.replace() takes effect, before the fetch for it resolves. Using
+  // history.replaceState() takes effect, before the fetch for it resolves. Using
   // the URL-fresh `page` to compute "Showing X-Y of Z" against a `total`
   // that still belongs to the previous fetch mixes two points in time in
   // one line; this ref keeps the count math pinned to whichever fetch
@@ -810,22 +843,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
     setLoading(true)
     setError(null)
 
-    const params = new URLSearchParams({
-      platform,
-      limit: String(PAGE_SIZE),
-      offset: String((page - 1) * PAGE_SIZE),
-    })
-    if (activeSearch) params.set('search', activeSearch)
-    if (activeLocation) params.set('location', activeLocation)
-    if (filters.employmentTypes.length > 0) params.set('employment_types', filters.employmentTypes.join(','))
-    if (filters.seniority.length > 0) params.set('seniority', filters.seniority.join(','))
-    if (filters.locationCountry !== 'all') params.set('location_country', filters.locationCountry)
-    if (filters.remoteOnly) params.set('remote', 'true')
-    if (filters.salaryMin.trim()) params.set('salary_min', filters.salaryMin.trim())
-    if (filters.salaryMax.trim()) params.set('salary_max', filters.salaryMax.trim())
-    if (filters.postedWithin !== 'all') params.set('posted_within', String(POSTED_DAYS[filters.postedWithin]))
-    if (filters.qualifications.length > 0) params.set('qualifications', filters.qualifications.join(','))
-    if (sortBy !== DEFAULT_SORT) params.set('sort_by', sortBy)
+    const params = buildDirectJobsParams(urlState, platform, PAGE_SIZE)
 
     try {
       const res = await fetch(`/api/jobs/direct?${params.toString()}`, { signal: controller.signal })
@@ -845,9 +863,26 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
     } finally {
       if (abortRef.current === controller) setLoading(false)
     }
-  }, [platform, activeSearch, activeLocation, filters, sortBy, page])
+  }, [platform, urlState, page])
 
-  useEffect(() => { fetchJobs(); return () => abortRef.current?.abort() }, [fetchJobs])
+  // Takes over the server's first page instead of fetching it — once per
+  // `initial` object, for its own view, while fresh (shouldAdoptInitial).
+  // A later `initial` from a real navigation (e.g. the hero search) is
+  // taken over the same way. Anything else fetches exactly as before.
+  useEffect(() => {
+    if (initial && shouldAdoptInitial({ initial, key: viewKey, consumed: adoptedRef.current, now: Date.now() })) {
+      adoptedRef.current = initial
+      abortRef.current?.abort()
+      confirmedPageRef.current = page
+      setJobs(initial.jobs)
+      setTotal(initial.total)
+      setError(null)
+      setLoading(false)
+      return
+    }
+    fetchJobs()
+    return () => abortRef.current?.abort()
+  }, [fetchJobs, initial, viewKey, page])
 
   // ── Scroll restoration ──────────────────────────────────────────────
   // Content is fetched client-side after mount, so the browser's own
@@ -869,7 +904,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   const restoredKeyRef = useRef('')
 
   useEffect(() => {
-    scrollKeyRef.current = `jobs-listings-scroll:${pathname}${buildListingsSearchString(urlState)}`
+    scrollKeyRef.current = listingsScrollKey(pathname, urlState)
   }, [pathname, urlState])
 
   useEffect(() => {
@@ -905,6 +940,8 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
   // this chip fixes, just reached by a different button.
   function handleClearFilters() { navigateToState({ ...urlState, search: '', filters: EMPTY_FILTERS, sortBy: DEFAULT_SORT, page: DEFAULT_PAGE }) }
   function handlePageChange(next: number) { navigateToState({ ...urlState, page: next }); scrollToResults() }
+  // The address of a page of this view: filters kept, page 1 without `page`.
+  function pageHref(n: number) { return pathname + buildListingsSearchString({ ...urlState, page: n }) }
 
   const displayedPage = confirmedPageRef.current
   const summary = summariseResults({ page: displayedPage, pageSize: PAGE_SIZE, rowsLength: jobs.length, total })
@@ -1037,9 +1074,12 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                         saved={savedIds.has(job.id)}
                         pending={savedPending.has(job.id)}
                         onSave={toggleSaved}
+                        now={clockNow ?? undefined}
                       />
                     ))}
                   </div>
+                  {/* Real page links (crawlable, open in a new tab); a plain
+                      click stays in the page via handlePageChange. */}
                   {summary.pager.kind === 'numbered' ? (
                     <Pagination
                       page={page}
@@ -1048,6 +1088,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                       navLabel="Job results pages"
                       itemLabel="job"
                       onChange={handlePageChange}
+                      hrefFor={pageHref}
                     />
                   ) : (
                     <PrevNextPagination
@@ -1056,6 +1097,7 @@ export default function JobListingsClient({ isEthioTax, countryOptions: derivedC
                       nextPage={summary.pager.nextPage}
                       navLabel="Job results pages"
                       onChange={handlePageChange}
+                      hrefFor={pageHref}
                     />
                   )}
                 </div>

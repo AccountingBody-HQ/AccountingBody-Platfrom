@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useId, useState, type MouseEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { computePageItems, nextPageTarget, parseJumpToPage, prevPageTarget } from './pagination'
@@ -23,8 +23,15 @@ import { computePageItems, nextPageTarget, parseJumpToPage, prevPageTarget } fro
 //     jump-to-page input performs a client-side `router.push(hrefFor(n))`
 //     on submit, since typing a target page isn't knowable in advance as a
 //     plain href the way Previous/Next/page-numbers are.
-// Exactly one of the two must be passed; only that one mode's rendering
-// path is used, so the two can't get out of sync with each other.
+//   - both `hrefFor` and `onChange`: for a client-fetched list whose first
+//     page is also in the server HTML (jobs/listings). Previous, Next and
+//     every page number are real <Link> anchors to hrefFor(page), so the
+//     pages can be crawled and opened in a new tab; a plain left click
+//     stays in the page and calls onChange instead (see pagerLinkClick).
+//     These links never prefetch: a plain click never navigates through
+//     the router, so a prefetch would only add server requests.
+// Only the chosen mode's rendering path is used, so the modes can't get out
+// of sync with each other.
 //
 // IMPORTANT — this component is always 'use client', but its caller is
 // often a Server Component (practice-questions/page.tsx). A Server
@@ -89,6 +96,16 @@ const DISABLED_TEXT = '#b0ac9f' // slate-400 in this repo's warm-slate scale —
 
 function controlLabelColor(disabled: boolean): string {
   return disabled ? DISABLED_TEXT : WHITE
+}
+
+// The click rule for links in the hrefFor + onChange mode. A plain primary
+// click stays in the page (onChange, as the buttons did); a click with
+// Ctrl, Cmd, Shift or Alt, a middle click, or one already handled is left
+// to the browser, so "open in a new tab" works as on any link.
+export function pagerLinkClick(e: MouseEvent<HTMLAnchorElement>, page: number, onChange: (page: number) => void): void {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+  e.preventDefault()
+  onChange(page)
 }
 
 function ChevronLeftIcon({ color }: { color: string }) {
@@ -173,7 +190,18 @@ function NavButton({
     </>
   )
 
-  if (hrefFor) {
+  // hrefFor + onChange: a real link when there is a destination; at a
+  // boundary the same disabled button as the onChange mode, so it looks
+  // exactly as before.
+  if (hrefFor && onChange && !disabled) {
+    return (
+      <Link href={hrefFor(target)} prefetch={false} onClick={e => pagerLinkClick(e, target, onChange)} aria-label={`${label} page`} className={NAV_BUTTON_CLASS}>
+        {content}
+      </Link>
+    )
+  }
+
+  if (hrefFor && !onChange) {
     if (disabled) {
       // Same aria-label as the enabled Link/button below — without it,
       // below 640px this control has no accessible name at all: its only
@@ -258,6 +286,13 @@ function PageNumberControl({
   const ariaCurrent = isCurrent ? 'page' : undefined
   const ariaLabel = `Page ${pageNumber}`
 
+  if (hrefFor && onChange) {
+    return (
+      <Link href={hrefFor(pageNumber)} prefetch={false} onClick={e => pagerLinkClick(e, pageNumber, onChange)} aria-current={ariaCurrent} aria-label={ariaLabel} className={className}>
+        {pageNumber}
+      </Link>
+    )
+  }
   if (hrefFor) {
     return (
       <Link href={hrefFor(pageNumber)} aria-current={ariaCurrent} aria-label={ariaLabel} className={className}>
@@ -300,6 +335,7 @@ type PaginationProps = PaginationBaseProps &
   (
     | { onChange: (page: number) => void; hrefFor?: undefined }
     | { hrefFor: (page: number) => string; onChange?: undefined }
+    | { hrefFor: (page: number) => string; onChange: (page: number) => void }
   )
 
 export function Pagination({
@@ -339,7 +375,7 @@ export function Pagination({
       {/* Context line — what makes a few hundred pages feel navigable
           rather than endless. Always visible, at every breakpoint. */}
       <p className="text-center text-xs text-slate-400 mb-3">
-        Page {page.toLocaleString()} of {totalPages.toLocaleString()} · {total.toLocaleString()} {itemLabel}{total === 1 ? '' : 's'}
+        Page {page.toLocaleString('en-GB')} of {totalPages.toLocaleString('en-GB')} · {total.toLocaleString('en-GB')} {itemLabel}{total === 1 ? '' : 's'}
       </p>
 
       <div className="flex items-center justify-center gap-2">
@@ -417,6 +453,7 @@ export function PrevNextPagination({
   nextPage,
   navLabel = 'Results pages',
   onChange,
+  hrefFor,
 }: {
   page: number
   prevPage: number | null
@@ -424,17 +461,19 @@ export function PrevNextPagination({
   /** aria-label for the <nav> — describe what's being paginated. */
   navLabel?: string
   onChange: (page: number) => void
+  /** When given, Previous/Next are real links (see the hrefFor + onChange mode above). */
+  hrefFor?: (page: number) => string
 }) {
   if (prevPage === null && nextPage === null) return null
 
   return (
     <nav aria-label={navLabel} className="mt-10">
       <div className="flex items-center justify-center gap-2">
-        <NavButton direction="prev" target={prevPage} onChange={onChange} />
+        <NavButton direction="prev" target={prevPage} onChange={onChange} hrefFor={hrefFor} />
         <span className="text-sm font-semibold text-navy-950 px-2 whitespace-nowrap" aria-current="page">
-          Page {page.toLocaleString()}
+          Page {page.toLocaleString('en-GB')}
         </span>
-        <NavButton direction="next" target={nextPage} onChange={onChange} />
+        <NavButton direction="next" target={nextPage} onChange={onChange} hrefFor={hrefFor} />
       </div>
     </nav>
   )

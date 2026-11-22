@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import JobListingsClient from './JobListingsClient'
@@ -8,6 +7,21 @@ import { ownerCanonical } from '@/lib/canonical'
 import { getCachedActiveJobCountries } from '@/lib/jobs'
 import { getRequestBrand } from '@/lib/brand-server'
 import { brandText } from '@/lib/et-wording'
+import { loadFirstListingsPage, parseDirectJobsQuery, toListingCard } from '@/app/api/jobs/direct/load'
+import { buildDirectJobsParams, listingsViewKey, parseListingsUrlState, LISTINGS_PAGE_SIZE } from './urlState'
+
+type PageSearchParams = Record<string, string | string[] | undefined>
+
+// The first value of each key, as useSearchParams().get() reads it in the
+// browser, so the server and the browser derive the same view.
+function firstValues(params: PageSearchParams): URLSearchParams {
+  const out = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    const first = Array.isArray(value) ? value[0] : value
+    if (first !== undefined) out.set(key, first)
+  }
+  return out
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const { isEthioTax } = await getRequestBrand()
@@ -18,9 +32,17 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default async function JobListingsPage() {
+export default async function JobListingsPage({ searchParams }: { searchParams: Promise<PageSearchParams> }) {
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  const platform = isEthioTax ? 'et' : 'ab'
+  // The first page of jobs for the URL's own filters and page, through the
+  // same parse and load as /api/jobs/direct (so it shares its cached reads),
+  // started before the countries so the two run together. Bounded and never
+  // failing: with null the page is sent without cards and the browser loads
+  // them as before.
+  const urlState = parseListingsUrlState(firstValues(await searchParams))
+  const firstPage = loadFirstListingsPage(parseDirectJobsQuery(buildDirectJobsParams(urlState, platform, LISTINGS_PAGE_SIZE)))
   // Fetched here, not inside the client component, so the derived country
   // list is present on first paint rather than arriving after a
   // post-mount client fetch — the <select> never has to render with an
@@ -28,6 +50,10 @@ export default async function JobListingsPage() {
   // JobListingsClient's own derivation (isEthioTax ? 'et' : 'ab') exactly,
   // since the pre-counted country rows are platform-scoped.
   const countryOptions = await getCachedActiveJobCountries(isEthioTax ? 'et' : 'ab')
+  const loaded = await firstPage
+  const initial = loaded
+    ? { key: listingsViewKey(platform, urlState), jobs: loaded.jobs.map(toListingCard), total: loaded.total, renderedAt: Date.now() }
+    : null
   return (
     <>
       <JobListingsStructuredData isEthioTax={isEthioTax} />
@@ -63,14 +89,14 @@ export default async function JobListingsPage() {
         </div>
       </section>
       {/* LISTINGS */}
-      {/* JobListingsClient calls useSearchParams() (see urlState.ts) — Next
-          requires that inside a Suspense boundary, otherwise the whole
-          route de-opts to fully client-side rendering. Falling back to
-          nothing: the client component's own loading skeleton (isFirstLoad
-          in JobListingsClient) takes over within the same tick regardless. */}
-      <Suspense>
-        <JobListingsClient isEthioTax={isEthioTax} countryOptions={countryOptions} />
-      </Suspense>
+      {/* No Suspense boundary here. JobListingsClient calls useSearchParams(),
+          which needs a boundary only when a page is prerendered at build
+          time; this page is rendered per request (it reads headers() and
+          searchParams), so the list renders straight into the first HTML —
+          with the first page's cards when `initial` is set, else its own
+          loading skeleton (isFirstLoad). A boundary would stream the list
+          as a hidden block that only script reveals. */}
+      <JobListingsClient isEthioTax={isEthioTax} countryOptions={countryOptions} initial={initial} />
     </>
   )
 }
