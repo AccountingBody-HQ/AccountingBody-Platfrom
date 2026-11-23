@@ -1,5 +1,6 @@
 import { withSentryConfig } from '@sentry/nextjs/config'
 import { LEGACY_WORDPRESS_REDIRECTS } from './lib/legacy-wordpress-redirects.mjs'
+import { LEGACY_WORDPRESS_PATTERNS } from './lib/legacy-wordpress-redirects.mjs'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -70,6 +71,8 @@ const nextConfig = {
 
       // Old WordPress attachment, category, author and tag addresses (frozen list)
       ...LEGACY_WORDPRESS_REDIRECTS.map(({ source, destination }) => ({ source, destination, permanent: true })),
+      // Old WordPress address classes without an exact row (frozen patterns; after every exact rule)
+      ...LEGACY_WORDPRESS_PATTERNS.map(({ source, destination }) => ({ source, destination, permanent: true })),
     ]
   },
 }
