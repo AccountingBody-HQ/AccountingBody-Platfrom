@@ -133,7 +133,7 @@ const publicReads: Case[] = [
       }
     },
   ],
-  ['articles page', () => ArticlesPage()],
+  ['articles page', () => ArticlesPage({})],
   ['dictionary page', () => DictionaryPage({ searchParams: Promise.resolve({ letter: 'b' }) })],
   ['ethiotax sitemap', () => etSitemap()],
   ['pages sitemap', () => pagesXml()],

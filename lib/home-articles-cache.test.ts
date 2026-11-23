@@ -34,7 +34,7 @@ let answer: Result
 let queries = 0
 function useClient() {
   const builder: Record<string, unknown> = {}
-  for (const m of ['from', 'select', 'eq', 'contains', 'order', 'limit']) builder[m] = () => builder
+  for (const m of ['from', 'select', 'eq', 'contains', 'order', 'limit', 'range']) builder[m] = () => builder
   builder.then = (res: (v: unknown) => unknown, rej?: (e: unknown) => unknown) => {
     queries += 1
     return Promise.resolve({ data: null, count: null, ...answer }).then(res, rej)
@@ -106,38 +106,54 @@ describe('home featured articles (F1)', () => {
 })
 
 describe('/articles list (F2)', () => {
-  it('uses its own key parts, one hour, and a per-site tag', async () => {
-    ok({ data: ROWS })
-    expect(await getPublishedArticlesForSite('ab')).toStrictEqual(ROWS)
+  const LIST = { articles: ROWS, total: 2, totalPages: 1 }
+
+  it('uses its own key parts, the site and the page, one hour, and a per-site tag', async () => {
+    ok({ data: ROWS, count: 2 })
+    expect(await getPublishedArticlesForSite('ab', 1)).toStrictEqual(LIST)
     expect(cacheCalls).toHaveLength(1)
     expect(cacheCalls[0].keyParts).toStrictEqual(['published-articles-for-site'])
-    expect(cacheCalls[0].args).toStrictEqual(['ab'])
+    expect(cacheCalls[0].args).toStrictEqual(['ab', 1])
     expect(cacheCalls[0].options).toStrictEqual({ revalidate: 3600, tags: ['articles', 'articles-list:ab'] })
   })
 
   it('keeps the two sites apart', async () => {
-    ok({ data: ROWS })
-    await getPublishedArticlesForSite('ab')
-    ok({ data: [] })
-    expect(await getPublishedArticlesForSite('et')).toStrictEqual([])
+    ok({ data: ROWS, count: 2 })
+    await getPublishedArticlesForSite('ab', 1)
+    ok({ data: [], count: 0 })
+    expect(await getPublishedArticlesForSite('et', 1)).toStrictEqual({ articles: [], total: 0, totalPages: 1 })
     expect(queries).toBe(2)
     expect(cacheCalls[1].options).toStrictEqual({ revalidate: 3600, tags: ['articles', 'articles-list:et'] })
-    expect(await getPublishedArticlesForSite('ab')).toStrictEqual(ROWS)
+    expect(await getPublishedArticlesForSite('ab', 1)).toStrictEqual(LIST)
     expect(queries).toBe(2)
+  })
+
+  it('keeps the pages apart: each page is its own entry, read once', async () => {
+    ok({ data: ROWS, count: 120 })
+    await getPublishedArticlesForSite('ab', 1)
+    ok({ data: [ROWS[1]] })
+    expect(await getPublishedArticlesForSite('ab', 2)).toStrictEqual({ articles: [ROWS[1]], total: 120, totalPages: 3 })
+    ok({ data: [ROWS[0]] })
+    expect((await getPublishedArticlesForSite('ab', 3))?.articles).toStrictEqual([ROWS[0]])
+    expect((await getPublishedArticlesForSite('ab', 2))?.articles).toStrictEqual([ROWS[1]])
+    expect((await getPublishedArticlesForSite('ab', 1))?.articles).toStrictEqual(ROWS)
+    expect(cacheCalls.map((c) => c.args)).toStrictEqual([['ab', 1], ['ab', 2], ['ab', 3]])
+    expect(await getPublishedArticlesForSite('ab', 4)).toBeNull()
+    expect(queries).toBe(3)
   })
 
   it('a failure throws the same fixed text and is not stored', async () => {
     fail()
-    await expect(getPublishedArticlesForSite('ab')).rejects.toThrow('getPublishedArticlesForSite: articles query failed (status 500)')
-    ok({ data: ROWS })
+    await expect(getPublishedArticlesForSite('ab', 1)).rejects.toThrow('getPublishedArticlesForSite: articles query failed (status 500)')
+    ok({ data: ROWS, count: 2 })
     vi.advanceTimersByTime(BACKOFF_MS)
-    expect(await getPublishedArticlesForSite('ab')).toStrictEqual(ROWS)
+    expect(await getPublishedArticlesForSite('ab', 1)).toStrictEqual(LIST)
     expect(queries).toBe(2)
   })
 
-  it('a genuine empty result is []', async () => {
-    ok({ data: [] })
-    expect(await getPublishedArticlesForSite('et')).toStrictEqual([])
+  it('a genuine empty result is an empty list', async () => {
+    ok({ data: [], count: 0 })
+    expect(await getPublishedArticlesForSite('et', 1)).toStrictEqual({ articles: [], total: 0, totalPages: 1 })
   })
 })
 

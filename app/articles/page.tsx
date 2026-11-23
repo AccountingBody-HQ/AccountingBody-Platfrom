@@ -1,20 +1,39 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
-import { getPublishedArticlesForSite, type ArticleSummary } from '@/lib/articles-list'
+import { notFound } from 'next/navigation'
+import { getPublishedArticlesForSite } from '@/lib/articles-list'
 import { ownerCanonical, resolveArticlePath } from '@/lib/canonical'
+import { ArticlesPagination } from './ArticlesPagination'
+import { articlesPageHref, parseArticlesPage } from './pageUrl'
 
 export const dynamic = 'force-dynamic'
 
-export async function generateMetadata(): Promise<Metadata> {
-  return { ...ownerCanonical('accountingbody', '/articles') }
-}
+type ArticlesSearchParams = { page?: string | string[] }
 
-export default async function ArticlesPage() {
+async function readSite(): Promise<{ isEthioTax: boolean; siteCode: 'ab' | 'et' }> {
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
-  const siteCode = isEthioTax ? 'et' : 'ab'
-  const articles: ArticleSummary[] = await getPublishedArticlesForSite(siteCode)
+  return { isEthioTax, siteCode: isEthioTax ? 'et' : 'ab' }
+}
+
+// Each page of the list has its own canonical (page 1 is /articles itself).
+export async function generateMetadata({ searchParams }: { searchParams?: Promise<ArticlesSearchParams> }): Promise<Metadata> {
+  const page = parseArticlesPage((await searchParams)?.page)
+  if (page > 1) {
+    const { siteCode } = await readSite()
+    if (!(await getPublishedArticlesForSite(siteCode, page))) notFound()
+  }
+  return { ...ownerCanonical('accountingbody', articlesPageHref(page)) }
+}
+
+export default async function ArticlesPage({ searchParams }: { searchParams?: Promise<ArticlesSearchParams> }) {
+  const { isEthioTax, siteCode } = await readSite()
+  const page = parseArticlesPage((await searchParams)?.page)
+  const list = await getPublishedArticlesForSite(siteCode, page)
+  if (!list) notFound()
+  const { articles, total, totalPages } = list
+  const countLine = `${total.toLocaleString('en-GB')} articles${totalPages > 1 ? ` · Page ${page} of ${totalPages}` : ''}`
 
   return (
     <div>
@@ -54,7 +73,7 @@ export default async function ArticlesPage() {
       <section className="section bg-slate-50">
         <div className="container-site">
           <div className="flex items-center justify-between mb-8 gap-4 flex-wrap">
-            <p className="text-sm text-slate-500">{articles.length} articles</p>
+            <p className="text-sm text-slate-500">{countLine}</p>
             <Link href={isEthioTax ? '/study/eticpa' : '/study'}
               className={`inline-flex items-center gap-2 h-10 px-5 rounded-lg text-sm font-semibold transition-colors ${isEthioTax ? 'bg-[#1A4731] text-white hover:bg-[#15382a]' : 'bg-navy-950 text-white hover:bg-navy-900'}`}>
               {isEthioTax ? 'Browse ETICPA modules' : 'Browse by qualification'}
@@ -100,6 +119,7 @@ export default async function ArticlesPage() {
               })}
             </div>
           )}
+          <ArticlesPagination page={page} totalPages={totalPages} total={total} />
         </div>
       </section>
     </div>

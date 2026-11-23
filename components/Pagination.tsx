@@ -206,8 +206,9 @@ function NavButton({
       // Same aria-label as the enabled Link/button below — without it,
       // below 640px this control has no accessible name at all: its only
       // visible content there is the aria-hidden icon (the label span is
-      // `hidden` below that breakpoint, not just visually hidden).
-      return <span aria-disabled="true" aria-label={`${label} page`} className={NAV_BUTTON_CLASS}>{content}</span>
+      // `hidden` below that breakpoint, not just visually hidden). A name is
+      // only allowed on an element with a role, hence role="link".
+      return <span role="link" aria-disabled="true" aria-label={`${label} page`} className={NAV_BUTTON_CLASS}>{content}</span>
     }
     return (
       <Link href={hrefFor(target)} aria-label={`${label} page`} className={NAV_BUTTON_CLASS}>
