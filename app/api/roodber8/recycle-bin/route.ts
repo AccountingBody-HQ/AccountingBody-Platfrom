@@ -50,12 +50,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) return signedOutResponse()
 
-  let body: unknown
-  try {
-    body = await req.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
-  }
+  const body: unknown = await req.json().catch(() => undefined)
+  if (body === undefined) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   const { action, id } = (body ?? {}) as { action?: unknown; id?: unknown }
   if (action !== 'restore') return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
   if (typeof id !== 'string' || !UUID_RE.test(id)) return NextResponse.json({ error: 'A valid item id is required' }, { status: 400 })
