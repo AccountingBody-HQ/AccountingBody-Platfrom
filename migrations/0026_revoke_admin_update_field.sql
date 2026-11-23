@@ -1,0 +1,23 @@
+-- 0026_revoke_admin_update_field.sql
+-- 23 Nov 2026, 14:12:19 UTC (owner decision D316; FINDINGS KM-KO; job SF-1b).
+-- RECORD OF A CHANGE ALREADY APPLIED TO PRODUCTION. Do not run it again.
+--
+-- WHY: public.admin_update_field(p_table, p_field, p_value, p_id) is a
+-- SECURITY DEFINER function (owner postgres) that updates any column of any
+-- row in any table, with no allow-list and no caller check; its table name is
+-- formatted with %s (open to SQL injection). It is not created by any migration
+-- here and no code calls it. EXECUTE was granted to PUBLIC, anon and
+-- authenticated, so anyone holding the public key could get round every RLS
+-- lock. This removes those three grants. The function, its body and the
+-- service_role grant are unchanged (only postgres and service_role can run it).
+--
+-- Applied after the owner's backup run 45191150856 (success 14:10:25 UTC), in
+-- one transaction with a guard that raised if any of the three could still
+-- execute it. Before: acl =X/postgres postgres=X/postgres anon=X/postgres
+-- authenticated=X/postgres service_role=X/postgres. After: postgres=X/postgres
+-- service_role=X/postgres.
+--
+-- UNDO (never expected): GRANT EXECUTE ON FUNCTION
+--   public.admin_update_field(text, text, text, uuid) TO PUBLIC, anon, authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_update_field(text, text, text, uuid) FROM PUBLIC, anon, authenticated;

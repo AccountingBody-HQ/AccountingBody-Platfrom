@@ -513,12 +513,14 @@ describe('G6 migrations/0022 (record file, not applied)', () => {
   const files = () => execFileSync('git', ['ls-files', 'migrations'], { encoding: 'utf8' }).split('\n').filter(Boolean)
   const FILE = 'migrations/0022_jobs_drop_raw_source_data.sql'
 
-  it('exactly one 0022 file and, after it, only the three LB-1 records', () => {
+  it('exactly one 0022 file and, after it, only the three LB-1 records and the two BP-1 records', () => {
     expect(files().filter((f) => /^migrations\/0022_/.test(f))).toStrictEqual([FILE])
     expect(files().filter((f) => /^migrations\/(002[3-9]|00[3-9]\d|0[1-9]\d\d)_/.test(f))).toStrictEqual([
       'migrations/0023_ops_database_size.sql',
       'migrations/0024_provider_runs_drop_raw_response_sample.sql',
       'migrations/0025_jobs_drop_idx_employer_email.sql',
+      'migrations/0026_revoke_admin_update_field.sql',
+      'migrations/0027_admin_recycle_bin.sql',
     ])
   })
 

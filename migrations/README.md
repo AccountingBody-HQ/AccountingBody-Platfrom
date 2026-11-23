@@ -53,8 +53,12 @@ Migrations in this directory cover only the AccountingBody-owned tables:
 ```
 jobs  job_providers  provider_runs  job_applications
 employer_briefs  job_seeker_registrations  firms_applications
-site_counts  job_similar
+site_counts  job_similar  admin_recycle_bin
 ```
+
+`admin_recycle_bin` (added by `0027`) holds a full copy of anything the admin
+area deletes or a Course Factory save replaces; only the admin routes write
+it (`lib/recycle-bin.ts`), and each copy expires after 90 days.
 
 `job_similar` (saved "Similar current roles" lists, one per job and site) was
 added by `0020`. Its rows are written only by the nightly
@@ -102,6 +106,8 @@ extend a migration here to touch another product's tables.
 | `0023_ops_database_size.sql` | **Record file, not applied yet (LB-1, D287).** The function `public.ops_database_size()` (database size in bytes; SECURITY INVOKER, empty search path, EXECUTE for `service_role` only) read by the `database-size` check of `/api/ops-status`. One transaction with a self-check; applied by an owner-approved database job (M-85) after a fresh backup, BEFORE the LB-1 pull request is merged (until then the check answers `unknown`). Undo: `DROP FUNCTION IF EXISTS public.ops_database_size();` |
 | `0024_provider_runs_drop_raw_response_sample.sql` | **Record file, not applied yet (LB-1, D287).** Removes the unused column `provider_runs.raw_response_sample` (one provider record per import run, never read) with `lock_timeout` 3s. Applied by M-85 after a fresh backup, only after the LB-1 pull request is live (the code stopped writing it there). Undo (structure only) in the file's comments |
 | `0025_jobs_drop_idx_employer_email.sql` | **Record file, not applied yet (LB-1, D287).** Removes the unused index `idx_jobs_employer_email` (0 scans; no code filters by that column). One statement, run alone outside a transaction (`CONCURRENTLY`). Applied by M-85 after a fresh backup, after the merge. Undo in the file's comments |
+| `0026_revoke_admin_update_field.sql` | **Record only - applied 23 Nov 2026, 14:12:19 UTC (D316).** Took the right to run the old helper function `public.admin_update_field` away from PUBLIC, anon and authenticated; the function itself and its `service_role` right are unchanged. No code uses it. Do not run it again (harmless if re-run). Undo in the file's comments |
+| `0027_admin_recycle_bin.sql` | **Record file, not applied yet (BP-1, D315).** The empty table `admin_recycle_bin` (a full copy of anything the admin area deletes or a Course Factory save replaces, kept 90 days) and the function `public.admin_recycle_restore(uuid)` that puts one copy back in one transaction. Row level security on with no policy; table and function for `service_role` only. One transaction with a guard and self-checks; applied by an owner-approved database job after a fresh backup, BEFORE the BP-1 pull request is merged. Undo (removes every copy) in the file's comments |
 
 ## Compare with the live database before any replace
 
