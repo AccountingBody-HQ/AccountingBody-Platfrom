@@ -19,6 +19,7 @@ import { ETLanguageProvider } from '@/components/layout/ETLanguageContext'
 import { LanguageSwitcher, MobileLangSwitcher } from '@/components/layout/LanguageSwitcher'
 import { Navigation } from '@/components/layout/Navigation'
 import { FONT_STYLESHEET } from '@/lib/fonts'
+import { studyCategoryName } from '@/lib/study-category-name'
 
 const ET_LINKS = { groups: [], cta: { label: 'Free quote', href: '/get-help', description: 'd' } }
 
@@ -75,6 +76,26 @@ describe('F3 the EthioTax sitemap lists final addresses only', () => {
     expect(read('app/firms-freelancers/directory/page.tsx')).toContain("redirect('/firms-freelancers')")
     expect(paths).toContain('/firms-freelancers')
     expect(paths).not.toContain('/firms-freelancers/directory')
+  })
+})
+
+describe('F5 the article breadcrumb shows a readable subject name', () => {
+  it.each([
+    ['financial-accounting', { category: 'financial-accounting', category_title: 'Financial Accounting' }, 'Financial Accounting'],
+    ['audit-assurance', { category: 'Audit-Assurance ', category_title: ' Audit and Assurance ' }, 'Audit and Assurance'],
+    // no title, or a title that is itself a raw slug, or an address that is not this article's subject
+    ['financial-accounting', { category: 'financial-accounting', category_title: null }, 'Financial Accounting'],
+    ['financial-accounting', { category: 'financial-accounting', category_title: 'financial-accounting' }, 'Financial Accounting'],
+    ['taxation', { category: 'economics', category_title: 'Economics' }, 'Taxation'],
+    ['financial-accounting', {}, 'Financial Accounting'],
+    // qualification addresses look the same as before
+    ['acca', { category: 'financial-accounting', category_title: 'Financial Accounting' }, 'ACCA'],
+    ['eticpa-atq', {}, 'ETICPA-ATQ'],
+  ])('%s %o', (category, article, name) => {
+    expect(studyCategoryName(category, article)).toBe(name)
+  })
+  it('the breadcrumb link keeps its address', () => {
+    expect(read('app/study/[category]/[slug]/page.tsx')).toMatch(/<Link href=\{`\/study\/\$\{category\}`\} [^>]*>\s*\{studyCategoryName\(category, article\)\}\s*<\/Link>/)
   })
 })
 

@@ -9,6 +9,7 @@ import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 import { resolveArticleCanonical } from '@/lib/canonical'
 import { toStoredSlug } from '@/lib/slug-param'
+import { studyCategoryName } from '@/lib/study-category-name'
 
 export async function generateStaticParams() {
   const slugs = await getAllArticleSlugs()
@@ -168,7 +169,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
               <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
             </svg>
             <Link href={`/study/${category}`} className="text-white/70 hover:text-white transition-colors">
-              {category.toUpperCase()}
+              {studyCategoryName(category, article)}
             </Link>
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
