@@ -12,8 +12,13 @@ vi.mock('next/link', () => ({
   default: ({ href, children, ...rest }: { href: string; children?: unknown }) =>
     createElement('a', { href, ...rest }, children as never),
 }))
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: () => {} }), usePathname: () => '/' }))
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: () => {} }),
+  usePathname: () => '/',
+  useSearchParams: () => new URLSearchParams('q=tax'),
+}))
 
+import { SearchInner } from '@/app/search/SearchClient'
 import { ShareButton } from '@/app/jobs/[slug]/ShareButton'
 import { ETLanguageProvider } from '@/components/layout/ETLanguageContext'
 import { LanguageSwitcher, MobileLangSwitcher } from '@/components/layout/LanguageSwitcher'
@@ -106,6 +111,50 @@ describe('F6 the search box has one clear button', () => {
     expect(input).toContain('type="search"')
     expect(input).toContain('[&::-webkit-search-cancel-button]:appearance-none')
     expect(src.match(/aria-label="Clear search"/g)).toHaveLength(1)
+  })
+})
+
+// VF-2b: the same readable name in the two other places that showed the raw subject.
+describe('G1 the article side panel names the subject in words', () => {
+  const src = read('app/study/[category]/[slug]/page.tsx')
+  it('the back link shows the helper name and keeps its address', () => {
+    expect(src).toMatch(/<Link\s+href=\{`\/study\/\$\{category\}`\}\s+className="[^"]*"\s*>\s*<svg[\s\S]{0,200}?<\/svg>\s*All \{studyCategoryName\(category, article\)\} notes\s*<\/Link>/)
+  })
+  it('the page never prints the raw subject in capitals', () => {
+    expect(src).not.toContain('{category.toUpperCase()}')
+  })
+})
+
+describe('G2 the search result chips show a readable subject name', () => {
+  const src = read('app/search/SearchClient.tsx')
+  const chip = (category: string) => studyCategoryName(category, { category, category_title: category })
+  it('the chip shows the helper name, not the raw value', () => {
+    expect(src).toContain('{studyCategoryName(result.category, { category: result.category, category_title: result.category })}')
+    expect(src).not.toMatch(/>\s*\{result\.category\}\s*</)
+  })
+  it.each([
+    ['financial-accounting', 'Financial Accounting'],
+    ['taxation', 'Taxation'],
+    ['acca', 'ACCA'],
+    // a value that is already readable stays as it is
+    ['Audit & Assurance', 'Audit & Assurance'],
+  ])('%s reads %s', (category, name) => {
+    expect(chip(category)).toBe(name)
+  })
+  it('the search request, the page address and every result address are unchanged', () => {
+    expect(src).toContain('fetch(`/api/search?q=${encodeURIComponent(query)}`)')
+    expect(src).toContain('router.replace(`/search?q=${encodeURIComponent(query)}`, { scroll: false })')
+    expect(src).toContain('href={`/jobs/listings?search=${encodeURIComponent(linkQuery)}`}')
+    expect(src).toContain('return resolveArticlePath(r)')
+    expect(src).toContain('href={getUrl(result)}')
+    expect(src).toContain('results.filter(r => r._type === activeType)')
+  })
+})
+
+describe('G3 the search clear button is centred in the box', () => {
+  it('sits in a centred row at the right, with the same 24 px target', () => {
+    const html = renderToStaticMarkup(createElement(SearchInner, { isEthioTax: false }))
+    expect(html).toMatch(/<div class="absolute right-4 top-1\/2 -translate-y-1\/2 flex items-center"><button class="p-0\.5 -m-0\.5 [^"]*" aria-label="Clear search"><svg class="w-5 h-5"/)
   })
 })
 

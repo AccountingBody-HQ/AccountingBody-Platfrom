@@ -9,6 +9,7 @@ import { resolveArticlePath } from '@/lib/article-path'
 import { formatSalary } from '@/lib/job-format'
 import { formatJobLocation } from '@/app/jobs/listings/jobLocation'
 import { brandName } from '@/lib/brand'
+import { studyCategoryName } from '@/lib/study-category-name'
 
 type ContentType = 'all' | 'article' | 'practicePost' | 'course'
 
@@ -120,7 +121,7 @@ function ResultCard({ result }: { result: SearchResult }) {
         </span>
         {result.category && (
           <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-            {result.category}
+            {studyCategoryName(result.category, { category: result.category, category_title: result.category })}
           </span>
         )}
       </div>
@@ -333,7 +334,7 @@ export function SearchInner({ isEthioTax }: { isEthioTax: boolean }) {
                 aria-label={`Search ${brandName(isEthioTax)}`}
                 autoComplete="off"
               />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
                 {loading ? (
                   <svg className="w-5 h-5 text-gold-400 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />

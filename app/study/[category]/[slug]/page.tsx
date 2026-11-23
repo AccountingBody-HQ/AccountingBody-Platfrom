@@ -410,7 +410,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
                 </svg>
-                All {category.toUpperCase()} notes
+                All {studyCategoryName(category, article)} notes
               </Link>
 
             </aside>
