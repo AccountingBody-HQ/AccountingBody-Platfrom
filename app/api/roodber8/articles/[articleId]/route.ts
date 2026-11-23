@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { DELETE_FAILED, errorCode, keepCopyBeforeDelete, snapshotArticle } from '@/lib/recycle-bin'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -93,14 +94,25 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
   const { articleId } = await params
   const supabase = getClient()
 
+  // A copy of the article and its course links goes to the recycle bin first.
+  const kept = await keepCopyBeforeDelete(supabase, await snapshotArticle(supabase, articleId), {
+    kind: 'article',
+    sourceTable: 'articles',
+    sourceId: articleId,
+    label: (row) => row.title,
+    notFound: 'Article not found',
+  })
+  if (!kept.ok) return NextResponse.json({ error: kept.error }, { status: kept.status })
+
   const { error } = await supabase
     .from('articles')
     .delete()
     .eq('id', articleId)
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('articles DELETE failed', errorCode(error))
+    return NextResponse.json({ error: DELETE_FAILED }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true, binId: kept.binId })
 }

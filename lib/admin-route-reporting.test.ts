@@ -390,13 +390,14 @@ const ROUTES: Route[] = [
       log: null,
       run: (load, problem) => {
         state.clientFails = problem
-        return call('/course-factory/save', 'POST')(load, request({ method: 'POST', body: { title: 'Course', slug: 'course-a' } }))
+        return call('/course-factory/save', 'POST')(load, request({ method: 'POST', body: { mode: 'create', title: 'Course', slug: 'course-a', chapters: [] } }))
       },
       answer: { status: 500, body: error(PROBLEM) },
     },
   ], [
     ['missing title', { method: 'POST', body: {} }, 400],
-    ['database error', { method: 'POST', body: { title: 'Course', slug: 'course-a' } }, 500, () => { db.failing = true }],
+    // BP-1: a save names its mode and sends its chapters.
+    ['database error', { method: 'POST', body: { mode: 'create', title: 'Course', slug: 'course-a', chapters: [] } }, 500, () => { db.failing = true }],
   ]),
   route('course update', '/courses/[courseId]', 'PATCH', () => ({ params: Promise.resolve({ courseId: COURSE_ID }) }), [
     {
@@ -419,7 +420,8 @@ const ROUTES: Route[] = [
       answer: { status: 500, body: error(PROBLEM) },
     },
   ], [
-    ['healthy delete', { method: 'DELETE' }, 200],
+    // BP-1: the course is copied to the recycle bin first, so it must exist.
+    ['healthy delete', { method: 'DELETE' }, 200, () => { db.tables.courses = [{ id: COURSE_ID, title: 'Course' }] }],
     ['database error', { method: 'DELETE' }, 500, () => { db.failing = true }],
   ]),
   route('job update', '/jobs/[id]', 'PATCH', () => ({ params: Promise.resolve({ id: JOB_ID }) }), [

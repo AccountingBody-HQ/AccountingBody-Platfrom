@@ -193,38 +193,44 @@ afterEach(() => {
 
 // ── Course save ─────────────────────────────────────────────────────────────
 
+// BP-1 (D311): a save says whether it creates a course or updates the loaded
+// one (by id). An update keeps the loaded lesson (lessonId).
 const COURSE_READ_FAILED = { error: 'Could not read the current course. Nothing was changed.' }
-const saveCourse = async () =>
-  (await api('course-factory/save/route.ts')).POST(
-    request('POST', 'course-factory/save', {
-      title: 'Course',
-      slug: 'course',
-      chapters: [{ chapterTitle: 'One', lessonRefs: [{ title: 'Lesson', articleIds: [ARTICLE] }] }],
-    }),
-    { params: {} },
-  )
+const saveBody = (mode: 'create' | 'update', lessonId?: string) => ({
+  mode,
+  ...(mode === 'update' ? { courseId: ID } : {}),
+  title: 'Course',
+  slug: 'course',
+  chapters: [{ chapterTitle: 'One', lessonRefs: [{ title: 'Lesson', articleIds: [ARTICLE], ...(lessonId ? { lessonId } : {}) }] }],
+})
+const saveAs = (mode: 'create' | 'update', lessonId?: string) => async () =>
+  (await api('course-factory/save/route.ts')).POST(request('POST', 'course-factory/save', saveBody(mode, lessonId)), { params: {} })
+const saveCourse = saveAs('update', LESSON)
+const createCourse = saveAs('create')
+const savedCourse = { id: ID, title: 'Course', slug: 'course', status: 'published', show_on_sites: ['ab'] }
 const savedChapter = { id: CHAPTER, course_id: ID, chapter_title: 'Old chapter', chapter_order: 1 }
 const savedLesson = { id: LESSON, chapter_id: CHAPTER, course_id: ID, title: 'Old lesson', slug: 'course-ch1-l1', lesson_order: 1 }
 const savedLink = { lesson_id: LESSON, article_id: ARTICLE, article_order: 1 }
 const existingCourse = () => {
   network.rows = {
-    courses: [{ id: ID }],
+    courses: [savedCourse],
     course_chapters: [savedChapter],
     course_lessons: [savedLesson],
     course_lesson_articles: [savedLink],
   }
 }
+const BIN = ['POST admin_recycle_bin', 'DELETE admin_recycle_bin']
 
 describe('course save', () => {
-  it('creates a new course as before', async () => {
-    const result = await answer(saveCourse)
+  it('creates a new course (BP-1: insert, never overwrite; lesson addresses checked first)', async () => {
+    const result = await answer(createCourse)
     expect(result).toEqual({
       status: 200,
       body: { success: true, id: ID },
       requests: [
         'GET courses',
+        'GET course_lessons',
         'POST courses',
-        'DELETE course_chapters',
         'POST course_chapters',
         'POST course_lessons',
         'POST course_lesson_articles',
@@ -233,18 +239,19 @@ describe('course save', () => {
     })
   })
 
-  it('reads the whole current course before it saves the new version', async () => {
+  it('reads the whole current course and keeps a recycle bin copy before it saves the new version', async () => {
     existingCourse()
     const result = await answer(saveCourse)
     expect(result).toEqual({
       status: 200,
-      body: { success: true, id: ID },
+      body: { success: true, id: ID, binId: ID },
       requests: [
         'GET courses',
         'GET course_chapters',
         'GET course_lessons',
         'GET course_lesson_articles',
-        'POST courses',
+        ...BIN,
+        'PATCH courses',
         'DELETE course_chapters',
         'POST course_chapters',
         'POST course_lessons',
@@ -254,13 +261,16 @@ describe('course save', () => {
     })
   })
 
-  it('leaves the course unchanged when it cannot read whether the course exists', async () => {
-    existingCourse()
-    network.fail = failOn('GET', 'courses', 'error')
-    expect(await answer(saveCourse)).toEqual({ status: 500, body: COURSE_READ_FAILED, requests: ['GET courses'], elapsed: 0 })
+  it('leaves everything unchanged when it cannot read whether the course exists', async () => {
+    for (const save of [saveCourse, createCourse]) {
+      existingCourse()
+      network.calls = []
+      network.fail = failOn('GET', 'courses', 'error')
+      expect(await answer(save)).toEqual({ status: 500, body: COURSE_READ_FAILED, requests: ['GET courses'], elapsed: 0 })
+    }
   })
 
-  it('leaves the course unchanged when the existence check gets no answer', async () => {
+  it('leaves everything unchanged when the existence check gets no answer', async () => {
     existingCourse()
     network.fail = failOn('GET', 'courses', 'never')
     expect(await answer(saveCourse)).toEqual({
@@ -289,14 +299,16 @@ describe('course save', () => {
     }
   })
 
-  it('treats a course with no chapters yet as a course to update', async () => {
-    network.rows = { courses: [{ id: ID }] }
-    const result = await answer(saveCourse)
+  it('updates a course with no chapters yet; its new lesson gets a free address', async () => {
+    network.rows = { courses: [savedCourse] }
+    const result = await answer(saveAs('update'))
     expect(result.status).toBe(200)
     expect(result.requests).toEqual([
       'GET courses',
       'GET course_chapters',
-      'POST courses',
+      'GET course_lessons',
+      ...BIN,
+      'PATCH courses',
       'DELETE course_chapters',
       'POST course_chapters',
       'POST course_lessons',
@@ -304,12 +316,18 @@ describe('course save', () => {
     ])
   })
 
-  it('puts the whole current course back when the new version cannot be written', async () => {
+  it('puts the whole current course back (its row first) when the new version cannot be written', async () => {
     existingCourse()
     network.fail = failOn('POST', 'course_chapters', 'error')
     const result = await answer(saveCourse)
     expect(result.status).toBe(500)
-    expect(result.body).toEqual({ error: 'Course update failed — your original content has been restored. Please try again.' })
+    expect(result.body).toEqual({
+      error:
+        'Course update failed — your original content has been restored. Please try again. The copy saved in the recycle bin can also restore it.',
+      binId: ID,
+    })
+    expect(result.requests.slice(-6, -4)).toEqual(['POST course_chapters', 'PATCH courses'])
+    expect(network.calls.at(-5)?.body).toEqual({ title: 'Course', status: 'published', show_on_sites: ['ab'] })
     expect(result.requests.slice(-4)).toEqual([
       'DELETE course_chapters',
       'POST course_chapters',
@@ -326,8 +344,10 @@ describe('course save', () => {
     const result = await answer(saveCourse)
     expect(result.status).toBe(500)
     expect(result.body).toEqual({
-      error: 'Course update failed and automatic restore was unsuccessful. Please check your course content and contact support.',
+      error:
+        'Course update failed and automatic restore was unsuccessful. The copy saved in the recycle bin can also restore it: delete this course, then restore the copy on the Recycle bin page.',
       restoreFailed: true,
+      binId: ID,
     })
   })
 })
@@ -345,12 +365,20 @@ describe('provider delete', () => {
     network.rows = { job_providers: [{ id: ID, slug: 'example', name: 'Example Jobs' }] }
   })
 
-  it('deletes a provider with no active jobs as before', async () => {
+  it('deletes a provider with no active jobs after keeping a recycle bin copy (BP-1)', async () => {
     network.counts = { jobs: 0 }
     expect(await answer(deleteProvider)).toEqual({
       status: 200,
-      body: { ok: true },
-      requests: ['GET job_providers', 'HEAD jobs', 'DELETE job_providers'],
+      body: { ok: true, binId: ID },
+      requests: [
+        'GET job_providers',
+        'HEAD jobs',
+        'GET job_providers',
+        'GET provider_runs',
+        'POST admin_recycle_bin',
+        'DELETE admin_recycle_bin',
+        'DELETE job_providers',
+      ],
       elapsed: 0,
     })
   })
@@ -781,7 +809,8 @@ describe.each<CourseCheckCase>([
     table: 'course_chapters',
     rows: { course_chapters: [chapterRow] },
     notFound: { error: 'Chapter not found' },
-    writes: ['DELETE course_chapters'],
+    // BP-1: the recycle bin copy (chapter, its lessons) is kept before the delete.
+    writes: ['GET course_chapters', 'GET course_lessons', 'POST admin_recycle_bin', 'DELETE admin_recycle_bin', 'DELETE course_chapters'],
   },
   {
     name: 'lesson add',
@@ -797,7 +826,8 @@ describe.each<CourseCheckCase>([
     table: 'course_lessons',
     rows: { course_lessons: [lessonRow] },
     notFound: { error: 'Lesson not found' },
-    writes: ['DELETE course_lessons'],
+    // BP-1: the recycle bin copy (lesson, its links) is kept before the delete.
+    writes: ['GET course_lessons', 'GET course_lesson_articles', 'POST admin_recycle_bin', 'DELETE admin_recycle_bin', 'DELETE course_lessons'],
   },
   {
     name: 'lesson reorder',
@@ -819,9 +849,10 @@ describe.each<CourseCheckCase>([
     name: 'article link remove',
     body: { action: 'remove_article', lessonId: LESSON, articleId: ARTICLE },
     table: 'course_lessons',
-    rows: { course_lessons: [lessonRow] },
+    rows: { course_lessons: [lessonRow], course_lesson_articles: [savedLink] },
     notFound: { error: 'Lesson not found' },
-    writes: ['DELETE course_lesson_articles'],
+    // BP-1: the recycle bin copy (the link) is kept before the delete.
+    writes: ['GET course_lesson_articles', 'POST admin_recycle_bin', 'DELETE admin_recycle_bin', 'DELETE course_lesson_articles'],
   },
   {
     name: 'article reorder',

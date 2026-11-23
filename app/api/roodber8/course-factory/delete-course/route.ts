@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { reportServerError } from '@/lib/report-error'
+import { DELETE_FAILED, errorCode, keepCopyBeforeDelete, snapshotCourseBy } from '@/lib/recycle-bin'
 
 function getSupabase() {
   return getServerSupabase('admin')
@@ -20,21 +21,16 @@ export async function DELETE(req: NextRequest) {
     const { slug } = await req.json()
     if (!slug) return NextResponse.json({ error: 'slug required' }, { status: 400 })
 
-    // Get course id and chapter/lesson counts before deleting (for response)
-    const { data: course, error: fetchError } = await supabase
-      .from('courses')
-      .select('id, course_chapters(id, course_lessons(id))')
-      .eq('slug', slug)
-      .maybeSingle()
-
-    if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 })
-    if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 })
-
-    const lessonCount = (course.course_chapters ?? []).reduce(
-      (acc: number, ch: { course_lessons: { id: string }[] }) =>
-        acc + (ch.course_lessons?.length ?? 0),
-      0
-    )
+    // A full copy of the course (chapters, lessons, links) goes to the
+    // recycle bin first; its lesson count is used for the response.
+    const kept = await keepCopyBeforeDelete(supabase, await snapshotCourseBy(supabase, 'slug', String(slug)), {
+      kind: 'course',
+      sourceTable: 'courses',
+      label: (row) => row.title,
+      notFound: 'Course not found',
+    })
+    if (!kept.ok) return NextResponse.json({ error: kept.error }, { status: kept.status })
+    const lessonCount = (kept.payload.course_lessons ?? []).length
 
     // Single delete — CASCADE removes chapters, lessons, and lesson_articles automatically
     const { error: deleteError } = await supabase
@@ -42,11 +38,15 @@ export async function DELETE(req: NextRequest) {
       .delete()
       .eq('slug', slug)
 
-    if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 500 })
+    if (deleteError) {
+      console.error('course-factory/delete-course: delete failed', errorCode(deleteError))
+      return NextResponse.json({ error: DELETE_FAILED }, { status: 500 })
+    }
 
     return NextResponse.json({
       success: true,
-      deleted: { lessons: lessonCount, courseId: course.id },
+      deleted: { lessons: lessonCount, courseId: kept.row.id },
+      binId: kept.binId,
     })
   } catch (e: unknown) {
     reportServerError('admin course factory delete failed', e, { area: 'admin' })

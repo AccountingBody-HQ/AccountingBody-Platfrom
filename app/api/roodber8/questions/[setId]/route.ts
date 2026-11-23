@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { checkRead } from '@/lib/db-check'
+import { DELETE_FAILED, errorCode, keepCopyBeforeDelete, snapshotQuestionSet, snapshotRows } from '@/lib/recycle-bin'
 
 export const runtime = 'nodejs'
 
@@ -135,21 +136,49 @@ export async function DELETE(
   const supabase = getClient()
 
   if (action === 'delete_set') {
+    // A copy of the set, its questions and case exhibits goes to the recycle bin first.
+    const kept = await keepCopyBeforeDelete(supabase, await snapshotQuestionSet(supabase, setId), {
+      kind: 'question_set',
+      sourceTable: 'question_sets',
+      sourceId: setId,
+      label: (row) => row.title,
+      notFound: 'Question set not found',
+    })
+    if (!kept.ok)
+      return NextResponse.json({ error: kept.error }, { status: kept.status })
+
     // CASCADE in Supabase schema handles question deletion automatically
     const { error } = await supabase
       .from('question_sets')
       .delete()
       .eq('id', setId)
 
-    if (error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      console.error('questions/[setId] delete_set failed', errorCode(error))
+      return NextResponse.json({ error: DELETE_FAILED }, { status: 500 })
+    }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, binId: kept.binId })
   }
 
   if (action === 'delete_question') {
     if (!questionId)
       return NextResponse.json({ error: 'questionId required' }, { status: 400 })
+
+    // A copy of the question goes to the recycle bin first.
+    const kept = await keepCopyBeforeDelete(
+      supabase,
+      await snapshotRows(supabase, 'questions', { id: String(questionId), set_id: setId }),
+      {
+        kind: 'question',
+        sourceTable: 'questions',
+        sourceId: String(questionId),
+        label: (row) => row.question_text,
+        notFound: 'Question not found',
+      },
+    )
+    if (!kept.ok)
+      return NextResponse.json({ error: kept.error }, { status: kept.status })
 
     const { error } = await supabase
       .from('questions')
@@ -157,10 +186,12 @@ export async function DELETE(
       .eq('id', questionId)
       .eq('set_id', setId) // ensure question belongs to this set
 
-    if (error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      console.error('questions/[setId] delete_question failed', errorCode(error))
+      return NextResponse.json({ error: DELETE_FAILED }, { status: 500 })
+    }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, binId: kept.binId })
   }
 
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 })

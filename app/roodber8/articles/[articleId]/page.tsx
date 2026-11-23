@@ -293,7 +293,7 @@ export default function ArticleEditorPage() {
       {confirmDel && (
         <ConfirmModal
           title="Delete this article?"
-          message={`"${article.title}" will be permanently deleted. This cannot be undone.`}
+          message={`"${article.title}" will be deleted. A copy is kept in the Recycle bin for 90 days, where it can be restored.`}
           onConfirm={handleDelete}
           onCancel={() => setConfirmDel(false)}
           loading={deleting}

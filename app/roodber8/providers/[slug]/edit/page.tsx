@@ -279,7 +279,7 @@ export default function EditProviderPage() {
   }
 
   async function handleDelete() {
-    if (!window.confirm('Delete this provider? This cannot be undone. Active jobs must expire first.')) return
+    if (!window.confirm('Delete this provider? A copy (with its run history, not its run error log) is kept in the Recycle bin for 90 days. Active jobs must expire first.')) return
 
     setDeleting(true)
     setError(null)

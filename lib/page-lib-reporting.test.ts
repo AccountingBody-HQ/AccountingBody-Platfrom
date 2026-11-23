@@ -598,6 +598,9 @@ const LOG_ONLY: Record<string, string> = {
   'lib/jobs.ts:getCachedListingJobs': 'relevance order with no search words falls back to the default order',
   'lib/jobs.ts:getPrecountedFilterTotal': 'a missing, stale or unreadable pre-counted row falls back to a live count',
   'lib/providers.ts:logProviderError': 'a failed error log write is logged with its code and the import goes on; it runs once per job, so no report per row',
+  'lib/recycle-bin.ts:moveToBin': 'the caller deletes nothing and tells the admin; logged with its code only',
+  'lib/recycle-bin.ts:purgeExpired': 'best-effort clean-up of expired copies; the next bin write or list tries again; code only',
+  'lib/recycle-bin.ts:restoreFromBin': 'the admin gets a plain sentence for the code; logged with its code only',
 }
 
 describe('log lines in server pages and shared code', () => {
