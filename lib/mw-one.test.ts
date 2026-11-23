@@ -144,7 +144,7 @@ function withFinalMarks(rows: Row[]): Row[] {
 }
 
 // The writes the sequential code made, in order.
-function sequentialWrites(rows: Row[]) {
+function sequentialWrites(rows: Row[]): { kind: string; primary?: string; ids: string[] }[] {
   const plan = planDuplicateMarks(rows)
   return [
     ...writeBatches(plan.toClear).map((ids) => ({ kind: 'clear', ids })),
@@ -425,7 +425,7 @@ describe('G7 one counts-only summary line', () => {
     setEnv('CRON_SECRET', CRON_VALUE)
     setEnv('JOB_DUPLICATE_MARKING', value)
     const rows = makeRows(5, [2], 3)
-    state.rows = rows
+    state.rows = rows as unknown as Record<string, unknown>[]
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
     const { GET } = await loadCron()
     const response = await GET(request())
