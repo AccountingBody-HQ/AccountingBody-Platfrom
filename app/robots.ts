@@ -10,7 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           '/api/',
           '/studio/',
-          '/roodber8/',
           '/_next/',
           '/dashboard/',
           '/account/',

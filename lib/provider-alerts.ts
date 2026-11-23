@@ -2,6 +2,7 @@ import { Resend } from 'resend'
 import { getServerSupabase } from './supabase-server'
 import type { JobProvider } from './providers'
 import { reportServerError } from './report-error'
+import { getAdminPath } from './middleware-logic'
 
 // Every other Resend call site in this codebase instantiates the client
 // inline — grep across lib/ and app/ turns up 15+ separate
@@ -58,7 +59,7 @@ function buildAlertEmail(
   consecutiveFailures: number,
   justAutoPaused: boolean
 ): { subject: string; html: string } {
-  const providerUrl = `${SITE_URL}/roodber8/providers/${provider.slug}`
+  const providerUrl = `${SITE_URL}/${getAdminPath()}/providers/${provider.slug}`
   const subject = isRecovery
     ? `[AccountingBody] ${provider.slug}: recovered`
     : justAutoPaused
