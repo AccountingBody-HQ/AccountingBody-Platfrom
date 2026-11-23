@@ -110,6 +110,32 @@ describe('getAdminPath', () => {
     vi.stubEnv('ADMIN_PATH', 'another-area')
     expect(getAdminPath()).toBe('another-area')
   })
+
+  it('an empty or blank value counts as unset: the built-in fallback is used', () => {
+    vi.stubEnv('ADMIN_PATH', undefined)
+    const fallback = getAdminPath()
+    expect(fallback.length).toBeGreaterThan(0)
+    expect(fallback).toBe(fallback.trim())
+    for (const blank of ['', '   ', '\t\n ']) {
+      vi.stubEnv('ADMIN_PATH', blank)
+      expect(getAdminPath()).toBe(fallback)
+    }
+  })
+
+  it('a set value is used as it is, without surrounding spaces', () => {
+    vi.stubEnv('ADMIN_PATH', ADMIN)
+    expect(getAdminPath()).toBe(ADMIN)
+    vi.stubEnv('ADMIN_PATH', `  ${ADMIN} `)
+    expect(getAdminPath()).toBe(ADMIN)
+  })
+
+  it.each([undefined, '', '   ', ADMIN])('with ADMIN_PATH %j, public pages are never admin pages', (value) => {
+    vi.stubEnv('ADMIN_PATH', value)
+    const adminPath = getAdminPath()
+    for (const page of ['/', '/jobs', '/jobs/listings', '/study/acca', '/about']) {
+      expect([page, isAdminPagePath(page, adminPath)]).toEqual([page, false])
+    }
+  })
 })
 
 describe('sha256Hex', () => {

@@ -51,8 +51,11 @@ export type RequestDecision =
   | { action: 'admin-api-signed-out' }
   | { action: 'continue'; platform: SitePlatform }
 
+// An empty or blank ADMIN_PATH counts as unset, so it can never turn every
+// page into an admin page.
 export function getAdminPath(): string {
-  return process.env.ADMIN_PATH ?? "roodber8"
+  const v = process.env.ADMIN_PATH?.trim()
+  return v ? v : "roodber8"
 }
 
 export async function sha256Hex(message: string): Promise<string> {
