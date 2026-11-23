@@ -588,7 +588,9 @@ describe('G4 the similar compute', () => {
     const failing = fakeStores(unmarked, { markErrorAt: 1 })
     const result = await runSimilarJobsRefresh(failing.store, fakeClock(), { marks: { write: true, store: failing.marks }, hideCopies: true })
     expect(result).toMatchObject({ ok: true, marks: { applied: false, failed: true } })
-    expect(failing.writes.filter((write) => write.kind === 'mark')).toHaveLength(2)
+    // MW-1: 6 marks start together; the 1st (already resolved) takes the 7th
+    // before the 2nd's failure is seen; nothing starts after that.
+    expect(failing.writes.filter((write) => write.kind === 'mark')).toHaveLength(7)
     const asRead = fakeStores(liveRows(false))
     await runSimilarJobsRefresh(asRead.store, fakeClock(), { marks: { write: false, store: asRead.marks }, hideCopies: true })
     expect(failing.upserts).toStrictEqual(asRead.upserts)
@@ -629,7 +631,7 @@ describe('G2 the nightly marking', () => {
     expect(response.status).toBe(200)
     expect(updates()).toStrictEqual([])
     expect(state.queries.filter((query) => query.table === 'jobs').every((query) => methods(query)[0] === 'select')).toBe(true)
-    expect(body.marks).toStrictEqual({ groups: 3, toMark: 131, toClear: 3, writes: 0, applied: false, failed: false, timedOut: false })
+    expect(body.marks).toStrictEqual({ groups: 3, toMark: 131, toClear: 3, writes: 0, applied: false, failed: false, timedOut: false, ms: 0 })
     const upserted = state.queries.filter((query) => methods(query).includes('upsert')).flatMap((query) => (argsOf(query, 'upsert')[0][0] as { job_id: string; platform: string; similar_ids: string[] }[]).map(({ job_id, platform, similar_ids }) => ({ job_id, platform, similar_ids })))
     const byIdOrder = [...state.db.jobs].sort((a, b) => ((a.id as string) < (b.id as string) ? -1 : 1))
     expect(upserted).toStrictEqual(computeSimilarLists(byIdOrder as unknown as LiveJobRow[]))
@@ -665,7 +667,7 @@ describe('G2 the nightly marking', () => {
     expect(cleared).toStrictEqual(['emp', 'h-1', 'solo'])
     expect(all.slice(1).map((query) => [(argsOf(query, 'update')[0][0] as Record<string, unknown>).ai_duplicate_of, (argsOf(query, 'in')[0][1] as string[]).length]))
       .toStrictEqual([['g-000', 100], ['g-000', 30], ['h-1', 1]])
-    expect(body.marks).toStrictEqual({ groups: 3, toMark: 131, toClear: 3, writes: 4, applied: true, failed: false, timedOut: false })
+    expect(body.marks).toStrictEqual({ groups: 3, toMark: 131, toClear: 3, writes: 4, applied: true, failed: false, timedOut: false, ms: expect.any(Number) })
     expect(state.reports).toStrictEqual([])
     expect(Object.keys(body)).toStrictEqual(['ok', 'live', 'pairs', 'written', 'deleted', 'ms', 'marks'])
   })
@@ -679,8 +681,10 @@ describe('G2 the nightly marking', () => {
     const response = await GET(request())
     const body = await response.json()
     expect(response.status).toBe(200)
-    expect(updates().map((query) => ((argsOf(query, 'update')[0][0] as Record<string, unknown>).ai_duplicate_of === null ? 'clear' : 'mark'))).toStrictEqual(['clear', 'mark'])
-    expect(body.marks).toMatchObject({ applied: false, failed: true, writes: 2 })
+    // MW-1: the three mark batches start together (at most 6 in flight)
+    // before the first failure is seen; nothing starts after it.
+    expect(updates().map((query) => ((argsOf(query, 'update')[0][0] as Record<string, unknown>).ai_duplicate_of === null ? 'clear' : 'mark'))).toStrictEqual(['clear', 'mark', 'mark', 'mark'])
+    expect(body.marks).toMatchObject({ applied: false, failed: true, writes: 4 })
     expect(state.reports).toHaveLength(1)
     const [label, problem, extra] = state.reports[0] as [string, Error & { code?: string }, unknown]
     expect(label).toBe('similar jobs marking failed')

@@ -110,6 +110,7 @@ export async function GET(req: NextRequest) {
       const markReport = Object.assign(new Error('similar jobs marking failed'), markCode ? { code: markCode } : {})
       reportServerError('similar jobs marking failed', markReport, { area: 'cron' })
     }
+    if (result.marks) console.log(`cron/similar-jobs: marks groups=${result.marks.groups} toMark=${result.marks.toMark} toClear=${result.marks.toClear} writes=${result.marks.writes} applied=${result.marks.applied} failed=${result.marks.failed} timedOut=${result.marks.timedOut} ms=${result.marks.ms}`)
     const { live, pairs, written, deleted, ms } = result
     return NextResponse.json({ ok: true, live, pairs, written, deleted, ms, marks: result.marks })
   } catch (err: unknown) {
