@@ -623,11 +623,18 @@ describe('G10 the Accounting Body sitemaps leave out what ethiotax.com owns', ()
         { slug: 'et-art', updated_at: '2026-10-01T00:00:00Z', category: 'taxation', canonical_owner: 'ethiotax', show_on_sites: ['ab', 'et'] },
       ],
       questionSets: [],
+      courses: [
+        { slug: 'shared-course', updated_at: null, canonical_owner: 'accountingbody', show_on_sites: ['ab', 'et'], lessonSlugs: ['intro'] },
+        { slug: 'et-course', updated_at: null, canonical_owner: 'ethiotax', show_on_sites: ['ab', 'et'], lessonSlugs: ['intro'] },
+      ],
     })
     const L = locs(await (await GET()).text())
     expect(L).toContain(`${AB}/study/acca/shared-art`)
     expect(L).toContain(`${AB}/study/acca/unconfirmed-art`)
     expect(L.some(u => u.includes('et-art'))).toBe(false)
+    expect(L).toContain(`${AB}/free-courses/shared-course`)
+    expect(L).toContain(`${AB}/free-courses/shared-course/learn/intro`)
+    expect(L.some(u => u.includes('et-course'))).toBe(false)
     expect(L.every(u => u.startsWith(AB))).toBe(true)
   })
 

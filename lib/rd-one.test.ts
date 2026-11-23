@@ -14,7 +14,7 @@ import { LEGACY_RENAMED_SLUGS, LEGACY_RENAMED_SLUG_COUNT } from '@/lib/legacy-re
 // applies it.
 
 vi.mock('@/lib/db', () => ({
-  getPagesSitemapContent: vi.fn(async () => ({ ok: true, articles: [], questionSets: [] })),
+  getPagesSitemapContent: vi.fn(async () => ({ ok: true, articles: [], questionSets: [], courses: [] })),
 }))
 vi.mock('next/headers', () => ({
   headers: async () => ({ get: () => null }),

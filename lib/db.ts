@@ -146,12 +146,13 @@ export const getArticleBySlug = cache(async (slug: string): Promise<ArticleFull 
 
 // ── Pages sitemap ─────────────────────────────────────────────────────────────
 
-// The two reads behind app/sitemaps/pages.xml/route.ts: published AB articles
-// and published AB question sets. If either read fails (or returns no data),
-// the problem is logged and reported here and the result is { ok: false }, so
-// the route answers 500 (never cached) instead of an hour-long sitemap that
-// quietly leaves those pages out. Real empty lists are ok: true. Same contract
-// as getJobSitemapChunk in lib/jobs.ts.
+// The reads behind app/sitemaps/pages.xml/route.ts: published AB articles,
+// published AB question sets and published courses shown on AB with their
+// lessons. If any read fails (or returns no data), the problem is logged and
+// reported here and the result is { ok: false }, so the route answers 500
+// (never cached) instead of an hour-long sitemap that quietly leaves those
+// pages out. Real empty lists are ok: true. Same contract as
+// getJobSitemapChunk in lib/jobs.ts.
 export interface PagesSitemapArticle {
   slug:             string
   updated_at:       string | null
@@ -165,9 +166,59 @@ export interface PagesSitemapQuestionSet {
   updated_at: string | null
 }
 
+export interface PagesSitemapCourse {
+  slug:            string
+  updated_at:      string | null
+  canonical_owner: string | null
+  show_on_sites:   string[] | null
+  lessonSlugs:     string[]
+}
+
 export type PagesSitemapContent =
-  | { ok: true; articles: PagesSitemapArticle[]; questionSets: PagesSitemapQuestionSet[] }
+  | { ok: true; articles: PagesSitemapArticle[]; questionSets: PagesSitemapQuestionSet[]; courses: PagesSitemapCourse[] }
   | { ok: false }
+
+type PagesSitemapCourseRow = Omit<PagesSitemapCourse, 'lessonSlugs'> & { id: string }
+
+// Published courses shown on AB, each with the addresses its lesson pages
+// answer on: a lesson counts only inside a chapter of the same course (the
+// rule getLessonData in lib/coursesNew.ts uses). Flat reads, one per table.
+// Throws on a failed read.
+async function readSitemapCourses(supabase: ReturnType<typeof getSupabase>): Promise<PagesSitemapCourse[]> {
+  const readOrThrow = <T>(read: { data: T | null; error: { code?: unknown } | null }): T => {
+    if (read.error) throw readProblem('sitemap pages read failed', read.error)
+    if (!read.data) throw readProblem('sitemap pages read returned no data', {})
+    return read.data
+  }
+
+  const rows = readOrThrow(await supabase
+    .from('courses')
+    .select('id, slug, updated_at, canonical_owner, show_on_sites')
+    .eq('status', 'published')
+    .contains('show_on_sites', ['ab'])) as PagesSitemapCourseRow[]
+  if (rows.length === 0) return []
+  const courseIds = rows.map(c => c.id)
+
+  const chapters = readOrThrow(await supabase
+    .from('course_chapters')
+    .select('id, course_id')
+    .in('course_id', courseIds)) as { id: string; course_id: string }[]
+  const courseByChapter = new Map(chapters.map(ch => [ch.id, ch.course_id]))
+
+  const lessons = readOrThrow(await supabase
+    .from('course_lessons')
+    .select('slug, course_id, chapter_id')
+    .in('course_id', courseIds)) as { slug: string | null; course_id: string; chapter_id: string }[]
+
+  return rows.map(({ id, ...course }) => ({
+    ...course,
+    lessonSlugs: Array.from(new Set(
+      lessons
+        .filter(l => l.slug && l.course_id === id && courseByChapter.get(l.chapter_id) === id)
+        .map(l => l.slug as string),
+    )),
+  }))
+}
 
 export async function getPagesSitemapContent(): Promise<PagesSitemapContent> {
   const supabase = getSupabase()
@@ -184,18 +235,22 @@ export async function getPagesSitemapContent(): Promise<PagesSitemapContent> {
     .eq('status', 'published')
     .eq('platform', 'ab')
 
-  const problem = articlesRead.error ?? questionSetsRead.error
-  if (problem || !articlesRead.data || !questionSetsRead.data) {
-    const error = readProblem(problem ? 'sitemap pages read failed' : 'sitemap pages read returned no data', problem ?? {})
+  try {
+    const problem = articlesRead.error ?? questionSetsRead.error
+    if (problem || !articlesRead.data || !questionSetsRead.data) {
+      throw readProblem(problem ? 'sitemap pages read failed' : 'sitemap pages read returned no data', problem ?? {})
+    }
+    return {
+      ok:           true,
+      articles:     articlesRead.data as PagesSitemapArticle[],
+      questionSets: questionSetsRead.data as PagesSitemapQuestionSet[],
+      courses:      await readSitemapCourses(supabase),
+    }
+  } catch (err) {
+    const error = err as Error & { code?: string }
     console.error('getPagesSitemapContent error:', error.code ?? 'no code')
     reportServerError('sitemap pages read failed', error, { area: 'public' })
     return { ok: false }
-  }
-
-  return {
-    ok:           true,
-    articles:     articlesRead.data as PagesSitemapArticle[],
-    questionSets: questionSetsRead.data as PagesSitemapQuestionSet[],
   }
 }
 
