@@ -140,7 +140,7 @@ describe('header logo mark (ET-2)', () => {
   })
   it('Accounting Body keeps the four-square mark', () => {
     const a = logo(renderToStaticMarkup(createElement(Navigation, {})))
-    expect(a).toContain('aria-label="AccountingBody home"')
+    expect(a).toContain('aria-label="Accounting Body home"')
     expect((a.match(/<rect [^>]*fill="#1e3a7a"/g) || []).length).toBe(3)
     expect(a).not.toContain('<path')
   })

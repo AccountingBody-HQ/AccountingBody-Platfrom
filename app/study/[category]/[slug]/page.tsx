@@ -45,7 +45,7 @@ const EXAM_BODY_ACCENT: Record<string, string> = {
 
 const EXAM_BODY_BADGE: Record<string, string> = {
   ACCA:  'bg-blue-50 text-[#004B8D] border-blue-200',
-  CIMA:  'bg-sky-50 text-[#0081C6] border-sky-200',
+  CIMA:  'bg-sky-50 text-[#0369a1] border-sky-200',
   AAT:   'bg-teal-50 text-teal-700 border-teal-200',
   ICAEW: 'bg-red-50 text-red-800 border-red-200',
 }

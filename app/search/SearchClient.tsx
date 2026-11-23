@@ -341,7 +341,7 @@ export function SearchInner({ isEthioTax }: { isEthioTax: boolean }) {
                   </svg>
                 ) : query ? (
                   <button onClick={() => { setQuery(''); inputRef.current?.focus() }}
-                    className="text-white/70 hover:text-white/80 transition-colors" aria-label="Clear search">
+                    className="p-0.5 -m-0.5 text-white/70 hover:text-white/80 transition-colors" aria-label="Clear search">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>

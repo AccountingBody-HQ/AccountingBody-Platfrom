@@ -14,7 +14,7 @@ type LetterSearchParams = { letter?: string | string[] }
 
 const EXAM_BODY_META: Record<string, { name: string; description: string; accent: string; badgeBg: string; badgeText: string }> = {
   acca:  { name: 'ACCA',  description: 'Association of Chartered Certified Accountants — all 13 papers.', accent: 'bg-[#004B8D]', badgeBg: 'bg-blue-50',    badgeText: 'text-[#004B8D]' },
-  cima:  { name: 'CIMA',  description: 'Chartered Institute of Management Accountants full pathway.',     accent: 'bg-[#0081C6]', badgeBg: 'bg-sky-50',     badgeText: 'text-[#0081C6]' },
+  cima:  { name: 'CIMA',  description: 'Chartered Institute of Management Accountants full pathway.',     accent: 'bg-[#0081C6]', badgeBg: 'bg-sky-50',     badgeText: 'text-[#0369a1]' },
   aat:   { name: 'AAT',   description: 'Association of Accounting Technicians — Levels 2 to 4.',          accent: 'bg-[#00857A]', badgeBg: 'bg-teal-50',    badgeText: 'text-teal-700'  },
   icaew: { name: 'ICAEW', description: 'Institute of Chartered Accountants — ACA qualification pathway.',        accent: 'bg-[#8B0000]', badgeBg: 'bg-red-50',     badgeText: 'text-red-800'   },
 }

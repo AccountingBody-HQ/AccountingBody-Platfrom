@@ -73,6 +73,26 @@ describe('colour contrast (A11-F2)', () => {
     const bad = files.filter((f) => /(?<![\w-])text-white\/(?:25|30|35|40|45|50|55)(?![\w/-])|(?<![\w-])text-gray-400(?![\w/-])/.test(read(f)))
     expect(bad).toEqual([])
   })
+
+  it('the CIMA badge text is the readable blue on public pages (VF-2; #0081C6 text is 4.2:1 on white)', () => {
+    const files = [...walk(join(root, 'app')), ...walk(join(root, 'components'))]
+      .filter((f) => f.endsWith('.tsx') && !isAdmin(f) && !f.startsWith('app/api/'))
+    expect(files.filter((f) => /(?<![\w-])text-\[#0081C6\]/i.test(read(f)))).toEqual([])
+    const SKY_50 = '#f0f9ff'
+    expect(ratio('#0081C6', SKY_50)).toBeLessThan(4.5)
+    expect(ratio('#0369a1', SKY_50)).toBeGreaterThanOrEqual(4.5)
+    expect(ratio('#0369a1', WHITE)).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('the lesson progress text is readable on both brand bars (VF-2)', () => {
+    const src = read('components/course/ProgressTracker.tsx')
+    const m = src.match(/color: 'rgba\(255,255,255,(0\.\d+)\)' \}\}>\{progressPct\}% done/)
+    const alpha = Number(m?.[1])
+    for (const bar of ['#1A4731', '#0C1A3D']) {
+      const mixed = '#' + [1, 3, 5].map((i) => Math.round(255 * alpha + parseInt(bar.slice(i, i + 2), 16) * (1 - alpha)).toString(16).padStart(2, '0')).join('')
+      expect(ratio(mixed, bar), bar).toBeGreaterThanOrEqual(4.5)
+    }
+  })
 })
 
 // RV-60 review additions: the stylesheet and the Tailwind palette agree, and the gold buttons,

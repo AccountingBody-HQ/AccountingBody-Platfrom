@@ -656,7 +656,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
           <Link
             href="/"
             className="flex items-center gap-2 shrink-0 mr-2"
-            aria-label={isEthioTax ? 'EthioTax home' : 'AccountingBody home'}
+            aria-label={isEthioTax ? 'EthioTax home' : 'Accounting Body home'}
           >
             {isEthioTax ? (
               <svg width="20" height="20" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -729,7 +729,7 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                     <Link
                       href={section.href ?? '#'}
                       className={[
-                        'relative flex items-center pl-3 pr-1 py-2 text-sm font-medium transition-colors duration-150',
+                        'relative flex items-center pl-3 pr-0.5 py-2 text-sm font-medium transition-colors duration-150',
                         isCurrentPage
                           ? 'text-gold-600 font-semibold'
                           : 'text-navy-950 hover:text-navy-700',
@@ -744,14 +744,14 @@ export function Navigation({ studyQualificationLinks, etGetHelpLinks, etCompanyL
                         )}
                       </span>
                       {isCurrentPage && (
-                        <span className="absolute bottom-0 left-3 right-1 h-0.5 bg-gold-500 rounded-full" />
+                        <span className="absolute bottom-0 left-3 right-0.5 h-0.5 bg-gold-500 rounded-full" />
                       )}
                     </Link>
                     <button
                       type="button"
                       data-menu-toggle
                       onClick={e => setActiveDropdown(nextOpenSection(activeDropdown, section.id, e.detail))}
-                      className="flex items-center pr-2 py-2 text-navy-950 hover:text-navy-700"
+                      className="flex items-center pl-0.5 pr-2 py-2 text-navy-950 hover:text-navy-700"
                       aria-label={`${section.label} menu`}
                       aria-expanded={isActive}
                     >
