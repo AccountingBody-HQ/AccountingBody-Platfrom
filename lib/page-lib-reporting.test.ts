@@ -321,7 +321,7 @@ describe('sitemaps', () => {
     expect(state.reports).toStrictEqual([])
   })
 
-  it.each(['articles', 'question_sets'])('reports a pages sitemap %s read that fails and keeps its failed result', async (table) => {
+  it.each(['articles', 'question_sets', 'courses'])('reports a pages sitemap %s read that fails and keeps its failed result', async (table) => {
     net.fail = (call) => call.table === table
     expect(await db.getPagesSitemapContent()).toStrictEqual({ ok: false })
     expectReports([['sitemap pages read failed', 'public', 'getPagesSitemapContent error:']])

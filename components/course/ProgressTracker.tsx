@@ -234,7 +234,7 @@ export function CourseProgressBar({ courseSlug, allLessonSlugs }: CourseProgress
       <div className="w-28 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${progressPct}%`, background: '#C9982A' }} />
       </div>
-      <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.5)' }}>{progressPct}% done</span>
+      <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>{progressPct}% done</span>
     </div>
   )
 }

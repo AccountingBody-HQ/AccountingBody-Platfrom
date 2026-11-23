@@ -7,8 +7,10 @@ import { resolveLegacyRenamedPath } from '@/lib/legacy-renamed-path'
 import type { ArticleFull } from '@/lib/db'
 import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
+import { brandExamBodies } from '@/lib/brand'
 import { resolveArticleCanonical } from '@/lib/canonical'
 import { toStoredSlug } from '@/lib/slug-param'
+import { studyCategoryName } from '@/lib/study-category-name'
 
 export async function generateStaticParams() {
   const slugs = await getAllArticleSlugs()
@@ -45,7 +47,7 @@ const EXAM_BODY_ACCENT: Record<string, string> = {
 
 const EXAM_BODY_BADGE: Record<string, string> = {
   ACCA:  'bg-blue-50 text-[#004B8D] border-blue-200',
-  CIMA:  'bg-sky-50 text-[#0081C6] border-sky-200',
+  CIMA:  'bg-sky-50 text-[#0369a1] border-sky-200',
   AAT:   'bg-teal-50 text-teal-700 border-teal-200',
   ICAEW: 'bg-red-50 text-red-800 border-red-200',
 }
@@ -129,7 +131,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
     notFound()
   }
 
-  const accentBar = EXAM_BODY_ACCENT[article.exam_body?.[0]?.toUpperCase() ?? ''] ?? 'bg-navy-950'
+  const examBodies = brandExamBodies(article.exam_body, isEthioTax)
+  const accentBar = EXAM_BODY_ACCENT[examBodies[0]?.toUpperCase() ?? ''] ?? 'bg-navy-950'
 
   const formattedPublished = article.published_at
     ? new Date(article.published_at).toLocaleDateString('en-GB', {
@@ -168,7 +171,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
               <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
             </svg>
             <Link href={`/study/${category}`} className="text-white/70 hover:text-white transition-colors">
-              {category.toUpperCase()}
+              {studyCategoryName(category, article)}
             </Link>
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2" d="M9 5l7 7-7 7" />
@@ -178,7 +181,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
 
           {/* Badges */}
           <div className="flex flex-wrap items-center gap-2 mb-5">
-            {article.exam_body?.map((body: string) => {
+            {examBodies.map((body: string) => {
               const cls = EXAM_BODY_BADGE[body.toUpperCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200'
               return (
                 <span key={body} className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-md border ${cls}`}>
@@ -274,11 +277,11 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                   Article details
                 </p>
                 <dl className="space-y-3">
-                  {article.exam_body?.length && (
+                  {examBodies.length > 0 && (
                     <div className="flex justify-between items-start text-sm gap-2" translate="no">
                       <dt className="text-slate-500 shrink-0">Qualification</dt>
                       <dd className="flex flex-wrap gap-1 justify-end" translate="no">
-                        {article.exam_body.map((body: string) => {
+                        {examBodies.map((body: string) => {
                           const cls = EXAM_BODY_BADGE[body.toUpperCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200'
                           return <span key={body} className={`text-xs font-bold px-2 py-0.5 rounded-md border ${cls}`} translate="no">{body.toUpperCase()}</span>
                         })}
@@ -409,7 +412,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeWidth="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
                 </svg>
-                All {category.toUpperCase()} notes
+                All {studyCategoryName(category, article)} notes
               </Link>
 
             </aside>

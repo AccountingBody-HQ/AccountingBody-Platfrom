@@ -79,7 +79,6 @@ export async function GET() {
     // Firms & freelancers
     url('/firms-freelancers',                      0.7,  'weekly'),
     url('/firms-freelancers/join',                 0.65, 'monthly'),
-    url('/firms-freelancers/directory',            0.6,  'monthly'),
     // Legal
     url('/terms',                                  0.3,  'yearly'),
   ]

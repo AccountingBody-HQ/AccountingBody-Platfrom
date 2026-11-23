@@ -3,6 +3,7 @@
 import * as Sentry from '@sentry/nextjs'
 import Link from 'next/link'
 import { useEffect } from 'react'
+import { FONT_STYLESHEET } from '@/lib/fonts'
 import './globals.css'
 
 export default function GlobalError({
@@ -18,6 +19,9 @@ export default function GlobalError({
 
   return (
     <html lang="en-GB">
+      <head>
+        <link rel="stylesheet" href={FONT_STYLESHEET} />
+      </head>
       <body className="antialiased bg-surface text-slate-900 min-h-screen flex flex-col">
         <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
           <div className="max-w-lg w-full text-center">

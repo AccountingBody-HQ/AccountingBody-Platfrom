@@ -29,6 +29,7 @@ describe('/sitemaps/pages.xml GET', () => {
       ok: true,
       articles: [{ slug: 'fixed-costs', updated_at: '2026-10-01T00:00:00Z', category: 'cost', show_on_sites: ['ab'] }],
       questionSets: [{ slug: 'variance-quiz', updated_at: '2026-10-02T00:00:00Z' }],
+      courses: [],
     })
 
     const res = await GET()
@@ -43,8 +44,34 @@ describe('/sitemaps/pages.xml GET', () => {
     expect(body).toContain('<loc>https://accountingbody.com/practice-questions/variance-quiz</loc>')
   })
 
+  it('lists each course and its lessons once, at the addresses their own canonicals name (VF-2)', async () => {
+    vi.mocked(getPagesSitemapContent).mockResolvedValue({
+      ok: true,
+      articles: [],
+      questionSets: [],
+      courses: [
+        { slug: 'costing', updated_at: '2026-10-03T00:00:00Z', canonical_owner: 'accountingbody', show_on_sites: ['ab', 'et'], lessonSlugs: ['intro', 'overheads'] },
+        { slug: 'no-owner', updated_at: null, canonical_owner: null, show_on_sites: ['ab'], lessonSlugs: [] },
+        // Owned by ethiotax.com: its pages name that domain, so it is not listed here.
+        { slug: 'et-owned', updated_at: null, canonical_owner: 'ethiotax', show_on_sites: ['ab', 'et'], lessonSlugs: ['one'] },
+      ],
+    })
+
+    const body = await (await GET()).text()
+    const courseLocs = Array.from(body.matchAll(/<loc>([^<]*\/free-courses\/[^<]*)<\/loc>/g)).map(m => m[1])
+
+    expect(courseLocs).toEqual([
+      'https://accountingbody.com/free-courses/costing',
+      'https://accountingbody.com/free-courses/costing/learn/intro',
+      'https://accountingbody.com/free-courses/costing/learn/overheads',
+      'https://accountingbody.com/free-courses/no-owner',
+    ])
+    expect(body.match(/<lastmod>2026-10-03T00:00:00.000Z<\/lastmod>/g)).toHaveLength(3)
+    expect(body).not.toContain('et-owned')
+  })
+
   it('still answers 200 with the static pages when there are no articles or question sets', async () => {
-    vi.mocked(getPagesSitemapContent).mockResolvedValue({ ok: true, articles: [], questionSets: [] })
+    vi.mocked(getPagesSitemapContent).mockResolvedValue({ ok: true, articles: [], questionSets: [], courses: [] })
 
     const res = await GET()
     const body = await res.text()

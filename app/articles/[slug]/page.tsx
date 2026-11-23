@@ -6,6 +6,7 @@ import { getArticleBySlug } from '@/lib/db'
 import { resolveLegacyRenamedPath } from '@/lib/legacy-renamed-path'
 import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
+import { brandExamBodies } from '@/lib/brand'
 import { articleTitleOwner, resolveArticleCanonical } from '@/lib/canonical'
 import { toStoredSlug } from '@/lib/slug-param'
 
@@ -59,7 +60,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   }
   if (!article) return null
 
-  const accentBar  = EXAM_BODY_ACCENT[article.exam_body?.[0] ?? ''] ?? 'bg-navy-950'
+  const examBodies = brandExamBodies(article.exam_body, isEthioTax)
+  const accentBar  = EXAM_BODY_ACCENT[examBodies[0] ?? ''] ?? 'bg-navy-950'
 
   const formattedReviewed = article.last_reviewed
     ? new Date(article.last_reviewed).toLocaleDateString('en-GB', {
@@ -94,7 +96,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
           {/* Badges */}
           <div className="flex flex-wrap items-center gap-2 mb-5">
-            {article.exam_body?.map((body: string) => {
+            {examBodies.map((body: string) => {
               const bc = EXAM_BODY_BADGE[body.toUpperCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200'
               return (
                 <span key={body} className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-md border ${bc}`}>
@@ -242,11 +244,11 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                   Article details
                 </p>
                 <dl className="space-y-3">
-                  {article.exam_body && article.exam_body.length > 0 && (
+                  {examBodies.length > 0 && (
                     <div className="flex justify-between text-sm gap-2">
                       <dt className="text-slate-500 shrink-0">Qualification</dt>
                       <dd className="flex flex-wrap gap-1 justify-end">
-                        {article.exam_body.map((body: string) => {
+                        {examBodies.map((body: string) => {
                           const bc = EXAM_BODY_BADGE[body.toUpperCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200'
                           return (
                             <span key={body} className={`text-xs font-bold px-2 py-0.5 rounded-md border ${bc}`}>

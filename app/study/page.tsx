@@ -28,7 +28,7 @@ const EXAM_BODIES = [
   {
     code: 'CIMA', slug: 'cima',
     description: 'Operational, Management, and Strategic levels plus Case Study prep.',
-    accent: 'bg-[#0081C6]', badgeBg: 'bg-sky-50', badgeText: 'text-[#0081C6]',
+    accent: 'bg-[#0081C6]', badgeBg: 'bg-sky-50', badgeText: 'text-[#0369a1]',
     highlights: ['Operational level', 'Management level', 'Strategic level', 'Case Study prep'],
   },
   {

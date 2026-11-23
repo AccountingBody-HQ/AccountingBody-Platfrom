@@ -85,7 +85,7 @@ export function ShareButton({ url, jobTitle, brandColor }: { url: string; jobTit
       <button
         type="button"
         onClick={handleClick}
-        aria-label={`Copy link to ${jobTitle}`}
+        aria-label={`${label}: copy link to ${jobTitle}`}
         className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold transition-colors hover:bg-slate-50"
         style={{ color: brandColor }}
       >

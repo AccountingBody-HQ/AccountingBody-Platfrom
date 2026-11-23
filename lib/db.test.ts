@@ -276,6 +276,8 @@ function fakeSitemapClient(results: Record<string, { data: unknown; error: unkno
       const builder = {
         select: (...args: unknown[]) => { query.calls.push({ method: 'select', args }); return builder },
         eq:     (...args: unknown[]) => { query.calls.push({ method: 'eq', args }); return builder },
+        contains: (...args: unknown[]) => { query.calls.push({ method: 'contains', args }); return builder },
+        in:     (...args: unknown[]) => { query.calls.push({ method: 'in', args }); return builder },
         then:   (resolve: (value: unknown) => unknown, reject?: (reason: unknown) => unknown) =>
           Promise.resolve(results[table]).then(resolve, reject),
       }
@@ -293,10 +295,10 @@ describe('getPagesSitemapContent', () => {
   const failed = { data: null, error: { message: 'database detail', code: '57014' } }
 
   it('reads published AB articles and question sets with the same columns and filters as before', async () => {
-    const queries = fakeSitemapClient({ articles: ok([ARTICLE]), question_sets: ok([QUESTION_SET]) })
+    const queries = fakeSitemapClient({ articles: ok([ARTICLE]), question_sets: ok([QUESTION_SET]), courses: ok([]) })
 
-    expect(await getPagesSitemapContent()).toStrictEqual({ ok: true, articles: [ARTICLE], questionSets: [QUESTION_SET] })
-    expect(queries).toStrictEqual([
+    expect(await getPagesSitemapContent()).toStrictEqual({ ok: true, articles: [ARTICLE], questionSets: [QUESTION_SET], courses: [] })
+    expect(queries.slice(0, 2)).toStrictEqual([
       {
         table: 'articles',
         calls: [
@@ -317,16 +319,58 @@ describe('getPagesSitemapContent', () => {
     expect(reportServerError).not.toHaveBeenCalled()
   })
 
-  it('treats real empty lists as a good result', async () => {
-    fakeSitemapClient({ articles: ok([]), question_sets: ok([]) })
-    expect(await getPagesSitemapContent()).toStrictEqual({ ok: true, articles: [], questionSets: [] })
+  const COURSE = { slug: 'costing', updated_at: '2026-10-03T00:00:00Z', canonical_owner: 'accountingbody', show_on_sites: ['ab', 'et'] }
+
+  it('reads published courses shown on AB only, flat, and each lesson inside a chapter of its own course (VF-2)', async () => {
+    const queries = fakeSitemapClient({
+      articles: ok([]), question_sets: ok([]),
+      courses: ok([{ id: 'c1', ...COURSE }, { id: 'c2', ...COURSE, slug: 'tax' }]),
+      course_chapters: ok([{ id: 'ch1', course_id: 'c1' }, { id: 'ch2', course_id: 'c2' }]),
+      course_lessons: ok([
+        { slug: 'intro', course_id: 'c1', chapter_id: 'ch1' },
+        { slug: 'intro', course_id: 'c1', chapter_id: 'ch1' },
+        { slug: null, course_id: 'c1', chapter_id: 'ch1' },
+        { slug: 'lost', course_id: 'c1', chapter_id: 'ch2' },
+        { slug: 'no-chapter', course_id: 'c1', chapter_id: 'gone' },
+        { slug: 'vat', course_id: 'c2', chapter_id: 'ch2' },
+      ]),
+    })
+
+    expect(await getPagesSitemapContent()).toStrictEqual({
+      ok: true, articles: [], questionSets: [],
+      courses: [{ ...COURSE, lessonSlugs: ['intro'] }, { ...COURSE, slug: 'tax', lessonSlugs: ['vat'] }],
+    })
+    // The status filter is what keeps a draft course (and so its lessons) out of the sitemap.
+    expect(queries.slice(2)).toStrictEqual([
+      {
+        table: 'courses',
+        calls: [
+          { method: 'select', args: ['id, slug, updated_at, canonical_owner, show_on_sites'] },
+          { method: 'eq', args: ['status', 'published'] },
+          { method: 'contains', args: ['show_on_sites', ['ab']] },
+        ],
+      },
+      { table: 'course_chapters', calls: [{ method: 'select', args: ['id, course_id'] }, { method: 'in', args: ['course_id', ['c1', 'c2']] }] },
+      { table: 'course_lessons', calls: [{ method: 'select', args: ['slug, course_id, chapter_id'] }, { method: 'in', args: ['course_id', ['c1', 'c2']] }] },
+    ])
     expect(reportServerError).not.toHaveBeenCalled()
   })
+
+  it('treats real empty lists as a good result', async () => {
+    fakeSitemapClient({ articles: ok([]), question_sets: ok([]), courses: ok([]) })
+    expect(await getPagesSitemapContent()).toStrictEqual({ ok: true, articles: [], questionSets: [], courses: [] })
+    expect(reportServerError).not.toHaveBeenCalled()
+  })
+
+  const COURSES_OK = { courses: ok([{ id: 'c1', ...COURSE }]), course_chapters: ok([]), course_lessons: ok([]) }
 
   it.each([
     ['articles', { articles: failed, question_sets: ok([QUESTION_SET]) }],
     ['question sets', { articles: ok([ARTICLE]), question_sets: failed }],
-  ])('fails, logs the short code only and reports once when the %s read fails', async (_name, results) => {
+    ['courses', { articles: ok([ARTICLE]), question_sets: ok([QUESTION_SET]), ...COURSES_OK, courses: failed }],
+    ['course chapters', { articles: ok([ARTICLE]), question_sets: ok([QUESTION_SET]), ...COURSES_OK, course_chapters: failed }],
+    ['course lessons', { articles: ok([ARTICLE]), question_sets: ok([QUESTION_SET]), ...COURSES_OK, course_lessons: failed }],
+  ] as [string, Record<string, { data: unknown; error: unknown }>][])('fails, logs the short code only and reports once when the %s read fails', async (_name, results) => {
     fakeSitemapClient(results)
     const log = vi.spyOn(console, 'error').mockImplementation(() => {})
 
@@ -344,7 +388,10 @@ describe('getPagesSitemapContent', () => {
   it.each([
     ['articles', { articles: ok(null), question_sets: ok([QUESTION_SET]) }],
     ['question sets', { articles: ok([ARTICLE]), question_sets: ok(null) }],
-  ])('fails and reports once when the %s read returns no data', async (_name, results) => {
+    ['courses', { articles: ok([ARTICLE]), question_sets: ok([QUESTION_SET]), ...COURSES_OK, courses: ok(null) }],
+    ['course chapters', { articles: ok([ARTICLE]), question_sets: ok([QUESTION_SET]), ...COURSES_OK, course_chapters: ok(null) }],
+    ['course lessons', { articles: ok([ARTICLE]), question_sets: ok([QUESTION_SET]), ...COURSES_OK, course_lessons: ok(null) }],
+  ] as [string, Record<string, { data: unknown; error: unknown }>][])('fails and reports once when the %s read returns no data', async (_name, results) => {
     fakeSitemapClient(results)
     vi.spyOn(console, 'error').mockImplementation(() => {})
 

@@ -9,6 +9,7 @@ import { resolveArticlePath } from '@/lib/article-path'
 import { formatSalary } from '@/lib/job-format'
 import { formatJobLocation } from '@/app/jobs/listings/jobLocation'
 import { brandName } from '@/lib/brand'
+import { studyCategoryName } from '@/lib/study-category-name'
 
 type ContentType = 'all' | 'article' | 'practicePost' | 'course'
 
@@ -120,7 +121,7 @@ function ResultCard({ result }: { result: SearchResult }) {
         </span>
         {result.category && (
           <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-            {result.category}
+            {studyCategoryName(result.category, { category: result.category, category_title: result.category })}
           </span>
         )}
       </div>
@@ -329,11 +330,11 @@ export function SearchInner({ isEthioTax }: { isEthioTax: boolean }) {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder={isEthioTax ? "Search for ETICPA ATQ, VAT Ethiopia, income tax…" : "Search for double entry, cash flow, depreciation…"}
-                className="w-full h-14 pl-12 pr-12 rounded-xl text-base bg-white/10 border border-white/20 text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all"
+                className="w-full h-14 pl-12 pr-12 rounded-xl text-base bg-white/10 border border-white/20 text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all [&::-webkit-search-cancel-button]:appearance-none"
                 aria-label={`Search ${brandName(isEthioTax)}`}
                 autoComplete="off"
               />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
                 {loading ? (
                   <svg className="w-5 h-5 text-gold-400 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -341,7 +342,7 @@ export function SearchInner({ isEthioTax }: { isEthioTax: boolean }) {
                   </svg>
                 ) : query ? (
                   <button onClick={() => { setQuery(''); inputRef.current?.focus() }}
-                    className="text-white/70 hover:text-white/80 transition-colors" aria-label="Clear search">
+                    className="p-0.5 -m-0.5 text-white/70 hover:text-white/80 transition-colors" aria-label="Clear search">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>

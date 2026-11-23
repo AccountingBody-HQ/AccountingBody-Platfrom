@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getPagesSitemapContent } from '@/lib/db'
-import { contentOwner, resolveArticleCanonicalUrl } from '@/lib/canonical'
+import { contentOwner, ownerUrl, resolveArticleCanonicalUrl } from '@/lib/canonical'
 import { buildUrlset, type UrlsetEntry } from '@/lib/sitemap-chunks'
 
 const AB_BASE_URL = 'https://accountingbody.com'
@@ -11,11 +11,11 @@ export const dynamic = 'force-dynamic'
 // at 13 Sept 2026. Do not remove. See Session 15 handover.
 export const fetchCache = 'force-no-store'
 
-// Static pages, published articles and practice-question sets. If the article
-// or question-set read fails, this answers 500 and is never cached, instead of
-// a sitemap that leaves those pages out (the reads, their log line and report
-// live in getPagesSitemapContent in lib/db.ts). Jobs live in
-// app/sitemaps/jobs/[file]/route.ts instead.
+// Static pages, published articles, practice-question sets, and published
+// courses with their lessons. If any of those reads fails, this answers 500
+// and is never cached, instead of a sitemap that leaves those pages out (the
+// reads, their log line and report live in getPagesSitemapContent in
+// lib/db.ts). Jobs live in app/sitemaps/jobs/[file]/route.ts instead.
 export async function GET() {
   const result = await getPagesSitemapContent()
   if (!result.ok) {
@@ -24,7 +24,7 @@ export async function GET() {
       headers: { 'Cache-Control': 'no-store' },
     })
   }
-  const { articles, questionSets } = result
+  const { articles, questionSets, courses } = result
 
   const staticPages: UrlsetEntry[] = [
     { url: AB_BASE_URL,                         lastModified: new Date(), changeFrequency: 'daily',   priority: 1.0 },
@@ -69,6 +69,17 @@ export async function GET() {
       changeFrequency: 'monthly' as const,
       priority:        0.65,
     })),
+    // The same owner rule as the course and lesson pages' own canonicals (D272);
+    // a lesson takes its course's owner and date.
+    ...courses.filter(c => contentOwner(c) === 'accountingbody').flatMap(c => [
+      { path: `/free-courses/${c.slug}`, priority: 0.7 },
+      ...c.lessonSlugs.map(lesson => ({ path: `/free-courses/${c.slug}/learn/${lesson}`, priority: 0.6 })),
+    ].map(({ path, priority }) => ({
+      url:             ownerUrl('accountingbody', path),
+      lastModified:    new Date(c.updated_at ?? Date.now()),
+      changeFrequency: 'monthly' as const,
+      priority,
+    }))),
   ]
 
   const xml = buildUrlset(entries)
