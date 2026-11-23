@@ -325,7 +325,8 @@ describe('G6 nothing else changed', () => {
     ['lib/middleware-logic.ts', 'e0378e7b89ad5007cf928664444f0d322620a534051d96fcb63421854f130612'],
     ['middleware.ts', 'd93412b73d16b115b288ab6d78999e2f3982a3485ada3c135a7c70122b14e92c'],
     ['vercel.json', 'c333bf786950054aca5ae357e5a9a48d9e475e724603a97e8d2a79b005bb299a'],
-    ['next.config.mjs', 'fa284c7ea1016faa24072b3b8caa06dbd0c39cd3646c86ec59b5c910532736fe'],
+    // B2 (D320): two redirects for the one course with a new address.
+    ['next.config.mjs', 'e31f74a28cdcad170ae1e458a19a11fc7136a71ec3038cd192d09e3b4d6e030f'],
     ['sentry.server.config.ts', '7606957e849e77260a359d7166ab7e42b71e4ef8a505e7d84a84897c7fe016ae'],
     ['sentry.edge.config.ts', 'efe89985aee63f30fb79756e54b67bbaf129eac738a3f49cebeb4b41b616bfc1'],
     ['sentry.client.config.ts', '531cbd1f11d15db6585d27e71059f011a04d7ea9083dadcdb72173c7c0b39006'],

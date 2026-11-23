@@ -296,6 +296,10 @@ describe('G6 scope: only the planned lines change', () => {
     "import { LEGACY_WORDPRESS_PATTERNS } from './lib/legacy-wordpress-redirects.mjs'",
     '      // Old WordPress address classes without an exact row (frozen patterns; after every exact rule)',
     '      ...LEGACY_WORDPRESS_PATTERNS.map(({ source, destination }) => ({ source, destination, permanent: true })),',
+    // B2 (D320): the one course with a new address.
+    '      // One course has a new address (owner decision D320)',
+    "      { source: '/free-courses/test-3', destination: '/free-courses/bookkeeping-essentials-recording-financial-transactions', permanent: true },",
+    "      { source: '/free-courses/test-3/:path*', destination: '/free-courses/bookkeeping-essentials-recording-financial-transactions/:path*', permanent: true },",
   ]
   it('next.config.mjs = main\'s file plus exactly the import, comment and spread lines', () => {
     const text = readFileSync('next.config.mjs', 'utf8')
