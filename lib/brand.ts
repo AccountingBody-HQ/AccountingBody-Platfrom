@@ -39,6 +39,17 @@ export function isEthioTaxJobPlatform(platform: unknown): boolean {
   return list.includes('et') && !list.includes('ab')
 }
 
+// The exam-body labels a brand shows, in their stored order. ETICPA is an
+// EthioTax label only (owner decision D318): EthioTax shows every label,
+// Accounting Body leaves ETICPA out, however it is spelled. Display only;
+// the stored values never change.
+export function brandExamBodies(bodies: unknown, isEthioTax: boolean): string[] {
+  if (!Array.isArray(bodies)) return []
+  const labels = bodies.filter((body): body is string => typeof body === 'string' && body !== '')
+  if (isEthioTax) return labels
+  return labels.filter((body) => !body.toLowerCase().replace(/[^a-z0-9]/g, '').startsWith('eticpa'))
+}
+
 // For the two client pages that cannot receive the brand from a server
 // parent: the platform cookie the middleware sets on every response
 // (middleware.ts), or the EthioTax host itself. Call it after mount only,
