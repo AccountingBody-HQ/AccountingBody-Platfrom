@@ -1550,6 +1550,11 @@ function openJobsExpiryFilter(nowMs: number): string {
   return `expires_at.is.null,expires_at.gt.${new Date(nowMs).toISOString()}`
 }
 
+// Jobs with a very short description are noindex on their page (owner
+// decision D321), so both job sitemaps leave them out. The column can be
+// null; a job without flags stays listed.
+const NOT_BRIEF_FILTER = 'quality_flags.is.null,quality_flags.not.cs.{brief_description}'
+
 // getJobSitemapEntries is used by app/et-sitemap/route.ts (platform 'et');
 // the Accounting Body job sitemaps use getJobSitemapChunk below.
 // Page size is deliberately 1,000 — the documented PostgREST default —
@@ -1587,6 +1592,7 @@ export async function getJobSitemapEntries(
       .from('jobs')
       .select(JOB_SITEMAP_COLUMNS)
       .eq('status', 'active')
+      .or(NOT_BRIEF_FILTER)
       .or(openJobsExpiryFilter(nowMs))
       .contains('platform', [platform])
 
@@ -1673,6 +1679,7 @@ export async function getJobSitemapChunk(
       .from('jobs')
       .select(JOB_SITEMAP_COLUMNS)
       .eq('status', 'active')
+      .or(NOT_BRIEF_FILTER)
       .or(openJobsExpiryFilter(nowMs))
       .contains('platform', [platform])
       .gte('id', lower)
