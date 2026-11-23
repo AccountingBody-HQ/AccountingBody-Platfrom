@@ -324,7 +324,7 @@ describe('G6 nothing else changed', () => {
     ['lib/middleware-logic.ts', '48e207e0ddb00d6f255d7e7ea07efd6da389d6b4da835cb74a440d765f71b96a'],
     ['middleware.ts', 'd93412b73d16b115b288ab6d78999e2f3982a3485ada3c135a7c70122b14e92c'],
     ['vercel.json', 'c333bf786950054aca5ae357e5a9a48d9e475e724603a97e8d2a79b005bb299a'],
-    ['next.config.mjs', '233fc0b44529d41a3cc9fbf3e494fcfc6695fb13fd037178aa253a819eb5bc7a'],
+    ['next.config.mjs', 'fa284c7ea1016faa24072b3b8caa06dbd0c39cd3646c86ec59b5c910532736fe'],
     ['sentry.server.config.ts', '7606957e849e77260a359d7166ab7e42b71e4ef8a505e7d84a84897c7fe016ae'],
     ['sentry.edge.config.ts', 'efe89985aee63f30fb79756e54b67bbaf129eac738a3f49cebeb4b41b616bfc1'],
     ['sentry.client.config.ts', '531cbd1f11d15db6585d27e71059f011a04d7ea9083dadcdb72173c7c0b39006'],
