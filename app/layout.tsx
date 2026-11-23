@@ -12,6 +12,7 @@ import { Footer } from '@/components/layout/Footer'
 import { EthioTaxWhatsAppButton } from '@/components/layout/EthioTaxWhatsAppButton'
 import { getCachedBrowsableJobsCount } from '@/lib/jobs'
 import { getCachedPublishedArticleCount, getCachedPublishedQuestionCount } from '@/lib/db'
+import { FONT_STYLESHEET } from '@/lib/fonts'
 import CookieConsent from '@/components/CookieConsent'
 import ScrollToTop from '@/components/ScrollToTop'
 import RouteProgressBar from '@/components/RouteProgressBar'
@@ -115,6 +116,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <link rel="dns-prefetch" href="//fonts.gstatic.com" />
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link rel="stylesheet" href={FONT_STYLESHEET} />
           {/* GTM and the ads script are loaded by CookieConsent only after the visitor accepts */}
         </head>
         <body className="antialiased bg-surface text-slate-900 min-h-screen flex flex-col">
