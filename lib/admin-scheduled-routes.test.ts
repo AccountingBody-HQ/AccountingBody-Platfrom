@@ -349,12 +349,14 @@ const scenarios: Scenario[] = [
     call: async () =>
       (await api('course-factory/save/route.ts')).POST(
         request('POST', adminPath('course-factory/save'), {
+          mode: 'create',
           title: 'Course',
           slug: 'course',
           chapters: [{ chapterTitle: 'One', lessonRefs: [{ title: 'Lesson', articleIds: [ID] }] }],
         }),
         { params: {} },
       ),
+    // BP-1: create reads the course address and the lesson addresses, then inserts (no delete).
     healthy: { status: 200, body: { success: true, id: ID }, dbRequests: 6 },
     // The first read gets no answer, so nothing is written.
     stalled: {

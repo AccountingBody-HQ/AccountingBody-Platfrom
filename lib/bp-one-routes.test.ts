@@ -46,6 +46,8 @@ const network = {
   rows: {} as Record<string, Row[]>,
   counts: {} as Record<string, number>,
   fail: (() => false) as (call: Call) => boolean,
+  failCode: 'XX000',
+  rpc: { status: 200, body: {} as unknown },
   calls: [] as Call[],
 }
 
@@ -61,8 +63,9 @@ const fakeFetch: typeof fetch = async (input, init) => {
   network.calls.push(call)
   if (network.fail(call)) {
     if (method === 'HEAD') return new Response(null, { status: 503 })
-    return json({ code: 'XX000', message: 'database detail', details: null, hint: null }, 500)
+    return json({ code: network.failCode, message: 'database detail', details: null, hint: null }, network.failCode === '23505' ? 409 : 500)
   }
+  if (table.startsWith('rpc/')) return json(network.rpc.body, network.rpc.status)
   const headers = new Headers(init?.headers)
   const prefer = headers.get('prefer') ?? ''
   const single = (headers.get('accept') ?? '').includes('vnd.pgrst.object')
@@ -102,7 +105,7 @@ beforeEach(async () => {
   vi.spyOn(console, 'error').mockImplementation(() => {})
   vi.spyOn(console, 'warn').mockImplementation(() => {})
   vi.spyOn(console, 'log').mockImplementation(() => {})
-  Object.assign(network, { rows: {}, counts: {}, fail: () => false, calls: [] })
+  Object.assign(network, { rows: {}, counts: {}, fail: () => false, failCode: 'XX000', rpc: { status: 200, body: {} }, calls: [] })
   session = await signTestSession()
 })
 
@@ -345,4 +348,198 @@ describe('actions route allow-list', () => {
       expect(res.status).toBe(200)
     },
   )
+})
+
+// ── (b) Course Factory save ─────────────────────────────────────────────────
+
+const KEPT = '3f2504e0-4f89-41d3-9a0c-0305e82c3301'
+const DROPPED = '9c5b94b1-35ad-49bb-b118-8e8fc24abf80'
+const keptLesson = {
+  id: KEPT,
+  chapter_id: CHAPTER,
+  course_id: ID,
+  title: 'Old title',
+  slug: 'tax-ch1-l1',
+  lesson_order: 1,
+  created_at: '2026-01-01T00:00:00Z',
+  estimated_time: '15 min',
+  video_url: 'https://video.example/1',
+  audio_url: 'https://audio.example/1',
+  external_quiz_url: 'https://quiz.example/1',
+}
+const droppedLesson = { id: DROPPED, chapter_id: CHAPTER, course_id: ID, title: 'Dropped', slug: 'tax-ch1-l2', lesson_order: 2 }
+const course = { id: ID, title: 'Tax basics', slug: 'tax', status: 'published', show_on_sites: ['ab', 'et'] }
+const liveCourse = () => {
+  network.rows = {
+    courses: [course],
+    course_chapters: [{ id: CHAPTER, course_id: ID, chapter_title: 'One', chapter_order: 1 }],
+    course_lessons: [keptLesson, droppedLesson],
+    course_lesson_articles: [{ id: QUESTION, lesson_id: KEPT, article_id: ARTICLE, article_order: 1 }],
+  }
+}
+
+type Ref = { title: string; articleIds: string[]; lessonId?: string }
+const save = (body: Record<string, unknown>) => async () =>
+  (await api('course-factory/save/route.ts')).POST(request('POST', 'course-factory/save', body), { params: {} })
+const update = (chapters: { chapterTitle: string; lessonRefs: Ref[] }[], extra: Record<string, unknown> = {}) =>
+  save({ mode: 'update', courseId: ID, title: 'Tax basics', slug: 'tax', showOnSites: ['accountingbody', 'ethiotax'], chapters, ...extra })
+const writes = () => lines().filter((line) => !line.startsWith('GET') && !line.startsWith('HEAD'))
+const lessonInserts = () => network.calls.filter((c) => c.method === 'POST' && c.table === 'course_lessons').map((c) => c.body as Row)
+
+describe('Course Factory save: create', () => {
+  const create = save({ mode: 'create', title: 'Tax basics', slug: 'tax', chapters: [{ chapterTitle: 'One', lessonRefs: [{ title: 'L', articleIds: [ARTICLE] }] }] })
+
+  it('refuses an address that is already used, and writes nothing', async () => {
+    liveCourse()
+    const res = await create()
+    expect(res.status).toBe(409)
+    expect(await res.json()).toEqual({ error: 'A course with this web address already exists. Load that course to edit it, or change the title.' })
+    expect(lines()).toEqual(['GET courses'])
+  })
+
+  it('inserts (never upserts) the course row', async () => {
+    const res = await create()
+    expect(res.status).toBe(200)
+    const insert = network.calls.find((c) => c.method === 'POST' && c.table === 'courses')
+    expect(insert?.query).not.toContain('on_conflict')
+    expect(writes()).not.toContain('DELETE course_chapters')
+  })
+
+  it('answers the same 409 when another save takes the address first', async () => {
+    network.fail = (call) => call.method === 'POST' && call.table === 'courses'
+    network.failCode = '23505'
+    const res = await create()
+    expect(res.status).toBe(409)
+    expect(JSON.stringify(await res.json())).toContain('already exists')
+  })
+
+  it('says honestly when the partial course could not be rolled back', async () => {
+    network.fail = (call) => (call.method === 'POST' && call.table === 'course_chapters') || (call.method === 'DELETE' && call.table === 'courses')
+    const res = await create()
+    expect(res.status).toBe(500)
+    expect(JSON.stringify(await res.json())).toContain('could not be rolled back')
+  })
+})
+
+describe('Course Factory save: update', () => {
+  it('keeps a loaded lesson: its id, address, time and media fields, wherever it moves', async () => {
+    liveCourse()
+    const res = await update([
+      { chapterTitle: 'Intro', lessonRefs: [{ title: 'Brand new', articleIds: [] }] },
+      { chapterTitle: 'Two', lessonRefs: [{ title: 'Renamed lesson', articleIds: [ARTICLE], lessonId: KEPT }] },
+    ])()
+    expect(res.status).toBe(200)
+    const kept = lessonInserts().find((row) => row.id === KEPT)
+    expect(kept).toMatchObject({
+      id: KEPT,
+      slug: 'tax-ch1-l1',
+      title: 'Renamed lesson',
+      lesson_order: 1,
+      estimated_time: '15 min',
+      video_url: 'https://video.example/1',
+      audio_url: 'https://audio.example/1',
+      external_quiz_url: 'https://quiz.example/1',
+    })
+  })
+
+  it('gives new lessons free, unique addresses (never a kept or existing one)', async () => {
+    liveCourse()
+    const res = await update([
+      {
+        chapterTitle: 'One',
+        lessonRefs: [
+          { title: 'Kept', articleIds: [], lessonId: KEPT },
+          { title: 'New A', articleIds: [] },
+        ],
+      },
+      { chapterTitle: 'Two', lessonRefs: [{ title: 'New B', articleIds: [] }] },
+    ])()
+    expect(res.status).toBe(200)
+    const slugs = lessonInserts().map((row) => row.slug)
+    // ch1-l2 is still used by a lesson in the database, so the new one gets -2.
+    expect(slugs).toEqual(['tax-ch1-l1', 'tax-ch1-l2-2', 'tax-ch2-l1'])
+    expect(new Set(slugs).size).toBe(slugs.length)
+    expect(lessonInserts()[1]).not.toHaveProperty('id')
+  })
+
+  it('refuses a lesson id that is not in this course, before any write', async () => {
+    liveCourse()
+    const res = await update([{ chapterTitle: 'One', lessonRefs: [{ title: 'X', articleIds: [], lessonId: QUESTION }] }])()
+    expect(res.status).toBe(400)
+    expect(writes()).toEqual([])
+  })
+
+  it('refuses a change of address, before any write', async () => {
+    liveCourse()
+    const res = await update([{ chapterTitle: 'One', lessonRefs: [{ title: 'X', articleIds: [], lessonId: KEPT }] }], { slug: 'tax-new' })()
+    expect(res.status).toBe(409)
+    expect(await res.json()).toEqual({ error: 'The course address changed since it was loaded. Reload the course.' })
+    expect(writes()).toEqual([])
+  })
+
+  it('writes the recycle bin copy before any other write, and the copy is the whole course', async () => {
+    liveCourse()
+    const res = await update([{ chapterTitle: 'One', lessonRefs: [{ title: 'Kept', articleIds: [], lessonId: KEPT }] }])()
+    expect(await res.json()).toMatchObject({ success: true, binId: ID })
+    expect(writes()[0]).toBe('POST admin_recycle_bin')
+    const bin = binWrites()[0].body as Row
+    expect(bin).toMatchObject({ kind: 'course', reason: 'course_save', source_table: 'courses', source_id: ID, row_count: 5 })
+    expect(String(bin.label)).toMatch(/^Tax basics \(before save \d{4}-\d\d-\d\d \d\d:\d\d UTC\)$/)
+    expect(Object.keys(bin.payload as Row)).toEqual(['courses', 'course_chapters', 'course_lessons', 'course_lesson_articles'])
+  })
+
+  it('updates the course row by id, keeps its address and the sites as sent', async () => {
+    liveCourse()
+    await update([{ chapterTitle: 'One', lessonRefs: [{ title: 'Kept', articleIds: [], lessonId: KEPT }] }])()
+    const patch = network.calls.find((c) => c.method === 'PATCH' && c.table === 'courses')
+    expect(patch?.query).toContain(`id=eq.${ID}`)
+    expect(patch?.body).not.toHaveProperty('slug')
+    expect(patch?.body).toMatchObject({ show_on_sites: ['ab', 'et'] })
+    expect(network.calls.some((c) => c.method === 'POST' && c.table === 'courses')).toBe(false)
+  })
+
+  it('changes nothing when the recycle bin copy cannot be written', async () => {
+    liveCourse()
+    network.fail = (call) => call.method === 'POST' && call.table === 'admin_recycle_bin'
+    const res = await update([{ chapterTitle: 'One', lessonRefs: [{ title: 'Kept', articleIds: [], lessonId: KEPT }] }])()
+    expect(res.status).toBe(500)
+    expect(await res.json()).toEqual({ error: 'Could not keep a copy of the current course in the recycle bin. Nothing was changed.' })
+    expect(writes()).toEqual(['POST admin_recycle_bin'])
+  })
+
+  it('answers 404 when the loaded course no longer exists', async () => {
+    const res = await update([{ chapterTitle: 'One', lessonRefs: [{ title: 'New', articleIds: [] }] }])()
+    expect(res.status).toBe(404)
+    expect(writes()).toEqual([])
+  })
+
+  it.each([
+    ['no mode', { title: 'T', slug: 'tax', chapters: [] }],
+    ['an update without a valid course id', { mode: 'update', courseId: 'nope', title: 'T', slug: 'tax', chapters: [] }],
+    ['a lesson id that is not an id', { mode: 'update', courseId: ID, title: 'T', slug: 'tax', chapters: [{ chapterTitle: 'C', lessonRefs: [{ title: 'L', articleIds: [], lessonId: 'x' }] }] }],
+    [
+      'the same lesson twice',
+      {
+        mode: 'update',
+        courseId: ID,
+        title: 'T',
+        slug: 'tax',
+        chapters: [{ chapterTitle: 'C', lessonRefs: [{ title: 'L', articleIds: [], lessonId: KEPT }, { title: 'L', articleIds: [], lessonId: KEPT }] }],
+      },
+    ],
+    ['a create that names a lesson id', { mode: 'create', title: 'T', slug: 'tax', chapters: [{ chapterTitle: 'C', lessonRefs: [{ title: 'L', articleIds: [], lessonId: KEPT }] }] }],
+    ['missing chapters', { mode: 'create', title: 'T', slug: 'tax' }],
+  ])('refuses %s with 400 before any database request', async (_name, body) => {
+    const res = await save(body)()
+    expect(res.status).toBe(400)
+    expect(network.calls).toEqual([])
+  })
+
+  it('never sends a database message to the browser', async () => {
+    liveCourse()
+    network.fail = (call) => call.method === 'PATCH' && call.table === 'courses'
+    const res = await update([{ chapterTitle: 'One', lessonRefs: [{ title: 'Kept', articleIds: [], lessonId: KEPT }] }])()
+    expect(res.status).toBe(500)
+    expect(JSON.stringify(await res.json())).not.toContain('database detail')
+  })
 })
