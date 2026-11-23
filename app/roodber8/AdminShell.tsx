@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Inbox, Users, Briefcase, Building2,
   Factory, Settings, LogOut, ExternalLink,
-  ChevronRight, BookOpen, FileText, Sparkles, Server, ArchiveRestore
+  ChevronRight, BookOpen, FileText, Sparkles, Server, ArchiveRestore, UserSearch
 } from 'lucide-react'
 
 // Sanity Studio nav entry removed — Sanity CMS is fully decommissioned (replaced by Supabase).
@@ -27,6 +27,7 @@ const NAV = [
   { href: '/roodber8/course-factory',   exact: false, icon: Factory,         label: 'Course Factory',  sub: 'Assemble structured courses' },
   { href: '/roodber8/ab-press',         exact: false, icon: BookOpen,        label: 'AB Press',        sub: 'Generate KDP-ready books'    },
   { href: '/roodber8/recycle-bin',     exact: false, icon: ArchiveRestore,  label: 'Recycle bin',     sub: 'Restore deleted items'     },
+  { href: '/roodber8/personal-data',   exact: false, icon: UserSearch,      label: 'Personal data',   sub: 'Find, export or erase one person' },
   { href: '/roodber8/settings',        exact: false, icon: Settings,        label: 'Settings',        sub: 'Environment & checklist'   },
 ]
 
@@ -59,6 +60,7 @@ function getBreadcrumb(pathname: string) {
     '/roodber8/course-factory':     'Course Factory',
     '/roodber8/ab-press':           'AB Press',
     '/roodber8/recycle-bin':        'Recycle bin',
+    '/roodber8/personal-data':      'Personal data',
   }
   if (map[pathname]) return map[pathname]
 

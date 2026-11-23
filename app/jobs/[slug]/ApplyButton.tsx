@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import type { Job } from '@/lib/jobs'
 import { brandName } from '@/lib/brand'
+import { decodeHtmlEntities } from '@/lib/html-entities'
 
 // The only client-rendered piece of this page — everything else (the job
 // fetch, lifecycle state, description, similar jobs) stays a Server
@@ -32,7 +33,7 @@ function trackApplyClick(jobId: string) {
 // with which branch actually renders.
 function getApplyLabel(job: Job, isEthioTax: boolean): string {
   if (job.apply_method === 'external' && job.application_url) {
-    const companyName = job.company_name?.trim()
+    const companyName = decodeHtmlEntities(job.company_name)?.trim()
     return companyName ? `Apply on ${companyName}` : "Apply on the employer's site"
   }
   if (job.apply_method === 'email' && job.application_email) {
@@ -99,7 +100,7 @@ export function ApplyButton({ job, isEthioTax, size = 'default' }: { job: Job; i
   }
   if (job.apply_method === 'email' && job.application_email) {
     return (
-      <a href={`mailto:${job.application_email}?subject=${encodeURIComponent('Application: ' + job.title)}`}
+      <a href={`mailto:${job.application_email}?subject=${encodeURIComponent('Application: ' + decodeHtmlEntities(job.title))}`}
         onClick={() => trackApplyClick(job.id)}
         className={buttonClass}>
         <span className="min-w-0 truncate">{label}</span>

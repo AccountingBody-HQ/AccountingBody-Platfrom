@@ -321,7 +321,8 @@ describe('G5 Sentry request errors', () => {
 
 describe('G6 nothing else changed', () => {
   it.each([
-    ['lib/middleware-logic.ts', '48e207e0ddb00d6f255d7e7ea07efd6da389d6b4da835cb74a440d765f71b96a'],
+    // BP-2 (B): getAdminPath treats an empty ADMIN_PATH like unset.
+    ['lib/middleware-logic.ts', 'e0378e7b89ad5007cf928664444f0d322620a534051d96fcb63421854f130612'],
     ['middleware.ts', 'd93412b73d16b115b288ab6d78999e2f3982a3485ada3c135a7c70122b14e92c'],
     ['vercel.json', 'c333bf786950054aca5ae357e5a9a48d9e475e724603a97e8d2a79b005bb299a'],
     ['next.config.mjs', 'fa284c7ea1016faa24072b3b8caa06dbd0c39cd3646c86ec59b5c910532736fe'],

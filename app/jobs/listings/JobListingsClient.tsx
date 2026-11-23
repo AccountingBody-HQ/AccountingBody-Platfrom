@@ -7,6 +7,7 @@ import type { Job, EmploymentType, SeniorityLevel, ActiveJobCountry } from '@/li
 import type { ListingCard } from '@/app/api/jobs/direct/load'
 import { buildCountryOptions, type CountryOption } from './countryOptions'
 import { formatJobLocation } from './jobLocation'
+import { decodeHtmlEntities } from '@/lib/html-entities'
 import {
   EMPLOYMENT_TYPE_LABELS,
   SENIORITY_LABELS,
@@ -518,7 +519,10 @@ function JobCard({ job, saved, pending, onSave, now }: {
   const empLabel = employmentTypeLabel(job.employment_type)
   const seniority = seniorityLabel(job.seniority_level)
   const isEmployer = job.source === 'employer'
-  const initials = getCompanyInitials(job.company_name)
+  // Shown text only; the stored name is unchanged (lib/html-entities.ts).
+  const displayTitle = decodeHtmlEntities(job.title)
+  const displayCompany = decodeHtmlEntities(job.company_name)
+  const initials = getCompanyInitials(displayCompany)
   const avatarColor = getCompanyColor(job.company_name)
   const dateStr = job.published_at ?? job.created_at
   const isNew = isNewJob(dateStr, clock)
@@ -543,7 +547,7 @@ function JobCard({ job, saved, pending, onSave, now }: {
       */}
       <Link
         href={`/jobs/${job.slug}`}
-        aria-label={`${job.title} at ${job.company_name}`}
+        aria-label={`${displayTitle} at ${displayCompany}`}
         className="absolute inset-0 z-0 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-950"
       />
 
@@ -555,7 +559,7 @@ function JobCard({ job, saved, pending, onSave, now }: {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <h2 className="font-display text-lg leading-tight font-medium text-navy-950 line-clamp-2 group-hover:text-navy-700 transition-colors">
-              {job.title}
+              {displayTitle}
             </h2>
             <button
               type="button"
@@ -569,7 +573,7 @@ function JobCard({ job, saved, pending, onSave, now }: {
               <BookmarkIcon saved={saved} />
             </button>
           </div>
-          <p className="text-sm font-semibold text-gray-800 mt-0.5">{job.company_name}</p>
+          <p className="text-sm font-semibold text-gray-800 mt-0.5">{displayCompany}</p>
         </div>
       </div>
 

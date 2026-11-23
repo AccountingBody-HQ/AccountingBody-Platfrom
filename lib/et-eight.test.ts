@@ -25,7 +25,8 @@ const NOT_FOUND_RETURN = "return { title: 'Page Not Found' }"
 const PAGES: Array<[string, number, string]> = [
   ['app/study/[category]/[slug]/page.tsx', 2, '    title:       article.title,'],
   ['app/articles/[slug]/page.tsx', 2, '    title:       `${metaTitle} | ${brand}`,'],
-  ['app/jobs/[slug]/page.tsx', 1, '  const title = `${job.title} at ${job.company_name}`'],
+  // BP-2: the same title, with entities decoded for display (lib/html-entities.ts).
+  ['app/jobs/[slug]/page.tsx', 1, '  const title = `${decodeHtmlEntities(job.title)} at ${decodeHtmlEntities(job.company_name)}`'],
   ['app/practice-questions/[slug]/page.tsx', 1, '    title:       `${qset.title} | ${name} Practice Questions`,'],
 ]
 
