@@ -38,8 +38,18 @@ interface FetchedArticle {
 
 interface Lesson {
   id:       string
+  // The lesson's database id when it was loaded from a saved course. A save
+  // sends it so the lesson keeps its id, web address and media fields.
+  dbId?:    string
   title:    string
   articles: FetchedArticle[]
+}
+
+// Saved courses store short site codes; the form uses full site names.
+const SITE_NAMES: Record<string, string> = { ab: 'accountingbody', et: 'ethiotax' }
+function siteNamesFromCodes(codes: unknown): string[] {
+  if (!Array.isArray(codes)) return ['accountingbody']
+  return codes.map((code) => (typeof code === 'string' ? SITE_NAMES[code] ?? code : String(code)))
 }
 
 interface Chapter {
@@ -133,6 +143,7 @@ export default function CourseFactoryPage() {
   const [loadingCourse,  setLoadingCourse]  = useState(false)
   const [loadError,      setLoadError]      = useState('')
   const [loadedSlug,     setLoadedSlug]     = useState('')
+  const [loadedCourseId, setLoadedCourseId] = useState('')
   const [showLoadPanel,  setShowLoadPanel]  = useState(false)
 
   // Save state
@@ -273,13 +284,39 @@ export default function CourseFactoryPage() {
     }))
   }
 
+  // ── Blank form (no course loaded) ────────────────────────────────────────
+  function resetForm() {
+    setTitle('')
+    setDescription('')
+    setLevel('beginner')
+    setStatus('draft')
+    setIsFeatured(false)
+    setShowOnSites(['accountingbody'])
+    setCanonical('accountingbody')
+    setLoadedSlug('')
+    setLoadedCourseId('')
+    setChapters([{ id: uid(), title: 'Chapter 1', lessons: [] }])
+    setFetchedArticles([])
+    setIdInput('')
+  }
+
+  function handleStartNewCourse() {
+    const filledIn = loadedSlug || title.trim() || description.trim() || chapters.some(ch => ch.lessons.length > 0)
+    if (filledIn && !window.confirm('Start a new course? The form will be cleared. Anything not saved will be lost.')) return
+    resetForm()
+    setSaveMsg('')
+    setSaveError('')
+    setDeleteMsg('')
+    setDeleteError('')
+  }
+
   // ── Delete course + all its lessons ─────────────────────────────────────
   async function handleDeleteCourse() {
     if (!loadedSlug) return
     const confirmed = window.confirm(
       `DELETE "${title}"?
 
-This will permanently delete the course and all its chapters and lessons. This cannot be undone.`
+This will delete the course and all its chapters and lessons. A copy is kept in the Recycle bin for 90 days, where it can be restored.`
     )
     if (!confirmed) return
     setDeleting(true)
@@ -295,15 +332,9 @@ This will permanently delete the course and all its chapters and lessons. This c
       if (!res.ok || !data.success) {
         setDeleteError(data.error ?? 'Delete failed')
       } else {
-        setDeleteMsg(`Deleted "${title}" and all its chapters and lessons.`)
+        setDeleteMsg(`Deleted "${title}" and all its chapters and lessons. A copy is in the Recycle bin for 90 days.`)
         // Reset factory to blank state
-        setTitle('')
-        setDescription('')
-        setLevel('beginner')
-        setStatus('draft')
-        setIsFeatured(false)
-        setLoadedSlug('')
-        setChapters([{ id: uid(), title: 'Chapter 1', lessons: [] }])
+        resetForm()
         setCourseList([])
         setShowLoadPanel(false)
       }
@@ -330,14 +361,14 @@ This will permanently delete the course and all its chapters and lessons. This c
     setLoadingList(false)
   }
 
-  async function handleLoadCourse(slug: string) {
-    if (!slug) return
+  async function handleLoadCourse(slug: string): Promise<boolean> {
+    if (!slug) return false
     setLoadingCourse(true)
     setLoadError('')
     try {
       const res = await adminFetch(`/api/roodber8/course-factory/load-course?action=load&slug=${encodeURIComponent(slug)}`)
       const data = await res.json()
-      if (!res.ok || data.error) { setLoadError(data.error); setLoadingCourse(false); return }
+      if (!res.ok || data.error) { setLoadError(data.error); setLoadingCourse(false); return false }
       const c = data.course
       setTitle(c.title ?? '')
       setDescription(c.description ?? '')
@@ -345,12 +376,15 @@ This will permanently delete the course and all its chapters and lessons. This c
       setStatus(c.status ?? 'draft')
       setIsFeatured(c.isFeatured ?? false)
       setLoadedSlug(c.slug ?? '')
+      setLoadedCourseId(c.id ?? '')
+      setShowOnSites(siteNamesFromCodes(c.showOnSites))
       setCanonical(c.canonicalOwner ?? 'accountingbody')
       const rebuilt = (c.chapters ?? []).map((ch: any) => ({
         id:    uid(),
         title: ch.title ?? ch.chapterTitle ?? 'Chapter',
         lessons: (ch.lessons ?? []).map((l: any) => ({
           id:       uid(),
+          dbId:     typeof l.id === 'string' ? l.id : undefined,
           title:    l.title ?? 'Lesson',
           articles: (l.articles ?? []).map((a: any) => ({
             _id:       a.id ?? a._id,
@@ -366,8 +400,11 @@ This will permanently delete the course and all its chapters and lessons. This c
       setShowLoadPanel(false)
     } catch {
       setLoadError('Failed to load course.')
+      setLoadingCourse(false)
+      return false
     }
     setLoadingCourse(false)
+    return true
   }
 
   // ── Save to Supabase ─────────────────────────────────────────────────────
@@ -382,7 +419,11 @@ This will permanently delete the course and all its chapters and lessons. This c
 
     const slug = loadedSlug || title.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
+    // A loaded course is updated by its id; otherwise a new course is created
+    // (the server refuses an address that is already used).
     const payload = {
+      mode:        loadedCourseId ? 'update' : 'create',
+      ...(loadedCourseId ? { courseId: loadedCourseId } : {}),
       title:       title.trim(),
       slug,
       description: description.trim(),
@@ -399,6 +440,7 @@ This will permanently delete the course and all its chapters and lessons. This c
         lessonRefs:   ch.lessons.map(l => ({
           title:       l.title,
           articleIds:  l.articles.map(a => a._id),
+          ...(l.dbId ? { lessonId: l.dbId } : {}),
         })),
       })),
     }
@@ -407,7 +449,12 @@ This will permanently delete the course and all its chapters and lessons. This c
     setSaving(false)
 
     if (result.success) {
-      setSaveMsg(`Course saved! ID: ${result.id}`)
+      // Load the saved course back, so every lesson now carries its database
+      // id and the next save updates this course rather than creating one.
+      const reloaded = await handleLoadCourse(slug)
+      setSaveMsg(reloaded
+        ? `Course saved! ID: ${result.id}`
+        : `Course saved! ID: ${result.id}. Load it again before making more changes.`)
     } else {
       setSaveError(result.error ?? 'Unknown error')
     }
@@ -443,13 +490,22 @@ This will permanently delete the course and all its chapters and lessons. This c
               <h2 className="text-lg font-bold text-white">Load Existing Course</h2>
               <p className="text-xs mt-0.5" style={{ color: '#475569' }}>Load a course to edit its structure or add more lessons.</p>
             </div>
-            <button
-              onClick={handleOpenLoadPanel}
-              className="h-9 px-4 rounded-lg text-sm font-semibold"
-              style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #C9982A' }}
-            >
-              {showLoadPanel ? 'Hide' : 'Browse Courses'}
-            </button>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={handleStartNewCourse}
+                className="h-9 px-4 rounded-lg text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                style={{ ...C.idle, color: '#cbd5e1' }}
+              >
+                Start a new course
+              </button>
+              <button
+                onClick={handleOpenLoadPanel}
+                className="h-9 px-4 rounded-lg text-sm font-semibold"
+                style={{ background: '#0C1A3D', color: '#fff', border: '1px solid #C9982A' }}
+              >
+                {showLoadPanel ? 'Hide' : 'Browse Courses'}
+              </button>
+            </div>
           </div>
 
           {loadedSlug && (
@@ -848,7 +904,7 @@ This will permanently delete the course and all its chapters and lessons. This c
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#475569' }}>Danger Zone</p>
                 <p className="text-xs" style={{ color: '#475569' }}>
-                  Permanently deletes this course and all its chapters and lessons. Cannot be undone.
+                  Deletes this course and all its chapters and lessons. A copy is kept in the Recycle bin for 90 days.
                 </p>
               </div>
               {deleteError && (
