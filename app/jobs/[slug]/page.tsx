@@ -14,6 +14,7 @@ import {
 } from '@/lib/job-format'
 import { getJobCanonicalUrl, ownerUrl } from '@/lib/canonical'
 import { formatJobLocation } from '@/app/jobs/listings/jobLocation'
+import { decodeHtmlEntities } from '@/lib/html-entities'
 import { JobPostingStructuredData } from './structured-data'
 import { ApplyBarWithSticky } from './ApplyBarWithSticky'
 import { BackToListingsLink } from './BackToListingsLink'
@@ -62,7 +63,7 @@ export async function generateMetadata({
   // that (as the initial version of this page did) produced a doubled
   // brand in the rendered <title> ("... | Accounting Body Jobs |
   // Accounting Body").
-  const title = `${job.title} at ${job.company_name}`
+  const title = `${decodeHtmlEntities(job.title)} at ${decodeHtmlEntities(job.company_name)}`
   const description = job.excerpt || job.description.slice(0, 300)
 
   // This page's own canonical — without it, it inherits the root layout's
@@ -140,6 +141,11 @@ export default async function JobDetailPage({
     limit: 6,
   })
 
+  // Shown text only; the stored values (and the similar-jobs query input
+  // above) stay as stored (lib/html-entities.ts).
+  const displayTitle = decodeHtmlEntities(job.title)
+  const displayCompany = decodeHtmlEntities(job.company_name)
+
   const salary = formatSalary(job)
   const empLabel = employmentTypeLabel(job.employment_type)
   const seniority = seniorityLabel(job.seniority_level)
@@ -184,23 +190,23 @@ export default async function JobDetailPage({
           {/* 1. Top bar */}
           <div className="flex items-center justify-between pb-[26px]">
             <BackToListingsLink />
-            <ShareButton url={shareUrl} jobTitle={job.title} brandColor={brandColor} />
+            <ShareButton url={shareUrl} jobTitle={displayTitle} brandColor={brandColor} />
           </div>
 
           {/* 2. Identity block */}
           <div className="flex items-start gap-4">
             <div className="w-[52px] h-[52px] rounded-[13px] shrink-0 flex items-center justify-center bg-navy-950">
               <span className="font-display text-[19px] text-[#F3D68A]">
-                {getCompanyInitials(job.company_name)}
+                {getCompanyInitials(displayCompany)}
               </span>
             </div>
             <div className="min-w-0 flex-1">
               <h1
                 className="font-display text-navy-950 text-[clamp(30px,5.4vw,41px)] leading-[1.12] tracking-[-0.015em]"
               >
-                {job.title}
+                {displayTitle}
               </h1>
-              <p className="text-[16.5px] font-medium text-slate-700 mt-1.5">{job.company_name}</p>
+              <p className="text-[16.5px] font-medium text-slate-700 mt-1.5">{displayCompany}</p>
               <p className="text-[15px] text-slate-500 mt-0.5">{locationDisplay}</p>
             </div>
           </div>
@@ -325,8 +331,8 @@ export default async function JobDetailPage({
                       className="flex items-center justify-between gap-4 bg-white px-[18px] py-[14px] min-h-[64px] hover:bg-slate-50 transition-colors max-[520px]:flex-col max-[520px]:items-start max-[520px]:gap-[5px] max-[520px]:min-h-0"
                     >
                       <div className="min-w-0 flex-1 max-[520px]:self-stretch">
-                        <p className="text-[15.5px] font-medium text-navy-950 truncate">{similar.title}</p>
-                        <p className="text-[13.5px] text-slate-500 truncate">{similar.company_name} · {similarLocation}</p>
+                        <p className="text-[15.5px] font-medium text-navy-950 truncate">{decodeHtmlEntities(similar.title)}</p>
+                        <p className="text-[13.5px] text-slate-500 truncate">{decodeHtmlEntities(similar.company_name)} · {similarLocation}</p>
                       </div>
                       <p
                         className={`text-[14px] font-medium whitespace-nowrap shrink-0 tabular-nums min-w-[90px] text-right max-[520px]:min-w-0 max-[520px]:text-left ${

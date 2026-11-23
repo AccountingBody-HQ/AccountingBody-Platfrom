@@ -491,7 +491,9 @@ describe('G7 scope and identity', () => {
     // A shallow checkout (CI) may not hold the commit before the first JF-2 one.
     try { execFileSync('git', ['cat-file', '-e', `${base}^{commit}`], { stdio: 'ignore' }) } catch { ctx.skip() }
     // Non-visible strings this job adds: class names, a path, a locale, props.
-    const NON_VISIBLE = new Set<string>(['en-GB', 'Page {page.toLocaleString(\'en-GB\')}'])
+    // BP-2 renamed the card's accessible-name parts (the same words, decoded
+    // for display); the visible text is unchanged.
+    const NON_VISIBLE = new Set<string>(['en-GB', 'Page {page.toLocaleString(\'en-GB\')}', '${displayTitle} at ${displayCompany}'])
     for (const file of ['app/jobs/listings/page.tsx', 'app/jobs/listings/JobListingsClient.tsx', 'components/Pagination.tsx']) {
       const before = textCandidates(execFileSync('git', ['show', `${base}:${file}`], { encoding: 'utf8' }))
       const added = Array.from(textCandidates(read(file))).filter((s) => !before.has(s) && !NON_VISIBLE.has(s))

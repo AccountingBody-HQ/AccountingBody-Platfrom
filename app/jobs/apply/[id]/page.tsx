@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import { getJobById } from '@/lib/jobs'
+import { decodeHtmlEntities } from '@/lib/html-entities'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,9 +43,9 @@ export default async function ApplyToJobPage({
           <div className="bg-white rounded-2xl border border-slate-200 p-8 md:p-10">
             <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#0b7b71' }}>Hiring Direct</span>
             <h1 className="font-display text-navy-950 text-2xl md:text-3xl mt-2 mb-1" style={{ letterSpacing: '-0.02em' }}>
-              {job.title}
+              {decodeHtmlEntities(job.title)}
             </h1>
-            <p className="text-slate-500 text-sm mb-8">{job.company_name} · {job.location_text}</p>
+            <p className="text-slate-500 text-sm mb-8">{decodeHtmlEntities(job.company_name)} · {job.location_text}</p>
 
             <div className="rounded-xl border border-slate-200 p-6 mb-8 whitespace-pre-line text-sm text-slate-600 leading-relaxed">
               {job.description}

@@ -1,5 +1,6 @@
 import type { Job, EmploymentType } from '@/lib/jobs'
 import { realCountry } from '@/lib/job-country'
+import { decodeHtmlEntities } from '@/lib/html-entities'
 
 // schema.org/JobPosting field mapping, kept to Google's documented
 // required + recommended properties
@@ -54,7 +55,7 @@ export function buildJobPostingSchema(job: Job, brandName: string): Record<strin
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'JobPosting',
-    title: job.title,
+    title: decodeHtmlEntities(job.title),
     // `description` is NOT NULL in the schema, so the excerpt fallback is
     // currently unreachable — kept defensively rather than assuming that
     // constraint never changes.
@@ -62,7 +63,7 @@ export function buildJobPostingSchema(job: Job, brandName: string): Record<strin
     datePosted: new Date(job.published_at ?? job.created_at).toISOString(),
     hiringOrganization: {
       '@type': 'Organization',
-      name: job.company_name,
+      name: decodeHtmlEntities(job.company_name),
     },
     identifier: {
       '@type': 'PropertyValue',
