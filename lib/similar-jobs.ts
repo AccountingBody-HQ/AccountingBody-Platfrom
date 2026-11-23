@@ -302,15 +302,20 @@ export interface SimilarRefreshOptions {
 
 // Mark writes stop once the run is this old; the next night continues.
 export const DUPLICATE_MARK_BUDGET_MS = 120_000
+// At most this many mark writes in flight at once (each touches other rows).
+export const DUPLICATE_WRITE_CONCURRENCY = 6
 
 export interface DuplicateMarksSummary {
   groups: number
   toMark: number
   toClear: number
+  // writes started
   writes: number
   applied: boolean
   failed: boolean
   timedOut: boolean
+  // from the first write's start to the last write's end; 0 when none
+  ms: number
 }
 
 export type SimilarRefreshStep = 'read' | 'empty' | 'page-limit' | 'compute' | 'write' | 'delete'
@@ -325,9 +330,11 @@ export type SimilarRefreshResult =
 const problem = (code: string) => Object.assign(new Error('similar jobs refresh stopped'), { code })
 
 // Plans the duplicate marks and, only when `write` is true, applies them:
-// clears first (so every group's primary is visible before any new mark),
-// then marks, at most DUPLICATE_WRITE_BATCH ids per statement. The first
-// failed write, or the time budget, stops all further mark writes. Answers
+// every clear first, all resolved (so every group's primary is visible
+// before any new mark), then the marks, at most DUPLICATE_WRITE_BATCH ids
+// per statement and at most DUPLICATE_WRITE_CONCURRENCY statements in
+// flight, started in plan order. The first failed write, or the time
+// budget, stops new writes; those already in flight are awaited. Answers
 // the mark each row has for the lists: the plan's only when it was applied
 // in full, otherwise the mark as read.
 async function refreshDuplicateMarks(
@@ -341,7 +348,7 @@ async function refreshDuplicateMarks(
   try {
     plan = planDuplicateMarks(rows)
   } catch (error) {
-    return { summary: { groups: 0, toMark: 0, toClear: 0, writes: 0, applied: false, failed: true, timedOut: false }, markOf: asRead, error }
+    return { summary: { groups: 0, toMark: 0, toClear: 0, writes: 0, applied: false, failed: true, timedOut: false, ms: 0 }, markOf: asRead, error }
   }
   const summary: DuplicateMarksSummary = {
     groups: plan.groups,
@@ -351,26 +358,49 @@ async function refreshDuplicateMarks(
     applied: false,
     failed: false,
     timedOut: false,
+    ms: 0,
   }
   if (!marks.write) return { summary, markOf: asRead }
 
-  const steps: Array<() => Promise<void>> = [
+  const clearSteps: Array<() => Promise<void>> = [
     ...writeBatches(plan.toClear).map(ids => () => marks.store.clearMarks(ids)),
+  ]
+  const markSteps: Array<() => Promise<void>> = [
     ...plan.toMark.flatMap(([primaryId, ids]) => writeBatches(ids).map(batch => () => marks.store.markCopies(primaryId, batch))),
   ]
-  for (const step of steps) {
-    if (clock() - startedAt > DUPLICATE_MARK_BUDGET_MS) {
-      summary.timedOut = true
-      return { summary, markOf: asRead }
+  const run: { stopped: boolean; failure: unknown; firstStart: number | null } = { stopped: false, failure: undefined, firstStart: null }
+  // Workers share one place in the list; a worker never throws, so awaiting
+  // them all awaits every write started.
+  const runPhase = async (steps: Array<() => Promise<void>>) => {
+    let next = 0
+    const worker = async () => {
+      while (!run.stopped && next < steps.length) {
+        const now = clock()
+        if (now - startedAt > DUPLICATE_MARK_BUDGET_MS) {
+          summary.timedOut = true
+          run.stopped = true
+          return
+        }
+        if (run.firstStart === null) run.firstStart = now
+        const step = steps[next++]
+        summary.writes++
+        try {
+          await step()
+        } catch (error) {
+          if (!summary.failed) run.failure = error
+          summary.failed = true
+          run.stopped = true
+        }
+      }
     }
-    summary.writes++
-    try {
-      await step()
-    } catch (error) {
-      summary.failed = true
-      return { summary, markOf: asRead, error }
-    }
+    await Promise.all(Array.from({ length: Math.min(DUPLICATE_WRITE_CONCURRENCY, steps.length) }, () => worker()))
   }
+  await runPhase(clearSteps)
+  if (!run.stopped) await runPhase(markSteps)
+  if (run.firstStart !== null) summary.ms = clock() - run.firstStart
+
+  if (summary.failed) return { summary, markOf: asRead, error: run.failure }
+  if (run.stopped) return { summary, markOf: asRead }
   summary.applied = true
   return { summary, markOf: row => plan.finalMark(row.id) }
 }
