@@ -546,7 +546,7 @@ const ET_FIXED = ['', '/how-it-works', '/about-ethiotax', '/faq', '/study/eticpa
   '/study/eticpa/atq/level-2/ethiopian-public-sector-accounting', '/study/eticpa/cpa']
 const HB_SITEMAP = ['/get-help', '/get-help/tax-filing-compliance', '/get-help/accounting-bookkeeping', '/get-help/business-consulting',
   '/get-help/payroll-services', '/get-help/company-formation', '/get-help/audit-assurance', '/get-help/financial-planning-advisory',
-  '/firms-freelancers', '/firms-freelancers/join', '/firms-freelancers/directory', '/terms']
+  '/firms-freelancers', '/firms-freelancers/join', '/terms']
 const AB_FIXED = ['/jobs', '/jobs/listings', '/study', '/study/acca', '/study/cima', '/study/aat', '/free-courses', '/practice-questions',
   '/mock-exams', '/articles', '/glossary', '/dictionary', '/calculators', '/search', '/contact', '/privacy-policy', '/cookie-policy',
   '/accessibility', '/disclaimer']

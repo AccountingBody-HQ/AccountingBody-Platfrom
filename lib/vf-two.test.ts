@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import * as React from 'react'
 import { createElement } from 'react'
@@ -58,6 +58,23 @@ describe('F2 targets are at least 24 by 24 px (WCAG 2.5.8)', () => {
   })
   it('the search clear button is 20 + 4 = 24 px and stays where it was', () => {
     expect(read('app/search/SearchClient.tsx')).toMatch(/className="p-0\.5 -m-0\.5 [^"]*" aria-label="Clear search">\s*<svg className="w-5 h-5"/)
+  })
+})
+
+describe('F3 the EthioTax sitemap lists final addresses only', () => {
+  const paths = Array.from(read('app/et-sitemap/route.ts').matchAll(/\n\s+url\('([^']*)',/g)).map((m) => m[1])
+  it('every fixed page is a real page, not one that only redirects', () => {
+    expect(paths).toHaveLength(28)
+    for (const p of paths) {
+      const file = [`app${p}/page.tsx`, `app${p.replace(/\/[^/]+$/, '')}/[slug]/page.tsx`].find((f) => existsSync(join(process.cwd(), f)))
+      expect(file, p).toBeTruthy()
+      expect(read(file as string), p).not.toMatch(/export default (?:async )?function \w*\([^)]*\) \{\s*(?:permanentRedirect|redirect)\(/)
+    }
+  })
+  it('the directory address still redirects and its target is listed', () => {
+    expect(read('app/firms-freelancers/directory/page.tsx')).toContain("redirect('/firms-freelancers')")
+    expect(paths).toContain('/firms-freelancers')
+    expect(paths).not.toContain('/firms-freelancers/directory')
   })
 })
 
