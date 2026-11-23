@@ -60,7 +60,7 @@ afterEach(() => {
 })
 
 function limitLines(): unknown[][] {
-  return warn.mock.calls.filter((call) => String(call[0]).startsWith(DB_TIME_LIMIT_LOG))
+  return warn.mock.calls.filter((call: unknown[]) => String(call[0]).startsWith(DB_TIME_LIMIT_LOG))
 }
 
 describe('database time limits', () => {

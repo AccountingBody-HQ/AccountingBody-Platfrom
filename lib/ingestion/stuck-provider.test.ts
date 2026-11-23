@@ -120,6 +120,9 @@ afterEach(() => {
   vi.useRealTimers()
   vi.clearAllMocks()
   vi.restoreAllMocks()
+  // Vitest 4+: restoreAllMocks no longer resets vi.fn mocks; put the watched
+  // runner back to the real one so a set answer cannot leak into later tests.
+  vi.mocked(runProviderImport).mockReset()
   vi.unstubAllEnvs()
 })
 

@@ -163,7 +163,7 @@ describe('orchestrator reaper failure log line', () => {
     vi.mocked(providers.getProvidersDueForFetch).mockResolvedValue([])
     const res = await orchestrator(new NextRequest('http://localhost/api/ingest/orchestrator', { headers: { authorization: 'Bearer followups-6-value' } }))
     expect(res.status).toBe(200)
-    return errors.mock.calls.filter((c) => c[0] === '[orchestrator] reaper failed:')
+    return errors.mock.calls.filter((c: unknown[]) => c[0] === '[orchestrator] reaper failed:')
   }
 
   it('logs the short code only', async () => {
