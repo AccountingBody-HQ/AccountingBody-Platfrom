@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TEST_ADMIN_PATH, TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
 import { DB_LIMITS_MS, type DbContext } from './supabase-server'
+import { SNAPSHOT_FAILED } from './recycle-bin'
 
 // Admin pages and APIs, the scheduled routes and the provider import route,
 // run with real supabase-js clients from the factory. Only the network is
@@ -517,8 +518,10 @@ const scenarios: Scenario[] = [
         request('POST', adminPath('actions'), { action: 'delete', table: 'help_requests', id: ID }),
         { params: {} },
       ),
-    healthy: { status: 200, body: { success: true }, dbRequests: 1 },
-    stalled: { waits: 1, status: 500, body: { error: TIMEOUT(20_000) }, dbRequests: 1 },
+    // BP-1: read the entry, keep a recycle bin copy (insert + expiry clean-up), then delete.
+    rows: { help_requests: [{ id: ID }] },
+    healthy: { status: 200, body: { success: true, binId: ID }, dbRequests: 4 },
+    stalled: { waits: 1, status: 500, body: { error: SNAPSHOT_FAILED }, dbRequests: 1 },
   },
   {
     name: 'article delete',
@@ -527,8 +530,10 @@ const scenarios: Scenario[] = [
       (await api('articles/[articleId]/route.ts')).DELETE(request('DELETE', adminPath(`articles/${ID}`)), {
         params: Promise.resolve({ articleId: ID }),
       }),
-    healthy: { status: 200, body: { success: true }, dbRequests: 1 },
-    stalled: { waits: 1, status: 500, body: { error: TIMEOUT(20_000) }, dbRequests: 1 },
+    // BP-1: read the article and its course links, keep a recycle bin copy, then delete.
+    rows: { articles: [{ id: ID, title: 'Article' }] },
+    healthy: { status: 200, body: { success: true, binId: ID }, dbRequests: 5 },
+    stalled: { waits: 1, status: 500, body: { error: SNAPSHOT_FAILED }, dbRequests: 1 },
   },
   {
     name: 'pending subscriber clean-up',

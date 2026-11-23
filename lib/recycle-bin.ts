@@ -34,7 +34,8 @@ export type BinPayload = Record<string, unknown[]>
 export const BIN_TABLE = 'admin_recycle_bin'
 export const LABEL_MAX = 300
 export const BIN_FAILED = 'Could not keep a copy in the recycle bin. Nothing was deleted.'
-export const SNAPSHOT_FAILED = 'Could not read the item to keep a copy in the recycle bin. Nothing was deleted.'
+export const DELETE_FAILED = 'Delete failed. Nothing was deleted.'
+export const SNAPSHOT_FAILED ='Could not read the item to keep a copy in the recycle bin. Nothing was deleted.'
 
 // The visitor-form tables the actions route may delete from.
 export const FORM_TABLES = [
@@ -288,7 +289,8 @@ export type KeepResult = { ok: true; binId: string; row: Row; payload: BinPayloa
 export async function keepCopyBeforeDelete(
   supabase: SupabaseClient,
   snapshot: Snapshot,
-  meta: { kind: BinKind; sourceTable: string; sourceId: string; label: (row: Row) => unknown; notFound: string },
+  // sourceId defaults to the copied row's id.
+  meta: { kind: BinKind; sourceTable: string; sourceId?: string; label: (row: Row) => unknown; notFound: string },
 ): Promise<KeepResult> {
   if (!snapshot.ok) return { ok: false, status: 500, error: SNAPSHOT_FAILED }
   if (!snapshot.found) return { ok: false, status: 404, error: meta.notFound }
@@ -297,7 +299,7 @@ export async function keepCopyBeforeDelete(
     reason: 'delete',
     label: meta.label(snapshot.row),
     sourceTable: meta.sourceTable,
-    sourceId: meta.sourceId,
+    sourceId: meta.sourceId ?? (snapshot.row.id === undefined || snapshot.row.id === null ? null : String(snapshot.row.id)),
     payload: snapshot.payload,
   })
   if (!moved.ok) return { ok: false, status: 500, error: BIN_FAILED }

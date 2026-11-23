@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { checkRead } from '@/lib/db-check'
+import { keepCopyBeforeDelete, snapshotRows } from '@/lib/recycle-bin'
 
 export const runtime = 'nodejs'
 
@@ -97,6 +98,17 @@ export async function DELETE(req: NextRequest) {
 
   const supabase = getServerSupabase('admin')
 
+  // A copy goes to the recycle bin first.
+  const kept = await keepCopyBeforeDelete(supabase, await snapshotRows(supabase, 'studio_references', { id }), {
+    kind: 'studio_reference',
+    sourceTable: 'studio_references',
+    sourceId: id,
+    label: (row) => row.label,
+    notFound: 'Reference not found',
+  })
+  if (!kept.ok)
+    return NextResponse.json({ error: kept.error }, { status: kept.status })
+
   const { error } = await supabase
     .from('studio_references')
     .delete()
@@ -105,5 +117,5 @@ export async function DELETE(req: NextRequest) {
   if (error)
     return NextResponse.json({ error: 'Failed to delete reference' }, { status: 500 })
 
-  return NextResponse.json({ deleted: true })
+  return NextResponse.json({ deleted: true, binId: kept.binId })
 }

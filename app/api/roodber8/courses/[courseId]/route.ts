@@ -8,6 +8,15 @@ import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 import { checkRead } from '@/lib/db-check'
 import { reportServerError } from '@/lib/report-error'
+import {
+  DELETE_FAILED,
+  errorCode,
+  keepCopyBeforeDelete,
+  snapshotChapter,
+  snapshotCourse,
+  snapshotLesson,
+  snapshotRows,
+} from '@/lib/recycle-bin'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -19,6 +28,12 @@ function getClient() {
 // Answers for a check that could not be read; the action stops before any write.
 function courseCheckFailed() {
   return NextResponse.json({ error: 'Could not check this course. Nothing was changed.' }, { status: 500 })
+}
+
+// A delete that failed after its recycle bin copy was kept: code in the log only.
+function deleteFailed(action: string, error: unknown) {
+  console.error(`courses/[courseId] ${action} failed`, errorCode(error))
+  return NextResponse.json({ error: DELETE_FAILED }, { status: 500 })
 }
 
 function nextPositionFailed() {
@@ -298,14 +313,24 @@ export async function PATCH(
 
     if (!chapter) return NextResponse.json({ error: 'Chapter not found' }, { status: 404 })
 
+    // A copy of the chapter, its lessons and their links goes to the recycle bin first.
+    const kept = await keepCopyBeforeDelete(supabase, await snapshotChapter(supabase, chapterId), {
+      kind: 'course_chapter',
+      sourceTable: 'course_chapters',
+      sourceId: chapterId,
+      label: (row) => row.chapter_title,
+      notFound: 'Chapter not found',
+    })
+    if (!kept.ok) return NextResponse.json({ error: kept.error }, { status: kept.status })
+
     const { error } = await supabase
       .from('course_chapters')
       .delete()
       .eq('id', chapterId)
       .eq('course_id', courseId)
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ success: true })
+    if (error) return deleteFailed('delete_chapter', error)
+    return NextResponse.json({ success: true, binId: kept.binId })
   }
 
   // ── reorder_chapters ─────────────────────────────────────────────────────
@@ -427,14 +452,24 @@ export async function PATCH(
 
     if (!lesson) return NextResponse.json({ error: 'Lesson not found' }, { status: 404 })
 
+    // A copy of the lesson and its links goes to the recycle bin first.
+    const kept = await keepCopyBeforeDelete(supabase, await snapshotLesson(supabase, lessonId), {
+      kind: 'course_lesson',
+      sourceTable: 'course_lessons',
+      sourceId: lessonId,
+      label: (row) => row.title,
+      notFound: 'Lesson not found',
+    })
+    if (!kept.ok) return NextResponse.json({ error: kept.error }, { status: kept.status })
+
     const { error } = await supabase
       .from('course_lessons')
       .delete()
       .eq('id', lessonId)
       .eq('course_id', courseId)
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ success: true })
+    if (error) return deleteFailed('delete_lesson', error)
+    return NextResponse.json({ success: true, binId: kept.binId })
   }
 
   // ── reorder_lessons ──────────────────────────────────────────────────────
@@ -548,14 +583,27 @@ export async function PATCH(
 
     if (!lesson) return NextResponse.json({ error: 'Lesson not found' }, { status: 404 })
 
+    // A copy of the link goes to the recycle bin first.
+    const kept = await keepCopyBeforeDelete(
+      supabase,
+      await snapshotRows(supabase, 'course_lesson_articles', { lesson_id: lessonId, article_id: articleId }),
+      {
+        kind: 'course_lesson_article',
+        sourceTable: 'course_lesson_articles',
+        label: () => '',
+        notFound: 'Article link not found',
+      },
+    )
+    if (!kept.ok) return NextResponse.json({ error: kept.error }, { status: kept.status })
+
     const { error } = await supabase
       .from('course_lesson_articles')
       .delete()
       .eq('lesson_id', lessonId)
       .eq('article_id', articleId)
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ success: true })
+    if (error) return deleteFailed('remove_article', error)
+    return NextResponse.json({ success: true, binId: kept.binId })
   }
 
   // ── reorder_articles ─────────────────────────────────────────────────────
@@ -605,14 +653,24 @@ export async function DELETE(
   const supabase = getClient()
 
   try {
+    // A full copy of the course goes to the recycle bin first.
+    const kept = await keepCopyBeforeDelete(supabase, await snapshotCourse(supabase, courseId), {
+      kind: 'course',
+      sourceTable: 'courses',
+      sourceId: courseId,
+      label: (row) => row.title,
+      notFound: 'Course not found',
+    })
+    if (!kept.ok) return NextResponse.json({ error: kept.error }, { status: kept.status })
+
     // CASCADE removes course_chapters → course_lessons → course_lesson_articles
     const { error } = await supabase
       .from('courses')
       .delete()
       .eq('id', courseId)
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ success: true })
+    if (error) return deleteFailed('delete course', error)
+    return NextResponse.json({ success: true, binId: kept.binId })
   } catch (err: unknown) {
     reportServerError('admin course delete failed', err, { area: 'admin' })
     const message = err instanceof Error ? err.message : 'Unknown error'

@@ -164,7 +164,8 @@ export async function POST(req: NextRequest) {
     if (qError) {
       console.error('questions/publish questions insert error:', qError)
       // Roll back the orphaned question set since its questions failed to insert
-      await supabase.from('question_sets').delete().eq('id', setId)
+      const { error: rollbackError } = await supabase.from('question_sets').delete().eq('id', setId)
+      if (rollbackError) console.error('questions/publish rollback delete failed', rollbackError.code ?? 'unknown')
       return NextResponse.json({ error: qError.message }, { status: 500 })
     }
 

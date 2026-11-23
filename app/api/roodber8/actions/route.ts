@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { reportServerError } from '@/lib/report-error'
+import { DELETE_FAILED, errorCode, keepCopyBeforeDelete, snapshotRows } from '@/lib/recycle-bin'
 
 export const runtime = 'nodejs'
 
@@ -30,7 +31,6 @@ export async function POST(req: NextRequest) {
       contact_submissions:      ['update_status', 'update_notes', 'delete'],
       firms_applications:       ['update_status', 'update_notes', 'delete'],
       email_subscribers:        ['update_status', 'delete'],
-      job_listings:             ['delete'],
       job_seeker_registrations: ['update_status', 'update_notes', 'delete'],
       employer_briefs:          ['update_status', 'update_notes', 'delete'],
     }
@@ -42,9 +42,21 @@ export async function POST(req: NextRequest) {
     const supabase = getClient()
 
     if (action === 'delete') {
+      // A copy goes to the recycle bin first; the label never holds a name or e-mail.
+      const kept = await keepCopyBeforeDelete(supabase, await snapshotRows(supabase, table, { id: String(id) }), {
+        kind: 'form_entry',
+        sourceTable: table,
+        sourceId: String(id),
+        label: () => `${table} entry ${String(id).slice(0, 8)}`,
+        notFound: 'Not found. Nothing was deleted.',
+      })
+      if (!kept.ok) return NextResponse.json({ error: kept.error }, { status: kept.status })
       const { error } = await supabase.from(table).delete().eq('id', id)
-      if (error) throw error
-      return NextResponse.json({ success: true })
+      if (error) {
+        console.error('admin/actions delete failed', errorCode(error))
+        return NextResponse.json({ error: DELETE_FAILED }, { status: 500 })
+      }
+      return NextResponse.json({ success: true, binId: kept.binId })
     }
 
     if (action === 'update_status') {

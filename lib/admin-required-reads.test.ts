@@ -345,12 +345,20 @@ describe('provider delete', () => {
     network.rows = { job_providers: [{ id: ID, slug: 'example', name: 'Example Jobs' }] }
   })
 
-  it('deletes a provider with no active jobs as before', async () => {
+  it('deletes a provider with no active jobs after keeping a recycle bin copy (BP-1)', async () => {
     network.counts = { jobs: 0 }
     expect(await answer(deleteProvider)).toEqual({
       status: 200,
-      body: { ok: true },
-      requests: ['GET job_providers', 'HEAD jobs', 'DELETE job_providers'],
+      body: { ok: true, binId: ID },
+      requests: [
+        'GET job_providers',
+        'HEAD jobs',
+        'GET job_providers',
+        'GET provider_runs',
+        'POST admin_recycle_bin',
+        'DELETE admin_recycle_bin',
+        'DELETE job_providers',
+      ],
       elapsed: 0,
     })
   })
@@ -781,7 +789,8 @@ describe.each<CourseCheckCase>([
     table: 'course_chapters',
     rows: { course_chapters: [chapterRow] },
     notFound: { error: 'Chapter not found' },
-    writes: ['DELETE course_chapters'],
+    // BP-1: the recycle bin copy (chapter, its lessons) is kept before the delete.
+    writes: ['GET course_chapters', 'GET course_lessons', 'POST admin_recycle_bin', 'DELETE admin_recycle_bin', 'DELETE course_chapters'],
   },
   {
     name: 'lesson add',
@@ -797,7 +806,8 @@ describe.each<CourseCheckCase>([
     table: 'course_lessons',
     rows: { course_lessons: [lessonRow] },
     notFound: { error: 'Lesson not found' },
-    writes: ['DELETE course_lessons'],
+    // BP-1: the recycle bin copy (lesson, its links) is kept before the delete.
+    writes: ['GET course_lessons', 'GET course_lesson_articles', 'POST admin_recycle_bin', 'DELETE admin_recycle_bin', 'DELETE course_lessons'],
   },
   {
     name: 'lesson reorder',
@@ -819,9 +829,10 @@ describe.each<CourseCheckCase>([
     name: 'article link remove',
     body: { action: 'remove_article', lessonId: LESSON, articleId: ARTICLE },
     table: 'course_lessons',
-    rows: { course_lessons: [lessonRow] },
+    rows: { course_lessons: [lessonRow], course_lesson_articles: [savedLink] },
     notFound: { error: 'Lesson not found' },
-    writes: ['DELETE course_lesson_articles'],
+    // BP-1: the recycle bin copy (the link) is kept before the delete.
+    writes: ['GET course_lesson_articles', 'POST admin_recycle_bin', 'DELETE admin_recycle_bin', 'DELETE course_lesson_articles'],
   },
   {
     name: 'article reorder',

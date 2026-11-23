@@ -419,7 +419,8 @@ const ROUTES: Route[] = [
       answer: { status: 500, body: error(PROBLEM) },
     },
   ], [
-    ['healthy delete', { method: 'DELETE' }, 200],
+    // BP-1: the course is copied to the recycle bin first, so it must exist.
+    ['healthy delete', { method: 'DELETE' }, 200, () => { db.tables.courses = [{ id: COURSE_ID, title: 'Course' }] }],
     ['database error', { method: 'DELETE' }, 500, () => { db.failing = true }],
   ]),
   route('job update', '/jobs/[id]', 'PATCH', () => ({ params: Promise.resolve({ id: JOB_ID }) }), [

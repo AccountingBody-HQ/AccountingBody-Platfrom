@@ -5,6 +5,7 @@ import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { REGISTERED_ADAPTER_KEYS, isRegisteredAdapterKey } from '@/lib/adapters'
 import { checkRead } from '@/lib/db-check'
 import { reportServerError } from '@/lib/report-error'
+import { DELETE_FAILED, errorCode, keepCopyBeforeDelete, snapshotProvider } from '@/lib/recycle-bin'
 
 function getSupabase() {
   return getServerSupabase('admin')
@@ -212,14 +213,27 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     )
   }
 
+  // A copy of the provider and its run history goes to the recycle bin first
+  // (the run error log is not kept).
+  const kept = await keepCopyBeforeDelete(supabase, await snapshotProvider(supabase, slug), {
+    kind: 'job_provider',
+    sourceTable: 'job_providers',
+    label: (row) => `${typeof row.name === 'string' && row.name.trim() ? row.name.trim() : slug} (run error log not kept)`,
+    notFound: 'Provider not found',
+  })
+  if (!kept.ok) {
+    return NextResponse.json({ ok: false, error: kept.error }, { status: kept.status })
+  }
+
   const { error } = await supabase
     .from('job_providers')
     .delete()
     .eq('slug', slug)
 
   if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
+    console.error('providers/edit DELETE failed', errorCode(error))
+    return NextResponse.json({ ok: false, error: DELETE_FAILED }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true, binId: kept.binId })
 }
