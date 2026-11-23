@@ -663,7 +663,12 @@ export function normalise(rawJob: RawJob, provider: JobProvider): NormalisedJob 
     // 4. Otherwise locationCountry stays null.
   }
 
-  const locationRemote = !hybrid && (locationCountry === 'Worldwide' || detectRemote(title, locationText))
+  // A board whose provider row lists the region "remote" is remote only, so
+  // its jobs are remote whatever their text says (owner decision D322).
+  // Hybrid wording still wins, and the country logic above is unchanged.
+  const isRemoteBoard = (provider.regions ?? []).some(region => String(region).trim().toLowerCase() === 'remote')
+
+  const locationRemote = !hybrid && (isRemoteBoard || locationCountry === 'Worldwide' || detectRemote(title, locationText))
 
   // ── Salary extraction ─────────────────────────────────────────────────────
   let salaryMin: number | null = null
