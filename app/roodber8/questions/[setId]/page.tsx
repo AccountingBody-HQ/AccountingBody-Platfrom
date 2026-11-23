@@ -241,7 +241,7 @@ function QuestionRow({
       {confirmDel && (
         <ConfirmModal
           title="Delete this question?"
-          message="This question will be permanently removed from the set. This cannot be undone."
+          message="This question will be removed from the set. A copy is kept in the Recycle bin for 90 days."
           onConfirm={handleDelete}
           onCancel={() => setConfirmDel(false)}
           loading={deleting}
@@ -819,7 +819,7 @@ export default function QuestionSetManagerPage() {
       {confirmDelSet && (
         <ConfirmModal
           title="Delete this entire question set?"
-          message={`"${set.title}" and all ${questions.length} question${questions.length !== 1 ? 's' : ''} will be permanently deleted. This cannot be undone.`}
+          message={`"${set.title}" and all ${questions.length} question${questions.length !== 1 ? 's' : ''} will be deleted. A copy is kept in the Recycle bin for 90 days.`}
           onConfirm={handleDeleteSet}
           onCancel={() => setConfirmDelSet(false)}
           loading={deletingSet}

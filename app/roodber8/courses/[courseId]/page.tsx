@@ -260,7 +260,7 @@ function ChapterCard({
       {confirmDelete && (
         <ConfirmModal
           title="Delete this chapter?"
-          message={`"${chapter.chapter_title}" and all ${chapter.lessons.length} lesson${chapter.lessons.length !== 1 ? 's' : ''} inside it will be permanently deleted.`}
+          message={`"${chapter.chapter_title}" and all ${chapter.lessons.length} lesson${chapter.lessons.length !== 1 ? 's' : ''} inside it will be deleted. A copy is kept in the Recycle bin for 90 days.`}
           onConfirm={() => { onDeleteChapter(); setConfirmDelete(false) }}
           onCancel={() => setConfirmDelete(false)}
         />
@@ -268,7 +268,7 @@ function ChapterCard({
       {confirmDeleteLesson && (
         <ConfirmModal
           title="Delete this lesson?"
-          message="This lesson and its article links will be permanently deleted."
+          message="This lesson and its article links will be deleted. A copy is kept in the Recycle bin for 90 days."
           onConfirm={() => { onDeleteLesson(confirmDeleteLesson); setConfirmDeleteLesson(null) }}
           onCancel={() => setConfirmDeleteLesson(null)}
         />
@@ -702,7 +702,7 @@ export default function CourseEditorPage() {
       {confirmDeleteCourse && (
         <ConfirmModal
           title="Delete this course?"
-          message={`"${course.title}" and all ${chapters.length} chapter${chapters.length !== 1 ? 's' : ''} and lesson${totalLessons !== 1 ? 's' : ''} will be permanently deleted.`}
+          message={`"${course.title}" and all ${chapters.length} chapter${chapters.length !== 1 ? 's' : ''} and lesson${totalLessons !== 1 ? 's' : ''} will be deleted. A copy is kept in the Recycle bin for 90 days.`}
           onConfirm={handleDeleteCourse}
           onCancel={() => setConfirmDeleteCourse(false)}
           loading={deletingCourse}

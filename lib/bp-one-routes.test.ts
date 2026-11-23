@@ -350,6 +350,99 @@ describe('actions route allow-list', () => {
   )
 })
 
+// ── (c) the recycle bin route ───────────────────────────────────────────────
+
+const binRoute = () => api('recycle-bin/route.ts')
+const binItem = {
+  id: ID,
+  kind: 'course',
+  reason: 'delete',
+  label: 'Tax basics',
+  row_count: 4,
+  deleted_at: '2026-11-23T10:00:00Z',
+  expires_at: '2027-02-21T10:00:00Z',
+  restored_at: null,
+  payload: { courses: [{ id: ID, secret_field: 'never shown' }] },
+}
+const restore = async (id: unknown) =>
+  (await binRoute()).POST(request('POST', 'recycle-bin', { action: 'restore', id }), { params: {} })
+
+describe('recycle bin route', () => {
+  it.each(['GET', 'POST'])('%s answers a signed-out request before any database request', async (method) => {
+    session = 'not-a-session'
+    const res = await (await binRoute())[method](request(method, 'recycle-bin', method === 'POST' ? { action: 'restore', id: ID } : undefined), { params: {} })
+    expect(res.status).toBe(401)
+    expect(network.calls).toEqual([])
+  })
+
+  it('lists the newest 200 items after removing expired copies, and never the saved copy', async () => {
+    network.rows = { admin_recycle_bin: [binItem] }
+    const res = await (await binRoute()).GET(request('GET', 'recycle-bin'), { params: {} })
+    expect(res.status).toBe(200)
+    const text = await res.clone().text()
+    expect(text).not.toContain('payload')
+    expect(text).not.toContain('never shown')
+    expect((await res.json()).items).toEqual([
+      {
+        id: ID,
+        kind: 'course',
+        reason: 'delete',
+        label: 'Tax basics',
+        row_count: 4,
+        deleted_at: '2026-11-23T10:00:00Z',
+        expires_at: '2027-02-21T10:00:00Z',
+        restored_at: null,
+      },
+    ])
+    expect(lines()).toEqual(['DELETE admin_recycle_bin', 'GET admin_recycle_bin'])
+    const list = network.calls[1].query
+    expect(list).not.toContain('payload')
+    expect(list).toContain('order=deleted_at.desc')
+    expect(list).toContain('limit=200')
+  })
+
+  it('answers a plain sentence when the list cannot be read', async () => {
+    network.fail = (call) => call.method === 'GET'
+    const res = await (await binRoute()).GET(request('GET', 'recycle-bin'), { params: {} })
+    expect(res.status).toBe(500)
+    expect(JSON.stringify(await res.json())).not.toContain('database detail')
+  })
+
+  it('restores one item through the restore function and gives the counts', async () => {
+    network.rpc = { status: 200, body: { courses: 1, course_chapters: 2 } }
+    const res = await restore(ID)
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ success: true, counts: { courses: 1, course_chapters: 2 } })
+    expect(lines()).toEqual(['POST rpc/admin_recycle_restore'])
+    expect(network.calls[0].body).toEqual({ p_id: ID })
+  })
+
+  it.each([
+    ['23505', 409, 'Cannot restore: an item with the same address or id already exists. Rename or delete that item first.'],
+    ['P0001', 409, 'Cannot restore: this item has already been restored, or it holds something that cannot be restored here.'],
+    ['P0002', 404, 'Cannot restore: this item is no longer in the recycle bin.'],
+    ['XX000', 500, 'Restore failed. Nothing was changed.'],
+  ])('maps restore error %s to a plain sentence', async (code, status, message) => {
+    network.fail = (call) => call.table.startsWith('rpc/')
+    network.failCode = code
+    const res = await restore(ID)
+    expect(res.status).toBe(status)
+    expect(await res.json()).toEqual({ error: message })
+  })
+
+  it.each([['not-an-id'], [42], [undefined]])('refuses an item id %s before any database request', async (id) => {
+    const res = await restore(id)
+    expect(res.status).toBe(400)
+    expect(network.calls).toEqual([])
+  })
+
+  it('refuses an unknown action', async () => {
+    const res = await (await binRoute()).POST(request('POST', 'recycle-bin', { action: 'empty', id: ID }), { params: {} })
+    expect(res.status).toBe(400)
+    expect(network.calls).toEqual([])
+  })
+})
+
 // ── (b) Course Factory save ─────────────────────────────────────────────────
 
 const KEPT = '3f2504e0-4f89-41d3-9a0c-0305e82c3301'
