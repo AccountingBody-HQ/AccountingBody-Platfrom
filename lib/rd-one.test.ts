@@ -316,8 +316,8 @@ describe('G6 scope: only the planned lines change', () => {
     ['lib/slug-param.ts', '23aff618c927ccded22026c3ea21391b9009fda6eb97eca0ee40ba174c0e95eb'],
     ['app/api/search/route.ts', 'f2479522443d94c8430794c25448c91c21771de16151409b28df83b8f63b2eac'],
     ['app/search/page.tsx', '507941ca50c62c81c966d532d9e153c98dacd49f7d24e3e094e4d9eb34611b2a'],
-    // VF-2 (F2): the clear button is 24 by 24 px.
-    ['app/search/SearchClient.tsx', 'd80e3c26fdb7c78d760725f305b81cc11b7be0cb55fefe9dbd038ecac30a0ddf'],
+    // VF-2 (F2, F6): the clear button is 24 by 24 px and the only one shown.
+    ['app/search/SearchClient.tsx', 'df98d3e9bce79a493ccd2db5ddc713461a6460d068d6b732346dafd6607f84dc'],
     ['app/api/ingest/[slug]/route.test.ts', '99c20fa8a9d3934f6cd3cc9daa43e9030bdcb04e0e196dec89274262c22eb627'],
   ])('%s is byte-identical to main', (file, hash) => {
     expect(sha256(readFileSync(file, 'utf8'))).toBe(hash)

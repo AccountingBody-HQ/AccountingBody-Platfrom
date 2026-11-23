@@ -99,6 +99,16 @@ describe('F5 the article breadcrumb shows a readable subject name', () => {
   })
 })
 
+describe('F6 the search box has one clear button', () => {
+  it("hides the browser's own search-field button on that input and keeps the site's", () => {
+    const src = read('app/search/SearchClient.tsx')
+    const input = src.slice(src.indexOf('<input'), src.indexOf('/>', src.indexOf('<input')))
+    expect(input).toContain('type="search"')
+    expect(input).toContain('[&::-webkit-search-cancel-button]:appearance-none')
+    expect(src.match(/aria-label="Clear search"/g)).toHaveLength(1)
+  })
+})
+
 describe('F1 the site fonts load by a link, so a blocked font host never fails the site stylesheet', () => {
   it('the stylesheet imports nothing from another site', () => {
     expect(read('app/globals.css')).not.toMatch(/@import\s+(?:url\()?\s*['"]?(?:https?:)?\/\//)
