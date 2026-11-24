@@ -337,6 +337,8 @@ type PaginationBaseProps = {
   navLabel?: string
   /** Singular noun for the context line ("job" -> "1 job" / "2 jobs"). */
   itemLabel?: string
+  /** False leaves out the context line, for a page that already shows the total. */
+  showContext?: boolean
 }
 
 type PaginationProps = PaginationBaseProps &
@@ -352,6 +354,7 @@ export function Pagination({
   total,
   navLabel = 'Results pages',
   itemLabel = 'result',
+  showContext = true,
   onChange,
   hrefFor,
 }: PaginationProps) {
@@ -381,10 +384,13 @@ export function Pagination({
   return (
     <nav aria-label={navLabel} className="mt-10">
       {/* Context line — what makes a few hundred pages feel navigable
-          rather than endless. Always visible, at every breakpoint. */}
-      <p className="mx-auto text-center text-xs text-slate-400 mb-3">
-        Page {page.toLocaleString('en-GB')} of {totalPages.toLocaleString('en-GB')} · {total.toLocaleString('en-GB')} {itemLabel}{total === 1 ? '' : 's'}
-      </p>
+          rather than endless. Shown at every breakpoint, unless the page
+          passes showContext={false} because it already shows the total. */}
+      {showContext && (
+        <p className="mx-auto text-center text-xs text-slate-400 mb-3">
+          Page {page.toLocaleString('en-GB')} of {totalPages.toLocaleString('en-GB')} · {total.toLocaleString('en-GB')} {itemLabel}{total === 1 ? '' : 's'}
+        </p>
+      )}
 
       <div className="flex items-center justify-center gap-2">
         <NavButton direction="prev" target={prevTarget} onChange={onChange} hrefFor={hrefFor} />
