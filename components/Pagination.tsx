@@ -154,11 +154,18 @@ function GoIcon({ color }: { color: string }) {
 // hover:bg-navy-900/hover:border-navy-900 gives a real, visible hover
 // state on the fill itself, rather than the old outline-to-fill hover
 // transition — consistent height and radius, same focus ring as before.
+//
+// `disabled:` only matches a real <button disabled>, so the same three looks
+// are repeated as `aria-disabled:` for the hrefFor placeholder (a span with
+// aria-disabled="true"; "false" never matches). The fill is `!` because the
+// EthioTax rule for bg-navy-950 in globals.css is more specific than a plain
+// utility and would keep the disabled control filled there.
 const NAV_BUTTON_CLASS =
   'inline-flex items-center justify-center gap-1.5 min-w-[44px] sm:min-w-[124px] h-11 px-3 rounded-lg ' +
   'border-2 border-navy-950 bg-navy-950 text-sm font-semibold transition-colors ' +
   'hover:bg-navy-900 hover:border-navy-900 ' +
   'disabled:pointer-events-none disabled:border-slate-200 disabled:bg-slate-50 ' +
+  'aria-disabled:pointer-events-none aria-disabled:border-slate-200 aria-disabled:!bg-slate-50 ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-navy-950'
 
 // `target` is the page Previous/Next would go to, or null at a boundary
