@@ -11,6 +11,7 @@ import { brandExamBodies } from '@/lib/brand'
 import { resolveArticleCanonical } from '@/lib/canonical'
 import { toStoredSlug } from '@/lib/slug-param'
 import { studyCategoryName } from '@/lib/study-category-name'
+import { studyEticpaRedirect } from '@/lib/study-eticpa-redirect'
 
 export async function generateStaticParams() {
   const slugs = await getAllArticleSlugs()
@@ -130,6 +131,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
     if (path) permanentRedirect(path)
     notFound()
   }
+  const eticpaTarget = studyEticpaRedirect(isEthioTax, category, article.slug)
+  if (eticpaTarget) permanentRedirect(eticpaTarget)
 
   const examBodies = brandExamBodies(article.exam_body, isEthioTax)
   const accentBar = EXAM_BODY_ACCENT[examBodies[0]?.toUpperCase() ?? ''] ?? 'bg-navy-950'
