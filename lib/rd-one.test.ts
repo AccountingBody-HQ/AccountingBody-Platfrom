@@ -319,7 +319,8 @@ describe('G6 scope: only the planned lines change', () => {
     ['app/robots.ts', 'bb3375cf5cf479acb4255bc4bca7166374ef7b2cd2b457e16b832d8fcac75f4e'],
     ['app/[slug]/page.tsx', 'eba427305e900fbf9ba257aa128b8a35f1a5ce1a40e0ec0cdca7d95f60828032'],
     ['lib/slug-param.ts', '23aff618c927ccded22026c3ea21391b9009fda6eb97eca0ee40ba174c0e95eb'],
-    ['app/api/search/route.ts', 'f2479522443d94c8430794c25448c91c21771de16151409b28df83b8f63b2eac'],
+    // W0-1 C1: the search words come from lib/search-words.ts (hyphens split too).
+    ['app/api/search/route.ts', '52be015e7934de01f4a2a55150b465166ecc643293b7314c50d60654fa2d31bb'],
     ['app/search/page.tsx', '507941ca50c62c81c966d532d9e153c98dacd49f7d24e3e094e4d9eb34611b2a'],
     // VF-2 (F2, F6): the clear button is 24 by 24 px and the only one shown.
     // VF-2b (G2, G3): readable subject chips; the clear button is centred.
