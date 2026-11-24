@@ -12,11 +12,15 @@ import { Footer } from '@/components/layout/Footer'
 import { EthioTaxWhatsAppButton } from '@/components/layout/EthioTaxWhatsAppButton'
 import { getCachedBrowsableJobsCount } from '@/lib/jobs'
 import { getCachedPublishedArticleCount, getCachedPublishedQuestionCount } from '@/lib/db'
-import { FONT_STYLESHEET } from '@/lib/fonts'
 import CookieConsent from '@/components/CookieConsent'
 import ScrollToTop from '@/components/ScrollToTop'
 import RouteProgressBar from '@/components/RouteProgressBar'
 import Script from 'next/script'
+// The site fonts are served from this site. The two files that render the html tag (this
+// one and app/global-error.tsx) import them, and never by @import in app/globals.css: when an imported
+// stylesheet cannot load, the browser marks the whole importing stylesheet as failed, and React
+// rejects its own promise for that stylesheet when it inserts it itself (the not-found page).
+import './_fonts/fonts.css'
 import './globals.css'
 
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID
@@ -112,11 +116,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <meta name="google-adsense-account" content={process.env.NEXT_PUBLIC_ADSENSE_ID} />
             </>
           )}
-          <link rel="dns-prefetch" href="//fonts.googleapis.com" />
-          <link rel="dns-prefetch" href="//fonts.gstatic.com" />
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          <link rel="stylesheet" href={FONT_STYLESHEET} />
           {/* GTM and the ads script are loaded by CookieConsent only after the visitor accepts */}
         </head>
         <body className="antialiased bg-surface text-slate-900 min-h-screen flex flex-col">

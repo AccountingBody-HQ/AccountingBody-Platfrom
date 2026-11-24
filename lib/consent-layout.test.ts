@@ -13,9 +13,9 @@ describe('no Google Tag Manager contact before consent (app/layout.tsx)', () => 
   it('has no DNS or connection hint to Google Tag Manager', () => {
     expect(src).not.toContain('googletagmanager')
   })
-  it('keeps the font hints', () => {
-    expect(src).toContain('<link rel="preconnect" href="https://fonts.googleapis.com" />')
-    expect(src).toContain('<link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />')
+  it('serves the fonts from this site, with no hint to a font host (W0-2)', () => {
+    expect(src).toContain("import './_fonts/fonts.css'")
+    expect(src).not.toMatch(/<link\b[^>]*rel="(?:preconnect|dns-prefetch)"/)
   })
 })
 

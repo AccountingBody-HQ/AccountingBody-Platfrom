@@ -2,7 +2,7 @@
    AccountingBody.com — Global Styles
    Design system: Editorial Financial Authority
    Fonts: DM Serif Display (headings) + DM Sans (body) + JetBrains Mono (code),
-   loaded by the <link> in app/layout.tsx (lib/fonts.ts), never by an import here
+   self-hosted in app/_fonts (imported by app/layout.tsx), never by an import here
    ───────────────────────────────────────────────────────────────────────────── */
 
 @tailwind base;
