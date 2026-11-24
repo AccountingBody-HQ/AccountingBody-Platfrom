@@ -299,7 +299,7 @@ export default function PersonalDataPage() {
       )}
 
       <section className="rounded-2xl p-5" style={C.warning} aria-labelledby="pd-outside">
-        <h2 id="pd-outside" className="font-semibold text-sm mb-2">Also check outside our database</h2>
+        <h2 id="pd-outside" className="font-sans font-semibold text-sm mb-2" style={{ color: ADMIN_COLORS.text }}>Also check outside our database</h2>
         <ul className="text-sm list-disc pl-5 space-y-1">
           {OUTSIDE.map((line) => <li key={line}>{line}</li>)}
         </ul>
