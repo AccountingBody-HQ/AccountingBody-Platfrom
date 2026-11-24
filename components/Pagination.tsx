@@ -375,7 +375,7 @@ export function Pagination({
     <nav aria-label={navLabel} className="mt-10">
       {/* Context line — what makes a few hundred pages feel navigable
           rather than endless. Always visible, at every breakpoint. */}
-      <p className="text-center text-xs text-slate-400 mb-3">
+      <p className="mx-auto text-center text-xs text-slate-400 mb-3">
         Page {page.toLocaleString('en-GB')} of {totalPages.toLocaleString('en-GB')} · {total.toLocaleString('en-GB')} {itemLabel}{total === 1 ? '' : 's'}
       </p>
 

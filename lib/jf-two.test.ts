@@ -339,11 +339,25 @@ const href = (n: number) => (n === 1 ? '/jobs/listings' : `/jobs/listings?page=$
 
 describe('G5 pagination modes', () => {
   it('onChange only and hrefFor only render exactly today\'s markup', async () => {
-    // Captured on main 4a80804 (before JF-2) from these exact renders.
+    // Captured on main 4a80804 (before JF-2) from these exact renders; moved
+    // by W0-1 C3 (the centred context line), see the next test.
     expect([
       sha256(await pager({ onChange: noop })),
       sha256(await pager({ hrefFor: href })),
       sha256(await prevNext({ onChange: noop })),
+    ]).toStrictEqual([
+      '4171fcf638f6ebd428b3c63acd4c24fb0eb529a823bf3d6f6a93e49506154c54',
+      '01a14dbcde8a07ffbb02bebba8a174aebeb82171c2a4786ca7da2dfb876963c4',
+      '20ec30cf13cea85778508e22fbec9879f838c3539b240502db9d1a9b5c58eae6',
+    ])
+  })
+
+  it('the W0-1 class changes are the only difference from the renders captured on main 4a80804', async () => {
+    const undo = (html: string) => html.replace('<p class="mx-auto text-center', '<p class="text-center')
+    expect([
+      sha256(undo(await pager({ onChange: noop }))),
+      sha256(undo(await pager({ hrefFor: href }))),
+      sha256(undo(await prevNext({ onChange: noop }))),
     ]).toStrictEqual([
       '5291c582292f534edca473ce7859d38e7ed7f47f853c6524731896326ff4aa08',
       '76982c49d3beb4524f7f2008eec578fa43c9ed964fe5d5fbfd037edca3d33529',
@@ -493,7 +507,9 @@ describe('G7 scope and identity', () => {
     // Non-visible strings this job adds: class names, a path, a locale, props.
     // BP-2 renamed the card's accessible-name parts (the same words, decoded
     // for display); the visible text is unchanged.
-    const NON_VISIBLE = new Set<string>(['en-GB', 'Page {page.toLocaleString(\'en-GB\')}', '${displayTitle} at ${displayCompany}'])
+    // W0-1 C3: the pager context line's class names (centred).
+    const NON_VISIBLE = new Set<string>(['en-GB', 'Page {page.toLocaleString(\'en-GB\')}', '${displayTitle} at ${displayCompany}',
+      'mx-auto text-center text-xs text-slate-400 mb-3'])
     for (const file of ['app/jobs/listings/page.tsx', 'app/jobs/listings/JobListingsClient.tsx', 'components/Pagination.tsx']) {
       const before = textCandidates(execFileSync('git', ['show', `${base}:${file}`], { encoding: 'utf8' }))
       const added = Array.from(textCandidates(read(file))).filter((s) => !before.has(s) && !NON_VISIBLE.has(s))
