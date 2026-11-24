@@ -311,7 +311,8 @@ describe('G6 scope: only the planned lines change', () => {
   })
 
   it.each([
-    ['vercel.json', 'c333bf786950054aca5ae357e5a9a48d9e475e724603a97e8d2a79b005bb299a'],
+    // B3 (D325): the function region line (lib/function-region.test.ts).
+    ['vercel.json', 'a9296250253e5c077d85ce411dbac37227a456aa3db2813632c54b2e49a568ec'],
     ['middleware.ts', 'd93412b73d16b115b288ab6d78999e2f3982a3485ada3c135a7c70122b14e92c'],
     // BP-2 (B): getAdminPath treats an empty ADMIN_PATH like unset.
     ['lib/middleware-logic.ts', 'e0378e7b89ad5007cf928664444f0d322620a534051d96fcb63421854f130612'],

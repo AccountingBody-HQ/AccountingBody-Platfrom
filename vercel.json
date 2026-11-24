@@ -1,4 +1,5 @@
 {
+  "regions": ["dub1"],
   "crons": [
     { "path": "/api/cron/expire-jobs", "schedule": "0 6 * * *" },
     { "path": "/api/ingest/orchestrator", "schedule": "*/15 * * * *" },

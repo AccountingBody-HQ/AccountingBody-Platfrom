@@ -324,7 +324,8 @@ describe('G6 nothing else changed', () => {
     // BP-2 (B): getAdminPath treats an empty ADMIN_PATH like unset.
     ['lib/middleware-logic.ts', 'e0378e7b89ad5007cf928664444f0d322620a534051d96fcb63421854f130612'],
     ['middleware.ts', 'd93412b73d16b115b288ab6d78999e2f3982a3485ada3c135a7c70122b14e92c'],
-    ['vercel.json', 'c333bf786950054aca5ae357e5a9a48d9e475e724603a97e8d2a79b005bb299a'],
+    // B3 (D325): the function region line (lib/function-region.test.ts).
+    ['vercel.json', 'a9296250253e5c077d85ce411dbac37227a456aa3db2813632c54b2e49a568ec'],
     // B2 (D320): two redirects for the one course with a new address.
     ['next.config.mjs', 'e31f74a28cdcad170ae1e458a19a11fc7136a71ec3038cd192d09e3b4d6e030f'],
     ['sentry.server.config.ts', '7606957e849e77260a359d7166ab7e42b71e4ef8a505e7d84a84897c7fe016ae'],
