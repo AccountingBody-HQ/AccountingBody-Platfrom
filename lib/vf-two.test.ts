@@ -23,7 +23,6 @@ import { ShareButton } from '@/app/jobs/[slug]/ShareButton'
 import { ETLanguageProvider } from '@/components/layout/ETLanguageContext'
 import { LanguageSwitcher, MobileLangSwitcher } from '@/components/layout/LanguageSwitcher'
 import { Navigation } from '@/components/layout/Navigation'
-import { FONT_STYLESHEET } from '@/lib/fonts'
 import { studyCategoryName } from '@/lib/study-category-name'
 
 const ET_LINKS = { groups: [], cta: { label: 'Free quote', href: '/get-help', description: 'd' } }
@@ -158,19 +157,21 @@ describe('G3 the search clear button is centred in the box', () => {
   })
 })
 
-describe('F1 the site fonts load by a link, so a blocked font host never fails the site stylesheet', () => {
-  it('the stylesheet imports nothing from another site', () => {
-    expect(read('app/globals.css')).not.toMatch(/@import\s+(?:url\()?\s*['"]?(?:https?:)?\/\//)
+describe('F1 the site fonts come from this site, so a blocked font host never fails the site stylesheet', () => {
+  it.each(['app/globals.css', 'app/_fonts/fonts.css'])('%s imports nothing from another site', (file) => {
+    expect(read(file)).not.toMatch(/@import\s+(?:url\()?\s*['"]?(?:https?:)?\/\//)
+    expect(read(file)).not.toMatch(/url\(\s*['"]?(?:https?:)?\/\//)
   })
-  it.each(['app/layout.tsx', 'app/global-error.tsx'])('%s links the font stylesheet once, with no precedence (React must not wait for it)', (file) => {
+  it.each(['app/layout.tsx', 'app/global-error.tsx'])('%s imports the font stylesheet once and links none itself', (file) => {
     const src = read(file)
-    expect(src.split('<link rel="stylesheet" href={FONT_STYLESHEET} />')).toHaveLength(2)
+    expect(src.split("import './_fonts/fonts.css'")).toHaveLength(2)
+    expect(src).not.toMatch(/<link\b[^>]*rel="stylesheet"/)
     expect(src).not.toMatch(/precedence=/)
   })
   it('the fonts are the same three families with swap', () => {
-    const u = new URL(FONT_STYLESHEET)
-    expect(u.origin + u.pathname).toBe('https://fonts.googleapis.com/css2')
-    expect(u.searchParams.getAll('family').map((f) => f.split(':')[0])).toEqual(['DM Serif Display', 'DM Sans', 'JetBrains Mono'])
-    expect(u.searchParams.get('display')).toBe('swap')
+    const css = read('app/_fonts/fonts.css')
+    const families = Array.from(css.matchAll(/font-family: '([^']+)';/g)).map((m) => m[1])
+    expect(Array.from(new Set(families)).sort()).toEqual(['DM Sans', 'DM Serif Display', 'JetBrains Mono'])
+    expect(css.match(/font-display: swap;/g)).toHaveLength(families.length)
   })
 })
