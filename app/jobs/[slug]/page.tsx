@@ -22,6 +22,10 @@ import { ShareButton } from './ShareButton'
 
 export const dynamic = 'force-dynamic'
 
+// The same measure as the import's brief_description flag
+// (lib/ingestion/validate.ts), which the job sitemaps leave out by.
+const SHORT_DESCRIPTION_CHARS = 300
+
 // Memoised per-request (not across requests) so generateMetadata and the
 // page component — which both need the same job — only hit Supabase once.
 const getCachedJob = cache(async (slug: string) => getJobBySlug(slug))
@@ -80,9 +84,10 @@ export async function generateMetadata({
     openGraph: { title, description, url: canonicalUrl, type: 'website' },
     // noindex once a job has been closed for more than
     // CLOSED_NOINDEX_AFTER_DAYS (lib/jobs.ts); open and recently closed jobs
-    // stay indexable (owner decision D55).
-    robots: lifecycle === 'closed_noindex'
-      ? { index: false, follow: true }
+    // stay indexable (owner decision D55). A job whose stored description is
+    // under SHORT_DESCRIPTION_CHARS is noindex too (owner decision D321).
+    robots: lifecycle === 'closed_noindex' || job.description.length < SHORT_DESCRIPTION_CHARS
+      ?{ index: false, follow: true }
       : { index: true, follow: true },
   }
 }

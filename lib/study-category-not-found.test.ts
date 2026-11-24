@@ -25,6 +25,8 @@ vi.mock('@/lib/canonical', () => ({
 vi.mock('@/lib/db', () => ({
   getArticlesByCategory: vi.fn(async () => []),
 }))
+const H = vi.hoisted(() => ({ map: new Headers(), reads: 0 }))
+vi.mock('next/headers', () => ({ headers: async () => { H.reads += 1; return H.map } }))
 
 import { notFound } from 'next/navigation'
 import { getArticlesByCategory } from '@/lib/db'
@@ -47,6 +49,36 @@ beforeEach(() => {
   vi.mocked(notFound).mockClear()
   reader.mockReset()
   reader.mockResolvedValue([])
+  H.map = new Headers()
+  H.reads = 0
+})
+
+// B2 F5 (D318): ETICPA hubs are EthioTax only.
+describe.each(callers)('/study/<category> $name: ETICPA hubs', ({ call }) => {
+  it.each(['eticpa-atq', 'eticpa-cpa', 'ETICPA-ATQ', 'eticpa-anything'])('%s is not found on Accounting Body, with no database read', async (category) => {
+    reader.mockResolvedValue(oneArticle)
+    await expect(call(category)).rejects.toBe(NOT_FOUND)
+    expect(notFound).toHaveBeenCalledTimes(1)
+    expect(reader).not.toHaveBeenCalled()
+  })
+
+  it.each(['eticpa-atq', 'ETICPA-ATQ'])('%s is unchanged on EthioTax', async (category) => {
+    H.map = new Headers({ 'x-et-platform': 'ethiotax' })
+    reader.mockResolvedValue(oneArticle)
+    await expect(call(category)).resolves.toBeDefined()
+    expect(notFound).not.toHaveBeenCalled()
+  })
+
+  it('an unknown ETICPA address with 0 articles stays not found on EthioTax', async () => {
+    H.map = new Headers({ 'x-et-platform': 'ethiotax' })
+    await expect(call('eticpa-zz')).rejects.toBe(NOT_FOUND)
+    expect(reader).toHaveBeenCalledTimes(1)
+  })
+
+  it.each(['acca', 'taxation'])('%s never reads the brand', async (category) => {
+    await expect(call(category)).resolves.toBeDefined()
+    expect(H.reads).toBe(0)
+  })
 })
 
 describe.each(callers)('/study/<category> $name', ({ call }) => {

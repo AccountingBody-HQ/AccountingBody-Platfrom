@@ -28,7 +28,9 @@ const SALARY_CLASS = [
 // 354 lines, 16,564 bytes with SJ-3's addition. Re-pinned from
 // '564bbf106d0030f7' by BP-2 (titles and company names decoded for display,
 // lib/html-entities.ts): 359 lines, 16,944 bytes with SJ-3's addition.
-const BEFORE_SHA16 = 'b9bef8f36c3f90a6'
+// Re-pinned from 'b9bef8f36c3f90a6' by B2 (D321: the robots rule for very
+// short descriptions).
+const BEFORE_SHA16 = 'dfa25c1fc856c22f'
 
 function similarBlock(src: string): string {
   const start = src.indexOf('Similar current roles')

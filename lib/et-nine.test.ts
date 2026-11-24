@@ -224,7 +224,10 @@ describe('G3 home page: each view names its own domain', () => {
 type Gen = () => Promise<Meta>
 const SHARED: Array<{ path: string; load: () => Promise<Gen>; title?: string; description?: string }> = [
   { path: '/accessibility', load: async () => (await import('@/app/accessibility/page')).generateMetadata as Gen },
-  { path: '/articles', load: async () => (await import('@/app/articles/page')).generateMetadata as Gen },
+  { path: '/articles', load: async () => {
+    const g = (await import('@/app/articles/page')).generateMetadata
+    return (() => g({})) as Gen
+  } },
   { path: '/calculators', load: async () => (await import('@/app/calculators/layout')).generateMetadata as Gen },
   { path: '/contact', load: async () => (await import('@/app/contact/page')).generateMetadata as Gen },
   { path: '/cookie-policy', load: async () => (await import('@/app/cookie-policy/page')).generateMetadata as Gen,

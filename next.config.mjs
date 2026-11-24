@@ -57,6 +57,9 @@ const nextConfig = {
         destination: '/free-courses/:path*',
         permanent: true,
       },
+      // One course has a new address (owner decision D320)
+      { source: '/free-courses/test-3', destination: '/free-courses/bookkeeping-essentials-recording-financial-transactions', permanent: true },
+      { source: '/free-courses/test-3/:path*', destination: '/free-courses/bookkeeping-essentials-recording-financial-transactions/:path*', permanent: true },
 
       // Legacy WordPress URLs — safe redirects (no existing routes affected)
       { source: '/module/:slug', destination: '/articles/:slug', permanent: true },

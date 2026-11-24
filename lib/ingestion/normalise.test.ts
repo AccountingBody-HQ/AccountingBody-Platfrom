@@ -11,6 +11,32 @@ const BASE_MAPPING = {
   application_url: 'application_url',
 }
 
+// B2 F4 (D322): a provider whose regions list holds "remote" is a remote-only board.
+describe('normalise — remote-only boards', () => {
+  const run = (regions: unknown, title: string, location_text: string) => {
+    const provider = makeProvider({ field_mapping: BASE_MAPPING, regions: regions as string[] })
+    const job = normalise({ title, company_name: 'Acme Corp', location_text, description: 'Own the ledgers.', application_url: 'https://example.com/a' }, provider)
+    return { remote: job.location_remote, country: job.location_country, city: job.location_city }
+  }
+
+  it('a plain title and place is remote; the country stays what the text says', () => {
+    expect(run(['remote'], 'Tax Manager', 'London, UK')).toEqual({ remote: true, country: 'United Kingdom', city: 'London' })
+    expect(run(['remote'], 'Tax Manager', 'Europe')).toMatchObject({ remote: true, country: null })
+    expect(run(['uk', ' Remote '], 'Tax Manager', 'London, UK').remote).toBe(true)
+  })
+
+  it.each([['Tax Manager (Hybrid)', 'London, UK'], ['Tax Manager', 'Hybrid, remote']])('hybrid wording wins on a remote board: %s / %s', (title, place) => {
+    expect(run(['remote'], title, place).remote).toBe(false)
+  })
+
+  it.each([[[]], [['uk', 'europe']], [['remote-friendly']], [null], [undefined]])('regions %o: not a remote board, same answers as before', (regions) => {
+    expect(run(regions, 'Tax Manager', 'London, UK')).toEqual({ remote: false, country: 'United Kingdom', city: 'London' })
+    expect(run(regions, 'Remote Tax Manager', 'London, UK').remote).toBe(true)
+    expect(run(regions, 'Tax Manager', 'Worldwide')).toMatchObject({ remote: true, country: 'Worldwide' })
+    expect(run(regions, 'Remote Tax Manager (Hybrid)', 'London, UK').remote).toBe(false)
+  })
+})
+
 describe('normalise — salary parsing', () => {
   it('a nested {min,max,currency} salary object round-trips into salary_min/salary_max/salary_currency', () => {
     // Nested salary objects are common in Greenhouse/Lever/Workday-style APIs

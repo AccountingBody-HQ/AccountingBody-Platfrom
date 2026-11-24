@@ -71,6 +71,18 @@ describe('next.config.mjs serves the list', () => {
   })
 })
 
+// Owner decision D320: one course has a new address; its lessons follow.
+describe('the renamed course', () => {
+  const NEW = '/free-courses/bookkeeping-essentials-recording-financial-transactions'
+  it('has exactly two permanent redirects: the course and everything under it', async () => {
+    const all = (await (nextConfig as { redirects: () => Promise<Redirect[]> }).redirects())
+    expect(all.filter((rule) => rule.source.includes('test-3'))).toEqual([
+      { source: '/free-courses/test-3', destination: NEW, permanent: true },
+      { source: '/free-courses/test-3/:path*', destination: `${NEW}/:path*`, permanent: true },
+    ])
+  })
+})
+
 // Slash-form redirects in vercel.json never fire on this site: Next removes the
 // trailing slash first (FINDINGS EK, EL). Old addresses live in next.config.mjs.
 describe('vercel.json holds no redirects', () => {

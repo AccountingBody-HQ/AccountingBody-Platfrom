@@ -4,6 +4,7 @@ import ScrollToTop from '@/components/ScrollToTop'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getArticlesByCategory } from '@/lib/db'
+import { getRequestBrand } from '@/lib/brand-server'
 import { ownerCanonical } from '@/lib/canonical'
 import { OTHER_KEY, groupAlphabetically, pickLetter, letterHref } from '@/lib/study-letter'
 
@@ -50,6 +51,13 @@ function isKnownCategory(slug: string): boolean {
   return Object.prototype.hasOwnProperty.call(EXAM_BODY_META, key) || Object.prototype.hasOwnProperty.call(SUBJECT_META, key)
 }
 
+// ETICPA hubs are EthioTax only (owner decision D318): on Accounting Body an
+// address starting with "eticpa" has no page here. /study/eticpa is its own
+// route. The brand is read for those addresses only.
+async function isHiddenEticpaHub(category: string): Promise<boolean> {
+  return category.toLowerCase().startsWith('eticpa') && !(await getRequestBrand()).isEthioTax
+}
+
 export const dynamicParams = true
 
 export async function generateStaticParams() {
@@ -59,6 +67,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params, searchParams }: { params: Promise<{ category: string }>; searchParams?: Promise<LetterSearchParams> }): Promise<Metadata> {
   const { category } = await params
+  if (await isHiddenEticpaHub(category)) notFound()
   const query      = await searchParams
   const meta       = getCategoryDisplay(category)
   const articles   = await readArticles(category)
@@ -76,6 +85,7 @@ export async function generateMetadata({ params, searchParams }: { params: Promi
 
 export default async function CategoryPage({ params, searchParams }: { params: Promise<{ category: string }>; searchParams?: Promise<LetterSearchParams> }) {
   const { category } = await params
+  if (await isHiddenEticpaHub(category)) notFound()
   const query        = await searchParams
   const meta         = getCategoryDisplay(category)
   const articles     = await readArticles(category)

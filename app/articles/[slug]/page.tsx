@@ -61,7 +61,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   if (!article) return null
 
   const examBodies = brandExamBodies(article.exam_body, isEthioTax)
-  const accentBar  = EXAM_BODY_ACCENT[examBodies[0] ?? ''] ?? 'bg-navy-950'
+  const accentBar  = EXAM_BODY_ACCENT[examBodies[0]?.toUpperCase() ?? ''] ?? 'bg-navy-950'
 
   const formattedReviewed = article.last_reviewed
     ? new Date(article.last_reviewed).toLocaleDateString('en-GB', {

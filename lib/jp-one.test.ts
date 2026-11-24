@@ -245,7 +245,7 @@ describe('G2 both job sitemap readers', () => {
 
 const JOB = {
   id: 'j1', slug: 'tax-manager', title: 'Tax Manager', company_name: 'Acme', company_domain: null,
-  description: 'Line one.\nLine two.', excerpt: 'Short.', location_text: 'London', location_city: 'London',
+  description: `Line one.\n${'Line two. '.repeat(40)}`, excerpt: 'Short.', location_text: 'London', location_city: 'London',
   location_country: 'United Kingdom', location_remote: false, salary_text: null, salary_min: null, salary_max: null,
   salary_currency: null, salary_is_predicted: false, employment_type: 'permanent', seniority_level: 'mid',
   category: null, qualifications_required: [], skills_required: [], skills_nice_to_have: [],
@@ -311,6 +311,38 @@ describe('G3 job page metadata', () => {
       expect(meta.openGraph).toEqual({ title: 'Tax Manager at Acme', description: 'Short.', url: 'https://accountingbody.com/jobs/tax-manager', type: 'website' })
     })
   }
+})
+
+// B2 F3 (D321): a job page with a very short stored description is noindex.
+describe('very short job pages are noindex and left out of both sitemaps', () => {
+  it.each([[0, false], [299, false], [300, true], [5000, true]])('an open job with %i characters: index %s, follow', async (length, index) => {
+    for (const source of ['adzuna', 'employer']) {
+      for (const view of ['ab', 'et'] as const) {
+        const { meta } = await renderPage({ ...OPEN, source, description: 'x'.repeat(length) }, view)
+        expect(meta.robots).toEqual({ index, follow: true })
+      }
+    }
+  })
+  it('a long job that closed long ago stays noindex', async () => {
+    const { meta } = await renderPage({ ...CLOSED_OLD, description: 'x'.repeat(5000) })
+    expect(meta.robots).toEqual({ index: false, follow: true })
+  })
+  it('the page and the import flag use the same number', () => {
+    expect(read('app/jobs/[slug]/page.tsx')).toContain('const SHORT_DESCRIPTION_CHARS = 300')
+    expect(read('lib/ingestion/validate.ts')).toContain("if (job.description.length < 300)              flags.push('brief_description')")
+  })
+  it.each([
+    ['getJobSitemapEntries', () => jobs.getJobSitemapEntries('et')],
+    ['getJobSitemapChunk', () => jobs.getJobSitemapChunk('ab', 0)],
+  ] as const)('%s leaves out flagged jobs, keeps jobs with no flags, and still asks for open jobs', async (_name, call) => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(NOW)
+    await call()
+    expect(DB.calls.filter(c => c[0] === 'or').map(c => c[1])).toEqual([
+      'quality_flags.is.null,quality_flags.not.cs.{brief_description}',
+      `expires_at.is.null,expires_at.gt.${iso(NOW)}`,
+    ])
+  })
 })
 
 describe('G4 the closed page and the open page', () => {

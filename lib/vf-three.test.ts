@@ -42,7 +42,8 @@ describe('H1 brandExamBodies', () => {
 describe('H2 both article pages show the brand list only', () => {
   it.each([
     ['app/study/[category]/[slug]/page.tsx', "EXAM_BODY_ACCENT[examBodies[0]?.toUpperCase() ?? '']"],
-    ['app/articles/[slug]/page.tsx', "EXAM_BODY_ACCENT[examBodies[0] ?? '']"],
+    // B2 (F6): the same look-up as the study page.
+    ['app/articles/[slug]/page.tsx', "EXAM_BODY_ACCENT[examBodies[0]?.toUpperCase() ?? '']"],
   ])('%s', (file, accent) => {
     const src = read(file)
     // the stored value is read once, by the helper
