@@ -14,6 +14,7 @@ export function ArticlesPagination({ page, totalPages, total }: { page: number; 
       total={total}
       navLabel="Articles pages"
       itemLabel="article"
+      showContext={false}
       hrefFor={articlesPageHref}
     />
   )

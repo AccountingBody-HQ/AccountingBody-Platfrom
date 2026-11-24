@@ -154,11 +154,18 @@ function GoIcon({ color }: { color: string }) {
 // hover:bg-navy-900/hover:border-navy-900 gives a real, visible hover
 // state on the fill itself, rather than the old outline-to-fill hover
 // transition — consistent height and radius, same focus ring as before.
+//
+// `disabled:` only matches a real <button disabled>, so the same three looks
+// are repeated as `aria-disabled:` for the hrefFor placeholder (a span with
+// aria-disabled="true"; "false" never matches). The fill is `!` because the
+// EthioTax rule for bg-navy-950 in globals.css is more specific than a plain
+// utility and would keep the disabled control filled there.
 const NAV_BUTTON_CLASS =
   'inline-flex items-center justify-center gap-1.5 min-w-[44px] sm:min-w-[124px] h-11 px-3 rounded-lg ' +
   'border-2 border-navy-950 bg-navy-950 text-sm font-semibold transition-colors ' +
   'hover:bg-navy-900 hover:border-navy-900 ' +
   'disabled:pointer-events-none disabled:border-slate-200 disabled:bg-slate-50 ' +
+  'aria-disabled:pointer-events-none aria-disabled:border-slate-200 aria-disabled:!bg-slate-50 ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-navy-950'
 
 // `target` is the page Previous/Next would go to, or null at a boundary
@@ -330,6 +337,8 @@ type PaginationBaseProps = {
   navLabel?: string
   /** Singular noun for the context line ("job" -> "1 job" / "2 jobs"). */
   itemLabel?: string
+  /** False leaves out the context line, for a page that already shows the total. */
+  showContext?: boolean
 }
 
 type PaginationProps = PaginationBaseProps &
@@ -345,6 +354,7 @@ export function Pagination({
   total,
   navLabel = 'Results pages',
   itemLabel = 'result',
+  showContext = true,
   onChange,
   hrefFor,
 }: PaginationProps) {
@@ -374,10 +384,13 @@ export function Pagination({
   return (
     <nav aria-label={navLabel} className="mt-10">
       {/* Context line — what makes a few hundred pages feel navigable
-          rather than endless. Always visible, at every breakpoint. */}
-      <p className="text-center text-xs text-slate-400 mb-3">
-        Page {page.toLocaleString('en-GB')} of {totalPages.toLocaleString('en-GB')} · {total.toLocaleString('en-GB')} {itemLabel}{total === 1 ? '' : 's'}
-      </p>
+          rather than endless. Shown at every breakpoint, unless the page
+          passes showContext={false} because it already shows the total. */}
+      {showContext && (
+        <p className="mx-auto text-center text-xs text-slate-400 mb-3">
+          Page {page.toLocaleString('en-GB')} of {totalPages.toLocaleString('en-GB')} · {total.toLocaleString('en-GB')} {itemLabel}{total === 1 ? '' : 's'}
+        </p>
+      )}
 
       <div className="flex items-center justify-center gap-2">
         <NavButton direction="prev" target={prevTarget} onChange={onChange} hrefFor={hrefFor} />

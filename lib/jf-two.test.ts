@@ -339,11 +339,28 @@ const href = (n: number) => (n === 1 ? '/jobs/listings' : `/jobs/listings?page=$
 
 describe('G5 pagination modes', () => {
   it('onChange only and hrefFor only render exactly today\'s markup', async () => {
-    // Captured on main 4a80804 (before JF-2) from these exact renders.
+    // Captured on main 4a80804 (before JF-2) from these exact renders; moved
+    // by W0-1 C3 and C4 (the centred context line, the muted disabled
+    // Previous/Next), see the next test.
     expect([
       sha256(await pager({ onChange: noop })),
       sha256(await pager({ hrefFor: href })),
       sha256(await prevNext({ onChange: noop })),
+    ]).toStrictEqual([
+      'c0674c9b9f07803973e576fd7e51c1165345cd4c0ef65e6fb52e134e02c910f8',
+      '6da95ff6d6f891b2603f90a038ea6bd60b65395d1427584e4bcb8e64161607ca',
+      '136e00dc11d86ff04fec64399413bc8f75775ef8a5042c3ad7dccc18b4a29b8e',
+    ])
+  })
+
+  it('the W0-1 class changes are the only difference from the renders captured on main 4a80804', async () => {
+    const undo = (html: string) => html
+      .replace('<p class="mx-auto text-center', '<p class="text-center')
+      .replaceAll(' aria-disabled:pointer-events-none aria-disabled:border-slate-200 aria-disabled:!bg-slate-50', '')
+    expect([
+      sha256(undo(await pager({ onChange: noop }))),
+      sha256(undo(await pager({ hrefFor: href }))),
+      sha256(undo(await prevNext({ onChange: noop }))),
     ]).toStrictEqual([
       '5291c582292f534edca473ce7859d38e7ed7f47f853c6524731896326ff4aa08',
       '76982c49d3beb4524f7f2008eec578fa43c9ed964fe5d5fbfd037edca3d33529',
@@ -493,7 +510,11 @@ describe('G7 scope and identity', () => {
     // Non-visible strings this job adds: class names, a path, a locale, props.
     // BP-2 renamed the card's accessible-name parts (the same words, decoded
     // for display); the visible text is unchanged.
-    const NON_VISIBLE = new Set<string>(['en-GB', 'Page {page.toLocaleString(\'en-GB\')}', '${displayTitle} at ${displayCompany}'])
+    // W0-1 C3, C4: class names of the pager context line (centred) and of a
+    // disabled Previous/Next (muted).
+    const NON_VISIBLE = new Set<string>(['en-GB', 'Page {page.toLocaleString(\'en-GB\')}', '${displayTitle} at ${displayCompany}',
+      'mx-auto text-center text-xs text-slate-400 mb-3',
+      'aria-disabled:pointer-events-none aria-disabled:border-slate-200 aria-disabled:!bg-slate-50'])
     for (const file of ['app/jobs/listings/page.tsx', 'app/jobs/listings/JobListingsClient.tsx', 'components/Pagination.tsx']) {
       const before = textCandidates(execFileSync('git', ['show', `${base}:${file}`], { encoding: 'utf8' }))
       const added = Array.from(textCandidates(read(file))).filter((s) => !before.has(s) && !NON_VISIBLE.has(s))

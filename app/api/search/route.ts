@@ -3,6 +3,7 @@ import { getServerSupabase } from '@/lib/supabase-server'
 import { getActiveDirectJobs, buildSimilarQuery, type Job } from '@/lib/jobs'
 import { buildPhraseQuery, buildAndQuery, pickJobSearchTier } from '@/app/search/jobSearchTiers'
 import { reportServerError } from '@/lib/report-error'
+import { sanitiseWord, searchWords } from '@/lib/search-words'
 
 const JOB_PANEL_LIMIT = 5
 
@@ -165,13 +166,6 @@ function checkRateLimit(ip: string): boolean {
   return true
 }
 
-// Strip characters that are special in PostgREST filter syntax.
-// Commas delimit .or() expressions; ( ) . % have syntactic meaning.
-// Stripping them from word tokens prevents filter string corruption.
-function sanitiseWord(w: string): string {
-  return w.replace(/[,().%]/g, '').trim()
-}
-
 export async function GET(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
   if (!checkRateLimit(ip)) {
@@ -194,16 +188,10 @@ export async function GET(req: NextRequest) {
   const platform = isEthioTax ? 'et' : 'ab'
 
   // Sanitise the raw query: lowercase, strip PostgREST special chars,
-  // split into individual words, deduplicate, drop empty/single-char tokens.
+  // split into individual words, deduplicate, drop empty/single-char tokens
+  // (lib/search-words.ts).
   const rawSearch = q.trim().toLowerCase()
-  const words = Array.from(
-    new Set(
-      rawSearch
-        .split(/\s+/)
-        .map(sanitiseWord)
-        .filter(w => w.length >= 2)
-    )
-  )
+  const words = searchWords(q)
 
   // If sanitising stripped everything (e.g. query was only punctuation),
   // return empty rather than sending a malformed or unbounded query.
