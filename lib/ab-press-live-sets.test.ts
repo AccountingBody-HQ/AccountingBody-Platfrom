@@ -744,6 +744,9 @@ describe('a failed read', () => {
         expect(response.status).toBe(200)
         const body = await response.json()
         expect(body.stats).toMatchObject({ questionCountError: true, questionCount: 0, articleCount: 5 })
+        expect(body.health.unavailable).toBe(table === 'articles')
+        if (table === 'articles') expect(body.health.verdict).toBe('issues')
+        expect(body.historyError).toBe(false)
         expect(JSON.stringify(body)).not.toContain('private detail')
         expect(log).toHaveBeenCalledTimes(table === 'articles' ? 2 : 1)
       })
@@ -778,9 +781,21 @@ describe('a failed read', () => {
     expect(log.mock.calls[0][1]).toMatchObject({ message, what })
   })
 
+  it.each(['error', 'empty'] as const)('book_publications (%s): the preview answers, with the history unknown', async (how) => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    state.failing = { book_publications: how }
+    const response = await callRoute('preview', { query: '?slug=good' })
+    expect(response.status).toBe(200)
+    const body = await response.json()
+    expect(body).toMatchObject({ historyError: true, history: [], health: { unavailable: false } })
+    expect(JSON.stringify(body)).not.toContain('private detail')
+    expect(log).toHaveBeenCalledTimes(1)
+  })
+
   it('the preview says nothing about it when the reads work', async () => {
     const body = await (await callRoute('preview', { query: '?slug=course' })).json()
     expect(body.stats.questionCountError).toBe(false)
+    expect(body).toMatchObject({ historyError: false, history: [], health: { unavailable: false, verdict: 'issues', emptyArticles: 4 } })
   })
 
   it('the preview screen shows a dash and the exact message', () => {
@@ -1021,6 +1036,70 @@ function spoil(made: Screen, name: string, at: number, change: object) {
     return body.chapterIndex === at ? { ...answer, body: { ...(answer.body as object), ...change } } : answer
   }
 }
+
+describe('the messages of the screen', () => {
+  const HEALTH_FAILED = 'Content check unavailable (the articles could not be read).'
+  const HISTORY_FAILED = 'Publication history unavailable (it could not be read).'
+  const COURSES_FAILED = 'Could not load the course list. Please reload the page.'
+  const READY = 'Content ready for publication'
+  const NO_BOOKS = 'No books generated yet for this course.'
+
+  const opened = async (change: { health?: object; historyError?: boolean }) => {
+    const page = await screen()
+    const { preview } = page.answers
+    page.answers.preview = (body) => {
+      const answer = preview(body).body as { health: object }
+      return { body: { ...answer, ...change, health: { ...answer.health, ...change.health } } }
+    }
+    await page.open()
+    ;(page.one((e) => e.type === 'button' && Screen.text(e).startsWith('Publication History')).props.onClick as () => void)()
+    return page
+  }
+  const figures = (page: Screen) =>
+    ['Empty Articles', 'Web Cleaned', 'Elements Removed', 'Practice Links'].map((name) => {
+      const box = page.one((e) => e.type === 'div' && Screen.text(e).endsWith(name) && Screen.text(e).length < name.length + 4)
+      return Screen.text(box).slice(0, -name.length)
+    })
+
+  it('a good preview shows its figures, its verdict and its history', async () => {
+    const page = await opened({})
+    expect(figures(page)).toEqual(['0', '0', '0', '2'])
+    expect(page.shown).toContain(READY)
+    expect(page.shown).toContain(NO_BOOKS)
+    for (const message of [HEALTH_FAILED, HISTORY_FAILED, COURSES_FAILED]) expect(page.shown).not.toContain(message)
+  })
+
+  it('a failed content check shows dashes and its message, not a verdict', async () => {
+    const page = await opened({ health: { unavailable: true, verdict: 'issues' } })
+    expect(figures(page)).toEqual(['—', '—', '—', '—'])
+    expect(page.shown).toContain(HEALTH_FAILED)
+    expect(page.shown).not.toContain(READY)
+    expect(page.shown).not.toContain('need attention')
+    expect(page.one((e) => e.type === 'p' && Screen.text(e) === HEALTH_FAILED).props.className).toBe('text-red-400 text-xs mb-3')
+  })
+
+  it('a failed history read shows its message, not an empty history', async () => {
+    const page = await opened({ historyError: true })
+    expect(page.shown).toContain(HISTORY_FAILED)
+    expect(page.shown).not.toContain(NO_BOOKS)
+  })
+
+  it.each<[string, Answer, boolean]>([
+    ['a list', { body: { courses: [] } }, false],
+    ['an error', { status: 500, body: { error: 'private detail' } }, true],
+    ['an error with a list', { status: 500, body: { courses: [] } }, true],
+    ['no list', { body: {} }, true],
+    ['something else', { body: { courses: 'x' } }, true],
+    ['nothing', { body: null }, true],
+  ])('the course list answers with %s', async (_name, answer, failed) => {
+    const page = await screen()
+    page.answers['load-course'] = () => answer
+    await page.open({ load: false })
+    const messages = page.elements().filter((e) => e.type === 'p' && e.props.className === 'text-red-400 text-xs mt-2')
+    expect(messages.map(Screen.text)).toEqual(failed ? [COURSES_FAILED] : [])
+    expect(page.shown).not.toContain('private detail')
+  })
+})
 
 describe('the screen of a book made chapter by chapter', () => {
   const COURSE_CHANGED = 'The course has changed since the preview was loaded, so nothing was made. Please load the preview again.'

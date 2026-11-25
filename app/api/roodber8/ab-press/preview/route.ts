@@ -74,6 +74,7 @@ export async function GET(req: NextRequest) {
     const allArticleIds = allArticles.map(a => a.id)
     const articleTitleMap = new Map(allArticles.map(a => [a.id, a.title]))
 
+    let healthUnavailable = false
     let emptyArticlesCount = 0
     let articlesWithWebElements = 0
     let totalWebElementsRemoved = 0
@@ -108,29 +109,33 @@ export async function GET(req: NextRequest) {
           if (row.mcq_url) mcqLinked++
         }
       } catch (err) {
+        // The content is unknown, not ready.
         console.error('ab-press/preview: article content read failed:', err)
+        healthUnavailable = true
       }
     }
 
     const verdict: 'ready' | 'warnings' | 'issues' =
-      emptyArticlesCount > 0 ? 'issues' :
+      healthUnavailable || emptyArticlesCount > 0 ? 'issues' :
       articlesWithWebElements > 0 ? 'warnings' :
       'ready'
 
     // ── Publication history (Phase 5) ───────────────────────────────────────
     // Best-effort: a missing/broken book_publications table must never fail
-    // the preview request — just fall back to an empty history list.
+    // the preview request — the screen says that the history is unknown.
     let history: any[] = []
+    let historyError = false
     try {
-      const { data: historyRows } = await supabase
+      const { data: historyRows, error: historyFailed } = await supabase
         .from('book_publications')
         .select('id, book_type, edition, subtitle, page_count, article_count, question_count, kdp_ready, preflight_verdict, content_hash, articles_with_web_elements, empty_articles, generated_at')
         .eq('course_slug', slug)
         .eq('platform', 'ab')
         .order('generated_at', { ascending: false })
         .limit(5)
+      if (historyFailed || !historyRows) throw historyFailed ?? new Error('no history list')
 
-      history = (historyRows ?? []).map(r => ({
+      history = historyRows.map(r => ({
         id: r.id,
         bookType: r.book_type,
         edition: r.edition,
@@ -146,8 +151,8 @@ export async function GET(req: NextRequest) {
         generatedAt: r.generated_at,
       }))
     } catch (err) {
-      console.error('ab-press/preview: book_publications history query threw:', err)
-      history = []
+      console.error('ab-press/preview: book_publications history read failed:', err)
+      historyError = true
     }
 
     // Return in shape the AB Press UI expects
@@ -185,6 +190,7 @@ export async function GET(req: NextRequest) {
         articlesWithWebElements,
       },
       health: {
+        unavailable: healthUnavailable,
         verdict,
         emptyArticles: emptyArticlesCount,
         articlesWithWebElements,
@@ -194,6 +200,7 @@ export async function GET(req: NextRequest) {
         webWarningDetails,
       },
       history,
+      historyError,
     })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'

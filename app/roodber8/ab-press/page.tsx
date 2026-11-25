@@ -10,6 +10,9 @@ const BOOK_TYPES = [
 ]
 const EDITIONS = ['2025/26 Edition', '2026/27 Edition', '2027/28 Edition']
 const PREVIEW_COUNT_FAILED = 'Question count unavailable (the practice questions could not be read).'
+const HEALTH_FAILED = 'Content check unavailable (the articles could not be read).'
+const HISTORY_FAILED = 'Publication history unavailable (it could not be read).'
+const COURSES_FAILED = 'Could not load the course list. Please reload the page.'
 const COURSE_CHANGED = 'The course has changed since the preview was loaded, so nothing was made. Please load the preview again.'
 const ANSWERS_DIFFER = (n: number) => `The questions and answers of chapter ${n} do not match, so nothing was made. Please try again in a minute.`
 
@@ -159,9 +162,12 @@ export default function AbPressPage() {
     setShowWebWarnings(false)
     setDownloadUrl('')
     adminFetch('/api/roodber8/course-factory/load-course?action=list')
-      .then(r => r.json())
-      .then(d => setCourses(d.courses || []))
-      .catch(() => setCourses([]))
+      .then(async r => {
+        const d = await r.json()
+        if (!r.ok || !Array.isArray(d?.courses)) throw new Error(COURSES_FAILED)
+        setCourses(d.courses)
+      })
+      .catch(() => { setCourses([]); setError(COURSES_FAILED) })
   }, [])
 
   const handleCourseSelect = (e: any) => {
@@ -602,7 +608,7 @@ export default function AbPressPage() {
             <div className="bg-[#081428] rounded-xl p-6 border border-slate-700">
               <h2 className="text-sm font-semibold text-[#C9982A] uppercase tracking-wide mb-4">Content Health</h2>
 
-              <div
+              {health.unavailable ? <p className="text-red-400 text-xs mb-3">{HEALTH_FAILED}</p> : <div
                 className="flex items-center gap-2 rounded-lg px-4 py-3 mb-4 text-sm font-medium"
                 style={
                   health.verdict === 'ready'
@@ -633,7 +639,7 @@ export default function AbPressPage() {
                     ? 'Web elements removed — review below'
                     : `${health.emptyArticles} article(s) need attention before publishing`}
                 </span>
-              </div>
+              </div>}
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                 {[
@@ -643,7 +649,7 @@ export default function AbPressPage() {
                   { val: health.mcqLinked,               label: 'Practice Links' },
                 ].map(({ val, label, alert }) => (
                   <div key={label} className="bg-[#0C1A3D] rounded-lg p-3 border border-slate-700">
-                    <p className={"text-2xl font-bold " + (alert ? "text-red-400" : "text-[#C9982A]")}>{val}</p>
+                    <p className={"text-2xl font-bold " + (alert ? "text-red-400" : "text-[#C9982A]")}>{health.unavailable ? '—' : val}</p>
                     <p className="text-xs text-slate-400">{label}</p>
                   </div>
                 ))}
@@ -786,7 +792,9 @@ export default function AbPressPage() {
               </button>
               {showHistory ? (
                 <div className="px-6 pb-6">
-                  {history.length === 0 ? (
+                  {preview?.historyError ? (
+                    <p className="text-red-400 text-xs">{HISTORY_FAILED}</p>
+                  ) : history.length === 0 ? (
                     <p className="text-slate-500 text-sm">No books generated yet for this course.</p>
                   ) : (
                     <div>
