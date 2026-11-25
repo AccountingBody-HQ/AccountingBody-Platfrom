@@ -410,10 +410,20 @@ describe('publish: the web address', () => {
 
   it.each([
     ['7', '7'],
-    ['የሂሳብ IAS 12', '-ias-12'],
     ['Leases quiz', 'leases-quiz'],
+    ['IAS 12 - part 2', 'ias-12-part-2'],
   ])('gives %j the same address as before', async (title, slug) => {
     expect(await publish({ bundle: bundle({ title }) })).toMatchObject({ status: 200, body: { slug } })
+  })
+
+  it.each([
+    ['የሂሳብ IAS 12', 'ias-12'],
+    ['IAS 12 የሂሳብ', 'ias-12'],
+    ['-- Leases quiz --', 'leases-quiz'],
+    [`${'a'.repeat(199)} b`, 'a'.repeat(199)],
+  ])('gives %j an address without a hyphen at the start or end', async (title, slug) => {
+    expect(await publish({ bundle: bundle({ title }) })).toMatchObject({ status: 200, body: { slug } })
+    expect(db.tables.question_sets).toMatchObject([{ slug }])
   })
 
   it.each(['published', 'draft'])('refuses an address another set uses (%s), and adds no suffix', async (status) => {

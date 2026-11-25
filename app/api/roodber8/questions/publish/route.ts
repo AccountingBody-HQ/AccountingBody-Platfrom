@@ -34,7 +34,7 @@ export const runtime = 'nodejs'
 export const maxDuration = 60
 
 function generateSlug(title: string): string {
-  return title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 200)
+  return title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 200).replace(/^-+|-+$/g, '')
 }
 
 function contentIdOf(num: number): string {
