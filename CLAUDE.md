@@ -236,6 +236,7 @@ The Tailwind `gold-500` and `accent` tokens and `ADMIN_COLORS.gold` currently ho
 - Repository visibility.
 - The admin path mechanism.
 - AB Press. It is locked, including `components/book/PracticeKitTemplate.tsx`, `lib/ab-press-builder.ts`, and its `generate-pq` route under `app/api/<admin>/ab-press/`. Make no changes unless the owner explicitly asks. One owner-approved exception: its admin login-check lines may later be replaced by the shared check.
+  - Owner's narrow exceptions so far: D53 (the first), D341 (live sets only), D342 (question reads checked), D343 (AP-1 whole-area fix), D344 (AP-2 leftovers).
 - Addresses (URLs and slugs) of published articles, question sets, courses and jobs. Change one only with a permanent redirect. Never re-generate a slug for an existing row. A job page whose row was deleted under owner decision D140 answers 404 (410 later); that is not an address change.
 - Job records. They are kept; expired jobs are hidden. One standing exception (owner decision D140): imported jobs (source other than 'employer') whose closed_at is older than the retention period (`JOB_RETENTION_DAYS`, 14–365, default 30) may be deleted by the daily retention cron `/api/cron/prune-expired-jobs` (env `JOB_RETENTION`, off by default); employer jobs and any job with an application are never deleted. The other exception: a job row created moments earlier in the same request may be removed if checkout set-up fails, because it was never public.
 - Database tables that look unused. Never drop a table on code evidence alone.
