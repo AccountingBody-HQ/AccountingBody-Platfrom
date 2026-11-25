@@ -13,7 +13,7 @@ import { FrontmatterTemplate } from "@/components/book/FrontmatterTemplate"
 import { getCourseBySlug } from "@/lib/coursesNew"
 import { courseKey, EMPTY_COURSE, isEmptyCourse } from "@/lib/ab-press-builder"
 
-export const maxDuration = 30
+export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {

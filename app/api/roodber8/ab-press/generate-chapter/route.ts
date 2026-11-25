@@ -15,7 +15,7 @@ import { getCourseBySlug } from "@/lib/coursesNew"
 import { htmlToBlocks } from "@/lib/html-to-blocks"
 import { courseKey, EMPTY_COURSE, hasAnswer, hasPrintedAnswer, isEmptyCourse, practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
 
-export const maxDuration = 60
+export const maxDuration = 300
 
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {

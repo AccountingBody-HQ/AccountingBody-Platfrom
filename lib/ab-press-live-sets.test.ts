@@ -7,6 +7,7 @@ import ts from 'typescript'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FrontmatterTemplate } from '@/components/book/FrontmatterTemplate'
 import { ARTICLES_READ_FAILED, buildCourse, courseKey, EMPTY_COURSE, missingOptionLine, noAnswerLine, READ_FAILED, unpublishedLine, type BuildStats } from './ab-press-builder'
+import { adminFetch, type AdminFetchOptions } from './admin-fetch'
 import { TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
 import { DB_LIMITS_MS } from './supabase-server'
@@ -303,11 +304,22 @@ describe('AB Press reads of articles, question_sets and questions', () => {
     expect(tablesUsed('Array.from(x); db.from(name); Buffer.from("y"); db.from("jobs")')).toEqual(['?', 'jobs'])
   })
 
-  it('the routes that read have a time limit', () => {
-    for (const [name, seconds] of [['preview', 60], ['export-word', 300], ['generate', 300], ['generate-pq', 300], ['generate-chapter', 60], ['generate-answers', 60]]) {
-      const path = FILES.find((file) => file.includes(`/ab-press/${name}/route.ts`))
-      expect(readFileSync(join(ROOT, path ?? ''), 'utf8')).toContain(`\nexport const maxDuration = ${seconds}\n`)
+  it('every route has its time limit', () => {
+    const found: Record<string, string[]> = {}
+    for (const path of FILES) {
+      const name = /^app\/api\/.*\/ab-press\/([a-z-]+)\/route\.tsx?$/.exec(path)?.[1]
+      if (name) found[name] = Array.from(readFileSync(join(ROOT, path), 'utf8').matchAll(/^export const maxDuration = (.*)$/gm), (match) => match[1])
     }
+    expect(found).toEqual({
+      generate: ['300'],
+      'generate-pq': ['300'],
+      'export-word': ['300'],
+      preview: ['60'],
+      'generate-chapter': ['300'],
+      'generate-answers': ['300'],
+      'generate-cover': ['60'],
+      'generate-frontmatter': ['60'],
+    })
   })
 
   it('the check recognises a query of the read helper, and only there', () => {
@@ -1315,12 +1327,14 @@ describe('the new lines of the check reports', () => {
 
 // ── The screen ──────────────────────────────────────────────────────────────
 // The page's own code, run with a stand-in for React (state and one effect) and
-// for adminFetch; pdf-lib and the rest are real.
+// for adminFetch; pdf-lib and the rest are real. On request adminFetch is real
+// too, and gets the same answers from a fake network.
 
 type Element = { type: unknown; props: Record<string, unknown> }
-type Answer = { status?: number; body?: unknown; file?: string | Uint8Array<ArrayBuffer>; wait?: Promise<void> }
+type Answer = { status?: number; body?: unknown; text?: string; type?: string; file?: string | Uint8Array<ArrayBuffer>; wait?: Promise<void> }
 
 class Screen {
+  realFetch = false
   calls: { name: string; body: Record<string, unknown> | null }[] = []
   files: Blob[] = []
   answers: Record<string, (body: Record<string, unknown>) => Answer> = {}
@@ -1346,7 +1360,9 @@ class Screen {
       },
       'react/jsx-runtime': { jsx: element, jsxs: element, Fragment: 'fragment' },
       'pdf-lib': pdfLib,
-      '@/lib/admin-fetch': { adminFetch: (url: string, init?: RequestInit) => this.fetch(url, init) },
+      '@/lib/admin-fetch': {
+        adminFetch: (url: string, init?: RequestInit, options?: AdminFetchOptions) => (this.realFetch ? adminFetch(url, init, options) : this.fetch(url, init)),
+      },
     }
     const made: { exports: { default?: () => Element } } = { exports: {} }
     new Function('require', 'module', 'exports', outputText)((name: string) => modules[name], made, made.exports)
@@ -1354,14 +1370,27 @@ class Screen {
     this.component = made.exports.default
   }
 
-  private async fetch(url: string, init?: RequestInit) {
+  private async answer(url: string, init?: RequestInit): Promise<Answer> {
     const name = /\/([a-z-]+)(\?.*)?$/.exec(url)?.[1] ?? ''
     const body = init?.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : null
     this.calls.push({ name, body })
     const answer = this.answers[name]?.(body ?? {}) ?? { status: 404, body: { error: 'no answer' } }
     if (answer.wait) await answer.wait
+    return answer
+  }
+
+  private async fetch(url: string, init?: RequestInit) {
+    const answer = await this.answer(url, init)
     const status = answer.status ?? 200
     return { ok: status < 400, status, json: async () => answer.body, blob: async () => new Blob([answer.file ?? '']) }
+  }
+
+  // The network under the real adminFetch.
+  network = async (url: string, init?: RequestInit): Promise<Response> => {
+    const { status = 200, body, text, type = 'text/plain', file } = await this.answer(url, init)
+    if (text !== undefined) return new Response(text, { status, headers: { 'content-type': type } })
+    if (file !== undefined) return new Response(file, { status, headers: { 'content-type': 'application/zip' } })
+    return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
   }
 
   elements(): Element[] {
@@ -1918,5 +1947,159 @@ describe('the screen of a book made chapter by chapter', () => {
     const source = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
     expect(source).toContain(`const COURSE_CHANGED = '${COURSE_CHANGED}'\n`)
     expect(source).toContain(`const ANSWERS_DIFFER = (n: number) => \`${ANSWERS_DIFFER.replace('3', '${n}')}\`\n`)
+  })
+})
+
+// Through the real adminFetch, so a failed answer reaches the screen as it does
+// on the site.
+describe('a request that the platform stops for time', () => {
+  const TIMED_OUT = 'The book took too long to make, so nothing was made. Please try again in a minute.'
+  const COURSES_FAILED = 'Could not load the course list. Please reload the page.'
+  const RAW = 'An error occurred with your deployment\n\nFUNCTION_INVOCATION_TIMEOUT\n\nlhr1::abcde-1234567890\n'
+  const RAW_PARTS = ['An error occurred', 'FUNCTION_INVOCATION_TIMEOUT', 'lhr1']
+
+  type Place = {
+    route: string
+    // The chapter whose request fails, in a book made chapter by chapter.
+    at?: number
+    run: (page: Screen) => Promise<void>
+    // The style of its message, and the text of a network failure.
+    style: string
+    offline: string
+  }
+  const UNDER_FIELD = 'text-red-400 text-xs mt-2'
+  const OVER_BUTTON = 'text-red-400 text-xs mb-3'
+
+  const bookOf = (bookType: string, articleCount: number) => async (page: Screen) => {
+    const { preview } = page.answers
+    page.answers.preview = (body) => {
+      const answer = preview(body).body as { stats: object }
+      return { body: { ...answer, stats: { ...answer.stats, articleCount } } }
+    }
+    await page.open()
+    page.change(page.radio(bookType), bookType)
+    await page.generate()
+  }
+  const part = (route: string, at?: number): Place => ({ route, at, run: bookOf('combined', 60), style: OVER_BUTTON, offline: 'offline' })
+  const PLACES: Record<string, Place> = {
+    'the course list': { route: 'load-course', run: (page) => page.open({ load: false }), style: UNDER_FIELD, offline: COURSES_FAILED },
+    'the preview': { route: 'preview', run: (page) => page.open(), style: UNDER_FIELD, offline: 'Network error - could not load preview' },
+    'the book': { route: 'generate', run: bookOf('combined', 50), style: OVER_BUTTON, offline: 'Network error - generation failed' },
+    'the Practice Kit': { route: 'generate-pq', run: bookOf('practice', 60), style: OVER_BUTTON, offline: 'Network error — generation failed' },
+    'the first chapter': part('generate-chapter', 0),
+    'the last chapter': part('generate-chapter', 2),
+    'the first answers': part('generate-answers', 0),
+    'the last answers': part('generate-answers', 2),
+    'the front pages': part('generate-frontmatter'),
+    'the cover': part('generate-cover'),
+    'the Word file': {
+      route: 'export-word',
+      run: async (page) => {
+        await page.open()
+        page.press('Export as Word')
+        await page.settle()
+      },
+      style: UNDER_FIELD,
+      offline: 'Network error - Word export failed',
+    },
+  }
+  const NAMES = Object.keys(PLACES)
+
+  const real = async () => {
+    const page = await screen()
+    page.realFetch = true
+    vi.stubGlobal('fetch', page.network)
+    return page
+  }
+  const fail = (page: Screen, { route, at }: Place, answer: () => Answer) => {
+    const before = page.answers[route]
+    page.answers[route] = (body) => (body.chapterIndex === at ? answer() : before(body))
+  }
+  const failed = async (name: string, answer: () => Answer) => {
+    const page = await real()
+    fail(page, PLACES[name], answer)
+    await PLACES[name].run(page)
+    expect(page.calls[page.calls.length - 1]).toMatchObject({ name: PLACES[name].route })
+    expect(page.calls[page.calls.length - 1].body?.chapterIndex).toBe(PLACES[name].at)
+    return page
+  }
+  const errors = (page: Screen) =>
+    page
+      .elements()
+      .filter((e) => e.type === 'p' && [UNDER_FIELD, OVER_BUTTON].includes(String(e.props.className)))
+      .map((e) => [e.props.className, Screen.text(e)])
+
+  const STOPPED: [string, Answer][] = [
+    ['504 with the text of the platform', { status: 504, text: RAW }],
+    ['504 with nothing', { status: 504, text: '' }],
+    ['504 with a page', { status: 504, text: `<html><body>${RAW}</body></html>`, type: 'text/html' }],
+    ['504 with an error', { status: 504, body: { error: 'private detail' } }],
+    ['500 with the text of the platform', { status: 500, text: RAW }],
+    ['500 with the name in an error', { status: 500, body: { error: RAW } }],
+  ]
+  it.each(NAMES.flatMap((name) => STOPPED.map(([kind, answer]) => [name, kind, answer] as const)))('%s, %s: shows the message in its place and makes nothing', async (name, _kind, answer) => {
+    const page = await failed(name, () => answer)
+    expect(errors(page)).toEqual([[PLACES[name].style, TIMED_OUT]])
+    for (const raw of [...RAW_PARTS, 'private detail']) expect(page.kept(raw)).toEqual([])
+    expect(page.links()).toEqual([])
+    expect(page.files).toEqual([])
+  })
+
+  const OTHERS: [string, Answer, string][] = [
+    ['500 with an error', { status: 500, body: { error: 'a known problem' } }, 'a known problem'],
+    ['500 with nothing', { status: 500, text: '' }, 'Request failed (500)'],
+    ['502 with a page', { status: 502, text: '<html><body>504</body></html>', type: 'text/html' }, 'Request failed (502)'],
+    ['503 with a text', { status: 503, text: 'An error occurred with your deployment' }, 'An error occurred with your deployment'],
+    ['524 with a page', { status: 524, text: '<html></html>', type: 'text/html' }, 'Request failed (524)'],
+    ['422 with an error about time', { status: 422, body: { error: 'took too long (504)' } }, 'took too long (504)'],
+    ['401', { status: 401, body: { error: 'x' } }, 'Signed out'],
+  ]
+  it.each(NAMES.flatMap((name) => OTHERS.map(([kind, answer, message]) => [name, kind, answer, message] as const)))('%s, %s: shows what it always showed', async (name, _kind, answer, message) => {
+    const page = await failed(name, () => answer)
+    expect(errors(page)).toEqual([[PLACES[name].style, name === 'the course list' ? COURSES_FAILED : message]])
+    expect(page.files).toEqual([])
+  })
+
+  it.each(NAMES)('%s, no network: shows what it always showed', async (name) => {
+    const page = await failed(name, () => {
+      throw new Error('offline')
+    })
+    expect(errors(page)).toEqual([[PLACES[name].style, PLACES[name].offline]])
+    expect(page.files).toEqual([])
+  })
+
+  it.each(NAMES.filter((name) => PLACES[name].route.startsWith('generate-') && name !== 'the Practice Kit'))('%s, 200 with an error: the same two ways', async (name) => {
+    const known = await failed(name, () => ({ body: { error: 'a known problem' } }))
+    expect(errors(known)).toEqual([[OVER_BUTTON, 'a known problem']])
+    const stopped = await failed(name, () => ({ body: { error: RAW } }))
+    expect(errors(stopped)).toEqual([[OVER_BUTTON, TIMED_OUT]])
+    expect(stopped.files).toEqual([])
+  })
+
+  it.each(NAMES)('%s: with no failure there is no message', async (name) => {
+    const page = await real()
+    await PLACES[name].run(page)
+    expect(errors(page)).toEqual([])
+    expect(page.files).toHaveLength(['load-course', 'preview'].includes(PLACES[name].route) ? 0 : 1)
+  })
+
+  it('the message goes when the book is made after all', async () => {
+    const page = await real()
+    const before = page.answers['generate-answers']
+    fail(page, PLACES['the last answers'], () => ({ status: 504, text: RAW }))
+    await PLACES['the last answers'].run(page)
+    expect(page.shown).toContain(TIMED_OUT)
+    page.answers['generate-answers'] = before
+    await page.generate()
+    expect(errors(page)).toEqual([])
+    expect(page.links()).toEqual(['first-combined.zip'])
+  })
+
+  it('the message is exact, and every request of the screen has it', () => {
+    const source = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
+    expect(source).toContain(`const TIMED_OUT = '${TIMED_OUT}'\n`)
+    const requests = source.split(/\badminFetch\(/).slice(1)
+    expect(requests).toHaveLength(9)
+    for (const request of requests) expect(request.split(/\bbookError\(/)).toHaveLength(2)
   })
 })

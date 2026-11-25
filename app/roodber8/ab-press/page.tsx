@@ -1,7 +1,7 @@
 'use client'
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react'
-import { adminFetch } from '@/lib/admin-fetch'
+import { adminFetch, type AdminResponse } from '@/lib/admin-fetch'
 
 const BOOK_TYPES = [
   { value: 'combined', label: 'Combined', desc: 'Study notes + practice questions per chapter' },
@@ -15,7 +15,15 @@ const HISTORY_FAILED = 'Publication history unavailable (it could not be read).'
 const COURSES_FAILED = 'Could not load the course list. Please reload the page.'
 const COURSE_CHANGED = 'The course has changed since the preview was loaded, so nothing was made. Please load the preview again.'
 const ANSWERS_DIFFER = (n: number) => `The questions and answers of chapter ${n} do not match, so nothing was made. Please try again in a minute.`
+const TIMED_OUT = 'The book took too long to make, so nothing was made. Please try again in a minute.'
 const REPORT_ITEMS = (n: number) => `The check report (preflight-report.txt) lists ${n} item(s) to look at. Please read it before uploading to KDP.`
+
+// The message for a failed request: TIMED_OUT when the platform stopped it for
+// time, else the message as given.
+function bookError(res: AdminResponse, message: string): string {
+  const timedOut = res.status === 504 || `${res.error} ${message}`.includes('FUNCTION_INVOCATION_TIMEOUT')
+  return timedOut ? TIMED_OUT : message
+}
 
 function formatGeneratedAt(iso: string): string {
   const d = new Date(iso)
@@ -213,7 +221,7 @@ export default function AbPressPage() {
     adminFetch('/api/roodber8/course-factory/load-course?action=list')
       .then(async r => {
         const d = await r.json()
-        if (!r.ok || !Array.isArray(d?.courses)) throw new Error(COURSES_FAILED)
+        if (!r.ok || !Array.isArray(d?.courses)) { setCourses([]); setError(bookError(r, COURSES_FAILED)); return }
         setCourses(d.courses)
       })
       .catch(() => { setCourses([]); setError(COURSES_FAILED) })
@@ -240,7 +248,7 @@ export default function AbPressPage() {
     try {
       const res  = await adminFetch('/api/roodber8/ab-press/preview?slug=' + encodeURIComponent(slug.trim()))
       const data = await res.json()
-      if (!res.ok) { setError(data.error || 'Preview failed'); return }
+      if (!res.ok) { setError(bookError(res, data.error || 'Preview failed')); return }
       setPreview(data)
       setHealth(data.health ?? null)
       setHistory(data.history ?? [])
@@ -263,7 +271,7 @@ export default function AbPressPage() {
       }, { expect: 'file' })
       if (!res.ok) {
         const data = await res.json()
-        setWordError(data.error || 'Word export failed')
+        setWordError(bookError(res, data.error || 'Word export failed'))
         return
       }
       const blob = await res.blob()
@@ -288,7 +296,7 @@ export default function AbPressPage() {
       }, { expect: 'file' })
       if (!res.ok) {
         const data = await res.json()
-        setGenError(data.error || 'Generation failed')
+        setGenError(bookError(res, data.error || 'Generation failed'))
         return
       }
       const blob = await res.blob()
@@ -346,7 +354,7 @@ export default function AbPressPage() {
           })
         })
         const data = await res.json()
-        if (!res.ok || data.error) throw new Error(data.error || 'Chapter render failed')
+        if (!res.ok || data.error) throw new Error(bookError(res, data.error || 'Chapter render failed'))
         if (data.chapterCount !== chapterCount || !sameCourse(data)) throw new Error(COURSE_CHANGED)
 
         const pdfBytes = Uint8Array.from(atob(data.pdf), c => c.charCodeAt(0))
@@ -378,7 +386,7 @@ export default function AbPressPage() {
             })
           })
           const data = await res.json()
-          if (!res.ok || data.error) throw new Error(data.error || `Answers chapter ${i + 1} failed`)
+          if (!res.ok || data.error) throw new Error(bookError(res, data.error || `Answers chapter ${i + 1} failed`))
           if (data.chapterCount !== chapterCount || !sameCourse(data)) throw new Error(COURSE_CHANGED)
           if (data.questionCount !== chapterQuestionCounts[i]) throw new Error(ANSWERS_DIFFER(i + 1))
           if (data.pdf) {
@@ -411,7 +419,7 @@ export default function AbPressPage() {
         })
       })
       const fmData = await fmRes.json()
-      if (!fmRes.ok || fmData.error) throw new Error(fmData.error || 'Frontmatter render failed')
+      if (!fmRes.ok || fmData.error) throw new Error(bookError(fmRes, fmData.error || 'Frontmatter render failed'))
       if (!sameCourse(fmData)) throw new Error(COURSE_CHANGED)
       const frontmatterPdf = Uint8Array.from(atob(fmData.pdf), c => c.charCodeAt(0))
 
@@ -464,7 +472,7 @@ export default function AbPressPage() {
         })
       })
       const coverData = await coverRes.json()
-      if (!coverRes.ok || coverData.error) throw new Error(coverData.error || 'Cover render failed')
+      if (!coverRes.ok || coverData.error) throw new Error(bookError(coverRes, coverData.error || 'Cover render failed'))
       const coverPdf = Uint8Array.from(atob(coverData.pdf), c => c.charCodeAt(0))
 
       // 7. Build ZIP client-side
@@ -502,7 +510,7 @@ export default function AbPressPage() {
       }, { expect: 'file' })
       if (!res.ok) {
         const data = await res.json()
-        setGenError(data.error || 'Generation failed')
+        setGenError(bookError(res, data.error || 'Generation failed'))
         return
       }
       const blob = await res.blob()
