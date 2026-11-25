@@ -1209,6 +1209,9 @@ describe('article link: the web address of a set', () => {
     ['a published set', { status: 'published' }, { slug: 'new-address' }],
     ['a published set that becomes a draft', { status: 'published' }, { slug: 'new-address', status: 'draft' }],
     ['a draft that becomes published', { status: 'draft' }, { slug: 'new-address', status: 'published' }],
+    ['a draft that was published before', { status: 'draft', published_at: '2026-01-01T00:00:00Z' }, { slug: 'new-address' }],
+    ['a draft that was published before and stays one', { status: 'draft', published_at: '2026-01-01T00:00:00Z' }, { slug: 'new-address', status: 'draft' }],
+    ['a set of another status that was published before', { status: 'archived', published_at: '2026-01-01T00:00:00Z' }, { slug: '' }],
   ])('cannot change for %s', async (_name, set, fields) => {
     withSet(set, HERE)
     expect(await patch({ title: 'New title', ...fields })).toEqual({ status: 400, body: { error: SLUG_LOCKED } })
@@ -1224,8 +1227,40 @@ describe('article link: the web address of a set', () => {
     expect(articleLink()).toBe(HERE)
   })
 
-  it('changes for a draft, and the article follows', async () => {
-    withSet({ status: 'draft' }, HERE)
+  it('may be sent unchanged for a draft that was published before', async () => {
+    withSet({ status: 'draft', published_at: '2026-01-01T00:00:00Z' }, null)
+    expect((await patch({ title: 'New title', slug: 'leases-quiz' })).body).toEqual({ success: true })
+    expect(db.tables.question_sets).toMatchObject([{ title: 'New title', published_at: '2026-01-01T00:00:00Z' }])
+  })
+
+  it('is locked for a new set that is published and then made a draft', async () => {
+    db.tables.articles = []
+    await publish({ bundle: bundle() })
+    expect((await patch({ status: 'draft' })).body).toEqual({ success: true })
+    expect(await patch({ slug: 'new-address' })).toEqual({ status: 400, body: { error: SLUG_LOCKED } })
+    expect(db.tables.question_sets).toMatchObject([{ status: 'draft', slug: 'leases-quiz' }])
+  })
+
+  it.each<[string, Row, string]>([
+    ['its creation date', { created_at: '2025-05-05T00:00:00Z' }, '2025-05-05T00:00:00Z'],
+    ['the date of the change', {}, expect.stringMatching(/^\d{4}-\d\d-\d\dT/)],
+  ])('is locked for a live set without a published date that becomes a draft, which gets %s', async (_name, set, date) => {
+    withSet({ ...set, published_at: null }, HERE)
+    expect((await patch({ status: 'draft' })).body).toEqual({ success: true })
+    expect(db.tables.question_sets).toMatchObject([{ status: 'draft', published_at: date }])
+    expect(await patch({ slug: 'new-address' })).toEqual({ status: 400, body: { error: SLUG_LOCKED } })
+  })
+
+  it('a live set that stays live gets no date, and a draft that stays one neither', async () => {
+    for (const status of ['published', 'draft']) {
+      withSet({ status, published_at: null, created_at: '2025-05-05T00:00:00Z' }, HERE)
+      await patch({ title: 'New title', status })
+      expect(db.tables.question_sets).toMatchObject([{ title: 'New title', published_at: null }])
+    }
+  })
+
+  it('changes for a draft that was never published, and the article follows', async () => {
+    withSet({ status: 'draft', published_at: null }, HERE)
     expect(await patch({ slug: 'new-address' })).toEqual({ status: 200, body: { success: true } })
     expect(db.tables.question_sets).toMatchObject([{ slug: 'new-address' }])
     expect(articleLink()).toBe('/practice-questions/new-address')

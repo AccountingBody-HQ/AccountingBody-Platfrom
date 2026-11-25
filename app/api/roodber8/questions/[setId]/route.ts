@@ -101,7 +101,7 @@ export async function PATCH(
     const before = checkRead(
       await supabase
         .from('question_sets')
-        .select('slug, article_slug, status, published_at')
+        .select('slug, article_slug, status, published_at, created_at')
         .eq('id', setId)
         .maybeSingle(),
       'questions/[setId]: set before update',
@@ -117,8 +117,9 @@ export async function PATCH(
     const isPublished = statusGiven ? sanitised.status === 'published' : wasPublished
     const slugChanged = 'slug' in sanitised && sanitised.slug !== old?.slug
 
-    // A published address never changes.
-    if (slugChanged && (wasPublished || isPublished))
+    // An address that is live, or ever was, never changes. published_at is set
+    // when a set first goes live, and is never cleared.
+    if (slugChanged && (wasPublished || isPublished || old?.published_at))
       return NextResponse.json({ error: SLUG_LOCKED }, { status: 400 })
 
     // A set goes live only with questions, and only when all are complete.
@@ -148,6 +149,10 @@ export async function PATCH(
     // sorts by it).
     if (isPublished && !wasPublished && !old?.published_at)
       sanitised.published_at = sanitised.updated_at
+
+    // A live set without that date keeps the sign that it was live.
+    if (wasPublished && !isPublished && !old?.published_at)
+      sanitised.published_at = old?.created_at ?? sanitised.updated_at
 
     const { error } = await supabase
       .from('question_sets')
