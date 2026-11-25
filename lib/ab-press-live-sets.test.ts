@@ -6,7 +6,7 @@ import * as pdfLib from 'pdf-lib'
 import ts from 'typescript'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FrontmatterTemplate } from '@/components/book/FrontmatterTemplate'
-import { ARTICLES_READ_FAILED, buildCourse, EMPTY_COURSE, noAnswerLine, READ_FAILED, unpublishedLine, type BuildStats } from './ab-press-builder'
+import { ARTICLES_READ_FAILED, buildCourse, courseKey, EMPTY_COURSE, missingOptionLine, noAnswerLine, READ_FAILED, unpublishedLine, type BuildStats } from './ab-press-builder'
 import { TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
 import { DB_LIMITS_MS } from './supabase-server'
@@ -385,8 +385,24 @@ const BIG = [[bigNames.slice(0, 125)], [bigNames.slice(125)]]
 // Stored answers, and the letter a book prints for each.
 const ANSWERS: [number | null, string][] = [[0, 'A'], [1, 'B'], [2, 'C'], [3, 'D'], [null, '–'], [7, '–'], [4, '–'], [-1, '–']]
 
+type Options = [string | null, string | null, string | null, string | null]
+const options = ([option_a, option_b, option_c, option_d]: Options) => ({ option_a, option_b, option_c, option_d })
+
+// Fewer printed options than letters: the stored answer, and what a book prints.
+const SHORT: [Options, number | null, string][] = [
+  [['a', 'b', 'c', null], 3, '–'],
+  [['a', 'b', 'c', null], 2, 'C'],
+  [['a', 'b', '', '  '], 2, '–'],
+  [['a', 'b', '', '  '], 1, 'B'],
+  [['a', null, 'c', 'd'], 1, 'B'],
+  [[null, null, null, null], 0, '–'],
+  [['a', 'b', 'c', null], null, '–'],
+  [['a', 'b', 'c', null], 4, '–'],
+  [['a', 'b', 'c', 'd'], 3, 'D'],
+]
+
 // Options with a blank in the middle, at the end, and nothing else.
-const OPTIONS: [string | null, string | null, string | null, string | null][] = [
+const OPTIONS: Options[] = [
   ['a', null, 'c', 'd'],
   ['a', 'b', '', '  '],
   ['', 'b', null, 'd'],
@@ -404,6 +420,7 @@ const TABLES: Record<string, Row[]> = {
     article('good-4', '/practice-questions/set-1', '<ul><li>Four</li></ul>'),
     article('good-5', '/practice-questions/set-3', '<p>Five</p>'),
     ...['ties', 'options', 'letters', ...bigNames].map((name) => article(name)),
+    article('short', '/practice-questions/short', '<p>Short</p>'),
     { ...article('hidden', '/practice-questions/live'), status: 'draft' },
     { ...article('unmarked', null), status: null },
     { ...article('blank'), status: 'draft' },
@@ -420,7 +437,7 @@ const TABLES: Record<string, Row[]> = {
     set('set-1', 'published'),
     set('set-2', 'published'),
     set('set-3', 'draft'),
-    ...['ties', 'options', 'letters', 'blank', ...bigNames].map((name) => set(name, 'published')),
+    ...['ties', 'options', 'letters', 'short', 'blank', ...bigNames].map((name) => set(name, 'published')),
   ],
   questions: [
     ...['live', 'draft', 'unset', 'other', 'other', 'foreign', 'foreign', 'foreign', 'stray', 'stray', 'stray', 'stray'].map(question),
@@ -428,17 +445,11 @@ const TABLES: Record<string, Row[]> = {
     ...questionsOf('set-2', 4),
     ...questionsOf('set-3', 2),
     ...questionsOf('ties', 9).map((row) => ({ ...row, question_order: 1 })),
-    ...OPTIONS.map(([a, b, c, d], index) => ({
-      ...question('options'),
-      option_a: a,
-      option_b: b,
-      option_c: c,
-      option_d: d,
-      question_order: index,
-    })),
-    ...ANSWERS.map(([correct_index], index) => ({ ...question('letters'), correct_index, question_order: index })),
+    ...OPTIONS.map((row, index) => ({ ...question('options'), ...options(row), question_order: index })),
+    ...ANSWERS.map(([correct_index], index) => ({ ...question('letters'), ...options(['A', 'B', 'C', 'D']), correct_index, question_order: index })),
     { ...question('blank'), question_text: ` ${String.fromCharCode(0x200b)}${String.fromCharCode(0xfeff)}`, correct_index: null },
     ...bigNames.flatMap((name) => questionsOf(name, 12)),
+    ...SHORT.map(([row, correct_index], index) => ({ ...question('short'), ...options(row), correct_index, question_order: index })),
   ].map((row, index) => ({ ...row, id: `q-${String(index).padStart(5, '0')}` })),
 }
 
@@ -676,10 +687,44 @@ describe('a book made from good reads', () => {
   it.each(MAKERS.map(([name, body], index) => [index, name, { ...body, slug: 'good' }] as const))('%i %s %o is as before', async (index, name, body) => {
     const { status, given, audit: text } = await make(name, body)
     const lines = text.split('\n')
-    const NEW = ['[PASS] Every printed question has a stored answer', '[PASS] Every printed article is published']
+    const NEW = [
+      '[PASS] Every printed question has a stored answer',
+      '[PASS] Every printed answer points to a printed option',
+      '[PASS] Every printed article is published',
+    ]
     expect(lines.filter((line) => NEW.includes(line))).toEqual(text ? NEW : [])
     const former = lines.filter((line) => !NEW.includes(line)).join('\n')
     expect([status, sha(given), sha(former)]).toEqual(BEFORE[index])
+  })
+
+  // The pages themselves, taken from the code before owner decision D344: every
+  // element with its style, its other settings and its text.
+  const page = (node: unknown): unknown => {
+    if (Array.isArray(node)) return node.map(page)
+    if (!node || typeof node !== 'object' || !('props' in node)) return node
+    const { type, props } = node as Element
+    const { children, ...rest } = props
+    return [typeof type === 'string' ? type : 'part', rest, page(children)]
+  }
+  const pages = () =>
+    JSON.stringify(state.drawn.map((made) => {
+      const { type, props } = made as { type: (props: unknown) => unknown; props: unknown }
+      return page(type(props))
+    })).split(`Copyright ",${new Date().getFullYear()},`).join('Copyright ",YEAR,')
+  const DRAWN: string[] = [
+    '6e405fd1e399911e',
+    'd2afa80d637c1052',
+    '0dcab6f488b0e47e',
+    sha('[]'), // The Word file is not drawn; what it is given is checked above.
+    'bb21ee32e275d272',
+    '7358b11cec5be134',
+    '24c735d705a00407',
+    '7f23ddd59695b424',
+  ]
+
+  it.each([...MAKERS, FRONT].map(([name, body], index) => [index, name, { ...body, slug: 'good' }] as const))('%i %s %o is drawn as before', async (index, name, body) => {
+    await make(name, body)
+    expect(sha(pages())).toBe(DRAWN[index])
   })
 })
 
@@ -944,7 +989,82 @@ describe('a chapter and its answers', () => {
     }
     state.chapters = { course: [[['plain']], [['live']]] }
     const none = await callRoute('generate-answers', { body: { slug: 'course', chapterIndex: 0 } })
-    expect(await none.json()).toEqual({ pdf: null, pageCount: 0, chapterCount: 2, questionCount: 0 })
+    expect(await none.json()).toEqual({ pdf: null, pageCount: 0, chapterCount: 2, courseKey: expect.stringMatching(KEY), questionCount: 0 })
+  })
+})
+
+const KEY = /^[0-9a-f]{12}$/
+
+// A course of chapters, each with its number and the article names of its lessons.
+type Plan = [id: string, order: number, lessons: string[][]][]
+const planned = (plan: Plan) => ({
+  chapters: plan.map(([id, chapterOrder, lessons]) => ({
+    id,
+    chapterOrder,
+    lessons: lessons.map((names) => ({ articles: names.map((name) => ({ id: name })) })),
+  })),
+})
+const PLAN: Plan = [['c1', 1, [['a', 'b'], ['c']]], ['c2', 2, [['d']]], ['c3', 3, [['e'], ['f']]]]
+
+// The same course after a change that keeps the number of chapters.
+const CHANGED: [string, Plan][] = [
+  ['two chapters were swapped', [PLAN[1], PLAN[0], PLAN[2]]],
+  ['a chapter got another number', [PLAN[0], ['c2', 5, [['d']]], PLAN[2]]],
+  ['a chapter was replaced by another with the same articles', [PLAN[0], ['c9', 2, [['d']]], PLAN[2]]],
+  ['an article moved to another chapter', [['c1', 1, [['a', 'b'], []]], ['c2', 2, [['c', 'd']]], PLAN[2]]],
+  ['two articles were swapped', [['c1', 1, [['b', 'a'], ['c']]], PLAN[1], PLAN[2]]],
+  ['an article was added', [PLAN[0], ['c2', 2, [['d', 'g']]], PLAN[2]]],
+  ['an article was taken away', [PLAN[0], PLAN[1], ['c3', 3, [['e'], []]]]],
+]
+
+describe('the key of a course', () => {
+  it('is the same for the same course, twelve hex characters long', () => {
+    expect(courseKey(planned(PLAN))).toMatch(KEY)
+    expect(courseKey(planned(JSON.parse(JSON.stringify(PLAN))))).toBe(courseKey(planned(PLAN)))
+  })
+
+  it.each(CHANGED)('is another one when %s', (_name, plan) => {
+    expect(plan).toHaveLength(PLAN.length)
+    expect(courseKey(planned(plan))).toMatch(KEY)
+    expect(courseKey(planned(plan))).not.toBe(courseKey(planned(PLAN)))
+  })
+
+  // The key each part of a book made chapter by chapter gives, the preview first.
+  const keys = async () => {
+    const asked: [string, { query?: string; body?: object }][] = [
+      ['preview', { query: '?slug=course' }],
+      ['generate-chapter', { body: { slug: 'course', bookType: 'combined', chapterIndex: 0 } }],
+      ['generate-chapter', { body: { slug: 'course', bookType: 'study', chapterIndex: 1 } }],
+      ['generate-answers', { body: { slug: 'course', chapterIndex: 0 } }],
+      ['generate-answers', { body: { slug: 'course', chapterIndex: 1 } }],
+      ['generate-answers', { body: { slug: 'course' } }],
+      ['generate-frontmatter', { body: FRONT[1] }],
+    ]
+    const given: unknown[] = []
+    for (const [name, request] of asked) given.push((await (await callRoute(name, request)).json()).courseKey)
+    return given
+  }
+
+  it('is given by the preview and by every part, each from its own read', async () => {
+    // Chapter 1 has no questions, so its answers come without a PDF.
+    state.chapters = { course: [[['plain']], [['live', 'other']]] }
+    const before = await keys()
+    expect(before[0]).toMatch(KEY)
+    expect(new Set(before).size).toBe(1)
+    const seen = new Set(before)
+    for (const changed of [
+      [[['live', 'other']], [['plain']]],
+      [[['plain', 'live']], [['other']]],
+      [[['plain']], [['other', 'live']]],
+      [[['plain']], [['live', 'other', 'foreign']]],
+    ]) {
+      state.chapters = { course: changed }
+      const after = await keys()
+      expect(after[0]).toMatch(KEY)
+      expect(new Set(after).size).toBe(1)
+      expect(seen.has(after[0])).toBe(false)
+      seen.add(after[0])
+    }
   })
 })
 
@@ -987,6 +1107,81 @@ describe('the page numbers and the check report of a book made chapter by chapte
   })
 })
 
+describe('the contents page of a book without answers', () => {
+  const ROW = 'Answers and Explanations'
+  const draw = (made: unknown) => {
+    const { type, props } = made as { type: (props: unknown) => unknown; props: unknown }
+    return type(props) as Element
+  }
+  // The contents page and the answers page of one drawn book.
+  const pagesWith = (made: unknown, part: string) =>
+    ((draw(made).props.children as unknown[]).flat(9) as Element[])
+      .filter((node) => node && Screen.text(node).includes(part))
+      .map((node) => Screen.text(node))
+
+  it('the front pages are told only by false', async () => {
+    for (const [given, passed] of [[false, false], [undefined, undefined], [true, undefined], ['false', undefined], [null, undefined], [0, undefined]]) {
+      state.made = []
+      await callRoute(FRONT[0], { body: { ...FRONT[1], hasAnswers: given } })
+      expect(JSON.parse(state.made[0]).hasAnswers).toBe(passed)
+    }
+  })
+
+  it('the front pages have no answers row then, and the same row as before in every other case', () => {
+    const contents = (bookType: 'combined' | 'study' | 'practice', hasAnswers?: boolean) =>
+      Screen.text(
+        FrontmatterTemplate({
+          course: { chapters: [{ chapterTitle: 'One' }] },
+          bookType,
+          edition: 'E',
+          subtitle: 'S',
+          chapterPageStarts: [4],
+          totalPages: 25,
+          answersPageStart: 18,
+          hasAnswers,
+        }),
+      )
+    for (const bookType of ['combined', 'practice'] as const) {
+      expect(contents(bookType, false)).toMatch(/ContentsChapter 1: One4$/)
+      for (const value of [undefined, true]) expect(contents(bookType, value)).toMatch(/ContentsChapter 1: One4Answers and Explanations18$/)
+    }
+    for (const value of [undefined, true, false]) expect(contents('study', value)).toMatch(/ContentsChapter 1: One4$/)
+  })
+
+  it.each<[string, object, number]>([
+    ['generate', { bookType: 'combined' }, 0],
+    ['generate', { bookType: 'practice' }, 0],
+    ['generate-pq', {}, 0],
+    ['generate-pq', {}, 1],
+  ])('%s %o, drawing %i: the row is there with a printed question, and only then', async (name, body, at) => {
+    const contents = async () => {
+      state.drawn = []
+      await make(name, { slug: 'course', ...body })
+      const found = pagesWith(state.drawn[at], 'Contents')
+      expect(found).toHaveLength(1)
+      return found[0]
+    }
+    state.chapters = { course: [[['plain']], [['live']]] }
+    expect(await contents()).toContain(ROW)
+    for (const chapters of [[[['plain']]], [[['draft', 'gone']], [['unset']]]]) {
+      state.chapters = { course: chapters }
+      expect(await contents()).not.toContain(ROW)
+      // The page of the answers itself stays, so no book changes its length.
+      expect(pagesWith(state.drawn[at], ROW)).toHaveLength(1)
+    }
+  })
+
+  it('in the kit, a question without text is not printed, so it does not make a row', async () => {
+    state.chapters = { course: [[['blank']]] }
+    await make('generate-pq', { slug: 'course' })
+    for (const at of [0, 1]) expect(pagesWith(state.drawn[at], 'Contents')[0]).not.toContain(ROW)
+    state.chapters = { course: [[['blank', 'live']]] }
+    state.drawn = []
+    await make('generate-pq', { slug: 'course' })
+    for (const at of [0, 1]) expect(pagesWith(state.drawn[at], 'Contents')[0]).toContain(ROW)
+  })
+})
+
 describe('a question with no stored answer', () => {
   const letters = (text: string) => Array.from(text.matchAll(/Q\d+: ?([A-E–])/g), (match) => match[1])
   const drawn = () => {
@@ -1003,6 +1198,54 @@ describe('a question with no stored answer', () => {
     state.lessons = { letters: [['letters']] }
     const { given } = await make(name, body)
     expect(letters(read(given))).toEqual(ANSWERS.map(([, letter]) => letter))
+    // An answer past the printed options is a dash too.
+    state.lessons = { letters: [['short']] }
+    const short = await make(name, body)
+    expect(letters(read(short.given))).toEqual(SHORT.map(([, , letter]) => letter))
+  })
+})
+
+describe('an answer that points to a missing option', () => {
+  const WARN = '[WARN] 3 question(s) whose answer points to a missing option (printed as –) in set(s): short'
+  const PASS = '[PASS] Every printed answer points to a printed option'
+  const auditOf = async (name: string, body: object) => (await make(name, { slug: 'course', ...body })).audit.split('\n')
+
+  it('has its exact lines', () => {
+    expect(missingOptionLine([])).toBe(PASS)
+    expect(missingOptionLine(['a', 'b', 'a'])).toBe('[WARN] 3 question(s) whose answer points to a missing option (printed as –) in set(s): a, b')
+  })
+
+  it.each<[string, object, string, string]>([
+    ['generate', { bookType: 'combined' }, WARN, '[WARN] 2 question(s) with no stored answer (printed as –) in set(s): short'],
+    ['generate', { bookType: 'study' }, PASS, '[PASS] Every printed question has a stored answer'],
+    ['generate-pq', {}, WARN, '[WARN] 2 question(s) with no stored answer (printed as –) in set(s): short'],
+  ])('%s %o: is listed after the questions without an answer, and never with them', async (name, body, line, before) => {
+    state.lessons = { course: [['short']] }
+    const lines = await auditOf(name, body)
+    const at = lines.indexOf('[PASS] No practice fetch errors')
+    expect(lines.slice(at + 1, at + 4)).toEqual([before, line, '[PASS] Every printed article is published'])
+  })
+
+  it.each<[string, object]>([['generate', { bookType: 'combined' }], ['generate-pq', {}]])('%s %o: counts each time it is printed, and the verdict stays', async (name, body) => {
+    state.lessons = { course: [['short', 'good-1'], ['short']] }
+    const lines = await auditOf(name, body)
+    expect(lines).toContain(WARN.replace('3', '6'))
+    state.lessons = { course: [['good-1']] }
+    const good = await auditOf(name, body)
+    expect(good).toContain(PASS)
+    expect(good[good.length - 1]).toMatch(/^FIDELITY VERDICT: COMPLETE/)
+    expect(lines[lines.length - 1]).toBe(good[good.length - 1])
+  })
+
+  it('a chapter says the same about its questions', async () => {
+    state.chapters = { course: [[['short', 'letters']], [['live']]] }
+    const chapter = async (bookType: string, chapterIndex: number) => {
+      const body = await (await callRoute('generate-chapter', { body: { slug: 'course', bookType, chapterIndex } })).json()
+      return [body.noAnswerSets, body.missingOptionSets]
+    }
+    expect(await chapter('combined', 0)).toEqual([['short', 'short', 'letters', 'letters', 'letters', 'letters'], ['short', 'short', 'short']])
+    expect(await chapter('study', 0)).toEqual([[], []])
+    expect(await chapter('combined', 1)).toEqual([[], []])
   })
 })
 
@@ -1075,7 +1318,7 @@ describe('the new lines of the check reports', () => {
 // for adminFetch; pdf-lib and the rest are real.
 
 type Element = { type: unknown; props: Record<string, unknown> }
-type Answer = { status?: number; body?: unknown; file?: string; wait?: Promise<void> }
+type Answer = { status?: number; body?: unknown; file?: string | Uint8Array<ArrayBuffer>; wait?: Promise<void> }
 
 class Screen {
   calls: { name: string; body: Record<string, unknown> | null }[] = []
@@ -1226,23 +1469,25 @@ async function screen(): Promise<Screen> {
     preview: () => ({
       body: {
         course: { title: 'Course', slug: 'first', chapters: CHAPTER_PAGES.map((_, i) => ({ _key: i, chapterTitle: `C${i}`, lessons: [] })) },
+        courseKey: courseKey(planned(PLAN)),
         stats: { chapterCount: 3, lessonCount: 3, articleCount: 60, questionCount: 15, questionCountError: false },
         health: { verdict: 'ready', emptyArticles: 0, articlesWithWebElements: 0, totalWebElementsRemoved: 0, mcqLinked: 2, emptyList: [], webWarningDetails: [] },
         history: [],
       },
     }),
     'generate-chapter': ({ chapterIndex: at }) => ({
-      body: { pdf: pdfs.get(CHAPTER_PAGES[at as number]), pageCount: CHAPTER_PAGES[at as number], chapterCount: 3, questionCount: QUESTIONS[at as number], missingSets: [], noAnswerSets: [], unpublished: [] },
+      body: { pdf: pdfs.get(CHAPTER_PAGES[at as number]), pageCount: CHAPTER_PAGES[at as number], chapterCount: 3, courseKey: courseKey(planned(PLAN)), questionCount: QUESTIONS[at as number], missingSets: [], noAnswerSets: [], missingOptionSets: [], unpublished: [] },
     }),
     'generate-answers': ({ chapterIndex: at }) => ({
       body: {
         pdf: answerPdfs[at as number],
         pageCount: ANSWER_PAGES[at as number],
         chapterCount: 3,
+        courseKey: courseKey(planned(PLAN)),
         questionCount: QUESTIONS[at as number],
       },
     }),
-    'generate-frontmatter': () => ({ body: { pdf: pdfs.get(3) } }),
+    'generate-frontmatter': () => ({ body: { pdf: pdfs.get(3), courseKey: courseKey(planned(PLAN)) } }),
     'generate-cover': () => ({ body: { pdf: pdfs.get(1) ?? '' } }),
     generate: () => ({ file: 'zip' }),
     'generate-pq': () => ({ file: 'zip' }),
@@ -1251,8 +1496,9 @@ async function screen(): Promise<Screen> {
   return made
 }
 
-// Changes one field of one answer of a route.
-function spoil(made: Screen, name: string, at: number, change: object) {
+// Changes one field of one answer of a route (of its only answer, when the route
+// is not asked by chapter).
+function spoil(made: Screen, name: string, at: number | undefined, change: object) {
   const before = made.answers[name]
   made.answers[name] = (body) => {
     const answer = before(body)
@@ -1267,7 +1513,8 @@ describe('the messages of the screen', () => {
   const READY = 'Content ready for publication'
   const NO_BOOKS = 'No books generated yet for this course.'
 
-  const opened = async (change: { health?: object; historyError?: boolean }) => {
+  const historyPanel = (page: Screen) => page.one((e) => e.type === 'button' && Screen.text(e).startsWith('Publication History'))
+  const opened = async (change: { health?: object; historyError?: boolean; history?: object[] }, { panel = true } = {}) => {
     const page = await screen()
     const { preview } = page.answers
     page.answers.preview = (body) => {
@@ -1275,7 +1522,7 @@ describe('the messages of the screen', () => {
       return { body: { ...answer, ...change, health: { ...answer.health, ...change.health } } }
     }
     await page.open()
-    ;(page.one((e) => e.type === 'button' && Screen.text(e).startsWith('Publication History')).props.onClick as () => void)()
+    if (panel) (historyPanel(page).props.onClick as () => void)()
     return page
   }
   const figures = (page: Screen) =>
@@ -1305,6 +1552,25 @@ describe('the messages of the screen', () => {
     const page = await opened({ historyError: true })
     expect(page.shown).toContain(HISTORY_FAILED)
     expect(page.shown).not.toContain(NO_BOOKS)
+  })
+
+  it('a failed history read shows its message in the heading, without opening the panel', async () => {
+    const page = await opened({ historyError: true }, { panel: false })
+    expect(Screen.text(historyPanel(page))).toBe(`Publication History${HISTORY_FAILED}▼`)
+    const message = page.one((e) => e.type === 'span' && Screen.text(e) === HISTORY_FAILED)
+    expect(message.props.className).toBe('text-slate-400 text-xs')
+    // Open, the panel has the message; it is not said twice.
+    ;(historyPanel(page).props.onClick as () => void)()
+    expect(Screen.text(historyPanel(page))).toBe('Publication History▲')
+    expect(page.shown.split(HISTORY_FAILED)).toHaveLength(2)
+  })
+
+  it('a good history read shows its count there as before, or nothing', async () => {
+    expect(Screen.text(historyPanel(await opened({}, { panel: false })))).toBe('Publication History▼')
+    const book = { id: 1, bookType: 'study', edition: 'E', subtitle: 'S', generatedAt: '2026-11-25T12:00:00' }
+    const page = await opened({ historyError: false, history: [book, book] }, { panel: false })
+    expect(Screen.text(historyPanel(page))).toBe('Publication History2 publications — last: 25 Nov 2026, 12:00▼')
+    expect(page.shown).not.toContain(HISTORY_FAILED)
   })
 
   it.each<[string, Answer, boolean]>([
@@ -1395,6 +1661,115 @@ describe('what the screen has made', () => {
   })
 })
 
+describe('the line under the download button', () => {
+  const BUTTON = 'Download ZIP — Ready for KDP Upload'
+  const LINE = (n: number) => `The check report (preflight-report.txt) lists ${n} item(s) to look at. Please read it before uploading to KDP.`
+
+  // A ZIP as the server makes it: files stored one after the other.
+  const zipOf = (files: [string, string][]) =>
+    new Uint8Array(
+      Buffer.concat(
+        files.flatMap(([name, text]) => {
+          const head = Buffer.alloc(30)
+          head.writeUInt32LE(0x04034b50, 0)
+          head.writeUInt32LE(Buffer.byteLength(text), 18)
+          head.writeUInt16LE(Buffer.byteLength(name), 26)
+          return [head, Buffer.from(name), Buffer.from(text)]
+        }),
+      ),
+    )
+  const reportZip = (...lines: string[]) => zipOf([['interior.pdf', '[WARN] not a report'], ['preflight-report.txt', lines.join('\n')]])
+
+  // A screen that has made a book on the server; the two ways to do that.
+  const WAYS = ['generate', 'generate-pq'] as const
+  const made = async (way: (typeof WAYS)[number], file: string | Uint8Array<ArrayBuffer>) => {
+    const page = await screen()
+    const { preview } = page.answers
+    page.answers.preview = (body) => {
+      const answer = preview(body).body as { stats: object }
+      return { body: { ...answer, stats: { ...answer.stats, articleCount: 50 } } }
+    }
+    page.answers[way] = () => ({ file })
+    await page.open()
+    if (way === 'generate-pq') page.change(page.radio('practice'), 'practice')
+    await page.generate()
+    expect(page.calls[page.calls.length - 1].name).toBe(way)
+    return page
+  }
+  // The line, when it is there: directly after the button, in the small style.
+  const line = (page: Screen) => {
+    const all = page.elements()
+    const at = all.findIndex((e) => e.type === 'a')
+    expect(Screen.text(all[at])).toBe(BUTTON)
+    const shown = all.filter((e) => e.type === 'p' && Screen.text(e).includes('preflight-report.txt'))
+    if (shown.length === 0) return null
+    expect(shown).toEqual([all[at + 1]])
+    expect(shown[0].props.className).toBe('text-red-400 text-xs mt-2')
+    return Screen.text(shown[0])
+  }
+
+  const CASES: [string, string | Uint8Array<ArrayBuffer>, number][] = [
+    ['no item', reportZip('[PASS] a', '[PASS] b', 'VERDICT: KDP-READY - x'), 0],
+    ['one WARN and one FAIL', reportZip('[PASS] a', '[WARN] b', '', '[FAIL] c'), 2],
+    ['one WARN at the very end', reportZip('[PASS] a', '[WARN] b'), 1],
+    ['the words inside a line only', reportZip('VERDICT: NOT READY - resolve [FAIL] items', 'see [WARN] lines above', '  [WARN] x', '[WARN', '[INFO] y'), 0],
+    ['an empty report', reportZip(''), 0],
+    ['no report', zipOf([['interior.pdf', '[WARN] x'], ['metadata.txt', '[FAIL] y']]), 0],
+    ['something that is not a ZIP', 'zip', 0],
+    ['nothing', '', 0],
+    ['a cut ZIP', reportZip('[WARN] b').slice(0, 40), 0],
+  ]
+  it.each(WAYS.flatMap((way) => CASES.map(([name, file, n]) => [way, name, n, file] as const)))('%s: %s in the report gives %i', async (way, _name, n, file) => {
+    const page = await made(way, file)
+    expect(page.links()).toHaveLength(1)
+    expect(page.shown).not.toContain('Network error')
+    expect(line(page)).toBe(n > 0 ? LINE(n) : null)
+  })
+
+  it.each([
+    ['generate', { slug: 'course', bookType: 'combined' }],
+    ['generate-pq', { slug: 'course' }],
+  ] as const)('%s: counts the report of a book the server really made', async (way, body) => {
+    state.lessons = { course: [['short', 'letters', 'hidden', 'gone']] }
+    const file = new Uint8Array(await (await callRoute(way, { body })).arrayBuffer())
+    const report = Buffer.from(file).toString('utf8').split('ACCOUNTING BODY PRESS - KDP PRE-FLIGHT REPORT')[1]
+    const items = report.match(/^\[(WARN|FAIL)\]/gm) ?? []
+    expect(new Set(items)).toEqual(new Set(['[WARN]', '[FAIL]']))
+    expect(line(await made(way, file))).toBe(LINE(items.length))
+  })
+
+  it('chapter by chapter: counts its own report', async () => {
+    const page = await screen()
+    await page.open()
+    await page.generate()
+    expect(line(page)).toBe(null)
+    spoil(page, 'generate-chapter', 0, { missingSets: ['x', 'y'], unpublished: ['u'] })
+    spoil(page, 'generate-chapter', 2, { missingOptionSets: ['m'] })
+    page.change(page.radio('combined'), 'combined')
+    await page.generate()
+    expect(line(page)).toBe(LINE(3))
+  })
+
+  it('goes away with the book, and belongs to the last book only', async () => {
+    const page = await made('generate', reportZip('[WARN] a', '[FAIL] b'))
+    expect(line(page)).toBe(LINE(2))
+    page.change(page.titleField(), 'Another title')
+    expect(page.links()).toEqual([])
+    expect(page.shown).not.toContain('preflight-report.txt')
+    page.answers.generate = () => ({ file: reportZip('[PASS] a') })
+    await page.generate()
+    expect(line(page)).toBe(null)
+    const source = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
+    expect(source).toContain(`\n  const clearMade = () => {\n    setDownloadUrl(''); setReportItems(0); `)
+  })
+
+  it('is exact', () => {
+    const source = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
+    expect(source).toContain(`const REPORT_ITEMS = (n: number) => \`${LINE(7).replace('7', '${n}')}\`\n`)
+    expect(source.split(BUTTON)).toHaveLength(2)
+  })
+})
+
 describe('the screen of a book made chapter by chapter', () => {
   const COURSE_CHANGED = 'The course has changed since the preview was loaded, so nothing was made. Please load the preview again.'
   const ANSWERS_DIFFER = 'The questions and answers of chapter 3 do not match, so nothing was made. Please try again in a minute.'
@@ -1441,10 +1816,11 @@ describe('the screen of a book made chapter by chapter', () => {
       '',
       '[PASS] All linked practice sets found',
       noAnswerLine([]),
+      missingOptionLine([]),
       unpublishedLine([]),
     ])
-    spoil(page, 'generate-chapter', 0, { missingSets: ['x', 'y'], noAnswerSets: ['s', 's'], unpublished: ['u', 'v'] })
-    spoil(page, 'generate-chapter', 2, { missingSets: ['x'], noAnswerSets: ['t'], unpublished: ['u'] })
+    spoil(page, 'generate-chapter', 0, { missingSets: ['x', 'y'], noAnswerSets: ['s', 's'], missingOptionSets: ['m'], unpublished: ['u', 'v'] })
+    spoil(page, 'generate-chapter', 2, { missingSets: ['x'], noAnswerSets: ['t'], missingOptionSets: ['n', 'm'], unpublished: ['u'] })
     page.change(page.radio('combined'), 'combined')
     await page.generate()
     expect(await report()).toEqual([
@@ -1452,6 +1828,7 @@ describe('the screen of a book made chapter by chapter', () => {
       '',
       '[WARN] 3 linked practice set(s) not found or not live: x, y, x',
       noAnswerLine(['s', 's', 't']),
+      missingOptionLine(['m', 'n', 'm']),
       unpublishedLine(['u', 'v', 'u']),
     ])
   })
@@ -1473,6 +1850,68 @@ describe('the screen of a book made chapter by chapter', () => {
     expect(page.links()).toEqual([])
     expect(page.files).toEqual([])
     expect(page.calls[page.calls.length - 1].name).toBe(last)
+  })
+
+  it('tells the front pages that there are no answers only when a book with questions has none', async () => {
+    const page = await screen()
+    const sent = async (bookType: string) => {
+      page.change(page.radio(bookType), bookType)
+      await page.generate()
+      expect(page.links()).toEqual([`first-${bookType}.zip`])
+      return page.calls.filter((call) => call.name === 'generate-frontmatter').pop()?.body ?? {}
+    }
+    await page.open()
+    expect(await sent('combined')).not.toHaveProperty('hasAnswers')
+    expect(await sent('study')).not.toHaveProperty('hasAnswers')
+    for (const at of [0, 1, 2]) {
+      spoil(page, 'generate-chapter', at, { questionCount: 0 })
+      spoil(page, 'generate-answers', at, { questionCount: 0, pdf: null, pageCount: 0 })
+    }
+    expect(await sent('study')).not.toHaveProperty('hasAnswers')
+    expect(await sent('combined')).toMatchObject({ hasAnswers: false })
+    const { 'interior.pdf': interior } = await page.zip()
+    expect((await pdfLib.PDFDocument.load(new Uint8Array(interior))).getPageCount()).toBe(3 + 5 + 2 + 7)
+  })
+
+  // Every part, as [route, chapter].
+  const PARTS: [string, number | undefined][] = [
+    ['generate-chapter', 0],
+    ['generate-chapter', 2],
+    ['generate-answers', 0],
+    ['generate-answers', 1],
+    ['generate-frontmatter', undefined],
+  ]
+  const KEYS: [string, () => string | undefined][] = [
+    ...CHANGED.map(([name, plan]): [string, () => string] => [name, () => courseKey(planned(plan))]),
+    ['the key is not told', () => undefined],
+    ['the key is empty', () => ''],
+  ]
+
+  it.each(KEYS.flatMap(([name, key]) => PARTS.map(([route, at]) => [name, route, at, key] as const)))(
+    '%s, seen by %s %s: it stops with its message and makes nothing',
+    async (_name, route, at, key) => {
+      const page = await screen()
+      spoil(page, route, at, { courseKey: key() })
+      await page.open()
+      page.change(page.radio('combined'), 'combined')
+      await page.generate()
+      expect(page.shown).toContain(COURSE_CHANGED)
+      expect(page.links()).toEqual([])
+      expect(page.files).toEqual([])
+      expect(page.calls[page.calls.length - 1].name).toBe(route)
+      expect(page.calls[page.calls.length - 1].body?.chapterIndex).toBe(at)
+    },
+  )
+
+  it.each([undefined, ''])('a preview without a key (%s) does not count as the same course', async (key) => {
+    const page = await screen()
+    spoil(page, 'preview', undefined, { courseKey: key })
+    for (const [route, at] of PARTS) spoil(page, route, at, { courseKey: key })
+    await page.open()
+    await page.generate()
+    expect(page.shown).toContain(COURSE_CHANGED)
+    expect(page.files).toEqual([])
+    expect(page.calls[page.calls.length - 1]).toMatchObject({ name: 'generate-chapter', body: { chapterIndex: 0 } })
   })
 
   it('the messages are exact', () => {

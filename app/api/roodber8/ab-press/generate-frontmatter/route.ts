@@ -11,7 +11,7 @@ import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { FrontmatterTemplate } from "@/components/book/FrontmatterTemplate"
 import { getCourseBySlug } from "@/lib/coursesNew"
-import { EMPTY_COURSE, isEmptyCourse } from "@/lib/ab-press-builder"
+import { courseKey, EMPTY_COURSE, isEmptyCourse } from "@/lib/ab-press-builder"
 
 export const maxDuration = 30
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   }
   try {
     const body = await req.json()
-    const { slug, bookType, edition, subtitle, chapterPageStarts, totalPages, answersPageStart } = body
+    const { slug, bookType, edition, subtitle, chapterPageStarts, totalPages, answersPageStart, hasAnswers } = body
     if (!slug)     return NextResponse.json({ error: "slug is required" },     { status: 400 })
     if (!bookType) return NextResponse.json({ error: "bookType is required" }, { status: 400 })
     if (!Array.isArray(chapterPageStarts)) {
@@ -50,10 +50,11 @@ export async function POST(req: NextRequest) {
         chapterPageStarts,
         totalPages: totalPages ?? 0,
         answersPageStart: typeof answersPageStart === "number" ? answersPageStart : undefined,
+        hasAnswers: hasAnswers === false ? false : undefined,
       }) as any
     )
 
-    return NextResponse.json({ pdf: pdfBuffer.toString("base64") })
+    return NextResponse.json({ pdf: pdfBuffer.toString("base64"), courseKey: courseKey(rawCourse) })
   } catch (err: unknown) {
     console.error("ab-press/generate-frontmatter: failed:", err)
     reportServerError("admin book front pages failed", err, { area: "admin" })

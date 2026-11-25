@@ -7,6 +7,7 @@
 // (carries publicationWarnings per article, used by the generate route's
 // buildFidelity() report); export-word/route.ts simply never reads that
 // field.
+import { createHash } from "node:crypto"
 import { getCourseBySlug } from "@/lib/coursesNew"
 import { htmlToBlocks } from "@/lib/html-to-blocks"
 import { filterForPublication, getPublicationWarnings } from "@/lib/publication-filter"
@@ -33,9 +34,21 @@ export function isEmptyCourse(course: { chapters: { lessons: { articles: unknown
   return course.chapters.every((ch) => ch.lessons.every((l) => l.articles.length === 0))
 }
 
+/** A short key of the course's chapters and their articles, in order. Two reads
+ *  of a course give the same key only when these are the same. */
+export function courseKey(course: { chapters: { id: string; chapterOrder: number; lessons: { articles: { id: string }[] }[] }[] }): string {
+  const structure = course.chapters.map((ch) => [ch.id, ch.chapterOrder, ch.lessons.flatMap((l) => l.articles.map((a) => a.id))])
+  return createHash("sha256").update(JSON.stringify(structure)).digest("hex").slice(0, 12)
+}
+
 /** True when the stored answer is one of the four options. */
 export function hasAnswer(correctIndex: unknown): boolean {
   return [0, 1, 2, 3].includes(correctIndex as number)
+}
+
+/** True when the stored answer is one of the question's printed options. */
+export function hasPrintedAnswer(question: { correctIndex?: unknown; options?: unknown[] }): boolean {
+  return hasAnswer(question.correctIndex) && (question.correctIndex as number) < (question.options ?? []).length
 }
 
 // ── Lines of the check reports ───────────────────────────────────────────────
@@ -44,6 +57,14 @@ export function noAnswerLine(setSlugs: string[]): string {
   return setSlugs.length > 0
     ? `[WARN] ${setSlugs.length} question(s) with no stored answer (printed as –) in set(s): ${Array.from(new Set(setSlugs)).join(", ")}`
     : "[PASS] Every printed question has a stored answer"
+}
+
+/** For the set slugs of the printed questions whose answer is not among their
+ *  printed options, one for each. */
+export function missingOptionLine(setSlugs: string[]): string {
+  return setSlugs.length > 0
+    ? `[WARN] ${setSlugs.length} question(s) whose answer points to a missing option (printed as –) in set(s): ${Array.from(new Set(setSlugs)).join(", ")}`
+    : "[PASS] Every printed answer points to a printed option"
 }
 
 /** For the slugs of the printed articles that are not published. */

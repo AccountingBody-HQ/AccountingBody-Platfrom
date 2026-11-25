@@ -11,7 +11,7 @@ import React from "react"
 import { BookTemplate } from "@/components/book/BookTemplate"
 import { FullCoverTemplate } from "@/components/book/FullCoverTemplate"
 import {
-  buildCourse, BuildStats, createSupabaseClient, EMPTY_COURSE, hasAnswer, noAnswerLine, practiceSlug, unpublishedLine,
+  buildCourse, BuildStats, createSupabaseClient, EMPTY_COURSE, hasAnswer, hasPrintedAnswer, missingOptionLine, noAnswerLine, practiceSlug, unpublishedLine,
 } from "@/lib/ab-press-builder"
 
 export const maxDuration = 300
@@ -70,6 +70,7 @@ function buildFidelity(course: any, stats: BuildStats, bookType: string): string
   const showNotes = bookType === "combined" || bookType === "study"
   const showQuestions = bookType === "combined" || bookType === "practice"
   const noAnswer: string[] = []
+  const missingOption: string[] = []
   const unpublished: string[] = []
   for (const ch of chapters) {
     for (const ls of (ch.lessons || [])) {
@@ -85,7 +86,10 @@ function buildFidelity(course: any, stats: BuildStats, bookType: string): string
         if (art.mcqUrl) mcqLinks++
         questions += (art.quizQuestions || []).length
         const printed = showQuestions ? (art.quizQuestions || []) : []
-        for (const q of printed) if (!hasAnswer(q.correctIndex)) noAnswer.push(practiceSlug(art.mcqUrl))
+        for (const q of printed) {
+          if (!hasAnswer(q.correctIndex)) noAnswer.push(practiceSlug(art.mcqUrl))
+          else if (!hasPrintedAnswer(q)) missingOption.push(practiceSlug(art.mcqUrl))
+        }
         if (stats.unpublished.includes(art._id) && (showNotes || printed.length > 0)) unpublished.push(art.slug)
         const pubWarnings: string[] = (art.publicationWarnings || []).filter((w: string) => !w.startsWith("Total:"))
         if (pubWarnings.length > 0) { articlesWithWebElements++; webElementsRemoved += pubWarnings.length }
@@ -123,6 +127,7 @@ function buildFidelity(course: any, stats: BuildStats, bookType: string): string
     lines.push("[PASS] No practice fetch errors")
   }
   lines.push(noAnswerLine(noAnswer))
+  lines.push(missingOptionLine(missingOption))
   lines.push(unpublishedLine(unpublished))
   lines.push("")
   lines.push("PUBLICATION FILTER (web-only elements removed before print)")

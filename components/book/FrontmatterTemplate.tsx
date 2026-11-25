@@ -109,12 +109,14 @@ interface FrontmatterTemplateProps {
   totalPages:         number
   // The true first page of the answers, when the caller knows it.
   answersPageStart?:  number
+  // False when the book has no answers: the contents page then lists none.
+  hasAnswers?:        boolean
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export function FrontmatterTemplate({ course, bookType, edition, subtitle, chapterPageStarts, totalPages, answersPageStart }: FrontmatterTemplateProps) {
+export function FrontmatterTemplate({ course, bookType, edition, subtitle, chapterPageStarts, totalPages, answersPageStart, hasAnswers }: FrontmatterTemplateProps) {
   const year = new Date().getFullYear()
-  const showQuestions = bookType === "combined" || bookType === "practice"
+  const showAnswers = (bookType === "combined" || bookType === "practice") && hasAnswers !== false
 
   // Without the true page, totalPages is taken to budget exactly 1 page for the
   // answers section, so the section's start page is totalPages - 1.
@@ -175,7 +177,7 @@ export function FrontmatterTemplate({ course, bookType, edition, subtitle, chapt
             </View>
           </View>
         ))}
-        {showQuestions && (
+        {showAnswers && (
           <View style={s.tocChapterRow}>
             <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
               <Text style={s.tocChapterText}>Answers and Explanations</Text>

@@ -13,7 +13,7 @@ import React from "react"
 import { ChapterTemplate } from "@/components/book/ChapterTemplate"
 import { getCourseBySlug } from "@/lib/coursesNew"
 import { htmlToBlocks } from "@/lib/html-to-blocks"
-import { EMPTY_COURSE, hasAnswer, isEmptyCourse, practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
+import { courseKey, EMPTY_COURSE, hasAnswer, hasPrintedAnswer, isEmptyCourse, practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
 
 export const maxDuration = 60
 
@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
     let chapterQuestionCount = 0
     const missingSets: string[] = []
     const noAnswerSets: string[] = []
+    const missingOptionSets: string[] = []
     const unpublished: string[] = []
     const lessons = targetChapter.lessons.map((l: any) => {
       const linkedArticles = l.articles.map((a: any) => {
@@ -57,7 +58,10 @@ export async function POST(req: NextRequest) {
         const quizQuestions = slugToQuestions.get(setSlug) ?? []
         if (setSlug && !slugToQuestions.has(setSlug)) missingSets.push(setSlug)
         const printed = bookType === "study" ? [] : quizQuestions
-        for (const q of printed) if (!hasAnswer(q.correctIndex)) noAnswerSets.push(setSlug)
+        for (const q of printed) {
+          if (!hasAnswer(q.correctIndex)) noAnswerSets.push(setSlug)
+          else if (!hasPrintedAnswer(q)) missingOptionSets.push(setSlug)
+        }
         if (row?.status !== "published" && (bookType !== "practice" || printed.length > 0)) unpublished.push(a.slug)
         chapterQuestionCount += quizQuestions.length
         return {
@@ -104,9 +108,11 @@ export async function POST(req: NextRequest) {
       pageCount,
       chapterIndex,
       chapterCount: rawCourse.chapters.length,
+      courseKey: courseKey(rawCourse),
       questionCount: chapterQuestionCount,
       missingSets,
       noAnswerSets,
+      missingOptionSets,
       unpublished,
     })
   } catch (err: unknown) {

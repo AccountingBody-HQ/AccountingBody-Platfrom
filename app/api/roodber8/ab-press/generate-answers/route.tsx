@@ -23,7 +23,7 @@ import { reportServerError } from "@/lib/report-error"
 import { Document, Page, Text, View, StyleSheet, Font, renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { getCourseBySlug } from "@/lib/coursesNew"
-import { EMPTY_COURSE, hasAnswer, isEmptyCourse, practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
+import { courseKey, EMPTY_COURSE, hasPrintedAnswer, isEmptyCourse, practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
 
 export const maxDuration = 60
 
@@ -221,7 +221,7 @@ function AnswersDocument({ course, subtitle, chapterIndexOffset = 0, startNumber
               <Text style={s.sectionHeader}>Chapter {ci + chapterIndexOffset + 1}: {sanitise(ch.chapterTitle)}</Text>
               {list.map(({ q, num }) => (
                 <View key={num} style={s.answerWrap}>
-                  <Text style={s.answerLabel}>Q{num}: {hasAnswer(q.correctIndex) ? LETTERS[q.correctIndex] : "–"}</Text>
+                  <Text style={s.answerLabel}>Q{num}: {hasPrintedAnswer(q) ? LETTERS[q.correctIndex] : "–"}</Text>
                   {q.explanation ? <View>{formatExplanation(sanitise(q.explanation))}</View> : null}
                 </View>
               ))}
@@ -279,7 +279,7 @@ export async function POST(req: NextRequest) {
           a + (art.quizQuestions || []).length, 0), 0), 0)
 
     if (chapterIndex !== undefined && questionCount === 0) {
-      return NextResponse.json({ pdf: null, pageCount: 0, chapterCount: rawCourse.chapters.length, questionCount: 0 })
+      return NextResponse.json({ pdf: null, pageCount: 0, chapterCount: rawCourse.chapters.length, courseKey: courseKey(rawCourse), questionCount: 0 })
     }
 
     const pdfBuffer = await renderToBuffer(
@@ -299,6 +299,7 @@ export async function POST(req: NextRequest) {
       pdf: pdfBuffer.toString("base64"),
       pageCount,
       chapterCount: rawCourse.chapters.length,
+      courseKey: courseKey(rawCourse),
       questionCount,
     })
   } catch (err: unknown) {

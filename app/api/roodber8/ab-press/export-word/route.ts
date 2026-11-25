@@ -10,7 +10,7 @@ import {
   Document, Packer, Paragraph, TextRun, HeadingLevel,
   AlignmentType, PageBreak, convertInchesToTwip,
 } from "docx"
-import { buildCourse, BuildStats, EMPTY_COURSE, hasAnswer } from "@/lib/ab-press-builder"
+import { buildCourse, BuildStats, EMPTY_COURSE, hasPrintedAnswer } from "@/lib/ab-press-builder"
 
 export const maxDuration = 300
 
@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
             )
             art.quizQuestions.forEach((q: any, qi: number) => {
               allParagraphs.push(
-                new Paragraph({ children: [new TextRun({ text: `Q${qi + 1}: ${hasAnswer(q.correctIndex) ? LETTERS[q.correctIndex] : "–"}`, bold: true, color: "D4A017" })], spacing: { after: 40 } }),
+                new Paragraph({ children: [new TextRun({ text: `Q${qi + 1}: ${hasPrintedAnswer(q) ? LETTERS[q.correctIndex] : "–"}`, bold: true, color: "D4A017" })], spacing: { after: 40 } }),
               )
               if (q.explanation) {
                 allParagraphs.push(new Paragraph({ children: [new TextRun(clean(q.explanation))], indent: { left: convertInchesToTwip(0.25) }, spacing: { after: 80 } }))
