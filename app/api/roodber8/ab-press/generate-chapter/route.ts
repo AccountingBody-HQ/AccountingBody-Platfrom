@@ -45,12 +45,15 @@ export async function POST(req: NextRequest) {
     const slugToQuestions = await readBookQuestions(articleRows.map((a: any) => a.mcq_url))
 
     let chapterQuestionCount = 0
+    const missingSets: string[] = []
     const lessons = targetChapter.lessons.map((l: any) => {
       const linkedArticles = l.articles.map((a: any) => {
         const row = articleMap.get(a.id)
         const rawContent = row?.content ?? ""
         const bodyBlocks = htmlToBlocks(rawContent, true)
-        const quizQuestions = slugToQuestions.get(practiceSlug(row?.mcq_url)) ?? []
+        const setSlug = practiceSlug(row?.mcq_url)
+        const quizQuestions = slugToQuestions.get(setSlug) ?? []
+        if (setSlug && !slugToQuestions.has(setSlug)) missingSets.push(setSlug)
         chapterQuestionCount += quizQuestions.length
         return {
           _id:     a.id,
@@ -97,6 +100,7 @@ export async function POST(req: NextRequest) {
       chapterIndex,
       chapterCount: rawCourse.chapters.length,
       questionCount: chapterQuestionCount,
+      missingSets,
     })
   } catch (err: unknown) {
     console.error("ab-press/generate-chapter: failed:", err)

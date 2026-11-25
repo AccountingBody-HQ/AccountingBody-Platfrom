@@ -5,6 +5,7 @@ import { NextRequest } from 'next/server'
 import * as pdfLib from 'pdf-lib'
 import ts from 'typescript'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { FrontmatterTemplate } from '@/components/book/FrontmatterTemplate'
 import { ARTICLES_READ_FAILED, buildCourse, EMPTY_COURSE, READ_FAILED, type BuildStats } from './ab-press-builder'
 import { TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
@@ -929,6 +930,45 @@ describe('a chapter and its answers', () => {
   })
 })
 
+describe('the page numbers and the check report of a book made chapter by chapter', () => {
+  it('a chapter names its sets that are missing or not live, each time they are linked', async () => {
+    const missing = async (slug: string, chapterIndex: number) =>
+      (await (await callRoute('generate-chapter', { body: { slug, bookType: 'combined', chapterIndex } })).json()).missingSets
+    expect(await missing('course', 0)).toEqual(['draft', 'unset', 'gone'])
+    expect(await missing('good', 0)).toEqual([])
+    expect(await missing('good', 1)).toEqual(['set-3'])
+    state.chapters = { course: [[['gone', 'live'], ['gone', 'plain']]] }
+    expect(await missing('course', 0)).toEqual(['gone', 'gone'])
+  })
+
+  it('the front pages get the answers page only when it is given as a number', async () => {
+    for (const [given, passed] of [[18, 18], [undefined, undefined], ['18', undefined], [null, undefined]]) {
+      state.made = []
+      await callRoute(FRONT[0], { body: { ...FRONT[1], totalPages: 25, answersPageStart: given } })
+      expect(JSON.parse(state.made[0])).toMatchObject({ totalPages: 25 })
+      expect(JSON.parse(state.made[0]).answersPageStart).toBe(passed)
+    }
+  })
+
+  it('the contents page prints that page; without it, its former rule', () => {
+    const contents = (bookType: 'combined' | 'study', answersPageStart?: number) =>
+      Screen.text(
+        FrontmatterTemplate({
+          course: { chapters: [{ chapterTitle: 'One' }] },
+          bookType,
+          edition: 'E',
+          subtitle: 'S',
+          chapterPageStarts: [4],
+          totalPages: 25,
+          answersPageStart,
+        }),
+      )
+    expect(contents('combined', 18)).toMatch(/Chapter 1: One4Answers and Explanations18$/)
+    expect(contents('combined')).toMatch(/Chapter 1: One4Answers and Explanations24$/)
+    expect(contents('study', 18)).toMatch(/Chapter 1: One4$/)
+  })
+})
+
 // ── The screen ──────────────────────────────────────────────────────────────
 // The page's own code, run with a stand-in for React (state and one effect) and
 // for adminFetch; pdf-lib and the rest are real.
@@ -1059,9 +1099,9 @@ class Screen {
   }
 }
 
-async function pdfOf(pages: number): Promise<string> {
+async function pdfOf(pages: number, width = 432): Promise<string> {
   const made = await pdfLib.PDFDocument.create()
-  for (let i = 0; i < pages; i++) made.addPage([432, 648])
+  for (let i = 0; i < pages; i++) made.addPage([width, 648])
   return Buffer.from(await made.save()).toString('base64')
 }
 
@@ -1077,7 +1117,9 @@ async function screen(): Promise<Screen> {
     return `blob:${made.files.length}`
   })
   const pdfs = new Map<number, string>()
-  for (const pages of [...CHAPTER_PAGES, ...ANSWER_PAGES, 1]) pdfs.set(pages, await pdfOf(pages))
+  for (const pages of [...CHAPTER_PAGES, 1, 3]) pdfs.set(pages, await pdfOf(pages))
+  // The pages of the answers are narrower, so they can be told apart.
+  const answerPdfs = await Promise.all(ANSWER_PAGES.map((pages) => (pages ? pdfOf(pages, 400) : null)))
   made.answers = {
     'load-course': () => ({ body: { courses: ['first', 'second'].map((slug) => ({ _id: slug, slug, title: `Title ${slug}` })) } }),
     preview: () => ({
@@ -1089,11 +1131,11 @@ async function screen(): Promise<Screen> {
       },
     }),
     'generate-chapter': ({ chapterIndex: at }) => ({
-      body: { pdf: pdfs.get(CHAPTER_PAGES[at as number]), pageCount: CHAPTER_PAGES[at as number], chapterCount: 3, questionCount: QUESTIONS[at as number] },
+      body: { pdf: pdfs.get(CHAPTER_PAGES[at as number]), pageCount: CHAPTER_PAGES[at as number], chapterCount: 3, questionCount: QUESTIONS[at as number], missingSets: [] },
     }),
     'generate-answers': ({ chapterIndex: at }) => ({
       body: {
-        pdf: ANSWER_PAGES[at as number] ? pdfs.get(ANSWER_PAGES[at as number]) : null,
+        pdf: answerPdfs[at as number],
         pageCount: ANSWER_PAGES[at as number],
         chapterCount: 3,
         questionCount: QUESTIONS[at as number],
@@ -1262,8 +1304,51 @@ describe('the screen of a book made chapter by chapter', () => {
     page.change(page.radio('combined'), 'combined')
     await page.generate()
     expect(page.links()).toEqual(['first-combined.zip'])
-    expect(Object.keys(await page.zip())).toEqual(expect.arrayContaining(['interior.pdf', 'cover.pdf', 'metadata.txt']))
+    expect(Object.keys(await page.zip())).toEqual(['interior.pdf', 'cover.pdf', 'metadata.txt', 'preflight-report.txt'])
     expect(page.calls.filter((call) => call.name === 'generate-answers').map((call) => call.body?.questionNumberOffset)).toEqual([0, 6, 6])
+  })
+
+  it.each<[string, number[]]>([
+    ['combined', [3, 0, 4]],
+    ['study', []],
+  ])('%s: the contents page and the cover get the true page numbers', async (bookType, answers) => {
+    const page = await screen()
+    await page.open()
+    page.change(page.radio(bookType), bookType)
+    await page.generate()
+    const sent = (name: string) => page.calls.filter((call) => call.name === name).map((call) => call.body)
+    const firstAnswer = 4 + 5 + 2 + 7
+    const total = firstAnswer - 1 + answers.reduce((sum, pages) => sum + pages, 0)
+    expect(sent('generate-frontmatter')).toEqual([
+      expect.objectContaining({ chapterPageStarts: [4, 9, 11], answersPageStart: firstAnswer, totalPages: firstAnswer + answers.filter(Boolean).length }),
+    ])
+    expect(sent('generate-cover')).toEqual([expect.objectContaining({ pageCount: total })])
+    const { 'interior.pdf': interior } = await page.zip()
+    const book = await pdfLib.PDFDocument.load(new Uint8Array(interior))
+    expect(book.getPageCount()).toBe(total)
+    const widths = book.getPages().map((made) => made.getWidth())
+    expect(widths.indexOf(400)).toBe(answers.length ? firstAnswer - 1 : -1)
+  })
+
+  it('the ZIP has a check report with the sets that were not found', async () => {
+    const page = await screen()
+    await page.open()
+    await page.generate()
+    const report = async () => (await page.zip())['preflight-report.txt'].toString('utf8').split('\n')
+    expect((await report()).slice(0, 3)).toEqual([
+      'AB Press check report (book made chapter by chapter)',
+      '',
+      '[PASS] All linked practice sets found',
+    ])
+    spoil(page, 'generate-chapter', 0, { missingSets: ['x', 'y'] })
+    spoil(page, 'generate-chapter', 2, { missingSets: ['x'] })
+    page.change(page.radio('combined'), 'combined')
+    await page.generate()
+    expect((await report()).slice(0, 3)).toEqual([
+      'AB Press check report (book made chapter by chapter)',
+      '',
+      '[WARN] 3 linked practice set(s) not found or not live: x, y, x',
+    ])
   })
 
   it.each<[string, string, number, object, string, string]>([

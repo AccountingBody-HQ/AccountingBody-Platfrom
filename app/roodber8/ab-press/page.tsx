@@ -77,6 +77,18 @@ function buildMetadata(subtitle: string, bookType: string, edition: string, cour
   return lines.join('\n')
 }
 
+// The check report of a book made chapter by chapter: the sentences of the
+// other books' check reports (lib/ab-press-builder.ts runs on the server only).
+function buildCheckReport(missingSets: string[]): string {
+  return [
+    'AB Press check report (book made chapter by chapter)',
+    '',
+    missingSets.length > 0
+      ? `[WARN] ${missingSets.length} linked practice set(s) not found or not live: ${missingSets.join(', ')}`
+      : '[PASS] All linked practice sets found',
+  ].join('\n')
+}
+
 function u32le(n: number): Uint8Array {
   const b = new Uint8Array(4)
   new DataView(b.buffer).setUint32(0, n, true)
@@ -270,6 +282,7 @@ export default function AbPressPage() {
       const chapterPageCounts: number[] = []
       const chapterQuestionOffsets: number[] = []
       const chapterQuestionCounts: number[] = []
+      const missingSets: string[] = []
       let questionNumberOffset = 0
 
       // 1. Render each chapter
@@ -295,6 +308,7 @@ export default function AbPressPage() {
         chapterPdfs.push(pdfBytes)
         chapterPageCounts.push(data.pageCount)
         chapterQuestionCounts.push(data.questionCount)
+        missingSets.push(...data.missingSets)
         questionNumberOffset += data.questionCount ?? 0
       }
 
@@ -332,6 +346,7 @@ export default function AbPressPage() {
         chapterPageStarts.push(pageAcc)
         pageAcc += count
       }
+      const answersPageStart = pageAcc // the answers come right after the last chapter
       const totalInteriorPages = pageAcc + answerChapterPdfs.length
 
       // 4. Render frontmatter (title + copyright + TOC with real page numbers)
@@ -341,7 +356,7 @@ export default function AbPressPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           slug: slug.trim(), bookType, edition, subtitle,
-          chapterPageStarts, totalPages: totalInteriorPages
+          chapterPageStarts, totalPages: totalInteriorPages, answersPageStart
         })
       })
       const fmData = await fmRes.json()
@@ -393,7 +408,7 @@ export default function AbPressPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           slug: slug.trim(), bookType, edition, subtitle,
-          pageCount: totalInteriorPages
+          pageCount: mergedDoc.getPageCount()
         })
       })
       const coverData = await coverRes.json()
@@ -406,6 +421,7 @@ export default function AbPressPage() {
         { name: 'interior.pdf', data: interiorPdf },
         { name: 'cover.pdf',    data: coverPdf },
         { name: 'metadata.txt', data: new TextEncoder().encode(buildMetadata(subtitle || preview.course.title, bookType, edition, preview.course)) },
+        { name: 'preflight-report.txt', data: new TextEncoder().encode(buildCheckReport(missingSets)) },
       ])
       const blob = new Blob([zipBytes as any], { type: 'application/zip' })
       setDownloadUrl(URL.createObjectURL(blob))

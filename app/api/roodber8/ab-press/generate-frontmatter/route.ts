@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   }
   try {
     const body = await req.json()
-    const { slug, bookType, edition, subtitle, chapterPageStarts, totalPages } = body
+    const { slug, bookType, edition, subtitle, chapterPageStarts, totalPages, answersPageStart } = body
     if (!slug)     return NextResponse.json({ error: "slug is required" },     { status: 400 })
     if (!bookType) return NextResponse.json({ error: "bookType is required" }, { status: 400 })
     if (!Array.isArray(chapterPageStarts)) {
@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
         subtitle: subtitle || rawCourse.title,
         chapterPageStarts,
         totalPages: totalPages ?? 0,
+        answersPageStart: typeof answersPageStart === "number" ? answersPageStart : undefined,
       }) as any
     )
 

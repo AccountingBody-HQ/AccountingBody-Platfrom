@@ -107,17 +107,18 @@ interface FrontmatterTemplateProps {
   subtitle:           string
   chapterPageStarts:  number[]
   totalPages:         number
+  // The true first page of the answers, when the caller knows it.
+  answersPageStart?:  number
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export function FrontmatterTemplate({ course, bookType, edition, subtitle, chapterPageStarts, totalPages }: FrontmatterTemplateProps) {
+export function FrontmatterTemplate({ course, bookType, edition, subtitle, chapterPageStarts, totalPages, answersPageStart }: FrontmatterTemplateProps) {
   const year = new Date().getFullYear()
   const showQuestions = bookType === "combined" || bookType === "practice"
 
-  // The client's page-count arithmetic (handleGenerate in page.tsx) budgets
-  // exactly 1 page for the merged answers section when computing totalPages,
-  // so the answers section's start page is always totalPages - 1.
-  const answersPageStart = totalPages - 1
+  // Without the true page, totalPages is taken to budget exactly 1 page for the
+  // answers section, so the section's start page is totalPages - 1.
+  const answersPage = answersPageStart ?? totalPages - 1
 
   const bookTypeLabel =
     bookType === "combined" ? "Study Text & Practice Kit"
@@ -179,7 +180,7 @@ export function FrontmatterTemplate({ course, bookType, edition, subtitle, chapt
             <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
               <Text style={s.tocChapterText}>Answers and Explanations</Text>
               <View style={{ flex: 1, borderBottomWidth: 0.7, borderBottomColor: "#bbbbbb", borderBottomStyle: "dotted", marginHorizontal: 4, marginBottom: 2 }} />
-              <Text style={s.tocChapterText}>{String(answersPageStart)}</Text>
+              <Text style={s.tocChapterText}>{String(answersPage)}</Text>
             </View>
           </View>
         )}
