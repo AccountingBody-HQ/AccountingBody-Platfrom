@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TEST_ADMIN_PATH, TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
 import {
-  CASES_FAILED,
+  CASES_SAVE_FAILED,
   EMPTY_ADDRESS,
   LEFT_DRAFT,
   LINK_FAILED,
@@ -380,23 +380,14 @@ describe('publish: an honest result', () => {
     expect(db.tables.question_sets).toMatchObject([{ status: 'published' }])
   })
 
-  it('warns when the case exhibits cannot be saved, and still links the article', async () => {
-    db.tables.articles = [{ ...article }]
-    db.fail = failOn('POST', 'question_cases')
-    expect(await publish({ bundle: scenario, articleSlug: 'leases' })).toEqual({
-      status: 200,
-      body: { ...done, casesWarning: CASES_FAILED },
-    })
-    expect(db.tables.articles).toMatchObject([{ mcq_url: '/practice-questions/leases-quiz' }])
-  })
-
-  it('gives both warnings when both fail', async () => {
-    db.tables.articles = [{ ...article }]
-    db.fail = (call) => failOn('POST', 'question_cases')(call) || failOn('PATCH', 'articles')(call)
-    expect(await publish({ bundle: scenario, articleSlug: 'leases' })).toEqual({
-      status: 200,
-      body: { ...done, linkWarning: LINK_FAILED, casesWarning: CASES_FAILED },
-    })
+  it('publishes a scenario set only when its cases are there, and makes no database request otherwise', async () => {
+    const error = 'Nothing was published. Please fix these questions first: Q1 refers to a missing case.'
+    for (const cases of [undefined, [], [{ caseId: 'case-2', exhibitHtml: '<p>Facts</p>' }], [{ caseId: 'case-1', exhibitHtml: ' ' }]]) {
+      expect(await publish({ bundle: { ...scenario, cases } })).toEqual({ status: 400, body: { error } })
+    }
+    expect(db.calls).toEqual([])
+    expect((await publish({ bundle: scenario })).status).toBe(200)
+    expect(db.tables.question_cases).toMatchObject([{ set_id: SET_ID, case_id: 'case-1', exhibit_html: '<p>Facts</p>' }])
   })
 
   it('removes the set again when its questions cannot be saved', async () => {
@@ -452,6 +443,13 @@ describe('publish: an honest result', () => {
   describe.each<[string, string, string, string[], string]>([
     ['the questions cannot be saved', 'POST', 'questions', ['POST question_sets', 'POST questions'], 'database detail'],
     [
+      'the case exhibits cannot be saved',
+      'POST',
+      'question_cases',
+      ['POST question_sets', 'POST questions', 'POST question_cases'],
+      CASES_SAVE_FAILED,
+    ],
+    [
       'the set cannot be published',
       'PATCH',
       'question_sets',
@@ -496,9 +494,9 @@ describe('publish: an honest result', () => {
     expect(revalidated).toEqual([])
   })
 
-  it.each(['generate', 'import'])('the %s page shows both warnings in its success view', (name) => {
+  it.each(['generate', 'import'])('the %s page shows the link warning in its success view', (name) => {
     const source = readFileSync(join(process.cwd(), `app/${ADMIN}/questions/${name}/page.tsx`), 'utf8')
-    expect(source).toContain('setPublishWarnings([data.linkWarning, data.casesWarning].filter(Boolean))')
+    expect(source).toContain('setPublishWarnings([data.linkWarning].filter(Boolean))')
     expect(source.split('publishWarnings.map(')).toHaveLength(2)
     expect(source.indexOf('publishWarnings.map(')).toBeGreaterThan(source.search(/Published Successfully|Import Successful/))
   })

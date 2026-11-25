@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  CASES_FAILED,
+  CASES_SAVE_FAILED,
   EMPTY_ADDRESS,
   LEFT_DRAFT,
   LINK_FAILED,
@@ -120,6 +120,55 @@ describe('checkPublishBundle', () => {
     })
   })
 
+  describe('a scenario question and its case', () => {
+    const withCases = (caseId: unknown, cases: unknown, type: unknown = 'scenario') => {
+      const result = checkPublishBundle({ questions: [mcq({ type, caseId })], cases })
+      return result.ok ? [] : result.problems.map((p) => p.reason)
+    }
+    const one = { caseId: 'case-1', title: 'Case', exhibitHtml: '<p>Facts</p>' }
+
+    it.each<[string, unknown, unknown]>([
+      ['its case', 'case-1', [one]],
+      ['its case among others', 'case-1', [null, 'text', { ...one, caseId: 'case-2' }, one]],
+      ['a number for a name', 7, [{ ...one, caseId: '7' }]],
+      ['no case named', undefined, undefined],
+      ['a null case', null, [one]],
+      ['an empty case', '', []],
+    ])('accepts %s', (_name, caseId, cases) => {
+      expect(withCases(caseId, cases)).toEqual([])
+    })
+
+    it.each<[string, unknown, unknown]>([
+      ['no cases', 'case-1', undefined],
+      ['cases that are not a list', 'case-1', { ...one }],
+      ['an empty list', 'case-1', []],
+      ['only another case', 'case-1', [{ ...one, caseId: 'case-2' }]],
+      ['a name with other spaces', 'case-1', [{ ...one, caseId: 'case-1 ' }]],
+      ['a case with no exhibit', 'case-1', [{ ...one, exhibitHtml: undefined }]],
+      ['a case with an empty exhibit', 'case-1', [{ ...one, exhibitHtml: '' }]],
+      ['a case with a blank exhibit', 'case-1', [{ ...one, exhibitHtml: ' \n ' }]],
+      ['a case with an exhibit that is not text', 'case-1', [{ ...one, exhibitHtml: { html: 'x' } }]],
+      ['a case with no name', 'undefined', [{ ...one, caseId: undefined }]],
+    ])('refuses %s', (_name, caseId, cases) => {
+      expect(withCases(caseId, cases)).toEqual(['missing-case'])
+    })
+
+    it('is listed last, with the question number', () => {
+      const result = checkPublishBundle({ questions: [mcq(), mcq({ type: 'scenario', caseId: 'case-1', explanation: '' })] })
+      expect(result).toEqual({
+        ok: false,
+        problems: [
+          { n: 2, reason: 'explanation' },
+          { n: 2, reason: 'missing-case' },
+        ],
+      })
+    })
+
+    it.each(['multiple-choice', 'writing'])('is not asked of a %s question', (type) => {
+      expect(withCases('case-1', [], type)).not.toContain('missing-case')
+    })
+  })
+
   it('never judges which answer is right', () => {
     const answers = [0, 1, 2, 3].map((correctIndex) => check(mcq({ questionText: '2 + 2 = ?', options: ['1', '2', '3', '4'], correctIndex })))
     expect(answers).toEqual([{ ok: true }, { ok: true }, { ok: true }, { ok: true }])
@@ -137,6 +186,7 @@ describe('wording', () => {
       'correct-answer': 'needs one correct answer (A, B, C or D)',
       'explanation': 'needs an explanation',
       'model-answer': 'needs a model answer',
+      'missing-case': 'refers to a missing case',
     })
   })
 
@@ -183,9 +233,7 @@ describe('wording', () => {
     expect(LINK_FAILED).toBe(
       'Published. But the link from the article to this set could not be saved, so the article does not point to it yet.',
     )
-    expect(CASES_FAILED).toBe(
-      'Published. But the case exhibits could not be saved, so scenario questions may show without their case.',
-    )
+    expect(CASES_SAVE_FAILED).toBe('Could not save the case exhibits. Nothing was published.')
     expect(SET_READ_FAILED).toBe('Could not check for an existing practice set. Nothing was published.')
     expect(SLUG_READ_FAILED).toBe('Could not check the web address. Nothing was published.')
     expect(EMPTY_ADDRESS).toBe(

@@ -5,7 +5,7 @@ import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 import { checkRead } from '@/lib/db-check'
 import {
-  CASES_FAILED,
+  CASES_SAVE_FAILED,
   EMPTY_ADDRESS,
   LEFT_DRAFT,
   LINK_FAILED,
@@ -235,12 +235,8 @@ export async function POST(req: NextRequest) {
       return undoDraft(qError.message)
     }
 
-    // A failure of the case exhibits or the article link is told to the admin
-    // as a warning next to the success, never as an error.
-    let casesWarning: string | undefined
-    let linkWarning: string | undefined
-
-    // Insert case exhibits if present (scenario question sets)
+    // Insert case exhibits if present (scenario question sets). A set never
+    // goes live without them.
     const cases: any[] = Array.isArray(bundle.cases) ? bundle.cases : []
     if (cases.length > 0) {
       const caseRows = cases
@@ -257,7 +253,7 @@ export async function POST(req: NextRequest) {
           .insert(caseRows)
         if (caseError) {
           console.error('questions/publish cases insert error:', caseError)
-          casesWarning = CASES_FAILED
+          return undoDraft(CASES_SAVE_FAILED)
         }
       }
     }
@@ -275,7 +271,9 @@ export async function POST(req: NextRequest) {
 
     // Close the bidirectional link: update articles.mcq_url so the
     // article page's "Practice this topic" CTA points to this PQ set.
-    // Exactly one article must change; anything else is a warning.
+    // Exactly one article must change; anything else is told to the admin as a
+    // warning next to the success, never as an error.
+    let linkWarning: string | undefined
     if (resolvedArticleSlug) {
       const mcqUrl = `/practice-questions/${slug}`
       const { data: linkedRows, error: mcqUpdateError } = await supabase
@@ -310,7 +308,6 @@ export async function POST(req: NextRequest) {
       slug,
       questionCount: questionRows.length,
       ...(linkWarning ? { linkWarning } : {}),
-      ...(casesWarning ? { casesWarning } : {}),
     })
 
   } catch (err: any) {

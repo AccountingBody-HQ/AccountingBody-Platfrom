@@ -178,7 +178,7 @@ export default function GenerateQuestionsPage() {
       if (!res.ok) throw new Error(data.error || 'Publish failed')
       setDocId(data.documentId ?? '')
       setDocSlug(data.slug ?? '')
-      setPublishWarnings([data.linkWarning, data.casesWarning].filter(Boolean))
+      setPublishWarnings([data.linkWarning].filter(Boolean))
       setPublished(true)
     } catch (e: any) {
       setError(e.message)

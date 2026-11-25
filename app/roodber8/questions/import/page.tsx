@@ -304,7 +304,7 @@ export default function ImportQuestionsPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Publish failed')
       setPublishedSlug(data.slug ?? '')
-      setPublishWarnings([data.linkWarning, data.casesWarning].filter(Boolean))
+      setPublishWarnings([data.linkWarning].filter(Boolean))
       setStep(3)
     } catch (e: any) {
       setPublishError(e.message)

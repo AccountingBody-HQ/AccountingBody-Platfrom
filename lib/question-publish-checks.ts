@@ -13,6 +13,7 @@ export type Reason =
   | 'correct-answer'
   | 'explanation'
   | 'model-answer'
+  | 'missing-case'
 
 // n is the question's position in the set, counted from 1.
 export type PublishProblem = { n: number; reason: Reason }
@@ -27,6 +28,7 @@ export const REASON_TEXT: Record<Reason, string> = {
   'correct-answer':     'needs one correct answer (A, B, C or D)',
   'explanation':        'needs an explanation',
   'model-answer':       'needs a model answer',
+  'missing-case':       'refers to a missing case',
 }
 
 export const MAX_LISTED_PROBLEMS = 10
@@ -36,8 +38,7 @@ const PROBLEMS_PREFIX = 'Nothing was published. Please fix these questions first
 export const NOT_FOUND = 'Nothing was published. The linked article was not found. Check the Article ID and try again.'
 export const LINK_FAILED =
   'Published. But the link from the article to this set could not be saved, so the article does not point to it yet.'
-export const CASES_FAILED =
-  'Published. But the case exhibits could not be saved, so scenario questions may show without their case.'
+export const CASES_SAVE_FAILED = 'Could not save the case exhibits. Nothing was published.'
 export const SET_READ_FAILED = 'Could not check for an existing practice set. Nothing was published.'
 export const SLUG_READ_FAILED = 'Could not check the web address. Nothing was published.'
 export const EMPTY_ADDRESS =
@@ -93,7 +94,18 @@ function optionReasons(options: unknown): Reason[] {
   return reasons
 }
 
-function questionReasons(value: unknown): Reason[] {
+// The cases a question can refer to, named as the public page names them. A
+// case without an exhibit has nothing to show.
+function caseIdsOf(cases: unknown): Set<string> {
+  const ids = new Set<string>()
+  for (const value of Array.isArray(cases) ? cases : []) {
+    const c = (typeof value === 'object' && value !== null ? value : {}) as Record<string, unknown>
+    if (textOf(c.caseId) && textOf(c.exhibitHtml)) ids.add(String(c.caseId))
+  }
+  return ids
+}
+
+function questionReasons(value: unknown, caseIds: Set<string>): Reason[] {
   const q = (typeof value === 'object' && value !== null ? value : {}) as Record<string, unknown>
   const reasons: Reason[] = []
   if (!textOf(q.questionText)) reasons.push('text')
@@ -111,14 +123,18 @@ function questionReasons(value: unknown): Reason[] {
     reasons.push('correct-answer')
   }
   if (!textOf(q.explanation)) reasons.push('explanation')
+  if (q.type === 'scenario' && q.caseId != null && q.caseId !== '' && !caseIds.has(String(q.caseId))) {
+    reasons.push('missing-case')
+  }
   return reasons
 }
 
 // The caller has already refused a bundle without questions.
-export function checkPublishBundle(bundle: { questions: unknown[] }): PublishCheck {
+export function checkPublishBundle(bundle: { questions: unknown[]; cases?: unknown }): PublishCheck {
+  const caseIds = caseIdsOf(bundle.cases)
   const problems: PublishProblem[] = []
   bundle.questions.forEach((question, i) => {
-    for (const reason of questionReasons(question)) problems.push({ n: i + 1, reason })
+    for (const reason of questionReasons(question, caseIds)) problems.push({ n: i + 1, reason })
   })
   return problems.length === 0 ? { ok: true } : { ok: false, problems }
 }
