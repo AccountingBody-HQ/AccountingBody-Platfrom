@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   ALREADY_HAS_SET_PLAIN,
   ARTICLE_RULE,
+  BAD_ADDRESS,
   CASES_SAVE_FAILED,
   CONTENT_ID_FAILED,
   CONTENT_ID_RULE,
@@ -370,6 +371,10 @@ describe('wording', () => {
       'Nothing was published. This article already has a practice set. Add questions to that set instead.',
     )
     expect(CONTENT_ID_FAILED).toBe('Could not assign a content ID. Nothing was published.')
+  })
+
+  it('has the exact message for an odd web address', () => {
+    expect(BAD_ADDRESS).toBe('Nothing was saved. A web address may use only small letters a–z, numbers and single hyphens.')
   })
 
   it('has the exact importer warning', () => {

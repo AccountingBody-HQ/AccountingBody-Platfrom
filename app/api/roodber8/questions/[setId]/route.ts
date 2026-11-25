@@ -6,6 +6,7 @@ import { checkRead } from '@/lib/db-check'
 import { linkArticleIfEmpty, replaceArticleLink, type LinkNotes } from '@/lib/question-article-link'
 import { refreshQuestionCaches } from '@/lib/question-cache'
 import {
+  BAD_ADDRESS,
   CHECKED_CASE_COLUMNS,
   CHECKED_QUESTION_COLUMNS,
   CORRECT_INDEX_RULE,
@@ -17,6 +18,7 @@ import {
   UNLINK_FAILED,
   checkStoredSet,
   fixThisQuestionMessage,
+  isSetAddress,
   notReadyProblemsMessage,
   slugTakenEditMessage,
   storedQuestionReasons,
@@ -125,6 +127,20 @@ export async function PATCH(
     if (slugChanged && (wasPublished || isPublished || old?.published_at))
       return NextResponse.json({ error: SLUG_LOCKED }, { status: 400 })
 
+    // A new address has the form every address has, and is free (any status).
+    if (slugChanged) {
+      if (!isSetAddress(sanitised.slug))
+        return NextResponse.json({ error: BAD_ADDRESS }, { status: 400 })
+      const taken = checkRead(
+        await supabase.from('question_sets').select('id').eq('slug', sanitised.slug).limit(1).maybeSingle(),
+        'questions/[setId]: web address',
+      )
+      if (!taken.ok)
+        return NextResponse.json({ error: SET_CHECK_FAILED }, { status: 500 })
+      if (taken.data)
+        return NextResponse.json({ error: slugTakenEditMessage(sanitised.slug) }, { status: 409 })
+    }
+
     // A set goes live only with questions, and only when all are complete.
     if (isPublished && !wasPublished) {
       const questions = checkRead(
@@ -172,8 +188,7 @@ export async function PATCH(
     let unlinkWarning: string | undefined
     if (old?.article_slug && old.slug) {
       if (slugChanged) {
-        const newSlug = typeof sanitised.slug === 'string' && sanitised.slug.trim() ? sanitised.slug : null
-        if (!(await replaceArticleLink(supabase, old.article_slug, old.slug, newSlug))) unlinkWarning = UNLINK_FAILED
+        if (!(await replaceArticleLink(supabase, old.article_slug, old.slug, sanitised.slug))) unlinkWarning = UNLINK_FAILED
       } else if (statusGiven && !isPublished) {
         if (!(await replaceArticleLink(supabase, old.article_slug, old.slug, null))) unlinkWarning = UNLINK_FAILED
       } else if (isPublished && !wasPublished) {

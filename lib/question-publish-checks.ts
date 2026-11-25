@@ -54,6 +54,8 @@ export const SET_CHECK_FAILED = 'Could not check this set. Nothing was saved.'
 export const NOT_READY_EMPTY = 'Nothing was saved. This set has no questions yet, so it cannot go live.'
 export const LAST_QUESTION =
   'Nothing was deleted. A live set must keep at least one question. Make the set a draft first, or delete the whole set.'
+export const BAD_ADDRESS =
+  'Nothing was saved. A web address may use only small letters a–z, numbers and single hyphens.'
 export const CONTENT_ID_FAILED = 'Could not assign a content ID. Nothing was published.'
 export const ALREADY_HAS_SET_PLAIN =
   'Nothing was published. This article already has a practice set. Add questions to that set instead.'
@@ -77,6 +79,12 @@ export function slugTakenMessage(slug: string): string {
 
 export function notLinkedOtherSetMessage(setTitle: string): string {
   return `Done. But the article already links to another practice set ("${setTitle}"), so this set is not linked from the article.`
+}
+
+// The form every web address of a set has: small letters, numbers and single
+// hyphens between them, at most 200 characters.
+export function isSetAddress(slug: unknown): slug is string {
+  return typeof slug === 'string' && slug.length <= 200 && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)
 }
 
 export function slugTakenEditMessage(slug: string): string {

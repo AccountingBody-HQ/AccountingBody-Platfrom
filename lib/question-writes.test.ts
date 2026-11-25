@@ -6,6 +6,7 @@ import { TEST_ADMIN_PATH, TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSessio
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
 import {
   ALREADY_HAS_SET_PLAIN,
+  BAD_ADDRESS,
   CASES_SAVE_FAILED,
   EMPTY_ADDRESS,
   LAST_QUESTION,
@@ -1421,6 +1422,65 @@ describe('article link: the web address of a set', () => {
     expect(db.tables.question_sets).toMatchObject([{ slug: 'new-address' }])
     expect(articleLink()).toBe('/practice-questions/new-address')
     expect(articleTag()).toBe(1)
+  })
+
+  it.each<[string, unknown]>([
+    ['empty', ''],
+    ['only spaces', '   '],
+    ['null', null],
+    ['a number', 7],
+    ['a list', ['new-address']],
+    ['capitals', 'New-address'],
+    ['a space', 'new address'],
+    ['a slash', 'new/address'],
+    ['a dot', 'new.address'],
+    ['an underscore', 'new_address'],
+    ['two hyphens', 'new--address'],
+    ['a hyphen first', '-new'],
+    ['a hyphen last', 'new-'],
+    ['only a hyphen', '-'],
+    ['another alphabet', 'የሂሳብ'],
+    ['an accent', 'café'],
+    ['a line end', 'new\n'],
+    ['201 characters', 'a'.repeat(201)],
+  ])('is refused for a draft when it is odd: %s', async (_name, slug) => {
+    withSet({ status: 'draft', published_at: null }, HERE)
+    expect(await patch({ title: 'New title', slug })).toEqual({ status: 400, body: { error: BAD_ADDRESS } })
+    expect(db.tables.question_sets).toMatchObject([{ title: 'Leases quiz', slug: 'leases-quiz' }])
+    expect(articleLink()).toBe(HERE)
+    refusedWithoutWrite()
+  })
+
+  it.each(['7', 'a', 'ias-12', 'new-address-2', 'a'.repeat(200)])('may be %s', async (slug) => {
+    withSet({ status: 'draft', published_at: null }, HERE)
+    expect(await patch({ slug })).toEqual({ status: 200, body: { success: true } })
+    expect(db.tables.question_sets).toMatchObject([{ slug }])
+    expect(articleLink()).toBe(`/practice-questions/${slug}`)
+  })
+
+  it('is not checked when it does not change, so an older odd one stays', async () => {
+    withSet({ status: 'draft', published_at: null, slug: '-ias-12' }, null)
+    expect(await patch({ title: 'New title', slug: '-ias-12' })).toEqual({ status: 200, body: { success: true } })
+    expect(db.tables.question_sets).toMatchObject([{ title: 'New title', slug: '-ias-12' }])
+  })
+
+  it.each(['published', 'draft', 'archived'])('is refused for a draft when another set uses it (%s)', async (status) => {
+    withSet({ status: 'draft', published_at: null }, HERE)
+    db.tables.question_sets.push({ ...anotherSet(), status })
+    expect(await patch({ slug: 'another-set' })).toEqual({
+      status: 409,
+      body: { error: 'Nothing was saved. Another practice set already uses the web address /practice-questions/another-set.' },
+    })
+    expect(db.tables.question_sets).toMatchObject([{ slug: 'leases-quiz' }, { slug: 'another-set' }])
+    expect(articleLink()).toBe(HERE)
+    refusedWithoutWrite()
+  })
+
+  it('is not saved when it cannot be checked', async () => {
+    withSet({ status: 'draft', published_at: null }, HERE)
+    db.fail = failOn('GET', 'question_sets', 'slug=eq.new-address')
+    expect(await patch({ slug: 'new-address' })).toEqual({ status: 500, body: { error: SET_CHECK_FAILED } })
+    refusedWithoutWrite()
   })
 
   it('changes for a draft, and leaves a different link alone', async () => {
