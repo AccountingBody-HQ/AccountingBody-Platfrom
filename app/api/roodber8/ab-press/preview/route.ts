@@ -5,23 +5,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
-import { createClient } from '@supabase/supabase-js'
+import { reportServerError } from '@/lib/report-error'
 import { getCourseBySlug } from '@/lib/coursesNew'
 import { filterForPublication, getPublicationWarnings } from '@/lib/publication-filter'
+import { countQuestions, createSupabaseClient, practiceSlug, readBookArticles, readLiveSets } from '@/lib/ab-press-builder'
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
-}
+export const maxDuration = 60
 
 export async function GET(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
     return signedOutResponse()
   }
   try {
-    const supabase = getSupabase()
+    const supabase = createSupabaseClient()
     const { searchParams } = new URL(req.url)
     const slug = searchParams.get('slug')
     if (!slug) return NextResponse.json({ error: 'slug is required' }, { status: 400 })
@@ -48,64 +44,39 @@ export async function GET(req: NextRequest) {
     if (printedIds.length > 0) {
       try {
         // Step 1: the articles' practice links
-        const { data: linkRows, error: linksError } = await supabase
-          .from('articles')
-          .select('id, mcq_url')
-          .in('id', printedIds)
-        if (linksError || !linkRows) throw linksError ?? new Error('no article list')
+        const linkRows = await readBookArticles(printedIds, 'id, mcq_url')
+        const slugByArticle = new Map<string, string>(linkRows.map(r => [r.id, practiceSlug(r.mcq_url)]))
 
-        // Slug extraction copied from buildCourse() in lib/ab-press-builder.ts
-        const slugByArticle = new Map<string, string>(
-          linkRows
-            .filter(r => r.mcq_url)
-            .map(r => [r.id, r.mcq_url.split('/').filter(Boolean).pop() ?? ''])
-        )
-        const mcqSlugs = Array.from(new Set(Array.from(slugByArticle.values()).filter(Boolean)))
-
-        if (mcqSlugs.length > 0) {
-          // Step 2: the live sets with those slugs
-          const { data: liveSets, error: setsError } = await supabase
-            .from('question_sets')
-            .select('id, slug')
-            .in('slug', mcqSlugs)
-            .eq('status', 'published')
-          if (setsError || !liveSets) throw setsError ?? new Error('no set list')
-
-          const slugToSetId = new Map<string, string>(liveSets.map(s => [s.slug, s.id]))
-          const timesPrinted = new Map<string, number>()
-          for (const id of printedIds) {
-            const setId = slugToSetId.get(slugByArticle.get(id) ?? '')
-            if (setId) timesPrinted.set(setId, (timesPrinted.get(setId) ?? 0) + 1)
-          }
-
-          // Step 3: one count for all sets printed once, one for twice, and so on
-          let counted = 0
-          for (const times of Array.from(new Set(Array.from(timesPrinted.values())))) {
-            const setIds = Array.from(timesPrinted.keys()).filter(id => timesPrinted.get(id) === times)
-            const { count: qCount, error: countError } = await supabase
-              .from('questions')
-              .select('*', { count: 'exact', head: true })
-              .in('set_id', setIds)
-            if (countError || qCount === null) throw countError ?? new Error('no question count')
-            counted += qCount * times
-          }
-          totalQuestions = counted
+        // Step 2: the live sets with those slugs
+        const slugToSetId = await readLiveSets(linkRows.map(r => r.mcq_url))
+        const timesPrinted = new Map<string, number>()
+        for (const id of printedIds) {
+          const setId = slugToSetId.get(slugByArticle.get(id) ?? '')
+          if (setId) timesPrinted.set(setId, (timesPrinted.get(setId) ?? 0) + 1)
         }
+
+        // Step 3: one count for all sets printed once, one for twice, and so on
+        let counted = 0
+        for (const times of Array.from(new Set(Array.from(timesPrinted.values())))) {
+          const setIds = Array.from(timesPrinted.keys()).filter(id => timesPrinted.get(id) === times)
+          counted += (await countQuestions(setIds)) * times
+        }
+        totalQuestions = counted
       } catch (err) {
         // The count is unknown, not zero.
         console.error('ab-press/preview: question count read failed:', err)
+        reportServerError('admin book preview count failed', err, { area: 'admin' })
         questionCountError = true
       }
     }
 
     // ── Content health check (Phase 3) ──────────────────────────────────────
-    // Second, separate Supabase query — same bulk SELECT shape as
-    // generate/route.ts buildCourse(), fetched independently of the
-    // question_sets count query above.
+    // A second, separate read of the articles, with their content.
     const allArticles = course.chapters.flatMap(ch => ch.lessons.flatMap(ls => ls.articles))
     const allArticleIds = allArticles.map(a => a.id)
     const articleTitleMap = new Map(allArticles.map(a => [a.id, a.title]))
 
+    let healthUnavailable = false
     let emptyArticlesCount = 0
     let articlesWithWebElements = 0
     let totalWebElementsRemoved = 0
@@ -115,63 +86,59 @@ export async function GET(req: NextRequest) {
 
     if (allArticleIds.length > 0) {
       try {
-        const { data: contentRows, error: contentError } = await supabase
-          .from('articles')
-          .select('id, content, mcq_url')
-          .in('id', allArticleIds)
+        for (const row of await readBookArticles(allArticleIds, 'id, content, mcq_url')) {
+          const rawContent = row.content ?? ''
+          const title = articleTitleMap.get(row.id) ?? row.id
 
-        if (contentError) {
-          console.error('ab-press/preview: article content query failed:', contentError)
-        } else {
-          for (const row of (contentRows ?? [])) {
-            const rawContent = row.content ?? ''
-            const title = articleTitleMap.get(row.id) ?? row.id
-
-            const strippedLength = rawContent.replace(/<[^>]+>/g, '').trim().length
-            if (strippedLength === 0) {
-              emptyArticlesCount++
-              emptyList.push(title)
-            }
-
-            const filtered = filterForPublication(rawContent)
-            const warnings = getPublicationWarnings(rawContent, filtered)
-            const removalWarnings = warnings.filter((w) => !w.startsWith('Total:'))
-
-            if (removalWarnings.length > 0) {
-              articlesWithWebElements++
-              totalWebElementsRemoved += removalWarnings.length
-              if (webWarningDetails.length < 10) {
-                webWarningDetails.push({ title, warnings: removalWarnings })
-              }
-            }
-
-            if (row.mcq_url) mcqLinked++
+          const strippedLength = rawContent.replace(/<[^>]+>/g, '').trim().length
+          if (strippedLength === 0) {
+            emptyArticlesCount++
+            emptyList.push(title)
           }
+
+          const filtered = filterForPublication(rawContent)
+          const warnings = getPublicationWarnings(rawContent, filtered)
+          const removalWarnings = warnings.filter((w) => !w.startsWith('Total:'))
+
+          if (removalWarnings.length > 0) {
+            articlesWithWebElements++
+            totalWebElementsRemoved += removalWarnings.length
+            if (webWarningDetails.length < 10) {
+              webWarningDetails.push({ title, warnings: removalWarnings })
+            }
+          }
+
+          if (row.mcq_url) mcqLinked++
         }
       } catch (err) {
-        console.error('ab-press/preview: article content query threw:', err)
+        // The content is unknown, not ready.
+        console.error('ab-press/preview: article content read failed:', err)
+        reportServerError('admin book preview content failed', err, { area: 'admin' })
+        healthUnavailable = true
       }
     }
 
     const verdict: 'ready' | 'warnings' | 'issues' =
-      emptyArticlesCount > 0 ? 'issues' :
+      healthUnavailable || emptyArticlesCount > 0 ? 'issues' :
       articlesWithWebElements > 0 ? 'warnings' :
       'ready'
 
     // ── Publication history (Phase 5) ───────────────────────────────────────
     // Best-effort: a missing/broken book_publications table must never fail
-    // the preview request — just fall back to an empty history list.
+    // the preview request — the screen says that the history is unknown.
     let history: any[] = []
+    let historyError = false
     try {
-      const { data: historyRows } = await supabase
+      const { data: historyRows, error: historyFailed } = await supabase
         .from('book_publications')
         .select('id, book_type, edition, subtitle, page_count, article_count, question_count, kdp_ready, preflight_verdict, content_hash, articles_with_web_elements, empty_articles, generated_at')
         .eq('course_slug', slug)
         .eq('platform', 'ab')
         .order('generated_at', { ascending: false })
         .limit(5)
+      if (historyFailed || !historyRows) throw historyFailed ?? new Error('no history list')
 
-      history = (historyRows ?? []).map(r => ({
+      history = historyRows.map(r => ({
         id: r.id,
         bookType: r.book_type,
         edition: r.edition,
@@ -187,8 +154,9 @@ export async function GET(req: NextRequest) {
         generatedAt: r.generated_at,
       }))
     } catch (err) {
-      console.error('ab-press/preview: book_publications history query threw:', err)
-      history = []
+      console.error('ab-press/preview: book_publications history read failed:', err)
+      reportServerError('admin book preview history failed', err, { area: 'admin' })
+      historyError = true
     }
 
     // Return in shape the AB Press UI expects
@@ -226,6 +194,7 @@ export async function GET(req: NextRequest) {
         articlesWithWebElements,
       },
       health: {
+        unavailable: healthUnavailable,
         verdict,
         emptyArticles: emptyArticlesCount,
         articlesWithWebElements,
@@ -235,8 +204,11 @@ export async function GET(req: NextRequest) {
         webWarningDetails,
       },
       history,
+      historyError,
     })
   } catch (err: unknown) {
+    console.error('ab-press/preview: failed:', err)
+    reportServerError('admin book preview failed', err, { area: 'admin' })
     const message = err instanceof Error ? err.message : 'Unknown error'
     return NextResponse.json({ error: message }, { status: 500 })
   }

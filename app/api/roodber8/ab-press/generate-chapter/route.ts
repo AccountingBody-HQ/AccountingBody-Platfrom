@@ -7,12 +7,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server"
 import { isAuthenticated, signedOutResponse } from "@/lib/admin-auth"
+import { reportServerError } from "@/lib/report-error"
 import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { ChapterTemplate } from "@/components/book/ChapterTemplate"
 import { getCourseBySlug } from "@/lib/coursesNew"
 import { htmlToBlocks } from "@/lib/html-to-blocks"
-import { createSupabaseClient, READ_FAILED } from "@/lib/ab-press-builder"
+import { EMPTY_COURSE, hasAnswer, isEmptyCourse, practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
 
 export const maxDuration = 60
 
@@ -32,87 +33,32 @@ export async function POST(req: NextRequest) {
     const rawCourse = await getCourseBySlug(slug, true)
     if (!rawCourse) return NextResponse.json({ error: "Course not found" }, { status: 404 })
 
+    if (isEmptyCourse(rawCourse)) return NextResponse.json({ error: EMPTY_COURSE }, { status: 422 })
+
     const targetChapter = rawCourse.chapters[chapterIndex]
     if (!targetChapter) return NextResponse.json({ error: "Chapter index out of range" }, { status: 400 })
 
-    const supabase = createSupabaseClient()
-
-    // Fetch content for just this chapter's articles (same bulk SELECT
-    // shape as lib/ab-press-builder.ts's buildCourse(), scoped to one chapter).
+    // Content and quiz questions for just this chapter's articles.
     const chapterArticleIds = targetChapter.lessons.flatMap((l: any) => l.articles.map((a: any) => a.id))
-    const { data: articleRows } = await supabase
-      .from("articles")
-      .select("id, content, mcq_url")
-      .in("id", chapterArticleIds)
-    const articleMap = new Map((articleRows ?? []).map((a: any) => [a.id, a]))
-
-    // Bulk-fetch quiz questions for this chapter only — same 2-query batch
-    // pattern as buildCourse() (1 query for matching question_sets by slug,
-    // 1 query for all their questions), scoped to this chapter's mcq_urls.
-    const mcqSlugs = Array.from(new Set(
-      (articleRows ?? [])
-        .map((a: any) => a.mcq_url)
-        .filter(Boolean)
-        .map((url: string) => url.split("/").filter(Boolean).pop())
-        .filter(Boolean)
-    ))
-
-    const slugToSetId = new Map<string, string>()
-    const setIdToQuestions = new Map<string, any[]>()
-
-    if (mcqSlugs.length > 0) {
-      const { data: allSets, error: setsError } = await supabase
-        .from("question_sets")
-        .select("id, slug")
-        .in("slug", mcqSlugs)
-        .eq("status", "published")
-
-      // No chapter from a partial read.
-      if (setsError || !allSets) {
-        console.error("ab-press/generate-chapter: question_sets read failed:", setsError)
-        throw new Error(READ_FAILED)
-      }
-
-      for (const st of (allSets ?? [])) slugToSetId.set(st.slug, st.id)
-
-      const allSetIds = (allSets ?? []).map((st) => st.id)
-      if (allSetIds.length > 0) {
-        const { data: allQuestions, error: questionsError } = await supabase
-          .from("questions")
-          .select("set_id, question_text, option_a, option_b, option_c, option_d, correct_index, explanation")
-          .in("set_id", allSetIds)
-          .order("question_order", { ascending: true })
-
-        if (questionsError || !allQuestions) {
-          console.error("ab-press/generate-chapter: questions read failed:", questionsError)
-          throw new Error(READ_FAILED)
-        }
-
-        for (const q of (allQuestions ?? [])) {
-          const arr = setIdToQuestions.get(q.set_id) ?? []
-          arr.push({
-            questionText:  q.question_text,
-            options:       [q.option_a, q.option_b, q.option_c, q.option_d].filter(Boolean),
-            correctIndex:  q.correct_index,
-            explanation:   q.explanation ?? "",
-          })
-          setIdToQuestions.set(q.set_id, arr)
-        }
-      }
-    }
+    const articleRows = await readBookArticles(chapterArticleIds, "id, content, mcq_url, status")
+    const articleMap = new Map(articleRows.map((a: any) => [a.id, a]))
+    const slugToQuestions = await readBookQuestions(articleRows.map((a: any) => a.mcq_url))
 
     let chapterQuestionCount = 0
+    const missingSets: string[] = []
+    const noAnswerSets: string[] = []
+    const unpublished: string[] = []
     const lessons = targetChapter.lessons.map((l: any) => {
       const linkedArticles = l.articles.map((a: any) => {
         const row = articleMap.get(a.id)
         const rawContent = row?.content ?? ""
         const bodyBlocks = htmlToBlocks(rawContent, true)
-        let quizQuestions: any[] = []
-        if (row?.mcq_url) {
-          const practiceSlug = row.mcq_url.split("/").filter(Boolean).pop() ?? ""
-          const setId = slugToSetId.get(practiceSlug)
-          if (setId) quizQuestions = setIdToQuestions.get(setId) ?? []
-        }
+        const setSlug = practiceSlug(row?.mcq_url)
+        const quizQuestions = slugToQuestions.get(setSlug) ?? []
+        if (setSlug && !slugToQuestions.has(setSlug)) missingSets.push(setSlug)
+        const printed = bookType === "study" ? [] : quizQuestions
+        for (const q of printed) if (!hasAnswer(q.correctIndex)) noAnswerSets.push(setSlug)
+        if (row?.status !== "published" && (bookType !== "practice" || printed.length > 0)) unpublished.push(a.slug)
         chapterQuestionCount += quizQuestions.length
         return {
           _id:     a.id,
@@ -157,9 +103,15 @@ export async function POST(req: NextRequest) {
       pdf: pdfBuffer.toString("base64"),
       pageCount,
       chapterIndex,
+      chapterCount: rawCourse.chapters.length,
       questionCount: chapterQuestionCount,
+      missingSets,
+      noAnswerSets,
+      unpublished,
     })
   } catch (err: unknown) {
+    console.error("ab-press/generate-chapter: failed:", err)
+    reportServerError("admin book chapter failed", err, { area: "admin" })
     const msg = err instanceof Error ? err.message : "Unknown error"
     return NextResponse.json({ error: msg }, { status: 500 })
   }

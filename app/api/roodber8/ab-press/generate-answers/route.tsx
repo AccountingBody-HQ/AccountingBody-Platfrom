@@ -19,10 +19,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server"
 import { isAuthenticated, signedOutResponse } from "@/lib/admin-auth"
+import { reportServerError } from "@/lib/report-error"
 import { Document, Page, Text, View, StyleSheet, Font, renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { getCourseBySlug } from "@/lib/coursesNew"
-import { createSupabaseClient, READ_FAILED } from "@/lib/ab-press-builder"
+import { EMPTY_COURSE, hasAnswer, isEmptyCourse, practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
 
 export const maxDuration = 60
 
@@ -220,7 +221,7 @@ function AnswersDocument({ course, subtitle, chapterIndexOffset = 0, startNumber
               <Text style={s.sectionHeader}>Chapter {ci + chapterIndexOffset + 1}: {sanitise(ch.chapterTitle)}</Text>
               {list.map(({ q, num }) => (
                 <View key={num} style={s.answerWrap}>
-                  <Text style={s.answerLabel}>Q{num}: {LETTERS[q.correctIndex ?? 0]}</Text>
+                  <Text style={s.answerLabel}>Q{num}: {hasAnswer(q.correctIndex) ? LETTERS[q.correctIndex] : "–"}</Text>
                   {q.explanation ? <View>{formatExplanation(sanitise(q.explanation))}</View> : null}
                 </View>
               ))}
@@ -244,89 +245,26 @@ export async function POST(req: NextRequest) {
     const rawCourse = await getCourseBySlug(slug, true)
     if (!rawCourse) return NextResponse.json({ error: "Course not found" }, { status: 404 })
 
+    if (isEmptyCourse(rawCourse)) return NextResponse.json({ error: EMPTY_COURSE }, { status: 422 })
+
     if (chapterIndex !== undefined && !rawCourse.chapters[chapterIndex]) {
       return NextResponse.json({ error: "Invalid chapterIndex" }, { status: 400 })
     }
 
-    const supabase = createSupabaseClient()
-
-    // Bulk-fetch mcq_url for every article in the course (content not
-    // needed here — only quiz questions are rendered on this page).
+    // The practice link of every article in the course (content not needed
+    // here — only quiz questions are rendered on this page), and their questions.
     const allArticleIds = rawCourse.chapters.flatMap((ch) => ch.lessons.flatMap((l) => l.articles.map((a) => a.id)))
-    const { data: articleRows } = await supabase
-      .from("articles")
-      .select("id, mcq_url")
-      .in("id", allArticleIds)
-    const mcqUrlById = new Map((articleRows ?? []).map((a: any) => [a.id, a.mcq_url]))
-
-    // Same 2-query bulk batch pattern as lib/ab-press-builder.ts, scoped to
-    // the whole course.
-    const mcqSlugs = Array.from(new Set(
-      (articleRows ?? [])
-        .map((a: any) => a.mcq_url)
-        .filter(Boolean)
-        .map((url: string) => url.split("/").filter(Boolean).pop())
-        .filter(Boolean)
-    ))
-
-    const slugToSetId = new Map<string, string>()
-    const setIdToQuestions = new Map<string, any[]>()
-
-    if (mcqSlugs.length > 0) {
-      const { data: allSets, error: setsError } = await supabase
-        .from("question_sets")
-        .select("id, slug")
-        .in("slug", mcqSlugs)
-        .eq("status", "published")
-
-      // No answers from a partial read.
-      if (setsError || !allSets) {
-        console.error("ab-press/generate-answers: question_sets read failed:", setsError)
-        throw new Error(READ_FAILED)
-      }
-
-      for (const st of (allSets ?? [])) slugToSetId.set(st.slug, st.id)
-
-      const allSetIds = (allSets ?? []).map((st) => st.id)
-      if (allSetIds.length > 0) {
-        const { data: allQuestions, error: questionsError } = await supabase
-          .from("questions")
-          .select("set_id, question_text, option_a, option_b, option_c, option_d, correct_index, explanation")
-          .in("set_id", allSetIds)
-          .order("question_order", { ascending: true })
-
-        if (questionsError || !allQuestions) {
-          console.error("ab-press/generate-answers: questions read failed:", questionsError)
-          throw new Error(READ_FAILED)
-        }
-
-        for (const q of (allQuestions ?? [])) {
-          const arr = setIdToQuestions.get(q.set_id) ?? []
-          arr.push({
-            questionText:  q.question_text,
-            options:       [q.option_a, q.option_b, q.option_c, q.option_d].filter(Boolean),
-            correctIndex:  q.correct_index,
-            explanation:   q.explanation ?? "",
-          })
-          setIdToQuestions.set(q.set_id, arr)
-        }
-      }
-    }
+    const articleRows = await readBookArticles(allArticleIds, "id, mcq_url")
+    const mcqUrlById = new Map(articleRows.map((a: any) => [a.id, a.mcq_url]))
+    const slugToQuestions = await readBookQuestions(articleRows.map((a: any) => a.mcq_url))
 
     const course = {
       chapters: rawCourse.chapters.map((ch) => ({
         chapterTitle: ch.title,
         lessons: ch.lessons.map((l) => ({
-          linkedArticles: l.articles.map((a) => {
-            const mcqUrl = mcqUrlById.get(a.id)
-            let quizQuestions: any[] = []
-            if (mcqUrl) {
-              const practiceSlug = mcqUrl.split("/").filter(Boolean).pop() ?? ""
-              const setId = slugToSetId.get(practiceSlug)
-              if (setId) quizQuestions = setIdToQuestions.get(setId) ?? []
-            }
-            return { quizQuestions }
-          }),
+          linkedArticles: l.articles.map((a) => ({
+            quizQuestions: slugToQuestions.get(practiceSlug(mcqUrlById.get(a.id))) ?? [],
+          })),
         })),
       })),
     }
@@ -341,7 +279,7 @@ export async function POST(req: NextRequest) {
           a + (art.quizQuestions || []).length, 0), 0), 0)
 
     if (chapterIndex !== undefined && questionCount === 0) {
-      return NextResponse.json({ pdf: null, pageCount: 0, questionCount: 0 })
+      return NextResponse.json({ pdf: null, pageCount: 0, chapterCount: rawCourse.chapters.length, questionCount: 0 })
     }
 
     const pdfBuffer = await renderToBuffer(
@@ -360,9 +298,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       pdf: pdfBuffer.toString("base64"),
       pageCount,
+      chapterCount: rawCourse.chapters.length,
       questionCount,
     })
   } catch (err: unknown) {
+    console.error("ab-press/generate-answers: failed:", err)
+    reportServerError("admin book answers failed", err, { area: "admin" })
     const msg = err instanceof Error ? err.message : "Unknown error"
     return NextResponse.json({ error: msg }, { status: 500 })
   }

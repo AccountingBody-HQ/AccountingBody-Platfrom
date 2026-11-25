@@ -6,10 +6,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server"
 import { isAuthenticated, signedOutResponse } from "@/lib/admin-auth"
+import { reportServerError } from "@/lib/report-error"
 import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { FrontmatterTemplate } from "@/components/book/FrontmatterTemplate"
 import { getCourseBySlug } from "@/lib/coursesNew"
+import { EMPTY_COURSE, isEmptyCourse } from "@/lib/ab-press-builder"
 
 export const maxDuration = 30
 
@@ -19,7 +21,7 @@ export async function POST(req: NextRequest) {
   }
   try {
     const body = await req.json()
-    const { slug, bookType, edition, subtitle, chapterPageStarts, totalPages } = body
+    const { slug, bookType, edition, subtitle, chapterPageStarts, totalPages, answersPageStart } = body
     if (!slug)     return NextResponse.json({ error: "slug is required" },     { status: 400 })
     if (!bookType) return NextResponse.json({ error: "bookType is required" }, { status: 400 })
     if (!Array.isArray(chapterPageStarts)) {
@@ -30,6 +32,7 @@ export async function POST(req: NextRequest) {
     // no article content or question fetching here.
     const rawCourse = await getCourseBySlug(slug, true)
     if (!rawCourse) return NextResponse.json({ error: "Course not found" }, { status: 404 })
+    if (isEmptyCourse(rawCourse)) return NextResponse.json({ error: EMPTY_COURSE }, { status: 422 })
 
     const course = {
       chapters: rawCourse.chapters.map((ch) => ({
@@ -46,11 +49,14 @@ export async function POST(req: NextRequest) {
         subtitle: subtitle || rawCourse.title,
         chapterPageStarts,
         totalPages: totalPages ?? 0,
+        answersPageStart: typeof answersPageStart === "number" ? answersPageStart : undefined,
       }) as any
     )
 
     return NextResponse.json({ pdf: pdfBuffer.toString("base64") })
   } catch (err: unknown) {
+    console.error("ab-press/generate-frontmatter: failed:", err)
+    reportServerError("admin book front pages failed", err, { area: "admin" })
     const msg = err instanceof Error ? err.message : "Unknown error"
     return NextResponse.json({ error: msg }, { status: 500 })
   }

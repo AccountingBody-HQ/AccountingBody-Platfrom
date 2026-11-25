@@ -569,7 +569,7 @@ export function PracticeKitTemplate({
                     <Text style={s.ansTopicHeader}>Topic {ci + 1}.{li + 1}: {cleanLessonTitle(sanitise(lesson.title))}</Text>
                     {questions.map(({ q, num, chapterLocalNum }, qi) => {
                       const parsed = parseExplanation(sanitise(q.explanation || ""))
-                      const letter = LETTERS[q.correctIndex ?? 0]
+                      const letter = [0, 1, 2, 3].includes(q.correctIndex) ? LETTERS[q.correctIndex] : "–"
                       const isLast = qi === questions.length - 1
                       return (
                         <View key={num} style={s.ansBlockWrap}>

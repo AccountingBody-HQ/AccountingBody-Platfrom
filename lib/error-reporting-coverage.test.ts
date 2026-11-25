@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { basename, join, relative } from 'node:path'
 import ts from 'typescript'
 import { describe, expect, it, vi } from 'vitest'
 import { getAdminPath } from './middleware-logic'
@@ -15,7 +15,6 @@ vi.stubEnv('ADMIN_PATH', undefined)
 const ADMIN = getAdminPath()
 vi.unstubAllEnvs()
 
-const LOCKED = 'AB Press files stay unchanged'
 const STAGE_PUBLIC = 'later stage: public forms and recruitment'
 const TOOL_ANSWER = "the catch gives the tool's answer to the admin's own input"
 const STAGE_SOCIAL = 'later job: social posting tool'
@@ -23,13 +22,6 @@ const STAGE_SOCIAL = 'later job: social posting tool'
 // Paths under app/api; '@admin' stands for the admin folder.
 const NOT_YET_REPORTING: Record<string, string> = {
   'confirm-subscription': STAGE_PUBLIC,
-  '@admin/ab-press/export-word': LOCKED,
-  '@admin/ab-press/generate': LOCKED,
-  '@admin/ab-press/generate-chapter': LOCKED,
-  '@admin/ab-press/generate-cover': LOCKED,
-  '@admin/ab-press/generate-frontmatter': LOCKED,
-  '@admin/ab-press/generate-pq': LOCKED,
-  '@admin/ab-press/preview': LOCKED,
   '@admin/articles/import': TOOL_ANSWER,
   '@admin/providers/[slug]/test': TOOL_ANSWER,
   '@admin/questions/import': TOOL_ANSWER,
@@ -43,7 +35,7 @@ function toFile(key: string): string {
 }
 
 function toKey(file: string): string {
-  const path = relative(API, file).replace(/\/route\.ts$/, '')
+  const path = relative(API, file).replace(/\/route\.tsx?$/, '')
   return path === ADMIN || path.startsWith(`${ADMIN}/`) || path.startsWith(`${ADMIN}-`) ? `@admin${path.slice(ADMIN.length)}` : path
 }
 
@@ -51,13 +43,13 @@ function routeFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((entry) => {
     const path = join(dir, entry)
     if (statSync(path).isDirectory()) return routeFiles(path)
-    return entry === 'route.ts' ? [path] : []
+    return entry === 'route.ts' || entry === 'route.tsx' ? [path] : []
   })
 }
 
 // Final catch blocks: a try statement directly in an exported handler.
-function finalCatches(source: string): { reports: boolean }[] {
-  const file = ts.createSourceFile('route.ts', source, ts.ScriptTarget.Latest, true)
+function finalCatches(source: string, name = 'route.ts'): { reports: boolean }[] {
+  const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true)
   const found: { reports: boolean }[] = []
   const calls = (node: ts.Node): boolean =>
     (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'reportServerError') ||
@@ -72,7 +64,7 @@ function finalCatches(source: string): { reports: boolean }[] {
   return found
 }
 
-const needsReport = (file: string) => finalCatches(readFileSync(file, 'utf8')).some((c) => !c.reports)
+const needsReport = (file: string) => finalCatches(readFileSync(file, 'utf8'), basename(file)).some((c) => !c.reports)
 
 describe('route handlers report server problems', () => {
   it('finds final catch blocks and whether they report', () => {
@@ -82,6 +74,15 @@ describe('route handlers report server problems', () => {
     expect(finalCatches('export async function POST() { try { a() } catch { console.error("x") } }')).toEqual([{ reports: false }])
     expect(finalCatches('async function helper() { try { a() } catch {} }')).toEqual([])
     expect(finalCatches('export async function GET() { if (x) { try { a() } catch {} } }')).toEqual([])
+  })
+
+  it('sees a handler that has markup in its file', () => {
+    const markup = 'const a = (b: string) => <p style={{ color: b }}>Q{b}: x</p>\n'
+    const handler = 'export async function POST() { try { a("x") } catch { console.error("x") } }'
+    expect(finalCatches(markup + handler, 'route.tsx')).toEqual([{ reports: false }])
+    const files = routeFiles(API).filter((file) => file.endsWith('.tsx'))
+    expect(files.map(toKey)).toEqual(['@admin/ab-press/generate-answers'])
+    expect(finalCatches(readFileSync(files[0], 'utf8'), basename(files[0]))).toEqual([{ reports: true }])
   })
 
   it('every route with a final catch block reports, or is listed with a reason', () => {
