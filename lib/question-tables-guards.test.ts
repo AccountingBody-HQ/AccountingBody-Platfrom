@@ -4,8 +4,8 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { ARTICLE_RULE, CORRECT_INDEX_RULE } from './question-publish-checks'
 
-// migrations/0029 (PQ-1e, D338/D339): the text of the record file. It is
-// written here and run only by an owner-approved database job.
+// migrations/0029 (PQ-1e, D338/D339): the text of the record file, as it was
+// applied by an owner-approved database job.
 
 const FILE = 'migrations/0029_question_tables_guards.sql'
 const text = readFileSync(join(process.cwd(), FILE), 'utf8')
@@ -22,11 +22,12 @@ const statements = code
 const NAMES = ['question_sets_article_slug_key', 'questions_set_id_idx', 'question_cases_set_id_idx', 'questions_correct_index_range']
 
 describe('migrations/0029 (record file)', () => {
-  it('is in the README as not applied yet, the only such row, and its tables are in the scope list', () => {
+  it('is in the README as applied, no row waits, and its tables are in the scope list', () => {
     const readme = readFileSync(join(process.cwd(), 'migrations/README.md'), 'utf8')
-    const waiting = readme.split('\n').filter((line) => line.includes('not applied yet'))
-    expect(waiting).toHaveLength(1)
-    expect(waiting[0]).toContain('| `0029_question_tables_guards.sql` | **Record file, not applied yet (PQ-1e, D339).**')
+    const rows = readme.split('\n').filter((line) => line.includes('0029_question_tables_guards.sql'))
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toContain('| `0029_question_tables_guards.sql` | **Applied 25 Nov 2026, 15:18:19 UTC (M-102, after backup run 45642414685).**')
+    expect(readme).not.toContain('not applied yet')
     const scope = readme.slice(readme.indexOf('Migrations in this directory cover only'), readme.indexOf('## Files'))
     expect(scope).toContain('\nquestion_sets  questions  question_cases\n')
     expect(scope.match(/owner approval D339/g)).toHaveLength(3)
