@@ -5,6 +5,8 @@ import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 import { checkRead } from '@/lib/db-check'
 import {
+  CASES_FAILED,
+  LINK_FAILED,
   NOT_FOUND,
   SET_READ_FAILED,
   SLUG_READ_FAILED,
@@ -217,6 +219,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: qError.message }, { status: 500 })
     }
 
+    // From here the set is live: a later failure is told to the admin as a
+    // warning next to the success, never as an error.
+    let casesWarning: string | undefined
+    let linkWarning: string | undefined
+
     // Insert case exhibits if present (scenario question sets)
     const cases = bundle.cases ?? []
     if (cases.length > 0) {
@@ -234,17 +241,17 @@ export async function POST(req: NextRequest) {
           .insert(caseRows)
         if (caseError) {
           console.error('questions/publish cases insert error:', caseError)
-          // Non-fatal — questions are published, cases failed. Log and continue.
+          casesWarning = CASES_FAILED
         }
       }
     }
 
     // Close the bidirectional link: update articles.mcq_url so the
     // article page's "Practice this topic" CTA points to this PQ set.
-    // Non-fatal: PQ is already published; a failure here is logged only.
+    // Exactly one article must change; anything else is a warning.
     if (resolvedArticleSlug) {
       const mcqUrl = `/practice-questions/${slug}`
-      const { error: mcqUpdateError } = await supabase
+      const { data: linkedRows, error: mcqUpdateError } = await supabase
         .from('articles')
         .update({
           mcq_url:    mcqUrl,
@@ -252,8 +259,13 @@ export async function POST(req: NextRequest) {
         })
         .eq('slug', resolvedArticleSlug)
         .eq('status', 'published')
+        .select('slug')
       if (mcqUpdateError) {
         console.error('questions/publish mcq_url update error:', mcqUpdateError)
+        linkWarning = LINK_FAILED
+      } else if (linkedRows?.length !== 1) {
+        console.error('questions/publish mcq_url update changed rows:', linkedRows?.length ?? 0)
+        linkWarning = LINK_FAILED
       }
     }
 
@@ -264,6 +276,8 @@ export async function POST(req: NextRequest) {
       title,
       slug,
       questionCount: questionRows.length,
+      ...(linkWarning ? { linkWarning } : {}),
+      ...(casesWarning ? { casesWarning } : {}),
     })
 
   } catch (err: any) {

@@ -1,9 +1,12 @@
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TEST_ADMIN_PATH, TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
 import {
+  CASES_FAILED,
+  LINK_FAILED,
   NOT_FOUND,
   SET_READ_FAILED,
   SLUG_READ_FAILED,
@@ -267,5 +270,84 @@ describe('publish: the web address', () => {
     db.fail = failOn('GET', 'question_sets', 'slug=eq.')
     expect(await publish({ bundle: bundle() })).toEqual({ status: 500, body: { error: SLUG_READ_FAILED } })
     expect(writes()).toEqual([])
+  })
+})
+
+describe('publish: an honest result', () => {
+  const article = { slug: 'leases', content_id: 'AB-ART-00007', status: 'published', mcq_url: null }
+  const scenario = bundle({
+    questions: [question({ type: 'scenario', caseId: 'case-1' })],
+    cases: [{ caseId: 'case-1', title: 'Case', exhibitHtml: '<p>Facts</p>' }],
+  })
+  const done = {
+    success: true,
+    documentId: SET_ID,
+    contentId: 'AB-QZ-00001',
+    title: 'Leases quiz',
+    slug: 'leases-quiz',
+    questionCount: 1,
+  }
+
+  it('checks, then writes in order, and the article points to the set', async () => {
+    db.tables.articles = [{ ...article }]
+    expect(await publish({ bundle: scenario, articleSlug: 'AB-ART-00007' })).toEqual({ status: 200, body: done })
+    expect(lines().filter((line) => line.startsWith('GET'))).toHaveLength(4)
+    expect(lines().slice(4)).toEqual(['POST question_sets', 'POST questions', 'POST question_cases', 'PATCH articles'])
+    expect(db.tables.articles).toMatchObject([{ slug: 'leases', mcq_url: '/practice-questions/leases-quiz' }])
+    expect(db.tables.questions).toMatchObject([{ set_id: SET_ID, question_order: 1, correct_index: 2, option_d: 'Four' }])
+  })
+
+  it('warns when no article row changed (found by ID, not published)', async () => {
+    db.tables.articles = [{ ...article, status: 'draft' }]
+    expect(await publish({ bundle: bundle(), articleSlug: 'AB-ART-00007' })).toEqual({
+      status: 200,
+      body: { ...done, linkWarning: LINK_FAILED },
+    })
+    expect(db.tables.articles).toMatchObject([{ mcq_url: null }])
+  })
+
+  it('warns when the article update fails, and the set stays published', async () => {
+    db.tables.articles = [{ ...article }]
+    db.fail = failOn('PATCH', 'articles')
+    const result = await publish({ bundle: bundle(), articleSlug: 'leases' })
+    expect(result).toEqual({ status: 200, body: { ...done, linkWarning: LINK_FAILED } })
+    expect(JSON.stringify(result.body)).not.toContain('database detail')
+    expect(writes()).toEqual(['POST question_sets', 'POST questions', 'PATCH articles'])
+  })
+
+  it('warns when the case exhibits cannot be saved, and still links the article', async () => {
+    db.tables.articles = [{ ...article }]
+    db.fail = failOn('POST', 'question_cases')
+    expect(await publish({ bundle: scenario, articleSlug: 'leases' })).toEqual({
+      status: 200,
+      body: { ...done, casesWarning: CASES_FAILED },
+    })
+    expect(db.tables.articles).toMatchObject([{ mcq_url: '/practice-questions/leases-quiz' }])
+  })
+
+  it('gives both warnings when both fail', async () => {
+    db.tables.articles = [{ ...article }]
+    db.fail = (call) => failOn('POST', 'question_cases')(call) || failOn('PATCH', 'articles')(call)
+    expect(await publish({ bundle: scenario, articleSlug: 'leases' })).toEqual({
+      status: 200,
+      body: { ...done, linkWarning: LINK_FAILED, casesWarning: CASES_FAILED },
+    })
+  })
+
+  it('removes the set again when its questions cannot be saved', async () => {
+    db.tables.articles = [{ ...article }]
+    db.fail = failOn('POST', 'questions')
+    expect((await publish({ bundle: bundle(), articleSlug: 'leases' })).status).toBe(500)
+    expect(writes()).toEqual(['POST question_sets', 'POST questions', 'DELETE question_sets'])
+    expect(db.tables.question_sets).toEqual([])
+    expect(db.tables.articles).toMatchObject([{ mcq_url: null }])
+    expect(revalidated).toEqual([])
+  })
+
+  it.each(['generate', 'import'])('the %s page shows both warnings in its success view', (name) => {
+    const source = readFileSync(join(process.cwd(), `app/${ADMIN}/questions/${name}/page.tsx`), 'utf8')
+    expect(source).toContain('setPublishWarnings([data.linkWarning, data.casesWarning].filter(Boolean))')
+    expect(source.split('publishWarnings.map(')).toHaveLength(2)
+    expect(source.indexOf('publishWarnings.map(')).toBeGreaterThan(source.search(/Published Successfully|Import Successful/))
   })
 })

@@ -84,6 +84,7 @@ export default function GenerateQuestionsPage() {
   const [warnings, setWarnings]       = useState<string[]>([])
   const [docId, setDocId]             = useState('')
   const [docSlug, setDocSlug]         = useState('')
+  const [publishWarnings, setPublishWarnings] = useState<string[]>([])
   const [showOnSites, setShowOnSites] = useState<string[]>(['accountingbody'])
   const [canonical, setCanonical]     = useState('accountingbody')
 
@@ -177,6 +178,7 @@ export default function GenerateQuestionsPage() {
       if (!res.ok) throw new Error(data.error || 'Publish failed')
       setDocId(data.documentId ?? '')
       setDocSlug(data.slug ?? '')
+      setPublishWarnings([data.linkWarning, data.casesWarning].filter(Boolean))
       setPublished(true)
     } catch (e: any) {
       setError(e.message)
@@ -188,7 +190,7 @@ export default function GenerateQuestionsPage() {
   function reset() {
     setStep(0); setConfig(EMPTY); setBundle(null)
     setPublished(false); setError(''); setWarnings([])
-    setDocId(''); setDocSlug('')
+    setDocId(''); setDocSlug(''); setPublishWarnings([])
     setShowOnSites(['accountingbody']); setCanonical('accountingbody')
     setEditingIdx(null); setEditDraft(null)
   }
@@ -685,6 +687,7 @@ export default function GenerateQuestionsPage() {
           </div>
           <h2 className="text-2xl font-black text-white mb-2">Published Successfully</h2>
           <p className="text-sm mb-2" style={{ color: '#475569' }}>{bundle?.questions.length} questions are now live in Supabase.</p>
+          {publishWarnings.map((w, i) => <p key={i} className="text-xs mb-2" style={{ color: '#f59e0b' }}>{w}</p>)}
           {docId && <p className="text-xs mb-2" style={{ color: '#334155' }}>Document ID: <span className="text-white font-mono">{docId}</span></p>}
           {docSlug && (
             <a href={'/practice-questions/' + docSlug} target="_blank" rel="noopener noreferrer"
