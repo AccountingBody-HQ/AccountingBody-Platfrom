@@ -198,6 +198,40 @@ describe('publish: structural checks before any read or write', () => {
   })
 })
 
+describe('import: an answer that cannot be read', () => {
+  const paste = async (answer: unknown) => {
+    const rawJson = JSON.stringify({ title: 'Leases quiz', questions: [{ ...question(), correctIndex: undefined, answer }] })
+    const res = await (await api('questions/import/route.ts')).POST(request('POST', 'questions/import', { rawJson }), { params: {} })
+    return (await res.json()) as { ready: boolean; warnings: string[]; validationErrors: string[]; bundle: Row }
+  }
+
+  it('is not ready, says why, and the publish route refuses the same bundle', async () => {
+    const result = await paste('E')
+    expect(result).toMatchObject({
+      ready: false,
+      warnings: ['Q1: could not work out the correct answer. Set it in the pasted text and paste again.'],
+      validationErrors: ['Q1: correct answer not set'],
+      bundle: { questions: [{ correctIndex: null }] },
+    })
+    expect(await publish({ bundle: result.bundle })).toEqual({
+      status: 400,
+      body: { error: 'Nothing was published. Please fix these questions first: Q1 needs one correct answer (A, B, C or D).' },
+    })
+    expect(db.calls).toEqual([])
+  })
+
+  it('is ready when the answer can be read', async () => {
+    expect(await paste('C')).toMatchObject({ ready: true, warnings: [], validationErrors: [] })
+  })
+
+  it('the import page shows the warnings and disables Publish while not ready', () => {
+    const source = readFileSync(join(process.cwd(), `app/${ADMIN}/questions/import/page.tsx`), 'utf8')
+    expect(source).toContain('result.warnings.map(')
+    expect(source).toContain('result.validationErrors.map(')
+    expect(source).toContain('disabled={publishing || !result.ready || !metaTitle.trim()}')
+  })
+})
+
 describe('publish: the linked article', () => {
   const article = { slug: 'leases', content_id: 'AB-ART-00007', status: 'published' }
 

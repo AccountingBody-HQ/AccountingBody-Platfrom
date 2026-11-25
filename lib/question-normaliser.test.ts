@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { normalise } from './question-normaliser'
+import { checkPublishBundle, publishProblemsMessage } from './question-publish-checks'
+import { normalise, validateNormalisedBundle } from './question-normaliser'
 
 // The importer's reading of pasted questions. All questions here are made up.
 
@@ -113,5 +114,106 @@ describe('option labels', () => {
     const long = read({ options: ['A) Cash', 'B) Bank', 'C) Loan', 'D) Equity', 'E) None'] })
     expect(long.question.options).toEqual(plain)
     expect(long.warnings).toContain('Q1: 5 options found — trimmed to first 4')
+  })
+})
+
+describe('the correct answer', () => {
+  const list = ['Cash', 'Cash and bank', 'Option premium', 'Adopt a policy']
+  const answerOf = (answer: unknown, opts: unknown = list) => read({ options: opts, correctIndex: undefined, answer }).question.correctIndex
+
+  it.each<[unknown, number]>([
+    [0, 0],
+    [3, 3],
+    [4, 3],
+    ['A', 0],
+    ['d', 3],
+    ['B)', 1],
+    ['(c)', 2],
+    ['D.', 3],
+    [['B'], 1],
+    ['Option B', 1],
+    ['option c', 2],
+    ['Answer: D', 3],
+    ['The correct answer is B', 1],
+    ['Option B: the second one', 1],
+    ['Option B) the second one', 1],
+    ['choice A - the first one', 0],
+    ['option_b', 1],
+    ['ans_d', 3],
+    ['Cash', 0],
+    ['cash and bank', 1],
+    ['B) Cash and bank', 1],
+    ['(a) Cash', 0],
+    ['Option premium', 2],
+    ['Adopt a policy', 3],
+    ['Adopt a policy for every class of asset', 3],
+    ['premium', 2],
+  ])('reads %j', (answer, index) => {
+    expect(answerOf(answer)).toBe(index)
+  })
+
+  it.each<[unknown]>([
+    [undefined],
+    [null],
+    [''],
+    ['   '],
+    ['E'],
+    ['5'],
+    [5],
+    [-1],
+    [1.5],
+    [['A', 'C']],
+    ['A and C'],
+    ['A, C'],
+    ['Option A and Option C'],
+    ['Option A or C'],
+    ['Opt out of the scheme'],
+    ['An option can be exercised'],
+    ['Answer depends on the facts'],
+    ['option_amount'],
+    ['None of the above'],
+    ['Cash and bank, or Option premium'],
+    [{ letter: 'A' }],
+  ])('leaves %j unset and says so', (answer) => {
+    const result = read({ options: list, correctIndex: undefined, answer })
+    expect(result.question.correctIndex).toBeNull()
+    expect(result.warnings).toEqual(['Q1: could not work out the correct answer. Set it in the pasted text and paste again.'])
+    expect(validateNormalisedBundle(result.bundle)).toEqual(['Q1: correct answer not set'])
+  })
+
+  it('does not match an empty option', () => {
+    expect(answerOf('Something else', ['Cash', 'Bank', '', ''])).toBeNull()
+  })
+
+  it('reads the answer text when the labels were removed, and when they were not', () => {
+    expect(answerOf('B) Bank', ['A) Cash', 'B) Bank', 'C) Loan', 'D) Equity'])).toBe(1)
+    expect(answerOf('Bank', ['A) Cash', 'B) Bank', 'C) Loan', 'D) Equity'])).toBe(1)
+    expect(answerOf('B) Bank', ['A) Cash', 'B) Bank', 'C) Loan', 'Equity'])).toBe(1)
+    expect(answerOf('2.5%', ['1.5%', '2.5%', '3.5%', '4.5%'])).toBe(1)
+  })
+
+  it('names the question that has no answer, and the publish check refuses it too', () => {
+    const { bundle, warnings } = normalise({ title: 'Test set', questions: [question(), question({ correctIndex: undefined, answer: 'E' })] })
+    expect(warnings).toEqual(['Q2: could not work out the correct answer. Set it in the pasted text and paste again.'])
+    expect(validateNormalisedBundle(bundle)).toEqual(['Q2: correct answer not set'])
+    const checked = checkPublishBundle(bundle)
+    expect(checked).toEqual({ ok: false, problems: [{ n: 2, reason: 'correct-answer' }] })
+    expect(checked.ok ? '' : publishProblemsMessage(checked.problems)).toBe(
+      'Nothing was published. Please fix these questions first: Q2 needs one correct answer (A, B, C or D).',
+    )
+  })
+
+  it('needs no correct answer for a writing question', () => {
+    const result = read({ type: 'writing', options: undefined, correctIndex: undefined, writingModelAnswer: 'A model answer.' })
+    expect(result.question.correctIndex).toBeNull()
+    expect(result.warnings).toEqual([])
+    expect(validateNormalisedBundle(result.bundle)).toEqual([])
+  })
+
+  it('a complete set is ready, as before', () => {
+    const { bundle, warnings } = normalise({ title: 'Test set', questions: [question(), question({ type: 'scenario' })] })
+    expect(warnings).toEqual([])
+    expect(validateNormalisedBundle(bundle)).toEqual([])
+    expect(checkPublishBundle(bundle)).toEqual({ ok: true })
   })
 })

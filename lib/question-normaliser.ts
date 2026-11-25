@@ -19,7 +19,7 @@ export interface NormalisedQuestion {
   type:                 'multiple-choice' | 'scenario' | 'writing'
   questionText:         string
   options:              string[]          // always 4 elements for MCQ/scenario, [] for writing
-  correctIndex:         number | null     // 0-3 for MCQ/scenario, null for writing
+  correctIndex:         number | null     // 0-3 for MCQ/scenario, null for writing or an answer that could not be read
   explanation:          string | null
   writingModelAnswer:   string | null
   writingExplanation:   string | null
@@ -233,17 +233,36 @@ function resolveCorrectIndex(
   const s = str(raw)
   if (!s) return null
 
-  // Single letter: "A", "B", "C", "D" (case-insensitive)
-  if (/^[A-Da-d]$/.test(s.trim())) {
-    const idx = letterToIndex(s)
+  // Single letter, alone or as a label: "A", "b", "C)", "(D)", "B."
+  const letterMatch = s.match(/^[([]?([A-Da-d])[)\].:]?$/)
+  if (letterMatch) {
+    const idx = letterToIndex(letterMatch[1])
     if (idx !== null) {
       changes.push(`${qId}: converted letter answer "${s.toUpperCase()}" → correctIndex ${idx}`)
       return idx
     }
   }
 
-  // "Option A", "Option B", "choice C", "answer D"
-  const prefixMatch = s.match(/(?:option|choice|answer|opt)\s*([A-Da-d])/i)
+  // Full text match against options (AI gave the full answer text). It comes
+  // before the looser readings, so an option that starts with a word like
+  // "Option" is never taken for a letter.
+  const sLower = s.toLowerCase()
+  const textIdx = options.findIndex(o => o.toLowerCase() === sLower)
+  if (textIdx >= 0) {
+    changes.push(`${qId}: matched full answer text to option ${textIdx} (correctIndex ${textIdx})`)
+    return textIdx
+  }
+
+  // The label and the text of the same option: "B) Bank"
+  const labelled = readLabel(s)
+  if (labelled && options[labelled.position]?.toLowerCase() === labelled.text.toLowerCase()) {
+    changes.push(`${qId}: matched full answer text to option ${labelled.position} (correctIndex ${labelled.position})`)
+    return labelled.position
+  }
+
+  // "Option A", "choice C", "answer: D", "Option B: Bank". The letter must end
+  // there: "Option A and C" and "Adopt a policy" are not a letter.
+  const prefixMatch = s.match(/^(?:(?:the\s+)?correct\s+)?(?:option|choice|answer|opt)(?:\s+is)?\s*:?\s*[([]?([A-D])(?:$|[)\].:]|\s+[-–—]\s)/i)
   if (prefixMatch) {
     const idx = letterToIndex(prefixMatch[1])
     if (idx !== null) {
@@ -253,7 +272,7 @@ function resolveCorrectIndex(
   }
 
   // "option_a", "option_b", "opt_c", "ans_d"
-  const snakeMatch = s.match(/(?:option|opt|ans|answer)_([a-d])/i)
+  const snakeMatch = s.match(/^(?:option|opt|ans|answer)_([a-d])$/i)
   if (snakeMatch) {
     const idx = letterToIndex(snakeMatch[1])
     if (idx !== null) {
@@ -262,26 +281,22 @@ function resolveCorrectIndex(
     }
   }
 
-  // Full text match against options (AI gave the full answer text)
-  if (options.length > 0) {
-    const sLower = s.toLowerCase()
-    const textIdx = options.findIndex(o => o.toLowerCase() === sLower)
-    if (textIdx >= 0) {
-      changes.push(`${qId}: matched full answer text to option ${textIdx} (correctIndex ${textIdx})`)
-      return textIdx
-    }
-    // Partial match — answer text is a substring of an option or vice versa
-    const partialIdx = options.findIndex(o =>
-      o.toLowerCase().includes(sLower.slice(0, 30)) ||
-      sLower.includes(o.toLowerCase().slice(0, 30))
-    )
-    if (partialIdx >= 0) {
-      changes.push(`${qId}: partial text match → correctIndex ${partialIdx}`)
-      return partialIdx
-    }
+  // Partial match — answer text is a substring of an option or vice versa.
+  // Only when exactly one option fits; anything else is a guess.
+  const fits = options.flatMap((o, i) =>
+    contains(o.toLowerCase(), sLower.slice(0, 30)) || contains(sLower, o.toLowerCase().slice(0, 30)) ? [i] : []
+  )
+  if (fits.length === 1) {
+    changes.push(`${qId}: partial text match → correctIndex ${fits[0]}`)
+    return fits[0]
   }
 
   return null
+}
+
+/** Whether text holds part, when part is long enough to mean something */
+function contains(text: string, part: string): boolean {
+  return part.length >= 4 && text.includes(part)
 }
 
 /**
@@ -505,7 +520,7 @@ function normaliseQuestion(
     : resolveCorrectIndex(rawCorrect, options, changes, qId)
 
   if (type !== 'writing' && correctIndex === null) {
-    warnings.push(`${qId}: could not resolve correct answer — defaulting to 0`)
+    warnings.push(`${qId}: could not work out the correct answer. Set it in the pasted text and paste again.`)
   }
 
   // ── Explanation ──
@@ -542,7 +557,7 @@ function normaliseQuestion(
     type,
     questionText,
     options,
-    correctIndex:       correctIndex ?? (type === 'writing' ? null : 0),
+    correctIndex,
     explanation,
     writingModelAnswer,
     writingExplanation,
