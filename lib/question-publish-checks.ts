@@ -42,6 +42,9 @@ export const SET_READ_FAILED = 'Could not check for an existing practice set. No
 export const SLUG_READ_FAILED = 'Could not check the web address. Nothing was published.'
 export const EMPTY_ADDRESS =
   'Nothing was published. The title needs at least one letter or number (A–Z or 0–9) so the set can have a web address.'
+export const LEFT_DRAFT =
+  'Nothing was published. Saving stopped part-way and a hidden draft set was left behind. Delete it in Questions, then publish again.'
+export const PUBLISH_FAILED = 'Could not publish the set. Nothing was published.'
 
 export function alreadyHasSetMessage(setTitle: string): string {
   return `Nothing was published. This article already has a practice set: "${setTitle}". Add questions to that set instead.`

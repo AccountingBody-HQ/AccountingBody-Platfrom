@@ -7,8 +7,10 @@ import { checkRead } from '@/lib/db-check'
 import {
   CASES_FAILED,
   EMPTY_ADDRESS,
+  LEFT_DRAFT,
   LINK_FAILED,
   NOT_FOUND,
+  PUBLISH_FAILED,
   SET_READ_FAILED,
   SLUG_READ_FAILED,
   alreadyHasSetMessage,
@@ -161,6 +163,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: slugTakenMessage(slug) }, { status: 409 })
     }
 
+    // The set is saved as a draft, which visitors never see, and is published
+    // only when its parts are saved. published_at is set at that moment.
     const setRow: any = {
       title,
       slug,
@@ -173,10 +177,9 @@ export async function POST(req: NextRequest) {
       canonical_owner:  canonicalOwner,
       seo_title:        title.length <= 60 ? title : title.slice(0, 60).replace(/\s+\S*$/, '...'),
       seo_description:  (bundle.excerpt ?? '').length <= 160 ? (bundle.excerpt ?? '') : (bundle.excerpt ?? '').slice(0, 160).replace(/\s+\S*$/, '...'),
-      status:           'published',
+      status:           'draft',
       platform,
       content_id:       contentId,
-      published_at:     now,
       article_slug:     resolvedArticleSlug,
     }
 
@@ -192,6 +195,14 @@ export async function POST(req: NextRequest) {
     }
 
     const setId = insertedSet.id
+
+    // Removes the draft after a step before publishing failed. Its questions
+    // and cases go with it, as when the set editor deletes a set.
+    const undoDraft = async (message: string) => {
+      const { error: undoError } = await supabase.from('question_sets').delete().eq('id', setId)
+      if (undoError) console.error('questions/publish rollback delete failed', undoError.code ?? 'unknown')
+      return NextResponse.json({ error: undoError ? LEFT_DRAFT : message }, { status: 500 })
+    }
 
     // Map bundle questions to Supabase `questions` rows (options are 4 discrete columns, not an array)
     const questionRows = bundle.questions.map((q: any, i: number) => {
@@ -221,14 +232,11 @@ export async function POST(req: NextRequest) {
 
     if (qError) {
       console.error('questions/publish questions insert error:', qError)
-      // Roll back the orphaned question set since its questions failed to insert
-      const { error: rollbackError } = await supabase.from('question_sets').delete().eq('id', setId)
-      if (rollbackError) console.error('questions/publish rollback delete failed', rollbackError.code ?? 'unknown')
-      return NextResponse.json({ error: qError.message }, { status: 500 })
+      return undoDraft(qError.message)
     }
 
-    // From here the set is live: a later failure is told to the admin as a
-    // warning next to the success, never as an error.
+    // A failure of the case exhibits or the article link is told to the admin
+    // as a warning next to the success, never as an error.
     let casesWarning: string | undefined
     let linkWarning: string | undefined
 
@@ -252,6 +260,17 @@ export async function POST(req: NextRequest) {
           casesWarning = CASES_FAILED
         }
       }
+    }
+
+    // Everything is saved: publish. Exactly one set must change.
+    const { data: publishedRows, error: publishError } = await supabase
+      .from('question_sets')
+      .update({ status: 'published', published_at: now })
+      .eq('id', setId)
+      .select('id')
+    if (publishError || publishedRows?.length !== 1) {
+      console.error('questions/publish status update failed', publishError?.code ?? 'no_row')
+      return undoDraft(PUBLISH_FAILED)
     }
 
     // Close the bidirectional link: update articles.mcq_url so the

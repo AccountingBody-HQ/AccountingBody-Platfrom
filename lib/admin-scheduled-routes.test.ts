@@ -379,7 +379,7 @@ const scenarios: Scenario[] = [
     healthy: {
       status: 200,
       body: { success: true, documentId: ID, contentId: 'AB-QZ-00001', title: 'Set', slug: 'set', questionCount: 1 },
-      dbRequests: 4,
+      dbRequests: 5,
     },
     stalled: {
       waits: 1,

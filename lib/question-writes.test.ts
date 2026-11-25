@@ -7,8 +7,10 @@ import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
 import {
   CASES_FAILED,
   EMPTY_ADDRESS,
+  LEFT_DRAFT,
   LINK_FAILED,
   NOT_FOUND,
+  PUBLISH_FAILED,
   SET_READ_FAILED,
   SLUG_READ_FAILED,
   alreadyHasSetMessage,
@@ -52,7 +54,7 @@ const SITE = 'https://accountingbody.com'
 const SET_ID = '0f8fad5b-d9cb-469f-a165-70867728950e'
 
 type Row = Record<string, unknown>
-type Call = { method: string; table: string; query: string; body: unknown; tagsBefore: number }
+type Call = { method: string; table: string; query: string; body: unknown; tagsBefore: number; publishedBefore: number }
 
 const db = {
   tables: {} as Record<string, Row[]>,
@@ -70,7 +72,8 @@ const fakeFetch: typeof fetch = async (input, init) => {
   const method = (init?.method ?? 'GET').toUpperCase()
   const table = url.pathname.replace('/rest/v1/', '')
   const body: unknown = init?.body ? JSON.parse(String(init.body)) : undefined
-  const call: Call = { method, table, query: decodeURIComponent(url.search), body, tagsBefore: revalidated.length }
+  const publishedBefore = (db.tables.question_sets ?? []).filter((row) => row.status === 'published').length
+  const call: Call = { method, table, query: decodeURIComponent(url.search), body, tagsBefore: revalidated.length, publishedBefore }
   db.calls.push(call)
   if (db.fail(call)) return json({ code: 'XX000', message: 'database detail', details: null, hint: null }, 500)
   if (table.startsWith('rpc/')) return json(db.rpc, 200)
@@ -343,7 +346,13 @@ describe('publish: an honest result', () => {
     db.tables.articles = [{ ...article }]
     expect(await publish({ bundle: scenario, articleSlug: 'AB-ART-00007' })).toEqual({ status: 200, body: done })
     expect(lines().filter((line) => line.startsWith('GET'))).toHaveLength(4)
-    expect(lines().slice(4)).toEqual(['POST question_sets', 'POST questions', 'POST question_cases', 'PATCH articles'])
+    expect(lines().slice(4)).toEqual([
+      'POST question_sets',
+      'POST questions',
+      'POST question_cases',
+      'PATCH question_sets',
+      'PATCH articles',
+    ])
     expect(db.tables.articles).toMatchObject([{ slug: 'leases', mcq_url: '/practice-questions/leases-quiz' }])
     expect(db.tables.questions).toMatchObject([{ set_id: SET_ID, question_order: 1, correct_index: 2, option_d: 'Four' }])
   })
@@ -363,7 +372,8 @@ describe('publish: an honest result', () => {
     const result = await publish({ bundle: bundle(), articleSlug: 'leases' })
     expect(result).toEqual({ status: 200, body: { ...done, linkWarning: LINK_FAILED } })
     expect(JSON.stringify(result.body)).not.toContain('database detail')
-    expect(writes()).toEqual(['POST question_sets', 'POST questions', 'PATCH articles'])
+    expect(writes()).toEqual(['POST question_sets', 'POST questions', 'PATCH question_sets', 'PATCH articles'])
+    expect(db.tables.question_sets).toMatchObject([{ status: 'published' }])
   })
 
   it('warns when the case exhibits cannot be saved, and still links the article', async () => {
@@ -417,7 +427,69 @@ describe('publish: an honest result', () => {
 
   it('publishes when the cases are not a list', async () => {
     expect((await publish({ bundle: bundle({ cases: { caseId: 'case-1' } }) })).status).toBe(200)
-    expect(writes()).toEqual(['POST question_sets', 'POST questions'])
+    expect(writes()).toEqual(['POST question_sets', 'POST questions', 'PATCH question_sets'])
+  })
+
+  it('saves a draft first, and publishes it once, after its parts', async () => {
+    db.tables.articles = [{ ...article }]
+    await publish({ bundle: scenario, articleSlug: 'leases' })
+    const inserted = db.calls.find((c) => c.method === 'POST' && c.table === 'question_sets')?.body as Row
+    expect(inserted.status).toBe('draft')
+    expect(inserted.published_at ?? null).toBeNull()
+    const updates = db.calls.filter((c) => c.method === 'PATCH' && c.table === 'question_sets')
+    expect(updates).toHaveLength(1)
+    expect(updates[0].query).toContain(`id=eq.${SET_ID}`)
+    expect(updates[0].body).toEqual({ status: 'published', published_at: expect.stringMatching(/^\d{4}-\d\d-\d\dT/) })
+    expect(db.tables.question_sets).toMatchObject([{ status: 'published', article_slug: 'leases' }])
+    // Until then no published row exists.
+    expect(db.calls.map((c) => `${c.table} ${c.publishedBefore}`).slice(-2)).toEqual(['question_sets 0', 'articles 1'])
+  })
+
+  describe.each<[string, string, string, string[], string]>([
+    ['the questions cannot be saved', 'POST', 'questions', ['POST question_sets', 'POST questions'], 'database detail'],
+    [
+      'the set cannot be published',
+      'PATCH',
+      'question_sets',
+      ['POST question_sets', 'POST questions', 'POST question_cases', 'PATCH question_sets'],
+      PUBLISH_FAILED,
+    ],
+  ])('when %s', (_name, method, table, before, error) => {
+    it('removes the draft, and nothing was ever published', async () => {
+      db.tables.articles = [{ ...article }]
+      db.fail = failOn(method, table)
+      expect(await publish({ bundle: scenario, articleSlug: 'leases' })).toEqual({ status: 500, body: { error } })
+      expect(writes()).toEqual([...before, 'DELETE question_sets'])
+      expect(db.calls.at(-1)?.query).toBe(`?id=eq.${SET_ID}`)
+      expect(db.calls.every((c) => c.publishedBefore === 0)).toBe(true)
+      expect(db.tables.question_sets).toEqual([])
+      expect(db.tables.articles).toMatchObject([{ mcq_url: null }])
+      expect(revalidated).toEqual([])
+    })
+
+    it('says so when the draft cannot be removed, and only a draft is left', async () => {
+      db.tables.articles = [{ ...article }]
+      db.fail = (call) => failOn(method, table)(call) || failOn('DELETE', 'question_sets')(call)
+      expect(await publish({ bundle: scenario, articleSlug: 'leases' })).toEqual({ status: 500, body: { error: LEFT_DRAFT } })
+      expect(writes()).toEqual([...before, 'DELETE question_sets'])
+      expect(db.calls.every((c) => c.publishedBefore === 0)).toBe(true)
+      expect(db.tables.question_sets).toMatchObject([{ status: 'draft' }])
+      expect(db.tables.articles).toMatchObject([{ mcq_url: null }])
+      expect(revalidated).toEqual([])
+      // The web address check still sees the draft that was left.
+      db.fail = () => false
+      expect(await publish({ bundle: bundle() })).toEqual({ status: 409, body: { error: slugTakenMessage('leases-quiz') } })
+    })
+  })
+
+  it('treats "no set changed" as a failure to publish', async () => {
+    db.fail = (call) => {
+      if (call.method === 'PATCH' && call.table === 'question_sets') db.tables.question_sets = []
+      return false
+    }
+    expect(await publish({ bundle: bundle() })).toEqual({ status: 500, body: { error: PUBLISH_FAILED } })
+    expect(writes().at(-1)).toBe('DELETE question_sets')
+    expect(revalidated).toEqual([])
   })
 
   it.each(['generate', 'import'])('the %s page shows both warnings in its success view', (name) => {

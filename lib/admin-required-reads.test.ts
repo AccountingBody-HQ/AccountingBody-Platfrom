@@ -508,8 +508,9 @@ describe.each([
     last: 'AB-QZ-00041',
     first: questionsAnswer('AB-QZ-00001'),
     next: questionsAnswer('AB-QZ-00042'),
-    // The web address is looked up before the first write.
-    writes: ['GET question_sets', 'POST question_sets', 'POST questions'],
+    // The web address is looked up before the first write, and the draft is
+    // published after the last one.
+    writes: ['GET question_sets', 'POST question_sets', 'POST questions', 'PATCH question_sets'],
   },
 ])('$name', ({ publish, table, last, first, next, writes }) => {
   it('gives the first content ID when there is no content yet, as before', async () => {
@@ -556,6 +557,7 @@ describe('question set publish with a linked article', () => {
         'GET question_sets',
         'POST question_sets',
         'POST questions',
+        'PATCH question_sets',
         'PATCH articles',
       ],
       elapsed: 0,

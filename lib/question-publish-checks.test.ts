@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest'
 import {
   CASES_FAILED,
   EMPTY_ADDRESS,
+  LEFT_DRAFT,
   LINK_FAILED,
   MAX_LISTED_PROBLEMS,
   NOT_FOUND,
+  PUBLISH_FAILED,
   REASON_TEXT,
   SET_READ_FAILED,
   SLUG_READ_FAILED,
@@ -185,5 +187,9 @@ describe('wording', () => {
     expect(EMPTY_ADDRESS).toBe(
       'Nothing was published. The title needs at least one letter or number (A–Z or 0–9) so the set can have a web address.',
     )
+    expect(LEFT_DRAFT).toBe(
+      'Nothing was published. Saving stopped part-way and a hidden draft set was left behind. Delete it in Questions, then publish again.',
+    )
+    expect(PUBLISH_FAILED).toBe('Could not publish the set. Nothing was published.')
   })
 })
