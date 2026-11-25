@@ -6,6 +6,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server"
 import { isAuthenticated, signedOutResponse } from "@/lib/admin-auth"
+import { reportServerError } from "@/lib/report-error"
 import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { FullCoverTemplate } from "@/components/book/FullCoverTemplate"
@@ -35,6 +36,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ pdf: pdfBuffer.toString("base64") })
   } catch (err: unknown) {
+    console.error("ab-press/generate-cover: failed:", err)
+    reportServerError("admin book cover failed", err, { area: "admin" })
     const msg = err instanceof Error ? err.message : "Unknown error"
     return NextResponse.json({ error: msg }, { status: 500 })
   }

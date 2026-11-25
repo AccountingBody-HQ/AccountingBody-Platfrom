@@ -34,30 +34,45 @@ const state = vi.hoisted(() => ({
   cap: Infinity,
   // Every request: the table and the number of values in its lists.
   requests: [] as { table: string; method: string; values: number }[],
+  // What the PDF maker throws, and what the course read throws.
+  pdfFails: null as Error | null,
+  courseFails: null as Error | null,
+  // Every problem report: its label, its problem and what goes with it.
+  reports: [] as unknown[][],
+}))
+
+vi.mock('@/lib/report-error', () => ({
+  reportServerError: (...args: unknown[]) => {
+    state.reports.push(args)
+  },
 }))
 
 vi.mock('@/lib/coursesNew', () => ({
-  getCourseBySlug: async (slug: string) => ({
-    id: slug,
-    title: 'Course',
-    slug,
-    chapters: (state.chapters[slug] ?? [state.lessons[slug] ?? [['live', 'draft', 'unset', 'gone']]]).map((lessons, index) => ({
-      id: 'chapter',
-      title: 'Chapter',
-      chapterOrder: index + 1,
-      lessons: lessons.map((names) => ({
-        id: 'lesson',
-        title: 'Lesson',
-        slug: 'lesson',
-        articles: names.map((name) => ({ id: `a-${name}`, title: name, slug: name })),
+  getCourseBySlug: async (slug: string) => {
+    if (state.courseFails) throw state.courseFails
+    return {
+      id: slug,
+      title: 'Course',
+      slug,
+      chapters: (state.chapters[slug] ?? [state.lessons[slug] ?? [['live', 'draft', 'unset', 'gone']]]).map((lessons, index) => ({
+        id: 'chapter',
+        title: 'Chapter',
+        chapterOrder: index + 1,
+        lessons: lessons.map((names) => ({
+          id: 'lesson',
+          title: 'Lesson',
+          slug: 'lesson',
+          articles: names.map((name) => ({ id: `a-${name}`, title: name, slug: name })),
+        })),
       })),
-    })),
-  }),
+    }
+  },
 }))
 
 vi.mock('@react-pdf/renderer', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@react-pdf/renderer')>()),
   renderToBuffer: async (element: { props: unknown }) => {
+    if (state.pdfFails) throw state.pdfFails
     state.pdfs += 1
     state.made.push(JSON.stringify(element.props))
     return Buffer.from('/Type /Page ')
@@ -440,7 +455,7 @@ async function fakeDatabase(input: RequestInfo | URL, init?: RequestInit): Promi
   const table = url.pathname.split('/').pop() ?? ''
   const lists = Array.from(url.searchParams.values()).filter((value) => value.startsWith('in.('))
   state.requests.push({ table, method, values: Math.max(0, ...lists.map((value) => value.split(',').length)) })
-  if (method === 'POST') {
+  if (method === 'POST' && state.failing[table] !== 'error') {
     state.written.push(table)
     return new Response(null, { status: 201 })
   }
@@ -488,6 +503,9 @@ beforeEach(() => {
   state.made = []
   state.pdfs = 0
   state.written = []
+  state.pdfFails = null
+  state.courseFails = null
+  state.reports = []
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'http://db.invalid')
   vi.stubEnv('SUPABASE_SECRET_KEY', 'test-key')
   vi.stubEnv('ADMIN_SECRET', TEST_ADMIN_SECRET)
@@ -598,6 +616,20 @@ const MAKERS: [string, object][] = [
   ['generate-answers', { slug: 'course' }],
   ['generate-answers', { slug: 'course', chapterIndex: 0 }],
 ]
+
+// Each route's report from its final catch.
+const LABELS: Record<string, string> = {
+  generate: 'admin book make failed',
+  'generate-pq': 'admin practice kit make failed',
+  'generate-chapter': 'admin book chapter failed',
+  'generate-answers': 'admin book answers failed',
+  'generate-cover': 'admin book cover failed',
+  'generate-frontmatter': 'admin book front pages failed',
+  'export-word': 'admin book word export failed',
+  preview: 'admin book preview failed',
+}
+const FRONT: [string, object] = ['generate-frontmatter', { slug: 'course', bookType: 'combined', chapterPageStarts: [], totalPages: 4 }]
+const COVER: [string, object] = ['generate-cover', { slug: 'course', bookType: 'combined', pageCount: 30 }]
 
 const sha = (text: string) => createHash('sha256').update(text).digest('hex').slice(0, 16)
 
@@ -732,6 +764,7 @@ describe('a failed read', () => {
         expect(log).toHaveBeenCalledTimes(1)
         expect(log.mock.calls[0][0]).toBe(`ab-press/${name}: failed:`)
         expect(log.mock.calls[0][1]).toMatchObject({ message, what, code: CODES[how] })
+        expect(state.reports).toEqual([[LABELS[name], log.mock.calls[0][1], { area: 'admin' }]])
       })
 
       // The preview counts the questions without reading them.
@@ -748,7 +781,12 @@ describe('a failed read', () => {
         if (table === 'articles') expect(body.health.verdict).toBe('issues')
         expect(body.historyError).toBe(false)
         expect(JSON.stringify(body)).not.toContain('private detail')
-        expect(log).toHaveBeenCalledTimes(table === 'articles' ? 2 : 1)
+        const labels = ['admin book preview count failed', ...(table === 'articles' ? ['admin book preview content failed'] : [])]
+        expect(log).toHaveBeenCalledTimes(labels.length)
+        expect(state.reports).toEqual(labels.map((text, index) => [text, log.mock.calls[index][1], { area: 'admin' }]))
+        // A count has no body, so no code comes back with its error.
+        const code = table !== 'questions' ? CODES[how] : how === 'error' ? undefined : 'NO_TOTAL'
+        expect((state.reports[0][1] as { code?: string }).code).toBe(code)
       })
     }
   }
@@ -790,6 +828,7 @@ describe('a failed read', () => {
     expect(body).toMatchObject({ historyError: true, history: [], health: { unavailable: false } })
     expect(JSON.stringify(body)).not.toContain('private detail')
     expect(log).toHaveBeenCalledTimes(1)
+    expect(state.reports).toEqual([['admin book preview history failed', log.mock.calls[0][1], { area: 'admin' }]])
   })
 
   it('the preview says nothing about it when the reads work', async () => {
@@ -815,7 +854,7 @@ describe('a course without articles', () => {
     expect(EMPTY_COURSE).toBe('No articles were found for this course, so nothing was made. Please check the course and try again in a minute.')
   })
 
-  it.each([...MAKERS, ['generate-frontmatter', { slug: 'course', bookType: 'combined', chapterPageStarts: [], totalPages: 4 }] as [string, object]])(
+  it.each([...MAKERS, FRONT])(
     '%s %o answers 422 and makes nothing',
     async (name, body) => {
       const log = vi.spyOn(console, 'error').mockImplementation(() => undefined)
@@ -825,7 +864,7 @@ describe('a course without articles', () => {
         expect(response.status).toBe(422)
         expect(await response.json()).toEqual({ error: EMPTY_COURSE })
       }
-      expect([state.made, state.written, state.requests]).toEqual([[], [], []])
+      expect([state.made, state.written, state.requests, state.reports]).toEqual([[], [], [], []])
       expect(log).not.toHaveBeenCalled()
     },
   )
@@ -835,6 +874,44 @@ describe('a course without articles', () => {
     const response = await callRoute('generate-chapter', { body: { slug: 'course', bookType: 'combined', chapterIndex: 0 } })
     expect(response.status).toBe(200)
     expect(await response.json()).toMatchObject({ chapterCount: 2, questionCount: 0 })
+  })
+})
+
+describe('a problem is logged and reported once', () => {
+  it.each([...MAKERS, FRONT, COVER].filter(([name]) => name !== 'export-word'))('%s %o: the PDF maker fails', async (name, body) => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    state.pdfFails = new Error('no pdf')
+    const response = await callRoute(name, { body })
+    expect([response.status, await response.json()]).toEqual([500, { error: 'no pdf' }])
+    expect(log.mock.calls).toEqual([[`ab-press/${name}: failed:`, state.pdfFails]])
+    expect(state.reports).toEqual([[LABELS[name], state.pdfFails, { area: 'admin' }]])
+    expect(state.written).toEqual([])
+  })
+
+  it.each<[string, { body?: object; query?: string }]>([
+    ...[...MAKERS, FRONT].map(([name, body]): [string, { body: object }] => [name, { body }]),
+    ['preview', { query: '?slug=course' }],
+  ])('%s %o: the course read fails', async (name, request) => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    state.courseFails = new Error('fixed text')
+    const response = await callRoute(name, request)
+    expect([response.status, await response.json()]).toEqual([500, { error: 'fixed text' }])
+    expect(log.mock.calls).toEqual([[`ab-press/${name}: failed:`, state.courseFails]])
+    expect(state.reports).toEqual([[LABELS[name], state.courseFails, { area: 'admin' }]])
+  })
+
+  it.each<[string, object, string]>([
+    ['generate', { slug: 'good', bookType: 'combined' }, 'admin book history save failed'],
+    ['generate-pq', { slug: 'good' }, 'admin practice kit history save failed'],
+  ])('%s %o: a failed history save still gives the book', async (name, body, text) => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const response = await callRoute(name, { body })
+    expect([response.status, state.written, state.reports]).toEqual([200, ['book_publications'], []])
+    state.failing = { book_publications: 'error' }
+    const unsaved = await callRoute(name, { body })
+    expect([unsaved.status, unsaved.headers.get('content-type'), state.written.length]).toEqual([200, 'application/zip', 1])
+    expect(log).toHaveBeenCalledTimes(1)
+    expect(state.reports).toEqual([[text, expect.objectContaining({ code: 'XX000' }), { area: 'admin' }]])
   })
 })
 

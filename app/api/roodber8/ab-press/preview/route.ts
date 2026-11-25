@@ -5,6 +5,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
+import { reportServerError } from '@/lib/report-error'
 import { getCourseBySlug } from '@/lib/coursesNew'
 import { filterForPublication, getPublicationWarnings } from '@/lib/publication-filter'
 import { countQuestions, createSupabaseClient, practiceSlug, readBookArticles, readLiveSets } from '@/lib/ab-press-builder'
@@ -64,6 +65,7 @@ export async function GET(req: NextRequest) {
       } catch (err) {
         // The count is unknown, not zero.
         console.error('ab-press/preview: question count read failed:', err)
+        reportServerError('admin book preview count failed', err, { area: 'admin' })
         questionCountError = true
       }
     }
@@ -111,6 +113,7 @@ export async function GET(req: NextRequest) {
       } catch (err) {
         // The content is unknown, not ready.
         console.error('ab-press/preview: article content read failed:', err)
+        reportServerError('admin book preview content failed', err, { area: 'admin' })
         healthUnavailable = true
       }
     }
@@ -152,6 +155,7 @@ export async function GET(req: NextRequest) {
       }))
     } catch (err) {
       console.error('ab-press/preview: book_publications history read failed:', err)
+      reportServerError('admin book preview history failed', err, { area: 'admin' })
       historyError = true
     }
 
@@ -203,6 +207,8 @@ export async function GET(req: NextRequest) {
       historyError,
     })
   } catch (err: unknown) {
+    console.error('ab-press/preview: failed:', err)
+    reportServerError('admin book preview failed', err, { area: 'admin' })
     const message = err instanceof Error ? err.message : 'Unknown error'
     return NextResponse.json({ error: message }, { status: 500 })
   }

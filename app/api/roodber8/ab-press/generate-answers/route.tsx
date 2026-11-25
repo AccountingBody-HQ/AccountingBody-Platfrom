@@ -19,6 +19,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server"
 import { isAuthenticated, signedOutResponse } from "@/lib/admin-auth"
+import { reportServerError } from "@/lib/report-error"
 import { Document, Page, Text, View, StyleSheet, Font, renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { getCourseBySlug } from "@/lib/coursesNew"
@@ -302,6 +303,7 @@ export async function POST(req: NextRequest) {
     })
   } catch (err: unknown) {
     console.error("ab-press/generate-answers: failed:", err)
+    reportServerError("admin book answers failed", err, { area: "admin" })
     const msg = err instanceof Error ? err.message : "Unknown error"
     return NextResponse.json({ error: msg }, { status: 500 })
   }

@@ -7,6 +7,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server"
 import { isAuthenticated, signedOutResponse } from "@/lib/admin-auth"
+import { reportServerError } from "@/lib/report-error"
 import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { ChapterTemplate } from "@/components/book/ChapterTemplate"
@@ -99,6 +100,7 @@ export async function POST(req: NextRequest) {
     })
   } catch (err: unknown) {
     console.error("ab-press/generate-chapter: failed:", err)
+    reportServerError("admin book chapter failed", err, { area: "admin" })
     const msg = err instanceof Error ? err.message : "Unknown error"
     return NextResponse.json({ error: msg }, { status: 500 })
   }

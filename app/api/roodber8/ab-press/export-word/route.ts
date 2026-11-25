@@ -5,6 +5,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server"
 import { isAuthenticated, signedOutResponse } from "@/lib/admin-auth"
+import { reportServerError } from "@/lib/report-error"
 import {
   Document, Packer, Paragraph, TextRun, HeadingLevel,
   AlignmentType, PageBreak, convertInchesToTwip,
@@ -216,6 +217,7 @@ export async function POST(req: NextRequest) {
     const msg = err instanceof Error ? err.message : "Unknown error"
     if (msg === EMPTY_COURSE) return NextResponse.json({ error: msg }, { status: 422 })
     console.error("ab-press/export-word: failed:", err)
+    reportServerError("admin book word export failed", err, { area: "admin" })
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
