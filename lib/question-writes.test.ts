@@ -7,9 +7,11 @@ import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
 import {
   CASES_SAVE_FAILED,
   EMPTY_ADDRESS,
+  LAST_QUESTION,
   LEFT_DRAFT,
   LINK_FAILED,
   NOT_FOUND,
+  NOT_READY_EMPTY,
   PUBLISH_FAILED,
   SET_CHECK_FAILED,
   SET_READ_FAILED,
@@ -17,9 +19,11 @@ import {
   SLUG_READ_FAILED,
   UNLINK_FAILED,
   alreadyHasSetMessage,
+  notReadyProblemsMessage,
   publishProblemsMessage,
   slugTakenMessage,
 } from './question-publish-checks'
+import { DELETE_FAILED } from './recycle-bin'
 
 // PQ-1 (D337): question publishing checks before it writes, says honestly
 // what happened, and refreshes the public question caches after a write that
@@ -545,6 +549,35 @@ async function setRoute(method: string, body: Row) {
   })
 }
 
+// A complete question, as it is stored.
+const storedQuestion = (over: Row = {}): Row => ({
+  id: QUESTION,
+  set_id: SET_ID,
+  question_order: 1,
+  type: 'multiple-choice',
+  question_text: 'Which one?',
+  option_a: 'One',
+  option_b: 'Two',
+  option_c: 'Three',
+  option_d: 'Four',
+  correct_index: 2,
+  explanation: 'Because.',
+  writing_model_answer: null,
+  case_id: null,
+  ...over,
+})
+// A complete question, as the set editor adds it.
+const newQuestion = (over: Row = {}): Row => ({
+  question_text: 'Another?',
+  option_a: 'One',
+  option_b: 'Two',
+  option_c: 'Three',
+  option_d: 'Four',
+  correct_index: 0,
+  explanation: 'Because.',
+  ...over,
+})
+
 const ID_TAG = `question-set-id:${SET_ID}`
 const WRITES: WriteCase[] = [
   {
@@ -584,7 +617,7 @@ const WRITES: WriteCase[] = [
   },
   {
     name: 'question added',
-    call: () => setRoute('POST', { question_text: 'Another?' }),
+    call: () => setRoute('POST', newQuestion()),
     write: 'POST',
     table: 'questions',
     tags: [ID_TAG],
@@ -594,7 +627,7 @@ const WRITES: WriteCase[] = [
 describe('set editor: refreshes the public caches', () => {
   beforeEach(() => {
     db.tables.question_sets = [{ id: SET_ID, title: 'Leases quiz', slug: 'leases-quiz', article_slug: 'leases' }]
-    db.tables.questions = [{ id: QUESTION, set_id: SET_ID, question_order: 1, question_text: 'Which one?' }]
+    db.tables.questions = [storedQuestion()]
   })
 
   it.each(WRITES)('$name: after the write', async ({ call, write, table, tags }) => {
@@ -674,6 +707,7 @@ const withSet = (set: Row, mcqUrl: unknown, article: Row = {}) => {
     { slug: 'leases', status: 'published', mcq_url: mcqUrl, ...article },
     { slug: 'bystander', status: 'published', mcq_url: HERE },
   ]
+  db.tables.questions = [storedQuestion()]
 }
 const send = async (method: string, body: Row) => {
   const res = await setRoute(method, body)
@@ -825,6 +859,270 @@ describe('article link: a draft changed to published', () => {
     withSet({ status: 'draft' }, null, { status: 'draft' })
     expect((await patch({ status: 'published' })).body).toEqual({ success: true, linkWarning: LINK_FAILED })
     expect(articleLink()).toBeNull()
+  })
+})
+
+// ── The set editor makes the same structural checks ─────────────────────────
+
+const OTHER_QUESTION = '2c5e39cb-3fb2-12e3-994f-1127e4ddb538'
+const OTHER_SET = '5d0f3a0e-6f0b-4b52-9f3c-3f1f7a6f2a11'
+const refusedWithoutWrite = () => {
+  expect(writes()).toEqual([])
+  expect(revalidated).toEqual([])
+}
+
+describe('set editor: a question that is edited', () => {
+  const edit = (fields: Row, questionId = QUESTION) => send('PATCH', { action: 'update_question', questionId, fields })
+
+  it.each<[string, Row, Row, string]>([
+    ['loses its text', {}, { question_text: '  ' }, 'needs question text'],
+    ['loses an option', {}, { option_c: '' }, 'has an empty answer option'],
+    ['gets a null option', {}, { option_c: null }, 'has an empty answer option'],
+    ['gets a placeholder', {}, { option_d: 'Option D' }, 'has a placeholder answer option'],
+    ['gets two equal options', {}, { option_b: 'one ' }, 'has two answer options that are the same'],
+    ['loses its answer', {}, { correct_index: null }, 'needs one correct answer (A, B, C or D)'],
+    ['gets an answer past D', {}, { correct_index: 4 }, 'needs one correct answer (A, B, C or D)'],
+    ['loses its explanation', {}, { explanation: '' }, 'needs an explanation'],
+    ['never had an answer, and gets another text', { correct_index: null }, { question_text: 'New?' }, 'needs one correct answer (A, B, C or D)'],
+    ['is a writing question and loses its model answer', { type: 'writing', writing_model_answer: 'Text.' }, { writing_model_answer: '' }, 'needs a model answer'],
+    ['has two faults', {}, { option_c: '', explanation: '' }, 'has an empty answer option; needs an explanation'],
+  ])('is not saved when it %s', async (_name, stored, fields, reason) => {
+    withSet({}, HERE)
+    db.tables.questions = [storedQuestion(stored)]
+    expect(await edit(fields)).toEqual({ status: 400, body: { error: `Nothing was saved. Please fix this question first: ${reason}.` } })
+    expect(db.tables.questions).toEqual([storedQuestion(stored)])
+    refusedWithoutWrite()
+  })
+
+  it.each<[string, Row, Row]>([
+    ['one part changes', {}, { option_c: 'Other' }],
+    ['the edit completes it', { explanation: null, correct_index: null }, { explanation: 'Because.', correct_index: 3 }],
+    ['it is a writing question', { type: 'writing', writing_model_answer: 'Text.', option_a: '', option_b: '', option_c: '', option_d: '', correct_index: null, explanation: null }, { question_text: 'Discuss.' }],
+    ['its case is missing, which an edit cannot repair', { type: 'scenario', case_id: 'case-1' }, { question_text: 'New?' }],
+  ])('is saved when %s', async (_name, stored, fields) => {
+    withSet({}, HERE)
+    db.tables.questions = [storedQuestion(stored), storedQuestion({ id: OTHER_QUESTION })]
+    expect(await edit(fields)).toEqual({ status: 200, body: { success: true } })
+    expect(db.tables.questions).toEqual([{ ...storedQuestion(stored), ...fields }, storedQuestion({ id: OTHER_QUESTION })])
+    expect(writes()).toEqual(['PATCH questions'])
+  })
+
+  it.each<[string, Row[]]>([
+    ['no question', []],
+    ['the question of another set', [storedQuestion({ set_id: OTHER_SET })]],
+  ])('answers "not found" for %s', async (_name, questions) => {
+    withSet({}, HERE)
+    db.tables.questions = questions
+    expect(await edit({ question_text: 'New?' })).toEqual({ status: 404, body: { error: 'Question not found' } })
+    refusedWithoutWrite()
+  })
+
+  it('answers "not found" when the question went away meanwhile', async () => {
+    withSet({}, HERE)
+    db.fail = (call) => {
+      if (call.method === 'PATCH' && call.table === 'questions') db.tables.questions = []
+      return false
+    }
+    expect((await edit({ question_text: 'New?' })).status).toBe(404)
+    expect(revalidated).toEqual([])
+  })
+
+  it('is not saved when it cannot be read', async () => {
+    withSet({}, HERE)
+    db.fail = failOn('GET', 'questions')
+    expect(await edit({ question_text: 'New?' })).toEqual({ status: 500, body: { error: SET_CHECK_FAILED } })
+    refusedWithoutWrite()
+  })
+
+  it('does not change its type or its set', async () => {
+    withSet({}, HERE)
+    await edit({ type: 'writing', set_id: OTHER_SET, question_text: 'New?' })
+    expect(db.tables.questions).toEqual([storedQuestion({ question_text: 'New?' })])
+  })
+})
+
+describe('set editor: a question that is added', () => {
+  it.each<[string, Row, string]>([
+    ['blank text', { question_text: '  ' }, 'needs question text'],
+    ['no options', { option_a: undefined, option_b: undefined, option_c: undefined, option_d: undefined }, 'has an empty answer option'],
+    ['a placeholder', { option_a: '—' }, 'has a placeholder answer option'],
+    ['equal options', { option_a: 'Two' }, 'has two answer options that are the same'],
+    ['no answer', { correct_index: undefined }, 'needs one correct answer (A, B, C or D)'],
+    ['a null answer', { correct_index: null }, 'needs one correct answer (A, B, C or D)'],
+    ['no explanation', { explanation: undefined }, 'needs an explanation'],
+    ['writing without a model answer', { type: 'writing', writing_model_answer: ' ' }, 'needs a model answer'],
+  ])('is refused with %s', async (_name, over, reason) => {
+    withSet({}, HERE)
+    expect(await send('POST', newQuestion(over))).toEqual({
+      status: 400,
+      body: { error: `Nothing was saved. Please fix this question first: ${reason}.` },
+    })
+    expect(db.tables.questions).toHaveLength(1)
+    refusedWithoutWrite()
+  })
+
+  it.each<[string, Row]>([
+    ['a multiple-choice question', {}],
+    ['a scenario question', { type: 'scenario' }],
+    ['a writing question', { type: 'writing', writing_model_answer: 'Text.', option_a: '', option_b: '', option_c: '', option_d: '' }],
+  ])('adds %s', async (_name, over) => {
+    withSet({}, HERE)
+    expect((await send('POST', newQuestion(over))).status).toBe(200)
+    expect(db.tables.questions).toHaveLength(2)
+    expect(db.tables.questions[1]).toMatchObject({ set_id: SET_ID, question_order: 2, question_text: 'Another?' })
+  })
+
+  it('keeps the answer for a question without text', async () => {
+    withSet({}, HERE)
+    expect(await send('POST', newQuestion({ question_text: '' }))).toEqual({ status: 400, body: { error: 'question_text is required' } })
+  })
+})
+
+describe('set editor: a draft that is published', () => {
+  const draft = (questions: Row[], cases: Row[] = []) => {
+    withSet({ status: 'draft' }, null)
+    db.tables.questions = questions
+    db.tables.question_cases = cases
+  }
+  const stillDraft = () => {
+    expect(db.tables.question_sets).toMatchObject([{ status: 'draft', title: 'Leases quiz' }])
+    expect(articleLink()).toBeNull()
+    refusedWithoutWrite()
+  }
+  const go = () => patch({ title: 'New title', status: 'published' })
+
+  it('is refused without questions, also when another set has some', async () => {
+    draft([storedQuestion({ set_id: OTHER_SET })])
+    expect(await go()).toEqual({ status: 400, body: { error: NOT_READY_EMPTY } })
+    stillDraft()
+  })
+
+  it('is refused with the exact list', async () => {
+    draft([storedQuestion(), storedQuestion({ option_b: '', explanation: null }), storedQuestion({ correct_index: null })])
+    expect(await go()).toEqual({
+      status: 400,
+      body: {
+        error:
+          'Nothing was saved. This set cannot go live yet. Please fix these questions first: Q2 has an empty answer option; Q2 needs an explanation; Q3 needs one correct answer (A, B, C or D).',
+      },
+    })
+    stillDraft()
+  })
+
+  it('reads the questions in the order the page shows them', async () => {
+    draft([storedQuestion()])
+    await go()
+    expect(db.calls.find((c) => c.method === 'GET' && c.table === 'questions')?.query).toContain('order=question_order.asc')
+  })
+
+  it.each<[string, Row[]]>([
+    ['no case', []],
+    ['another case', [{ set_id: SET_ID, case_id: 'case-2', exhibit_html: '<p>Facts</p>' }]],
+    ['an empty case', [{ set_id: SET_ID, case_id: 'case-1', exhibit_html: '' }]],
+    ['the case of another set', [{ set_id: OTHER_SET, case_id: 'case-1', exhibit_html: '<p>Facts</p>' }]],
+  ])('is refused when a scenario question finds %s', async (_name, cases) => {
+    draft([storedQuestion({ type: 'scenario', case_id: 'case-1' })], cases)
+    expect(await go()).toEqual({
+      status: 400,
+      body: { error: notReadyProblemsMessage([{ n: 1, reason: 'missing-case' }]) },
+    })
+    stillDraft()
+  })
+
+  it.each<[string, Row[]]>([
+    ['a scenario question with its case', [storedQuestion({ type: 'scenario', case_id: 'case-1' })]],
+    ['a scenario question without one', [storedQuestion({ type: 'scenario' })]],
+    ['a writing question', [storedQuestion({ type: 'writing', writing_model_answer: 'Text.', option_a: '', correct_index: null, explanation: null })]],
+  ])('goes live with %s', async (_name, questions) => {
+    draft(questions, [{ set_id: SET_ID, case_id: 'case-1', exhibit_html: '<p>Facts</p>' }])
+    expect(await go()).toEqual({ status: 200, body: { success: true } })
+    expect(db.tables.question_sets).toMatchObject([{ status: 'published', title: 'New title' }])
+    expect(articleLink()).toBe(HERE)
+  })
+
+  it.each(['questions', 'question_cases'])('is refused when its %s cannot be read', async (table) => {
+    draft([storedQuestion()])
+    db.fail = failOn('GET', table)
+    expect(await go()).toEqual({ status: 500, body: { error: SET_CHECK_FAILED } })
+    stillDraft()
+  })
+
+  it.each<[string, Row, Row]>([
+    ['a live set that is saved again', { status: 'published' }, { title: 'New title', status: 'published' }],
+    ['a live set that becomes a draft', { status: 'published' }, { status: 'draft' }],
+    ['a draft that stays one', { status: 'draft' }, { status: 'draft' }],
+  ])('asks nothing of %s', async (_name, set, fields) => {
+    withSet(set, HERE)
+    db.tables.questions = []
+    expect((await patch(fields)).status).toBe(200)
+    expect(lines().filter((line) => line.startsWith('GET question') && line !== 'GET question_sets')).toEqual([])
+  })
+})
+
+describe('set editor: a question that is deleted', () => {
+  const remove = (questionId = QUESTION) => send('DELETE', { action: 'delete_question', questionId })
+
+  it('is kept when it is the last one of a live set', async () => {
+    withSet({}, HERE)
+    db.tables.questions = [storedQuestion(), storedQuestion({ id: OTHER_QUESTION, set_id: OTHER_SET })]
+    expect(await remove()).toEqual({ status: 400, body: { error: LAST_QUESTION } })
+    expect(db.tables.questions).toHaveLength(2)
+    expect(db.tables.admin_recycle_bin ?? []).toEqual([])
+    refusedWithoutWrite()
+  })
+
+  it.each<[string, Row, Row[]]>([
+    ['not the last one of a live set', {}, [storedQuestion(), storedQuestion({ id: OTHER_QUESTION })]],
+    ['the last one of a draft', { status: 'draft' }, [storedQuestion()]],
+  ])('goes when it is %s', async (_name, set, questions) => {
+    withSet(set, null)
+    db.tables.questions = questions
+    expect(await remove()).toEqual({ status: 200, body: { success: true, binId: SET_ID } })
+    expect(db.tables.questions.map((q) => q.id)).not.toContain(QUESTION)
+    expect(writes()[0]).toBe('POST admin_recycle_bin')
+    expect(writes().at(-1)).toBe('DELETE questions')
+  })
+
+  it.each<[string, Row[]]>([
+    ['no question', []],
+    ['the question of another set', [storedQuestion({ set_id: OTHER_SET })]],
+    ['a question that is not the only one', [storedQuestion({ id: OTHER_QUESTION })]],
+  ])('answers "not found" for %s', async (_name, questions) => {
+    withSet({}, HERE)
+    db.tables.questions = questions
+    expect(await remove()).toEqual({ status: 404, body: { error: 'Question not found' } })
+    expect(db.tables.questions).toEqual(questions)
+    refusedWithoutWrite()
+  })
+
+  it.each(['question_sets', 'questions'])('is kept when the %s cannot be read', async (table) => {
+    withSet({}, HERE)
+    db.fail = failOn('GET', table)
+    expect(await remove()).toEqual({ status: 500, body: { error: DELETE_FAILED } })
+    expect(db.tables.questions).toHaveLength(1)
+    refusedWithoutWrite()
+  })
+})
+
+describe('set editor: the page shows the answer as it is given', () => {
+  const page = () => readFileSync(join(process.cwd(), `app/${ADMIN}/questions/[setId]/page.tsx`), 'utf8')
+
+  it('for a saved question, an added question, a saved set and a deleted question', () => {
+    const source = page()
+    for (const fallback of ['Save failed', 'Failed to add question', 'Delete failed']) {
+      expect(source).toContain(`throw new Error(data.error || '${fallback}')`)
+    }
+    expect(source.split('style={C.danger}>{error}</div>')).toHaveLength(4)
+  })
+
+  it('opens the row when a delete is refused, because the message is inside it', () => {
+    const source = page()
+    const start = source.indexOf('async function handleDelete()')
+    expect(source.slice(start, source.indexOf('finally', start))).toContain('setExpanded(true)')
+  })
+
+  it('never sends an answer that nobody chose', () => {
+    expect(page()).toContain('fields.correct_index = draft.correct_index ?? null')
   })
 })
 

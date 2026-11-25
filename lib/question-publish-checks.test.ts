@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 import {
   CASES_SAVE_FAILED,
   EMPTY_ADDRESS,
+  LAST_QUESTION,
   LEFT_DRAFT,
   LINK_FAILED,
   MAX_LISTED_PROBLEMS,
   NOT_FOUND,
+  NOT_READY_EMPTY,
   PUBLISH_FAILED,
   REASON_TEXT,
   SET_CHECK_FAILED,
@@ -15,9 +17,13 @@ import {
   UNLINK_FAILED,
   alreadyHasSetMessage,
   checkPublishBundle,
+  checkStoredSet,
+  fixThisQuestionMessage,
+  notReadyProblemsMessage,
   numberUnclearMessage,
   publishProblemsMessage,
   slugTakenMessage,
+  storedQuestionReasons,
   type PublishProblem,
 } from './question-publish-checks'
 
@@ -175,6 +181,41 @@ describe('checkPublishBundle', () => {
   })
 })
 
+describe('stored questions', () => {
+  const row = (over: Question = {}): Question => ({
+    type: 'scenario',
+    question_text: 'Which one?',
+    option_a: 'One',
+    option_b: 'Two',
+    option_c: 'Three',
+    option_d: 'Four',
+    correct_index: 0,
+    explanation: 'Because.',
+    writing_model_answer: null,
+    case_id: 'case-1',
+    ...over,
+  })
+
+  it('has the same rules as a bundle, without the case', () => {
+    expect(storedQuestionReasons(row())).toEqual([])
+    expect(storedQuestionReasons(row({ question_text: null, option_b: null, option_c: '-', correct_index: null, explanation: '' }))).toEqual([
+      'text',
+      'empty-option',
+      'placeholder-option',
+      'correct-answer',
+      'explanation',
+    ])
+    expect(storedQuestionReasons(row({ type: 'writing' }))).toEqual(['model-answer'])
+    expect(storedQuestionReasons({})).toEqual(['text', 'empty-option', 'correct-answer', 'explanation'])
+  })
+
+  it('a whole set is checked with its cases', () => {
+    const cases = [{ case_id: 'case-1', exhibit_html: '<p>Facts</p>' }]
+    expect(checkStoredSet([row()], cases)).toEqual({ ok: true })
+    expect(checkStoredSet([row({ case_id: null }), row()], [])).toEqual({ ok: false, problems: [{ n: 2, reason: 'missing-case' }] })
+  })
+})
+
 describe('wording', () => {
   it('has the exact reason texts', () => {
     expect(REASON_TEXT).toEqual({
@@ -248,6 +289,21 @@ describe('wording', () => {
       "Done. But the article's link to this set could not be removed, so the article may point to a missing page.",
     )
     expect(SET_CHECK_FAILED).toBe('Could not check this set. Nothing was saved.')
+  })
+
+  it('has the exact set editor messages', () => {
+    expect(fixThisQuestionMessage(['explanation'])).toBe('Nothing was saved. Please fix this question first: needs an explanation.')
+    expect(fixThisQuestionMessage(['text', 'model-answer'])).toBe(
+      'Nothing was saved. Please fix this question first: needs question text; needs a model answer.',
+    )
+    expect(NOT_READY_EMPTY).toBe('Nothing was saved. This set has no questions yet, so it cannot go live.')
+    expect(notReadyProblemsMessage([{ n: 2, reason: 'missing-case' }])).toBe(
+      'Nothing was saved. This set cannot go live yet. Please fix these questions first: Q2 refers to a missing case.',
+    )
+    expect(notReadyProblemsMessage(problems(13)).endsWith('; Q10 needs an explanation and 3 more.')).toBe(true)
+    expect(LAST_QUESTION).toBe(
+      'Nothing was deleted. A live set must keep at least one question. Make the set a draft first, or delete the whole set.',
+    )
   })
 
   it('has the exact importer warning', () => {

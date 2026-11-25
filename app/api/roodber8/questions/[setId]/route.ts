@@ -5,10 +5,25 @@ import { getServerSupabase } from '@/lib/supabase-server'
 import { checkRead } from '@/lib/db-check'
 import { linkArticleIfEmpty, replaceArticleLink } from '@/lib/question-article-link'
 import { refreshQuestionCaches } from '@/lib/question-cache'
-import { LINK_FAILED, SET_CHECK_FAILED, SLUG_LOCKED, UNLINK_FAILED } from '@/lib/question-publish-checks'
+import {
+  CHECKED_CASE_COLUMNS,
+  CHECKED_QUESTION_COLUMNS,
+  LAST_QUESTION,
+  LINK_FAILED,
+  NOT_READY_EMPTY,
+  SET_CHECK_FAILED,
+  SLUG_LOCKED,
+  UNLINK_FAILED,
+  checkStoredSet,
+  fixThisQuestionMessage,
+  notReadyProblemsMessage,
+  storedQuestionReasons,
+} from '@/lib/question-publish-checks'
 import { DELETE_FAILED, errorCode, keepCopyBeforeDelete, snapshotQuestionSet, snapshotRows } from '@/lib/recycle-bin'
 
 export const runtime = 'nodejs'
+
+const QUESTION_NOT_FOUND = 'Question not found'
 
 function getClient() {
   return getServerSupabase('admin')
@@ -106,6 +121,29 @@ export async function PATCH(
     if (slugChanged && (wasPublished || isPublished))
       return NextResponse.json({ error: SLUG_LOCKED }, { status: 400 })
 
+    // A set goes live only with questions, and only when all are complete.
+    if (isPublished && !wasPublished) {
+      const questions = checkRead(
+        await supabase
+          .from('questions')
+          .select(CHECKED_QUESTION_COLUMNS)
+          .eq('set_id', setId)
+          .order('question_order', { ascending: true }),
+        'questions/[setId]: questions before publishing',
+      )
+      const cases = checkRead(
+        await supabase.from('question_cases').select(CHECKED_CASE_COLUMNS).eq('set_id', setId),
+        'questions/[setId]: cases before publishing',
+      )
+      if (!questions.ok || !cases.ok)
+        return NextResponse.json({ error: SET_CHECK_FAILED }, { status: 500 })
+      if (!questions.data?.length)
+        return NextResponse.json({ error: NOT_READY_EMPTY }, { status: 400 })
+      const checked = checkStoredSet(questions.data, cases.data ?? [])
+      if (!checked.ok)
+        return NextResponse.json({ error: notReadyProblemsMessage(checked.problems) }, { status: 400 })
+    }
+
     // A draft that was never published gets its date now (the public list
     // sorts by it).
     if (isPublished && !wasPublished && !old?.published_at)
@@ -162,14 +200,35 @@ export async function PATCH(
       if (key in fields) sanitised[key] = fields[key]
     }
 
-    const { error } = await supabase
+    // The question as it would be after the edit must be complete.
+    const stored = checkRead(
+      await supabase
+        .from('questions')
+        .select(CHECKED_QUESTION_COLUMNS)
+        .eq('id', questionId)
+        .eq('set_id', setId) // ensure question belongs to this set
+        .maybeSingle(),
+      'questions/[setId]: question before update',
+    )
+    if (!stored.ok)
+      return NextResponse.json({ error: SET_CHECK_FAILED }, { status: 500 })
+    if (!stored.data)
+      return NextResponse.json({ error: QUESTION_NOT_FOUND }, { status: 404 })
+    const reasons = storedQuestionReasons({ ...stored.data, ...sanitised })
+    if (reasons.length > 0)
+      return NextResponse.json({ error: fixThisQuestionMessage(reasons) }, { status: 400 })
+
+    const { data: updated, error } = await supabase
       .from('questions')
       .update(sanitised)
       .eq('id', questionId)
-      .eq('set_id', setId) // ensure question belongs to this set
+      .eq('set_id', setId)
+      .select('id')
 
     if (error)
       return NextResponse.json({ error: error.message }, { status: 500 })
+    if (updated.length !== 1)
+      return NextResponse.json({ error: QUESTION_NOT_FOUND }, { status: 404 })
 
     refreshQuestionCaches({ setIds: [setId] })
     return NextResponse.json({ success: true })
@@ -233,6 +292,24 @@ export async function DELETE(
     if (!questionId)
       return NextResponse.json({ error: 'questionId required' }, { status: 400 })
 
+    // A live set is never empty.
+    const set = checkRead(
+      await supabase.from('question_sets').select('status').eq('id', setId).maybeSingle(),
+      'questions/[setId]: set before question delete',
+    )
+    if (!set.ok)
+      return NextResponse.json({ error: DELETE_FAILED }, { status: 500 })
+    if (set.data?.status === 'published') {
+      const others = checkRead(
+        await supabase.from('questions').select('id').eq('set_id', setId).limit(2),
+        'questions/[setId]: questions before question delete',
+      )
+      if (!others.ok)
+        return NextResponse.json({ error: DELETE_FAILED }, { status: 500 })
+      if (others.data?.length === 1 && String(others.data[0].id) === String(questionId))
+        return NextResponse.json({ error: LAST_QUESTION }, { status: 400 })
+    }
+
     // A copy of the question goes to the recycle bin first.
     const kept = await keepCopyBeforeDelete(
       supabase,
@@ -242,7 +319,7 @@ export async function DELETE(
         sourceTable: 'questions',
         sourceId: String(questionId),
         label: (row) => row.question_text,
-        notFound: 'Question not found',
+        notFound: QUESTION_NOT_FOUND,
       },
     )
     if (!kept.ok)
@@ -312,7 +389,7 @@ export async function POST(
     option_b = '',
     option_c = '',
     option_d = '',
-    correct_index = 0,
+    correct_index = null,
     explanation = '',
     writing_model_answer = null,
     writing_explanation = null,
@@ -325,26 +402,31 @@ export async function POST(
   if (!question_text)
     return NextResponse.json({ error: 'question_text is required' }, { status: 400 })
 
+  const row = {
+    set_id:               setId,
+    question_order:       nextOrder,
+    type,
+    question_text,
+    option_a,
+    option_b,
+    option_c,
+    option_d,
+    correct_index:        type === 'writing' ? null : correct_index,
+    explanation:          type === 'writing' ? null : explanation,
+    writing_model_answer: type === 'writing' ? writing_model_answer : null,
+    writing_explanation:  type === 'writing' ? writing_explanation : null,
+    primary_topic,
+    difficulty,
+    time_target_minutes,
+    points,
+  }
+  const reasons = storedQuestionReasons(row)
+  if (reasons.length > 0)
+    return NextResponse.json({ error: fixThisQuestionMessage(reasons) }, { status: 400 })
+
   const { data: inserted, error: insertError } = await supabase
     .from('questions')
-    .insert({
-      set_id:               setId,
-      question_order:       nextOrder,
-      type,
-      question_text,
-      option_a,
-      option_b,
-      option_c,
-      option_d,
-      correct_index:        type === 'writing' ? null : correct_index,
-      explanation:          type === 'writing' ? null : explanation,
-      writing_model_answer: type === 'writing' ? writing_model_answer : null,
-      writing_explanation:  type === 'writing' ? writing_explanation : null,
-      primary_topic,
-      difficulty,
-      time_target_minutes,
-      points,
-    })
+    .insert(row)
     .select('*')
     .single()
 

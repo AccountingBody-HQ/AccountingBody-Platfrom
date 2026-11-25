@@ -188,7 +188,7 @@ function QuestionRow({
         fields.option_b      = draft.option_b ?? ''
         fields.option_c      = draft.option_c ?? ''
         fields.option_d      = draft.option_d ?? ''
-        fields.correct_index = draft.correct_index ?? 0
+        fields.correct_index = draft.correct_index ?? null
         fields.explanation   = draft.explanation ?? ''
       }
       if (draft.type === 'writing') {
@@ -225,6 +225,7 @@ function QuestionRow({
       onDeleted(question.id)
     } catch (e: any) {
       setError(e.message)
+      setExpanded(true) // the message is in the open row
       setConfirmDel(false)
     } finally {
       setDeleting(false)

@@ -665,7 +665,16 @@ const COURSE_CHECK_FAILED = { error: 'Could not check this course. Nothing was c
 const OTHER_CHAPTER = '2c5e39cb-3fb2-12e3-994f-1127e4ddb538'
 const OTHER_LESSON = '7ab56afb-ff9b-4db5-9a5f-ec88f271466f'
 
-const addQuestion = (body: Row = { question_text: 'Question?' }) => async () =>
+const completeQuestion: Row = {
+  question_text: 'Question?',
+  option_a: 'One',
+  option_b: 'Two',
+  option_c: 'Three',
+  option_d: 'Four',
+  correct_index: 1,
+  explanation: 'Because.',
+}
+const addQuestion = (body: Row = completeQuestion) => async () =>
   (await api('questions/[setId]/route.ts')).POST(request('POST', `questions/${ID}`, body), { params: Promise.resolve({ setId: ID }) })
 const addReference = async () =>
   (await api('studio/references/route.ts')).POST(

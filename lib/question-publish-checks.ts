@@ -34,6 +34,7 @@ export const REASON_TEXT: Record<Reason, string> = {
 export const MAX_LISTED_PROBLEMS = 10
 
 const PROBLEMS_PREFIX = 'Nothing was published. Please fix these questions first: '
+const NOT_READY_PROBLEMS_PREFIX = 'Nothing was saved. This set cannot go live yet. Please fix these questions first: '
 
 export const NOT_FOUND = 'Nothing was published. The linked article was not found. Check the Article ID and try again.'
 export const LINK_FAILED =
@@ -50,6 +51,9 @@ export const SLUG_LOCKED = 'The web address of a published set cannot be changed
 export const UNLINK_FAILED =
   "Done. But the article's link to this set could not be removed, so the article may point to a missing page."
 export const SET_CHECK_FAILED = 'Could not check this set. Nothing was saved.'
+export const NOT_READY_EMPTY = 'Nothing was saved. This set has no questions yet, so it cannot go live.'
+export const LAST_QUESTION =
+  'Nothing was deleted. A live set must keep at least one question. Make the set a draft first, or delete the whole set.'
 
 // The importer's warning when a paste does not show how it numbers its answers.
 export function numberUnclearMessage(n: number): string {
@@ -64,10 +68,22 @@ export function slugTakenMessage(slug: string): string {
   return `Nothing was published. Another practice set already uses the web address /practice-questions/${slug}. Change the title and try again.`
 }
 
-export function publishProblemsMessage(problems: PublishProblem[]): string {
+function problemsMessage(prefix: string, problems: PublishProblem[]): string {
   const listed = problems.slice(0, MAX_LISTED_PROBLEMS).map(({ n, reason }) => `Q${n} ${REASON_TEXT[reason]}`)
   const more = problems.length - listed.length
-  return `${PROBLEMS_PREFIX}${listed.join('; ')}${more > 0 ? ` and ${more} more` : ''}.`
+  return `${prefix}${listed.join('; ')}${more > 0 ? ` and ${more} more` : ''}.`
+}
+
+export function publishProblemsMessage(problems: PublishProblem[]): string {
+  return problemsMessage(PROBLEMS_PREFIX, problems)
+}
+
+export function notReadyProblemsMessage(problems: PublishProblem[]): string {
+  return problemsMessage(NOT_READY_PROBLEMS_PREFIX, problems)
+}
+
+export function fixThisQuestionMessage(reasons: Reason[]): string {
+  return `Nothing was saved. Please fix this question first: ${reasons.map((reason) => REASON_TEXT[reason]).join('; ')}.`
 }
 
 // The text the publish route would store, trimmed. Anything that is not text
@@ -105,7 +121,8 @@ function caseIdsOf(cases: unknown): Set<string> {
   return ids
 }
 
-function questionReasons(value: unknown, caseIds: Set<string>): Reason[] {
+// caseIds null: the question's case is not looked at.
+function questionReasons(value: unknown, caseIds: Set<string> | null): Reason[] {
   const q = (typeof value === 'object' && value !== null ? value : {}) as Record<string, unknown>
   const reasons: Reason[] = []
   if (!textOf(q.questionText)) reasons.push('text')
@@ -123,7 +140,7 @@ function questionReasons(value: unknown, caseIds: Set<string>): Reason[] {
     reasons.push('correct-answer')
   }
   if (!textOf(q.explanation)) reasons.push('explanation')
-  if (q.type === 'scenario' && q.caseId != null && q.caseId !== '' && !caseIds.has(String(q.caseId))) {
+  if (caseIds && q.type === 'scenario' && q.caseId != null && q.caseId !== '' && !caseIds.has(String(q.caseId))) {
     reasons.push('missing-case')
   }
   return reasons
@@ -137,4 +154,38 @@ export function checkPublishBundle(bundle: { questions: unknown[]; cases?: unkno
     for (const reason of questionReasons(question, caseIds)) problems.push({ n: i + 1, reason })
   })
   return problems.length === 0 ? { ok: true } : { ok: false, problems }
+}
+
+// The columns the checks below read.
+export const CHECKED_QUESTION_COLUMNS =
+  'type, question_text, option_a, option_b, option_c, option_d, correct_index, explanation, writing_model_answer, case_id'
+export const CHECKED_CASE_COLUMNS = 'case_id, exhibit_html'
+
+type StoredRow = Record<string, unknown>
+
+// A row of `questions` as the question it was published from.
+function asQuestion(row: StoredRow) {
+  return {
+    type: row.type,
+    questionText: row.question_text,
+    options: [row.option_a, row.option_b, row.option_c, row.option_d],
+    correctIndex: row.correct_index,
+    explanation: row.explanation,
+    writingModelAnswer: row.writing_model_answer,
+    caseId: row.case_id,
+  }
+}
+
+// One stored question, or one that is about to be stored. Its case is not
+// looked at: the set editor cannot add one, so an edit must not depend on it.
+export function storedQuestionReasons(row: StoredRow): Reason[] {
+  return questionReasons(asQuestion(row), null)
+}
+
+// A stored set that is about to go live: its questions in order, and its cases.
+export function checkStoredSet(questions: StoredRow[], cases: StoredRow[]): PublishCheck {
+  return checkPublishBundle({
+    questions: questions.map(asQuestion),
+    cases: cases.map((row) => ({ caseId: row.case_id, exhibitHtml: row.exhibit_html })),
+  })
 }
