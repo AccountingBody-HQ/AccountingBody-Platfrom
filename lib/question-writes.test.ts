@@ -294,6 +294,84 @@ describe('publish: the linked article', () => {
     expect(writes()).toEqual([])
   })
 
+  // The article's link points to a set that names another article, or none.
+  const pointing = (mcq_url: unknown, sets: Row[] = [], over: Row = {}) => {
+    db.tables.articles = [
+      { ...article, mcq_url, ...over },
+      { slug: 'bystander', status: 'published', mcq_url: HERE },
+    ]
+    db.tables.question_sets = sets
+  }
+  const basics = (over: Row = {}) => ({ id: 'other', title: 'Leases basics', slug: 'leases-basics', article_slug: 'another-article', status: 'published', ...over })
+  const bystanderKept = () =>
+    expect(db.tables.articles[1]).toEqual({ slug: 'bystander', status: 'published', mcq_url: HERE })
+
+  it.each([
+    ['published', {}, 'AB-ART-00007'],
+    ['draft', { status: 'draft' }, 'leases'],
+    ['archived', { status: 'archived' }, 'leases'],
+    ['not tied to an article', { article_slug: null }, 'leases'],
+    ['tied to an article that does not exist', { article_slug: 'gone' }, 'leases'],
+  ])('refuses an article that points to another set (%s), names that set, and keeps the link', async (_name, over, articleSlug) => {
+    pointing('/practice-questions/leases-basics', [basics(over)])
+    expect(await publish({ bundle: bundle(), articleSlug })).toEqual({
+      status: 409,
+      body: { error: alreadyHasSetMessage('Leases basics') },
+    })
+    expect(writes()).toEqual([])
+    expect(revalidated).toEqual([])
+    expect(db.tables.articles[0].mcq_url).toBe('/practice-questions/leases-basics')
+    bystanderKept()
+  })
+
+  it.each([
+    '/practice-questions/leases-basics/',
+    ' /practice-questions/leases-basics?from=article#top ',
+    'https://accountingbody.com/practice-questions/leases-basics',
+  ])('reads the link %j as that set too', async (link) => {
+    pointing(link, [basics()])
+    expect((await publish({ bundle: bundle(), articleSlug: 'leases' })).status).toBe(409)
+    expect(writes()).toEqual([])
+  })
+
+  it('refuses an article that already points to the address of the new set', async () => {
+    pointing('/practice-questions/leases-quiz', [basics({ slug: 'leases-quiz' })])
+    expect(await publish({ bundle: bundle(), articleSlug: 'leases' })).toEqual({
+      status: 409,
+      body: { error: alreadyHasSetMessage('Leases basics') },
+    })
+  })
+
+  it.each([[null], [''], ['/practice-questions/gone'], ['/practice-questions/leases-quiz'], ['/practice-questions/'], ['/quiz/leases-basics']])(
+    'replaces a link that points to no set (%j)',
+    async (link) => {
+      pointing(link, [basics()])
+      expect((await publish({ bundle: bundle(), articleSlug: 'leases' })).body).not.toHaveProperty('linkWarning')
+      expect(db.tables.articles[0].mcq_url).toBe('/practice-questions/leases-quiz')
+      bystanderKept()
+    },
+  )
+
+  it('never replaces a link that was made meanwhile', async () => {
+    for (const before of [null, '/practice-questions/gone']) {
+      pointing(before, [basics()])
+      db.fail = (call) => {
+        if (call.method === 'PATCH' && call.table === 'question_sets') db.tables.articles[0].mcq_url = '/practice-questions/leases-basics'
+        return false
+      }
+      expect(await publish({ bundle: bundle(), articleSlug: 'leases' })).toMatchObject({ status: 200, body: { linkWarning: LINK_FAILED } })
+      expect(db.tables.articles[0].mcq_url).toBe('/practice-questions/leases-basics')
+      bystanderKept()
+    }
+  })
+
+  it('writes nothing when the set the article points to cannot be read', async () => {
+    pointing('/practice-questions/leases-basics', [basics()])
+    db.fail = failOn('GET', 'question_sets', 'slug=eq.leases-basics')
+    expect(await publish({ bundle: bundle(), articleSlug: 'leases' })).toEqual({ status: 500, body: { error: SET_READ_FAILED } })
+    expect(writes()).toEqual([])
+  })
+
   it.each([undefined, null, '', '   '])('publishes without a link when no article is named (%j)', async (articleSlug) => {
     expect((await publish({ bundle: bundle(), articleSlug })).status).toBe(200)
     expect(db.tables.question_sets).toMatchObject([{ article_slug: null }])

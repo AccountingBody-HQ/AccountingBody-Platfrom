@@ -18,6 +18,7 @@ import {
   publishProblemsMessage,
   slugTakenMessage,
 } from '@/lib/question-publish-checks'
+import { linkedSetSlug, setArticleLink } from '@/lib/question-article-link'
 import { refreshQuestionCaches } from '@/lib/question-cache'
 import { reportServerError } from '@/lib/report-error'
 
@@ -109,10 +110,11 @@ export async function POST(req: NextRequest) {
     // published article. An article that was named must exist, and must not
     // have a practice set yet (any status).
     let resolvedArticleSlug: string | null = null
+    let articleLink: string | null = null
     const articleRef = articleSlug ? String(articleSlug).trim() : ''
     if (articleRef) {
       const contentRef = articleRef.toUpperCase()
-      const articles = supabase.from('articles').select('slug')
+      const articles = supabase.from('articles').select('slug, mcq_url')
       const artRead = checkRead(
         await (contentRef.startsWith('AB-ART-')
           ? articles.eq('content_id', contentRef)
@@ -142,6 +144,28 @@ export async function POST(req: NextRequest) {
       }
       if (linkedSetRead.data) {
         return NextResponse.json({ error: alreadyHasSetMessage(linkedSetRead.data.title) }, { status: 409 })
+      }
+
+      // Nor may its link point to a set, whichever article that set names. A
+      // link to a set that does not exist is broken, and is replaced.
+      articleLink = (artRead.data?.mcq_url as string | null | undefined) ?? null
+      const otherSlug = linkedSetSlug(articleLink)
+      if (otherSlug) {
+        const otherSetRead = checkRead(
+          await supabase
+            .from('question_sets')
+            .select('title')
+            .eq('slug', otherSlug)
+            .limit(1)
+            .maybeSingle(),
+          'questions/publish: set the article points to',
+        )
+        if (!otherSetRead.ok) {
+          return NextResponse.json({ error: SET_READ_FAILED }, { status: 500 })
+        }
+        if (otherSetRead.data) {
+          return NextResponse.json({ error: alreadyHasSetMessage(otherSetRead.data.title) }, { status: 409 })
+        }
       }
     }
 
@@ -271,27 +295,12 @@ export async function POST(req: NextRequest) {
 
     // Close the bidirectional link: update articles.mcq_url so the
     // article page's "Practice this topic" CTA points to this PQ set.
-    // Exactly one article must change; anything else is told to the admin as a
-    // warning next to the success, never as an error.
+    // Only while its link is still the one that was read above. Exactly one
+    // article must change; anything else is told to the admin as a warning
+    // next to the success, never as an error.
     let linkWarning: string | undefined
-    if (resolvedArticleSlug) {
-      const mcqUrl = `/practice-questions/${slug}`
-      const { data: linkedRows, error: mcqUpdateError } = await supabase
-        .from('articles')
-        .update({
-          mcq_url:    mcqUrl,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('slug', resolvedArticleSlug)
-        .eq('status', 'published')
-        .select('slug')
-      if (mcqUpdateError) {
-        console.error('questions/publish mcq_url update error:', mcqUpdateError)
-        linkWarning = LINK_FAILED
-      } else if (linkedRows?.length !== 1) {
-        console.error('questions/publish mcq_url update changed rows:', linkedRows?.length ?? 0)
-        linkWarning = LINK_FAILED
-      }
+    if (resolvedArticleSlug && !(await setArticleLink(supabase, resolvedArticleSlug, articleLink, slug))) {
+      linkWarning = LINK_FAILED
     }
 
     refreshQuestionCaches({

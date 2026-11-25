@@ -11,6 +11,34 @@ import { BIN_TABLE, errorCode } from './recycle-bin'
 
 const address = (setSlug: string) => `/practice-questions/${setSlug}`
 
+// The address of the set an article's link names (also as a full web address,
+// with a trailing slash or a query), or null when it names none.
+export function linkedSetSlug(mcqUrl: unknown): string | null {
+  const match = typeof mcqUrl === 'string' ? mcqUrl.trim().match(/^(?:https?:\/\/[^/]+)?\/practice-questions\/([^/?#]+)/i) : null
+  return match ? match[1] : null
+}
+
+// The published article's link becomes the set's, while it still is the link
+// that was read. False when not exactly one row changed.
+export async function setArticleLink(
+  supabase: SupabaseClient,
+  articleSlug: string,
+  readLink: string | null,
+  setSlug: string,
+): Promise<boolean> {
+  const update = supabase
+    .from('articles')
+    .update({ mcq_url: address(setSlug), updated_at: new Date().toISOString() })
+    .eq('slug', articleSlug)
+    .eq('status', 'published')
+  const { data, error } = await (readLink === null ? update.is('mcq_url', null) : update.eq('mcq_url', readLink)).select('slug')
+  if (error || data?.length !== 1) {
+    console.error('question article link: not saved', error ? errorCode(error) : 'no_row')
+    return false
+  }
+  return true
+}
+
 // The article's link to the old address becomes the new one, or is removed
 // (newSlug null). No change when the article does not point to the old address.
 export async function replaceArticleLink(
@@ -37,18 +65,7 @@ export async function linkArticleIfEmpty(supabase: SupabaseClient, articleSlug: 
   )
   if (!read.ok || !read.data) return false
   if (read.data.mcq_url) return true
-
-  const update = supabase
-    .from('articles')
-    .update({ mcq_url: address(setSlug), updated_at: new Date().toISOString() })
-    .eq('slug', articleSlug)
-    .eq('status', 'published')
-  const { data, error } = await (read.data.mcq_url === '' ? update.eq('mcq_url', '') : update.is('mcq_url', null)).select('slug')
-  if (error || data?.length !== 1) {
-    console.error('question article link: not saved', error ? errorCode(error) : 'no_row')
-    return false
-  }
-  return true
+  return setArticleLink(supabase, articleSlug, read.data.mcq_url ?? null, setSlug)
 }
 
 type RestoredSet = { id: string; slug: string; status: string | null; article_slug: string | null }
