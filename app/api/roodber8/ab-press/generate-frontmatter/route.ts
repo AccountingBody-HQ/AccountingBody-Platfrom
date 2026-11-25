@@ -10,6 +10,7 @@ import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { FrontmatterTemplate } from "@/components/book/FrontmatterTemplate"
 import { getCourseBySlug } from "@/lib/coursesNew"
+import { EMPTY_COURSE, isEmptyCourse } from "@/lib/ab-press-builder"
 
 export const maxDuration = 30
 
@@ -30,6 +31,7 @@ export async function POST(req: NextRequest) {
     // no article content or question fetching here.
     const rawCourse = await getCourseBySlug(slug, true)
     if (!rawCourse) return NextResponse.json({ error: "Course not found" }, { status: 404 })
+    if (isEmptyCourse(rawCourse)) return NextResponse.json({ error: EMPTY_COURSE }, { status: 422 })
 
     const course = {
       chapters: rawCourse.chapters.map((ch) => ({

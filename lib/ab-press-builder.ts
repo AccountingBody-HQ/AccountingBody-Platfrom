@@ -23,6 +23,14 @@ export const READ_FAILED = "Could not read the practice questions, so nothing wa
 /** What the admin sees when the articles could not be read. */
 export const ARTICLES_READ_FAILED = "Could not read the articles, so nothing was made. Please try again in a minute."
 
+/** What the admin sees when a course has no articles at all. */
+export const EMPTY_COURSE = "No articles were found for this course, so nothing was made. Please check the course and try again in a minute."
+
+/** True when the whole course has no articles. */
+export function isEmptyCourse(course: { chapters: { lessons: { articles: unknown[] }[] }[] }): boolean {
+  return course.chapters.every((ch) => ch.lessons.every((l) => l.articles.length === 0))
+}
+
 /** Service-role Supabase client used by AB Press (the admin time limit). */
 export function createSupabaseClient() {
   return getServerSupabase("admin")
@@ -157,6 +165,7 @@ export async function countQuestions(setIds: string[]): Promise<number> {
 export async function buildCourse(slug: string, stats: BuildStats) {
   const course = await getCourseBySlug(slug, true)
   if (!course) throw new Error("Course not found")
+  if (isEmptyCourse(course)) throw new Error(EMPTY_COURSE)
 
   // Fetch full article content (including HTML body and mcq_url)
   const allArticleIds = course.chapters

@@ -22,7 +22,7 @@ import { isAuthenticated, signedOutResponse } from "@/lib/admin-auth"
 import { Document, Page, Text, View, StyleSheet, Font, renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { getCourseBySlug } from "@/lib/coursesNew"
-import { practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
+import { EMPTY_COURSE, isEmptyCourse, practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
 
 export const maxDuration = 60
 
@@ -244,6 +244,8 @@ export async function POST(req: NextRequest) {
     const rawCourse = await getCourseBySlug(slug, true)
     if (!rawCourse) return NextResponse.json({ error: "Course not found" }, { status: 404 })
 
+    if (isEmptyCourse(rawCourse)) return NextResponse.json({ error: EMPTY_COURSE }, { status: 422 })
+
     if (chapterIndex !== undefined && !rawCourse.chapters[chapterIndex]) {
       return NextResponse.json({ error: "Invalid chapterIndex" }, { status: 400 })
     }
@@ -276,7 +278,7 @@ export async function POST(req: NextRequest) {
           a + (art.quizQuestions || []).length, 0), 0), 0)
 
     if (chapterIndex !== undefined && questionCount === 0) {
-      return NextResponse.json({ pdf: null, pageCount: 0, questionCount: 0 })
+      return NextResponse.json({ pdf: null, pageCount: 0, chapterCount: rawCourse.chapters.length, questionCount: 0 })
     }
 
     const pdfBuffer = await renderToBuffer(
@@ -295,6 +297,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       pdf: pdfBuffer.toString("base64"),
       pageCount,
+      chapterCount: rawCourse.chapters.length,
       questionCount,
     })
   } catch (err: unknown) {

@@ -12,7 +12,7 @@ import React from "react"
 import { ChapterTemplate } from "@/components/book/ChapterTemplate"
 import { getCourseBySlug } from "@/lib/coursesNew"
 import { htmlToBlocks } from "@/lib/html-to-blocks"
-import { practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
+import { EMPTY_COURSE, isEmptyCourse, practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
 
 export const maxDuration = 60
 
@@ -31,6 +31,8 @@ export async function POST(req: NextRequest) {
 
     const rawCourse = await getCourseBySlug(slug, true)
     if (!rawCourse) return NextResponse.json({ error: "Course not found" }, { status: 404 })
+
+    if (isEmptyCourse(rawCourse)) return NextResponse.json({ error: EMPTY_COURSE }, { status: 422 })
 
     const targetChapter = rawCourse.chapters[chapterIndex]
     if (!targetChapter) return NextResponse.json({ error: "Chapter index out of range" }, { status: 400 })
@@ -92,6 +94,7 @@ export async function POST(req: NextRequest) {
       pdf: pdfBuffer.toString("base64"),
       pageCount,
       chapterIndex,
+      chapterCount: rawCourse.chapters.length,
       questionCount: chapterQuestionCount,
     })
   } catch (err: unknown) {

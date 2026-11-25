@@ -25,7 +25,7 @@ import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { PracticeKitTemplate } from "@/components/book/PracticeKitTemplate"
 import { FullCoverTemplate } from "@/components/book/FullCoverTemplate"
-import { buildCourse, createSupabaseClient } from "@/lib/ab-press-builder"
+import { buildCourse, createSupabaseClient, EMPTY_COURSE } from "@/lib/ab-press-builder"
 
 export const maxDuration = 300
 
@@ -339,8 +339,9 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (err: unknown) {
-    console.error("ab-press/generate-pq: failed:", err)
     const msg = err instanceof Error ? err.message : "Unknown error"
+    if (msg === EMPTY_COURSE) return NextResponse.json({ error: msg }, { status: 422 })
+    console.error("ab-press/generate-pq: failed:", err)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

@@ -10,6 +10,8 @@ const BOOK_TYPES = [
 ]
 const EDITIONS = ['2025/26 Edition', '2026/27 Edition', '2027/28 Edition']
 const PREVIEW_COUNT_FAILED = 'Question count unavailable (the practice questions could not be read).'
+const COURSE_CHANGED = 'The course has changed since the preview was loaded, so nothing was made. Please load the preview again.'
+const ANSWERS_DIFFER = (n: number) => `The questions and answers of chapter ${n} do not match, so nothing was made. Please try again in a minute.`
 
 function formatGeneratedAt(iso: string): string {
   const d = new Date(iso)
@@ -256,6 +258,7 @@ export default function AbPressPage() {
       const chapterPdfs: Uint8Array[] = []
       const chapterPageCounts: number[] = []
       const chapterQuestionOffsets: number[] = []
+      const chapterQuestionCounts: number[] = []
       let questionNumberOffset = 0
 
       // 1. Render each chapter
@@ -275,10 +278,12 @@ export default function AbPressPage() {
         })
         const data = await res.json()
         if (!res.ok || data.error) throw new Error(data.error || 'Chapter render failed')
+        if (data.chapterCount !== chapterCount) throw new Error(COURSE_CHANGED)
 
         const pdfBytes = Uint8Array.from(atob(data.pdf), c => c.charCodeAt(0))
         chapterPdfs.push(pdfBytes)
         chapterPageCounts.push(data.pageCount)
+        chapterQuestionCounts.push(data.questionCount)
         questionNumberOffset += data.questionCount ?? 0
       }
 
@@ -301,6 +306,8 @@ export default function AbPressPage() {
           })
           const data = await res.json()
           if (!res.ok || data.error) throw new Error(data.error || `Answers chapter ${i + 1} failed`)
+          if (data.chapterCount !== chapterCount) throw new Error(COURSE_CHANGED)
+          if (data.questionCount !== chapterQuestionCounts[i]) throw new Error(ANSWERS_DIFFER(i + 1))
           if (data.pdf) {
             answerChapterPdfs.push(Uint8Array.from(atob(data.pdf), c => c.charCodeAt(0)))
           }

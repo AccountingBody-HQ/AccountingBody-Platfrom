@@ -9,7 +9,7 @@ import {
   Document, Packer, Paragraph, TextRun, HeadingLevel,
   AlignmentType, PageBreak, convertInchesToTwip,
 } from "docx"
-import { buildCourse, BuildStats } from "@/lib/ab-press-builder"
+import { buildCourse, BuildStats, EMPTY_COURSE } from "@/lib/ab-press-builder"
 
 export const maxDuration = 300
 
@@ -213,8 +213,9 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (err: unknown) {
-    console.error("ab-press/export-word: failed:", err)
     const msg = err instanceof Error ? err.message : "Unknown error"
+    if (msg === EMPTY_COURSE) return NextResponse.json({ error: msg }, { status: 422 })
+    console.error("ab-press/export-word: failed:", err)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

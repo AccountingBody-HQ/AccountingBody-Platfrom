@@ -2,9 +2,10 @@ import { createHash } from 'node:crypto'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { NextRequest } from 'next/server'
+import * as pdfLib from 'pdf-lib'
 import ts from 'typescript'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ARTICLES_READ_FAILED, buildCourse, READ_FAILED, type BuildStats } from './ab-press-builder'
+import { ARTICLES_READ_FAILED, buildCourse, EMPTY_COURSE, READ_FAILED, type BuildStats } from './ab-press-builder'
 import { TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
 import { DB_LIMITS_MS } from './supabase-server'
@@ -551,7 +552,6 @@ describe('the preview question count', () => {
     ['a set that names another article', [['other']], 2],
     ['a set of another site', [['foreign']], 3],
     ['an article without a link', [['plain']], 0],
-    ['no articles', [[]], 0],
     ['a set printed more than once', [['live', 'twin'], ['live', 'other']], 5],
     ['all of them', [['live', 'draft', 'unset', 'gone', 'other'], ['live', 'twin', 'plain', 'foreign']], 8],
   ])('is the number of questions in the book: %s', async (_name, lessons, expected) => {
@@ -559,6 +559,13 @@ describe('the preview question count', () => {
     const body = await (await callRoute('preview', { query: '?slug=counted' })).json()
     expect(body.stats).toMatchObject({ questionCount: expected, questionCountError: false })
     expect(await bookCount('counted')).toBe(expected)
+  })
+
+  it('is 0 for a course without articles, which makes no book', async () => {
+    state.lessons = { counted: [[]] }
+    const body = await (await callRoute('preview', { query: '?slug=counted' })).json()
+    expect(body.stats).toMatchObject({ questionCount: 0, questionCountError: false })
+    await expect(bookCount('counted')).rejects.toThrow(EMPTY_COURSE)
   })
 })
 
@@ -785,5 +792,272 @@ describe('a failed read', () => {
     expect(page).toContain(
       `{stats.questionCountError ? <p className="text-red-400 text-xs mt-2">{PREVIEW_COUNT_FAILED}</p> : null}`,
     )
+  })
+})
+
+describe('a course without articles', () => {
+  it('has its exact message', () => {
+    expect(EMPTY_COURSE).toBe('No articles were found for this course, so nothing was made. Please check the course and try again in a minute.')
+  })
+
+  it.each([...MAKERS, ['generate-frontmatter', { slug: 'course', bookType: 'combined', chapterPageStarts: [], totalPages: 4 }] as [string, object]])(
+    '%s %o answers 422 and makes nothing',
+    async (name, body) => {
+      const log = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+      for (const chapters of [[], [[]], [[[]], [[], []]]]) {
+        state.chapters = { course: chapters }
+        const response = await callRoute(name, { body })
+        expect(response.status).toBe(422)
+        expect(await response.json()).toEqual({ error: EMPTY_COURSE })
+      }
+      expect([state.made, state.written, state.requests]).toEqual([[], [], []])
+      expect(log).not.toHaveBeenCalled()
+    },
+  )
+
+  it('a chapter without articles in a course that has some is made as before', async () => {
+    state.chapters = { course: [[[]], [['live']]] }
+    const response = await callRoute('generate-chapter', { body: { slug: 'course', bookType: 'combined', chapterIndex: 0 } })
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({ chapterCount: 2, questionCount: 0 })
+  })
+})
+
+describe('a chapter and its answers', () => {
+  it('say how many chapters the course has now and how many questions they print', async () => {
+    for (const [chapterIndex, questionCount] of [[0, 7], [1, 3]]) {
+      for (const name of ['generate-chapter', 'generate-answers']) {
+        const response = await callRoute(name, { body: { slug: 'good', bookType: 'combined', chapterIndex } })
+        expect(await response.json()).toMatchObject({ chapterCount: 2, questionCount, pageCount: 1 })
+      }
+    }
+    state.chapters = { course: [[['plain']], [['live']]] }
+    const none = await callRoute('generate-answers', { body: { slug: 'course', chapterIndex: 0 } })
+    expect(await none.json()).toEqual({ pdf: null, pageCount: 0, chapterCount: 2, questionCount: 0 })
+  })
+})
+
+// ── The screen ──────────────────────────────────────────────────────────────
+// The page's own code, run with a stand-in for React (state and one effect) and
+// for adminFetch; pdf-lib and the rest are real.
+
+type Element = { type: unknown; props: Record<string, unknown> }
+type Answer = { status?: number; body?: unknown; file?: string; wait?: Promise<void> }
+
+class Screen {
+  calls: { name: string; body: Record<string, unknown> | null }[] = []
+  files: Blob[] = []
+  answers: Record<string, (body: Record<string, unknown>) => Answer> = {}
+  private values: unknown[] = []
+  private cursor = 0
+  private effects: (() => void)[] = []
+  private component: () => Element
+
+  constructor() {
+    const source = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
+    const { outputText } = ts.transpileModule(source, {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
+    })
+    const element = (type: unknown, props: Record<string, unknown>): Element => ({ type, props })
+    const modules: Record<string, unknown> = {
+      react: {
+        useState: (first: unknown) => {
+          const at = this.cursor++
+          if (!(at in this.values)) this.values[at] = first
+          return [this.values[at], (next: unknown) => { this.values[at] = next }]
+        },
+        useEffect: (effect: () => void) => { this.effects.push(effect) },
+      },
+      'react/jsx-runtime': { jsx: element, jsxs: element, Fragment: 'fragment' },
+      'pdf-lib': pdfLib,
+      '@/lib/admin-fetch': { adminFetch: (url: string, init?: RequestInit) => this.fetch(url, init) },
+    }
+    const made: { exports: { default?: () => Element } } = { exports: {} }
+    new Function('require', 'module', 'exports', outputText)((name: string) => modules[name], made, made.exports)
+    if (!made.exports.default) throw new Error('no page')
+    this.component = made.exports.default
+  }
+
+  private async fetch(url: string, init?: RequestInit) {
+    const name = /\/([a-z-]+)(\?.*)?$/.exec(url)?.[1] ?? ''
+    const body = init?.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : null
+    this.calls.push({ name, body })
+    const answer = this.answers[name]?.(body ?? {}) ?? { status: 404, body: { error: 'no answer' } }
+    if (answer.wait) await answer.wait
+    const status = answer.status ?? 200
+    return { ok: status < 400, status, json: async () => answer.body, blob: async () => new Blob([answer.file ?? '']) }
+  }
+
+  elements(): Element[] {
+    this.cursor = 0
+    this.effects = []
+    const found: Element[] = []
+    const walk = (node: unknown) => {
+      if (Array.isArray(node)) node.forEach(walk)
+      else if (node && typeof node === 'object' && 'props' in node) {
+        found.push(node as Element)
+        walk((node as Element).props.children)
+      }
+    }
+    walk(this.component())
+    return found
+  }
+
+  static text(node: unknown): string {
+    if (Array.isArray(node)) return node.map(Screen.text).join('')
+    if (node && typeof node === 'object' && 'props' in node) return Screen.text((node as Element).props.children)
+    return typeof node === 'string' || typeof node === 'number' ? String(node) : ''
+  }
+
+  get shown(): string {
+    const [top] = this.elements()
+    return Screen.text(top)
+  }
+
+  one(test: (element: Element) => boolean): Element {
+    const found = this.elements().filter(test)
+    if (found.length !== 1) throw new Error(`${found.length} elements found`)
+    return found[0]
+  }
+
+  button = (text: string) => this.one((e) => e.type === 'button' && Screen.text(e).startsWith(text))
+  select = (at: number) => this.elements().filter((e) => e.type === 'select')[at]
+  radio = (value: string) => this.one((e) => e.type === 'input' && e.props.type === 'radio' && e.props.value === value)
+  titleField = () => this.one((e) => e.type === 'input' && e.props.placeholder === 'e.g. Financial Accounting')
+  links = () => this.elements().filter((e) => e.type === 'a').map((e) => String(e.props.download))
+  press = (text: string) => (this.button(text).props.onClick as () => unknown)()
+  change = (element: Element, value: string) => (element.props.onChange as (event: object) => void)({ target: { value } })
+
+  async settle() {
+    for (let i = 0; i < 400; i++) await new Promise((resolve) => setImmediate(resolve))
+  }
+
+  // Opens the screen, chooses the first course and loads its preview.
+  async open({ load = true } = {}) {
+    this.elements()
+    const [effect] = this.effects
+    effect()
+    await this.settle()
+    if (!load) return
+    this.change(this.select(0), 'first')
+    this.press('Load Course Preview')
+    await this.settle()
+  }
+
+  // Presses a button that makes a book and waits for the result.
+  async generate() {
+    this.press('Generate Book')
+    for (let i = 0; i < 50 && this.shown.includes('please wait'); i++) await this.settle()
+  }
+
+  async zip(): Promise<Record<string, Buffer>> {
+    const bytes = Buffer.from(await this.files[this.files.length - 1].arrayBuffer())
+    const found: Record<string, Buffer> = {}
+    for (let at = 0; bytes.readUInt32LE(at) === 0x04034b50; ) {
+      const size = bytes.readUInt32LE(at + 18)
+      const name = at + 30
+      const data = name + bytes.readUInt16LE(at + 26)
+      found[bytes.toString('utf8', name, data)] = bytes.subarray(data, data + size)
+      at = data + size
+    }
+    return found
+  }
+}
+
+async function pdfOf(pages: number): Promise<string> {
+  const made = await pdfLib.PDFDocument.create()
+  for (let i = 0; i < pages; i++) made.addPage([432, 648])
+  return Buffer.from(await made.save()).toString('base64')
+}
+
+// A screen for a course of three chapters, made chapter by chapter.
+const CHAPTER_PAGES = [5, 2, 7]
+const ANSWER_PAGES = [3, 0, 4]
+const QUESTIONS = [6, 0, 9]
+
+async function screen(): Promise<Screen> {
+  const made = new Screen()
+  vi.spyOn(URL, 'createObjectURL').mockImplementation((file) => {
+    made.files.push(file as Blob)
+    return `blob:${made.files.length}`
+  })
+  const pdfs = new Map<number, string>()
+  for (const pages of [...CHAPTER_PAGES, ...ANSWER_PAGES, 1]) pdfs.set(pages, await pdfOf(pages))
+  made.answers = {
+    'load-course': () => ({ body: { courses: ['first', 'second'].map((slug) => ({ _id: slug, slug, title: `Title ${slug}` })) } }),
+    preview: () => ({
+      body: {
+        course: { title: 'Course', slug: 'first', chapters: CHAPTER_PAGES.map((_, i) => ({ _key: i, chapterTitle: `C${i}`, lessons: [] })) },
+        stats: { chapterCount: 3, lessonCount: 3, articleCount: 60, questionCount: 15, questionCountError: false },
+        health: { verdict: 'ready', emptyArticles: 0, articlesWithWebElements: 0, totalWebElementsRemoved: 0, mcqLinked: 2, emptyList: [], webWarningDetails: [] },
+        history: [],
+      },
+    }),
+    'generate-chapter': ({ chapterIndex: at }) => ({
+      body: { pdf: pdfs.get(CHAPTER_PAGES[at as number]), pageCount: CHAPTER_PAGES[at as number], chapterCount: 3, questionCount: QUESTIONS[at as number] },
+    }),
+    'generate-answers': ({ chapterIndex: at }) => ({
+      body: {
+        pdf: ANSWER_PAGES[at as number] ? pdfs.get(ANSWER_PAGES[at as number]) : null,
+        pageCount: ANSWER_PAGES[at as number],
+        chapterCount: 3,
+        questionCount: QUESTIONS[at as number],
+      },
+    }),
+    'generate-frontmatter': () => ({ body: { pdf: pdfs.get(3) } }),
+    'generate-cover': () => ({ body: { pdf: pdfs.get(1) ?? '' } }),
+    generate: () => ({ file: 'zip' }),
+    'generate-pq': () => ({ file: 'zip' }),
+    'export-word': () => ({ file: 'word' }),
+  }
+  return made
+}
+
+// Changes one field of one answer of a route.
+function spoil(made: Screen, name: string, at: number, change: object) {
+  const before = made.answers[name]
+  made.answers[name] = (body) => {
+    const answer = before(body)
+    return body.chapterIndex === at ? { ...answer, body: { ...(answer.body as object), ...change } } : answer
+  }
+}
+
+describe('the screen of a book made chapter by chapter', () => {
+  const COURSE_CHANGED = 'The course has changed since the preview was loaded, so nothing was made. Please load the preview again.'
+  const ANSWERS_DIFFER = 'The questions and answers of chapter 3 do not match, so nothing was made. Please try again in a minute.'
+
+  it('makes the ZIP when everything matches', async () => {
+    const page = await screen()
+    await page.open()
+    page.change(page.radio('combined'), 'combined')
+    await page.generate()
+    expect(page.links()).toEqual(['first-combined.zip'])
+    expect(Object.keys(await page.zip())).toEqual(expect.arrayContaining(['interior.pdf', 'cover.pdf', 'metadata.txt']))
+    expect(page.calls.filter((call) => call.name === 'generate-answers').map((call) => call.body?.questionNumberOffset)).toEqual([0, 6, 6])
+  })
+
+  it.each<[string, string, number, object, string, string]>([
+    ['a chapter was added', 'generate-chapter', 0, { chapterCount: 4 }, COURSE_CHANGED, 'generate-chapter'],
+    ['a chapter was taken away', 'generate-chapter', 1, { chapterCount: 2 }, COURSE_CHANGED, 'generate-chapter'],
+    ['the number of chapters is not told', 'generate-chapter', 2, { chapterCount: undefined }, COURSE_CHANGED, 'generate-chapter'],
+    ['a chapter was added before the answers', 'generate-answers', 1, { chapterCount: 4 }, COURSE_CHANGED, 'generate-answers'],
+    ['a question was added before the answers', 'generate-answers', 2, { questionCount: 10 }, ANSWERS_DIFFER, 'generate-answers'],
+    ['the answers have no questions', 'generate-answers', 2, { questionCount: 0, pdf: null }, ANSWERS_DIFFER, 'generate-answers'],
+  ])('%s: it stops with its message and makes nothing', async (_name, route, at, change, message, last) => {
+    const page = await screen()
+    spoil(page, route, at, change)
+    await page.open()
+    page.change(page.radio('combined'), 'combined')
+    await page.generate()
+    expect(page.shown).toContain(message)
+    expect(page.links()).toEqual([])
+    expect(page.files).toEqual([])
+    expect(page.calls[page.calls.length - 1].name).toBe(last)
+  })
+
+  it('the messages are exact', () => {
+    const source = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
+    expect(source).toContain(`const COURSE_CHANGED = '${COURSE_CHANGED}'\n`)
+    expect(source).toContain(`const ANSWERS_DIFFER = (n: number) => \`${ANSWERS_DIFFER.replace('3', '${n}')}\`\n`)
   })
 })
