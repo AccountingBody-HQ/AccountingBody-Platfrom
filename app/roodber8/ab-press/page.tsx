@@ -15,6 +15,7 @@ const HISTORY_FAILED = 'Publication history unavailable (it could not be read).'
 const COURSES_FAILED = 'Could not load the course list. Please reload the page.'
 const COURSE_CHANGED = 'The course has changed since the preview was loaded, so nothing was made. Please load the preview again.'
 const ANSWERS_DIFFER = (n: number) => `The questions and answers of chapter ${n} do not match, so nothing was made. Please try again in a minute.`
+const REPORT_ITEMS = (n: number) => `The check report (preflight-report.txt) lists ${n} item(s) to look at. Please read it before uploading to KDP.`
 
 function formatGeneratedAt(iso: string): string {
   const d = new Date(iso)
@@ -99,6 +100,31 @@ function buildCheckReport(missingSets: string[], noAnswerSets: string[], missing
   ].join('\n')
 }
 
+// How many lines of a check report ask for a look.
+function countReportItems(report: string): number {
+  return report.split('\n').filter(line => line.startsWith('[WARN]') || line.startsWith('[FAIL]')).length
+}
+
+// The same for the check report in a ZIP made by the server, whose files are
+// stored one after the other, not compressed. 0 when it cannot be read.
+async function countZipReportItems(zip: Blob): Promise<number> {
+  try {
+    const bytes = new Uint8Array(await zip.arrayBuffer())
+    const view = new DataView(bytes.buffer)
+    const text = (start: number, length: number) => new TextDecoder().decode(bytes.subarray(start, start + length))
+    for (let at = 0; view.getUint32(at, true) === 0x04034b50;) {
+      const size = view.getUint32(at + 18, true)
+      const nameLength = view.getUint16(at + 26, true)
+      const data = at + 30 + nameLength + view.getUint16(at + 28, true)
+      if (text(at + 30, nameLength) === 'preflight-report.txt') return countReportItems(text(data, size))
+      at = data + size
+    }
+    return 0
+  } catch {
+    return 0
+  }
+}
+
 function u32le(n: number): Uint8Array {
   const b = new Uint8Array(4)
   new DataView(b.buffer).setUint32(0, n, true)
@@ -170,6 +196,7 @@ export default function AbPressPage() {
   const [error,       setError]       = useState('')
   const [genError,    setGenError]    = useState('')
   const [downloadUrl,    setDownloadUrl]    = useState('')
+  const [reportItems,    setReportItems]    = useState(0)
   const [wordUrl,        setWordUrl]        = useState('')
   const [exportingWord,  setExportingWord]  = useState(false)
   const [wordError,      setWordError]      = useState('')
@@ -194,7 +221,7 @@ export default function AbPressPage() {
 
   // A file that was made belongs to the choices it was made with.
   const clearMade = () => {
-    setDownloadUrl(''); setGenError(''); setWordUrl(''); setWordError('')
+    setDownloadUrl(''); setReportItems(0); setGenError(''); setWordUrl(''); setWordError('')
   }
 
   const handleCourseSelect = (e: any) => {
@@ -265,6 +292,7 @@ export default function AbPressPage() {
         return
       }
       const blob = await res.blob()
+      setReportItems(await countZipReportItems(blob))
       setDownloadUrl(URL.createObjectURL(blob))
     } catch {
       setGenError('Network error - generation failed')
@@ -441,13 +469,15 @@ export default function AbPressPage() {
 
       // 7. Build ZIP client-side
       setGenerationPhase('Building ZIP...')
+      const checkReport = buildCheckReport(missingSets, noAnswerSets, missingOptionSets, unpublished)
       const zipBytes = buildZip([
         { name: 'interior.pdf', data: interiorPdf },
         { name: 'cover.pdf',    data: coverPdf },
         { name: 'metadata.txt', data: new TextEncoder().encode(buildMetadata(subtitle || preview.course.title, bookType, edition, preview.course)) },
-        { name: 'preflight-report.txt', data: new TextEncoder().encode(buildCheckReport(missingSets, noAnswerSets, missingOptionSets, unpublished)) },
+        { name: 'preflight-report.txt', data: new TextEncoder().encode(checkReport) },
       ])
       const blob = new Blob([zipBytes as any], { type: 'application/zip' })
+      setReportItems(countReportItems(checkReport))
       setDownloadUrl(URL.createObjectURL(blob))
 
     } catch (err: any) {
@@ -476,6 +506,7 @@ export default function AbPressPage() {
         return
       }
       const blob = await res.blob()
+      setReportItems(await countZipReportItems(blob))
       setDownloadUrl(URL.createObjectURL(blob))
     } catch {
       setGenError('Network error — generation failed')
@@ -797,6 +828,7 @@ export default function AbPressPage() {
                   {generating ? 'Generating PDF — please wait...' : 'Generate Book'}
                 </button>
               )}
+              {downloadUrl && reportItems > 0 ? <p className="text-red-400 text-xs mt-2">{REPORT_ITEMS(reportItems)}</p> : null}
               {wordError ? <p className="text-red-400 text-xs mt-2">{wordError}</p> : null}
               {wordUrl ? (
                 <a

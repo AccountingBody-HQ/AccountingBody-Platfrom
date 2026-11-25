@@ -1318,7 +1318,7 @@ describe('the new lines of the check reports', () => {
 // for adminFetch; pdf-lib and the rest are real.
 
 type Element = { type: unknown; props: Record<string, unknown> }
-type Answer = { status?: number; body?: unknown; file?: string; wait?: Promise<void> }
+type Answer = { status?: number; body?: unknown; file?: string | Uint8Array<ArrayBuffer>; wait?: Promise<void> }
 
 class Screen {
   calls: { name: string; body: Record<string, unknown> | null }[] = []
@@ -1658,6 +1658,115 @@ describe('what the screen has made', () => {
       expect(locks(page), route).toEqual(FREE)
       page.answers[route] = before
     }
+  })
+})
+
+describe('the line under the download button', () => {
+  const BUTTON = 'Download ZIP — Ready for KDP Upload'
+  const LINE = (n: number) => `The check report (preflight-report.txt) lists ${n} item(s) to look at. Please read it before uploading to KDP.`
+
+  // A ZIP as the server makes it: files stored one after the other.
+  const zipOf = (files: [string, string][]) =>
+    new Uint8Array(
+      Buffer.concat(
+        files.flatMap(([name, text]) => {
+          const head = Buffer.alloc(30)
+          head.writeUInt32LE(0x04034b50, 0)
+          head.writeUInt32LE(Buffer.byteLength(text), 18)
+          head.writeUInt16LE(Buffer.byteLength(name), 26)
+          return [head, Buffer.from(name), Buffer.from(text)]
+        }),
+      ),
+    )
+  const reportZip = (...lines: string[]) => zipOf([['interior.pdf', '[WARN] not a report'], ['preflight-report.txt', lines.join('\n')]])
+
+  // A screen that has made a book on the server; the two ways to do that.
+  const WAYS = ['generate', 'generate-pq'] as const
+  const made = async (way: (typeof WAYS)[number], file: string | Uint8Array<ArrayBuffer>) => {
+    const page = await screen()
+    const { preview } = page.answers
+    page.answers.preview = (body) => {
+      const answer = preview(body).body as { stats: object }
+      return { body: { ...answer, stats: { ...answer.stats, articleCount: 50 } } }
+    }
+    page.answers[way] = () => ({ file })
+    await page.open()
+    if (way === 'generate-pq') page.change(page.radio('practice'), 'practice')
+    await page.generate()
+    expect(page.calls[page.calls.length - 1].name).toBe(way)
+    return page
+  }
+  // The line, when it is there: directly after the button, in the small style.
+  const line = (page: Screen) => {
+    const all = page.elements()
+    const at = all.findIndex((e) => e.type === 'a')
+    expect(Screen.text(all[at])).toBe(BUTTON)
+    const shown = all.filter((e) => e.type === 'p' && Screen.text(e).includes('preflight-report.txt'))
+    if (shown.length === 0) return null
+    expect(shown).toEqual([all[at + 1]])
+    expect(shown[0].props.className).toBe('text-red-400 text-xs mt-2')
+    return Screen.text(shown[0])
+  }
+
+  const CASES: [string, string | Uint8Array<ArrayBuffer>, number][] = [
+    ['no item', reportZip('[PASS] a', '[PASS] b', 'VERDICT: KDP-READY - x'), 0],
+    ['one WARN and one FAIL', reportZip('[PASS] a', '[WARN] b', '', '[FAIL] c'), 2],
+    ['one WARN at the very end', reportZip('[PASS] a', '[WARN] b'), 1],
+    ['the words inside a line only', reportZip('VERDICT: NOT READY - resolve [FAIL] items', 'see [WARN] lines above', '  [WARN] x', '[WARN', '[INFO] y'), 0],
+    ['an empty report', reportZip(''), 0],
+    ['no report', zipOf([['interior.pdf', '[WARN] x'], ['metadata.txt', '[FAIL] y']]), 0],
+    ['something that is not a ZIP', 'zip', 0],
+    ['nothing', '', 0],
+    ['a cut ZIP', reportZip('[WARN] b').slice(0, 40), 0],
+  ]
+  it.each(WAYS.flatMap((way) => CASES.map(([name, file, n]) => [way, name, n, file] as const)))('%s: %s in the report gives %i', async (way, _name, n, file) => {
+    const page = await made(way, file)
+    expect(page.links()).toHaveLength(1)
+    expect(page.shown).not.toContain('Network error')
+    expect(line(page)).toBe(n > 0 ? LINE(n) : null)
+  })
+
+  it.each([
+    ['generate', { slug: 'course', bookType: 'combined' }],
+    ['generate-pq', { slug: 'course' }],
+  ] as const)('%s: counts the report of a book the server really made', async (way, body) => {
+    state.lessons = { course: [['short', 'letters', 'hidden', 'gone']] }
+    const file = new Uint8Array(await (await callRoute(way, { body })).arrayBuffer())
+    const report = Buffer.from(file).toString('utf8').split('ACCOUNTING BODY PRESS - KDP PRE-FLIGHT REPORT')[1]
+    const items = report.match(/^\[(WARN|FAIL)\]/gm) ?? []
+    expect(new Set(items)).toEqual(new Set(['[WARN]', '[FAIL]']))
+    expect(line(await made(way, file))).toBe(LINE(items.length))
+  })
+
+  it('chapter by chapter: counts its own report', async () => {
+    const page = await screen()
+    await page.open()
+    await page.generate()
+    expect(line(page)).toBe(null)
+    spoil(page, 'generate-chapter', 0, { missingSets: ['x', 'y'], unpublished: ['u'] })
+    spoil(page, 'generate-chapter', 2, { missingOptionSets: ['m'] })
+    page.change(page.radio('combined'), 'combined')
+    await page.generate()
+    expect(line(page)).toBe(LINE(3))
+  })
+
+  it('goes away with the book, and belongs to the last book only', async () => {
+    const page = await made('generate', reportZip('[WARN] a', '[FAIL] b'))
+    expect(line(page)).toBe(LINE(2))
+    page.change(page.titleField(), 'Another title')
+    expect(page.links()).toEqual([])
+    expect(page.shown).not.toContain('preflight-report.txt')
+    page.answers.generate = () => ({ file: reportZip('[PASS] a') })
+    await page.generate()
+    expect(line(page)).toBe(null)
+    const source = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
+    expect(source).toContain(`\n  const clearMade = () => {\n    setDownloadUrl(''); setReportItems(0); `)
+  })
+
+  it('is exact', () => {
+    const source = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
+    expect(source).toContain(`const REPORT_ITEMS = (n: number) => \`${LINE(7).replace('7', '${n}')}\`\n`)
+    expect(source.split(BUTTON)).toHaveLength(2)
   })
 })
 
