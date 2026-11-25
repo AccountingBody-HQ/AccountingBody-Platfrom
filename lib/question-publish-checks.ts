@@ -69,6 +69,11 @@ export function numberUnclearMessage(n: number): string {
   return `Q${n}: the correct answer is a number, and this paste does not show whether numbers start at 0 or 1. Use a letter (A, B, C or D) instead.`
 }
 
+// The importer's review: the question's case is not in the paste.
+export function missingCaseMessage(n: number): string {
+  return `Q${n}: ${REASON_TEXT['missing-case']}`
+}
+
 export function alreadyHasSetMessage(setTitle: string): string {
   return `Nothing was published. This article already has a practice set: "${setTitle}". Add questions to that set instead.`
 }

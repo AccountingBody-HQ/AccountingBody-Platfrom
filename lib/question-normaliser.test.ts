@@ -14,6 +14,47 @@ const question = (over: Record<string, unknown> = {}) => ({
   ...over,
 })
 
+describe('the review: a scenario question and its case', () => {
+  const scenario = (over: Record<string, unknown> = {}) => question({ type: 'scenario', caseId: 'case-1', ...over })
+  const facts = { caseId: 'case-1', title: 'Case', exhibit: '<p>Facts</p>' }
+  const review = (questions: unknown[], cases?: unknown) => {
+    const { bundle } = normalise({ title: 'Test set', questions, cases })
+    const errors = validateNormalisedBundle(bundle)
+    // The publish check finds the same.
+    const check = checkPublishBundle(bundle)
+    const missing = check.ok ? [] : check.problems.filter((p) => p.reason === 'missing-case').map((p) => `Q${p.n}: refers to a missing case`)
+    expect(errors.filter((error) => error.includes('case'))).toEqual(missing)
+    return errors
+  }
+
+  it.each([
+    ['no cases', undefined],
+    ['an empty list', []],
+    ['another case', [{ ...facts, caseId: 'case-2' }]],
+    ['an empty case', [{ ...facts, exhibit: ' ' }]],
+    ['a case without a text', [{ caseId: 'case-1', title: 'Case' }]],
+  ])('lists a missing case with %s', (_name, cases) => {
+    expect(review([scenario()], cases)).toEqual(['Q1: refers to a missing case'])
+  })
+
+  it('lists each question, with its number, after its other errors', () => {
+    expect(review([question(), scenario({ caseId: 'case-2', correctIndex: null }), scenario(), scenario({ caseId: 'case-3' })], [facts])).toEqual([
+      'Q2: correct answer not set',
+      'Q2: refers to a missing case',
+      'Q4: refers to a missing case',
+    ])
+  })
+
+  it.each([
+    ['its case is there', scenario(), [facts]],
+    ['it brings its own case', question({ type: 'scenario', exhibit: '<p>Facts</p>' }), undefined],
+    ['it names no case', question({ type: 'scenario' }), undefined],
+    ['it is not a scenario question', question({ caseId: 'case-1' }), undefined],
+  ])('lists nothing when %s', (_name, q, cases) => {
+    expect(review([q], cases)).toEqual([])
+  })
+})
+
 function read(over: Record<string, unknown>) {
   const { bundle, changes, warnings } = normalise({ title: 'Test set', questions: [question(over)] })
   return { question: bundle.questions[0], bundle, changes, warnings }

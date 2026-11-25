@@ -12,7 +12,7 @@
  *   - any warnings about data that could not be resolved
  */
 
-import { numberUnclearMessage } from './question-publish-checks'
+import { checkPublishBundle, missingCaseMessage, numberUnclearMessage } from './question-publish-checks'
 
 // ── Internal bundle types ─────────────────────────────────────────────────────
 
@@ -813,6 +813,10 @@ export function validateNormalisedBundle(bundle: NormalisedBundle): string[] {
   if (!bundle.title.trim())   errors.push('Title is required')
   if (bundle.questions.length === 0) errors.push('No questions in bundle')
 
+  // The publish check's own rule, so both always agree.
+  const check = checkPublishBundle(bundle)
+  const missingCase = new Set(check.ok ? [] : check.problems.filter(({ reason }) => reason === 'missing-case').map(({ n }) => n))
+
   bundle.questions.forEach((q, i) => {
     const p = `Q${i + 1}`
     if (!q.questionText.trim()) errors.push(`${p}: question text is empty`)
@@ -824,6 +828,7 @@ export function validateNormalisedBundle(bundle: NormalisedBundle): string[] {
     if (q.type === 'writing' && !q.writingModelAnswer?.trim()) {
       errors.push(`${p}: writing question has no model answer`)
     }
+    if (missingCase.has(i + 1)) errors.push(missingCaseMessage(i + 1))
   })
 
   return errors

@@ -28,6 +28,7 @@ import {
   checkPublishBundle,
   checkStoredSet,
   fixThisQuestionMessage,
+  missingCaseMessage,
   notLinkedOtherSetMessage,
   notReadyProblemsMessage,
   numberUnclearMessage,
@@ -375,6 +376,10 @@ describe('wording', () => {
 
   it('has the exact message for an odd web address', () => {
     expect(BAD_ADDRESS).toBe('Nothing was saved. A web address may use only small letters a–z, numbers and single hyphens.')
+  })
+
+  it('has the exact importer review line', () => {
+    expect(missingCaseMessage(4)).toBe('Q4: refers to a missing case')
   })
 
   it('has the exact importer warning', () => {

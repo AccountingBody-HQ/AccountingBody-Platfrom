@@ -245,6 +245,18 @@ describe('import: an answer that cannot be read', () => {
     expect(await paste('C')).toMatchObject({ ready: true, warnings: [], validationErrors: [] })
   })
 
+  it('is not ready when a scenario question misses its case, and the publish route refuses the same bundle', async () => {
+    const rawJson = JSON.stringify({ title: 'Leases quiz', questions: [question({ correctIndex: 'C' }), question({ correctIndex: 'C', type: 'scenario', caseId: 'case-1' })] })
+    const res = await (await api('questions/import/route.ts')).POST(request('POST', 'questions/import', { rawJson }), { params: {} })
+    const result = (await res.json()) as Row
+    expect(result).toMatchObject({ ready: false, warnings: [], validationErrors: ['Q2: refers to a missing case'] })
+    expect(await publish({ bundle: result.bundle })).toEqual({
+      status: 400,
+      body: { error: 'Nothing was published. Please fix these questions first: Q2 refers to a missing case.' },
+    })
+    expect(db.calls).toEqual([])
+  })
+
   it('the import page shows the warnings and disables Publish while not ready', () => {
     const source = readFileSync(join(process.cwd(), `app/${ADMIN}/questions/import/page.tsx`), 'utf8')
     expect(source).toContain('result.warnings.map(')
