@@ -17,6 +17,9 @@ export interface BuildStats {
   mcqNotFound: string[]
 }
 
+/** What the admin sees when the practice questions could not be read. */
+export const READ_FAILED = "Could not read the practice questions, so nothing was made. Please try again in a minute."
+
 /** Service-role Supabase client used by the AB Press build pipeline. */
 export function createSupabaseClient() {
   return createClient(
@@ -33,21 +36,23 @@ export async function fetchQuestions(mcqUrl: string, stats: BuildStats): Promise
     const practiceSlug = parts[parts.length - 1]
     if (!practiceSlug) return []
 
-    const { data: qSet } = await supabase
+    const { data: qSet, error: setError } = await supabase
       .from("question_sets")
       .select("id")
       .eq("slug", practiceSlug)
       .eq("status", "published")
       .maybeSingle()
 
+    if (setError) throw setError
     if (!qSet) { stats.mcqNotFound.push(practiceSlug); return [] }
 
-    const { data: questions } = await supabase
+    const { data: questions, error: questionsError } = await supabase
       .from("questions")
       .select("question_text, option_a, option_b, option_c, option_d, correct_index, explanation")
       .eq("set_id", qSet.id)
       .order("question_order", { ascending: true })
 
+    if (questionsError) throw questionsError
     return (questions ?? []).map((q) => ({
       questionText:  q.question_text,
       options:       [q.option_a, q.option_b, q.option_c, q.option_d].filter(Boolean),
@@ -93,21 +98,32 @@ export async function buildCourse(slug: string, stats: BuildStats) {
   const setIdToQuestions = new Map<string, any[]>()
 
   if (mcqSlugs.length > 0) {
-    const { data: allSets } = await supabase
+    const { data: allSets, error: setsError } = await supabase
       .from("question_sets")
       .select("id, slug")
       .in("slug", mcqSlugs)
       .eq("status", "published")
 
+    // No book from a partial read.
+    if (setsError || !allSets) {
+      console.error("ab-press/builder: question_sets read failed:", setsError)
+      throw new Error(READ_FAILED)
+    }
+
     for (const s of (allSets ?? [])) slugToSetId.set(s.slug, s.id)
 
     const allSetIds = (allSets ?? []).map((s) => s.id)
     if (allSetIds.length > 0) {
-      const { data: allQuestions } = await supabase
+      const { data: allQuestions, error: questionsError } = await supabase
         .from("questions")
         .select("set_id, question_text, option_a, option_b, option_c, option_d, correct_index, explanation")
         .in("set_id", allSetIds)
         .order("question_order", { ascending: true })
+
+      if (questionsError || !allQuestions) {
+        console.error("ab-press/builder: questions read failed:", questionsError)
+        throw new Error(READ_FAILED)
+      }
 
       for (const q of (allQuestions ?? [])) {
         const arr = setIdToQuestions.get(q.set_id) ?? []

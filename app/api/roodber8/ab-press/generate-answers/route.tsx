@@ -22,7 +22,7 @@ import { isAuthenticated, signedOutResponse } from "@/lib/admin-auth"
 import { Document, Page, Text, View, StyleSheet, Font, renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { getCourseBySlug } from "@/lib/coursesNew"
-import { createSupabaseClient } from "@/lib/ab-press-builder"
+import { createSupabaseClient, READ_FAILED } from "@/lib/ab-press-builder"
 
 export const maxDuration = 60
 
@@ -273,21 +273,32 @@ export async function POST(req: NextRequest) {
     const setIdToQuestions = new Map<string, any[]>()
 
     if (mcqSlugs.length > 0) {
-      const { data: allSets } = await supabase
+      const { data: allSets, error: setsError } = await supabase
         .from("question_sets")
         .select("id, slug")
         .in("slug", mcqSlugs)
         .eq("status", "published")
 
+      // No answers from a partial read.
+      if (setsError || !allSets) {
+        console.error("ab-press/generate-answers: question_sets read failed:", setsError)
+        throw new Error(READ_FAILED)
+      }
+
       for (const st of (allSets ?? [])) slugToSetId.set(st.slug, st.id)
 
       const allSetIds = (allSets ?? []).map((st) => st.id)
       if (allSetIds.length > 0) {
-        const { data: allQuestions } = await supabase
+        const { data: allQuestions, error: questionsError } = await supabase
           .from("questions")
           .select("set_id, question_text, option_a, option_b, option_c, option_d, correct_index, explanation")
           .in("set_id", allSetIds)
           .order("question_order", { ascending: true })
+
+        if (questionsError || !allQuestions) {
+          console.error("ab-press/generate-answers: questions read failed:", questionsError)
+          throw new Error(READ_FAILED)
+        }
 
         for (const q of (allQuestions ?? [])) {
           const arr = setIdToQuestions.get(q.set_id) ?? []

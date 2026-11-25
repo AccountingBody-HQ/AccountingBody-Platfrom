@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
     // Compute stats
     let totalArticles = 0
     let totalQuestions = 0
+    let questionCountError = false
     for (const ch of course.chapters) {
       for (const ls of ch.lessons) {
         totalArticles += ls.articles.length
@@ -47,23 +48,27 @@ export async function GET(req: NextRequest) {
     if (articleSlugs.length > 0) {
       try {
         // Step 1: get matching set IDs
-        const { data: matchingSets } = await supabase
+        const { data: matchingSets, error: setsError } = await supabase
           .from('question_sets')
           .select('id')
           .in('article_slug', articleSlugs)
           .eq('status', 'published')
           .eq('platform', 'ab')
+        if (setsError || !matchingSets) throw setsError ?? new Error('no set list')
 
-        if (matchingSets && matchingSets.length > 0) {
+        if (matchingSets.length > 0) {
           const setIds = matchingSets.map(s => s.id)
-          const { count: qCount } = await supabase
+          const { count: qCount, error: countError } = await supabase
             .from('questions')
             .select('*', { count: 'exact', head: true })
             .in('set_id', setIds)
-          totalQuestions = qCount ?? 0
+          if (countError || qCount === null) throw countError ?? new Error('no question count')
+          totalQuestions = qCount
         }
       } catch (err) {
-        console.error('ab-press/preview: question_sets count query threw:', err)
+        // The count is unknown, not zero.
+        console.error('ab-press/preview: question count read failed:', err)
+        questionCountError = true
       }
     }
 
@@ -190,6 +195,7 @@ export async function GET(req: NextRequest) {
         lessonCount:   course.chapters.reduce((a, c) => a + c.lessons.length, 0),
         articleCount:  totalArticles,
         questionCount: totalQuestions,
+        questionCountError,
         emptyArticles: emptyArticlesCount,
         articlesWithWebElements,
       },

@@ -590,6 +590,7 @@ const LOG_ONLY: Record<string, string> = {
   'lib/cache-guard.ts:refresh': 'the last good value is served; without one the problem goes to the reader, which reports',
   'lib/adapters/adzuna.ts:fetch': 'some search words failed and the run goes on; when all fail the run fails and reports',
   'lib/ingestion/validate.ts:validate': 'a job refused for its data',
+  'lib/ab-press-builder.ts:buildCourse': 'the admin is told nothing was made; AB Press routes keep log lines only',
   'lib/supabase-server.ts:timeLimitedFetch': 'the caller receives the time-limit problem and handles it',
   'lib/coursesNew.ts:getCourseBySlug': 'passed on to the page or route',
   'lib/coursesNew.ts:getLessonData': 'passed on to the page',
