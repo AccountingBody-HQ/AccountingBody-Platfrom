@@ -303,11 +303,22 @@ describe('AB Press reads of articles, question_sets and questions', () => {
     expect(tablesUsed('Array.from(x); db.from(name); Buffer.from("y"); db.from("jobs")')).toEqual(['?', 'jobs'])
   })
 
-  it('the routes that read have a time limit', () => {
-    for (const [name, seconds] of [['preview', 60], ['export-word', 300], ['generate', 300], ['generate-pq', 300], ['generate-chapter', 60], ['generate-answers', 60]]) {
-      const path = FILES.find((file) => file.includes(`/ab-press/${name}/route.ts`))
-      expect(readFileSync(join(ROOT, path ?? ''), 'utf8')).toContain(`\nexport const maxDuration = ${seconds}\n`)
+  it('every route has its time limit', () => {
+    const found: Record<string, string[]> = {}
+    for (const path of FILES) {
+      const name = /^app\/api\/.*\/ab-press\/([a-z-]+)\/route\.tsx?$/.exec(path)?.[1]
+      if (name) found[name] = Array.from(readFileSync(join(ROOT, path), 'utf8').matchAll(/^export const maxDuration = (.*)$/gm), (match) => match[1])
     }
+    expect(found).toEqual({
+      generate: ['300'],
+      'generate-pq': ['300'],
+      'export-word': ['300'],
+      preview: ['60'],
+      'generate-chapter': ['300'],
+      'generate-answers': ['300'],
+      'generate-cover': ['60'],
+      'generate-frontmatter': ['60'],
+    })
   })
 
   it('the check recognises a query of the read helper, and only there', () => {

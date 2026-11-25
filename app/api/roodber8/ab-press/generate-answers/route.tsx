@@ -25,7 +25,7 @@ import React from "react"
 import { getCourseBySlug } from "@/lib/coursesNew"
 import { courseKey, EMPTY_COURSE, hasPrintedAnswer, isEmptyCourse, practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
 
-export const maxDuration = 60
+export const maxDuration = 300
 
 Font.registerHyphenationCallback((word: string) => [word])
 const FONT_BASE = "https://accountingbody.com/fonts"
