@@ -72,6 +72,10 @@ export function slugTakenMessage(slug: string): string {
   return `Nothing was published. Another practice set already uses the web address /practice-questions/${slug}. Change the title and try again.`
 }
 
+export function notLinkedOtherSetMessage(setTitle: string): string {
+  return `Done. But the article already links to another practice set ("${setTitle}"), so this set is not linked from the article.`
+}
+
 function problemsMessage(prefix: string, problems: PublishProblem[]): string {
   const listed = problems.slice(0, MAX_LISTED_PROBLEMS).map(({ n, reason }) => `Q${n} ${REASON_TEXT[reason]}`)
   const more = problems.length - listed.length

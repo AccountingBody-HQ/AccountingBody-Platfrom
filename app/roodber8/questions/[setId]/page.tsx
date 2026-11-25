@@ -651,7 +651,7 @@ function SetMetadataEditor({
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Save failed')
-      onUpdated({ ...set, title, topic, excerpt, difficulty, status }, data.unlinkWarning ?? data.linkWarning ?? '')
+      onUpdated({ ...set, title, topic, excerpt, difficulty, status }, data.unlinkWarning ?? data.linkWarning ?? data.linkNote ?? '')
       onClose()
     } catch (e: any) {
       setError(e.message)

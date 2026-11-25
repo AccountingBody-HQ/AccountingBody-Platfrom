@@ -3,13 +3,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { checkRead } from '@/lib/db-check'
-import { linkArticleIfEmpty, replaceArticleLink } from '@/lib/question-article-link'
+import { linkArticleIfEmpty, replaceArticleLink, type LinkNotes } from '@/lib/question-article-link'
 import { refreshQuestionCaches } from '@/lib/question-cache'
 import {
   CHECKED_CASE_COLUMNS,
   CHECKED_QUESTION_COLUMNS,
   LAST_QUESTION,
-  LINK_FAILED,
   NOT_READY_EMPTY,
   SET_CHECK_FAILED,
   SLUG_LOCKED,
@@ -163,7 +162,7 @@ export async function PATCH(
       return NextResponse.json({ error: error.message }, { status: 500 })
 
     // The article's link follows the set.
-    let linkWarning: string | undefined
+    let linkNotes: LinkNotes = {}
     let unlinkWarning: string | undefined
     if (old?.article_slug && old.slug) {
       if (slugChanged) {
@@ -172,7 +171,7 @@ export async function PATCH(
       } else if (statusGiven && !isPublished) {
         if (!(await replaceArticleLink(supabase, old.article_slug, old.slug, null))) unlinkWarning = UNLINK_FAILED
       } else if (isPublished && !wasPublished) {
-        if (!(await linkArticleIfEmpty(supabase, old.article_slug, old.slug))) linkWarning = LINK_FAILED
+        linkNotes = await linkArticleIfEmpty(supabase, old.article_slug, old.slug)
       }
     }
 
@@ -183,7 +182,7 @@ export async function PATCH(
     })
     return NextResponse.json({
       success: true,
-      ...(linkWarning ? { linkWarning } : {}),
+      ...linkNotes,
       ...(unlinkWarning ? { unlinkWarning } : {}),
     })
   }

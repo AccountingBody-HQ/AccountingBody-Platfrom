@@ -21,6 +21,7 @@ import {
   checkPublishBundle,
   checkStoredSet,
   fixThisQuestionMessage,
+  notLinkedOtherSetMessage,
   notReadyProblemsMessage,
   numberUnclearMessage,
   publishProblemsMessage,
@@ -312,6 +313,12 @@ describe('wording', () => {
     expect(RESTORED_AS_DRAFT).toBe('Restored as a draft, because the set is not complete. Fix it in Questions, then make it live.')
     expect(RESTORE_CHECK_FAILED).toBe(
       'Restored. But the set could not be checked or made a draft, so an incomplete set may be live. Check it in Questions.',
+    )
+  })
+
+  it('has the exact note for a set that is not linked', () => {
+    expect(notLinkedOtherSetMessage('Leases basics')).toBe(
+      'Done. But the article already links to another practice set ("Leases basics"), so this set is not linked from the article.',
     )
   })
 

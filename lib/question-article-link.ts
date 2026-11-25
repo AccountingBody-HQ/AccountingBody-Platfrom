@@ -3,8 +3,8 @@
 //
 // Every write is conditional: it changes the link only while it still holds
 // the expected value, so a link to a different set is never touched. Nothing
-// here throws for a database problem; the caller turns false into a warning,
-// because its own write has already succeeded.
+// here throws for a database problem; it becomes a warning to the admin,
+// because the caller's own write has already succeeded.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { checkRead } from './db-check'
@@ -16,6 +16,7 @@ import {
   RESTORE_CHECK_FAILED,
   UNLINK_FAILED,
   checkStoredSet,
+  notLinkedOtherSetMessage,
 } from './question-publish-checks'
 import { BIN_TABLE, errorCode } from './recycle-bin'
 
@@ -66,16 +67,31 @@ export async function replaceArticleLink(
   return !error
 }
 
+// What the admin is told when the article does not point to the set; empty
+// when it does.
+export type LinkNotes = { linkWarning?: string; linkNote?: string }
+
 // The published article points to the set, unless it already points somewhere.
-// False when there is no such article, or not exactly one row changed.
-export async function linkArticleIfEmpty(supabase: SupabaseClient, articleSlug: string, setSlug: string): Promise<boolean> {
+// A link to another set is kept, and named. The warning: there is no such
+// article, not exactly one row changed, or its link is no set's address.
+export async function linkArticleIfEmpty(supabase: SupabaseClient, articleSlug: string, setSlug: string): Promise<LinkNotes> {
+  const failed = { linkWarning: LINK_FAILED }
   const read = checkRead(
     await supabase.from('articles').select('mcq_url').eq('slug', articleSlug).eq('status', 'published').limit(1).maybeSingle(),
     'question article link: article',
   )
-  if (!read.ok || !read.data) return false
-  if (read.data.mcq_url) return true
-  return setArticleLink(supabase, articleSlug, read.data.mcq_url ?? null, setSlug)
+  if (!read.ok || !read.data) return failed
+  const link = (read.data.mcq_url as string | null | undefined) ?? null
+  if (!link) return (await setArticleLink(supabase, articleSlug, link, setSlug)) ? {} : failed
+
+  const linkedSlug = linkedSetSlug(link)
+  if (linkedSlug === setSlug) return {}
+  if (!linkedSlug) return failed
+  const other = checkRead(
+    await supabase.from('question_sets').select('title').eq('slug', linkedSlug).limit(1).maybeSingle(),
+    'question article link: set the article points to',
+  )
+  return other.ok && other.data ? { linkNote: notLinkedOtherSetMessage(other.data.title as string) } : failed
 }
 
 type RestoredSet = {
@@ -123,7 +139,7 @@ async function makeDraft(supabase: SupabaseClient, set: RestoredSet): Promise<bo
   return true
 }
 
-export type RestoreNotes = { restoreNote?: string; linkWarning?: string; unlinkWarning?: string }
+export type RestoreNotes = LinkNotes & { restoreNote?: string; unlinkWarning?: string }
 
 // After a question set, or one question, came back from the recycle bin. A
 // published set that is not complete becomes a draft and is unlinked from its
@@ -172,8 +188,6 @@ export async function settleRestoredSet(
     return { set, notes }
   }
   if (!complete) notes.restoreNote = RESTORE_CHECK_FAILED
-  if (restored === 'set' && set.article_slug && !(await linkArticleIfEmpty(supabase, set.article_slug, set.slug))) {
-    notes.linkWarning = LINK_FAILED
-  }
+  if (restored === 'set' && set.article_slug) Object.assign(notes, await linkArticleIfEmpty(supabase, set.article_slug, set.slug))
   return { set, notes }
 }

@@ -93,7 +93,7 @@ export default function RecycleBinPage() {
         setRestoreError(data.error ?? 'Restore failed. Nothing was changed.')
       } else {
         setMessage(`Restored "${item.label}".`)
-        setRestoreError([data.restoreNote, data.unlinkWarning, data.linkWarning].filter(Boolean).join(' '))
+        setRestoreError([data.restoreNote, data.unlinkWarning, data.linkWarning, data.linkNote].filter(Boolean).join(' '))
         await load()
       }
     } catch {

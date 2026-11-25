@@ -21,6 +21,7 @@ import {
   SLUG_READ_FAILED,
   UNLINK_FAILED,
   alreadyHasSetMessage,
+  notLinkedOtherSetMessage,
   notReadyProblemsMessage,
   publishProblemsMessage,
   slugTakenMessage,
@@ -779,6 +780,7 @@ describe('recycle bin restore: refreshes the public caches', () => {
 
 const HERE = '/practice-questions/leases-quiz'
 const OTHER = '/practice-questions/another-set'
+const anotherSet = (): Row => ({ id: OTHER_SET, title: 'Leases basics', slug: 'another-set', article_slug: 'another-article', status: 'draft' })
 const articleLink = () => db.tables.articles[0].mcq_url
 const articleTag = () => revalidated.filter((tag) => tag === 'article:leases').length
 const withSet = (set: Row, mcqUrl: unknown, article: Row = {}) => {
@@ -897,11 +899,33 @@ describe('article link: a draft changed to published', () => {
     expect(db.tables.question_sets).toMatchObject([{ status: 'published', published_at: expect.stringMatching(/^\d{4}-\d\d-\d\dT/) }])
   })
 
-  it.each([[OTHER], [HERE]])('leaves a link that is there alone (%j)', async (link) => {
+  const goesLive = async (link: string, note: Row) => {
     withSet({ status: 'draft' }, link)
-    expect((await patch({ status: 'published' })).body).toEqual({ success: true })
+    db.tables.question_sets.push(anotherSet())
+    expect(await patch({ status: 'published' })).toEqual({ status: 200, body: { success: true, ...note } })
     expect(articleLink()).toBe(link)
+    expect(db.tables.question_sets).toMatchObject([{ status: 'published' }, anotherSet()])
     expect(writes()).toEqual(['PATCH question_sets'])
+  }
+
+  it.each([HERE, `${HERE}/`, `https://accountingbody.com${HERE}?from=article`])('leaves a link to it alone, and says nothing (%j)', async (link) => {
+    await goesLive(link, {})
+  })
+
+  it.each([OTHER, ` ${OTHER}/ `, `https://accountingbody.com${OTHER}`])('leaves a link to another set alone, and names that set (%j)', async (link) => {
+    await goesLive(link, { linkNote: notLinkedOtherSetMessage('Leases basics') })
+  })
+
+  it.each(['/practice-questions/gone', '/quiz/leases', 'https://example.com/'])('leaves a link that is no set alone, and says the article does not point to it (%j)', async (link) => {
+    await goesLive(link, { linkWarning: LINK_FAILED })
+  })
+
+  it('says the article does not point to it when the other set cannot be read', async () => {
+    withSet({ status: 'draft' }, OTHER)
+    db.tables.question_sets.push(anotherSet())
+    db.fail = failOn('GET', 'question_sets', 'slug=eq.another-set')
+    expect(await patch({ status: 'published' })).toEqual({ status: 200, body: { success: true, linkWarning: LINK_FAILED } })
+    expect(articleLink()).toBe(OTHER)
   })
 
   it('does not put back a removed link when a published set is saved again', async () => {
@@ -1315,10 +1339,17 @@ describe('article link: a set that comes back from the recycle bin', () => {
     expect(db.calls.every((c) => c.tagsBefore === 0)).toBe(true)
   })
 
-  it('leaves an article that points to a different set alone', async () => {
+  it('leaves an article that points to a different set alone, and names that set', async () => {
     withSet({}, OTHER)
-    expect((await restore()).body).toEqual({ success: true, counts })
+    db.tables.question_sets.push(anotherSet())
+    expect((await restore()).body).toEqual({ success: true, counts, linkNote: notLinkedOtherSetMessage('Leases basics') })
     expect(articleLink()).toBe(OTHER)
+    expect(writes()).toEqual(['POST rpc/admin_recycle_restore'])
+  })
+
+  it('leaves an article that already points to it alone, and says nothing', async () => {
+    withSet({}, `${HERE}/`)
+    expect((await restore()).body).toEqual({ success: true, counts })
     expect(writes()).toEqual(['POST rpc/admin_recycle_restore'])
   })
 
@@ -1488,7 +1519,7 @@ describe('article link: the warnings are shown', () => {
 
   it('on the set editor page, for a save and for a delete', () => {
     const page = source('questions/[setId]/page.tsx')
-    expect(page).toContain("data.unlinkWarning ?? data.linkWarning ?? ''")
+    expect(page).toContain("data.unlinkWarning ?? data.linkWarning ?? data.linkNote ?? ''")
     expect(page).toContain('setDeleteSetError(warning)')
     expect(page).toContain('setDeleteSetError(data.unlinkWarning)')
     expect(page).toContain('style={C.danger}>{deleteSetError}</div>')
@@ -1496,7 +1527,7 @@ describe('article link: the warnings are shown', () => {
 
   it('on the recycle bin page', () => {
     const page = source('recycle-bin/page.tsx')
-    expect(page).toContain("setRestoreError([data.restoreNote, data.unlinkWarning, data.linkWarning].filter(Boolean).join(' '))")
+    expect(page).toContain("setRestoreError([data.restoreNote, data.unlinkWarning, data.linkWarning, data.linkNote].filter(Boolean).join(' '))")
     expect(page).toContain('style={C.danger}>{restoreError}</p>')
   })
 })
