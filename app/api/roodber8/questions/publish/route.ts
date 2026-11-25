@@ -4,7 +4,13 @@ import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 import { checkRead } from '@/lib/db-check'
-import { checkPublishBundle, publishProblemsMessage } from '@/lib/question-publish-checks'
+import {
+  NOT_FOUND,
+  SET_READ_FAILED,
+  alreadyHasSetMessage,
+  checkPublishBundle,
+  publishProblemsMessage,
+} from '@/lib/question-publish-checks'
 import { reportServerError } from '@/lib/report-error'
 
 export const runtime = 'nodejs'
@@ -85,28 +91,43 @@ export async function POST(req: NextRequest) {
     }
     const contentId = 'AB-QZ-' + String(nextNum).padStart(5, '0')
 
-    // Resolve articleSlug: if caller passed an AB-ART-XXXXX content_id,
-    // look up the real slug from the articles table.
+    // Resolve articleSlug: an AB-ART-XXXXX content_id, or the slug of a
+    // published article. An article that was named must exist, and must not
+    // have a practice set yet (any status).
     let resolvedArticleSlug: string | null = null
-    if (articleSlug) {
-      const trimmed = String(articleSlug).trim().toUpperCase()
-      if (trimmed.startsWith('AB-ART-')) {
-        const artRead = checkRead(
-          await supabase
-            .from('articles')
-            .select('slug')
-            .eq('content_id', trimmed)
-            .maybeSingle(),
-          'questions/publish: linked article',
-        )
-        if (!artRead.ok) {
-          return NextResponse.json({ error: 'Could not read the linked article. Nothing was published.' }, { status: 500 })
-        }
-        const artRow = artRead.data
-        resolvedArticleSlug = artRow?.slug ?? null
-      } else {
-        // Fallback: treat as a raw slug (legacy behaviour)
-        resolvedArticleSlug = articleSlug.trim() || null
+    const articleRef = articleSlug ? String(articleSlug).trim() : ''
+    if (articleRef) {
+      const contentRef = articleRef.toUpperCase()
+      const articles = supabase.from('articles').select('slug')
+      const artRead = checkRead(
+        await (contentRef.startsWith('AB-ART-')
+          ? articles.eq('content_id', contentRef)
+          : articles.eq('slug', articleRef).eq('status', 'published')
+        ).maybeSingle(),
+        'questions/publish: linked article',
+      )
+      if (!artRead.ok) {
+        return NextResponse.json({ error: 'Could not read the linked article. Nothing was published.' }, { status: 500 })
+      }
+      resolvedArticleSlug = (artRead.data?.slug as string | null | undefined) || null
+      if (!resolvedArticleSlug) {
+        return NextResponse.json({ error: NOT_FOUND }, { status: 400 })
+      }
+
+      const linkedSetRead = checkRead(
+        await supabase
+          .from('question_sets')
+          .select('title')
+          .eq('article_slug', resolvedArticleSlug)
+          .limit(1)
+          .maybeSingle(),
+        'questions/publish: existing set',
+      )
+      if (!linkedSetRead.ok) {
+        return NextResponse.json({ error: SET_READ_FAILED }, { status: 500 })
+      }
+      if (linkedSetRead.data) {
+        return NextResponse.json({ error: alreadyHasSetMessage(linkedSetRead.data.title) }, { status: 409 })
       }
     }
 

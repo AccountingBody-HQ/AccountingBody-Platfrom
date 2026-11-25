@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TEST_ADMIN_PATH, TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
-import { publishProblemsMessage } from './question-publish-checks'
+import { NOT_FOUND, SET_READ_FAILED, alreadyHasSetMessage, publishProblemsMessage } from './question-publish-checks'
 
 // PQ-1 (D337): question publishing checks before it writes, says honestly
 // what happened, and refreshes the public question caches after a write that
@@ -183,5 +183,62 @@ describe('publish: structural checks before any read or write', () => {
     session = 'not-a-session'
     expect((await publish({ bundle: bundle() })).status).toBe(401)
     expect(db.calls).toEqual([])
+  })
+})
+
+describe('publish: the linked article', () => {
+  const article = { slug: 'leases', content_id: 'AB-ART-00007', status: 'published' }
+
+  it.each([
+    ['an unknown ID', 'AB-ART-99999'],
+    ['an unknown slug', 'no-such-article'],
+    ['the slug of an unpublished article', 'draft-article'],
+  ])('refuses %s and writes nothing', async (_name, articleSlug) => {
+    db.tables.articles = [article, { slug: 'draft-article', content_id: 'AB-ART-00008', status: 'draft' }]
+    expect(await publish({ bundle: bundle(), articleSlug })).toEqual({ status: 400, body: { error: NOT_FOUND } })
+    expect(writes()).toEqual([])
+    expect(revalidated).toEqual([])
+  })
+
+  it.each([
+    ['the ID', ' ab-art-00007 '],
+    ['the slug', ' leases '],
+  ])('accepts an article by %s, and stores its slug', async (_name, articleSlug) => {
+    db.tables.articles = [{ ...article }]
+    expect((await publish({ bundle: bundle(), articleSlug })).status).toBe(200)
+    expect(db.tables.question_sets).toMatchObject([{ article_slug: 'leases' }])
+  })
+
+  it.each(['published', 'draft', 'archived'])('refuses an article that already has a set (%s), and names that set', async (status) => {
+    db.tables.articles = [article]
+    db.tables.question_sets = [{ id: 'other', title: 'Leases basics', slug: 'leases-basics', article_slug: 'leases', status }]
+    expect(await publish({ bundle: bundle(), articleSlug: 'AB-ART-00007' })).toEqual({
+      status: 409,
+      body: { error: alreadyHasSetMessage('Leases basics') },
+    })
+    expect(writes()).toEqual([])
+  })
+
+  it('refuses an article that already has several sets', async () => {
+    db.tables.articles = [article]
+    db.tables.question_sets = ['one', 'two'].map((slug) => ({ id: slug, title: slug, slug, article_slug: 'leases' }))
+    expect((await publish({ bundle: bundle(), articleSlug: 'leases' })).status).toBe(409)
+    expect(writes()).toEqual([])
+  })
+
+  it.each([
+    ['the linked article', 'articles', '', 'Could not read the linked article. Nothing was published.'],
+    ['the existing set', 'question_sets', 'article_slug=eq.', SET_READ_FAILED],
+  ])('writes nothing when %s cannot be read', async (_name, table, part, error) => {
+    db.tables.articles = [article]
+    db.fail = failOn('GET', table, part)
+    expect(await publish({ bundle: bundle(), articleSlug: 'AB-ART-00007' })).toEqual({ status: 500, body: { error } })
+    expect(writes()).toEqual([])
+  })
+
+  it.each([undefined, null, '', '   '])('publishes without a link when no article is named (%j)', async (articleSlug) => {
+    expect((await publish({ bundle: bundle(), articleSlug })).status).toBe(200)
+    expect(db.tables.question_sets).toMatchObject([{ article_slug: null }])
+    expect(lines().filter((line) => line.endsWith(' articles'))).toEqual([])
   })
 })

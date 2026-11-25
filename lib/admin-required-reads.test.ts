@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TEST_ADMIN_PATH, TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
+import { NOT_FOUND, SET_READ_FAILED } from './question-publish-checks'
 
 // Admin tools that delete, replace or number content first read what is
 // there. These tests run the routes with real supabase-js clients from the
@@ -545,21 +546,31 @@ describe('question set publish with a linked article', () => {
     expect(result).toEqual({
       status: 200,
       body: questionsAnswer('AB-QZ-00001'),
-      requests: ['GET question_sets', 'GET articles', 'POST question_sets', 'POST questions', 'PATCH articles'],
+      requests: ['GET question_sets', 'GET articles', 'GET question_sets', 'POST question_sets', 'POST questions', 'PATCH articles'],
       elapsed: 0,
     })
-    expect((network.calls[2].body as Row).article_slug).toBe('linked-article')
+    expect((network.calls[3].body as Row).article_slug).toBe('linked-article')
   })
 
-  it('publishes the set without a link when no article has that ID, as before', async () => {
-    const result = await answer(() => publishQuestions('AB-ART-00007'))
-    expect(result).toEqual({
-      status: 200,
-      body: questionsAnswer('AB-QZ-00001'),
-      requests: ['GET question_sets', 'GET articles', 'POST question_sets', 'POST questions'],
+  it('publishes nothing when no article has that ID', async () => {
+    expect(await answer(() => publishQuestions('AB-ART-00007'))).toEqual({
+      status: 400,
+      body: { error: NOT_FOUND },
+      requests: ['GET question_sets', 'GET articles'],
       elapsed: 0,
     })
-    expect((network.calls[2].body as Row).article_slug).toBeNull()
+    expect(revalidated).toEqual([])
+  })
+
+  it.each(['error', 'never'] as const)('publishes nothing when it cannot check for an existing set (%s)', async (how) => {
+    network.rows = { articles: [{ slug: 'linked-article' }] }
+    network.fail = failOn('GET', 'question_sets', how, 1)
+    expect(await answer(() => publishQuestions('AB-ART-00007'))).toEqual({
+      status: 500,
+      body: { error: SET_READ_FAILED },
+      requests: ['GET question_sets', 'GET articles', 'GET question_sets'],
+      elapsed: how === 'never' ? LIMIT_MS : 0,
+    })
   })
 
   it.each(['error', 'never'] as const)('publishes nothing when it cannot read the linked article (%s)', async (how) => {
