@@ -819,7 +819,9 @@ export default function AbPressPage() {
               >
                 <h2 className="text-sm font-semibold text-[#C9982A] uppercase tracking-wide">Publication History</h2>
                 <div className="flex items-center gap-3">
-                  {history.length > 0 && !showHistory ? (
+                  {preview?.historyError && !showHistory ? (
+                    <span className="text-slate-400 text-xs">{HISTORY_FAILED}</span>
+                  ) : history.length > 0 && !showHistory ? (
                     <span className="text-slate-400 text-xs">
                       {history.length} publication{history.length !== 1 ? 's' : ''} — last: {formatGeneratedAt(history[0].generatedAt)}
                     </span>

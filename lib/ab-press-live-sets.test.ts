@@ -1345,7 +1345,8 @@ describe('the messages of the screen', () => {
   const READY = 'Content ready for publication'
   const NO_BOOKS = 'No books generated yet for this course.'
 
-  const opened = async (change: { health?: object; historyError?: boolean }) => {
+  const historyPanel = (page: Screen) => page.one((e) => e.type === 'button' && Screen.text(e).startsWith('Publication History'))
+  const opened = async (change: { health?: object; historyError?: boolean; history?: object[] }, { panel = true } = {}) => {
     const page = await screen()
     const { preview } = page.answers
     page.answers.preview = (body) => {
@@ -1353,7 +1354,7 @@ describe('the messages of the screen', () => {
       return { body: { ...answer, ...change, health: { ...answer.health, ...change.health } } }
     }
     await page.open()
-    ;(page.one((e) => e.type === 'button' && Screen.text(e).startsWith('Publication History')).props.onClick as () => void)()
+    if (panel) (historyPanel(page).props.onClick as () => void)()
     return page
   }
   const figures = (page: Screen) =>
@@ -1383,6 +1384,25 @@ describe('the messages of the screen', () => {
     const page = await opened({ historyError: true })
     expect(page.shown).toContain(HISTORY_FAILED)
     expect(page.shown).not.toContain(NO_BOOKS)
+  })
+
+  it('a failed history read shows its message in the heading, without opening the panel', async () => {
+    const page = await opened({ historyError: true }, { panel: false })
+    expect(Screen.text(historyPanel(page))).toBe(`Publication History${HISTORY_FAILED}▼`)
+    const message = page.one((e) => e.type === 'span' && Screen.text(e) === HISTORY_FAILED)
+    expect(message.props.className).toBe('text-slate-400 text-xs')
+    // Open, the panel has the message; it is not said twice.
+    ;(historyPanel(page).props.onClick as () => void)()
+    expect(Screen.text(historyPanel(page))).toBe('Publication History▲')
+    expect(page.shown.split(HISTORY_FAILED)).toHaveLength(2)
+  })
+
+  it('a good history read shows its count there as before, or nothing', async () => {
+    expect(Screen.text(historyPanel(await opened({}, { panel: false })))).toBe('Publication History▼')
+    const book = { id: 1, bookType: 'study', edition: 'E', subtitle: 'S', generatedAt: '2026-11-25T12:00:00' }
+    const page = await opened({ historyError: false, history: [book, book] }, { panel: false })
+    expect(Screen.text(historyPanel(page))).toBe('Publication History2 publications — last: 25 Nov 2026, 12:00▼')
+    expect(page.shown).not.toContain(HISTORY_FAILED)
   })
 
   it.each<[string, Answer, boolean]>([
