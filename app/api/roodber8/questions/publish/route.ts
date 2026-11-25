@@ -5,7 +5,12 @@ import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 import { checkRead } from '@/lib/db-check'
 import {
+  ALREADY_HAS_SET_PLAIN,
+  ARTICLE_RULE,
   CASES_SAVE_FAILED,
+  CONTENT_ID_FAILED,
+  CONTENT_ID_RULE,
+  CORRECT_INDEX_RULE,
   EMPTY_ADDRESS,
   LEFT_DRAFT,
   LINK_FAILED,
@@ -13,10 +18,13 @@ import {
   PUBLISH_FAILED,
   SET_READ_FAILED,
   SLUG_READ_FAILED,
+  SLUG_RULE,
   alreadyHasSetMessage,
   checkPublishBundle,
+  fixThisQuestionMessage,
   publishProblemsMessage,
   slugTakenMessage,
+  violatedRule,
 } from '@/lib/question-publish-checks'
 import { linkedSetSlug, setArticleLink } from '@/lib/question-article-link'
 import { refreshQuestionCaches } from '@/lib/question-cache'
@@ -27,6 +35,10 @@ export const maxDuration = 60
 
 function generateSlug(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 200)
+}
+
+function contentIdOf(num: number): string {
+  return 'AB-QZ-' + String(num).padStart(5, '0')
 }
 
 export async function POST(req: NextRequest) {
@@ -96,7 +108,7 @@ export async function POST(req: NextRequest) {
       'questions/publish: last content_id',
     )
     if (!lastRead.ok) {
-      return NextResponse.json({ error: 'Could not assign a content ID. Nothing was published.' }, { status: 500 })
+      return NextResponse.json({ error: CONTENT_ID_FAILED }, { status: 500 })
     }
     const lastRow = lastRead.data
     let nextNum = 1
@@ -104,7 +116,7 @@ export async function POST(req: NextRequest) {
       const match = (lastRow.content_id as string).match(/AB-QZ-(\d+)$/)
       if (match) nextNum = parseInt(match[1], 10) + 1
     }
-    const contentId = 'AB-QZ-' + String(nextNum).padStart(5, '0')
+    let contentId = contentIdOf(nextNum)
 
     // Resolve articleSlug: an AB-ART-XXXXX content_id, or the slug of a
     // published article. An article that was named must exist, and must not
@@ -203,18 +215,32 @@ export async function POST(req: NextRequest) {
       seo_description:  (bundle.excerpt ?? '').length <= 160 ? (bundle.excerpt ?? '') : (bundle.excerpt ?? '').slice(0, 160).replace(/\s+\S*$/, '...'),
       status:           'draft',
       platform,
-      content_id:       contentId,
       article_slug:     resolvedArticleSlug,
     }
 
-    const { data: insertedSet, error: setError } = await supabase
-      .from('question_sets')
-      .insert(setRow)
-      .select('id')
-      .single()
+    const insertSet = () =>
+      supabase
+        .from('question_sets')
+        .insert({ ...setRow, content_id: contentId })
+        .select('id')
+        .single()
+
+    let saved = await insertSet()
+    // The number was taken meanwhile: the next one, once. A refused insert
+    // wrote nothing.
+    if (violatedRule(saved.error) === CONTENT_ID_RULE) {
+      contentId = contentIdOf(nextNum + 1)
+      saved = await insertSet()
+    }
+    const { data: insertedSet, error: setError } = saved
 
     if (setError || !insertedSet) {
       console.error('questions/publish set insert error:', setError)
+      // Taken in the moment between the checks above and the insert.
+      const rule = violatedRule(setError)
+      if (rule === SLUG_RULE) return NextResponse.json({ error: slugTakenMessage(slug) }, { status: 409 })
+      if (rule === ARTICLE_RULE) return NextResponse.json({ error: ALREADY_HAS_SET_PLAIN }, { status: 409 })
+      if (rule === CONTENT_ID_RULE) return NextResponse.json({ error: CONTENT_ID_FAILED }, { status: 500 })
       return NextResponse.json({ error: setError?.message ?? 'Failed to insert question set' }, { status: 500 })
     }
 
@@ -222,10 +248,10 @@ export async function POST(req: NextRequest) {
 
     // Removes the draft after a step before publishing failed. Its questions
     // and cases go with it, as when the set editor deletes a set.
-    const undoDraft = async (message: string) => {
+    const undoDraft = async (message: string, status = 500) => {
       const { error: undoError } = await supabase.from('question_sets').delete().eq('id', setId)
       if (undoError) console.error('questions/publish rollback delete failed', undoError.code ?? 'unknown')
-      return NextResponse.json({ error: undoError ? LEFT_DRAFT : message }, { status: 500 })
+      return NextResponse.json({ error: undoError ? LEFT_DRAFT : message }, { status: undoError ? 500 : status })
     }
 
     // Map bundle questions to Supabase `questions` rows (options are 4 discrete columns, not an array)
@@ -256,6 +282,7 @@ export async function POST(req: NextRequest) {
 
     if (qError) {
       console.error('questions/publish questions insert error:', qError)
+      if (violatedRule(qError) === CORRECT_INDEX_RULE) return undoDraft(fixThisQuestionMessage(['correct-answer']), 400)
       return undoDraft(qError.message)
     }
 

@@ -8,15 +8,19 @@ import { refreshQuestionCaches } from '@/lib/question-cache'
 import {
   CHECKED_CASE_COLUMNS,
   CHECKED_QUESTION_COLUMNS,
+  CORRECT_INDEX_RULE,
   LAST_QUESTION,
   NOT_READY_EMPTY,
   SET_CHECK_FAILED,
   SLUG_LOCKED,
+  SLUG_RULE,
   UNLINK_FAILED,
   checkStoredSet,
   fixThisQuestionMessage,
   notReadyProblemsMessage,
+  slugTakenEditMessage,
   storedQuestionReasons,
+  violatedRule,
 } from '@/lib/question-publish-checks'
 import { DELETE_FAILED, errorCode, keepCopyBeforeDelete, snapshotQuestionSet, snapshotRows } from '@/lib/recycle-bin'
 
@@ -158,6 +162,8 @@ export async function PATCH(
       .update(sanitised)
       .eq('id', setId)
 
+    if (violatedRule(error) === SLUG_RULE)
+      return NextResponse.json({ error: slugTakenEditMessage(sanitised.slug) }, { status: 409 })
     if (error)
       return NextResponse.json({ error: error.message }, { status: 500 })
 
@@ -229,6 +235,8 @@ export async function PATCH(
       .eq('set_id', setId)
       .select('id')
 
+    if (violatedRule(error) === CORRECT_INDEX_RULE)
+      return NextResponse.json({ error: fixThisQuestionMessage(['correct-answer']) }, { status: 400 })
     if (error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     if (updated.length !== 1)
@@ -434,6 +442,8 @@ export async function POST(
     .select('*')
     .single()
 
+  if (violatedRule(insertError) === CORRECT_INDEX_RULE)
+    return NextResponse.json({ error: fixThisQuestionMessage(['correct-answer']) }, { status: 400 })
   if (insertError || !inserted)
     return NextResponse.json({ error: insertError?.message ?? 'Insert failed' }, { status: 500 })
 

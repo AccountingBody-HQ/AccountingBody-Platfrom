@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TEST_ADMIN_PATH, TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
 import {
+  ALREADY_HAS_SET_PLAIN,
   CASES_SAVE_FAILED,
   EMPTY_ADDRESS,
   LAST_QUESTION,
@@ -24,6 +25,7 @@ import {
   notLinkedOtherSetMessage,
   notReadyProblemsMessage,
   publishProblemsMessage,
+  slugTakenEditMessage,
   slugTakenMessage,
 } from './question-publish-checks'
 import { DELETE_FAILED } from './recycle-bin'
@@ -69,6 +71,7 @@ type Call = { method: string; table: string; query: string; body: unknown; tagsB
 const db = {
   tables: {} as Record<string, Row[]>,
   fail: (() => false) as (call: Call) => boolean,
+  refuse: (() => null) as (call: Call) => { code: string; message: string } | null,
   rpc: {} as unknown,
   calls: [] as Call[],
 }
@@ -86,6 +89,8 @@ const fakeFetch: typeof fetch = async (input, init) => {
   const call: Call = { method, table, query: decodeURIComponent(url.search), body, tagsBefore: revalidated.length, publishedBefore }
   db.calls.push(call)
   if (db.fail(call)) return json({ code: 'XX000', message: 'database detail', details: null, hint: null }, 500)
+  const refused = db.refuse(call)
+  if (refused) return json({ details: 'Key (x)=(database detail) already exists.', hint: null, ...refused }, 409)
   if (table.startsWith('rpc/')) return json(db.rpc, 200)
 
   const headers = new Headers(init?.headers)
@@ -142,7 +147,7 @@ beforeEach(async () => {
   vi.spyOn(console, 'warn').mockImplementation(() => {})
   vi.spyOn(console, 'log').mockImplementation(() => {})
   revalidated.length = 0
-  Object.assign(db, { tables: {}, fail: () => false, rpc: {}, calls: [] })
+  Object.assign(db, { tables: {}, fail: () => false, refuse: () => null, rpc: {}, calls: [] })
   session = await signTestSession()
 })
 
@@ -1227,6 +1232,131 @@ describe('set editor: the page shows the answer as it is given', () => {
 
   it('never sends an answer that nobody chose', () => {
     expect(page()).toContain('fields.correct_index = draft.correct_index ?? null')
+  })
+})
+
+// ── The database's own rules ────────────────────────────────────────────────
+
+const unique = (name: string) => ({ code: '23505', message: `duplicate key value violates unique constraint "${name}"` })
+const check = (name: string) => ({ code: '23514', message: `new row for relation "questions" violates check constraint "${name}"` })
+type Refusal = { code: string; message: string }
+// The first `times` matching writes are refused by the database.
+const refuseOn = (method: string, table: string, refusal: Refusal, times = Infinity) => {
+  let left = times
+  db.refuse = (call) => (call.method === method && call.table === table && left-- > 0 ? refusal : null)
+}
+const NEEDS_ANSWER = 'Nothing was saved. Please fix this question first: needs one correct answer (A, B, C or D).'
+const plain = (body: Row) => expect(JSON.stringify(body)).not.toMatch(/constraint|duplicate key|database detail|_key|_range/)
+
+describe('a write the database refuses: publish', () => {
+  it.each<[string, string, number, string]>([
+    ['the web address', 'question_sets_slug_key', 409, slugTakenMessage('leases-quiz')],
+    ['the article', 'question_sets_article_slug_key', 409, ALREADY_HAS_SET_PLAIN],
+  ])('answers a plain sentence when %s is taken meanwhile, and writes nothing', async (_name, rule, status, error) => {
+    db.tables.articles = [{ slug: 'leases', status: 'published', mcq_url: null }]
+    refuseOn('POST', 'question_sets', unique(rule))
+    const result = await publish({ bundle: bundle(), articleSlug: 'leases' })
+    expect(result).toEqual({ status, body: { error } })
+    plain(result.body)
+    expect(writes()).toEqual(['POST question_sets'])
+    expect(db.tables.question_sets ?? []).toEqual([])
+    expect(db.tables.articles[0].mcq_url).toBeNull()
+    expect(revalidated).toEqual([])
+  })
+
+  const last = { id: 'other', slug: 'other', content_id: 'AB-QZ-00041' }
+
+  it('takes the next content ID, once, when the number is taken meanwhile', async () => {
+    db.tables.question_sets = [last]
+    refuseOn('POST', 'question_sets', unique('question_sets_content_id_key'), 1)
+    expect(await publish({ bundle: bundle() })).toMatchObject({ status: 200, body: { contentId: 'AB-QZ-00043' } })
+    const tried = db.calls.filter((c) => c.method === 'POST' && c.table === 'question_sets').map((c) => c.body as Row)
+    expect(tried.map((row) => row.content_id)).toEqual(['AB-QZ-00042', 'AB-QZ-00043'])
+    expect({ ...tried[1], content_id: null }).toEqual({ ...tried[0], content_id: null })
+    expect(db.tables.question_sets).toMatchObject([last, { content_id: 'AB-QZ-00043', status: 'published' }])
+  })
+
+  it('answers the existing sentence when the next number is taken too', async () => {
+    db.tables.question_sets = [last]
+    refuseOn('POST', 'question_sets', unique('question_sets_content_id_key'))
+    const result = await publish({ bundle: bundle() })
+    expect(result).toEqual({ status: 500, body: { error: 'Could not assign a content ID. Nothing was published.' } })
+    expect(writes()).toEqual(['POST question_sets', 'POST question_sets'])
+    expect(db.tables.question_sets).toEqual([last])
+    expect(revalidated).toEqual([])
+  })
+
+  it('answers the address sentence when the second try finds the address taken', async () => {
+    let tries = 0
+    db.refuse = (call) =>
+      call.method === 'POST' && call.table === 'question_sets'
+        ? unique(tries++ === 0 ? 'question_sets_content_id_key' : 'question_sets_slug_key')
+        : null
+    expect(await publish({ bundle: bundle() })).toEqual({ status: 409, body: { error: slugTakenMessage('leases-quiz') } })
+    expect(writes()).toEqual(['POST question_sets', 'POST question_sets'])
+  })
+
+  it('removes the draft when a stored answer is outside A to D', async () => {
+    refuseOn('POST', 'questions', check('questions_correct_index_range'))
+    const result = await publish({ bundle: bundle() })
+    expect(result).toEqual({ status: 400, body: { error: NEEDS_ANSWER } })
+    plain(result.body)
+    expect(writes()).toEqual(['POST question_sets', 'POST questions', 'DELETE question_sets'])
+    expect(db.tables.question_sets).toEqual([])
+  })
+
+  it('says so when that draft cannot be removed', async () => {
+    refuseOn('POST', 'questions', check('questions_correct_index_range'))
+    db.fail = failOn('DELETE', 'question_sets')
+    expect(await publish({ bundle: bundle() })).toEqual({ status: 500, body: { error: LEFT_DRAFT } })
+  })
+
+  it.each<[string, Refusal]>([
+    ['another rule', unique('question_sets_pkey')],
+    ['another code', { code: '23503', message: 'violates foreign key constraint "question_sets_slug_key"' }],
+    ['no rule named', { code: '23505', message: 'duplicate key' }],
+  ])('keeps its answer for any other refusal (%s)', async (_name, refusal) => {
+    refuseOn('POST', 'question_sets', refusal)
+    expect(await publish({ bundle: bundle() })).toEqual({ status: 500, body: { error: refusal.message } })
+    expect(writes()).toEqual(['POST question_sets'])
+  })
+})
+
+describe('a write the database refuses: set editor', () => {
+  it('answers a plain sentence when the new address is taken meanwhile', async () => {
+    withSet({ status: 'draft', published_at: null }, HERE)
+    refuseOn('PATCH', 'question_sets', unique('question_sets_slug_key'))
+    const result = await patch({ slug: 'new-address' })
+    expect(result).toEqual({ status: 409, body: { error: slugTakenEditMessage('new-address') } })
+    plain(result.body)
+    expect(articleLink()).toBe(HERE)
+    expect(revalidated).toEqual([])
+  })
+
+  it('answers a plain sentence for a stored answer outside A to D, edited or added', async () => {
+    withSet({}, HERE)
+    db.tables.questions = [storedQuestion({ type: 'writing', writing_model_answer: 'Text.' })]
+    refuseOn('PATCH', 'questions', check('questions_correct_index_range'))
+    expect(await send('PATCH', { action: 'update_question', questionId: QUESTION, fields: { correct_index: 9 } })).toEqual({
+      status: 400,
+      body: { error: NEEDS_ANSWER },
+    })
+    refuseOn('POST', 'questions', check('questions_correct_index_range'))
+    expect(await send('POST', newQuestion())).toEqual({ status: 400, body: { error: NEEDS_ANSWER } })
+    expect(revalidated).toEqual([])
+  })
+
+  it('keeps its answer for any other refusal', async () => {
+    withSet({}, HERE)
+    const refusal = unique('another_rule')
+    for (const [method, table, body] of [
+      ['PATCH', 'question_sets', { action: 'update_set', fields: { title: 'New title' } }],
+      ['PATCH', 'questions', { action: 'update_question', questionId: QUESTION, fields: { question_text: 'New?' } }],
+      ['POST', 'questions', newQuestion()],
+    ] as [string, string, Row][]) {
+      refuseOn(method, table, refusal)
+      expect(await send(method, body)).toEqual({ status: 500, body: { error: refusal.message } })
+    }
   })
 })
 

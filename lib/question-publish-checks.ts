@@ -54,6 +54,9 @@ export const SET_CHECK_FAILED = 'Could not check this set. Nothing was saved.'
 export const NOT_READY_EMPTY = 'Nothing was saved. This set has no questions yet, so it cannot go live.'
 export const LAST_QUESTION =
   'Nothing was deleted. A live set must keep at least one question. Make the set a draft first, or delete the whole set.'
+export const CONTENT_ID_FAILED = 'Could not assign a content ID. Nothing was published.'
+export const ALREADY_HAS_SET_PLAIN =
+  'Nothing was published. This article already has a practice set. Add questions to that set instead.'
 export const RESTORED_AS_DRAFT =
   'Restored as a draft, because the set is not complete. Fix it in Questions, then make it live.'
 export const RESTORE_CHECK_FAILED =
@@ -74,6 +77,24 @@ export function slugTakenMessage(slug: string): string {
 
 export function notLinkedOtherSetMessage(setTitle: string): string {
   return `Done. But the article already links to another practice set ("${setTitle}"), so this set is not linked from the article.`
+}
+
+export function slugTakenEditMessage(slug: string): string {
+  return `Nothing was saved. Another practice set already uses the web address /practice-questions/${slug}.`
+}
+
+// The database's own rules on the question tables. The last two are in
+// migrations/0029.
+export const SLUG_RULE = 'question_sets_slug_key'
+export const CONTENT_ID_RULE = 'question_sets_content_id_key'
+export const ARTICLE_RULE = 'question_sets_article_slug_key'
+export const CORRECT_INDEX_RULE = 'questions_correct_index_range'
+
+// The rule that refused a write (a unique value that is taken, or a failed
+// check), or null for any other error. The database's text is never shown.
+export function violatedRule(error: { code?: string; message?: string } | null | undefined): string | null {
+  if (error?.code !== '23505' && error?.code !== '23514') return null
+  return error.message?.match(/constraint "([^"]+)"/)?.[1] ?? null
 }
 
 function problemsMessage(prefix: string, problems: PublishProblem[]): string {

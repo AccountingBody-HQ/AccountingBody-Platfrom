@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  ALREADY_HAS_SET_PLAIN,
+  ARTICLE_RULE,
   CASES_SAVE_FAILED,
+  CONTENT_ID_FAILED,
+  CONTENT_ID_RULE,
+  CORRECT_INDEX_RULE,
   EMPTY_ADDRESS,
   LAST_QUESTION,
   LEFT_DRAFT,
@@ -16,6 +21,7 @@ import {
   SET_READ_FAILED,
   SLUG_LOCKED,
   SLUG_READ_FAILED,
+  SLUG_RULE,
   UNLINK_FAILED,
   alreadyHasSetMessage,
   checkPublishBundle,
@@ -25,8 +31,10 @@ import {
   notReadyProblemsMessage,
   numberUnclearMessage,
   publishProblemsMessage,
+  slugTakenEditMessage,
   slugTakenMessage,
   storedQuestionReasons,
+  violatedRule,
   type PublishProblem,
 } from './question-publish-checks'
 
@@ -219,6 +227,38 @@ describe('stored questions', () => {
   })
 })
 
+describe('violatedRule', () => {
+  const unique = 'duplicate key value violates unique constraint "question_sets_slug_key"'
+  const check = 'new row for relation "questions" violates check constraint "questions_correct_index_range"'
+
+  it('names the rule of a unique or a check violation', () => {
+    expect(violatedRule({ code: '23505', message: unique })).toBe(SLUG_RULE)
+    expect(violatedRule({ code: '23514', message: check })).toBe(CORRECT_INDEX_RULE)
+  })
+
+  it.each([
+    [null],
+    [undefined],
+    [{}],
+    [{ message: unique }],
+    [{ code: '23505' }],
+    [{ code: '23505', message: '' }],
+    [{ code: '23503', message: unique }],
+    [{ code: 'XX000', message: unique }],
+  ])('names nothing for another error (%j)', (error) => {
+    expect(violatedRule(error)).toBeNull()
+  })
+
+  it('knows the names the database uses', () => {
+    expect([SLUG_RULE, CONTENT_ID_RULE, ARTICLE_RULE, CORRECT_INDEX_RULE]).toEqual([
+      'question_sets_slug_key',
+      'question_sets_content_id_key',
+      'question_sets_article_slug_key',
+      'questions_correct_index_range',
+    ])
+  })
+})
+
 describe('wording', () => {
   it('has the exact reason texts', () => {
     expect(REASON_TEXT).toEqual({
@@ -320,6 +360,16 @@ describe('wording', () => {
     expect(notLinkedOtherSetMessage('Leases basics')).toBe(
       'Done. But the article already links to another practice set ("Leases basics"), so this set is not linked from the article.',
     )
+  })
+
+  it('has the exact messages for a write the database refused', () => {
+    expect(slugTakenEditMessage('leases-quiz')).toBe(
+      'Nothing was saved. Another practice set already uses the web address /practice-questions/leases-quiz.',
+    )
+    expect(ALREADY_HAS_SET_PLAIN).toBe(
+      'Nothing was published. This article already has a practice set. Add questions to that set instead.',
+    )
+    expect(CONTENT_ID_FAILED).toBe('Could not assign a content ID. Nothing was published.')
   })
 
   it('has the exact importer warning', () => {
