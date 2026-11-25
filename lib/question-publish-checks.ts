@@ -63,6 +63,8 @@ export const RESTORED_AS_DRAFT =
   'Restored as a draft, because the set is not complete. Fix it in Questions, then make it live.'
 export const RESTORE_CHECK_FAILED =
   'Restored. But the set could not be checked or made a draft, so an incomplete set may be live. Check it in Questions.'
+export const RESTORE_ARTICLE_TAKEN =
+  'Nothing was restored. The article now has another practice set. Delete that set first, or leave this one in the bin.'
 
 // The importer's warning when a paste does not show how it numbers its answers.
 export function numberUnclearMessage(n: number): string {

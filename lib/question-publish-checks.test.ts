@@ -17,6 +17,7 @@ import {
   PUBLISH_FAILED,
   REASON_TEXT,
   RESTORED_AS_DRAFT,
+  RESTORE_ARTICLE_TAKEN,
   RESTORE_CHECK_FAILED,
   SET_CHECK_FAILED,
   SET_READ_FAILED,
@@ -355,6 +356,9 @@ describe('wording', () => {
     expect(RESTORED_AS_DRAFT).toBe('Restored as a draft, because the set is not complete. Fix it in Questions, then make it live.')
     expect(RESTORE_CHECK_FAILED).toBe(
       'Restored. But the set could not be checked or made a draft, so an incomplete set may be live. Check it in Questions.',
+    )
+    expect(RESTORE_ARTICLE_TAKEN).toBe(
+      'Nothing was restored. The article now has another practice set. Delete that set first, or leave this one in the bin.',
     )
   })
 

@@ -16,6 +16,7 @@ import {
   NOT_READY_EMPTY,
   PUBLISH_FAILED,
   RESTORED_AS_DRAFT,
+  RESTORE_ARTICLE_TAKEN,
   RESTORE_CHECK_FAILED,
   SET_CHECK_FAILED,
   SET_READ_FAILED,
@@ -29,7 +30,7 @@ import {
   slugTakenEditMessage,
   slugTakenMessage,
 } from './question-publish-checks'
-import { DELETE_FAILED } from './recycle-bin'
+import { DELETE_FAILED, RESTORE_FAILED, restoreMessage } from './recycle-bin'
 
 // PQ-1 (D337): question publishing checks before it writes, says honestly
 // what happened, and refreshes the public question caches after a write that
@@ -1713,6 +1714,68 @@ describe('article link: a set that comes back from the recycle bin', () => {
       expect(articleLink()).toBe(HERE)
       expect(revalidated.slice(0, 2)).toEqual(BROAD)
     })
+  })
+})
+
+describe('recycle bin restore: the article has another set by now', () => {
+  const restore = async () => {
+    const res = await (await api('recycle-bin/route.ts')).POST(request('POST', 'recycle-bin', { action: 'restore', id: QUESTION }), { params: {} })
+    return { status: res.status, body: (await res.json()) as Row }
+  }
+  const refusedWith = (code: string) => {
+    db.refuse = (call) => (call.table.startsWith('rpc/') ? { code, message: 'duplicate key value violates unique constraint "any_rule"' } : null)
+  }
+  const SAVED: Row = { id: SET_ID, slug: 'leases-quiz', article_slug: 'leases' }
+  const binItem = (kind: string, payload: unknown) => {
+    db.tables.admin_recycle_bin = [{ id: QUESTION, kind, source_id: SET_ID, payload }]
+  }
+  const GENERAL = restoreMessage('23505')
+
+  beforeEach(() => {
+    refusedWith('23505')
+    binItem('question_set', { question_sets: [SAVED], questions: [], question_cases: [] })
+    db.tables.question_sets = [{ ...anotherSet(), article_slug: 'leases' }]
+  })
+  afterEach(() => {
+    expect(writes()).toEqual(['POST rpc/admin_recycle_restore'])
+    expect(revalidated).toEqual([])
+  })
+
+  it('is refused, and the admin is told why', async () => {
+    expect(await restore()).toEqual({ status: 409, body: { error: RESTORE_ARTICLE_TAKEN } })
+  })
+
+  it('is told also when the address is taken too', async () => {
+    db.tables.question_sets.push({ ...anotherSet(), id: 'third', article_slug: 'bystander', slug: 'leases-quiz' })
+    expect(await restore()).toEqual({ status: 409, body: { error: RESTORE_ARTICLE_TAKEN } })
+  })
+
+  it.each<[string, () => void]>([
+    ['no set names the article', () => { db.tables.question_sets = [anotherSet()] }],
+    ['only the set itself names it', () => { db.tables.question_sets = [SAVED] }],
+    ['the saved set has no article (null)', () => binItem('question_set', { question_sets: [{ ...SAVED, article_slug: null }] })],
+    ['the saved set has no article (empty)', () => binItem('question_set', { question_sets: [{ ...SAVED, article_slug: '' }] })],
+    ['the copy holds no set', () => binItem('question_set', {})],
+    ['there is no copy', () => binItem('question_set', null)],
+    ['the item is something else', () => binItem('article', { question_sets: [SAVED] })],
+    ['the item is gone', () => { db.tables.admin_recycle_bin = [] }],
+    ['the item cannot be read', () => { db.fail = failOn('GET', 'admin_recycle_bin') }],
+    ['the sets cannot be read', () => { db.fail = failOn('GET', 'question_sets') }],
+  ])('gives the general sentence when %s', async (_name, arrange) => {
+    arrange()
+    expect(await restore()).toEqual({ status: 409, body: { error: GENERAL } })
+  })
+
+  it.each([['23503', 409], ['P0001', 409], ['P0002', 404]])('reads nothing for another refusal (%s)', async (code, status) => {
+    refusedWith(code)
+    expect(await restore()).toEqual({ status, body: { error: restoreMessage(code) } })
+    expect(lines()).toEqual(['POST rpc/admin_recycle_restore'])
+  })
+
+  it('reads nothing when the restore fails', async () => {
+    db.fail = (call) => call.table.startsWith('rpc/')
+    expect(await restore()).toEqual({ status: 500, body: { error: RESTORE_FAILED } })
+    expect(lines()).toEqual(['POST rpc/admin_recycle_restore'])
   })
 })
 
