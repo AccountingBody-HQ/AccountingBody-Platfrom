@@ -392,6 +392,25 @@ describe('the preview question count', () => {
   })
 })
 
+describe('the check report of a book', () => {
+  // The files in the ZIP are stored, not compressed, so its text can be read.
+  const report = async (name: string, body: object) =>
+    Buffer.from(await (await callRoute(name, { body })).arrayBuffer()).toString('latin1').split('\n')
+
+  it.each<[string, object]>([
+    ['generate', { slug: 'course', bookType: 'combined' }],
+    ['generate-pq', { slug: 'course' }],
+  ])('%s names the sets that are missing or not live', async (name, body) => {
+    const lines = await report(name, body)
+    expect(lines.filter((line) => line.includes('practice set(s)'))).toEqual([
+      '[WARN] 3 linked practice set(s) not found or not live: draft, unset, gone',
+    ])
+    expect(lines).toContain('[PASS] No practice fetch errors')
+    state.lessons = { course: [['live']] }
+    expect(await report(name, body)).toContain('[PASS] All linked practice sets found')
+  })
+})
+
 describe('a failed read of the practice questions', () => {
   const MAKERS: [string, object][] = [
     ['generate', { slug: 'course', bookType: 'combined' }],
