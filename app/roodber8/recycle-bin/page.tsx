@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { adminFetch } from '@/lib/admin-fetch'
+import { CONFIRM_TEXT } from '@/lib/question-publish-checks'
 import { ArchiveRestore, Loader2, RotateCcw } from 'lucide-react'
 
 const C = {
@@ -93,6 +94,7 @@ export default function RecycleBinPage() {
         setRestoreError(data.error ?? 'Restore failed. Nothing was changed.')
       } else {
         setMessage(`Restored "${item.label}".`)
+        setRestoreError([data.restoreNote, data.unlinkWarning, data.linkWarning, data.linkNote].filter(Boolean).join(' '))
         await load()
       }
     } catch {
@@ -164,7 +166,7 @@ export default function RecycleBinPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.7)' }}>
           <div role="dialog" aria-modal="true" aria-labelledby="restore-title" className="rounded-2xl p-6 max-w-md w-full mx-4" style={C.card}>
             <h2 id="restore-title" className="text-white font-bold text-base mb-2">Restore &ldquo;{confirming.label}&rdquo;</h2>
-            <p className="text-sm mb-6" style={C.muted}>Put this back? It returns exactly as it was when it was deleted.</p>
+            <p className="text-sm mb-6" style={C.muted}>Put this back? {CONFIRM_TEXT}</p>
             <div className="flex gap-3 justify-end">
               <button onClick={() => setConfirming(null)} disabled={restoring}
                 className="px-5 py-2 rounded-xl text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"

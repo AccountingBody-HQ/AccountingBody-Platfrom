@@ -3,9 +3,32 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { checkRead } from '@/lib/db-check'
+import { linkArticleIfEmpty, replaceArticleLink, type LinkNotes } from '@/lib/question-article-link'
+import { refreshQuestionCaches } from '@/lib/question-cache'
+import {
+  BAD_ADDRESS,
+  CHECKED_CASE_COLUMNS,
+  CHECKED_QUESTION_COLUMNS,
+  CORRECT_INDEX_RULE,
+  LAST_QUESTION,
+  NOT_READY_EMPTY,
+  SET_CHECK_FAILED,
+  SLUG_LOCKED,
+  SLUG_RULE,
+  UNLINK_FAILED,
+  checkStoredSet,
+  fixThisQuestionMessage,
+  isSetAddress,
+  notReadyProblemsMessage,
+  slugTakenEditMessage,
+  storedQuestionReasons,
+  violatedRule,
+} from '@/lib/question-publish-checks'
 import { DELETE_FAILED, errorCode, keepCopyBeforeDelete, snapshotQuestionSet, snapshotRows } from '@/lib/recycle-bin'
 
 export const runtime = 'nodejs'
+
+const QUESTION_NOT_FOUND = 'Question not found'
 
 function getClient() {
   return getServerSupabase('admin')
@@ -77,15 +100,112 @@ export async function PATCH(
     }
     sanitised.updated_at = new Date().toISOString()
 
+    // The set as it is now. A change of status or address needs it, so a
+    // failed read stops those. Otherwise it only names the caches to refresh
+    // (the broad tags cover every set).
+    const before = checkRead(
+      await supabase
+        .from('question_sets')
+        .select('slug, article_slug, status, published_at, created_at')
+        .eq('id', setId)
+        .maybeSingle(),
+      'questions/[setId]: set before update',
+    )
+    const statusGiven = 'status' in sanitised
+    if (!before.ok && (statusGiven || 'slug' in sanitised))
+      return NextResponse.json({ error: SET_CHECK_FAILED }, { status: 500 })
+    if (before.ok && !before.data)
+      return NextResponse.json({ error: 'Question set not found' }, { status: 404 })
+    const old = before.ok ? before.data : null
+
+    const wasPublished = old?.status === 'published'
+    const isPublished = statusGiven ? sanitised.status === 'published' : wasPublished
+    const slugChanged = 'slug' in sanitised && sanitised.slug !== old?.slug
+
+    // An address that is live, or ever was, never changes. published_at is set
+    // when a set first goes live, and is never cleared.
+    if (slugChanged && (wasPublished || isPublished || old?.published_at))
+      return NextResponse.json({ error: SLUG_LOCKED }, { status: 400 })
+
+    // A new address has the form every address has, and is free (any status).
+    if (slugChanged) {
+      if (!isSetAddress(sanitised.slug))
+        return NextResponse.json({ error: BAD_ADDRESS }, { status: 400 })
+      const taken = checkRead(
+        await supabase.from('question_sets').select('id').eq('slug', sanitised.slug).limit(1).maybeSingle(),
+        'questions/[setId]: web address',
+      )
+      if (!taken.ok)
+        return NextResponse.json({ error: SET_CHECK_FAILED }, { status: 500 })
+      if (taken.data)
+        return NextResponse.json({ error: slugTakenEditMessage(sanitised.slug) }, { status: 409 })
+    }
+
+    // A set goes live only with questions, and only when all are complete.
+    if (isPublished && !wasPublished) {
+      const questions = checkRead(
+        await supabase
+          .from('questions')
+          .select(CHECKED_QUESTION_COLUMNS)
+          .eq('set_id', setId)
+          .order('question_order', { ascending: true }),
+        'questions/[setId]: questions before publishing',
+      )
+      const cases = checkRead(
+        await supabase.from('question_cases').select(CHECKED_CASE_COLUMNS).eq('set_id', setId),
+        'questions/[setId]: cases before publishing',
+      )
+      if (!questions.ok || !cases.ok)
+        return NextResponse.json({ error: SET_CHECK_FAILED }, { status: 500 })
+      if (!questions.data?.length)
+        return NextResponse.json({ error: NOT_READY_EMPTY }, { status: 400 })
+      const checked = checkStoredSet(questions.data, cases.data ?? [])
+      if (!checked.ok)
+        return NextResponse.json({ error: notReadyProblemsMessage(checked.problems) }, { status: 400 })
+    }
+
+    // A draft that was never published gets its date now (the public list
+    // sorts by it).
+    if (isPublished && !wasPublished && !old?.published_at)
+      sanitised.published_at = sanitised.updated_at
+
+    // A live set without that date keeps the sign that it was live.
+    if (wasPublished && !isPublished && !old?.published_at)
+      sanitised.published_at = old?.created_at ?? sanitised.updated_at
+
     const { error } = await supabase
       .from('question_sets')
       .update(sanitised)
       .eq('id', setId)
 
+    if (violatedRule(error) === SLUG_RULE)
+      return NextResponse.json({ error: slugTakenEditMessage(sanitised.slug) }, { status: 409 })
     if (error)
       return NextResponse.json({ error: error.message }, { status: 500 })
 
-    return NextResponse.json({ success: true })
+    // The article's link follows the set.
+    let linkNotes: LinkNotes = {}
+    let unlinkWarning: string | undefined
+    if (old?.article_slug && old.slug) {
+      if (slugChanged) {
+        if (!(await replaceArticleLink(supabase, old.article_slug, old.slug, sanitised.slug))) unlinkWarning = UNLINK_FAILED
+      } else if (statusGiven && !isPublished) {
+        if (!(await replaceArticleLink(supabase, old.article_slug, old.slug, null))) unlinkWarning = UNLINK_FAILED
+      } else if (isPublished && !wasPublished) {
+        linkNotes = await linkArticleIfEmpty(supabase, old.article_slug, old.slug)
+      }
+    }
+
+    refreshQuestionCaches({
+      slugs: [old?.slug, sanitised.slug],
+      setIds: [setId],
+      articleSlugs: [old?.article_slug],
+    })
+    return NextResponse.json({
+      success: true,
+      ...linkNotes,
+      ...(unlinkWarning ? { unlinkWarning } : {}),
+    })
   }
 
   if (action === 'update_question') {
@@ -105,15 +225,39 @@ export async function PATCH(
       if (key in fields) sanitised[key] = fields[key]
     }
 
-    const { error } = await supabase
+    // The question as it would be after the edit must be complete.
+    const stored = checkRead(
+      await supabase
+        .from('questions')
+        .select(CHECKED_QUESTION_COLUMNS)
+        .eq('id', questionId)
+        .eq('set_id', setId) // ensure question belongs to this set
+        .maybeSingle(),
+      'questions/[setId]: question before update',
+    )
+    if (!stored.ok)
+      return NextResponse.json({ error: SET_CHECK_FAILED }, { status: 500 })
+    if (!stored.data)
+      return NextResponse.json({ error: QUESTION_NOT_FOUND }, { status: 404 })
+    const reasons = storedQuestionReasons({ ...stored.data, ...sanitised })
+    if (reasons.length > 0)
+      return NextResponse.json({ error: fixThisQuestionMessage(reasons) }, { status: 400 })
+
+    const { data: updated, error } = await supabase
       .from('questions')
       .update(sanitised)
       .eq('id', questionId)
-      .eq('set_id', setId) // ensure question belongs to this set
+      .eq('set_id', setId)
+      .select('id')
 
+    if (violatedRule(error) === CORRECT_INDEX_RULE)
+      return NextResponse.json({ error: fixThisQuestionMessage(['correct-answer']) }, { status: 400 })
     if (error)
       return NextResponse.json({ error: error.message }, { status: 500 })
+    if (updated.length !== 1)
+      return NextResponse.json({ error: QUESTION_NOT_FOUND }, { status: 404 })
 
+    refreshQuestionCaches({ setIds: [setId] })
     return NextResponse.json({ success: true })
   }
 
@@ -158,12 +302,40 @@ export async function DELETE(
       return NextResponse.json({ error: DELETE_FAILED }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, binId: kept.binId })
+    // An article that points to this set would now point to a missing page.
+    const slug = kept.row.slug as string | null | undefined
+    const articleSlug = kept.row.article_slug as string | null | undefined
+    const unlinked = !articleSlug || !slug || (await replaceArticleLink(supabase, articleSlug, slug, null))
+
+    refreshQuestionCaches({
+      slugs: [slug],
+      setIds: [setId],
+      articleSlugs: [articleSlug],
+    })
+    return NextResponse.json({ success: true, binId: kept.binId, ...(unlinked ? {} : { unlinkWarning: UNLINK_FAILED }) })
   }
 
   if (action === 'delete_question') {
     if (!questionId)
       return NextResponse.json({ error: 'questionId required' }, { status: 400 })
+
+    // A live set is never empty.
+    const set = checkRead(
+      await supabase.from('question_sets').select('status').eq('id', setId).maybeSingle(),
+      'questions/[setId]: set before question delete',
+    )
+    if (!set.ok)
+      return NextResponse.json({ error: DELETE_FAILED }, { status: 500 })
+    if (set.data?.status === 'published') {
+      const others = checkRead(
+        await supabase.from('questions').select('id').eq('set_id', setId).limit(2),
+        'questions/[setId]: questions before question delete',
+      )
+      if (!others.ok)
+        return NextResponse.json({ error: DELETE_FAILED }, { status: 500 })
+      if (others.data?.length === 1 && String(others.data[0].id) === String(questionId))
+        return NextResponse.json({ error: LAST_QUESTION }, { status: 400 })
+    }
 
     // A copy of the question goes to the recycle bin first.
     const kept = await keepCopyBeforeDelete(
@@ -174,7 +346,7 @@ export async function DELETE(
         sourceTable: 'questions',
         sourceId: String(questionId),
         label: (row) => row.question_text,
-        notFound: 'Question not found',
+        notFound: QUESTION_NOT_FOUND,
       },
     )
     if (!kept.ok)
@@ -191,6 +363,7 @@ export async function DELETE(
       return NextResponse.json({ error: DELETE_FAILED }, { status: 500 })
     }
 
+    refreshQuestionCaches({ setIds: [setId] })
     return NextResponse.json({ success: true, binId: kept.binId })
   }
 
@@ -243,7 +416,7 @@ export async function POST(
     option_b = '',
     option_c = '',
     option_d = '',
-    correct_index = 0,
+    correct_index = null,
     explanation = '',
     writing_model_answer = null,
     writing_explanation = null,
@@ -256,31 +429,39 @@ export async function POST(
   if (!question_text)
     return NextResponse.json({ error: 'question_text is required' }, { status: 400 })
 
+  const row = {
+    set_id:               setId,
+    question_order:       nextOrder,
+    type,
+    question_text,
+    option_a,
+    option_b,
+    option_c,
+    option_d,
+    correct_index:        type === 'writing' ? null : correct_index,
+    explanation:          type === 'writing' ? null : explanation,
+    writing_model_answer: type === 'writing' ? writing_model_answer : null,
+    writing_explanation:  type === 'writing' ? writing_explanation : null,
+    primary_topic,
+    difficulty,
+    time_target_minutes,
+    points,
+  }
+  const reasons = storedQuestionReasons(row)
+  if (reasons.length > 0)
+    return NextResponse.json({ error: fixThisQuestionMessage(reasons) }, { status: 400 })
+
   const { data: inserted, error: insertError } = await supabase
     .from('questions')
-    .insert({
-      set_id:               setId,
-      question_order:       nextOrder,
-      type,
-      question_text,
-      option_a,
-      option_b,
-      option_c,
-      option_d,
-      correct_index:        type === 'writing' ? null : correct_index,
-      explanation:          type === 'writing' ? null : explanation,
-      writing_model_answer: type === 'writing' ? writing_model_answer : null,
-      writing_explanation:  type === 'writing' ? writing_explanation : null,
-      primary_topic,
-      difficulty,
-      time_target_minutes,
-      points,
-    })
+    .insert(row)
     .select('*')
     .single()
 
+  if (violatedRule(insertError) === CORRECT_INDEX_RULE)
+    return NextResponse.json({ error: fixThisQuestionMessage(['correct-answer']) }, { status: 400 })
   if (insertError || !inserted)
     return NextResponse.json({ error: insertError?.message ?? 'Insert failed' }, { status: 500 })
 
+  refreshQuestionCaches({ setIds: [setId] })
   return NextResponse.json({ success: true, question: inserted })
 }

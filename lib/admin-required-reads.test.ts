@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TEST_ADMIN_PATH, TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
+import { NOT_FOUND, SET_READ_FAILED } from './question-publish-checks'
 
 // Admin tools that delete, replace or number content first read what is
 // there. These tests run the routes with real supabase-js clients from the
@@ -85,7 +86,9 @@ const fakeFetch: typeof fetch = async (input, init) => {
 
   const headers = new Headers(init?.headers)
   const prefer = headers.get('prefer') ?? ''
-  const rows = network.rows[table] ?? []
+  // A lookup by web address finds only rows that have that address.
+  const slug = method === 'GET' && table === 'question_sets' ? url.searchParams.get('slug') : null
+  const rows = (network.rows[table] ?? []).filter((row) => slug === null || `eq.${row.slug}` === slug)
   const total = network.counts[table] ?? rows.length
   const counted: Record<string, string> = prefer.includes('count=') ? { 'content-range': `0-0/${total}` } : {}
   if (method === 'HEAD') return new Response(null, { status: 200, headers: counted })
@@ -448,7 +451,7 @@ const publishGenerated = async () =>
 const publishQuestions = async (articleSlug?: string) =>
   (await api('questions/publish/route.ts')).POST(
     request('POST', 'questions/publish', {
-      bundle: { title: 'Set', questions: [{ questionText: 'Q', options: ['a', 'b', 'c', 'd'], correctIndex: 0 }] },
+      bundle: { title: 'Set', questions: [{ questionText: 'Q', options: ['a', 'b', 'c', 'd'], correctIndex: 0, explanation: 'E' }] },
       ...(articleSlug ? { articleSlug } : {}),
     }),
     { params: {} },
@@ -505,7 +508,9 @@ describe.each([
     last: 'AB-QZ-00041',
     first: questionsAnswer('AB-QZ-00001'),
     next: questionsAnswer('AB-QZ-00042'),
-    writes: ['POST question_sets', 'POST questions'],
+    // The web address is looked up before the first write, and the draft is
+    // published after the last one.
+    writes: ['GET question_sets', 'POST question_sets', 'POST questions', 'PATCH question_sets'],
   },
 ])('$name', ({ publish, table, last, first, next, writes }) => {
   it('gives the first content ID when there is no content yet, as before', async () => {
@@ -545,21 +550,40 @@ describe('question set publish with a linked article', () => {
     expect(result).toEqual({
       status: 200,
       body: questionsAnswer('AB-QZ-00001'),
-      requests: ['GET question_sets', 'GET articles', 'POST question_sets', 'POST questions', 'PATCH articles'],
+      requests: [
+        'GET question_sets',
+        'GET articles',
+        'GET question_sets',
+        'GET question_sets',
+        'POST question_sets',
+        'POST questions',
+        'PATCH question_sets',
+        'PATCH articles',
+      ],
       elapsed: 0,
     })
-    expect((network.calls[2].body as Row).article_slug).toBe('linked-article')
+    expect((network.calls[4].body as Row).article_slug).toBe('linked-article')
   })
 
-  it('publishes the set without a link when no article has that ID, as before', async () => {
-    const result = await answer(() => publishQuestions('AB-ART-00007'))
-    expect(result).toEqual({
-      status: 200,
-      body: questionsAnswer('AB-QZ-00001'),
-      requests: ['GET question_sets', 'GET articles', 'POST question_sets', 'POST questions'],
+  it('publishes nothing when no article has that ID', async () => {
+    expect(await answer(() => publishQuestions('AB-ART-00007'))).toEqual({
+      status: 400,
+      body: { error: NOT_FOUND },
+      requests: ['GET question_sets', 'GET articles'],
       elapsed: 0,
     })
-    expect((network.calls[2].body as Row).article_slug).toBeNull()
+    expect(revalidated).toEqual([])
+  })
+
+  it.each(['error', 'never'] as const)('publishes nothing when it cannot check for an existing set (%s)', async (how) => {
+    network.rows = { articles: [{ slug: 'linked-article' }] }
+    network.fail = failOn('GET', 'question_sets', how, 1)
+    expect(await answer(() => publishQuestions('AB-ART-00007'))).toEqual({
+      status: 500,
+      body: { error: SET_READ_FAILED },
+      requests: ['GET question_sets', 'GET articles', 'GET question_sets'],
+      elapsed: how === 'never' ? LIMIT_MS : 0,
+    })
   })
 
   it.each(['error', 'never'] as const)('publishes nothing when it cannot read the linked article (%s)', async (how) => {
@@ -641,7 +665,16 @@ const COURSE_CHECK_FAILED = { error: 'Could not check this course. Nothing was c
 const OTHER_CHAPTER = '2c5e39cb-3fb2-12e3-994f-1127e4ddb538'
 const OTHER_LESSON = '7ab56afb-ff9b-4db5-9a5f-ec88f271466f'
 
-const addQuestion = (body: Row = { question_text: 'Question?' }) => async () =>
+const completeQuestion: Row = {
+  question_text: 'Question?',
+  option_a: 'One',
+  option_b: 'Two',
+  option_c: 'Three',
+  option_d: 'Four',
+  correct_index: 1,
+  explanation: 'Because.',
+}
+const addQuestion = (body: Row = completeQuestion) => async () =>
   (await api('questions/[setId]/route.ts')).POST(request('POST', `questions/${ID}`, body), { params: Promise.resolve({ setId: ID }) })
 const addReference = async () =>
   (await api('studio/references/route.ts')).POST(

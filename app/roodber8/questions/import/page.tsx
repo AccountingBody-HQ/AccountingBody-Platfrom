@@ -220,6 +220,7 @@ export default function ImportQuestionsPage() {
   const [publishing, setPublishing]   = useState(false)
   const [publishError, setPublishError] = useState('')
   const [publishedSlug, setPublishedSlug] = useState('')
+  const [publishWarnings, setPublishWarnings] = useState<string[]>([])
   const [articleSlug, setArticleSlug]     = useState('')
   const [articleFetchStatus, setArticleFetchStatus] = useState<'idle'|'loading'|'found'|'not_found'>('idle')
 
@@ -303,6 +304,7 @@ export default function ImportQuestionsPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Publish failed')
       setPublishedSlug(data.slug ?? '')
+      setPublishWarnings([data.linkWarning].filter(Boolean))
       setStep(3)
     } catch (e: any) {
       setPublishError(e.message)
@@ -318,7 +320,7 @@ export default function ImportQuestionsPage() {
     setMetaExcerpt(''); setMetaDiff('intermediate')
     setMetaExamBody('acca')
     setShowOnSites(['accountingbody']); setCanonical('accountingbody')
-    setPublishedSlug('')
+    setPublishedSlug(''); setPublishWarnings([])
     setArticleSlug('')
     setArticleFetchStatus('idle')
   }
@@ -688,6 +690,9 @@ export default function ImportQuestionsPage() {
           <p className="text-sm mb-2" style={{ color: '#6ee7b7' }}>
             {result?.bundle.questions.length} questions published to Supabase
           </p>
+          {publishWarnings.map((w, i) => (
+            <p key={i} className="text-sm mb-2" style={{ color: C.warning.color }}>{w}</p>
+          ))}
           {publishedSlug && (
             <a href={`/practice-questions/${publishedSlug}`} target="_blank" rel="noopener noreferrer"
               className="text-sm font-semibold inline-block mb-6" style={{ color: '#C9982A' }}>

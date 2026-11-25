@@ -578,6 +578,7 @@ const REPORTING: Record<string, string[]> = {
   ],
   'lib/providers.ts:reapStaleRuns': ["reportServerError('job import stale run update failed', error, { area: 'ingest' })"],
   'lib/providers.ts:updateProviderKeywordCursor': ["reportServerError('job import keyword cursor save failed', error, { area: 'ingest' })"],
+  'lib/question-cache.ts:refreshQuestionCaches': ["reportServerError('admin question cache refresh failed', error, { area: 'admin' })"],
   'lib/saved-jobs-store.ts:touchLastSeen': [
     "reportServerError('saved jobs last seen save failed', new Error('saved jobs last seen save failed'), { area: 'public' })",
     "reportServerError('saved jobs last seen save threw', new Error('saved jobs last seen save threw'), { area: 'public' })",
@@ -601,6 +602,9 @@ const LOG_ONLY: Record<string, string> = {
   'lib/recycle-bin.ts:moveToBin': 'the caller deletes nothing and tells the admin; logged with its code only',
   'lib/recycle-bin.ts:purgeExpired': 'best-effort clean-up of expired copies; the next bin write or list tries again; code only',
   'lib/recycle-bin.ts:restoreFromBin': 'the admin gets a plain sentence for the code; logged with its code only',
+  'lib/question-article-link.ts:makeDraft': 'the admin is told the set may be incomplete and live; logged with its code only',
+  'lib/question-article-link.ts:replaceArticleLink':'the admin is told the link stayed; logged with its code only',
+  'lib/question-article-link.ts:setArticleLink':'the admin is told the link was not saved; logged with its code only',
   'lib/personal-data.ts:findPerson': 'the admin is told nothing was shown; table and code only, never the address (a database message can echo it)',
   'lib/personal-data.ts:erasePerson': 'the admin gets the honest partial answer; table and code only, never the address',
 }

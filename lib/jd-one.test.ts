@@ -834,10 +834,10 @@ describe('G6 migrations/0021 (record file, not applied)', () => {
     expect(jobsSource).toContain("'jobs_primary'")
   })
 
-  it('the README lists 0021 as not applied yet', () => {
+  it('the README lists 0021 as applied', () => {
     const row = read('migrations/README.md').split('\n').find((line) => line.startsWith('| `0021_'))
     expect(row).toBeDefined()
-    expect(row).toContain('not applied yet')
+    expect(row).toContain('**Applied (see ab-control FINDINGS) (JD-1, D283).**')
   })
 })
 

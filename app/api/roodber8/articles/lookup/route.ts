@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from('articles')
-    .select('title, slug, excerpt, category, category_title')
+    .select('content_id, title, slug, excerpt, category, category_title, exam_body, difficulty')
     .eq('content_id', id)
     .maybeSingle()
 

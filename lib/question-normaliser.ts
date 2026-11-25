@@ -12,6 +12,8 @@
  *   - any warnings about data that could not be resolved
  */
 
+import { checkPublishBundle, missingCaseMessage, numberUnclearMessage } from './question-publish-checks'
+
 // ── Internal bundle types ─────────────────────────────────────────────────────
 
 export interface NormalisedQuestion {
@@ -19,7 +21,7 @@ export interface NormalisedQuestion {
   type:                 'multiple-choice' | 'scenario' | 'writing'
   questionText:         string
   options:              string[]          // always 4 elements for MCQ/scenario, [] for writing
-  correctIndex:         number | null     // 0-3 for MCQ/scenario, null for writing
+  correctIndex:         number | null     // 0-3 for MCQ/scenario, null for writing or an answer that could not be read
   explanation:          string | null
   writingModelAnswer:   string | null
   writingExplanation:   string | null
@@ -121,12 +123,15 @@ const CASE_TITLE_KEYS = [
 
 // ── Utility helpers ───────────────────────────────────────────────────────────
 
-/** Pick the first key present in obj from a list of candidates */
+/** The first key present in obj from a list of candidates */
+function pickKey(obj: Record<string, unknown>, keys: string[]): string | undefined {
+  return keys.find(k => k in obj && obj[k] !== null && obj[k] !== undefined)
+}
+
+/** The value of the first key present in obj from a list of candidates */
 function pick(obj: Record<string, unknown>, keys: string[]): unknown {
-  for (const k of keys) {
-    if (k in obj && obj[k] !== null && obj[k] !== undefined) return obj[k]
-  }
-  return undefined
+  const key = pickKey(obj, keys)
+  return key === undefined ? undefined : obj[key]
 }
 
 /** Coerce any value to a non-empty string or return null */
@@ -153,11 +158,35 @@ function letterToIndex(letter: string): number | null {
   return l in map ? map[l] : null
 }
 
-/** Strip option prefix like "A.", "A)", "(A)", "1.", "1)" from option text */
-function stripOptionPrefix(text: string): string {
-  return text
-    .replace(/^\s*[\(\[]?[A-Da-d1-4][\)\]\.:\s]+\s*/, '')
-    .trim()
+/**
+ * A label at the start of an option: "A) x", "A. x", "A: x", "(A) x", "[A] x"
+ * with A-D, a-d or 1-4. Letters may also be followed by the text at once:
+ * "A)x", "A.x", "(A)x". A space alone is never a label, and a digit always
+ * needs a space after its mark ("2.5%" has no label).
+ * style tells upper case, lower case and digits, and the marks, apart.
+ */
+function readLabel(option: string): { position: number; style: string; text: string } | null {
+  const match =
+    option.match(/^([([]?)([A-Da-d1-4])([)\].:])\s+(\S[\s\S]*)$/) ??
+    option.match(/^(\(?)([A-Da-d])([).])(\S[\s\S]*)$/)
+  if (!match) return null
+  const [, open, sign, close, text] = match
+  const pair = open + close
+  if (!['(' + ')', '[' + ']', ')', '.', ':'].includes(pair)) return null
+  const family = ['ABCD', 'abcd', '1234'].find(signs => signs.includes(sign)) as string
+  return { position: family.indexOf(sign), style: family + pair, text: text.trim() }
+}
+
+/**
+ * One decision per question: the four options without their labels, or null
+ * when they are not labelled. All four must carry the label of their own
+ * position, in one style.
+ */
+function withoutLabels(options: string[]): string[] | null {
+  if (options.length !== 4) return null
+  const labels = options.map(readLabel)
+  const real = labels.every((label, i) => label !== null && label.position === i && label.style === labels[0]?.style)
+  return real ? labels.map(label => label?.text ?? '') : null
 }
 
 /** Normalise difficulty value to one of the three accepted values */
@@ -182,6 +211,58 @@ function normaliseType(raw: unknown): 'multiple-choice' | 'scenario' | 'writing'
   return 'multiple-choice'
 }
 
+/** Where a paste starts counting its numbered answers; null when it does not show it */
+type Numbering = 0 | 1 | null
+
+/** The value of an answer given as a plain number: a number, or a text of digits only */
+function plainNumber(raw: unknown): number | null {
+  if (typeof raw === 'number') return raw
+  const s = str(raw)
+  return s !== null && /^\d+$/.test(s) ? Number(s) : null
+}
+
+/** Whether a plain number can be an option's position (counted from 0 or from 1) */
+function canBePosition(n: number): boolean {
+  return Number.isInteger(n) && n >= 0 && n <= 4
+}
+
+/**
+ * One numbering rule for the whole paste, read from its plain-number answers:
+ * a 0 and no 4 counts from 0, a 4 and no 0 counts from 1. Anything else does
+ * not show it, so no number is read as an answer.
+ */
+function answerNumbering(questions: unknown[]): Numbering {
+  let zero = false
+  let four = false
+
+  for (const q of questions) {
+    if (typeof q !== 'object' || q === null) continue
+    const o = q as Record<string, unknown>
+    if (normaliseType(pick(o, TYPE_KEYS)) === 'writing' || !str(pick(o, QUESTION_TEXT_KEYS))) continue
+
+    const raw = pick(o, CORRECT_INDEX_KEYS)
+    const n = plainNumber(raw)
+    if (n === null) continue
+
+    const rawOptions = pick(o, OPTIONS_KEYS)
+    const options = resolveOptions(rawOptions, [], [], '')
+    if (!canBePosition(n)) {
+      // Not a position: the text of an option, or the paste is not consistent.
+      if (resolveCorrectIndex(raw, options, [], '', null) === null) return null
+      continue
+    }
+    // Also an option's own text: it may mean either, so it shows nothing.
+    if (options.includes(str(raw) ?? '')) continue
+    // With five options a 4 may be the last one counted from 0.
+    if (n === 4 && typeof rawOptions === 'object' && rawOptions !== null && Object.keys(rawOptions).length > 4) return null
+    if (n === 0) zero = true
+    if (n === 4) four = true
+  }
+
+  if (zero === four) return null
+  return zero ? 0 : 1
+}
+
 /**
  * Resolve correctIndex from any of the wild formats AI models produce.
  * Returns 0-based index (0-3) or null if unresolvable.
@@ -191,35 +272,54 @@ function resolveCorrectIndex(
   options: string[],
   changes: string[],
   qId: string,
+  numbering: Numbering,
 ): number | null {
 
   if (raw === null || raw === undefined) return null
 
-  // Already a 0-based number in range
-  if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 0 && raw <= 3) {
-    return raw
-  }
-
-  // 1-based number (1,2,3,4)
-  if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 1 && raw <= 4) {
-    changes.push(`${qId}: converted 1-based answer index ${raw} → correctIndex ${raw - 1}`)
-    return raw - 1
-  }
-
   const s = str(raw)
   if (!s) return null
 
-  // Single letter: "A", "B", "C", "D" (case-insensitive)
-  if (/^[A-Da-d]$/.test(s.trim())) {
-    const idx = letterToIndex(s)
+  // A plain number is read by the paste's own numbering, or not at all. When
+  // it is also an option's text, both readings must give the same option.
+  const n = plainNumber(raw)
+  if (n !== null && canBePosition(n)) {
+    if (numbering === null) return null
+    const idx = n - numbering
+    const sameText = options.indexOf(s)
+    return idx >= 0 && idx <= 3 && (sameText < 0 || sameText === idx) ? idx : null
+  }
+
+  // Single letter, alone or as a label: "A", "b", "C)", "(D)", "B."
+  const letterMatch = s.match(/^[([]?([A-Da-d])[)\].:]?$/)
+  if (letterMatch) {
+    const idx = letterToIndex(letterMatch[1])
     if (idx !== null) {
       changes.push(`${qId}: converted letter answer "${s.toUpperCase()}" → correctIndex ${idx}`)
       return idx
     }
   }
 
-  // "Option A", "Option B", "choice C", "answer D"
-  const prefixMatch = s.match(/(?:option|choice|answer|opt)\s*([A-Da-d])/i)
+  // Full text match against options (AI gave the full answer text). It comes
+  // before the looser readings, so an option that starts with a word like
+  // "Option" is never taken for a letter.
+  const sLower = s.toLowerCase()
+  const textIdx = options.findIndex(o => o.toLowerCase() === sLower)
+  if (textIdx >= 0) {
+    changes.push(`${qId}: matched full answer text to option ${textIdx} (correctIndex ${textIdx})`)
+    return textIdx
+  }
+
+  // The label and the text of the same option: "B) Bank"
+  const labelled = readLabel(s)
+  if (labelled && options[labelled.position]?.toLowerCase() === labelled.text.toLowerCase()) {
+    changes.push(`${qId}: matched full answer text to option ${labelled.position} (correctIndex ${labelled.position})`)
+    return labelled.position
+  }
+
+  // "Option A", "choice C", "answer: D", "Option B: Bank". The letter must end
+  // there: "Option A and C" and "Adopt a policy" are not a letter.
+  const prefixMatch = s.match(/^(?:(?:the\s+)?correct\s+)?(?:option|choice|answer|opt)(?:\s+is)?\s*:?\s*[([]?([A-D])(?:$|[)\].:]|\s+[-–—]\s)/i)
   if (prefixMatch) {
     const idx = letterToIndex(prefixMatch[1])
     if (idx !== null) {
@@ -229,7 +329,7 @@ function resolveCorrectIndex(
   }
 
   // "option_a", "option_b", "opt_c", "ans_d"
-  const snakeMatch = s.match(/(?:option|opt|ans|answer)_([a-d])/i)
+  const snakeMatch = s.match(/^(?:option|opt|ans|answer)_([a-d])$/i)
   if (snakeMatch) {
     const idx = letterToIndex(snakeMatch[1])
     if (idx !== null) {
@@ -238,31 +338,27 @@ function resolveCorrectIndex(
     }
   }
 
-  // Full text match against options (AI gave the full answer text)
-  if (options.length > 0) {
-    const sLower = s.toLowerCase()
-    const textIdx = options.findIndex(o => o.toLowerCase() === sLower)
-    if (textIdx >= 0) {
-      changes.push(`${qId}: matched full answer text to option ${textIdx} (correctIndex ${textIdx})`)
-      return textIdx
-    }
-    // Partial match — answer text is a substring of an option or vice versa
-    const partialIdx = options.findIndex(o =>
-      o.toLowerCase().includes(sLower.slice(0, 30)) ||
-      sLower.includes(o.toLowerCase().slice(0, 30))
-    )
-    if (partialIdx >= 0) {
-      changes.push(`${qId}: partial text match → correctIndex ${partialIdx}`)
-      return partialIdx
-    }
+  // Partial match — answer text is a substring of an option or vice versa.
+  // Only when exactly one option fits; anything else is a guess.
+  const fits = options.flatMap((o, i) =>
+    contains(o.toLowerCase(), sLower.slice(0, 30)) || contains(sLower, o.toLowerCase().slice(0, 30)) ? [i] : []
+  )
+  if (fits.length === 1) {
+    changes.push(`${qId}: partial text match → correctIndex ${fits[0]}`)
+    return fits[0]
   }
 
   return null
 }
 
+/** Whether text holds part, when part is long enough to mean something */
+function contains(text: string, part: string): boolean {
+  return part.length >= 4 && text.includes(part)
+}
+
 /**
  * Normalise the options array from any shape AI models produce.
- * Returns exactly 4 strings, stripping prefixes.
+ * Returns exactly 4 strings, without their labels when they have real ones.
  */
 function resolveOptions(
   raw: unknown,
@@ -278,14 +374,13 @@ function resolveOptions(
   // Plain array
   if (Array.isArray(raw)) {
     arr = raw.map(item => {
-      if (typeof item === 'string') return stripOptionPrefix(item)
       // Object with text/label/content key
       if (typeof item === 'object' && item !== null) {
         const o = item as Record<string, unknown>
-        const text = str(o.text ?? o.content ?? o.label ?? o.value ?? o.option ?? '')
-        return text ? stripOptionPrefix(text) : ''
+        return str(o.text ?? o.content ?? o.label ?? o.value ?? o.option ?? '') ?? ''
       }
-      return String(item)
+      // Text or a number, as written; an empty entry stays empty
+      return str(item) ?? ''
     })
   }
 
@@ -303,26 +398,21 @@ function resolveOptions(
     changes.push(`${qId}: converted options object to array`)
   }
 
-  // Strip prefixes from all options
-  const stripped = arr.map(stripOptionPrefix)
-
   // Pad or trim to exactly 4
-  if (stripped.length < 4) {
-    warnings.push(`${qId}: only ${stripped.length} options found — padded to 4`)
-    while (stripped.length < 4) stripped.push('')
+  if (arr.length < 4) {
+    warnings.push(`${qId}: only ${arr.length} options found — padded to 4`)
+    while (arr.length < 4) arr.push('')
   }
-  if (stripped.length > 4) {
-    warnings.push(`${qId}: ${stripped.length} options found — trimmed to first 4`)
-    stripped.splice(4)
-  }
-
-  // Flag if any options had prefixes stripped
-  const hadPrefixes = arr.some((o, i) => o !== stripped[i])
-  if (hadPrefixes) {
-    changes.push(`${qId}: stripped A./B./C./D. prefixes from options`)
+  if (arr.length > 4) {
+    warnings.push(`${qId}: ${arr.length} options found — trimmed to first 4`)
+    arr.splice(4)
   }
 
-  return stripped
+  // Remove the labels, or leave every option exactly as written
+  const unlabelled = withoutLabels(arr)
+  if (!unlabelled) return arr
+  changes.push(`${qId}: stripped A./B./C./D. prefixes from options`)
+  return unlabelled
 }
 
 // ── Case/exhibit extraction ───────────────────────────────────────────────────
@@ -418,7 +508,9 @@ function extractInlineCases(
   questions.forEach((q, i) => {
     if (typeof q !== 'object' || q === null) return
     const o = q as Record<string, unknown>
-    const rawExhibit = pick(o, EXHIBIT_KEYS)
+    // The key that holds the question text is not an exhibit as well.
+    const textKey = pickKey(o, QUESTION_TEXT_KEYS)
+    const rawExhibit = pick(o, EXHIBIT_KEYS.filter(k => k !== textKey))
     if (!rawExhibit) return
 
     const exhibitText = typeof rawExhibit === 'string'
@@ -448,6 +540,7 @@ function normaliseQuestion(
   raw: unknown,
   index: number,
   inlineCaseId: string | undefined,
+  numbering: Numbering,
   changes: string[],
   warnings: string[],
 ): NormalisedQuestion | null {
@@ -484,16 +577,19 @@ function normaliseQuestion(
   const rawCorrect = pick(o, CORRECT_INDEX_KEYS)
   const correctIndex = (type === 'writing')
     ? null
-    : resolveCorrectIndex(rawCorrect, options, changes, qId)
+    : resolveCorrectIndex(rawCorrect, options, changes, qId, numbering)
 
   if (type !== 'writing' && correctIndex === null) {
-    warnings.push(`${qId}: could not resolve correct answer — defaulting to 0`)
+    warnings.push(numbering === null && plainNumber(rawCorrect) !== null
+      ? numberUnclearMessage(index + 1)
+      : `${qId}: could not work out the correct answer. Set it in the pasted text and paste again.`)
   }
 
-  // ── Explanation ──
+  // ── Explanation ── (the key that gave the answer is not one as well)
+  const answerKey = correctIndex === null ? undefined : pickKey(o, CORRECT_INDEX_KEYS)
   const explanation = type === 'writing'
     ? null
-    : (str(pick(o, EXPLANATION_KEYS)) ?? null)
+    : (str(pick(o, EXPLANATION_KEYS.filter(k => k !== answerKey))) ?? null)
 
   // ── Writing fields ──
   const writingModelAnswer = type === 'writing'
@@ -524,7 +620,7 @@ function normaliseQuestion(
     type,
     questionText,
     options,
-    correctIndex:       correctIndex ?? (type === 'writing' ? null : 0),
+    correctIndex,
     explanation,
     writingModelAnswer,
     writingExplanation,
@@ -672,11 +768,15 @@ export function normalise(rawJson: string | unknown): NormaliseResult {
     }
   }
 
+  // ── One numbering rule for the answers of the whole paste ──
+  const numbering = answerNumbering(rawQuestions)
+  if (numbering !== null) changes.push(`answers numbered from ${numbering}`)
+
   // ── Normalise each question ──
   const normalisedQuestions: NormalisedQuestion[] = []
   rawQuestions.forEach((q, i) => {
     const inlineCaseId = caseIdByQIndex.get(i)
-    const nq = normaliseQuestion(q, i, inlineCaseId, changes, warnings)
+    const nq = normaliseQuestion(q, i, inlineCaseId, numbering, changes, warnings)
     if (nq) normalisedQuestions.push(nq)
   })
 
@@ -713,6 +813,10 @@ export function validateNormalisedBundle(bundle: NormalisedBundle): string[] {
   if (!bundle.title.trim())   errors.push('Title is required')
   if (bundle.questions.length === 0) errors.push('No questions in bundle')
 
+  // The publish check's own rule, so both always agree.
+  const check = checkPublishBundle(bundle)
+  const missingCase = new Set(check.ok ? [] : check.problems.filter(({ reason }) => reason === 'missing-case').map(({ n }) => n))
+
   bundle.questions.forEach((q, i) => {
     const p = `Q${i + 1}`
     if (!q.questionText.trim()) errors.push(`${p}: question text is empty`)
@@ -724,6 +828,7 @@ export function validateNormalisedBundle(bundle: NormalisedBundle): string[] {
     if (q.type === 'writing' && !q.writingModelAnswer?.trim()) {
       errors.push(`${p}: writing question has no model answer`)
     }
+    if (missingCase.has(i + 1)) errors.push(missingCaseMessage(i + 1))
   })
 
   return errors
