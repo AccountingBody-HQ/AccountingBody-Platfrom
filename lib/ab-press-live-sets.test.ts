@@ -258,14 +258,25 @@ const question = (name: string): Row => ({
   question_order: 1,
 })
 
+const article = (name: string, link: string | null = `/practice-questions/${name}`): Row => ({ id: `a-${name}`, content: '', mcq_url: link })
+
 const TABLES: Record<string, Row[]> = {
-  articles: ['live', 'draft', 'unset', 'gone'].map((name) => ({
-    id: `a-${name}`,
-    content: '',
-    mcq_url: `/practice-questions/${name}`,
-  })),
-  question_sets: [set('live', 'published'), set('draft', 'draft'), set('unset', null)],
-  questions: ['live', 'draft', 'unset'].map(question),
+  articles: [
+    ...['live', 'draft', 'unset', 'gone', 'other', 'foreign'].map((name) => article(name)),
+    article('twin', 'https://example.com/practice-questions/live/'),
+    article('plain', null),
+  ],
+  question_sets: [
+    set('live', 'published'),
+    set('draft', 'draft'),
+    set('unset', null),
+    // Linked by article 'other', but the set names another article.
+    set('other', 'published', 'elsewhere'),
+    set('foreign', 'published', 'foreign', 'et'),
+    // Names article 'live', but no article links to it.
+    set('stray', 'published', 'live'),
+  ],
+  questions: ['live', 'draft', 'unset', 'other', 'other', 'foreign', 'foreign', 'foreign', 'stray', 'stray', 'stray', 'stray'].map(question),
 }
 
 // Answers a GET as the database would, with its eq and in filters. A HEAD gets
@@ -297,6 +308,7 @@ async function fakeDatabase(input: RequestInfo | URL, init?: RequestInit): Promi
 
 beforeEach(() => {
   state.failing = {}
+  state.lessons = {}
   state.pdfs = 0
   state.written = []
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'http://db.invalid')
@@ -355,6 +367,31 @@ describe('the shared builder', () => {
   })
 })
 
+describe('the preview question count', () => {
+  const bookCount = async (slug: string) => {
+    const course = await buildCourse(slug, { mcqFailed: [], mcqNotFound: [] })
+    return course.chapters
+      .flatMap((chapter) => chapter.lessons.flatMap((lesson) => lesson.linkedArticles))
+      .reduce((sum, linked) => sum + linked.quizQuestions.length, 0)
+  }
+
+  it.each<[string, string[][], number]>([
+    ['a live set', [['live']], 1],
+    ['a draft set, a set with no status and a missing set', [['draft', 'unset', 'gone']], 0],
+    ['a set that names another article', [['other']], 2],
+    ['a set of another site', [['foreign']], 3],
+    ['an article without a link', [['plain']], 0],
+    ['no articles', [[]], 0],
+    ['a set printed more than once', [['live', 'twin'], ['live', 'other']], 5],
+    ['all of them', [['live', 'draft', 'unset', 'gone', 'other'], ['live', 'twin', 'plain', 'foreign']], 8],
+  ])('is the number of questions in the book: %s', async (_name, lessons, expected) => {
+    state.lessons = { counted: lessons }
+    const body = await (await callRoute('preview', { query: '?slug=counted' })).json()
+    expect(body.stats).toMatchObject({ questionCount: expected, questionCountError: false })
+    expect(await bookCount('counted')).toBe(expected)
+  })
+})
+
 describe('a failed read of the practice questions', () => {
   const MAKERS: [string, object][] = [
     ['generate', { slug: 'course', bookType: 'combined' }],
@@ -402,6 +439,16 @@ describe('a failed read of the practice questions', () => {
       })
     }
   }
+
+  it('a failed read of the practice links makes the preview count unknown too', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    for (const how of ['error', 'empty'] as const) {
+      state.failing = { articles: how }
+      const response = await callRoute('preview', { query: '?slug=course' })
+      expect(response.status).toBe(200)
+      expect((await response.json()).stats).toMatchObject({ questionCountError: true, questionCount: 0 })
+    }
+  })
 
   it('the preview says nothing about it when the reads work', async () => {
     const body = await (await callRoute('preview', { query: '?slug=course' })).json()

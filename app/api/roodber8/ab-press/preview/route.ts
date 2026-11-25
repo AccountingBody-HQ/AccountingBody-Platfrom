@@ -40,30 +40,56 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Count published, AccountingBody-owned question sets linked to this course's articles
-    const articleSlugs = Array.from(new Set(
-      course.chapters.flatMap(ch => ch.lessons.flatMap(ls => ls.articles.map(a => a.slug).filter(Boolean)))
-    ))
+    // Count the questions the book would print, by the book's own rule: each
+    // article's practice link (mcq_url) names a set; the set must be live; any
+    // site (the book has no site filter). A set linked twice is printed twice.
+    const printedIds = course.chapters.flatMap(ch => ch.lessons.flatMap(ls => ls.articles.map(a => a.id)))
 
-    if (articleSlugs.length > 0) {
+    if (printedIds.length > 0) {
       try {
-        // Step 1: get matching set IDs
-        const { data: matchingSets, error: setsError } = await supabase
-          .from('question_sets')
-          .select('id')
-          .in('article_slug', articleSlugs)
-          .eq('status', 'published')
-          .eq('platform', 'ab')
-        if (setsError || !matchingSets) throw setsError ?? new Error('no set list')
+        // Step 1: the articles' practice links
+        const { data: linkRows, error: linksError } = await supabase
+          .from('articles')
+          .select('id, mcq_url')
+          .in('id', printedIds)
+        if (linksError || !linkRows) throw linksError ?? new Error('no article list')
 
-        if (matchingSets.length > 0) {
-          const setIds = matchingSets.map(s => s.id)
-          const { count: qCount, error: countError } = await supabase
-            .from('questions')
-            .select('*', { count: 'exact', head: true })
-            .in('set_id', setIds)
-          if (countError || qCount === null) throw countError ?? new Error('no question count')
-          totalQuestions = qCount
+        // Slug extraction copied from buildCourse() in lib/ab-press-builder.ts
+        const slugByArticle = new Map<string, string>(
+          linkRows
+            .filter(r => r.mcq_url)
+            .map(r => [r.id, r.mcq_url.split('/').filter(Boolean).pop() ?? ''])
+        )
+        const mcqSlugs = Array.from(new Set(Array.from(slugByArticle.values()).filter(Boolean)))
+
+        if (mcqSlugs.length > 0) {
+          // Step 2: the live sets with those slugs
+          const { data: liveSets, error: setsError } = await supabase
+            .from('question_sets')
+            .select('id, slug')
+            .in('slug', mcqSlugs)
+            .eq('status', 'published')
+          if (setsError || !liveSets) throw setsError ?? new Error('no set list')
+
+          const slugToSetId = new Map<string, string>(liveSets.map(s => [s.slug, s.id]))
+          const timesPrinted = new Map<string, number>()
+          for (const id of printedIds) {
+            const setId = slugToSetId.get(slugByArticle.get(id) ?? '')
+            if (setId) timesPrinted.set(setId, (timesPrinted.get(setId) ?? 0) + 1)
+          }
+
+          // Step 3: one count for all sets printed once, one for twice, and so on
+          let counted = 0
+          for (const times of Array.from(new Set(Array.from(timesPrinted.values())))) {
+            const setIds = Array.from(timesPrinted.keys()).filter(id => timesPrinted.get(id) === times)
+            const { count: qCount, error: countError } = await supabase
+              .from('questions')
+              .select('*', { count: 'exact', head: true })
+              .in('set_id', setIds)
+            if (countError || qCount === null) throw countError ?? new Error('no question count')
+            counted += qCount * times
+          }
+          totalQuestions = counted
         }
       } catch (err) {
         // The count is unknown, not zero.
