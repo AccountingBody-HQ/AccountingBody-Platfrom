@@ -1,0 +1,185 @@
+import { describe, expect, it } from 'vitest'
+import {
+  CASES_FAILED,
+  LINK_FAILED,
+  MAX_LISTED_PROBLEMS,
+  NOT_FOUND,
+  REASON_TEXT,
+  SET_READ_FAILED,
+  SLUG_READ_FAILED,
+  alreadyHasSetMessage,
+  checkPublishBundle,
+  publishProblemsMessage,
+  slugTakenMessage,
+  type PublishProblem,
+} from './question-publish-checks'
+
+type Question = Record<string, unknown>
+
+const mcq = (over: Question = {}): Question => ({
+  type: 'multiple-choice',
+  questionText: 'Which one?',
+  options: ['One', 'Two', 'Three', 'Four'],
+  correctIndex: 2,
+  explanation: 'Because.',
+  ...over,
+})
+const writing = (over: Question = {}): Question => ({
+  type: 'writing',
+  questionText: 'Discuss.',
+  options: [],
+  correctIndex: null,
+  explanation: null,
+  writingModelAnswer: 'A model answer.',
+  ...over,
+})
+
+const check = (...questions: unknown[]) => checkPublishBundle({ questions })
+const reasons = (question: unknown) => {
+  const result = check(question)
+  return result.ok ? [] : result.problems.map((p) => p.reason)
+}
+
+describe('checkPublishBundle', () => {
+  it('accepts complete questions of every type', () => {
+    expect(check(mcq(), mcq({ type: 'scenario' }), writing())).toEqual({ ok: true })
+  })
+
+  it.each([0, 1, 2, 3])('accepts correct answer %s', (correctIndex) => {
+    expect(reasons(mcq({ correctIndex }))).toEqual([])
+  })
+
+  it('accepts number options', () => {
+    expect(reasons(mcq({ options: [0, 10, 20, 30] }))).toEqual([])
+  })
+
+  describe.each(['multiple-choice', 'scenario', undefined, 'something-else'])('type %s', (type) => {
+    it.each([
+      ['no question text', { questionText: undefined }, ['text']],
+      ['blank question text', { questionText: '  \n ' }, ['text']],
+      ['no options', { options: undefined }, ['four-options']],
+      ['options that are not a list', { options: { a: 'One' } }, ['four-options']],
+      ['three options', { options: ['One', 'Two', 'Three'] }, ['four-options']],
+      ['five options', { options: ['One', 'Two', 'Three', 'Four', 'Five'] }, ['four-options']],
+      ['an empty option', { options: ['One', 'Two', 'Three', '   '] }, ['empty-option']],
+      ['a null option', { options: ['One', 'Two', 'Three', null] }, ['empty-option']],
+      ['an object option', { options: ['One', 'Two', 'Three', { text: 'Four' }] }, ['empty-option']],
+      ['two empty options', { options: ['One', 'Two', '', ''] }, ['empty-option']],
+      ['a long dash option', { options: ['One', 'Two', 'Three', ' — '] }, ['placeholder-option']],
+      ['a short dash option', { options: ['One', 'Two', 'Three', '-'] }, ['placeholder-option']],
+      ['an "Option C" option', { options: ['One', 'Two', 'Option C', 'Four'] }, ['placeholder-option']],
+      ['an "option  d" option', { options: ['One', 'Two', 'Three', 'option  d'] }, ['placeholder-option']],
+      ['two long dash options', { options: ['One', 'Two', '—', '—'] }, ['placeholder-option']],
+      ['two equal options', { options: ['One', 'Two', 'Three', 'Two'] }, ['same-options']],
+      ['two options equal but for case and spaces', { options: ['One', 'Two', 'Three', ' TWO '] }, ['same-options']],
+      ['a number equal to a text option', { options: ['10', 10, '20', '30'] }, ['same-options']],
+      ['no correct answer', { correctIndex: null }, ['correct-answer']],
+      ['a correct answer below A', { correctIndex: -1 }, ['correct-answer']],
+      ['a correct answer past D', { correctIndex: 4 }, ['correct-answer']],
+      ['a fractional correct answer', { correctIndex: 1.5 }, ['correct-answer']],
+      ['a text correct answer', { correctIndex: '1' }, ['correct-answer']],
+      ['no explanation', { explanation: null }, ['explanation']],
+      ['a blank explanation', { explanation: ' ' }, ['explanation']],
+    ])('refuses %s', (_name, over, expected) => {
+      expect(reasons(mcq({ type, ...over }))).toEqual(expected)
+    })
+  })
+
+  it.each(['Option E', 'Option A is right', 'Options', '-5', '— 5%'])('keeps %j as a real option', (option) => {
+    expect(reasons(mcq({ options: ['One', 'Two', 'Three', option] }))).toEqual([])
+  })
+
+  it('needs a model answer for writing, and ignores its options, answer and explanation', () => {
+    expect(reasons(writing({ options: ['—', '—'], correctIndex: 9 }))).toEqual([])
+    expect(reasons(writing({ writingModelAnswer: null }))).toEqual(['model-answer'])
+    expect(reasons(writing({ writingModelAnswer: '  ' }))).toEqual(['model-answer'])
+    expect(reasons(writing({ questionText: '', writingModelAnswer: '' }))).toEqual(['text', 'model-answer'])
+  })
+
+  it.each([[null], ['text'], [undefined]])('refuses an entry that is not a question (%s)', (entry) => {
+    expect(reasons(entry)).toEqual(['text', 'four-options', 'correct-answer', 'explanation'])
+  })
+
+  it('lists every problem in order, with the question number', () => {
+    expect(check(mcq(), mcq({ options: ['', '-', 'Same', 'same'], explanation: '' }), writing({ questionText: '' }))).toEqual({
+      ok: false,
+      problems: [
+        { n: 2, reason: 'empty-option' },
+        { n: 2, reason: 'placeholder-option' },
+        { n: 2, reason: 'same-options' },
+        { n: 2, reason: 'explanation' },
+        { n: 3, reason: 'text' },
+      ],
+    })
+  })
+
+  it('never judges which answer is right', () => {
+    const answers = [0, 1, 2, 3].map((correctIndex) => check(mcq({ questionText: '2 + 2 = ?', options: ['1', '2', '3', '4'], correctIndex })))
+    expect(answers).toEqual([{ ok: true }, { ok: true }, { ok: true }, { ok: true }])
+  })
+})
+
+describe('wording', () => {
+  it('has the exact reason texts', () => {
+    expect(REASON_TEXT).toEqual({
+      'text': 'needs question text',
+      'four-options': 'needs four answer options',
+      'empty-option': 'has an empty answer option',
+      'placeholder-option': 'has a placeholder answer option',
+      'same-options': 'has two answer options that are the same',
+      'correct-answer': 'needs one correct answer (A, B, C or D)',
+      'explanation': 'needs an explanation',
+      'model-answer': 'needs a model answer',
+    })
+  })
+
+  const problems = (count: number): PublishProblem[] => Array.from({ length: count }, (_, i) => ({ n: i + 1, reason: 'explanation' }))
+
+  it('lists one problem', () => {
+    expect(publishProblemsMessage([{ n: 3, reason: 'text' }])).toBe(
+      'Nothing was published. Please fix these questions first: Q3 needs question text.',
+    )
+  })
+
+  it('joins problems with semicolons', () => {
+    expect(
+      publishProblemsMessage([
+        { n: 1, reason: 'same-options' },
+        { n: 4, reason: 'model-answer' },
+      ]),
+    ).toBe(
+      'Nothing was published. Please fix these questions first: Q1 has two answer options that are the same; Q4 needs a model answer.',
+    )
+  })
+
+  it('lists all ten of ten problems', () => {
+    expect(MAX_LISTED_PROBLEMS).toBe(10)
+    const message = publishProblemsMessage(problems(10))
+    expect(message.endsWith('; Q10 needs an explanation.')).toBe(true)
+    expect(message).not.toContain('more')
+  })
+
+  it('lists the first ten of more and counts the rest', () => {
+    const message = publishProblemsMessage(problems(13))
+    expect(message.endsWith('; Q10 needs an explanation and 3 more.')).toBe(true)
+    expect(message).not.toContain('Q11')
+  })
+
+  it('has the exact article, address and warning messages', () => {
+    expect(NOT_FOUND).toBe('Nothing was published. The linked article was not found. Check the Article ID and try again.')
+    expect(alreadyHasSetMessage('Leases quiz')).toBe(
+      'Nothing was published. This article already has a practice set: "Leases quiz". Add questions to that set instead.',
+    )
+    expect(slugTakenMessage('leases-quiz')).toBe(
+      'Nothing was published. Another practice set already uses the web address /practice-questions/leases-quiz. Change the title and try again.',
+    )
+    expect(LINK_FAILED).toBe(
+      'Published. But the link from the article to this set could not be saved, so the article does not point to it yet.',
+    )
+    expect(CASES_FAILED).toBe(
+      'Published. But the case exhibits could not be saved, so scenario questions may show without their case.',
+    )
+    expect(SET_READ_FAILED).toBe('Could not check for an existing practice set. Nothing was published.')
+    expect(SLUG_READ_FAILED).toBe('Could not check the web address. Nothing was published.')
+  })
+})

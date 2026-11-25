@@ -448,7 +448,7 @@ const publishGenerated = async () =>
 const publishQuestions = async (articleSlug?: string) =>
   (await api('questions/publish/route.ts')).POST(
     request('POST', 'questions/publish', {
-      bundle: { title: 'Set', questions: [{ questionText: 'Q', options: ['a', 'b', 'c', 'd'], correctIndex: 0 }] },
+      bundle: { title: 'Set', questions: [{ questionText: 'Q', options: ['a', 'b', 'c', 'd'], correctIndex: 0, explanation: 'E' }] },
       ...(articleSlug ? { articleSlug } : {}),
     }),
     { params: {} },

@@ -4,6 +4,7 @@ import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 import { checkRead } from '@/lib/db-check'
+import { checkPublishBundle, publishProblemsMessage } from '@/lib/question-publish-checks'
 import { reportServerError } from '@/lib/report-error'
 
 export const runtime = 'nodejs'
@@ -28,8 +29,14 @@ export async function POST(req: NextRequest) {
       articleSlug,
     } = body
 
-    if (!bundle || !bundle.questions?.length) {
+    if (!bundle || !Array.isArray(bundle.questions) || bundle.questions.length === 0) {
       return NextResponse.json({ error: 'bundle with questions is required' }, { status: 400 })
+    }
+
+    // Structure first: nothing is read or written for an incomplete bundle.
+    const checked = checkPublishBundle(bundle)
+    if (!checked.ok) {
+      return NextResponse.json({ error: publishProblemsMessage(checked.problems) }, { status: 400 })
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

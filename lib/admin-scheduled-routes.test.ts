@@ -372,7 +372,7 @@ const scenarios: Scenario[] = [
     call: async () =>
       (await api('questions/publish/route.ts')).POST(
         request('POST', adminPath('questions/publish'), {
-          bundle: { title: 'Set', questions: [{ questionText: 'Q', options: ['a', 'b', 'c', 'd'], correctIndex: 0 }] },
+          bundle: { title: 'Set', questions: [{ questionText: 'Q', options: ['a', 'b', 'c', 'd'], correctIndex: 0, explanation: 'E' }] },
         }),
         { params: {} },
       ),
