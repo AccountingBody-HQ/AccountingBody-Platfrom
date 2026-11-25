@@ -6,7 +6,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { linkRestoredSet } from '@/lib/question-article-link'
 import { refreshQuestionCaches } from '@/lib/question-cache'
+import { LINK_FAILED } from '@/lib/question-publish-checks'
 import { BIN_TABLE, errorCode, purgeExpired, restoreFromBin } from '@/lib/recycle-bin'
 
 export const runtime = 'nodejs'
@@ -63,7 +65,17 @@ export async function POST(req: NextRequest) {
     const status = result.code === 'P0002' ? 404 : result.code === '23505' || result.code === 'P0001' || result.code === '23503' ? 409 : 500
     return NextResponse.json({ error: result.message }, { status })
   }
-  // The counts name the tables put back; the sets themselves are not known here.
-  if (result.counts.question_sets || result.counts.questions || result.counts.question_cases) refreshQuestionCaches()
-  return NextResponse.json({ success: true, counts: result.counts })
+  // The counts name the tables put back. A published set is linked from its
+  // article again, when that article points nowhere.
+  const link = result.counts.question_sets ? await linkRestoredSet(supabase, id) : null
+  if (link?.set) {
+    refreshQuestionCaches({ slugs: [link.set.slug], setIds: [link.set.id], articleSlugs: [link.set.article_slug] })
+  } else if (result.counts.question_sets || result.counts.questions || result.counts.question_cases) {
+    refreshQuestionCaches()
+  }
+  return NextResponse.json({
+    success: true,
+    counts: result.counts,
+    ...(link && !link.linked ? { linkWarning: LINK_FAILED } : {}),
+  })
 }

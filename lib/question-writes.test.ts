@@ -11,8 +11,11 @@ import {
   LINK_FAILED,
   NOT_FOUND,
   PUBLISH_FAILED,
+  SET_CHECK_FAILED,
   SET_READ_FAILED,
+  SLUG_LOCKED,
   SLUG_READ_FAILED,
+  UNLINK_FAILED,
   alreadyHasSetMessage,
   publishProblemsMessage,
   slugTakenMessage,
@@ -84,7 +87,8 @@ const fakeFetch: typeof fetch = async (input, init) => {
   const matches = (row: Row) =>
     Array.from(url.searchParams).every(([key, value]) => {
       if (value.startsWith('eq.')) return String(row[key]) === value.slice(3)
-      if (value.startsWith('in.(')) return value.slice(4, -1).split(',').includes(String(row[key]))
+      if (value === 'is.null') return (row[key] ?? null) === null
+      if (value.startsWith('in.('))return value.slice(4, -1).split(',').includes(String(row[key]))
       if (value.startsWith('like.')) return String(row[key] ?? '').startsWith(value.slice(5).replace(/[*%]$/, ''))
       return true
     })
@@ -656,5 +660,298 @@ describe('recycle bin restore: refreshes the public caches', () => {
     db.fail = (call) => call.table.startsWith('rpc/')
     expect((await restore()).status).toBe(500)
     expect(revalidated).toEqual([])
+    expect(lines()).toEqual(['POST rpc/admin_recycle_restore'])
+  })
+})
+
+// ── The article's link follows the set ──────────────────────────────────────
+
+const HERE = '/practice-questions/leases-quiz'
+const OTHER = '/practice-questions/another-set'
+const articleLink = () => db.tables.articles[0].mcq_url
+const articleTag = () => revalidated.filter((tag) => tag === 'article:leases').length
+const withSet = (set: Row, mcqUrl: unknown, article: Row = {}) => {
+  db.tables.question_sets = [{ id: SET_ID, title: 'Leases quiz', slug: 'leases-quiz', article_slug: 'leases', status: 'published', ...set }]
+  db.tables.articles = [
+    { slug: 'leases', status: 'published', mcq_url: mcqUrl, ...article },
+    { slug: 'bystander', status: 'published', mcq_url: HERE },
+  ]
+}
+const send = async (method: string, body: Row) => {
+  const res = await setRoute(method, body)
+  return { status: res.status, body: (await res.json()) as Row }
+}
+const patch = (fields: Row) => send('PATCH', { action: 'update_set', fields })
+
+afterEach(() => {
+  // Another article is never touched.
+  const bystander = (db.tables.articles ?? []).find((row) => row.slug === 'bystander')
+  if (bystander) expect(bystander.mcq_url).toBe(HERE)
+})
+
+describe('article link: a deleted set', () => {
+  const remove = () => send('DELETE', { action: 'delete_set' })
+
+  it.each(['published', 'draft'])('is no longer linked (article %s)', async (status) => {
+    withSet({}, HERE, { status })
+    expect(await remove()).toEqual({ status: 200, body: { success: true, binId: SET_ID } })
+    expect(articleLink()).toBeNull()
+    expect(writes().slice(-2)).toEqual(['DELETE question_sets', 'PATCH articles'])
+    expect(articleTag()).toBe(1)
+    expect(db.calls.every((c) => c.tagsBefore === 0)).toBe(true)
+  })
+
+  it.each([[OTHER], [null], ['']])('leaves another link alone (%j)', async (link) => {
+    withSet({}, link)
+    expect(await remove()).toEqual({ status: 200, body: { success: true, binId: SET_ID } })
+    expect(articleLink()).toBe(link)
+  })
+
+  it('asks nothing of the articles when the set has none', async () => {
+    withSet({ article_slug: null }, HERE)
+    expect((await remove()).body).toEqual({ success: true, binId: SET_ID })
+    expect(lines().filter((line) => line.endsWith(' articles'))).toEqual([])
+    expect(articleLink()).toBe(HERE)
+  })
+
+  it('is deleted, and says so, when the link cannot be removed', async () => {
+    withSet({}, HERE)
+    db.fail = failOn('PATCH', 'articles')
+    expect(await remove()).toEqual({ status: 200, body: { success: true, binId: SET_ID, unlinkWarning: UNLINK_FAILED } })
+    expect(db.tables.question_sets).toEqual([])
+    expect(revalidated).toContain('question-set:leases-quiz')
+  })
+
+  it('keeps the link when the set could not be deleted', async () => {
+    withSet({}, HERE)
+    db.fail = failOn('DELETE', 'question_sets')
+    expect((await remove()).status).toBe(500)
+    expect(articleLink()).toBe(HERE)
+    expect(revalidated).toEqual([])
+  })
+})
+
+describe('article link: a set changed to draft', () => {
+  it('is no longer linked', async () => {
+    withSet({}, HERE)
+    expect(await patch({ title: 'Leases quiz', status: 'draft' })).toEqual({ status: 200, body: { success: true } })
+    expect(articleLink()).toBeNull()
+    expect(writes()).toEqual(['PATCH question_sets', 'PATCH articles'])
+    expect(articleTag()).toBe(1)
+    expect(db.calls.every((c) => c.tagsBefore === 0)).toBe(true)
+  })
+
+  it('saving the draft again repairs a link that stayed', async () => {
+    withSet({ status: 'draft' }, HERE)
+    expect((await patch({ status: 'draft' })).body).toEqual({ success: true })
+    expect(articleLink()).toBeNull()
+  })
+
+  it.each([[OTHER], [null]])('leaves another link alone (%j)', async (link) => {
+    withSet({}, link)
+    expect((await patch({ status: 'draft' })).body).toEqual({ success: true })
+    expect(articleLink()).toBe(link)
+  })
+
+  it('is saved, and says so, when the link cannot be removed', async () => {
+    withSet({}, HERE)
+    db.fail = failOn('PATCH', 'articles')
+    expect(await patch({ status: 'draft' })).toEqual({ status: 200, body: { success: true, unlinkWarning: UNLINK_FAILED } })
+    expect(db.tables.question_sets).toMatchObject([{ status: 'draft' }])
+  })
+
+  it('keeps the link when the set could not be saved', async () => {
+    withSet({}, HERE)
+    db.fail = failOn('PATCH', 'question_sets')
+    expect((await patch({ status: 'draft' })).status).toBe(500)
+    expect(articleLink()).toBe(HERE)
+  })
+})
+
+describe('article link: a draft changed to published', () => {
+  it.each([[null], ['']])('is linked when the article points nowhere (%j)', async (link) => {
+    withSet({ status: 'draft', published_at: '2026-01-01T00:00:00Z' }, link)
+    expect(await patch({ status: 'published' })).toEqual({ status: 200, body: { success: true } })
+    expect(articleLink()).toBe(HERE)
+    expect(writes()).toEqual(['PATCH question_sets', 'PATCH articles'])
+    expect(articleTag()).toBe(1)
+    expect(db.calls.every((c) => c.tagsBefore === 0)).toBe(true)
+    expect(db.tables.question_sets).toMatchObject([{ status: 'published', published_at: '2026-01-01T00:00:00Z' }])
+  })
+
+  it('gets its first published date when it has none', async () => {
+    withSet({ status: 'draft', published_at: null }, null)
+    await patch({ status: 'published' })
+    expect(db.tables.question_sets).toMatchObject([{ status: 'published', published_at: expect.stringMatching(/^\d{4}-\d\d-\d\dT/) }])
+  })
+
+  it.each([[OTHER], [HERE]])('leaves a link that is there alone (%j)', async (link) => {
+    withSet({ status: 'draft' }, link)
+    expect((await patch({ status: 'published' })).body).toEqual({ success: true })
+    expect(articleLink()).toBe(link)
+    expect(writes()).toEqual(['PATCH question_sets'])
+  })
+
+  it('does not put back a removed link when a published set is saved again', async () => {
+    withSet({}, null)
+    expect((await patch({ title: 'New title', status: 'published' })).body).toEqual({ success: true })
+    expect(articleLink()).toBeNull()
+    expect(db.tables.question_sets[0]).not.toHaveProperty('published_at')
+  })
+
+  it('does nothing to articles when the set has none', async () => {
+    withSet({ status: 'draft', article_slug: null }, null)
+    expect((await patch({ status: 'published' })).body).toEqual({ success: true })
+    expect(lines().filter((line) => line.endsWith(' articles'))).toEqual([])
+  })
+
+  it.each([
+    ['the article cannot be read', failOn('GET', 'articles')],
+    ['the link cannot be saved', failOn('PATCH', 'articles')],
+    [
+      'no article changed',
+      (call: Call) => {
+        if (call.method === 'PATCH' && call.table === 'articles') db.tables.articles[0].mcq_url = OTHER
+        return false
+      },
+    ],
+  ])('is saved, and says so, when %s', async (_name, fail) => {
+    withSet({ status: 'draft' }, null)
+    db.fail = fail
+    expect(await patch({ status: 'published' })).toEqual({ status: 200, body: { success: true, linkWarning: LINK_FAILED } })
+    expect(db.tables.question_sets).toMatchObject([{ status: 'published' }])
+    expect(articleLink()).not.toBe(HERE)
+  })
+
+  it('warns when the article is not published', async () => {
+    withSet({ status: 'draft' }, null, { status: 'draft' })
+    expect((await patch({ status: 'published' })).body).toEqual({ success: true, linkWarning: LINK_FAILED })
+    expect(articleLink()).toBeNull()
+  })
+})
+
+describe('article link: the web address of a set', () => {
+  it.each([
+    ['a published set', { status: 'published' }, { slug: 'new-address' }],
+    ['a published set that becomes a draft', { status: 'published' }, { slug: 'new-address', status: 'draft' }],
+    ['a draft that becomes published', { status: 'draft' }, { slug: 'new-address', status: 'published' }],
+  ])('cannot change for %s', async (_name, set, fields) => {
+    withSet(set, HERE)
+    expect(await patch({ title: 'New title', ...fields })).toEqual({ status: 400, body: { error: SLUG_LOCKED } })
+    expect(writes()).toEqual([])
+    expect(revalidated).toEqual([])
+    expect(db.tables.question_sets).toMatchObject([{ title: 'Leases quiz', slug: 'leases-quiz' }])
+  })
+
+  it('may be sent unchanged for a published set', async () => {
+    withSet({}, HERE)
+    expect((await patch({ title: 'New title', slug: 'leases-quiz' })).body).toEqual({ success: true })
+    expect(db.tables.question_sets).toMatchObject([{ title: 'New title', slug: 'leases-quiz' }])
+    expect(articleLink()).toBe(HERE)
+  })
+
+  it('changes for a draft, and the article follows', async () => {
+    withSet({ status: 'draft' }, HERE)
+    expect(await patch({ slug: 'new-address' })).toEqual({ status: 200, body: { success: true } })
+    expect(db.tables.question_sets).toMatchObject([{ slug: 'new-address' }])
+    expect(articleLink()).toBe('/practice-questions/new-address')
+    expect(articleTag()).toBe(1)
+  })
+
+  it('changes for a draft, and leaves a different link alone', async () => {
+    withSet({ status: 'draft' }, OTHER)
+    expect((await patch({ slug: 'new-address' })).body).toEqual({ success: true })
+    expect(articleLink()).toBe(OTHER)
+  })
+
+  it('says so when the article cannot follow', async () => {
+    withSet({ status: 'draft' }, HERE)
+    db.fail = failOn('PATCH', 'articles')
+    expect((await patch({ slug: 'new-address' })).body).toEqual({ success: true, unlinkWarning: UNLINK_FAILED })
+  })
+
+  it.each([{ slug: 'new-address' }, { status: 'draft' }, { status: 'published' }])('saves nothing when the set cannot be read (%j)', async (fields) => {
+    withSet({}, HERE)
+    db.fail = failOn('GET', 'question_sets')
+    expect(await patch(fields)).toEqual({ status: 500, body: { error: SET_CHECK_FAILED } })
+    expect(writes()).toEqual([])
+  })
+
+  it('answers "not found" for a set that does not exist', async () => {
+    expect(await patch({ title: 'New title' })).toEqual({ status: 404, body: { error: 'Question set not found' } })
+    expect(writes()).toEqual([])
+    expect(revalidated).toEqual([])
+  })
+})
+
+describe('article link: a set that comes back from the recycle bin', () => {
+  const BIN_ID = QUESTION
+  const counts = { question_sets: 1, questions: 10 }
+  const restore = async () => {
+    const res = await (await api('recycle-bin/route.ts')).POST(request('POST', 'recycle-bin', { action: 'restore', id: BIN_ID }), { params: {} })
+    return { status: res.status, body: (await res.json()) as Row }
+  }
+  beforeEach(() => {
+    db.rpc = counts
+    db.tables.admin_recycle_bin = [{ id: BIN_ID, kind: 'question_set', source_id: SET_ID }]
+  })
+
+  it.each([[null], ['']])('is linked again when the article points nowhere (%j)', async (link) => {
+    withSet({}, link)
+    expect(await restore()).toEqual({ status: 200, body: { success: true, counts } })
+    expect(articleLink()).toBe(HERE)
+    expect(revalidated).toEqual([...BROAD, 'question-set:leases-quiz', ID_TAG, 'article:leases'])
+    expect(db.calls.every((c) => c.tagsBefore === 0)).toBe(true)
+  })
+
+  it('leaves an article that points to a different set alone', async () => {
+    withSet({}, OTHER)
+    expect((await restore()).body).toEqual({ success: true, counts })
+    expect(articleLink()).toBe(OTHER)
+    expect(writes()).toEqual(['POST rpc/admin_recycle_restore'])
+  })
+
+  it.each([{ status: 'draft' }, { article_slug: null }])('is not linked when there is nothing to link (%j)', async (set) => {
+    withSet(set, null)
+    expect((await restore()).body).toEqual({ success: true, counts })
+    expect(articleLink()).toBeNull()
+    expect(writes()).toEqual(['POST rpc/admin_recycle_restore'])
+  })
+
+  it.each([
+    ['the item', failOn('GET', 'admin_recycle_bin')],
+    ['the set', failOn('GET', 'question_sets')],
+    ['the article', failOn('GET', 'articles')],
+    ['the link', failOn('PATCH', 'articles')],
+  ])('is back, and says so, when %s cannot be read or saved', async (_name, fail) => {
+    withSet({}, null)
+    db.fail = fail
+    expect(await restore()).toEqual({ status: 200, body: { success: true, counts, linkWarning: LINK_FAILED } })
+    expect(articleLink()).toBeNull()
+    expect(revalidated.slice(0, 2)).toEqual(BROAD)
+  })
+
+  it('reads nothing more for a single question', async () => {
+    db.rpc = { questions: 1 }
+    expect((await restore()).body).toEqual({ success: true, counts: { questions: 1 } })
+    expect(lines()).toEqual(['POST rpc/admin_recycle_restore'])
+  })
+})
+
+describe('article link: the warnings are shown', () => {
+  const source = (path: string) => readFileSync(join(process.cwd(), `app/${ADMIN}/${path}`), 'utf8')
+
+  it('on the set editor page, for a save and for a delete', () => {
+    const page = source('questions/[setId]/page.tsx')
+    expect(page).toContain("data.unlinkWarning ?? data.linkWarning ?? ''")
+    expect(page).toContain('setDeleteSetError(warning)')
+    expect(page).toContain('setDeleteSetError(data.unlinkWarning)')
+    expect(page).toContain('style={C.danger}>{deleteSetError}</div>')
+  })
+
+  it('on the recycle bin page', () => {
+    const page = source('recycle-bin/page.tsx')
+    expect(page).toContain('if (data.linkWarning) setRestoreError(data.linkWarning)')
+    expect(page).toContain('style={C.danger}>{restoreError}</p>')
   })
 })

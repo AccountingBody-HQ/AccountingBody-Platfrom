@@ -45,6 +45,10 @@ export const EMPTY_ADDRESS =
 export const LEFT_DRAFT =
   'Nothing was published. Saving stopped part-way and a hidden draft set was left behind. Delete it in Questions, then publish again.'
 export const PUBLISH_FAILED = 'Could not publish the set. Nothing was published.'
+export const SLUG_LOCKED = 'The web address of a published set cannot be changed.'
+export const UNLINK_FAILED =
+  "Done. But the article's link to this set could not be removed, so the article may point to a missing page."
+export const SET_CHECK_FAILED = 'Could not check this set. Nothing was saved.'
 
 export function alreadyHasSetMessage(setTitle: string): string {
   return `Nothing was published. This article already has a practice set: "${setTitle}". Add questions to that set instead.`

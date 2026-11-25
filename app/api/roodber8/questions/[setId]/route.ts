@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { checkRead } from '@/lib/db-check'
+import { linkArticleIfEmpty, replaceArticleLink } from '@/lib/question-article-link'
 import { refreshQuestionCaches } from '@/lib/question-cache'
+import { LINK_FAILED, SET_CHECK_FAILED, SLUG_LOCKED, UNLINK_FAILED } from '@/lib/question-publish-checks'
 import { DELETE_FAILED, errorCode, keepCopyBeforeDelete, snapshotQuestionSet, snapshotRows } from '@/lib/recycle-bin'
 
 export const runtime = 'nodejs'
@@ -78,17 +80,36 @@ export async function PATCH(
     }
     sanitised.updated_at = new Date().toISOString()
 
-    // Only names the caches to refresh after the save, so a failed read does
-    // not stop it (the broad tags cover every set).
+    // The set as it is now. A change of status or address needs it, so a
+    // failed read stops those. Otherwise it only names the caches to refresh
+    // (the broad tags cover every set).
     const before = checkRead(
       await supabase
         .from('question_sets')
-        .select('slug, article_slug')
+        .select('slug, article_slug, status, published_at')
         .eq('id', setId)
         .maybeSingle(),
       'questions/[setId]: set before update',
     )
+    const statusGiven = 'status' in sanitised
+    if (!before.ok && (statusGiven || 'slug' in sanitised))
+      return NextResponse.json({ error: SET_CHECK_FAILED }, { status: 500 })
+    if (before.ok && !before.data)
+      return NextResponse.json({ error: 'Question set not found' }, { status: 404 })
     const old = before.ok ? before.data : null
+
+    const wasPublished = old?.status === 'published'
+    const isPublished = statusGiven ? sanitised.status === 'published' : wasPublished
+    const slugChanged = 'slug' in sanitised && sanitised.slug !== old?.slug
+
+    // A published address never changes.
+    if (slugChanged && (wasPublished || isPublished))
+      return NextResponse.json({ error: SLUG_LOCKED }, { status: 400 })
+
+    // A draft that was never published gets its date now (the public list
+    // sorts by it).
+    if (isPublished && !wasPublished && !old?.published_at)
+      sanitised.published_at = sanitised.updated_at
 
     const { error } = await supabase
       .from('question_sets')
@@ -98,12 +119,30 @@ export async function PATCH(
     if (error)
       return NextResponse.json({ error: error.message }, { status: 500 })
 
+    // The article's link follows the set.
+    let linkWarning: string | undefined
+    let unlinkWarning: string | undefined
+    if (old?.article_slug && old.slug) {
+      if (slugChanged) {
+        const newSlug = typeof sanitised.slug === 'string' && sanitised.slug.trim() ? sanitised.slug : null
+        if (!(await replaceArticleLink(supabase, old.article_slug, old.slug, newSlug))) unlinkWarning = UNLINK_FAILED
+      } else if (statusGiven && !isPublished) {
+        if (!(await replaceArticleLink(supabase, old.article_slug, old.slug, null))) unlinkWarning = UNLINK_FAILED
+      } else if (isPublished && !wasPublished) {
+        if (!(await linkArticleIfEmpty(supabase, old.article_slug, old.slug))) linkWarning = LINK_FAILED
+      }
+    }
+
     refreshQuestionCaches({
       slugs: [old?.slug, sanitised.slug],
       setIds: [setId],
       articleSlugs: [old?.article_slug],
     })
-    return NextResponse.json({ success: true })
+    return NextResponse.json({
+      success: true,
+      ...(linkWarning ? { linkWarning } : {}),
+      ...(unlinkWarning ? { unlinkWarning } : {}),
+    })
   }
 
   if (action === 'update_question') {
@@ -177,12 +216,17 @@ export async function DELETE(
       return NextResponse.json({ error: DELETE_FAILED }, { status: 500 })
     }
 
+    // An article that points to this set would now point to a missing page.
+    const slug = kept.row.slug as string | null | undefined
+    const articleSlug = kept.row.article_slug as string | null | undefined
+    const unlinked = !articleSlug || !slug || (await replaceArticleLink(supabase, articleSlug, slug, null))
+
     refreshQuestionCaches({
-      slugs: [kept.row.slug as string | null | undefined],
+      slugs: [slug],
       setIds: [setId],
-      articleSlugs: [kept.row.article_slug as string | null | undefined],
+      articleSlugs: [articleSlug],
     })
-    return NextResponse.json({ success: true, binId: kept.binId })
+    return NextResponse.json({ success: true, binId: kept.binId, ...(unlinked ? {} : { unlinkWarning: UNLINK_FAILED }) })
   }
 
   if (action === 'delete_question') {

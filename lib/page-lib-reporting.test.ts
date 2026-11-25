@@ -602,6 +602,8 @@ const LOG_ONLY: Record<string, string> = {
   'lib/recycle-bin.ts:moveToBin': 'the caller deletes nothing and tells the admin; logged with its code only',
   'lib/recycle-bin.ts:purgeExpired': 'best-effort clean-up of expired copies; the next bin write or list tries again; code only',
   'lib/recycle-bin.ts:restoreFromBin': 'the admin gets a plain sentence for the code; logged with its code only',
+  'lib/question-article-link.ts:replaceArticleLink': 'the admin is told the link stayed; logged with its code only',
+  'lib/question-article-link.ts:linkArticleIfEmpty': 'the admin is told the link was not saved; logged with its code only',
   'lib/personal-data.ts:findPerson': 'the admin is told nothing was shown; table and code only, never the address (a database message can echo it)',
   'lib/personal-data.ts:erasePerson': 'the admin gets the honest partial answer; table and code only, never the address',
 }

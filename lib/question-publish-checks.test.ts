@@ -8,8 +8,11 @@ import {
   NOT_FOUND,
   PUBLISH_FAILED,
   REASON_TEXT,
+  SET_CHECK_FAILED,
   SET_READ_FAILED,
+  SLUG_LOCKED,
   SLUG_READ_FAILED,
+  UNLINK_FAILED,
   alreadyHasSetMessage,
   checkPublishBundle,
   publishProblemsMessage,
@@ -191,5 +194,10 @@ describe('wording', () => {
       'Nothing was published. Saving stopped part-way and a hidden draft set was left behind. Delete it in Questions, then publish again.',
     )
     expect(PUBLISH_FAILED).toBe('Could not publish the set. Nothing was published.')
+    expect(SLUG_LOCKED).toBe('The web address of a published set cannot be changed.')
+    expect(UNLINK_FAILED).toBe(
+      "Done. But the article's link to this set could not be removed, so the article may point to a missing page.",
+    )
+    expect(SET_CHECK_FAILED).toBe('Could not check this set. Nothing was saved.')
   })
 })

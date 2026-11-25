@@ -627,7 +627,7 @@ function SetMetadataEditor({
   set, setId, onUpdated, onClose,
 }: {
   set: QuestionSet; setId: string
-  onUpdated: (s: QuestionSet) => void; onClose: () => void
+  onUpdated: (s: QuestionSet, warning: string) => void; onClose: () => void
 }) {
   const [title, setTitle]       = useState(set.title)
   const [topic, setTopic]       = useState(set.topic ?? '')
@@ -650,7 +650,7 @@ function SetMetadataEditor({
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Save failed')
-      onUpdated({ ...set, title, topic, excerpt, difficulty, status })
+      onUpdated({ ...set, title, topic, excerpt, difficulty, status }, data.unlinkWarning ?? data.linkWarning ?? '')
       onClose()
     } catch (e: any) {
       setError(e.message)
@@ -762,6 +762,12 @@ export default function QuestionSetManagerPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Delete failed')
+      // Stay here so the warning can be read; the set itself is gone.
+      if (data.unlinkWarning) {
+        setDeleteSetError(data.unlinkWarning)
+        setConfirmDelSet(false)
+        return
+      }
       router.push('/roodber8/questions')
     } catch (e: any) {
       setDeleteSetError(e.message)
@@ -898,7 +904,7 @@ export default function QuestionSetManagerPage() {
       {editingMeta && (
         <SetMetadataEditor
           set={set} setId={setId}
-          onUpdated={s => { setSet(s); setEditingMeta(false) }}
+          onUpdated={(s, warning) => { setSet(s); setDeleteSetError(warning); setEditingMeta(false) }}
           onClose={() => setEditingMeta(false)}
         />
       )}
