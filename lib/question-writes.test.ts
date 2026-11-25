@@ -3,7 +3,14 @@ import { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { TEST_ADMIN_PATH, TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
-import { NOT_FOUND, SET_READ_FAILED, alreadyHasSetMessage, publishProblemsMessage } from './question-publish-checks'
+import {
+  NOT_FOUND,
+  SET_READ_FAILED,
+  SLUG_READ_FAILED,
+  alreadyHasSetMessage,
+  publishProblemsMessage,
+  slugTakenMessage,
+} from './question-publish-checks'
 
 // PQ-1 (D337): question publishing checks before it writes, says honestly
 // what happened, and refreshes the public question caches after a write that
@@ -240,5 +247,25 @@ describe('publish: the linked article', () => {
     expect((await publish({ bundle: bundle(), articleSlug })).status).toBe(200)
     expect(db.tables.question_sets).toMatchObject([{ article_slug: null }])
     expect(lines().filter((line) => line.endsWith(' articles'))).toEqual([])
+  })
+})
+
+describe('publish: the web address', () => {
+  it.each(['published', 'draft'])('refuses an address another set uses (%s), and adds no suffix', async (status) => {
+    db.tables.question_sets = [{ id: 'other', title: 'Leases quiz', slug: 'leases-quiz', status }]
+    expect(await publish({ bundle: bundle() })).toEqual({ status: 409, body: { error: slugTakenMessage('leases-quiz') } })
+    expect(writes()).toEqual([])
+    expect(revalidated).toEqual([])
+  })
+
+  it('publishes when only similar addresses are used', async () => {
+    db.tables.question_sets = [{ id: 'other', title: 'Leases quiz 2', slug: 'leases-quiz-2' }]
+    expect(await publish({ bundle: bundle() })).toMatchObject({ status: 200, body: { slug: 'leases-quiz' } })
+  })
+
+  it('writes nothing when the address cannot be checked', async () => {
+    db.fail = failOn('GET', 'question_sets', 'slug=eq.')
+    expect(await publish({ bundle: bundle() })).toEqual({ status: 500, body: { error: SLUG_READ_FAILED } })
+    expect(writes()).toEqual([])
   })
 })

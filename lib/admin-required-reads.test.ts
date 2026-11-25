@@ -86,7 +86,9 @@ const fakeFetch: typeof fetch = async (input, init) => {
 
   const headers = new Headers(init?.headers)
   const prefer = headers.get('prefer') ?? ''
-  const rows = network.rows[table] ?? []
+  // A lookup by web address finds only rows that have that address.
+  const slug = method === 'GET' && table === 'question_sets' ? url.searchParams.get('slug') : null
+  const rows = (network.rows[table] ?? []).filter((row) => slug === null || `eq.${row.slug}` === slug)
   const total = network.counts[table] ?? rows.length
   const counted: Record<string, string> = prefer.includes('count=') ? { 'content-range': `0-0/${total}` } : {}
   if (method === 'HEAD') return new Response(null, { status: 200, headers: counted })
@@ -506,7 +508,8 @@ describe.each([
     last: 'AB-QZ-00041',
     first: questionsAnswer('AB-QZ-00001'),
     next: questionsAnswer('AB-QZ-00042'),
-    writes: ['POST question_sets', 'POST questions'],
+    // The web address is looked up before the first write.
+    writes: ['GET question_sets', 'POST question_sets', 'POST questions'],
   },
 ])('$name', ({ publish, table, last, first, next, writes }) => {
   it('gives the first content ID when there is no content yet, as before', async () => {
@@ -546,10 +549,18 @@ describe('question set publish with a linked article', () => {
     expect(result).toEqual({
       status: 200,
       body: questionsAnswer('AB-QZ-00001'),
-      requests: ['GET question_sets', 'GET articles', 'GET question_sets', 'POST question_sets', 'POST questions', 'PATCH articles'],
+      requests: [
+        'GET question_sets',
+        'GET articles',
+        'GET question_sets',
+        'GET question_sets',
+        'POST question_sets',
+        'POST questions',
+        'PATCH articles',
+      ],
       elapsed: 0,
     })
-    expect((network.calls[3].body as Row).article_slug).toBe('linked-article')
+    expect((network.calls[4].body as Row).article_slug).toBe('linked-article')
   })
 
   it('publishes nothing when no article has that ID', async () => {

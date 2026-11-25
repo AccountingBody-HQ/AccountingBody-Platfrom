@@ -7,9 +7,11 @@ import { checkRead } from '@/lib/db-check'
 import {
   NOT_FOUND,
   SET_READ_FAILED,
+  SLUG_READ_FAILED,
   alreadyHasSetMessage,
   checkPublishBundle,
   publishProblemsMessage,
+  slugTakenMessage,
 } from '@/lib/question-publish-checks'
 import { reportServerError } from '@/lib/report-error'
 
@@ -129,6 +131,24 @@ export async function POST(req: NextRequest) {
       if (linkedSetRead.data) {
         return NextResponse.json({ error: alreadyHasSetMessage(linkedSetRead.data.title) }, { status: 409 })
       }
+    }
+
+    // The web address must be free (any status). No suffix is invented: the
+    // title decides the address.
+    const slugRead = checkRead(
+      await supabase
+        .from('question_sets')
+        .select('slug')
+        .eq('slug', slug)
+        .limit(1)
+        .maybeSingle(),
+      'questions/publish: web address',
+    )
+    if (!slugRead.ok) {
+      return NextResponse.json({ error: SLUG_READ_FAILED }, { status: 500 })
+    }
+    if (slugRead.data) {
+      return NextResponse.json({ error: slugTakenMessage(slug) }, { status: 409 })
     }
 
     const setRow: any = {
