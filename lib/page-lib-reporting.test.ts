@@ -578,6 +578,7 @@ const REPORTING: Record<string, string[]> = {
   ],
   'lib/providers.ts:reapStaleRuns': ["reportServerError('job import stale run update failed', error, { area: 'ingest' })"],
   'lib/providers.ts:updateProviderKeywordCursor': ["reportServerError('job import keyword cursor save failed', error, { area: 'ingest' })"],
+  'lib/question-cache.ts:refreshQuestionCaches': ["reportServerError('admin question cache refresh failed', error, { area: 'admin' })"],
   'lib/saved-jobs-store.ts:touchLastSeen': [
     "reportServerError('saved jobs last seen save failed', new Error('saved jobs last seen save failed'), { area: 'public' })",
     "reportServerError('saved jobs last seen save threw', new Error('saved jobs last seen save threw'), { area: 'public' })",

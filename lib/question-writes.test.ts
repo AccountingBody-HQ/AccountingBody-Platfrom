@@ -137,6 +137,8 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+const BROAD = ['question-sets', 'questions']
+
 // ── Publish ─────────────────────────────────────────────────────────────────
 
 const question = (over: Row = {}): Row => ({
@@ -344,10 +346,163 @@ describe('publish: an honest result', () => {
     expect(revalidated).toEqual([])
   })
 
+  it('refreshes the public caches for the set and its article, after every write', async () => {
+    db.tables.articles = [{ ...article }]
+    await publish({ bundle: scenario, articleSlug: 'AB-ART-00007' })
+    expect(revalidated).toEqual([...BROAD, 'question-set:leases-quiz', `question-set-id:${SET_ID}`, 'article:leases'])
+    expect(db.calls.map((c) => c.tagsBefore)).toEqual(db.calls.map(() => 0))
+  })
+
+  it('refreshes the set but not the article when the link could not be saved', async () => {
+    db.tables.articles = [{ ...article }]
+    db.fail = failOn('PATCH', 'articles')
+    await publish({ bundle: bundle(), articleSlug: 'leases' })
+    expect(revalidated).toEqual([...BROAD, 'question-set:leases-quiz', `question-set-id:${SET_ID}`])
+  })
+
+  it('refreshes nothing when the set cannot be saved', async () => {
+    db.fail = failOn('POST', 'question_sets')
+    expect((await publish({ bundle: bundle() })).status).toBe(500)
+    expect(revalidated).toEqual([])
+  })
+
+  it('publishes when the cases are not a list', async () => {
+    expect((await publish({ bundle: bundle({ cases: { caseId: 'case-1' } }) })).status).toBe(200)
+    expect(writes()).toEqual(['POST question_sets', 'POST questions'])
+  })
+
   it.each(['generate', 'import'])('the %s page shows both warnings in its success view', (name) => {
     const source = readFileSync(join(process.cwd(), `app/${ADMIN}/questions/${name}/page.tsx`), 'utf8')
     expect(source).toContain('setPublishWarnings([data.linkWarning, data.casesWarning].filter(Boolean))')
     expect(source.split('publishWarnings.map(')).toHaveLength(2)
     expect(source.indexOf('publishWarnings.map(')).toBeGreaterThan(source.search(/Published Successfully|Import Successful/))
+  })
+})
+
+// ── Set editor and recycle bin ──────────────────────────────────────────────
+
+const QUESTION = '7ab56afb-ff9b-4db5-9a5f-ec88f271466f'
+
+type WriteCase = { name: string; call: () => Promise<Response>; write: string; table: string; tags: string[] }
+
+async function setRoute(method: string, body: Row) {
+  return (await api('questions/[setId]/route.ts'))[method](request(method, `questions/${SET_ID}`, body), {
+    params: Promise.resolve({ setId: SET_ID }),
+  })
+}
+
+const ID_TAG = `question-set-id:${SET_ID}`
+const WRITES: WriteCase[] = [
+  {
+    name: 'set saved',
+    call: () => setRoute('PATCH', { action: 'update_set', fields: { title: 'New title' } }),
+    write: 'PATCH',
+    table: 'question_sets',
+    tags: ['question-set:leases-quiz', ID_TAG, 'article:leases'],
+  },
+  {
+    name: 'set saved with a new address',
+    call: () => setRoute('PATCH', { action: 'update_set', fields: { slug: 'leases-test' } }),
+    write: 'PATCH',
+    table: 'question_sets',
+    tags: ['question-set:leases-quiz', 'question-set:leases-test', ID_TAG, 'article:leases'],
+  },
+  {
+    name: 'question saved',
+    call: () => setRoute('PATCH', { action: 'update_question', questionId: QUESTION, fields: { question_text: 'New?' } }),
+    write: 'PATCH',
+    table: 'questions',
+    tags: [ID_TAG],
+  },
+  {
+    name: 'set deleted',
+    call: () => setRoute('DELETE', { action: 'delete_set' }),
+    write: 'DELETE',
+    table: 'question_sets',
+    tags: ['question-set:leases-quiz', ID_TAG, 'article:leases'],
+  },
+  {
+    name: 'question deleted',
+    call: () => setRoute('DELETE', { action: 'delete_question', questionId: QUESTION }),
+    write: 'DELETE',
+    table: 'questions',
+    tags: [ID_TAG],
+  },
+  {
+    name: 'question added',
+    call: () => setRoute('POST', { question_text: 'Another?' }),
+    write: 'POST',
+    table: 'questions',
+    tags: [ID_TAG],
+  },
+]
+
+describe('set editor: refreshes the public caches', () => {
+  beforeEach(() => {
+    db.tables.question_sets = [{ id: SET_ID, title: 'Leases quiz', slug: 'leases-quiz', article_slug: 'leases' }]
+    db.tables.questions = [{ id: QUESTION, set_id: SET_ID, question_order: 1, question_text: 'Which one?' }]
+  })
+
+  it.each(WRITES)('$name: after the write', async ({ call, write, table, tags }) => {
+    expect((await call()).status).toBe(200)
+    expect(db.calls.filter((c) => c.method === write && c.table === table)).toHaveLength(1)
+    expect(db.calls.every((c) => c.tagsBefore === 0)).toBe(true)
+    expect(revalidated).toEqual([...BROAD, ...tags])
+  })
+
+  it.each(WRITES)('$name: not when the write fails', async ({ call, write, table }) => {
+    db.fail = failOn(write, table)
+    expect((await call()).status).toBe(500)
+    expect(revalidated).toEqual([])
+  })
+
+  it.each(WRITES)('$name: not for a signed-out request', async ({ call }) => {
+    session = 'not-a-session'
+    expect((await call()).status).toBe(401)
+    expect(db.calls).toEqual([])
+    expect(revalidated).toEqual([])
+  })
+
+  it('saves the set when its old address cannot be read, and refreshes the broad tags', async () => {
+    db.fail = failOn('GET', 'question_sets')
+    expect((await WRITES[0].call()).status).toBe(200)
+    expect(db.tables.question_sets).toMatchObject([{ title: 'New title' }])
+    expect(revalidated).toEqual([...BROAD, ID_TAG])
+  })
+
+  it('refreshes nothing for a refused request', async () => {
+    expect((await setRoute('PATCH', { action: 'unknown' })).status).toBe(400)
+    expect((await setRoute('POST', { question_text: '' })).status).toBe(400)
+    expect((await setRoute('DELETE', { action: 'delete_question' })).status).toBe(400)
+    expect(revalidated).toEqual([])
+  })
+})
+
+describe('recycle bin restore: refreshes the public caches', () => {
+  const restore = async () =>
+    (await api('recycle-bin/route.ts')).POST(request('POST', 'recycle-bin', { action: 'restore', id: SET_ID }), { params: {} })
+
+  it.each([
+    ['a question set', { question_sets: 1, questions: 10, question_cases: 2 }],
+    ['a question', { questions: 1 }],
+  ])('after %s is put back', async (_name, counts) => {
+    db.rpc = counts
+    const res = await restore()
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ success: true, counts })
+    expect(revalidated).toEqual(BROAD)
+  })
+
+  it('not after something else is put back', async () => {
+    db.rpc = { courses: 1, course_chapters: 2 }
+    expect((await restore()).status).toBe(200)
+    expect(revalidated).toEqual([])
+  })
+
+  it('not when the restore fails', async () => {
+    db.rpc = { question_sets: 1 }
+    db.fail = (call) => call.table.startsWith('rpc/')
+    expect((await restore()).status).toBe(500)
+    expect(revalidated).toEqual([])
   })
 })

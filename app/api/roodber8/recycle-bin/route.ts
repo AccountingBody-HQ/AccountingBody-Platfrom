@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { refreshQuestionCaches } from '@/lib/question-cache'
 import { BIN_TABLE, errorCode, purgeExpired, restoreFromBin } from '@/lib/recycle-bin'
 
 export const runtime = 'nodejs'
@@ -62,5 +63,7 @@ export async function POST(req: NextRequest) {
     const status = result.code === 'P0002' ? 404 : result.code === '23505' || result.code === 'P0001' || result.code === '23503' ? 409 : 500
     return NextResponse.json({ error: result.message }, { status })
   }
+  // The counts name the tables put back; the sets themselves are not known here.
+  if (result.counts.question_sets || result.counts.questions || result.counts.question_cases) refreshQuestionCaches()
   return NextResponse.json({ success: true, counts: result.counts })
 }

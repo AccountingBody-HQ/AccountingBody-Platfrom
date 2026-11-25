@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { checkRead } from '@/lib/db-check'
+import { refreshQuestionCaches } from '@/lib/question-cache'
 import { DELETE_FAILED, errorCode, keepCopyBeforeDelete, snapshotQuestionSet, snapshotRows } from '@/lib/recycle-bin'
 
 export const runtime = 'nodejs'
@@ -77,6 +78,18 @@ export async function PATCH(
     }
     sanitised.updated_at = new Date().toISOString()
 
+    // Only names the caches to refresh after the save, so a failed read does
+    // not stop it (the broad tags cover every set).
+    const before = checkRead(
+      await supabase
+        .from('question_sets')
+        .select('slug, article_slug')
+        .eq('id', setId)
+        .maybeSingle(),
+      'questions/[setId]: set before update',
+    )
+    const old = before.ok ? before.data : null
+
     const { error } = await supabase
       .from('question_sets')
       .update(sanitised)
@@ -85,6 +98,11 @@ export async function PATCH(
     if (error)
       return NextResponse.json({ error: error.message }, { status: 500 })
 
+    refreshQuestionCaches({
+      slugs: [old?.slug, sanitised.slug],
+      setIds: [setId],
+      articleSlugs: [old?.article_slug],
+    })
     return NextResponse.json({ success: true })
   }
 
@@ -114,6 +132,7 @@ export async function PATCH(
     if (error)
       return NextResponse.json({ error: error.message }, { status: 500 })
 
+    refreshQuestionCaches({ setIds: [setId] })
     return NextResponse.json({ success: true })
   }
 
@@ -158,6 +177,11 @@ export async function DELETE(
       return NextResponse.json({ error: DELETE_FAILED }, { status: 500 })
     }
 
+    refreshQuestionCaches({
+      slugs: [kept.row.slug as string | null | undefined],
+      setIds: [setId],
+      articleSlugs: [kept.row.article_slug as string | null | undefined],
+    })
     return NextResponse.json({ success: true, binId: kept.binId })
   }
 
@@ -191,6 +215,7 @@ export async function DELETE(
       return NextResponse.json({ error: DELETE_FAILED }, { status: 500 })
     }
 
+    refreshQuestionCaches({ setIds: [setId] })
     return NextResponse.json({ success: true, binId: kept.binId })
   }
 
@@ -282,5 +307,6 @@ export async function POST(
   if (insertError || !inserted)
     return NextResponse.json({ error: insertError?.message ?? 'Insert failed' }, { status: 500 })
 
+  refreshQuestionCaches({ setIds: [setId] })
   return NextResponse.json({ success: true, question: inserted })
 }

@@ -15,6 +15,7 @@ import {
   publishProblemsMessage,
   slugTakenMessage,
 } from '@/lib/question-publish-checks'
+import { refreshQuestionCaches } from '@/lib/question-cache'
 import { reportServerError } from '@/lib/report-error'
 
 export const runtime = 'nodejs'
@@ -225,10 +226,10 @@ export async function POST(req: NextRequest) {
     let linkWarning: string | undefined
 
     // Insert case exhibits if present (scenario question sets)
-    const cases = bundle.cases ?? []
+    const cases: any[] = Array.isArray(bundle.cases) ? bundle.cases : []
     if (cases.length > 0) {
       const caseRows = cases
-        .filter((c: any) => c.caseId && c.exhibitHtml)
+        .filter((c: any) => c?.caseId && c.exhibitHtml)
         .map((c: any) => ({
           set_id:       setId,
           case_id:      c.caseId,
@@ -268,6 +269,12 @@ export async function POST(req: NextRequest) {
         linkWarning = LINK_FAILED
       }
     }
+
+    refreshQuestionCaches({
+      slugs: [slug],
+      setIds: [setId],
+      articleSlugs: linkWarning ? [] : [resolvedArticleSlug],
+    })
 
     return NextResponse.json({
       success:       true,
