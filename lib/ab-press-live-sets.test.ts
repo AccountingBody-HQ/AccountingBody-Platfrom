@@ -681,6 +681,36 @@ describe('a book made from good reads', () => {
     const former = lines.filter((line) => !NEW.includes(line)).join('\n')
     expect([status, sha(given), sha(former)]).toEqual(BEFORE[index])
   })
+
+  // The pages themselves, taken from the code before owner decision D344: every
+  // element with its style, its other settings and its text.
+  const page = (node: unknown): unknown => {
+    if (Array.isArray(node)) return node.map(page)
+    if (!node || typeof node !== 'object' || !('props' in node)) return node
+    const { type, props } = node as Element
+    const { children, ...rest } = props
+    return [typeof type === 'string' ? type : 'part', rest, page(children)]
+  }
+  const pages = () =>
+    JSON.stringify(state.drawn.map((made) => {
+      const { type, props } = made as { type: (props: unknown) => unknown; props: unknown }
+      return page(type(props))
+    })).split(`Copyright ",${new Date().getFullYear()},`).join('Copyright ",YEAR,')
+  const DRAWN: string[] = [
+    '6e405fd1e399911e',
+    'd2afa80d637c1052',
+    '0dcab6f488b0e47e',
+    sha('[]'), // The Word file is not drawn; what it is given is checked above.
+    'bb21ee32e275d272',
+    '7358b11cec5be134',
+    '24c735d705a00407',
+    '7f23ddd59695b424',
+  ]
+
+  it.each([...MAKERS, FRONT].map(([name, body], index) => [index, name, { ...body, slug: 'good' }] as const))('%i %s %o is drawn as before', async (index, name, body) => {
+    await make(name, body)
+    expect(sha(pages())).toBe(DRAWN[index])
+  })
 })
 
 describe('a limit on the rows of one answer', () => {
@@ -1059,6 +1089,81 @@ describe('the page numbers and the check report of a book made chapter by chapte
     expect(contents('combined', 18)).toMatch(/Chapter 1: One4Answers and Explanations18$/)
     expect(contents('combined')).toMatch(/Chapter 1: One4Answers and Explanations24$/)
     expect(contents('study', 18)).toMatch(/Chapter 1: One4$/)
+  })
+})
+
+describe('the contents page of a book without answers', () => {
+  const ROW = 'Answers and Explanations'
+  const draw = (made: unknown) => {
+    const { type, props } = made as { type: (props: unknown) => unknown; props: unknown }
+    return type(props) as Element
+  }
+  // The contents page and the answers page of one drawn book.
+  const pagesWith = (made: unknown, part: string) =>
+    ((draw(made).props.children as unknown[]).flat(9) as Element[])
+      .filter((node) => node && Screen.text(node).includes(part))
+      .map((node) => Screen.text(node))
+
+  it('the front pages are told only by false', async () => {
+    for (const [given, passed] of [[false, false], [undefined, undefined], [true, undefined], ['false', undefined], [null, undefined], [0, undefined]]) {
+      state.made = []
+      await callRoute(FRONT[0], { body: { ...FRONT[1], hasAnswers: given } })
+      expect(JSON.parse(state.made[0]).hasAnswers).toBe(passed)
+    }
+  })
+
+  it('the front pages have no answers row then, and the same row as before in every other case', () => {
+    const contents = (bookType: 'combined' | 'study' | 'practice', hasAnswers?: boolean) =>
+      Screen.text(
+        FrontmatterTemplate({
+          course: { chapters: [{ chapterTitle: 'One' }] },
+          bookType,
+          edition: 'E',
+          subtitle: 'S',
+          chapterPageStarts: [4],
+          totalPages: 25,
+          answersPageStart: 18,
+          hasAnswers,
+        }),
+      )
+    for (const bookType of ['combined', 'practice'] as const) {
+      expect(contents(bookType, false)).toMatch(/ContentsChapter 1: One4$/)
+      for (const value of [undefined, true]) expect(contents(bookType, value)).toMatch(/ContentsChapter 1: One4Answers and Explanations18$/)
+    }
+    for (const value of [undefined, true, false]) expect(contents('study', value)).toMatch(/ContentsChapter 1: One4$/)
+  })
+
+  it.each<[string, object, number]>([
+    ['generate', { bookType: 'combined' }, 0],
+    ['generate', { bookType: 'practice' }, 0],
+    ['generate-pq', {}, 0],
+    ['generate-pq', {}, 1],
+  ])('%s %o, drawing %i: the row is there with a printed question, and only then', async (name, body, at) => {
+    const contents = async () => {
+      state.drawn = []
+      await make(name, { slug: 'course', ...body })
+      const found = pagesWith(state.drawn[at], 'Contents')
+      expect(found).toHaveLength(1)
+      return found[0]
+    }
+    state.chapters = { course: [[['plain']], [['live']]] }
+    expect(await contents()).toContain(ROW)
+    for (const chapters of [[[['plain']]], [[['draft', 'gone']], [['unset']]]]) {
+      state.chapters = { course: chapters }
+      expect(await contents()).not.toContain(ROW)
+      // The page of the answers itself stays, so no book changes its length.
+      expect(pagesWith(state.drawn[at], ROW)).toHaveLength(1)
+    }
+  })
+
+  it('in the kit, a question without text is not printed, so it does not make a row', async () => {
+    state.chapters = { course: [[['blank']]] }
+    await make('generate-pq', { slug: 'course' })
+    for (const at of [0, 1]) expect(pagesWith(state.drawn[at], 'Contents')[0]).not.toContain(ROW)
+    state.chapters = { course: [[['blank', 'live']]] }
+    state.drawn = []
+    await make('generate-pq', { slug: 'course' })
+    for (const at of [0, 1]) expect(pagesWith(state.drawn[at], 'Contents')[0]).toContain(ROW)
   })
 })
 
@@ -1573,6 +1678,27 @@ describe('the screen of a book made chapter by chapter', () => {
     expect(page.calls[page.calls.length - 1].name).toBe(last)
   })
 
+  it('tells the front pages that there are no answers only when a book with questions has none', async () => {
+    const page = await screen()
+    const sent = async (bookType: string) => {
+      page.change(page.radio(bookType), bookType)
+      await page.generate()
+      expect(page.links()).toEqual([`first-${bookType}.zip`])
+      return page.calls.filter((call) => call.name === 'generate-frontmatter').pop()?.body ?? {}
+    }
+    await page.open()
+    expect(await sent('combined')).not.toHaveProperty('hasAnswers')
+    expect(await sent('study')).not.toHaveProperty('hasAnswers')
+    for (const at of [0, 1, 2]) {
+      spoil(page, 'generate-chapter', at, { questionCount: 0 })
+      spoil(page, 'generate-answers', at, { questionCount: 0, pdf: null, pageCount: 0 })
+    }
+    expect(await sent('study')).not.toHaveProperty('hasAnswers')
+    expect(await sent('combined')).toMatchObject({ hasAnswers: false })
+    const { 'interior.pdf': interior } = await page.zip()
+    expect((await pdfLib.PDFDocument.load(new Uint8Array(interior))).getPageCount()).toBe(3 + 5 + 2 + 7)
+  })
+
   // Every part, as [route, chapter].
   const PARTS: [string, number | undefined][] = [
     ['generate-chapter', 0],
@@ -1581,17 +1707,17 @@ describe('the screen of a book made chapter by chapter', () => {
     ['generate-answers', 1],
     ['generate-frontmatter', undefined],
   ]
-  const KEYS: [string, string | undefined][] = [
-    ...CHANGED.map(([name, plan]): [string, string] => [name, courseKey(planned(plan))]),
-    ['the key is not told', undefined],
-    ['the key is empty', ''],
+  const KEYS: [string, () => string | undefined][] = [
+    ...CHANGED.map(([name, plan]): [string, () => string] => [name, () => courseKey(planned(plan))]),
+    ['the key is not told', () => undefined],
+    ['the key is empty', () => ''],
   ]
 
   it.each(KEYS.flatMap(([name, key]) => PARTS.map(([route, at]) => [name, route, at, key] as const)))(
     '%s, seen by %s %s: it stops with its message and makes nothing',
     async (_name, route, at, key) => {
       const page = await screen()
-      spoil(page, route, at, { courseKey: key })
+      spoil(page, route, at, { courseKey: key() })
       await page.open()
       page.change(page.radio('combined'), 'combined')
       await page.generate()

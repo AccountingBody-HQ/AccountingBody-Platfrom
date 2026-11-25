@@ -367,7 +367,7 @@ export function PracticeKitTemplate({
   course, edition, subtitle,
   pageMap, onSectionPage, skipAnswers,
 }: PracticeKitTemplateProps) {
-  const { chapters: qIndex } = buildQuestionIndex(course)
+  const { chapters: qIndex, totalQuestions } = buildQuestionIndex(course)
 
   function pageFor(key: string): string {
     return pageMap && pageMap[key] ? String(pageMap[key]) : ""
@@ -435,13 +435,15 @@ export function PracticeKitTemplate({
             ))}
           </View>
         ))}
-        <View style={s.tocChapterRow}>
-          <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
-            <Text style={s.tocChapterText}>Answers and Explanations</Text>
-            <View style={s.dotLeader} />
-            <Text style={s.tocChapterText}>{pageFor("answers")}</Text>
+        {totalQuestions > 0 && (
+          <View style={s.tocChapterRow}>
+            <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
+              <Text style={s.tocChapterText}>Answers and Explanations</Text>
+              <View style={s.dotLeader} />
+              <Text style={s.tocChapterText}>{pageFor("answers")}</Text>
+            </View>
           </View>
-        </View>
+        )}
       </Page>
 
       {/* ── 4. Chapters ── */}

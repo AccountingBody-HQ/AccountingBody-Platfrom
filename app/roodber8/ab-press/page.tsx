@@ -363,6 +363,7 @@ export default function AbPressPage() {
       }
       const answersPageStart = pageAcc // the answers come right after the last chapter
       const totalInteriorPages = pageAcc + answerChapterPdfs.length
+      const noAnswersPart = bookType !== 'study' && answerChapterPdfs.length === 0
 
       // 4. Render frontmatter (title + copyright + TOC with real page numbers)
       setGenerationPhase('Rendering frontmatter and TOC...')
@@ -371,7 +372,9 @@ export default function AbPressPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           slug: slug.trim(), bookType, edition, subtitle,
-          chapterPageStarts, totalPages: totalInteriorPages, answersPageStart
+          chapterPageStarts, totalPages: totalInteriorPages, answersPageStart,
+          // Sent only for a book without answers.
+          ...(noAnswersPart ? { hasAnswers: false } : {})
         })
       })
       const fmData = await fmRes.json()

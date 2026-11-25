@@ -594,7 +594,7 @@ export function BookTemplate({ course, bookType, edition, subtitle, pageMap }: B
             </View>
           </View>
         ))}
-        {showQuestions && (
+        {showQuestions && (course.chapters || []).some((ch: any) => chapterQuestionList(ch).length > 0) && (
           <View style={s.tocChapterRow}>
             <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
               <Text style={s.tocChapterText}>Answers and Explanations</Text>
