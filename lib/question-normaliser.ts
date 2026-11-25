@@ -153,11 +153,35 @@ function letterToIndex(letter: string): number | null {
   return l in map ? map[l] : null
 }
 
-/** Strip option prefix like "A.", "A)", "(A)", "1.", "1)" from option text */
-function stripOptionPrefix(text: string): string {
-  return text
-    .replace(/^\s*[\(\[]?[A-Da-d1-4][\)\]\.:\s]+\s*/, '')
-    .trim()
+/**
+ * A label at the start of an option: "A) x", "A. x", "A: x", "(A) x", "[A] x"
+ * with A-D, a-d or 1-4. Letters may also be followed by the text at once:
+ * "A)x", "A.x", "(A)x". A space alone is never a label, and a digit always
+ * needs a space after its mark ("2.5%" has no label).
+ * style tells upper case, lower case and digits, and the marks, apart.
+ */
+function readLabel(option: string): { position: number; style: string; text: string } | null {
+  const match =
+    option.match(/^([([]?)([A-Da-d1-4])([)\].:])\s+(\S[\s\S]*)$/) ??
+    option.match(/^(\(?)([A-Da-d])([).])(\S[\s\S]*)$/)
+  if (!match) return null
+  const [, open, sign, close, text] = match
+  const pair = open + close
+  if (!['(' + ')', '[' + ']', ')', '.', ':'].includes(pair)) return null
+  const family = ['ABCD', 'abcd', '1234'].find(signs => signs.includes(sign)) as string
+  return { position: family.indexOf(sign), style: family + pair, text: text.trim() }
+}
+
+/**
+ * One decision per question: the four options without their labels, or null
+ * when they are not labelled. All four must carry the label of their own
+ * position, in one style.
+ */
+function withoutLabels(options: string[]): string[] | null {
+  if (options.length !== 4) return null
+  const labels = options.map(readLabel)
+  const real = labels.every((label, i) => label !== null && label.position === i && label.style === labels[0]?.style)
+  return real ? labels.map(label => label?.text ?? '') : null
 }
 
 /** Normalise difficulty value to one of the three accepted values */
@@ -262,7 +286,7 @@ function resolveCorrectIndex(
 
 /**
  * Normalise the options array from any shape AI models produce.
- * Returns exactly 4 strings, stripping prefixes.
+ * Returns exactly 4 strings, without their labels when they have real ones.
  */
 function resolveOptions(
   raw: unknown,
@@ -278,14 +302,13 @@ function resolveOptions(
   // Plain array
   if (Array.isArray(raw)) {
     arr = raw.map(item => {
-      if (typeof item === 'string') return stripOptionPrefix(item)
       // Object with text/label/content key
       if (typeof item === 'object' && item !== null) {
         const o = item as Record<string, unknown>
-        const text = str(o.text ?? o.content ?? o.label ?? o.value ?? o.option ?? '')
-        return text ? stripOptionPrefix(text) : ''
+        return str(o.text ?? o.content ?? o.label ?? o.value ?? o.option ?? '') ?? ''
       }
-      return String(item)
+      // Text or a number, as written; an empty entry stays empty
+      return str(item) ?? ''
     })
   }
 
@@ -303,26 +326,21 @@ function resolveOptions(
     changes.push(`${qId}: converted options object to array`)
   }
 
-  // Strip prefixes from all options
-  const stripped = arr.map(stripOptionPrefix)
-
   // Pad or trim to exactly 4
-  if (stripped.length < 4) {
-    warnings.push(`${qId}: only ${stripped.length} options found — padded to 4`)
-    while (stripped.length < 4) stripped.push('')
+  if (arr.length < 4) {
+    warnings.push(`${qId}: only ${arr.length} options found — padded to 4`)
+    while (arr.length < 4) arr.push('')
   }
-  if (stripped.length > 4) {
-    warnings.push(`${qId}: ${stripped.length} options found — trimmed to first 4`)
-    stripped.splice(4)
-  }
-
-  // Flag if any options had prefixes stripped
-  const hadPrefixes = arr.some((o, i) => o !== stripped[i])
-  if (hadPrefixes) {
-    changes.push(`${qId}: stripped A./B./C./D. prefixes from options`)
+  if (arr.length > 4) {
+    warnings.push(`${qId}: ${arr.length} options found — trimmed to first 4`)
+    arr.splice(4)
   }
 
-  return stripped
+  // Remove the labels, or leave every option exactly as written
+  const unlabelled = withoutLabels(arr)
+  if (!unlabelled) return arr
+  changes.push(`${qId}: stripped A./B./C./D. prefixes from options`)
+  return unlabelled
 }
 
 // ── Case/exhibit extraction ───────────────────────────────────────────────────
