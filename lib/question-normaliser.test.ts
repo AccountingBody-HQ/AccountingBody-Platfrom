@@ -218,6 +218,63 @@ describe('the correct answer', () => {
   })
 })
 
+describe('one key, one meaning', () => {
+  const only = (over: Record<string, unknown>) => read({ questionText: undefined, ...over })
+
+  it('"stem" alone is the question text, and no case', () => {
+    const { question: q, bundle, changes } = only({ stem: 'Which one?' })
+    expect(q).toMatchObject({ questionText: 'Which one?', caseId: null })
+    expect(bundle.cases).toEqual([])
+    expect(changes.join()).not.toContain('exhibit')
+  })
+
+  it.each(['exhibit', 'case_text', 'context', 'passage', 'scenario', 'vignette'])('"stem" with "%s" is a question and a case', (key) => {
+    const { question: q, bundle } = only({ stem: 'Which one?', [key]: 'The facts.' })
+    expect(q).toMatchObject({ questionText: 'Which one?', caseId: 'case-inline-1' })
+    expect(bundle.cases).toEqual([{ caseId: 'case-inline-1', title: 'Case 1', exhibitHtml: 'The facts.' }])
+  })
+
+  it('a case key with another question key is a case, as before', () => {
+    const { question: q, bundle } = read({ context: 'The facts.' })
+    expect(q).toMatchObject({ questionText: 'Which one?', caseId: 'case-inline-1' })
+    expect(bundle.cases).toMatchObject([{ exhibitHtml: 'The facts.' }])
+  })
+
+  it('a case key alone is not a question', () => {
+    expect(() => only({ context: 'The facts.' })).toThrow('No valid questions could be extracted')
+  })
+
+  it('"stem" beside the key that holds the question is a case, and an empty one is not read', () => {
+    expect(read({ stem: 'The facts.' })).toMatchObject({
+      question: { questionText: 'Which one?', caseId: 'case-inline-1' },
+      bundle: { cases: [{ exhibitHtml: 'The facts.' }] },
+    })
+    expect(only({ question: null, stem: 'Which one?' }).bundle.cases).toEqual([])
+  })
+
+  it('is decided for each question on its own', () => {
+    const { bundle } = normalise([question({ questionText: undefined, stem: 'First?' }), question({ stem: 'The facts.' })])
+    expect(bundle.questions.map((q) => [q.questionText, q.caseId])).toEqual([
+      ['First?', null],
+      ['Which one?', 'case-inline-1'],
+    ])
+  })
+
+  it('"stem" in the list of cases is the exhibit of that case', () => {
+    const { bundle } = normalise({ title: 'Test set', cases: [{ caseId: 'c1', stem: 'The facts.' }], questions: [question({ type: 'scenario', caseId: 'c1' })] })
+    expect(bundle.cases).toMatchObject([{ caseId: 'c1', exhibitHtml: 'The facts.' }])
+    expect(checkPublishBundle(bundle)).toEqual({ ok: true })
+  })
+
+  it('a key that gave the answer is not the explanation as well', () => {
+    const without = { correctIndex: undefined, explanation: undefined }
+    expect(read({ ...without, solution: 'B' }).question).toMatchObject({ correctIndex: 1, explanation: null })
+    expect(read({ ...without, solution: 'B', rationale: 'Why.' }).question).toMatchObject({ correctIndex: 1, explanation: 'Why.' })
+    expect(read({ ...without, answer: 'B', solution: 'Why.' }).question).toMatchObject({ correctIndex: 1, explanation: 'Why.' })
+    expect(read({ ...without, solution: 'Look at the facts.' }).question).toMatchObject({ correctIndex: null, explanation: 'Look at the facts.' })
+  })
+})
+
 describe('numbered answers: one rule for the whole paste', () => {
   // One question per answer; an answer may come with its own options or type.
   const paste = (...answers: unknown[]) => {

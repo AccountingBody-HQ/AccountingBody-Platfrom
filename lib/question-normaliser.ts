@@ -123,12 +123,15 @@ const CASE_TITLE_KEYS = [
 
 // ── Utility helpers ───────────────────────────────────────────────────────────
 
-/** Pick the first key present in obj from a list of candidates */
+/** The first key present in obj from a list of candidates */
+function pickKey(obj: Record<string, unknown>, keys: string[]): string | undefined {
+  return keys.find(k => k in obj && obj[k] !== null && obj[k] !== undefined)
+}
+
+/** The value of the first key present in obj from a list of candidates */
 function pick(obj: Record<string, unknown>, keys: string[]): unknown {
-  for (const k of keys) {
-    if (k in obj && obj[k] !== null && obj[k] !== undefined) return obj[k]
-  }
-  return undefined
+  const key = pickKey(obj, keys)
+  return key === undefined ? undefined : obj[key]
 }
 
 /** Coerce any value to a non-empty string or return null */
@@ -505,7 +508,9 @@ function extractInlineCases(
   questions.forEach((q, i) => {
     if (typeof q !== 'object' || q === null) return
     const o = q as Record<string, unknown>
-    const rawExhibit = pick(o, EXHIBIT_KEYS)
+    // The key that holds the question text is not an exhibit as well.
+    const textKey = pickKey(o, QUESTION_TEXT_KEYS)
+    const rawExhibit = pick(o, EXHIBIT_KEYS.filter(k => k !== textKey))
     if (!rawExhibit) return
 
     const exhibitText = typeof rawExhibit === 'string'
@@ -580,10 +585,11 @@ function normaliseQuestion(
       : `${qId}: could not work out the correct answer. Set it in the pasted text and paste again.`)
   }
 
-  // ── Explanation ──
+  // ── Explanation ── (the key that gave the answer is not one as well)
+  const answerKey = correctIndex === null ? undefined : pickKey(o, CORRECT_INDEX_KEYS)
   const explanation = type === 'writing'
     ? null
-    : (str(pick(o, EXPLANATION_KEYS)) ?? null)
+    : (str(pick(o, EXPLANATION_KEYS.filter(k => k !== answerKey))) ?? null)
 
   // ── Writing fields ──
   const writingModelAnswer = type === 'writing'
