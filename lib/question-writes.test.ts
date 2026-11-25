@@ -6,6 +6,7 @@ import { TEST_ADMIN_PATH, TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSessio
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
 import {
   CASES_FAILED,
+  EMPTY_ADDRESS,
   LINK_FAILED,
   NOT_FOUND,
   SET_READ_FAILED,
@@ -290,6 +291,20 @@ describe('publish: the linked article', () => {
 })
 
 describe('publish: the web address', () => {
+  it.each([[''], ['   '], ['?!'], ['—'], [' - '], ['የሂሳብ'], ['የሂሳብ ጥያቄ'], ['会计']])('refuses a title that gives no address (%j)', async (title) => {
+    expect(await publish({ bundle: bundle({ title }), articleSlug: 'leases' })).toEqual({ status: 400, body: { error: EMPTY_ADDRESS } })
+    expect(db.calls).toEqual([])
+    expect(revalidated).toEqual([])
+  })
+
+  it.each([
+    ['7', '7'],
+    ['የሂሳብ IAS 12', '-ias-12'],
+    ['Leases quiz', 'leases-quiz'],
+  ])('gives %j the same address as before', async (title, slug) => {
+    expect(await publish({ bundle: bundle({ title }) })).toMatchObject({ status: 200, body: { slug } })
+  })
+
   it.each(['published', 'draft'])('refuses an address another set uses (%s), and adds no suffix', async (status) => {
     db.tables.question_sets = [{ id: 'other', title: 'Leases quiz', slug: 'leases-quiz', status }]
     expect(await publish({ bundle: bundle() })).toEqual({ status: 409, body: { error: slugTakenMessage('leases-quiz') } })

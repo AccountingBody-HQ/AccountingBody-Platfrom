@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   CASES_FAILED,
+  EMPTY_ADDRESS,
   LINK_FAILED,
   MAX_LISTED_PROBLEMS,
   NOT_FOUND,
@@ -181,5 +182,8 @@ describe('wording', () => {
     )
     expect(SET_READ_FAILED).toBe('Could not check for an existing practice set. Nothing was published.')
     expect(SLUG_READ_FAILED).toBe('Could not check the web address. Nothing was published.')
+    expect(EMPTY_ADDRESS).toBe(
+      'Nothing was published. The title needs at least one letter or number (A–Z or 0–9) so the set can have a web address.',
+    )
   })
 })

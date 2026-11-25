@@ -40,6 +40,8 @@ export const CASES_FAILED =
   'Published. But the case exhibits could not be saved, so scenario questions may show without their case.'
 export const SET_READ_FAILED = 'Could not check for an existing practice set. Nothing was published.'
 export const SLUG_READ_FAILED = 'Could not check the web address. Nothing was published.'
+export const EMPTY_ADDRESS =
+  'Nothing was published. The title needs at least one letter or number (A–Z or 0–9) so the set can have a web address.'
 
 export function alreadyHasSetMessage(setTitle: string): string {
   return `Nothing was published. This article already has a practice set: "${setTitle}". Add questions to that set instead.`

@@ -6,6 +6,7 @@ import { SITE_CODE_MAP } from '@/lib/site-codes'
 import { checkRead } from '@/lib/db-check'
 import {
   CASES_FAILED,
+  EMPTY_ADDRESS,
   LINK_FAILED,
   NOT_FOUND,
   SET_READ_FAILED,
@@ -62,6 +63,12 @@ export async function POST(req: NextRequest) {
     const title = bundle.title ?? 'Practice Question Set'
     const slug  = generateSlug(title)
     const now   = new Date().toISOString()
+
+    // A title in another alphabet can leave nothing, or only dashes. No
+    // address is invented for it.
+    if (!/[a-z0-9]/.test(slug)) {
+      return NextResponse.json({ error: EMPTY_ADDRESS }, { status: 400 })
+    }
 
     // Map examBody string to array for the question_sets schema
     const examBodyArr: string[] = []
