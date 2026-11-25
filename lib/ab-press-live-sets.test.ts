@@ -939,6 +939,9 @@ class Screen {
   select = (at: number) => this.elements().filter((e) => e.type === 'select')[at]
   radio = (value: string) => this.one((e) => e.type === 'input' && e.props.type === 'radio' && e.props.value === value)
   titleField = () => this.one((e) => e.type === 'input' && e.props.placeholder === 'e.g. Financial Accounting')
+  // The texts the screen keeps in its state, shown or not.
+  kept = (part: string) => this.values.filter((value) => typeof value === 'string' && value.includes(part))
+  made = () => this.kept('blob:')
   links = () => this.elements().filter((e) => e.type === 'a').map((e) => String(e.props.download))
   press = (text: string) => (this.button(text).props.onClick as () => unknown)()
   change = (element: Element, value: string) => (element.props.onChange as (event: object) => void)({ target: { value } })
@@ -1098,6 +1101,77 @@ describe('the messages of the screen', () => {
     const messages = page.elements().filter((e) => e.type === 'p' && e.props.className === 'text-red-400 text-xs mt-2')
     expect(messages.map(Screen.text)).toEqual(failed ? [COURSES_FAILED] : [])
     expect(page.shown).not.toContain('private detail')
+  })
+})
+
+describe('what the screen has made', () => {
+  const CHANGES: [string, (page: Screen) => unknown][] = [
+    ['the course', (page) => page.change(page.select(0), 'second')],
+    ['the book type', (page) => page.change(page.radio('practice'), 'practice')],
+    ['the title', (page) => page.change(page.titleField(), 'Another title')],
+    ['the edition', (page) => page.change(page.select(1), '2027/28 Edition')],
+    ['the preview', (page) => page.press('Load Course Preview')],
+  ]
+
+  it.each(CHANGES)('goes away, with its name, when %s changes', async (_name, change) => {
+    const page = await screen()
+    await page.open()
+    await page.generate()
+    page.press('Export as Word')
+    await page.settle()
+    expect(page.links()).toEqual(['first-study.zip', 'first-study.docx'])
+    expect(page.made()).toEqual(['blob:1', 'blob:2'])
+    change(page)
+    expect(page.made()).toEqual([])
+    expect(page.links()).toEqual([])
+    await page.settle()
+  })
+
+  it.each(CHANGES)('the errors go away too when %s changes', async (_name, change) => {
+    const page = await screen()
+    page.answers['generate-chapter'] = () => ({ status: 500, body: { error: 'book problem' } })
+    page.answers['export-word'] = () => ({ status: 500, body: { error: 'word problem' } })
+    await page.open()
+    await page.generate()
+    page.press('Export as Word')
+    await page.settle()
+    expect(page.shown).toContain('book problem')
+    expect(page.shown).toContain('word problem')
+    change(page)
+    expect(page.kept('problem')).toEqual([])
+    await page.settle()
+  })
+
+  const locks = (page: Screen) => ({
+    course: page.select(0).props.disabled,
+    bookType: page.radio('study').props.disabled,
+    title: page.titleField().props.disabled,
+    edition: page.select(1).props.disabled,
+  })
+  const FREE = { course: false, bookType: false, title: false, edition: false }
+
+  it('cannot change under a request: the fields are locked while one runs', async () => {
+    const page = await screen()
+    await page.open()
+    expect(locks(page)).toEqual(FREE)
+
+    for (const [route, button, expected] of [
+      ['preview', 'Load Course Preview', { ...FREE, course: true }],
+      ['export-word', 'Export as Word', { course: true, bookType: true, title: true, edition: true }],
+      ['generate-chapter', 'Generate Book', { course: true, bookType: true, title: true, edition: true }],
+    ] as const) {
+      let release = () => {}
+      const wait = new Promise<void>((resolve) => { release = resolve })
+      const before = page.answers[route]
+      page.answers[route] = (body) => ({ ...before(body), wait })
+      page.press(button)
+      await page.settle()
+      expect(locks(page), route).toEqual(expected)
+      release()
+      for (let i = 0; i < 20; i++) await page.settle()
+      expect(locks(page), route).toEqual(FREE)
+      page.answers[route] = before
+    }
   })
 })
 

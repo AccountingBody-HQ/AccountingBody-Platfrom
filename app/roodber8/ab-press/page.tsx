@@ -170,19 +170,24 @@ export default function AbPressPage() {
       .catch(() => { setCourses([]); setError(COURSES_FAILED) })
   }, [])
 
+  // A file that was made belongs to the choices it was made with.
+  const clearMade = () => {
+    setDownloadUrl(''); setGenError(''); setWordUrl(''); setWordError('')
+  }
+
   const handleCourseSelect = (e: any) => {
     const selected = courses.find((c: any) => c.slug === e.target.value)
     setSlug(e.target.value)
     if (selected) setSubtitle(selected.title)
     setPreview(null); setHealth(null); setHistory(null); setShowEmptyList(false); setShowWebWarnings(false)
-    setDownloadUrl(''); setError(''); setGenError('')
+    setError(''); clearMade()
   }
 
   const handlePreview = async () => {
     if (!slug.trim()) { setError('Select a course first'); return }
     setLoading(true); setError(''); setPreview(null); setHealth(null); setHistory(null)
     setShowEmptyList(false); setShowWebWarnings(false)
-    setDownloadUrl(''); setGenError('')
+    clearMade()
     try {
       const res  = await adminFetch('/api/roodber8/ab-press/preview?slug=' + encodeURIComponent(slug.trim()))
       const data = await res.json()
@@ -480,7 +485,7 @@ export default function AbPressPage() {
             <select
               value={slug}
               onChange={handleCourseSelect}
-              disabled={generating}
+              disabled={generating || loading || exportingWord}
               className="w-full bg-[#0C1A3D] border border-slate-600 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#C9982A] disabled:opacity-50"
             >
               <option value="">-- Select a course --</option>
@@ -511,8 +516,8 @@ export default function AbPressPage() {
                   <input
                     type="radio" name="bookType" value={bt.value}
                     checked={bookType === bt.value}
-                    onChange={() => setBookType(bt.value)}
-                    disabled={generating}
+                    onChange={() => { setBookType(bt.value); clearMade() }}
+                    disabled={generating || exportingWord}
                     className="mt-0.5"
                   />
                   <div>
@@ -532,8 +537,8 @@ export default function AbPressPage() {
                 <label className="block text-xs text-slate-400 mb-1">Book Title</label>
                 <input
                   type="text" value={subtitle}
-                  onChange={e => setSubtitle(e.target.value)}
-                  disabled={generating}
+                  onChange={e => { setSubtitle(e.target.value); clearMade() }}
+                  disabled={generating || exportingWord}
                   placeholder="e.g. Financial Accounting"
                   className="w-full bg-[#0C1A3D] border border-slate-600 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-[#C9982A] disabled:opacity-50"
                 />
@@ -542,8 +547,8 @@ export default function AbPressPage() {
                 <label className="block text-xs text-slate-400 mb-1">Edition</label>
                 <select
                   value={edition}
-                  onChange={e => setEdition(e.target.value)}
-                  disabled={generating}
+                  onChange={e => { setEdition(e.target.value); clearMade() }}
+                  disabled={generating || exportingWord}
                   className="w-full bg-[#0C1A3D] border border-slate-600 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-[#C9982A] disabled:opacity-50"
                 >
                   {EDITIONS.map(ed => <option key={ed} value={ed}>{ed}</option>)}
