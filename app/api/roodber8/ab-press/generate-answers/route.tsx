@@ -22,7 +22,7 @@ import { isAuthenticated, signedOutResponse } from "@/lib/admin-auth"
 import { Document, Page, Text, View, StyleSheet, Font, renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { getCourseBySlug } from "@/lib/coursesNew"
-import { createSupabaseClient, READ_FAILED } from "@/lib/ab-press-builder"
+import { practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
 
 export const maxDuration = 60
 
@@ -248,85 +248,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid chapterIndex" }, { status: 400 })
     }
 
-    const supabase = createSupabaseClient()
-
-    // Bulk-fetch mcq_url for every article in the course (content not
-    // needed here — only quiz questions are rendered on this page).
+    // The practice link of every article in the course (content not needed
+    // here — only quiz questions are rendered on this page), and their questions.
     const allArticleIds = rawCourse.chapters.flatMap((ch) => ch.lessons.flatMap((l) => l.articles.map((a) => a.id)))
-    const { data: articleRows } = await supabase
-      .from("articles")
-      .select("id, mcq_url")
-      .in("id", allArticleIds)
-    const mcqUrlById = new Map((articleRows ?? []).map((a: any) => [a.id, a.mcq_url]))
-
-    // Same 2-query bulk batch pattern as lib/ab-press-builder.ts, scoped to
-    // the whole course.
-    const mcqSlugs = Array.from(new Set(
-      (articleRows ?? [])
-        .map((a: any) => a.mcq_url)
-        .filter(Boolean)
-        .map((url: string) => url.split("/").filter(Boolean).pop())
-        .filter(Boolean)
-    ))
-
-    const slugToSetId = new Map<string, string>()
-    const setIdToQuestions = new Map<string, any[]>()
-
-    if (mcqSlugs.length > 0) {
-      const { data: allSets, error: setsError } = await supabase
-        .from("question_sets")
-        .select("id, slug")
-        .in("slug", mcqSlugs)
-        .eq("status", "published")
-
-      // No answers from a partial read.
-      if (setsError || !allSets) {
-        console.error("ab-press/generate-answers: question_sets read failed:", setsError)
-        throw new Error(READ_FAILED)
-      }
-
-      for (const st of (allSets ?? [])) slugToSetId.set(st.slug, st.id)
-
-      const allSetIds = (allSets ?? []).map((st) => st.id)
-      if (allSetIds.length > 0) {
-        const { data: allQuestions, error: questionsError } = await supabase
-          .from("questions")
-          .select("set_id, question_text, option_a, option_b, option_c, option_d, correct_index, explanation")
-          .in("set_id", allSetIds)
-          .order("question_order", { ascending: true })
-
-        if (questionsError || !allQuestions) {
-          console.error("ab-press/generate-answers: questions read failed:", questionsError)
-          throw new Error(READ_FAILED)
-        }
-
-        for (const q of (allQuestions ?? [])) {
-          const arr = setIdToQuestions.get(q.set_id) ?? []
-          arr.push({
-            questionText:  q.question_text,
-            options:       [q.option_a, q.option_b, q.option_c, q.option_d].filter(Boolean),
-            correctIndex:  q.correct_index,
-            explanation:   q.explanation ?? "",
-          })
-          setIdToQuestions.set(q.set_id, arr)
-        }
-      }
-    }
+    const articleRows = await readBookArticles(allArticleIds, "id, mcq_url")
+    const mcqUrlById = new Map(articleRows.map((a: any) => [a.id, a.mcq_url]))
+    const slugToQuestions = await readBookQuestions(articleRows.map((a: any) => a.mcq_url))
 
     const course = {
       chapters: rawCourse.chapters.map((ch) => ({
         chapterTitle: ch.title,
         lessons: ch.lessons.map((l) => ({
-          linkedArticles: l.articles.map((a) => {
-            const mcqUrl = mcqUrlById.get(a.id)
-            let quizQuestions: any[] = []
-            if (mcqUrl) {
-              const practiceSlug = mcqUrl.split("/").filter(Boolean).pop() ?? ""
-              const setId = slugToSetId.get(practiceSlug)
-              if (setId) quizQuestions = setIdToQuestions.get(setId) ?? []
-            }
-            return { quizQuestions }
-          }),
+          linkedArticles: l.articles.map((a) => ({
+            quizQuestions: slugToQuestions.get(practiceSlug(mcqUrlById.get(a.id))) ?? [],
+          })),
         })),
       })),
     }
@@ -363,6 +298,7 @@ export async function POST(req: NextRequest) {
       questionCount,
     })
   } catch (err: unknown) {
+    console.error("ab-press/generate-answers: failed:", err)
     const msg = err instanceof Error ? err.message : "Unknown error"
     return NextResponse.json({ error: msg }, { status: 500 })
   }

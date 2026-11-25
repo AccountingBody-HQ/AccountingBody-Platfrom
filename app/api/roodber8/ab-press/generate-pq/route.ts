@@ -339,6 +339,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (err: unknown) {
+    console.error("ab-press/generate-pq: failed:", err)
     const msg = err instanceof Error ? err.message : "Unknown error"
     return NextResponse.json({ error: msg }, { status: 500 })
   }

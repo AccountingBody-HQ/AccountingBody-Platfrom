@@ -11,6 +11,8 @@ import {
 } from "docx"
 import { buildCourse, BuildStats } from "@/lib/ab-press-builder"
 
+export const maxDuration = 300
+
 // ── Text cleaner ─────────────────────────────────────────────────────────────
 function clean(text: string): string {
   if (!text) return ""
@@ -211,6 +213,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (err: unknown) {
+    console.error("ab-press/export-word: failed:", err)
     const msg = err instanceof Error ? err.message : "Unknown error"
     return NextResponse.json({ error: msg }, { status: 500 })
   }

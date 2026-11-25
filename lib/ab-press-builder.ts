@@ -3,14 +3,14 @@
 // Accounting Body Press — shared course builder
 // Extracted from app/api/roodber8/ab-press/generate/route.ts (Phase 4A) so
 // generate/route.ts and export-word/route.ts no longer each define their own
-// copy of buildCourse()/fetchQuestions(). This is the more complete version
+// copy of buildCourse(). This is the more complete version
 // (carries publicationWarnings per article, used by the generate route's
 // buildFidelity() report); export-word/route.ts simply never reads that
 // field.
-import { createClient } from "@supabase/supabase-js"
 import { getCourseBySlug } from "@/lib/coursesNew"
 import { htmlToBlocks } from "@/lib/html-to-blocks"
 import { filterForPublication, getPublicationWarnings } from "@/lib/publication-filter"
+import { getServerSupabase } from "@/lib/supabase-server"
 
 export interface BuildStats {
   mcqFailed: string[]
@@ -20,123 +20,152 @@ export interface BuildStats {
 /** What the admin sees when the practice questions could not be read. */
 export const READ_FAILED = "Could not read the practice questions, so nothing was made. Please try again in a minute."
 
-/** Service-role Supabase client used by the AB Press build pipeline. */
+/** What the admin sees when the articles could not be read. */
+export const ARTICLES_READ_FAILED = "Could not read the articles, so nothing was made. Please try again in a minute."
+
+/** Service-role Supabase client used by AB Press (the admin time limit). */
 export function createSupabaseClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!
-  )
+  return getServerSupabase("admin")
 }
 
-// ── Fetch questions for an article via mcq_url ───────────────────────────────
-export async function fetchQuestions(mcqUrl: string, stats: BuildStats): Promise<any[]> {
-  try {
-    const supabase = createSupabaseClient()
-    const parts = mcqUrl.split("/")
-    const practiceSlug = parts[parts.length - 1]
-    if (!practiceSlug) return []
+// ── Reads ────────────────────────────────────────────────────────────────────
+const PAGE_ROWS = 1000 // one request never asks for more rows than this
+const IN_CHUNK = 100 // values per .in() list
 
-    const { data: qSet, error: setError } = await supabase
-      .from("question_sets")
-      .select("id")
-      .eq("slug", practiceSlug)
-      .eq("status", "published")
-      .maybeSingle()
+// A failed read: the fixed message for the admin. The database's short code
+// goes with it for the problem report, and its whole answer (cause) for the
+// server log only.
+function readFailed(message: string, what: string, cause: { code?: unknown }): Error {
+  const failed = new Error(message) as Error & { code?: string; what?: string; cause?: unknown }
+  if (typeof cause.code === "string" && /^[A-Za-z0-9_.-]{1,40}$/.test(cause.code)) failed.code = cause.code
+  failed.what = what
+  failed.cause = cause
+  return failed
+}
 
-    if (setError) throw setError
-    if (!qSet) { stats.mcqNotFound.push(practiceSlug); return [] }
+interface PagedQuery {
+  range(from: number, to: number): PromiseLike<{ data: unknown; error: { code?: unknown } | null; count: number | null }>
+}
 
-    const { data: questions, error: questionsError } = await supabase
-      .from("questions")
-      .select("question_text, option_a, option_b, option_c, option_d, correct_index, explanation")
-      .eq("set_id", qSet.id)
-      .order("question_order", { ascending: true })
-
-    if (questionsError) throw questionsError
-    return (questions ?? []).map((q) => ({
-      questionText:  q.question_text,
-      options:       [q.option_a, q.option_b, q.option_c, q.option_d].filter(Boolean),
-      correctIndex:  q.correct_index,
-      explanation:   q.explanation ?? "",
-    }))
-  } catch {
-    const parts = mcqUrl.split("/")
-    stats.mcqFailed.push(parts[parts.length - 1] ?? mcqUrl)
-    return []
+// Every row for a list of values, in chunks of 100 values and in pages. The
+// query asks for the exact total and ends with .order("id"), so pages neither
+// overlap nor skip. The next page starts after the rows RECEIVED (a database
+// setting may send fewer than asked for) until the total is in. Anything else
+// than all rows is thrown, never returned.
+async function readAll(
+  what: string,
+  message: string,
+  values: string[],
+  query: (chunk: string[]) => PagedQuery,
+): Promise<any[]> {
+  const rows: any[] = []
+  for (let start = 0; start < values.length; start += IN_CHUNK) {
+    const chunk = values.slice(start, start + IN_CHUNK)
+    let received = 0
+    let total = 0
+    do {
+      const { data, error, count } = await query(chunk).range(received, received + PAGE_ROWS - 1)
+      if (error) throw readFailed(message, what, error)
+      if (!Array.isArray(data)) throw readFailed(message, what, { code: "NO_DATA" })
+      if (count === null || !Number.isInteger(count)) throw readFailed(message, what, { code: "NO_TOTAL" })
+      if (received > 0 && count !== total) throw readFailed(message, what, { code: "TOTAL_CHANGED" })
+      if (data.length === 0 && received < count) throw readFailed(message, what, { code: "EMPTY_PAGE" })
+      rows.push(...data)
+      received += data.length
+      total = count
+    } while (received < total)
   }
+  return rows
+}
+
+/** The articles with these ids; every one of them, or an error. */
+export async function readBookArticles(ids: string[], columns: string): Promise<any[]> {
+  const supabase = createSupabaseClient()
+  const wanted = Array.from(new Set(ids))
+  const rows = await readAll("articles", ARTICLES_READ_FAILED, wanted, (chunk) =>
+    supabase.from("articles").select(columns, { count: "exact" }).in("id", chunk).order("id", { ascending: true }))
+  const found = new Set(rows.map((row) => row.id))
+  if (wanted.some((id) => !found.has(id))) throw readFailed(ARTICLES_READ_FAILED, "articles", { code: "ROWS_MISSING" })
+  return rows
+}
+
+/** The set slug in an article's practice link, or "". */
+export function practiceSlug(link: string | null | undefined): string {
+  return (link ?? "").split("/").filter(Boolean).pop() ?? ""
+}
+
+function practiceSlugs(links: (string | null | undefined)[]): string[] {
+  return Array.from(new Set(links.map(practiceSlug).filter(Boolean)))
+}
+
+/** Slug to id of the live sets named by these practice links (any site). */
+export async function readLiveSets(links: (string | null | undefined)[]): Promise<Map<string, string>> {
+  const supabase = createSupabaseClient()
+  const rows = await readAll("sets", READ_FAILED, practiceSlugs(links), (chunk) =>
+    supabase.from("question_sets").select("id, slug", { count: "exact" }).in("slug", chunk).eq("status", "published").order("id", { ascending: true }))
+  return new Map<string, string>(rows.map((row) => [row.slug, row.id]))
+}
+
+// Only blanks at the end are left out, so every option keeps its letter.
+function bookOptions(row: any): string[] {
+  const options: string[] = [row.option_a, row.option_b, row.option_c, row.option_d].map((option) => option ?? "")
+  while (options.length > 0 && options[options.length - 1].trim() === "") options.pop()
+  return options
+}
+
+/** Slug to questions, in print order, of the live sets named by these links. */
+export async function readBookQuestions(links: (string | null | undefined)[]): Promise<Map<string, any[]>> {
+  const supabase = createSupabaseClient()
+  const sets = await readLiveSets(links)
+  const rows = await readAll("questions", READ_FAILED, Array.from(sets.values()), (chunk) =>
+    supabase
+      .from("questions")
+      .select("set_id, question_text, option_a, option_b, option_c, option_d, correct_index, explanation", { count: "exact" })
+      .in("set_id", chunk)
+      .order("question_order", { ascending: true })
+      .order("id", { ascending: true }))
+  const bySet = new Map<string, any[]>()
+  for (const row of rows) {
+    const list = bySet.get(row.set_id) ?? []
+    list.push({
+      questionText:  row.question_text,
+      options:       bookOptions(row),
+      correctIndex:  row.correct_index,
+      explanation:   row.explanation ?? "",
+    })
+    bySet.set(row.set_id, list)
+  }
+  return new Map(Array.from(sets).map(([slug, id]) => [slug, bySet.get(id) ?? []]))
+}
+
+/** How many questions these sets have: a true count, whatever the row limit. */
+export async function countQuestions(setIds: string[]): Promise<number> {
+  const supabase = createSupabaseClient()
+  let counted = 0
+  for (let start = 0; start < setIds.length; start += IN_CHUNK) {
+    const { count, error } = await supabase
+      .from("questions")
+      .select("*", { count: "exact", head: true })
+      .in("set_id", setIds.slice(start, start + IN_CHUNK))
+    if (error || count === null || !Number.isInteger(count)) throw readFailed(READ_FAILED, "count", error ?? { code: "NO_TOTAL" })
+    counted += count
+  }
+  return counted
 }
 
 // ── Build course in BookTemplate shape ───────────────────────────────────────
 export async function buildCourse(slug: string, stats: BuildStats) {
-  const supabase = createSupabaseClient()
   const course = await getCourseBySlug(slug, true)
   if (!course) throw new Error("Course not found")
 
   // Fetch full article content (including HTML body and mcq_url)
   const allArticleIds = course.chapters
     .flatMap((ch) => ch.lessons.flatMap((l) => l.articles.map((a) => a.id)))
+  const articleRows = await readBookArticles(allArticleIds, "id, content, mcq_url")
+  const articleMap = new Map(articleRows.map((a) => [a.id, a]))
 
-  const { data: articleRows } = await supabase
-    .from("articles")
-    .select("id, content, mcq_url")
-    .in("id", allArticleIds)
-
-  const articleMap = new Map((articleRows ?? []).map((a) => [a.id, a]))
-
-  // ── Bulk-fetch all quiz questions in 2 queries instead of one round-trip
-  // per article (was up to N sequential queries for N articles with an
-  // mcq_url — hit the Vercel 300s limit on large courses).
-  const mcqSlugs = Array.from(new Set(
-    (articleRows ?? [])
-      .map((a) => a.mcq_url)
-      .filter(Boolean)
-      .map((url) => url.split("/").filter(Boolean).pop())
-      .filter(Boolean)
-  ))
-
-  const slugToSetId = new Map<string, string>()
-  const setIdToQuestions = new Map<string, any[]>()
-
-  if (mcqSlugs.length > 0) {
-    const { data: allSets, error: setsError } = await supabase
-      .from("question_sets")
-      .select("id, slug")
-      .in("slug", mcqSlugs)
-      .eq("status", "published")
-
-    // No book from a partial read.
-    if (setsError || !allSets) {
-      console.error("ab-press/builder: question_sets read failed:", setsError)
-      throw new Error(READ_FAILED)
-    }
-
-    for (const s of (allSets ?? [])) slugToSetId.set(s.slug, s.id)
-
-    const allSetIds = (allSets ?? []).map((s) => s.id)
-    if (allSetIds.length > 0) {
-      const { data: allQuestions, error: questionsError } = await supabase
-        .from("questions")
-        .select("set_id, question_text, option_a, option_b, option_c, option_d, correct_index, explanation")
-        .in("set_id", allSetIds)
-        .order("question_order", { ascending: true })
-
-      if (questionsError || !allQuestions) {
-        console.error("ab-press/builder: questions read failed:", questionsError)
-        throw new Error(READ_FAILED)
-      }
-
-      for (const q of (allQuestions ?? [])) {
-        const arr = setIdToQuestions.get(q.set_id) ?? []
-        arr.push({
-          questionText:  q.question_text,
-          options:       [q.option_a, q.option_b, q.option_c, q.option_d].filter(Boolean),
-          correctIndex:  q.correct_index,
-          explanation:   q.explanation ?? "",
-        })
-        setIdToQuestions.set(q.set_id, arr)
-      }
-    }
-  }
+  // All quiz questions of the book, read together.
+  const slugToQuestions = await readBookQuestions(articleRows.map((a) => a.mcq_url))
 
   const chapters = await Promise.all(
     course.chapters.map(async (ch) => {
@@ -149,15 +178,10 @@ export async function buildCourse(slug: string, stats: BuildStats) {
               const pubWarnings = getPublicationWarnings(rawContent, filterForPublication(rawContent))
               const body = htmlToBlocks(rawContent, true)
               let quizQuestions: any[] = []
-              if (row?.mcq_url) {
-                const practiceSlug = row.mcq_url.split("/").filter(Boolean).pop() ?? ""
-                const setId = slugToSetId.get(practiceSlug)
-                if (setId) {
-                  quizQuestions = setIdToQuestions.get(setId) ?? []
-                } else if (practiceSlug) {
-                  stats.mcqNotFound.push(practiceSlug)
-                }
-              }
+              const setSlug = practiceSlug(row?.mcq_url)
+              const questions = slugToQuestions.get(setSlug)
+              if (questions) quizQuestions = questions
+              else if (setSlug) stats.mcqNotFound.push(setSlug)
               return {
                 _id:          a.id,
                 title:        a.title,

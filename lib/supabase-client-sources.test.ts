@@ -1,27 +1,15 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import ts from 'typescript'
-import { describe, expect, it, vi } from 'vitest'
-import { getAdminPath } from './middleware-logic'
+import { describe, expect, it } from 'vitest'
 
 // Server code creates supabase-js clients only through lib/supabase-server.ts.
-// The two files below create their own on purpose. This list may only
-// shrink: a file that stops creating its own client must be removed from it,
-// and no new file may be added.
+// The list of files that create their own is empty, and no file may be added.
 
 const MODULE = '@supabase/supabase-js'
 const FACTORY = 'lib/supabase-server.ts'
 
-// The folder comes from the app's own default, so its name is not repeated here.
-vi.stubEnv('ADMIN_PATH', undefined)
-const ADMIN = getAdminPath()
-vi.unstubAllEnvs()
-
-const LEGACY = [
-  // Kept on purpose: AB Press (locked).
-  'lib/ab-press-builder.ts',
-  `app/api/${ADMIN}/ab-press/preview/route.ts`,
-]
+const LEGACY: string[] = []
 
 const ROOT = process.cwd()
 const SKIP_DIRS = new Set(['node_modules', 'reports'])
@@ -105,10 +93,8 @@ describe('server database clients come from one place', () => {
     expect(new Set(LEGACY).size).toBe(LEGACY.length)
   })
 
-  it('only the factory and the two kept files create their own client', () => {
-    expect(users).toEqual(
-      [FACTORY, 'lib/ab-press-builder.ts', `app/api/${ADMIN}/ab-press/preview/route.ts`].sort(),
-    )
+  it('only the factory creates a client', () => {
+    expect(users).toEqual([FACTORY])
   })
 
   it('recognises every way of taking createClient, and ignores type-only imports', () => {
