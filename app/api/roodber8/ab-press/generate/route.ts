@@ -104,7 +104,7 @@ function buildFidelity(course: any, stats: { mcqFailed: string[]; mcqNotFound: s
     lines.push("[PASS] Every article has body content")
   }
   if (stats.mcqNotFound.length > 0) {
-    lines.push("[WARN] " + stats.mcqNotFound.length + " linked practice set(s) not found: " + stats.mcqNotFound.join(", "))
+    lines.push("[WARN] " + stats.mcqNotFound.length + " linked practice set(s) not found or not live: " + stats.mcqNotFound.join(", "))
   } else {
     lines.push("[PASS] All linked practice sets found")
   }

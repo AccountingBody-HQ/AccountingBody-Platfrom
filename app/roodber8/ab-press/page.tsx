@@ -9,6 +9,7 @@ const BOOK_TYPES = [
   { value: 'practice', label: 'Practice Kit',  desc: 'Practice questions + answer key only' },
 ]
 const EDITIONS = ['2025/26 Edition', '2026/27 Edition', '2027/28 Edition']
+const PREVIEW_COUNT_FAILED = 'Question count unavailable (the practice questions could not be read).'
 
 function formatGeneratedAt(iso: string): string {
   const d = new Date(iso)
@@ -568,7 +569,7 @@ export default function AbPressPage() {
                     { val: stats.chapterCount,  label: 'Chapters'     },
                     { val: stats.lessonCount,   label: 'Lessons'      },
                     { val: stats.articleCount,  label: 'Study Notes'  },
-                    { val: stats.questionCount, label: 'Practice Qs' },
+                    { val: stats.questionCountError ? '—' : stats.questionCount, label: 'Practice Qs' },
                   ].map(({ val, label }) => (
                     <div key={label} className="bg-[#0C1A3D] rounded-lg p-3 border border-slate-700">
                       <p className="text-2xl font-bold text-[#C9982A]">{val}</p>
@@ -576,6 +577,7 @@ export default function AbPressPage() {
                     </div>
                   ))}
                 </div>
+                {stats.questionCountError ? <p className="text-red-400 text-xs mt-2">{PREVIEW_COUNT_FAILED}</p> : null}
                 <div className="space-y-2 max-h-52 overflow-y-auto">
                   {course.chapters.map((ch: any, i: number) => (
                     <div key={ch._key} className="bg-[#0C1A3D] rounded-lg px-3 py-2 border border-slate-700">
