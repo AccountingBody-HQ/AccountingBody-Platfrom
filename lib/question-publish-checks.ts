@@ -65,6 +65,9 @@ export const RESTORE_CHECK_FAILED =
   'Restored. But the set could not be checked or made a draft, so an incomplete set may be live. Check it in Questions.'
 export const RESTORE_ARTICLE_TAKEN =
   'Nothing was restored. The article now has another practice set. Delete that set first, or leave this one in the bin.'
+// The recycle bin's confirm box, after "Put this back?".
+export const CONFIRM_TEXT =
+  'It returns as it was when it was deleted. A practice set that is not complete comes back as a hidden draft.'
 
 // The importer's warning when a paste does not show how it numbers its answers.
 export function numberUnclearMessage(n: number): string {

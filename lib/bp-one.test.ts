@@ -46,7 +46,8 @@ describe('BP-1 admin screens', () => {
     expect(page).toContain(`adminFetch('/api/${ADMIN}/recycle-bin'`)
     expect(page).not.toMatch(/[^n]fetch\(/)
     for (const words of [
-      'Put this back? It returns exactly as it was when it was deleted.',
+      'Put this back? {CONFIRM_TEXT}</p>',
+      "import { CONFIRM_TEXT } from '@/lib/question-publish-checks'",
       'The recycle bin is empty. Anything deleted in the admin area is kept here for 90 days.',
       'Replaced by a course save',
       'Kept until',

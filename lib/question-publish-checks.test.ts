@@ -4,6 +4,7 @@ import {
   ARTICLE_RULE,
   BAD_ADDRESS,
   CASES_SAVE_FAILED,
+  CONFIRM_TEXT,
   CONTENT_ID_FAILED,
   CONTENT_ID_RULE,
   CORRECT_INDEX_RULE,
@@ -359,6 +360,12 @@ describe('wording', () => {
     )
     expect(RESTORE_ARTICLE_TAKEN).toBe(
       'Nothing was restored. The article now has another practice set. Delete that set first, or leave this one in the bin.',
+    )
+  })
+
+  it('has the exact text of the recycle bin confirm box', () => {
+    expect(CONFIRM_TEXT).toBe(
+      'It returns as it was when it was deleted. A practice set that is not complete comes back as a hidden draft.',
     )
   })
 
