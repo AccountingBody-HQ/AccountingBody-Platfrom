@@ -10,6 +10,8 @@ import {
   NOT_READY_EMPTY,
   PUBLISH_FAILED,
   REASON_TEXT,
+  RESTORED_AS_DRAFT,
+  RESTORE_CHECK_FAILED,
   SET_CHECK_FAILED,
   SET_READ_FAILED,
   SLUG_LOCKED,
@@ -303,6 +305,13 @@ describe('wording', () => {
     expect(notReadyProblemsMessage(problems(13)).endsWith('; Q10 needs an explanation and 3 more.')).toBe(true)
     expect(LAST_QUESTION).toBe(
       'Nothing was deleted. A live set must keep at least one question. Make the set a draft first, or delete the whole set.',
+    )
+  })
+
+  it('has the exact restore messages', () => {
+    expect(RESTORED_AS_DRAFT).toBe('Restored as a draft, because the set is not complete. Fix it in Questions, then make it live.')
+    expect(RESTORE_CHECK_FAILED).toBe(
+      'Restored. But the set could not be checked or made a draft, so an incomplete set may be live. Check it in Questions.',
     )
   })
 

@@ -54,6 +54,10 @@ export const SET_CHECK_FAILED = 'Could not check this set. Nothing was saved.'
 export const NOT_READY_EMPTY = 'Nothing was saved. This set has no questions yet, so it cannot go live.'
 export const LAST_QUESTION =
   'Nothing was deleted. A live set must keep at least one question. Make the set a draft first, or delete the whole set.'
+export const RESTORED_AS_DRAFT =
+  'Restored as a draft, because the set is not complete. Fix it in Questions, then make it live.'
+export const RESTORE_CHECK_FAILED =
+  'Restored. But the set could not be checked or made a draft, so an incomplete set may be live. Check it in Questions.'
 
 // The importer's warning when a paste does not show how it numbers its answers.
 export function numberUnclearMessage(n: number): string {

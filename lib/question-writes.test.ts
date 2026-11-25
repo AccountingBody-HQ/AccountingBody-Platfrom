@@ -13,6 +13,8 @@ import {
   NOT_FOUND,
   NOT_READY_EMPTY,
   PUBLISH_FAILED,
+  RESTORED_AS_DRAFT,
+  RESTORE_CHECK_FAILED,
   SET_CHECK_FAILED,
   SET_READ_FAILED,
   SLUG_LOCKED,
@@ -1327,23 +1329,157 @@ describe('article link: a set that comes back from the recycle bin', () => {
     expect(writes()).toEqual(['POST rpc/admin_recycle_restore'])
   })
 
-  it.each([
-    ['the item', failOn('GET', 'admin_recycle_bin')],
-    ['the set', failOn('GET', 'question_sets')],
-    ['the article', failOn('GET', 'articles')],
-    ['the link', failOn('PATCH', 'articles')],
-  ])('is back, and says so, when %s cannot be read or saved', async (_name, fail) => {
+  it.each<[string, (call: Call) => boolean, Row]>([
+    ['the item', failOn('GET', 'admin_recycle_bin'), { restoreNote: RESTORE_CHECK_FAILED }],
+    ['the set', failOn('GET', 'question_sets'), { restoreNote: RESTORE_CHECK_FAILED }],
+    ['the article', failOn('GET', 'articles'), {}],
+    ['the link', failOn('PATCH', 'articles'), {}],
+  ])('is back, and says so, when %s cannot be read or saved', async (_name, fail, notes) => {
     withSet({}, null)
     db.fail = fail
-    expect(await restore()).toEqual({ status: 200, body: { success: true, counts, linkWarning: LINK_FAILED } })
+    expect(await restore()).toEqual({ status: 200, body: { success: true, counts, linkWarning: LINK_FAILED, ...notes } })
     expect(articleLink()).toBeNull()
     expect(revalidated.slice(0, 2)).toEqual(BROAD)
   })
 
-  it('reads nothing more for a single question', async () => {
-    db.rpc = { questions: 1 }
-    expect((await restore()).body).toEqual({ success: true, counts: { questions: 1 } })
-    expect(lines()).toEqual(['POST rpc/admin_recycle_restore'])
+  // Incomplete: what came back would not pass the check that a draft must pass.
+  const INCOMPLETE: [string, Row[], Row[]][] = [
+    ['no questions', [], []],
+    ['the questions of another set only', [storedQuestion({ set_id: OTHER_SET })], []],
+    ['a question without an explanation', [storedQuestion(), storedQuestion({ explanation: null })], []],
+    ['a question without an answer', [storedQuestion({ correct_index: null })], []],
+    ['a scenario question without its case', [storedQuestion({ type: 'scenario', case_id: 'case-1' })], [{ set_id: OTHER_SET, case_id: 'case-1', exhibit_html: '<p>Facts</p>' }]],
+  ]
+  const PUBLISHED_AT = '2026-01-01T00:00:00Z'
+
+  it.each(INCOMPLETE)('comes back as a draft with %s', async (_name, questions, cases) => {
+    withSet({ published_at: PUBLISHED_AT }, null)
+    Object.assign(db.tables, { questions, question_cases: cases })
+    expect(await restore()).toEqual({ status: 200, body: { success: true, counts, restoreNote: RESTORED_AS_DRAFT } })
+    expect(db.tables.question_sets).toMatchObject([{ status: 'draft', published_at: PUBLISHED_AT, slug: 'leases-quiz', title: 'Leases quiz' }])
+    expect(articleLink()).toBeNull()
+    expect(writes()).toEqual(['POST rpc/admin_recycle_restore', 'PATCH question_sets', 'PATCH articles'])
+    expect(db.calls.find((c) => c.method === 'PATCH' && c.table === 'question_sets')?.query).toMatch(/id=eq\.[^&]+&status=eq\.published/)
+    expect(revalidated).toEqual([...BROAD, 'question-set:leases-quiz', ID_TAG, 'article:leases'])
+    expect(db.calls.every((c) => c.tagsBefore === 0)).toBe(true)
+    // Its web address stays locked, and it cannot go live as it is.
+    expect(await patch({ slug: 'new-address' })).toEqual({ status: 400, body: { error: SLUG_LOCKED } })
+    expect((await patch({ status: 'published' })).status).toBe(400)
+  })
+
+  it.each<[string, Row, unknown]>([
+    ['its creation date', { created_at: '2025-05-05T00:00:00Z' }, '2025-05-05T00:00:00Z'],
+    ['the date of the change', {}, expect.stringMatching(/^\d{4}-\d\d-\d\dT/)],
+  ])('a draft that had no published date gets %s', async (_name, set, date) => {
+    withSet({ ...set, published_at: null }, null)
+    db.tables.questions = []
+    await restore()
+    expect(db.tables.question_sets).toMatchObject([{ status: 'draft', published_at: date }])
+  })
+
+  it('a set that comes back as a draft is no longer linked, and another link is kept', async () => {
+    for (const [link, after] of [[HERE, null], [OTHER, OTHER]]) {
+      withSet({}, link)
+      db.tables.questions = []
+      expect((await restore()).body).toEqual({ success: true, counts, restoreNote: RESTORED_AS_DRAFT })
+      expect(articleLink()).toBe(after)
+    }
+  })
+
+  it('says so when that link cannot be removed', async () => {
+    withSet({}, HERE)
+    db.tables.questions = []
+    db.fail = failOn('PATCH', 'articles')
+    expect((await restore()).body).toEqual({ success: true, counts, restoreNote: RESTORED_AS_DRAFT, unlinkWarning: UNLINK_FAILED })
+  })
+
+  it('asks nothing of the articles when a set without one comes back as a draft', async () => {
+    withSet({ article_slug: null }, HERE)
+    db.tables.questions = []
+    expect((await restore()).body).toEqual({ success: true, counts, restoreNote: RESTORED_AS_DRAFT })
+    expect(lines().filter((line) => line.endsWith(' articles'))).toEqual([])
+  })
+
+  it.each<[string, (call: Call) => boolean]>([
+    ['the questions cannot be read', failOn('GET', 'questions')],
+    ['the cases cannot be read', failOn('GET', 'question_cases')],
+    ['an incomplete set cannot be made a draft', failOn('PATCH', 'question_sets')],
+    [
+      'the set changed meanwhile',
+      (call) => {
+        if (call.method === 'PATCH' && call.table === 'question_sets') db.tables.question_sets = []
+        return false
+      },
+    ],
+  ])('never claims a check it could not make: %s', async (_name, fail) => {
+    withSet({}, null)
+    db.tables.questions = []
+    db.fail = fail
+    const result = await restore()
+    expect(result).toEqual({ status: 200, body: { success: true, counts, restoreNote: RESTORE_CHECK_FAILED } })
+    expect(JSON.stringify(result.body)).not.toContain('database detail')
+  })
+
+  it('a draft comes back as it was, complete or not', async () => {
+    withSet({ status: 'draft' }, null)
+    const before = { ...db.tables.question_sets[0] }
+    db.tables.questions = []
+    expect((await restore()).body).toEqual({ success: true, counts })
+    expect(db.tables.question_sets).toEqual([before])
+  })
+
+  describe('a single question', () => {
+    const one = { questions: 1 }
+    beforeEach(() => {
+      db.rpc = one
+      db.tables.admin_recycle_bin = [{ id: BIN_ID, kind: 'question', source_id: QUESTION }]
+    })
+
+    it.each(['published', 'draft'])('comes back into a complete set (%s), and nothing else changes', async (status) => {
+      withSet({ status }, null)
+      const before = { ...db.tables.question_sets[0] }
+      expect(await restore()).toEqual({ status: 200, body: { success: true, counts: one } })
+      expect(db.tables.question_sets).toEqual([before])
+      expect(articleLink()).toBeNull()
+      expect(writes()).toEqual(['POST rpc/admin_recycle_restore'])
+      expect(revalidated).toEqual([...BROAD, 'question-set:leases-quiz', ID_TAG, 'article:leases'])
+    })
+
+    it('that is not complete makes a live set a draft, without its link', async () => {
+      withSet({ published_at: PUBLISHED_AT }, HERE)
+      db.tables.questions = [storedQuestion({ explanation: '' }), storedQuestion({ id: OTHER_QUESTION })]
+      expect(await restore()).toEqual({ status: 200, body: { success: true, counts: one, restoreNote: RESTORED_AS_DRAFT } })
+      expect(db.tables.question_sets).toMatchObject([{ status: 'draft', published_at: PUBLISHED_AT }])
+      expect(articleLink()).toBeNull()
+    })
+
+    it('that is not complete leaves a draft as it is', async () => {
+      withSet({ status: 'draft' }, null)
+      db.tables.questions = [storedQuestion({ explanation: '' })]
+      expect((await restore()).body).toEqual({ success: true, counts: one })
+      expect(writes()).toEqual(['POST rpc/admin_recycle_restore'])
+    })
+
+    it('looks at its own set only', async () => {
+      withSet({ status: 'published' }, HERE)
+      db.tables.question_sets.push({ id: OTHER_SET, title: 'Other', slug: 'other', status: 'published', article_slug: null })
+      db.tables.questions = [storedQuestion({ set_id: OTHER_SET, explanation: '' })]
+      expect((await restore()).body).toEqual({ success: true, counts: one, restoreNote: RESTORED_AS_DRAFT })
+      expect(db.tables.question_sets).toMatchObject([{ status: 'published' }, { id: OTHER_SET, status: 'draft' }])
+      expect(articleLink()).toBe(HERE)
+    })
+
+    it.each<[string, (call: Call) => boolean]>([
+      ['the item', failOn('GET', 'admin_recycle_bin')],
+      ['the question', failOn('GET', 'questions', 'select=set_id')],
+      ['the set', failOn('GET', 'question_sets')],
+    ])('is back, and says so, when %s cannot be read', async (_name, fail) => {
+      withSet({}, HERE)
+      db.fail = fail
+      expect(await restore()).toEqual({ status: 200, body: { success: true, counts: one, restoreNote: RESTORE_CHECK_FAILED } })
+      expect(articleLink()).toBe(HERE)
+      expect(revalidated.slice(0, 2)).toEqual(BROAD)
+    })
   })
 })
 
@@ -1360,7 +1496,7 @@ describe('article link: the warnings are shown', () => {
 
   it('on the recycle bin page', () => {
     const page = source('recycle-bin/page.tsx')
-    expect(page).toContain('if (data.linkWarning) setRestoreError(data.linkWarning)')
+    expect(page).toContain("setRestoreError([data.restoreNote, data.unlinkWarning, data.linkWarning].filter(Boolean).join(' '))")
     expect(page).toContain('style={C.danger}>{restoreError}</p>')
   })
 })
