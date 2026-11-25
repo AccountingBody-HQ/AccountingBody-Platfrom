@@ -8,7 +8,7 @@ import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { reportServerError } from '@/lib/report-error'
 import { getCourseBySlug } from '@/lib/coursesNew'
 import { filterForPublication, getPublicationWarnings } from '@/lib/publication-filter'
-import { countQuestions, createSupabaseClient, practiceSlug, readBookArticles, readLiveSets } from '@/lib/ab-press-builder'
+import { countQuestions, courseKey, createSupabaseClient, practiceSlug, readBookArticles, readLiveSets } from '@/lib/ab-press-builder'
 
 export const maxDuration = 60
 
@@ -184,6 +184,7 @@ export async function GET(req: NextRequest) {
           })),
         })),
       },
+      courseKey: courseKey(course),
       stats: {
         chapterCount:  course.chapters.length,
         lessonCount:   course.chapters.reduce((a, c) => a + c.lessons.length, 0),

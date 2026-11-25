@@ -6,7 +6,7 @@ import * as pdfLib from 'pdf-lib'
 import ts from 'typescript'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FrontmatterTemplate } from '@/components/book/FrontmatterTemplate'
-import { ARTICLES_READ_FAILED, buildCourse, EMPTY_COURSE, noAnswerLine, READ_FAILED, unpublishedLine, type BuildStats } from './ab-press-builder'
+import { ARTICLES_READ_FAILED, buildCourse, courseKey, EMPTY_COURSE, noAnswerLine, READ_FAILED, unpublishedLine, type BuildStats } from './ab-press-builder'
 import { TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
 import { DB_LIMITS_MS } from './supabase-server'
@@ -944,7 +944,82 @@ describe('a chapter and its answers', () => {
     }
     state.chapters = { course: [[['plain']], [['live']]] }
     const none = await callRoute('generate-answers', { body: { slug: 'course', chapterIndex: 0 } })
-    expect(await none.json()).toEqual({ pdf: null, pageCount: 0, chapterCount: 2, questionCount: 0 })
+    expect(await none.json()).toEqual({ pdf: null, pageCount: 0, chapterCount: 2, courseKey: expect.stringMatching(KEY), questionCount: 0 })
+  })
+})
+
+const KEY = /^[0-9a-f]{12}$/
+
+// A course of chapters, each with its number and the article names of its lessons.
+type Plan = [id: string, order: number, lessons: string[][]][]
+const planned = (plan: Plan) => ({
+  chapters: plan.map(([id, chapterOrder, lessons]) => ({
+    id,
+    chapterOrder,
+    lessons: lessons.map((names) => ({ articles: names.map((name) => ({ id: name })) })),
+  })),
+})
+const PLAN: Plan = [['c1', 1, [['a', 'b'], ['c']]], ['c2', 2, [['d']]], ['c3', 3, [['e'], ['f']]]]
+
+// The same course after a change that keeps the number of chapters.
+const CHANGED: [string, Plan][] = [
+  ['two chapters were swapped', [PLAN[1], PLAN[0], PLAN[2]]],
+  ['a chapter got another number', [PLAN[0], ['c2', 5, [['d']]], PLAN[2]]],
+  ['a chapter was replaced by another with the same articles', [PLAN[0], ['c9', 2, [['d']]], PLAN[2]]],
+  ['an article moved to another chapter', [['c1', 1, [['a', 'b'], []]], ['c2', 2, [['c', 'd']]], PLAN[2]]],
+  ['two articles were swapped', [['c1', 1, [['b', 'a'], ['c']]], PLAN[1], PLAN[2]]],
+  ['an article was added', [PLAN[0], ['c2', 2, [['d', 'g']]], PLAN[2]]],
+  ['an article was taken away', [PLAN[0], PLAN[1], ['c3', 3, [['e'], []]]]],
+]
+
+describe('the key of a course', () => {
+  it('is the same for the same course, twelve hex characters long', () => {
+    expect(courseKey(planned(PLAN))).toMatch(KEY)
+    expect(courseKey(planned(JSON.parse(JSON.stringify(PLAN))))).toBe(courseKey(planned(PLAN)))
+  })
+
+  it.each(CHANGED)('is another one when %s', (_name, plan) => {
+    expect(plan).toHaveLength(PLAN.length)
+    expect(courseKey(planned(plan))).toMatch(KEY)
+    expect(courseKey(planned(plan))).not.toBe(courseKey(planned(PLAN)))
+  })
+
+  // The key each part of a book made chapter by chapter gives, the preview first.
+  const keys = async () => {
+    const asked: [string, { query?: string; body?: object }][] = [
+      ['preview', { query: '?slug=course' }],
+      ['generate-chapter', { body: { slug: 'course', bookType: 'combined', chapterIndex: 0 } }],
+      ['generate-chapter', { body: { slug: 'course', bookType: 'study', chapterIndex: 1 } }],
+      ['generate-answers', { body: { slug: 'course', chapterIndex: 0 } }],
+      ['generate-answers', { body: { slug: 'course', chapterIndex: 1 } }],
+      ['generate-answers', { body: { slug: 'course' } }],
+      ['generate-frontmatter', { body: FRONT[1] }],
+    ]
+    const given: unknown[] = []
+    for (const [name, request] of asked) given.push((await (await callRoute(name, request)).json()).courseKey)
+    return given
+  }
+
+  it('is given by the preview and by every part, each from its own read', async () => {
+    // Chapter 1 has no questions, so its answers come without a PDF.
+    state.chapters = { course: [[['plain']], [['live', 'other']]] }
+    const before = await keys()
+    expect(before[0]).toMatch(KEY)
+    expect(new Set(before).size).toBe(1)
+    const seen = new Set(before)
+    for (const changed of [
+      [[['live', 'other']], [['plain']]],
+      [[['plain', 'live']], [['other']]],
+      [[['plain']], [['other', 'live']]],
+      [[['plain']], [['live', 'other', 'foreign']]],
+    ]) {
+      state.chapters = { course: changed }
+      const after = await keys()
+      expect(after[0]).toMatch(KEY)
+      expect(new Set(after).size).toBe(1)
+      expect(seen.has(after[0])).toBe(false)
+      seen.add(after[0])
+    }
   })
 })
 
@@ -1226,23 +1301,25 @@ async function screen(): Promise<Screen> {
     preview: () => ({
       body: {
         course: { title: 'Course', slug: 'first', chapters: CHAPTER_PAGES.map((_, i) => ({ _key: i, chapterTitle: `C${i}`, lessons: [] })) },
+        courseKey: courseKey(planned(PLAN)),
         stats: { chapterCount: 3, lessonCount: 3, articleCount: 60, questionCount: 15, questionCountError: false },
         health: { verdict: 'ready', emptyArticles: 0, articlesWithWebElements: 0, totalWebElementsRemoved: 0, mcqLinked: 2, emptyList: [], webWarningDetails: [] },
         history: [],
       },
     }),
     'generate-chapter': ({ chapterIndex: at }) => ({
-      body: { pdf: pdfs.get(CHAPTER_PAGES[at as number]), pageCount: CHAPTER_PAGES[at as number], chapterCount: 3, questionCount: QUESTIONS[at as number], missingSets: [], noAnswerSets: [], unpublished: [] },
+      body: { pdf: pdfs.get(CHAPTER_PAGES[at as number]), pageCount: CHAPTER_PAGES[at as number], chapterCount: 3, courseKey: courseKey(planned(PLAN)), questionCount: QUESTIONS[at as number], missingSets: [], noAnswerSets: [], unpublished: [] },
     }),
     'generate-answers': ({ chapterIndex: at }) => ({
       body: {
         pdf: answerPdfs[at as number],
         pageCount: ANSWER_PAGES[at as number],
         chapterCount: 3,
+        courseKey: courseKey(planned(PLAN)),
         questionCount: QUESTIONS[at as number],
       },
     }),
-    'generate-frontmatter': () => ({ body: { pdf: pdfs.get(3) } }),
+    'generate-frontmatter': () => ({ body: { pdf: pdfs.get(3), courseKey: courseKey(planned(PLAN)) } }),
     'generate-cover': () => ({ body: { pdf: pdfs.get(1) ?? '' } }),
     generate: () => ({ file: 'zip' }),
     'generate-pq': () => ({ file: 'zip' }),
@@ -1251,8 +1328,9 @@ async function screen(): Promise<Screen> {
   return made
 }
 
-// Changes one field of one answer of a route.
-function spoil(made: Screen, name: string, at: number, change: object) {
+// Changes one field of one answer of a route (of its only answer, when the route
+// is not asked by chapter).
+function spoil(made: Screen, name: string, at: number | undefined, change: object) {
   const before = made.answers[name]
   made.answers[name] = (body) => {
     const answer = before(body)
@@ -1473,6 +1551,47 @@ describe('the screen of a book made chapter by chapter', () => {
     expect(page.links()).toEqual([])
     expect(page.files).toEqual([])
     expect(page.calls[page.calls.length - 1].name).toBe(last)
+  })
+
+  // Every part, as [route, chapter].
+  const PARTS: [string, number | undefined][] = [
+    ['generate-chapter', 0],
+    ['generate-chapter', 2],
+    ['generate-answers', 0],
+    ['generate-answers', 1],
+    ['generate-frontmatter', undefined],
+  ]
+  const KEYS: [string, string | undefined][] = [
+    ...CHANGED.map(([name, plan]): [string, string] => [name, courseKey(planned(plan))]),
+    ['the key is not told', undefined],
+    ['the key is empty', ''],
+  ]
+
+  it.each(KEYS.flatMap(([name, key]) => PARTS.map(([route, at]) => [name, route, at, key] as const)))(
+    '%s, seen by %s %s: it stops with its message and makes nothing',
+    async (_name, route, at, key) => {
+      const page = await screen()
+      spoil(page, route, at, { courseKey: key })
+      await page.open()
+      page.change(page.radio('combined'), 'combined')
+      await page.generate()
+      expect(page.shown).toContain(COURSE_CHANGED)
+      expect(page.links()).toEqual([])
+      expect(page.files).toEqual([])
+      expect(page.calls[page.calls.length - 1].name).toBe(route)
+      expect(page.calls[page.calls.length - 1].body?.chapterIndex).toBe(at)
+    },
+  )
+
+  it.each([undefined, ''])('a preview without a key (%s) does not count as the same course', async (key) => {
+    const page = await screen()
+    spoil(page, 'preview', undefined, { courseKey: key })
+    for (const [route, at] of PARTS) spoil(page, route, at, { courseKey: key })
+    await page.open()
+    await page.generate()
+    expect(page.shown).toContain(COURSE_CHANGED)
+    expect(page.files).toEqual([])
+    expect(page.calls[page.calls.length - 1]).toMatchObject({ name: 'generate-chapter', body: { chapterIndex: 0 } })
   })
 
   it('the messages are exact', () => {

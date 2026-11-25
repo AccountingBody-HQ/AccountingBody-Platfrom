@@ -7,6 +7,7 @@
 // (carries publicationWarnings per article, used by the generate route's
 // buildFidelity() report); export-word/route.ts simply never reads that
 // field.
+import { createHash } from "node:crypto"
 import { getCourseBySlug } from "@/lib/coursesNew"
 import { htmlToBlocks } from "@/lib/html-to-blocks"
 import { filterForPublication, getPublicationWarnings } from "@/lib/publication-filter"
@@ -31,6 +32,13 @@ export const EMPTY_COURSE = "No articles were found for this course, so nothing 
 /** True when the whole course has no articles. */
 export function isEmptyCourse(course: { chapters: { lessons: { articles: unknown[] }[] }[] }): boolean {
   return course.chapters.every((ch) => ch.lessons.every((l) => l.articles.length === 0))
+}
+
+/** A short key of the course's chapters and their articles, in order. Two reads
+ *  of a course give the same key only when these are the same. */
+export function courseKey(course: { chapters: { id: string; chapterOrder: number; lessons: { articles: { id: string }[] }[] }[] }): string {
+  const structure = course.chapters.map((ch) => [ch.id, ch.chapterOrder, ch.lessons.flatMap((l) => l.articles.map((a) => a.id))])
+  return createHash("sha256").update(JSON.stringify(structure)).digest("hex").slice(0, 12)
 }
 
 /** True when the stored answer is one of the four options. */

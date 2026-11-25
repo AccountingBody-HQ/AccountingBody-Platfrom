@@ -11,7 +11,7 @@ import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { FrontmatterTemplate } from "@/components/book/FrontmatterTemplate"
 import { getCourseBySlug } from "@/lib/coursesNew"
-import { EMPTY_COURSE, isEmptyCourse } from "@/lib/ab-press-builder"
+import { courseKey, EMPTY_COURSE, isEmptyCourse } from "@/lib/ab-press-builder"
 
 export const maxDuration = 30
 
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       }) as any
     )
 
-    return NextResponse.json({ pdf: pdfBuffer.toString("base64") })
+    return NextResponse.json({ pdf: pdfBuffer.toString("base64"), courseKey: courseKey(rawCourse) })
   } catch (err: unknown) {
     console.error("ab-press/generate-frontmatter: failed:", err)
     reportServerError("admin book front pages failed", err, { area: "admin" })

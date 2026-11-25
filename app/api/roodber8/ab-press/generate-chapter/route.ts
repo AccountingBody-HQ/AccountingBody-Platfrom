@@ -13,7 +13,7 @@ import React from "react"
 import { ChapterTemplate } from "@/components/book/ChapterTemplate"
 import { getCourseBySlug } from "@/lib/coursesNew"
 import { htmlToBlocks } from "@/lib/html-to-blocks"
-import { EMPTY_COURSE, hasAnswer, isEmptyCourse, practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
+import { courseKey, EMPTY_COURSE, hasAnswer, isEmptyCourse, practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
 
 export const maxDuration = 60
 
@@ -104,6 +104,7 @@ export async function POST(req: NextRequest) {
       pageCount,
       chapterIndex,
       chapterCount: rawCourse.chapters.length,
+      courseKey: courseKey(rawCourse),
       questionCount: chapterQuestionCount,
       missingSets,
       noAnswerSets,

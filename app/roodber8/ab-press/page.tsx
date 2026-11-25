@@ -294,6 +294,10 @@ export default function AbPressPage() {
       const unpublished: string[] = []
       let questionNumberOffset = 0
 
+      // Every part must come from the course as the preview showed it. A part
+      // or a preview without a key does not count as the same.
+      const sameCourse = (data: any) => !!preview.courseKey && data.courseKey === preview.courseKey
+
       // 1. Render each chapter
       for (let i = 0; i < chapterCount; i++) {
         setGenerationPhase(`Rendering chapter ${i + 1} of ${chapterCount}...`)
@@ -311,7 +315,7 @@ export default function AbPressPage() {
         })
         const data = await res.json()
         if (!res.ok || data.error) throw new Error(data.error || 'Chapter render failed')
-        if (data.chapterCount !== chapterCount) throw new Error(COURSE_CHANGED)
+        if (data.chapterCount !== chapterCount || !sameCourse(data)) throw new Error(COURSE_CHANGED)
 
         const pdfBytes = Uint8Array.from(atob(data.pdf), c => c.charCodeAt(0))
         chapterPdfs.push(pdfBytes)
@@ -342,7 +346,7 @@ export default function AbPressPage() {
           })
           const data = await res.json()
           if (!res.ok || data.error) throw new Error(data.error || `Answers chapter ${i + 1} failed`)
-          if (data.chapterCount !== chapterCount) throw new Error(COURSE_CHANGED)
+          if (data.chapterCount !== chapterCount || !sameCourse(data)) throw new Error(COURSE_CHANGED)
           if (data.questionCount !== chapterQuestionCounts[i]) throw new Error(ANSWERS_DIFFER(i + 1))
           if (data.pdf) {
             answerChapterPdfs.push(Uint8Array.from(atob(data.pdf), c => c.charCodeAt(0)))
@@ -372,6 +376,7 @@ export default function AbPressPage() {
       })
       const fmData = await fmRes.json()
       if (!fmRes.ok || fmData.error) throw new Error(fmData.error || 'Frontmatter render failed')
+      if (!sameCourse(fmData)) throw new Error(COURSE_CHANGED)
       const frontmatterPdf = Uint8Array.from(atob(fmData.pdf), c => c.charCodeAt(0))
 
       // 5. Merge all PDFs using pdf-lib (client-side)
