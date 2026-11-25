@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { checkPublishBundle, publishProblemsMessage } from './question-publish-checks'
+import { checkPublishBundle, numberUnclearMessage, publishProblemsMessage } from './question-publish-checks'
 import { normalise, validateNormalisedBundle } from './question-normaliser'
 
 // The importer's reading of pasted questions. All questions here are made up.
@@ -123,8 +123,9 @@ describe('the correct answer', () => {
 
   it.each<[unknown, number]>([
     [0, 0],
-    [3, 3],
+    ['0', 0],
     [4, 3],
+    ['4', 3],
     ['A', 0],
     ['d', 3],
     ['B)', 1],
@@ -158,11 +159,10 @@ describe('the correct answer', () => {
     [''],
     ['   '],
     ['E'],
-    ['5'],
-    [5],
-    [-1],
-    [1.5],
+    ['-1'],
+    ['1.5'],
     [['A', 'C']],
+    [[0, 2]],
     ['A and C'],
     ['A, C'],
     ['Option A and Option C'],
@@ -215,5 +215,107 @@ describe('the correct answer', () => {
     expect(warnings).toEqual([])
     expect(validateNormalisedBundle(bundle)).toEqual([])
     expect(checkPublishBundle(bundle)).toEqual({ ok: true })
+  })
+})
+
+describe('numbered answers: one rule for the whole paste', () => {
+  // One question per answer; an answer may come with its own options or type.
+  const paste = (...answers: unknown[]) => {
+    const questions = answers.map((answer) =>
+      question({ correctIndex: undefined, ...(typeof answer === 'object' && answer !== null && !Array.isArray(answer) ? answer : { answer }) }),
+    )
+    const { bundle, changes, warnings } = normalise({ title: 'Test set', questions })
+    return { read: bundle.questions.map((q) => q.correctIndex), changes, warnings, ready: validateNormalisedBundle(bundle).length === 0 }
+  }
+  const FROM_0 = 'answers numbered from 0'
+  const FROM_1 = 'answers numbered from 1'
+  const UNSET = (n: number) => `Q${n}: could not work out the correct answer. Set it in the pasted text and paste again.`
+
+  it('counts from 0 when there is a 0 and no 4', () => {
+    const result = paste(0, 1, 2, 3)
+    expect(result).toMatchObject({ read: [0, 1, 2, 3], warnings: [], ready: true })
+    expect(result.changes).toEqual([FROM_0])
+  })
+
+  it('counts from 1 when there is a 4 and no 0', () => {
+    const result = paste(1, 2, 3, 4)
+    expect(result).toMatchObject({ read: [0, 1, 2, 3], warnings: [], ready: true })
+    expect(result.changes).toEqual([FROM_1])
+  })
+
+  it('reads digits given as text the same way', () => {
+    expect(paste('2', ' 0 ', '3')).toMatchObject({ read: [2, 0, 3], changes: [FROM_0] })
+    expect(paste('2', 4, '3', ['1'])).toMatchObject({ read: [1, 3, 2, 0], changes: [FROM_1] })
+  })
+
+  it.each([
+    ['only 1 to 3', [1, 2, 3]],
+    ['only 1 to 3, as text', ['1', '2', '3']],
+    ['one number', [2]],
+    ['both 0 and 4', [0, 1, 4]],
+    ['a number past the options', [5]],
+    ['a number past the options, as text', ['5']],
+    ['a 0 and a number past the options', [0, 7]],
+    ['a 4 and a number past the options', [4, 5]],
+    ['a negative number', [0, -1]],
+    ['a fraction', [0, 1.5]],
+  ])('leaves every number unset with %s', (_name, answers) => {
+    const result = paste(...answers)
+    expect(result.read).toEqual(answers.map(() => null))
+    expect(result.warnings).toEqual(answers.map((_, i) => numberUnclearMessage(i + 1)))
+    expect(result.changes).toEqual([])
+    expect(result.ready).toBe(false)
+  })
+
+  it('leaves letters and full text alone', () => {
+    expect(paste('A', 'D', 'Option B', 'Three')).toMatchObject({ read: [0, 3, 1, 2], warnings: [], ready: true })
+    expect(paste('A', 'D').changes.join()).not.toContain('numbered')
+  })
+
+  it('reads letters and numbers in one paste, each by its own rule', () => {
+    expect(paste('B', 0, 'Two', 2)).toMatchObject({ read: [1, 0, 1, 2], warnings: [] })
+    expect(paste('B', 4, 'Two', 2)).toMatchObject({ read: [1, 3, 1, 1], warnings: [] })
+    expect(paste('B', 2, 'Two', 3)).toMatchObject({
+      read: [1, null, 1, null],
+      warnings: [numberUnclearMessage(2), numberUnclearMessage(4)],
+      ready: false,
+    })
+    expect(paste('E', 2).warnings).toEqual([UNSET(1), numberUnclearMessage(2)])
+  })
+
+  it('takes no rule from a question without options to choose from', () => {
+    expect(paste(2, { type: 'writing', answer: 0, writingModelAnswer: 'Text.' })).toMatchObject({ read: [null, null] })
+    expect(paste(2, { type: 'writing', answer: 99, writingModelAnswer: 'Text.' }, 0)).toMatchObject({ read: [2, null, 0] })
+    expect(paste(2, { questionText: '', answer: 0 }).read).toEqual([null])
+  })
+
+  it('a number that is one option\'s text is that option, not a position', () => {
+    const options = ['100', '1000', '200', '300']
+    expect(paste({ options, answer: 200 })).toMatchObject({ read: [2], warnings: [] })
+    expect(paste({ options, answer: '1000' }, 0, 3)).toMatchObject({ read: [1, 0, 3], warnings: [] })
+    expect(paste({ options: ['1.5', '2.5', '3.5', '4.5'], answer: 2.5 })).toMatchObject({ read: [1], warnings: [] })
+  })
+
+  it('a number that may be a text or a position shows no rule, and is set only when both agree', () => {
+    const options = ['2', '3', '4', '5']
+    expect(paste({ options, answer: 4 }, 2)).toMatchObject({ read: [null, null], changes: [] })
+    expect(paste({ options, answer: 2 }, 0)).toMatchObject({ read: [null, 0], warnings: [UNSET(1)] })
+    expect(paste({ options, answer: 4 }, 0)).toMatchObject({ read: [null, 0], warnings: [UNSET(1)] })
+    expect(paste({ options: ['1', '2', '3', '4'], answer: 3 }, 4)).toMatchObject({ read: [2, 3], warnings: [] })
+    expect(paste({ options: ['0', '1', '2', '3'], answer: 3 }, 0)).toMatchObject({ read: [3, 0], warnings: [] })
+  })
+
+  it('a 4 from five options shows no rule', () => {
+    const five = { options: ['One', 'Two', 'Three', 'Four', 'Five'], answer: 4 }
+    expect(paste(five, 2).read).toEqual([null, null])
+    expect(paste({ ...five, options: { a: 'One', b: 'Two', c: 'Three', d: 'Four', e: 'Five' } }, 2).read).toEqual([null, null])
+  })
+
+  it('is the same for a plain list, and for several sets in one paste', () => {
+    const q = (answer: unknown) => question({ correctIndex: undefined, answer })
+    const answers = (raw: unknown) => normalise(raw).bundle.questions.map((x) => x.correctIndex)
+    expect(answers([q(0), q(2)])).toEqual([0, 2])
+    expect(answers(JSON.stringify([q(4), q(2)]))).toEqual([3, 1])
+    expect(answers([{ questions: [q(2)] }, { questions: [q(4)] }])).toEqual([1, 3])
   })
 })

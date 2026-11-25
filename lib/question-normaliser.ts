@@ -12,6 +12,8 @@
  *   - any warnings about data that could not be resolved
  */
 
+import { numberUnclearMessage } from './question-publish-checks'
+
 // ── Internal bundle types ─────────────────────────────────────────────────────
 
 export interface NormalisedQuestion {
@@ -206,6 +208,58 @@ function normaliseType(raw: unknown): 'multiple-choice' | 'scenario' | 'writing'
   return 'multiple-choice'
 }
 
+/** Where a paste starts counting its numbered answers; null when it does not show it */
+type Numbering = 0 | 1 | null
+
+/** The value of an answer given as a plain number: a number, or a text of digits only */
+function plainNumber(raw: unknown): number | null {
+  if (typeof raw === 'number') return raw
+  const s = str(raw)
+  return s !== null && /^\d+$/.test(s) ? Number(s) : null
+}
+
+/** Whether a plain number can be an option's position (counted from 0 or from 1) */
+function canBePosition(n: number): boolean {
+  return Number.isInteger(n) && n >= 0 && n <= 4
+}
+
+/**
+ * One numbering rule for the whole paste, read from its plain-number answers:
+ * a 0 and no 4 counts from 0, a 4 and no 0 counts from 1. Anything else does
+ * not show it, so no number is read as an answer.
+ */
+function answerNumbering(questions: unknown[]): Numbering {
+  let zero = false
+  let four = false
+
+  for (const q of questions) {
+    if (typeof q !== 'object' || q === null) continue
+    const o = q as Record<string, unknown>
+    if (normaliseType(pick(o, TYPE_KEYS)) === 'writing' || !str(pick(o, QUESTION_TEXT_KEYS))) continue
+
+    const raw = pick(o, CORRECT_INDEX_KEYS)
+    const n = plainNumber(raw)
+    if (n === null) continue
+
+    const rawOptions = pick(o, OPTIONS_KEYS)
+    const options = resolveOptions(rawOptions, [], [], '')
+    if (!canBePosition(n)) {
+      // Not a position: the text of an option, or the paste is not consistent.
+      if (resolveCorrectIndex(raw, options, [], '', null) === null) return null
+      continue
+    }
+    // Also an option's own text: it may mean either, so it shows nothing.
+    if (options.includes(str(raw) ?? '')) continue
+    // With five options a 4 may be the last one counted from 0.
+    if (n === 4 && typeof rawOptions === 'object' && rawOptions !== null && Object.keys(rawOptions).length > 4) return null
+    if (n === 0) zero = true
+    if (n === 4) four = true
+  }
+
+  if (zero === four) return null
+  return zero ? 0 : 1
+}
+
 /**
  * Resolve correctIndex from any of the wild formats AI models produce.
  * Returns 0-based index (0-3) or null if unresolvable.
@@ -215,23 +269,23 @@ function resolveCorrectIndex(
   options: string[],
   changes: string[],
   qId: string,
+  numbering: Numbering,
 ): number | null {
 
   if (raw === null || raw === undefined) return null
 
-  // Already a 0-based number in range
-  if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 0 && raw <= 3) {
-    return raw
-  }
-
-  // 1-based number (1,2,3,4)
-  if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 1 && raw <= 4) {
-    changes.push(`${qId}: converted 1-based answer index ${raw} → correctIndex ${raw - 1}`)
-    return raw - 1
-  }
-
   const s = str(raw)
   if (!s) return null
+
+  // A plain number is read by the paste's own numbering, or not at all. When
+  // it is also an option's text, both readings must give the same option.
+  const n = plainNumber(raw)
+  if (n !== null && canBePosition(n)) {
+    if (numbering === null) return null
+    const idx = n - numbering
+    const sameText = options.indexOf(s)
+    return idx >= 0 && idx <= 3 && (sameText < 0 || sameText === idx) ? idx : null
+  }
 
   // Single letter, alone or as a label: "A", "b", "C)", "(D)", "B."
   const letterMatch = s.match(/^[([]?([A-Da-d])[)\].:]?$/)
@@ -481,6 +535,7 @@ function normaliseQuestion(
   raw: unknown,
   index: number,
   inlineCaseId: string | undefined,
+  numbering: Numbering,
   changes: string[],
   warnings: string[],
 ): NormalisedQuestion | null {
@@ -517,10 +572,12 @@ function normaliseQuestion(
   const rawCorrect = pick(o, CORRECT_INDEX_KEYS)
   const correctIndex = (type === 'writing')
     ? null
-    : resolveCorrectIndex(rawCorrect, options, changes, qId)
+    : resolveCorrectIndex(rawCorrect, options, changes, qId, numbering)
 
   if (type !== 'writing' && correctIndex === null) {
-    warnings.push(`${qId}: could not work out the correct answer. Set it in the pasted text and paste again.`)
+    warnings.push(numbering === null && plainNumber(rawCorrect) !== null
+      ? numberUnclearMessage(index + 1)
+      : `${qId}: could not work out the correct answer. Set it in the pasted text and paste again.`)
   }
 
   // ── Explanation ──
@@ -705,11 +762,15 @@ export function normalise(rawJson: string | unknown): NormaliseResult {
     }
   }
 
+  // ── One numbering rule for the answers of the whole paste ──
+  const numbering = answerNumbering(rawQuestions)
+  if (numbering !== null) changes.push(`answers numbered from ${numbering}`)
+
   // ── Normalise each question ──
   const normalisedQuestions: NormalisedQuestion[] = []
   rawQuestions.forEach((q, i) => {
     const inlineCaseId = caseIdByQIndex.get(i)
-    const nq = normaliseQuestion(q, i, inlineCaseId, changes, warnings)
+    const nq = normaliseQuestion(q, i, inlineCaseId, numbering, changes, warnings)
     if (nq) normalisedQuestions.push(nq)
   })
 

@@ -15,6 +15,7 @@ import {
   UNLINK_FAILED,
   alreadyHasSetMessage,
   checkPublishBundle,
+  numberUnclearMessage,
   publishProblemsMessage,
   slugTakenMessage,
   type PublishProblem,
@@ -199,5 +200,11 @@ describe('wording', () => {
       "Done. But the article's link to this set could not be removed, so the article may point to a missing page.",
     )
     expect(SET_CHECK_FAILED).toBe('Could not check this set. Nothing was saved.')
+  })
+
+  it('has the exact importer warning', () => {
+    expect(numberUnclearMessage(7)).toBe(
+      'Q7: the correct answer is a number, and this paste does not show whether numbers start at 0 or 1. Use a letter (A, B, C or D) instead.',
+    )
   })
 })
