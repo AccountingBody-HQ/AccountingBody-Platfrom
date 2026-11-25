@@ -37,6 +37,7 @@ export async function fetchQuestions(mcqUrl: string, stats: BuildStats): Promise
       .from("question_sets")
       .select("id")
       .eq("slug", practiceSlug)
+      .eq("status", "published")
       .maybeSingle()
 
     if (!qSet) { stats.mcqNotFound.push(practiceSlug); return [] }
@@ -96,6 +97,7 @@ export async function buildCourse(slug: string, stats: BuildStats) {
       .from("question_sets")
       .select("id, slug")
       .in("slug", mcqSlugs)
+      .eq("status", "published")
 
     for (const s of (allSets ?? [])) slugToSetId.set(s.slug, s.id)
 

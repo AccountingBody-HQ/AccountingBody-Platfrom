@@ -277,6 +277,7 @@ export async function POST(req: NextRequest) {
         .from("question_sets")
         .select("id, slug")
         .in("slug", mcqSlugs)
+        .eq("status", "published")
 
       for (const st of (allSets ?? [])) slugToSetId.set(st.slug, st.id)
 
