@@ -79,13 +79,20 @@ function buildMetadata(subtitle: string, bookType: string, edition: string, cour
 
 // The check report of a book made chapter by chapter: the sentences of the
 // other books' check reports (lib/ab-press-builder.ts runs on the server only).
-function buildCheckReport(missingSets: string[]): string {
+function buildCheckReport(missingSets: string[], noAnswerSets: string[], unpublishedSlugs: string[]): string {
+  const unpublished = Array.from(new Set(unpublishedSlugs))
   return [
     'AB Press check report (book made chapter by chapter)',
     '',
     missingSets.length > 0
       ? `[WARN] ${missingSets.length} linked practice set(s) not found or not live: ${missingSets.join(', ')}`
       : '[PASS] All linked practice sets found',
+    noAnswerSets.length > 0
+      ? `[WARN] ${noAnswerSets.length} question(s) with no stored answer (printed as –) in set(s): ${Array.from(new Set(noAnswerSets)).join(', ')}`
+      : '[PASS] Every printed question has a stored answer',
+    unpublished.length > 0
+      ? `[WARN] ${unpublished.length} unpublished article(s) printed: ${unpublished.join(', ')}`
+      : '[PASS] Every printed article is published',
   ].join('\n')
 }
 
@@ -283,6 +290,8 @@ export default function AbPressPage() {
       const chapterQuestionOffsets: number[] = []
       const chapterQuestionCounts: number[] = []
       const missingSets: string[] = []
+      const noAnswerSets: string[] = []
+      const unpublished: string[] = []
       let questionNumberOffset = 0
 
       // 1. Render each chapter
@@ -309,6 +318,8 @@ export default function AbPressPage() {
         chapterPageCounts.push(data.pageCount)
         chapterQuestionCounts.push(data.questionCount)
         missingSets.push(...data.missingSets)
+        noAnswerSets.push(...data.noAnswerSets)
+        unpublished.push(...data.unpublished)
         questionNumberOffset += data.questionCount ?? 0
       }
 
@@ -421,7 +432,7 @@ export default function AbPressPage() {
         { name: 'interior.pdf', data: interiorPdf },
         { name: 'cover.pdf',    data: coverPdf },
         { name: 'metadata.txt', data: new TextEncoder().encode(buildMetadata(subtitle || preview.course.title, bookType, edition, preview.course)) },
-        { name: 'preflight-report.txt', data: new TextEncoder().encode(buildCheckReport(missingSets)) },
+        { name: 'preflight-report.txt', data: new TextEncoder().encode(buildCheckReport(missingSets, noAnswerSets, unpublished)) },
       ])
       const blob = new Blob([zipBytes as any], { type: 'application/zip' })
       setDownloadUrl(URL.createObjectURL(blob))

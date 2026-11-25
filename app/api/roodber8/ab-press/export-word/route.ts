@@ -10,7 +10,7 @@ import {
   Document, Packer, Paragraph, TextRun, HeadingLevel,
   AlignmentType, PageBreak, convertInchesToTwip,
 } from "docx"
-import { buildCourse, BuildStats, EMPTY_COURSE } from "@/lib/ab-press-builder"
+import { buildCourse, BuildStats, EMPTY_COURSE, hasAnswer } from "@/lib/ab-press-builder"
 
 export const maxDuration = 300
 
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
     if (!slug)     return NextResponse.json({ error: "slug is required" },     { status: 400 })
     if (!bookType) return NextResponse.json({ error: "bookType is required" }, { status: 400 })
 
-    const buildStats: BuildStats = { mcqFailed: [], mcqNotFound: [] }
+    const buildStats: BuildStats = { mcqFailed: [], mcqNotFound: [], unpublished: [] }
     const course    = await buildCourse(slug, buildStats)
     const showNotes = bookType === "combined" || bookType === "study"
     const showQs    = bookType === "combined" || bookType === "practice"
@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
             )
             art.quizQuestions.forEach((q: any, qi: number) => {
               allParagraphs.push(
-                new Paragraph({ children: [new TextRun({ text: `Q${qi + 1}: ${LETTERS[q.correctIndex ?? 0]}`, bold: true, color: "D4A017" })], spacing: { after: 40 } }),
+                new Paragraph({ children: [new TextRun({ text: `Q${qi + 1}: ${hasAnswer(q.correctIndex) ? LETTERS[q.correctIndex] : "–"}`, bold: true, color: "D4A017" })], spacing: { after: 40 } }),
               )
               if (q.explanation) {
                 allParagraphs.push(new Paragraph({ children: [new TextRun(clean(q.explanation))], indent: { left: convertInchesToTwip(0.25) }, spacing: { after: 80 } }))

@@ -13,7 +13,7 @@ import React from "react"
 import { ChapterTemplate } from "@/components/book/ChapterTemplate"
 import { getCourseBySlug } from "@/lib/coursesNew"
 import { htmlToBlocks } from "@/lib/html-to-blocks"
-import { EMPTY_COURSE, isEmptyCourse, practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
+import { EMPTY_COURSE, hasAnswer, isEmptyCourse, practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
 
 export const maxDuration = 60
 
@@ -40,12 +40,14 @@ export async function POST(req: NextRequest) {
 
     // Content and quiz questions for just this chapter's articles.
     const chapterArticleIds = targetChapter.lessons.flatMap((l: any) => l.articles.map((a: any) => a.id))
-    const articleRows = await readBookArticles(chapterArticleIds, "id, content, mcq_url")
+    const articleRows = await readBookArticles(chapterArticleIds, "id, content, mcq_url, status")
     const articleMap = new Map(articleRows.map((a: any) => [a.id, a]))
     const slugToQuestions = await readBookQuestions(articleRows.map((a: any) => a.mcq_url))
 
     let chapterQuestionCount = 0
     const missingSets: string[] = []
+    const noAnswerSets: string[] = []
+    const unpublished: string[] = []
     const lessons = targetChapter.lessons.map((l: any) => {
       const linkedArticles = l.articles.map((a: any) => {
         const row = articleMap.get(a.id)
@@ -54,6 +56,9 @@ export async function POST(req: NextRequest) {
         const setSlug = practiceSlug(row?.mcq_url)
         const quizQuestions = slugToQuestions.get(setSlug) ?? []
         if (setSlug && !slugToQuestions.has(setSlug)) missingSets.push(setSlug)
+        const printed = bookType === "study" ? [] : quizQuestions
+        for (const q of printed) if (!hasAnswer(q.correctIndex)) noAnswerSets.push(setSlug)
+        if (row?.status !== "published" && (bookType !== "practice" || printed.length > 0)) unpublished.push(a.slug)
         chapterQuestionCount += quizQuestions.length
         return {
           _id:     a.id,
@@ -101,6 +106,8 @@ export async function POST(req: NextRequest) {
       chapterCount: rawCourse.chapters.length,
       questionCount: chapterQuestionCount,
       missingSets,
+      noAnswerSets,
+      unpublished,
     })
   } catch (err: unknown) {
     console.error("ab-press/generate-chapter: failed:", err)

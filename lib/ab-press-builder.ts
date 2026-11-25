@@ -15,6 +15,8 @@ import { getServerSupabase } from "@/lib/supabase-server"
 export interface BuildStats {
   mcqFailed: string[]
   mcqNotFound: string[]
+  // Ids of the course's articles that are not published.
+  unpublished: string[]
 }
 
 /** What the admin sees when the practice questions could not be read. */
@@ -29,6 +31,27 @@ export const EMPTY_COURSE = "No articles were found for this course, so nothing 
 /** True when the whole course has no articles. */
 export function isEmptyCourse(course: { chapters: { lessons: { articles: unknown[] }[] }[] }): boolean {
   return course.chapters.every((ch) => ch.lessons.every((l) => l.articles.length === 0))
+}
+
+/** True when the stored answer is one of the four options. */
+export function hasAnswer(correctIndex: unknown): boolean {
+  return [0, 1, 2, 3].includes(correctIndex as number)
+}
+
+// ── Lines of the check reports ───────────────────────────────────────────────
+/** For the set slugs of the printed questions without an answer, one for each. */
+export function noAnswerLine(setSlugs: string[]): string {
+  return setSlugs.length > 0
+    ? `[WARN] ${setSlugs.length} question(s) with no stored answer (printed as –) in set(s): ${Array.from(new Set(setSlugs)).join(", ")}`
+    : "[PASS] Every printed question has a stored answer"
+}
+
+/** For the slugs of the printed articles that are not published. */
+export function unpublishedLine(articleSlugs: string[]): string {
+  const slugs = Array.from(new Set(articleSlugs))
+  return slugs.length > 0
+    ? `[WARN] ${slugs.length} unpublished article(s) printed: ${slugs.join(", ")}`
+    : "[PASS] Every printed article is published"
 }
 
 /** Service-role Supabase client used by AB Press (the admin time limit). */
@@ -170,8 +193,9 @@ export async function buildCourse(slug: string, stats: BuildStats) {
   // Fetch full article content (including HTML body and mcq_url)
   const allArticleIds = course.chapters
     .flatMap((ch) => ch.lessons.flatMap((l) => l.articles.map((a) => a.id)))
-  const articleRows = await readBookArticles(allArticleIds, "id, content, mcq_url")
+  const articleRows = await readBookArticles(allArticleIds, "id, content, mcq_url, status")
   const articleMap = new Map(articleRows.map((a) => [a.id, a]))
+  for (const a of articleRows) if (a.status !== "published") stats.unpublished.push(a.id)
 
   // All quiz questions of the book, read together.
   const slugToQuestions = await readBookQuestions(articleRows.map((a) => a.mcq_url))

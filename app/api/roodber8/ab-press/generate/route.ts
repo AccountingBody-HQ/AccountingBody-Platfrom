@@ -10,7 +10,9 @@ import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { BookTemplate } from "@/components/book/BookTemplate"
 import { FullCoverTemplate } from "@/components/book/FullCoverTemplate"
-import { buildCourse, createSupabaseClient, EMPTY_COURSE } from "@/lib/ab-press-builder"
+import {
+  buildCourse, BuildStats, createSupabaseClient, EMPTY_COURSE, hasAnswer, noAnswerLine, practiceSlug, unpublishedLine,
+} from "@/lib/ab-press-builder"
 
 export const maxDuration = 300
 
@@ -60,11 +62,15 @@ function buildMetadata(subtitle: string, bookType: string, edition: string, cour
   return lines.join("\n")
 }
 
-function buildFidelity(course: any, stats: { mcqFailed: string[]; mcqNotFound: string[] }, bookType: string): string {
+function buildFidelity(course: any, stats: BuildStats, bookType: string): string {
   const chapters = course.chapters || []
   let lessons = 0, articles = 0, emptyBodies = 0, questions = 0, mcqLinks = 0
   let articlesWithWebElements = 0, webElementsRemoved = 0
   const emptyList: string[] = []
+  const showNotes = bookType === "combined" || bookType === "study"
+  const showQuestions = bookType === "combined" || bookType === "practice"
+  const noAnswer: string[] = []
+  const unpublished: string[] = []
   for (const ch of chapters) {
     for (const ls of (ch.lessons || [])) {
       lessons++
@@ -78,12 +84,14 @@ function buildFidelity(course: any, stats: { mcqFailed: string[]; mcqNotFound: s
         if (!hasContent) { emptyBodies++; emptyList.push(art.title || art._id) }
         if (art.mcqUrl) mcqLinks++
         questions += (art.quizQuestions || []).length
+        const printed = showQuestions ? (art.quizQuestions || []) : []
+        for (const q of printed) if (!hasAnswer(q.correctIndex)) noAnswer.push(practiceSlug(art.mcqUrl))
+        if (stats.unpublished.includes(art._id) && (showNotes || printed.length > 0)) unpublished.push(art.slug)
         const pubWarnings: string[] = (art.publicationWarnings || []).filter((w: string) => !w.startsWith("Total:"))
         if (pubWarnings.length > 0) { articlesWithWebElements++; webElementsRemoved += pubWarnings.length }
       }
     }
   }
-  const showQuestions = bookType === "combined" || bookType === "practice"
   const issues = emptyBodies + stats.mcqFailed.length + stats.mcqNotFound.length
   const lines = [
     "CONTENT FIDELITY AUDIT",
@@ -114,6 +122,8 @@ function buildFidelity(course: any, stats: { mcqFailed: string[]; mcqNotFound: s
   } else {
     lines.push("[PASS] No practice fetch errors")
   }
+  lines.push(noAnswerLine(noAnswer))
+  lines.push(unpublishedLine(unpublished))
   lines.push("")
   lines.push("PUBLICATION FILTER (web-only elements removed before print)")
   lines.push("-------------------------------------------------------------")
@@ -249,7 +259,7 @@ export async function POST(req: NextRequest) {
     if (!slug)     return NextResponse.json({ error: "slug is required" },     { status: 400 })
     if (!bookType) return NextResponse.json({ error: "bookType is required" }, { status: 400 })
 
-    const fidelityStats = { mcqFailed: [] as string[], mcqNotFound: [] as string[] }
+    const fidelityStats: BuildStats = { mcqFailed: [], mcqNotFound: [], unpublished: [] }
     const course = await buildCourse(slug, fidelityStats)
 
     const pageMap: Record<number, number> = {}

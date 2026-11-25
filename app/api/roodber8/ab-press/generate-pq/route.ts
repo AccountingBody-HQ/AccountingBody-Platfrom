@@ -26,7 +26,9 @@ import { renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { PracticeKitTemplate } from "@/components/book/PracticeKitTemplate"
 import { FullCoverTemplate } from "@/components/book/FullCoverTemplate"
-import { buildCourse, createSupabaseClient, EMPTY_COURSE } from "@/lib/ab-press-builder"
+import {
+  buildCourse, BuildStats, createSupabaseClient, EMPTY_COURSE, hasAnswer, noAnswerLine, practiceSlug, unpublishedLine,
+} from "@/lib/ab-press-builder"
 
 export const maxDuration = 300
 
@@ -70,10 +72,17 @@ function buildMetadata(subtitle: string, edition: string, course: any): string {
   return lines.join("\n")
 }
 
-function buildFidelity(course: any, stats: { mcqFailed: string[]; mcqNotFound: string[] }): string {
+// The kit's own rule for a question that has text (spaces and the zero-width
+// characters 200B to 200D are not text).
+const BLANKS = new RegExp("[\\s" + String.fromCharCode(0x200b) + "-" + String.fromCharCode(0x200d) + "]", "g")
+const hasText = (raw: string) => raw.replace(BLANKS, "").length > 0
+
+function buildFidelity(course: any, stats: BuildStats): string {
   const chapters = course.chapters || []
   let lessons = 0, articles = 0, questions = 0, mcqLinks = 0
   let articlesWithWebElements = 0, webElementsRemoved = 0
+  const noAnswer: string[] = []
+  const unpublished: string[] = []
   for (const ch of chapters) {
     for (const ls of (ch.lessons || [])) {
       lessons++
@@ -81,6 +90,10 @@ function buildFidelity(course: any, stats: { mcqFailed: string[]; mcqNotFound: s
         articles++
         if (art.mcqUrl) mcqLinks++
         questions += (art.quizQuestions || []).length
+        // The kit prints only the questions that have text, and no study notes.
+        const printed = (art.quizQuestions || []).filter((q: any) => hasText(q.questionText || ""))
+        for (const q of printed) if (!hasAnswer(q.correctIndex)) noAnswer.push(practiceSlug(art.mcqUrl))
+        if (stats.unpublished.includes(art._id) && printed.length > 0) unpublished.push(art.slug)
         const pubWarnings: string[] = (art.publicationWarnings || []).filter((w: string) => !w.startsWith("Total:"))
         if (pubWarnings.length > 0) { articlesWithWebElements++; webElementsRemoved += pubWarnings.length }
       }
@@ -117,6 +130,8 @@ function buildFidelity(course: any, stats: { mcqFailed: string[]; mcqNotFound: s
   } else {
     lines.push("[PASS] No practice fetch errors")
   }
+  lines.push(noAnswerLine(noAnswer))
+  lines.push(unpublishedLine(unpublished))
   lines.push("")
   lines.push("PUBLICATION FILTER (web-only elements removed before print)")
   lines.push("-------------------------------------------------------------")
@@ -207,7 +222,7 @@ export async function POST(req: NextRequest) {
     const { slug, edition, subtitle } = body
     if (!slug) return NextResponse.json({ error: "slug is required" }, { status: 400 })
 
-    const fidelityStats = { mcqFailed: [] as string[], mcqNotFound: [] as string[] }
+    const fidelityStats: BuildStats = { mcqFailed: [], mcqNotFound: [], unpublished: [] }
     const course = await buildCourse(slug, fidelityStats)
 
     const editionFinal  = edition  || "2026/27 Edition"

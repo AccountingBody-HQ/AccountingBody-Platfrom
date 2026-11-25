@@ -23,7 +23,7 @@ import { reportServerError } from "@/lib/report-error"
 import { Document, Page, Text, View, StyleSheet, Font, renderToBuffer } from "@react-pdf/renderer"
 import React from "react"
 import { getCourseBySlug } from "@/lib/coursesNew"
-import { EMPTY_COURSE, isEmptyCourse, practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
+import { EMPTY_COURSE, hasAnswer, isEmptyCourse, practiceSlug, readBookArticles, readBookQuestions } from "@/lib/ab-press-builder"
 
 export const maxDuration = 60
 
@@ -221,7 +221,7 @@ function AnswersDocument({ course, subtitle, chapterIndexOffset = 0, startNumber
               <Text style={s.sectionHeader}>Chapter {ci + chapterIndexOffset + 1}: {sanitise(ch.chapterTitle)}</Text>
               {list.map(({ q, num }) => (
                 <View key={num} style={s.answerWrap}>
-                  <Text style={s.answerLabel}>Q{num}: {LETTERS[q.correctIndex ?? 0]}</Text>
+                  <Text style={s.answerLabel}>Q{num}: {hasAnswer(q.correctIndex) ? LETTERS[q.correctIndex] : "–"}</Text>
                   {q.explanation ? <View>{formatExplanation(sanitise(q.explanation))}</View> : null}
                 </View>
               ))}

@@ -6,7 +6,7 @@ import * as pdfLib from 'pdf-lib'
 import ts from 'typescript'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FrontmatterTemplate } from '@/components/book/FrontmatterTemplate'
-import { ARTICLES_READ_FAILED, buildCourse, EMPTY_COURSE, READ_FAILED, type BuildStats } from './ab-press-builder'
+import { ARTICLES_READ_FAILED, buildCourse, EMPTY_COURSE, noAnswerLine, READ_FAILED, unpublishedLine, type BuildStats } from './ab-press-builder'
 import { TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
 import { DB_LIMITS_MS } from './supabase-server'
@@ -26,6 +26,8 @@ const state = vi.hoisted(() => ({
   pdfs: 0,
   // What the PDF maker and the Word maker were given.
   made: [] as string[],
+  // The pages the PDF maker was given, as they would be drawn.
+  drawn: [] as unknown[],
   written: [] as string[],
   // Course slug to the article names of each lesson.
   lessons: {} as Record<string, string[][]>,
@@ -72,10 +74,11 @@ vi.mock('@/lib/coursesNew', () => ({
 
 vi.mock('@react-pdf/renderer', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@react-pdf/renderer')>()),
-  renderToBuffer: async (element: { props: unknown }) => {
+  renderToBuffer: async (element: { type: (props: unknown) => unknown; props: unknown }) => {
     if (state.pdfFails) throw state.pdfFails
     state.pdfs += 1
     state.made.push(JSON.stringify(element.props))
+    state.drawn.push(element)
     return Buffer.from('/Type /Page ')
   },
 }))
@@ -379,6 +382,9 @@ const GOOD = [[['good-1', 'good-2'], ['good-3']], [['good-4', 'good-5']]]
 const bigNames = Array.from({ length: 250 }, (_, index) => `big-${index}`)
 const BIG = [[bigNames.slice(0, 125)], [bigNames.slice(125)]]
 
+// Stored answers, and the letter a book prints for each.
+const ANSWERS: [number | null, string][] = [[0, 'A'], [1, 'B'], [2, 'C'], [3, 'D'], [null, '–'], [7, '–'], [4, '–'], [-1, '–']]
+
 // Options with a blank in the middle, at the end, and nothing else.
 const OPTIONS: [string | null, string | null, string | null, string | null][] = [
   ['a', null, 'c', 'd'],
@@ -397,7 +403,10 @@ const TABLES: Record<string, Row[]> = {
     article('good-3', null, ''),
     article('good-4', '/practice-questions/set-1', '<ul><li>Four</li></ul>'),
     article('good-5', '/practice-questions/set-3', '<p>Five</p>'),
-    ...['ties', 'options', ...bigNames].map((name) => article(name)),
+    ...['ties', 'options', 'letters', ...bigNames].map((name) => article(name)),
+    { ...article('hidden', '/practice-questions/live'), status: 'draft' },
+    { ...article('unmarked', null), status: null },
+    { ...article('blank'), status: 'draft' },
   ],
   question_sets: [
     set('live', 'published'),
@@ -411,7 +420,7 @@ const TABLES: Record<string, Row[]> = {
     set('set-1', 'published'),
     set('set-2', 'published'),
     set('set-3', 'draft'),
-    ...['ties', 'options', ...bigNames].map((name) => set(name, 'published')),
+    ...['ties', 'options', 'letters', 'blank', ...bigNames].map((name) => set(name, 'published')),
   ],
   questions: [
     ...['live', 'draft', 'unset', 'other', 'other', 'foreign', 'foreign', 'foreign', 'stray', 'stray', 'stray', 'stray'].map(question),
@@ -427,6 +436,8 @@ const TABLES: Record<string, Row[]> = {
       option_d: d,
       question_order: index,
     })),
+    ...ANSWERS.map(([correct_index], index) => ({ ...question('letters'), correct_index, question_order: index })),
+    { ...question('blank'), question_text: ` ${String.fromCharCode(0x200b)}${String.fromCharCode(0xfeff)}`, correct_index: null },
     ...bigNames.flatMap((name) => questionsOf(name, 12)),
   ].map((row, index) => ({ ...row, id: `q-${String(index).padStart(5, '0')}` })),
 }
@@ -502,6 +513,7 @@ beforeEach(() => {
   state.cap = Infinity
   state.requests = []
   state.made = []
+  state.drawn = []
   state.pdfs = 0
   state.written = []
   state.pdfFails = null
@@ -531,9 +543,11 @@ async function callRoute(name: string, request: { query?: string; body?: object 
   return request.body ? handlers.POST(req) : handlers.GET(req)
 }
 
+const noStats = (): BuildStats => ({ mcqFailed: [], mcqNotFound: [], unpublished: [] })
+
 describe('the shared builder', () => {
   it('a book takes the questions of a live set; any other set is as a missing one', async () => {
-    const stats: BuildStats = { mcqFailed: [], mcqNotFound: [] }
+    const stats = noStats()
     const course = await buildCourse('course', stats)
     const articles = course.chapters[0].lessons[0].linkedArticles
     expect(articles.map((article) => [article.slug, article.quizQuestions.length])).toEqual([
@@ -543,11 +557,11 @@ describe('the shared builder', () => {
       ['gone', 0],
     ])
     expect(articles[0].quizQuestions[0].questionText).toBe('Q live')
-    expect(stats).toEqual({ mcqFailed: [], mcqNotFound: ['draft', 'unset', 'gone'] })
+    expect(stats).toEqual({ mcqFailed: [], mcqNotFound: ['draft', 'unset', 'gone'], unpublished: [] })
   })
 
   it('leaves out only the blank options at the end, so every option keeps its letter', async () => {
-    const course = await buildCourse('options', { mcqFailed: [], mcqNotFound: [] })
+    const course = await buildCourse('options', noStats())
     expect(course.chapters[0].lessons[0].linkedArticles[0].quizQuestions.map((q) => q.options)).toEqual([
       ['a', '', 'c', 'd'],
       ['a', 'b'],
@@ -559,7 +573,7 @@ describe('the shared builder', () => {
 
 describe('the preview question count', () => {
   const bookCount = async (slug: string) => {
-    const course = await buildCourse(slug, { mcqFailed: [], mcqNotFound: [] })
+    const course = await buildCourse(slug, noStats())
     return course.chapters
       .flatMap((chapter) => chapter.lessons.flatMap((lesson) => lesson.linkedArticles))
       .reduce((sum, linked) => sum + linked.quizQuestions.length, 0)
@@ -661,7 +675,11 @@ describe('a book made from good reads', () => {
 
   it.each(MAKERS.map(([name, body], index) => [index, name, { ...body, slug: 'good' }] as const))('%i %s %o is as before', async (index, name, body) => {
     const { status, given, audit: text } = await make(name, body)
-    expect([status, sha(given), sha(text)]).toEqual(BEFORE[index])
+    const lines = text.split('\n')
+    const NEW = ['[PASS] Every printed question has a stored answer', '[PASS] Every printed article is published']
+    expect(lines.filter((line) => NEW.includes(line))).toEqual(text ? NEW : [])
+    const former = lines.filter((line) => !NEW.includes(line)).join('\n')
+    expect([status, sha(given), sha(former)]).toEqual(BEFORE[index])
   })
 })
 
@@ -969,6 +987,89 @@ describe('the page numbers and the check report of a book made chapter by chapte
   })
 })
 
+describe('a question with no stored answer', () => {
+  const letters = (text: string) => Array.from(text.matchAll(/Q\d+: ?([A-E–])/g), (match) => match[1])
+  const drawn = () => {
+    const element = state.drawn[state.drawn.length - 1] as Element & { type: (props: unknown) => unknown }
+    return Screen.text(element.type(element.props))
+  }
+
+  it.each<[string, object, (given: string) => string]>([
+    ['generate', { slug: 'letters', bookType: 'combined' }, () => { state.drawn.pop(); return drawn() }],
+    ['generate-pq', { slug: 'letters' }, () => { state.drawn.pop(); return drawn() }],
+    ['generate-answers', { slug: 'letters' }, drawn],
+    ['export-word', { slug: 'letters', bookType: 'combined' }, (given) => given],
+  ])('%s prints a dash for it, and the letter of every other answer', async (name, body, read) => {
+    state.lessons = { letters: [['letters']] }
+    const { given } = await make(name, body)
+    expect(letters(read(given))).toEqual(ANSWERS.map(([, letter]) => letter))
+  })
+})
+
+describe('the new lines of the check reports', () => {
+  const NO_ANSWER = '[WARN] 4 question(s) with no stored answer (printed as –) in set(s): letters'
+  const ANSWERED = '[PASS] Every printed question has a stored answer'
+  const PUBLISHED = '[PASS] Every printed article is published'
+  const linesOf = async (name: string, body: object) => {
+    const lines = (await make(name, { slug: 'course', ...body })).audit.split('\n')
+    return {
+      added: lines.filter((line) => /stored answer|unpublished article|article is published/.test(line)),
+      verdict: lines[lines.length - 1].split(' - ')[0],
+      after: lines[lines.indexOf('[PASS] No practice fetch errors') + 1],
+    }
+  }
+
+  it('are exact', () => {
+    expect(noAnswerLine([])).toBe(ANSWERED)
+    expect(noAnswerLine(['a', 'b', 'a'])).toBe('[WARN] 3 question(s) with no stored answer (printed as –) in set(s): a, b')
+    expect(unpublishedLine([])).toBe(PUBLISHED)
+    expect(unpublishedLine(['a', 'b', 'a'])).toBe('[WARN] 2 unpublished article(s) printed: a, b')
+  })
+
+  it.each<[string, object, string]>([
+    ['generate', { bookType: 'combined' }, NO_ANSWER],
+    ['generate', { bookType: 'study' }, ANSWERED],
+    ['generate-pq', {}, NO_ANSWER],
+  ])('%s %o: questions without an answer', async (name, body, line) => {
+    state.lessons = { course: [['letters']] }
+    const { added, after } = await linesOf(name, body)
+    expect(added).toEqual([line, PUBLISHED])
+    expect(after).toBe(line)
+  })
+
+  it('a question printed twice counts twice', async () => {
+    state.lessons = { course: [['letters'], ['letters']] }
+    expect((await linesOf('generate', { bookType: 'combined' })).added[0]).toBe(
+      '[WARN] 8 question(s) with no stored answer (printed as –) in set(s): letters',
+    )
+  })
+
+  it.each<[string, object, string[]]>([
+    ['generate', { bookType: 'combined' }, ['[WARN] 1 question(s) with no stored answer (printed as –) in set(s): blank', '[WARN] 3 unpublished article(s) printed: hidden, unmarked, blank']],
+    ['generate', { bookType: 'study' }, [ANSWERED, '[WARN] 3 unpublished article(s) printed: hidden, unmarked, blank']],
+    ['generate-pq', {}, [ANSWERED, '[WARN] 1 unpublished article(s) printed: hidden']],
+  ])('%s %o: unpublished articles, and a question without text', async (name, body, expected) => {
+    state.lessons = { course: [['live', 'hidden', 'unmarked'], ['hidden', 'blank']] }
+    expect((await linesOf(name, body)).added).toEqual(expected)
+  })
+
+  it('they inform only: the verdict stays', async () => {
+    state.lessons = { course: [['letters', 'hidden']] }
+    expect((await linesOf('generate-pq', {})).verdict).toBe('FIDELITY VERDICT: COMPLETE')
+  })
+
+  it('a chapter says the same about its questions and articles', async () => {
+    state.chapters = { course: [[['letters', 'hidden'], ['unmarked']], [['live']]] }
+    const chapter = async (bookType: string, chapterIndex: number) => {
+      const body = await (await callRoute('generate-chapter', { body: { slug: 'course', bookType, chapterIndex } })).json()
+      return [body.noAnswerSets, body.unpublished]
+    }
+    expect(await chapter('combined', 0)).toEqual([['letters', 'letters', 'letters', 'letters'], ['hidden', 'unmarked']])
+    expect(await chapter('study', 0)).toEqual([[], ['hidden', 'unmarked']])
+    expect(await chapter('combined', 1)).toEqual([[], []])
+  })
+})
+
 // ── The screen ──────────────────────────────────────────────────────────────
 // The page's own code, run with a stand-in for React (state and one effect) and
 // for adminFetch; pdf-lib and the rest are real.
@@ -1131,7 +1232,7 @@ async function screen(): Promise<Screen> {
       },
     }),
     'generate-chapter': ({ chapterIndex: at }) => ({
-      body: { pdf: pdfs.get(CHAPTER_PAGES[at as number]), pageCount: CHAPTER_PAGES[at as number], chapterCount: 3, questionCount: QUESTIONS[at as number], missingSets: [] },
+      body: { pdf: pdfs.get(CHAPTER_PAGES[at as number]), pageCount: CHAPTER_PAGES[at as number], chapterCount: 3, questionCount: QUESTIONS[at as number], missingSets: [], noAnswerSets: [], unpublished: [] },
     }),
     'generate-answers': ({ chapterIndex: at }) => ({
       body: {
@@ -1330,24 +1431,28 @@ describe('the screen of a book made chapter by chapter', () => {
     expect(widths.indexOf(400)).toBe(answers.length ? firstAnswer - 1 : -1)
   })
 
-  it('the ZIP has a check report with the sets that were not found', async () => {
+  it('the ZIP has a check report, with the same lines as the other books', async () => {
     const page = await screen()
     await page.open()
     await page.generate()
     const report = async () => (await page.zip())['preflight-report.txt'].toString('utf8').split('\n')
-    expect((await report()).slice(0, 3)).toEqual([
+    expect(await report()).toEqual([
       'AB Press check report (book made chapter by chapter)',
       '',
       '[PASS] All linked practice sets found',
+      noAnswerLine([]),
+      unpublishedLine([]),
     ])
-    spoil(page, 'generate-chapter', 0, { missingSets: ['x', 'y'] })
-    spoil(page, 'generate-chapter', 2, { missingSets: ['x'] })
+    spoil(page, 'generate-chapter', 0, { missingSets: ['x', 'y'], noAnswerSets: ['s', 's'], unpublished: ['u', 'v'] })
+    spoil(page, 'generate-chapter', 2, { missingSets: ['x'], noAnswerSets: ['t'], unpublished: ['u'] })
     page.change(page.radio('combined'), 'combined')
     await page.generate()
-    expect((await report()).slice(0, 3)).toEqual([
+    expect(await report()).toEqual([
       'AB Press check report (book made chapter by chapter)',
       '',
       '[WARN] 3 linked practice set(s) not found or not live: x, y, x',
+      noAnswerLine(['s', 's', 't']),
+      unpublishedLine(['u', 'v', 'u']),
     ])
   })
 
