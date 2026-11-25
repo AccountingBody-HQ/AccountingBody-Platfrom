@@ -379,6 +379,37 @@ describe('publish: an honest result', () => {
   })
 })
 
+// ── Article lookup (Studio "Add by ID" and the importer) ────────────────────
+
+describe('article lookup', () => {
+  const lookup = async (id: string) =>
+    (await api('articles/lookup/route.ts')).GET(request('GET', `articles/lookup?id=${id}`), { params: {} })
+
+  it('gives every field Studio and the importer read', async () => {
+    const article = {
+      content_id: 'AB-ART-00007',
+      title: 'Leases',
+      slug: 'leases',
+      excerpt: 'About leases.',
+      category: 'financial-reporting',
+      category_title: 'Financial Reporting',
+      exam_body: ['cima'],
+      difficulty: 'advanced',
+    }
+    db.tables.articles = [article]
+    const res = await lookup('ab-art-00007')
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ article })
+    const select = new URLSearchParams(db.calls[0].query).get('select') ?? ''
+    expect(select.split(',').sort()).toEqual(Object.keys(article).sort())
+  })
+
+  it('answers "not found" for an unknown ID, and refuses another kind of ID', async () => {
+    expect((await lookup('AB-ART-99999')).status).toBe(404)
+    expect((await lookup('AB-QZ-00001')).status).toBe(400)
+  })
+})
+
 // ── Set editor and recycle bin ──────────────────────────────────────────────
 
 const QUESTION = '7ab56afb-ff9b-4db5-9a5f-ec88f271466f'
