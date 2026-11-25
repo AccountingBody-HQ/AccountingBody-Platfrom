@@ -46,12 +46,25 @@ export function hasAnswer(correctIndex: unknown): boolean {
   return [0, 1, 2, 3].includes(correctIndex as number)
 }
 
+/** True when the stored answer is one of the question's printed options. */
+export function hasPrintedAnswer(question: { correctIndex?: unknown; options?: unknown[] }): boolean {
+  return hasAnswer(question.correctIndex) && (question.correctIndex as number) < (question.options ?? []).length
+}
+
 // ── Lines of the check reports ───────────────────────────────────────────────
 /** For the set slugs of the printed questions without an answer, one for each. */
 export function noAnswerLine(setSlugs: string[]): string {
   return setSlugs.length > 0
     ? `[WARN] ${setSlugs.length} question(s) with no stored answer (printed as –) in set(s): ${Array.from(new Set(setSlugs)).join(", ")}`
     : "[PASS] Every printed question has a stored answer"
+}
+
+/** For the set slugs of the printed questions whose answer is not among their
+ *  printed options, one for each. */
+export function missingOptionLine(setSlugs: string[]): string {
+  return setSlugs.length > 0
+    ? `[WARN] ${setSlugs.length} question(s) whose answer points to a missing option (printed as –) in set(s): ${Array.from(new Set(setSlugs)).join(", ")}`
+    : "[PASS] Every printed answer points to a printed option"
 }
 
 /** For the slugs of the printed articles that are not published. */

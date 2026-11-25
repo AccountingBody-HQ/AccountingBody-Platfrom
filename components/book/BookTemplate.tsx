@@ -696,7 +696,7 @@ export function BookTemplate({ course, bookType, edition, subtitle, pageMap }: B
                 <Text style={s.sectionHeader}>Chapter {ci + 1}: {sanitise(ch.chapterTitle)}</Text>
                 {list.map(({ q, num }: { q: any; num: number }) => (
                   <View key={num} style={s.answerWrap}>
-                    <Text style={s.answerLabel}>Q{num}: {[0, 1, 2, 3].includes(q.correctIndex) ? LETTERS[q.correctIndex] : "–"}</Text>
+                    <Text style={s.answerLabel}>Q{num}: {[0, 1, 2, 3].includes(q.correctIndex) && q.correctIndex < (q.options || []).length ? LETTERS[q.correctIndex] : "–"}</Text>
                     {q.explanation ? <View>{formatExplanation(sanitise(q.explanation))}</View> : null}
                   </View>
                 ))}

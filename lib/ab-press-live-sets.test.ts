@@ -6,7 +6,7 @@ import * as pdfLib from 'pdf-lib'
 import ts from 'typescript'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FrontmatterTemplate } from '@/components/book/FrontmatterTemplate'
-import { ARTICLES_READ_FAILED, buildCourse, courseKey, EMPTY_COURSE, noAnswerLine, READ_FAILED, unpublishedLine, type BuildStats } from './ab-press-builder'
+import { ARTICLES_READ_FAILED, buildCourse, courseKey, EMPTY_COURSE, missingOptionLine, noAnswerLine, READ_FAILED, unpublishedLine, type BuildStats } from './ab-press-builder'
 import { TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
 import { DB_LIMITS_MS } from './supabase-server'
@@ -385,8 +385,24 @@ const BIG = [[bigNames.slice(0, 125)], [bigNames.slice(125)]]
 // Stored answers, and the letter a book prints for each.
 const ANSWERS: [number | null, string][] = [[0, 'A'], [1, 'B'], [2, 'C'], [3, 'D'], [null, '–'], [7, '–'], [4, '–'], [-1, '–']]
 
+type Options = [string | null, string | null, string | null, string | null]
+const options = ([option_a, option_b, option_c, option_d]: Options) => ({ option_a, option_b, option_c, option_d })
+
+// Fewer printed options than letters: the stored answer, and what a book prints.
+const SHORT: [Options, number | null, string][] = [
+  [['a', 'b', 'c', null], 3, '–'],
+  [['a', 'b', 'c', null], 2, 'C'],
+  [['a', 'b', '', '  '], 2, '–'],
+  [['a', 'b', '', '  '], 1, 'B'],
+  [['a', null, 'c', 'd'], 1, 'B'],
+  [[null, null, null, null], 0, '–'],
+  [['a', 'b', 'c', null], null, '–'],
+  [['a', 'b', 'c', null], 4, '–'],
+  [['a', 'b', 'c', 'd'], 3, 'D'],
+]
+
 // Options with a blank in the middle, at the end, and nothing else.
-const OPTIONS: [string | null, string | null, string | null, string | null][] = [
+const OPTIONS: Options[] = [
   ['a', null, 'c', 'd'],
   ['a', 'b', '', '  '],
   ['', 'b', null, 'd'],
@@ -404,6 +420,7 @@ const TABLES: Record<string, Row[]> = {
     article('good-4', '/practice-questions/set-1', '<ul><li>Four</li></ul>'),
     article('good-5', '/practice-questions/set-3', '<p>Five</p>'),
     ...['ties', 'options', 'letters', ...bigNames].map((name) => article(name)),
+    article('short', '/practice-questions/short', '<p>Short</p>'),
     { ...article('hidden', '/practice-questions/live'), status: 'draft' },
     { ...article('unmarked', null), status: null },
     { ...article('blank'), status: 'draft' },
@@ -420,7 +437,7 @@ const TABLES: Record<string, Row[]> = {
     set('set-1', 'published'),
     set('set-2', 'published'),
     set('set-3', 'draft'),
-    ...['ties', 'options', 'letters', 'blank', ...bigNames].map((name) => set(name, 'published')),
+    ...['ties', 'options', 'letters', 'short', 'blank', ...bigNames].map((name) => set(name, 'published')),
   ],
   questions: [
     ...['live', 'draft', 'unset', 'other', 'other', 'foreign', 'foreign', 'foreign', 'stray', 'stray', 'stray', 'stray'].map(question),
@@ -428,17 +445,11 @@ const TABLES: Record<string, Row[]> = {
     ...questionsOf('set-2', 4),
     ...questionsOf('set-3', 2),
     ...questionsOf('ties', 9).map((row) => ({ ...row, question_order: 1 })),
-    ...OPTIONS.map(([a, b, c, d], index) => ({
-      ...question('options'),
-      option_a: a,
-      option_b: b,
-      option_c: c,
-      option_d: d,
-      question_order: index,
-    })),
-    ...ANSWERS.map(([correct_index], index) => ({ ...question('letters'), correct_index, question_order: index })),
+    ...OPTIONS.map((row, index) => ({ ...question('options'), ...options(row), question_order: index })),
+    ...ANSWERS.map(([correct_index], index) => ({ ...question('letters'), ...options(['A', 'B', 'C', 'D']), correct_index, question_order: index })),
     { ...question('blank'), question_text: ` ${String.fromCharCode(0x200b)}${String.fromCharCode(0xfeff)}`, correct_index: null },
     ...bigNames.flatMap((name) => questionsOf(name, 12)),
+    ...SHORT.map(([row, correct_index], index) => ({ ...question('short'), ...options(row), correct_index, question_order: index })),
   ].map((row, index) => ({ ...row, id: `q-${String(index).padStart(5, '0')}` })),
 }
 
@@ -676,7 +687,11 @@ describe('a book made from good reads', () => {
   it.each(MAKERS.map(([name, body], index) => [index, name, { ...body, slug: 'good' }] as const))('%i %s %o is as before', async (index, name, body) => {
     const { status, given, audit: text } = await make(name, body)
     const lines = text.split('\n')
-    const NEW = ['[PASS] Every printed question has a stored answer', '[PASS] Every printed article is published']
+    const NEW = [
+      '[PASS] Every printed question has a stored answer',
+      '[PASS] Every printed answer points to a printed option',
+      '[PASS] Every printed article is published',
+    ]
     expect(lines.filter((line) => NEW.includes(line))).toEqual(text ? NEW : [])
     const former = lines.filter((line) => !NEW.includes(line)).join('\n')
     expect([status, sha(given), sha(former)]).toEqual(BEFORE[index])
@@ -1183,6 +1198,54 @@ describe('a question with no stored answer', () => {
     state.lessons = { letters: [['letters']] }
     const { given } = await make(name, body)
     expect(letters(read(given))).toEqual(ANSWERS.map(([, letter]) => letter))
+    // An answer past the printed options is a dash too.
+    state.lessons = { letters: [['short']] }
+    const short = await make(name, body)
+    expect(letters(read(short.given))).toEqual(SHORT.map(([, , letter]) => letter))
+  })
+})
+
+describe('an answer that points to a missing option', () => {
+  const WARN = '[WARN] 3 question(s) whose answer points to a missing option (printed as –) in set(s): short'
+  const PASS = '[PASS] Every printed answer points to a printed option'
+  const auditOf = async (name: string, body: object) => (await make(name, { slug: 'course', ...body })).audit.split('\n')
+
+  it('has its exact lines', () => {
+    expect(missingOptionLine([])).toBe(PASS)
+    expect(missingOptionLine(['a', 'b', 'a'])).toBe('[WARN] 3 question(s) whose answer points to a missing option (printed as –) in set(s): a, b')
+  })
+
+  it.each<[string, object, string, string]>([
+    ['generate', { bookType: 'combined' }, WARN, '[WARN] 2 question(s) with no stored answer (printed as –) in set(s): short'],
+    ['generate', { bookType: 'study' }, PASS, '[PASS] Every printed question has a stored answer'],
+    ['generate-pq', {}, WARN, '[WARN] 2 question(s) with no stored answer (printed as –) in set(s): short'],
+  ])('%s %o: is listed after the questions without an answer, and never with them', async (name, body, line, before) => {
+    state.lessons = { course: [['short']] }
+    const lines = await auditOf(name, body)
+    const at = lines.indexOf('[PASS] No practice fetch errors')
+    expect(lines.slice(at + 1, at + 4)).toEqual([before, line, '[PASS] Every printed article is published'])
+  })
+
+  it.each<[string, object]>([['generate', { bookType: 'combined' }], ['generate-pq', {}]])('%s %o: counts each time it is printed, and the verdict stays', async (name, body) => {
+    state.lessons = { course: [['short', 'good-1'], ['short']] }
+    const lines = await auditOf(name, body)
+    expect(lines).toContain(WARN.replace('3', '6'))
+    state.lessons = { course: [['good-1']] }
+    const good = await auditOf(name, body)
+    expect(good).toContain(PASS)
+    expect(good[good.length - 1]).toMatch(/^FIDELITY VERDICT: COMPLETE/)
+    expect(lines[lines.length - 1]).toBe(good[good.length - 1])
+  })
+
+  it('a chapter says the same about its questions', async () => {
+    state.chapters = { course: [[['short', 'letters']], [['live']]] }
+    const chapter = async (bookType: string, chapterIndex: number) => {
+      const body = await (await callRoute('generate-chapter', { body: { slug: 'course', bookType, chapterIndex } })).json()
+      return [body.noAnswerSets, body.missingOptionSets]
+    }
+    expect(await chapter('combined', 0)).toEqual([['short', 'short', 'letters', 'letters', 'letters', 'letters'], ['short', 'short', 'short']])
+    expect(await chapter('study', 0)).toEqual([[], []])
+    expect(await chapter('combined', 1)).toEqual([[], []])
   })
 })
 
@@ -1413,7 +1476,7 @@ async function screen(): Promise<Screen> {
       },
     }),
     'generate-chapter': ({ chapterIndex: at }) => ({
-      body: { pdf: pdfs.get(CHAPTER_PAGES[at as number]), pageCount: CHAPTER_PAGES[at as number], chapterCount: 3, courseKey: courseKey(planned(PLAN)), questionCount: QUESTIONS[at as number], missingSets: [], noAnswerSets: [], unpublished: [] },
+      body: { pdf: pdfs.get(CHAPTER_PAGES[at as number]), pageCount: CHAPTER_PAGES[at as number], chapterCount: 3, courseKey: courseKey(planned(PLAN)), questionCount: QUESTIONS[at as number], missingSets: [], noAnswerSets: [], missingOptionSets: [], unpublished: [] },
     }),
     'generate-answers': ({ chapterIndex: at }) => ({
       body: {
@@ -1644,10 +1707,11 @@ describe('the screen of a book made chapter by chapter', () => {
       '',
       '[PASS] All linked practice sets found',
       noAnswerLine([]),
+      missingOptionLine([]),
       unpublishedLine([]),
     ])
-    spoil(page, 'generate-chapter', 0, { missingSets: ['x', 'y'], noAnswerSets: ['s', 's'], unpublished: ['u', 'v'] })
-    spoil(page, 'generate-chapter', 2, { missingSets: ['x'], noAnswerSets: ['t'], unpublished: ['u'] })
+    spoil(page, 'generate-chapter', 0, { missingSets: ['x', 'y'], noAnswerSets: ['s', 's'], missingOptionSets: ['m'], unpublished: ['u', 'v'] })
+    spoil(page, 'generate-chapter', 2, { missingSets: ['x'], noAnswerSets: ['t'], missingOptionSets: ['n', 'm'], unpublished: ['u'] })
     page.change(page.radio('combined'), 'combined')
     await page.generate()
     expect(await report()).toEqual([
@@ -1655,6 +1719,7 @@ describe('the screen of a book made chapter by chapter', () => {
       '',
       '[WARN] 3 linked practice set(s) not found or not live: x, y, x',
       noAnswerLine(['s', 's', 't']),
+      missingOptionLine(['m', 'n', 'm']),
       unpublishedLine(['u', 'v', 'u']),
     ])
   })
