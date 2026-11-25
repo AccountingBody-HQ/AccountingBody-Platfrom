@@ -545,10 +545,10 @@ describe('G6 migrations/0022 (record file, not applied)', () => {
     expect(comments).toContain('VACUUM FULL public.jobs')
   })
 
-  it('the README lists 0022 as not applied yet', () => {
+  it('the README lists 0022 as applied', () => {
     const row = read('migrations/README.md').split('\n').find((line) => line.startsWith('| `0022_'))
     expect(row).toBeDefined()
-    expect(row).toContain('not applied yet')
+    expect(row).toContain('**Applied (see ab-control FINDINGS) (DL-1, D287).**')
   })
 })
 

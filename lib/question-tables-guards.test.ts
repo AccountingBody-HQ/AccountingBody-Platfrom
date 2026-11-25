@@ -22,6 +22,16 @@ const statements = code
 const NAMES = ['question_sets_article_slug_key', 'questions_set_id_idx', 'question_cases_set_id_idx', 'questions_correct_index_range']
 
 describe('migrations/0029 (record file)', () => {
+  it('is in the README as not applied yet, the only such row, and its tables are in the scope list', () => {
+    const readme = readFileSync(join(process.cwd(), 'migrations/README.md'), 'utf8')
+    const waiting = readme.split('\n').filter((line) => line.includes('not applied yet'))
+    expect(waiting).toHaveLength(1)
+    expect(waiting[0]).toContain('| `0029_question_tables_guards.sql` | **Record file, not applied yet (PQ-1e, D339).**')
+    const scope = readme.slice(readme.indexOf('Migrations in this directory cover only'), readme.indexOf('## Files'))
+    expect(scope).toContain('\nquestion_sets  questions  question_cases\n')
+    expect(scope.match(/owner approval D339/g)).toHaveLength(3)
+  })
+
   it('is the only 0029 file', () => {
     const files = execFileSync('git', ['ls-files', 'migrations'], { encoding: 'utf8' }).split('\n')
     expect(files.filter((file) => file.startsWith('migrations/0029'))).toEqual([FILE])

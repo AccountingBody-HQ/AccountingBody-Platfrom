@@ -400,12 +400,13 @@ describe('G6 migration records', () => {
     expect(text).toContain('cannot run inside a transaction')
   })
 
-  it('the README lists the three records as not applied yet; the alerts guide lists the check', () => {
+  it('the README lists the three records as applied; the alerts guide lists the check', () => {
     const readme = read('migrations/README.md').split('\n')
     for (const prefix of ['| `0023_ops_database_size.sql` |', '| `0024_provider_runs_drop_raw_response_sample.sql` |', '| `0025_jobs_drop_idx_employer_email.sql` |']) {
       const row = readme.find((line) => line.startsWith(prefix))
       expect(row).toBeDefined()
-      expect(row).toContain('not applied yet')
+      expect(row).toMatch(/\| \*\*Applied [^|]*\(LB-1, D287\)\.\*\* /)
+      expect(row).not.toContain('not applied yet')
     }
     expect(read('docs/ALERTS.md').split('\n').filter((line) => line.startsWith('| `database-size` |'))).toHaveLength(1)
   })

@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 // BP-2 guards: the migration record is exactly the reviewed file and is
-// recorded as not applied yet.
+// recorded as applied.
 
 const ROOT = process.cwd()
 const bytes = (path: string) => readFileSync(join(ROOT, path))
@@ -19,10 +19,10 @@ describe('BP-2 migration record', () => {
     expect(data.length).toBe(2231)
   })
 
-  it('the README lists 0028 as a record file, not applied yet', () => {
+  it('the README lists 0028 as applied', () => {
     const rows = bytes('migrations/README.md').toString('utf8').split('\n')
     const row = rows.find((line) => line.startsWith('| `0028_jobs_drop_public_read_policy.sql` |'))
-    expect(row).toContain('**Record file, not applied yet (BP-2).**')
+    expect(row).toContain('**Applied at 16:46:08 UTC (date in ab-control; see FINDINGS) (BP-2).**')
     expect(row).toContain('BEFORE or AFTER the BP-2 pull request is merged')
   })
 })

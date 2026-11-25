@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { getAdminPath } from './middleware-logic'
 
 // BP-1 guards (D311, D315): the two migration records are exactly the
-// reviewed files; 0027 is recorded as not applied yet.
+// reviewed files; 0027 is recorded as applied.
 
 const ROOT = process.cwd()
 const bytes = (path: string) => readFileSync(join(ROOT, path))
@@ -24,11 +24,11 @@ describe('BP-1 migration records', () => {
     expect(data.length).toBe(size)
   })
 
-  it('the README lists 0026 as a record and 0027 as not applied yet, and names the new table', () => {
+  it('the README lists 0026 as a record and 0027 as applied, and names the new table', () => {
     const readme = bytes('migrations/README.md').toString('utf8')
     const rows = readme.split('\n')
     expect(rows.find((line) => line.startsWith('| `0026_revoke_admin_update_field.sql` |'))).toContain('Record only - applied 23 Nov 2026, 14:12:19 UTC (D316).')
-    expect(rows.find((line) => line.startsWith('| `0027_admin_recycle_bin.sql` |'))).toContain('Record file, not applied yet (BP-1, D315).')
+    expect(rows.find((line) => line.startsWith('| `0027_admin_recycle_bin.sql` |'))).toContain('Applied 23 Nov 2026, 15:28:43 UTC (BP-1, D315).')
     expect(readme).toContain('site_counts  job_similar  admin_recycle_bin')
   })
 })
