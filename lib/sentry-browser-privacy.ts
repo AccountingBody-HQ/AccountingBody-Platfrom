@@ -50,6 +50,7 @@ export const PUBLIC_PAGE_SEGMENTS: readonly string[] = [
   'glossary',
   'how-it-works',
   'jobs',
+  'llms.txt',
   'mock-exams',
   'practice-questions',
   'privacy-policy',

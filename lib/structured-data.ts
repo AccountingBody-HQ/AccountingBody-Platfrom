@@ -1,73 +1,74 @@
-// lib/structured-data.ts
-const BASE_URL = 'https://accountingbody.com'
-const LOGO_URL = `${BASE_URL}/logo.png`
-const ORG_NAME = 'AccountingBody'
+// lib/structured-data.ts — the one source of the site's hidden labels
+// (JSON-LD, schema.org), rendered by components/StructuredData.tsx.
+//
+// Rules (owner decisions D348 item 16 and D350):
+// - Every value repeats something the page visibly shows, or the page's own
+//   canonical address. Callers pass the same values the page renders.
+// - Addresses are the page's canonical (lib/canonical.ts), on both brands.
+// - The organisation is the brand as shown (lib/brand.ts), with its home
+//   address. No logo: the site has no public logo file.
+// - No dates are emitted, and there is no FAQPage helper.
+import { AB_URL, ET_URL } from '@/lib/canonical'
+import { brandName } from '@/lib/brand'
 
-const organisation = {
-  '@type': 'Organization' as const,
-  name:    ORG_NAME,
-  url:     BASE_URL,
-  logo: {
-    '@type': 'ImageObject',
-    url:     LOGO_URL,
-  },
+const CONTEXT = 'https://schema.org'
+
+export function brandHomeUrl(isEthioTax: boolean): string {
+  return isEthioTax ? ET_URL : AB_URL
 }
 
-export function websiteSchema() {
+function organisation(isEthioTax: boolean) {
   return {
-    '@context': 'https://schema.org',
-    '@type':    'WebSite',
-    name:        ORG_NAME,
-    url:         BASE_URL,
-    description: "The UK's leading accounting education platform.",
-    potentialAction: {
-      '@type':  'SearchAction',
-      target: {
-        '@type':      'EntryPoint',
-        urlTemplate: `${BASE_URL}/search?q={search_term_string}`,
-      },
-      'query-input': 'required name=search_term_string',
-    },
+    '@type': 'Organization' as const,
+    name:    brandName(isEthioTax),
+    url:     brandHomeUrl(isEthioTax),
   }
+}
+
+export function organizationSchema(isEthioTax: boolean) {
+  return { '@context': CONTEXT, ...organisation(isEthioTax) }
+}
+
+export function websiteSchema(isEthioTax: boolean) {
+  return {
+    '@context': CONTEXT,
+    '@type':    'WebSite',
+    name:        brandName(isEthioTax),
+    url:         brandHomeUrl(isEthioTax),
+  }
+}
+
+// An author name that names a team or an organisation (for example the
+// default "Accounting Body Editorial Team", lib/article-normaliser.ts) is an
+// Organization; any other name is a Person.
+const ORGANISATION_AUTHOR = /\b(team|editorial|editors?|staff|ltd|limited)\b|accounting ?body|ethiotax/i
+
+export function authorType(name: string): 'Organization' | 'Person' {
+  return ORGANISATION_AUTHOR.test(name) ? 'Organization' : 'Person'
 }
 
 export function articleSchema({
   title,
   description,
   url,
-  datePublished,
-  dateModified,
-  authorName = ORG_NAME,
-  imageUrl,
+  authorName,
+  isEthioTax,
 }: {
-  title:         string
-  description:   string
-  url:           string
-  datePublished: string
-  dateModified?: string
-  authorName?:   string
-  imageUrl?:     string
+  title:        string
+  description?: string
+  url:          string
+  authorName?:  string
+  isEthioTax:   boolean
 }) {
   return {
-    '@context':  'https://schema.org',
+    '@context':  CONTEXT,
     '@type':     'Article',
     headline:     title,
-    description,
+    ...(description ? { description } : {}),
     url,
-    datePublished,
-    dateModified:  dateModified ?? datePublished,
-    author: {
-      '@type': 'Person',
-      name:     authorName,
-    },
-    publisher:     organisation,
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id':    url,
-    },
-    ...(imageUrl && {
-      image: { '@type': 'ImageObject', url: imageUrl },
-    }),
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    ...(authorName ? { author: { '@type': authorType(authorName), name: authorName } } : {}),
+    publisher:    organisation(isEthioTax),
   }
 }
 
@@ -75,36 +76,65 @@ export function courseSchema({
   name,
   description,
   url,
-  courseCode,
-  isFree = true,
+  level,
+  isEthioTax,
 }: {
   name:         string
-  description:  string
+  description?: string
   url:          string
-  courseCode?:  string
-  isFree?:      boolean
+  level?:       string
+  isEthioTax:   boolean
 }) {
   return {
-    '@context':  'https://schema.org',
+    '@context':  CONTEXT,
     '@type':     'Course',
     name,
-    description,
+    ...(description ? { description } : {}),
     url,
-    courseCode,
-    provider:    organisation,
-    offers: {
-      '@type':       'Offer',
-      price:          isFree ? '0' : undefined,
-      priceCurrency: 'GBP',
-      availability:  'https://schema.org/InStock',
-      category:       isFree ? 'free' : 'paid',
-    },
+    ...(level ? { educationalLevel: level } : {}),
+    isAccessibleForFree: true,
+    provider:    organisation(isEthioTax),
+  }
+}
+
+export function itemListSchema(items: { name: string; url: string }[]) {
+  return {
+    '@context':      CONTEXT,
+    '@type':         'ItemList',
+    itemListElement: items.map((item, index) => ({
+      '@type':   'ListItem',
+      position:   index + 1,
+      name:       item.name,
+      url:        item.url,
+    })),
+  }
+}
+
+export function lessonSchema({
+  name,
+  url,
+  course,
+  isEthioTax,
+}: {
+  name:       string
+  url:        string
+  course:     { name: string; url: string }
+  isEthioTax: boolean
+}) {
+  return {
+    '@context':  CONTEXT,
+    '@type':     'LearningResource',
+    name,
+    url,
+    learningResourceType: 'lesson',
+    isPartOf:    { '@type': 'Course', name: course.name, url: course.url },
+    provider:    organisation(isEthioTax),
   }
 }
 
 export function breadcrumbSchema(items: { name: string; url: string }[]) {
   return {
-    '@context':      'https://schema.org',
+    '@context':      CONTEXT,
     '@type':         'BreadcrumbList',
     itemListElement: items.map((item, index) => ({
       '@type':   'ListItem',
@@ -115,39 +145,68 @@ export function breadcrumbSchema(items: { name: string; url: string }[]) {
   }
 }
 
-export function faqSchema(faqs: { question: string; answer: string }[]) {
-  return {
-    '@context':  'https://schema.org',
-    '@type':     'FAQPage',
-    mainEntity:   faqs.map(faq => ({
-      '@type': 'Question',
-      name:     faq.question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text:     faq.answer,
-      },
-    })),
-  }
-}
-
+// A practice set: its name and description only — never its questions or
+// answers (owner decision D350 E).
 export function quizSchema({
   name,
   description,
   url,
-  educationalLevel,
+  isEthioTax,
 }: {
-  name:              string
-  description:       string
-  url:               string
-  educationalLevel?: string
+  name:         string
+  description?: string
+  url:          string
+  isEthioTax:   boolean
 }) {
   return {
-    '@context':       'https://schema.org',
+    '@context':       CONTEXT,
     '@type':          'Quiz',
     name,
-    description,
+    ...(description ? { description } : {}),
     url,
-    educationalLevel,
-    provider:          organisation,
+    isAccessibleForFree: true,
+    provider:          organisation(isEthioTax),
+  }
+}
+
+export function webPageSchema({
+  type,
+  name,
+  description,
+  url,
+}: {
+  type:         'WebPage' | 'CollectionPage'
+  name:         string
+  description?: string
+  url:          string
+}) {
+  return {
+    '@context': CONTEXT,
+    '@type':    type,
+    name,
+    ...(description ? { description } : {}),
+    url,
+  }
+}
+
+export function definedTermSetSchema({
+  name,
+  url,
+  terms,
+}: {
+  name:  string
+  url:   string
+  terms: { name: string; description?: string }[]
+}) {
+  return {
+    '@context':     CONTEXT,
+    '@type':        'DefinedTermSet',
+    name,
+    url,
+    hasDefinedTerm: terms.map(term => ({
+      '@type': 'DefinedTerm',
+      name:     term.name,
+      ...(term.description ? { description: term.description } : {}),
+    })),
   }
 }

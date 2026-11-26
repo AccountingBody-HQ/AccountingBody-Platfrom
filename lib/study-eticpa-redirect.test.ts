@@ -24,7 +24,10 @@ vi.mock('next/headers', () => ({
   headers: async () => ({ get: (name: string) => (name === 'x-et-platform' && brand.ethiotax ? 'ethiotax' : null) }),
 }))
 vi.mock('@/lib/canonical', () => ({
-  resolveArticleCanonical: async () => ({ alternates: {}, openGraph: { url: 'https://example.test/x' } }),
+  resolveArticleCanonical: () => ({ alternates: {}, openGraph: { url: 'https://example.test/x' } }),
+  ownerUrl: (_owner: string, path: string) => `https://example.test${path}`,
+  AB_URL: 'https://accountingbody.com',
+  ET_URL: 'https://ethiotax.com',
 }))
 
 import { permanentRedirect } from 'next/navigation'

@@ -74,14 +74,13 @@ describe('G1 robots.txt', () => {
     expect(star?.allow).toBe('/')
     expect(star?.disallow).toEqual(['/api/', '/studio/', '/_next/', '/dashboard/', '/account/', '/private/'])
   })
-  it('the four AI bot rules are unchanged', () => {
+  // SEO-1 S4 (D348, D350): ChatGPT-User and PerplexityBot are no longer blocked.
+  it('the two AI training-crawler rules are unchanged', () => {
     expect(rules.filter((rule) => rule.userAgent !== '*')).toEqual([
       { userAgent: 'GPTBot', disallow: ['/'] },
-      { userAgent: 'ChatGPT-User', disallow: ['/'] },
       { userAgent: 'CCBot', disallow: ['/'] },
-      { userAgent: 'PerplexityBot', disallow: ['/'] },
     ])
-    expect(rules.length).toBe(5)
+    expect(rules.length).toBe(3)
   })
   it('sitemap and host are unchanged', () => {
     expect(result.sitemap).toBe('https://accountingbody.com/sitemap.xml')

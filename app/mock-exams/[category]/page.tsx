@@ -3,7 +3,9 @@ import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import MockExamClient from '@/components/course/MockExamClient'
 import type { Metadata } from 'next'
-import { ownerCanonical } from '@/lib/canonical'
+import { ownerCanonical, ownerUrl } from '@/lib/canonical'
+import StructuredData from '@/components/StructuredData'
+import { breadcrumbSchema, webPageSchema } from '@/lib/structured-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,8 +57,20 @@ export default async function CategoryMockExamPage({ params }: { params: Promise
   const cat = filters.categories.find(c => c.slug === category)
   if (!cat) redirect('/mock-exams')
 
+  // Hidden labels: the breadcrumb as shown (Accounting Body only; EthioTax redirects above).
+  const pageUrl = ownerUrl('accountingbody', `/mock-exams/${category}`)
+
   return (
     <div className="min-h-screen bg-slate-50">
+      <StructuredData data={[
+        webPageSchema({ type: 'WebPage', name: cat.title, url: pageUrl }),
+        breadcrumbSchema([
+          { name: 'Home', url: ownerUrl('accountingbody', '/') },
+          { name: 'Study', url: ownerUrl('accountingbody', '/study') },
+          { name: 'Mock Exams', url: ownerUrl('accountingbody', '/mock-exams') },
+          { name: cat.title, url: pageUrl },
+        ]),
+      ]} />
       {/* HEADER BAR */}
       <div className="bg-white border-b border-slate-200">
         <div className="container-site py-4">

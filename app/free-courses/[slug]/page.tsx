@@ -7,6 +7,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { contentOwner, ownerCanonical } from '@/lib/canonical'
 import { getRequestBrand } from '@/lib/brand-server'
+import StructuredData from '@/components/StructuredData'
+import { courseSchema } from '@/lib/structured-data'
 
 export async function generateStaticParams() {
   const courses = await getPublishedCourses()
@@ -34,15 +36,24 @@ export default async function FreeCoursesSlugPage({ params }: { params: Promise<
   const { slug } = await params
   const course = await getPublicCourseBySlug(slug)
   if (!course) notFound()
-  const { name } = await getRequestBrand()
+  const { name, isEthioTax } = await getRequestBrand()
 
   const badge        = levelBadge(course.level)
   const firstLesson  = course.chapters?.[0]?.lessons?.[0]
   const totalLessons = course.chapters?.reduce((acc, ch) => acc + (ch.lessons?.length ?? 0), 0) ?? 0
   const chapterCount = course.chapters?.length ?? 0
+  // Hidden label: what the hero shows, at the page's canonical address.
+  const canonicalUrl = ownerCanonical(
+    contentOwner({ canonical_owner: course.canonicalOwner, show_on_sites: course.showOnSites }),
+    `/free-courses/${slug}`,
+  ).openGraph.url
 
   return (
     <>
+      <StructuredData data={courseSchema({
+        name: course.title, description: course.description || undefined, url: canonicalUrl,
+        level: course.level ? capitalize(course.level) : undefined, isEthioTax,
+      })} />
       {/* Hero */}
       <section className="bg-navy-950 py-16 md:py-24 relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.04]"

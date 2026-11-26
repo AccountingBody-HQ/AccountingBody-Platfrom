@@ -5,6 +5,12 @@ import { buildUrlset, type UrlsetEntry } from '@/lib/sitemap-chunks'
 
 const AB_BASE_URL = 'https://accountingbody.com'
 
+// The subjects the /mock-exams hub lists, in its order.
+const MOCK_EXAM_SUBJECTS = [
+  'financial-accounting', 'financial-management', 'management-accounting', 'financial-market',
+  'business-management', 'audit-assurance', 'taxation', 'economics',
+] as const
+
 export const dynamic = 'force-dynamic'
 // force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
 // handlers (Data Cache, up to 1 year, survives deploys). This froze the sitemap
@@ -50,6 +56,14 @@ export async function GET() {
       lastModified:    new Date(),
       changeFrequency: 'weekly' as const,
       priority:        0.85,
+    })),
+    // The mock-exam hub and each subject it links to (app/mock-exams).
+    { url: `${AB_BASE_URL}/mock-exams`,         lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.8 },
+    ...MOCK_EXAM_SUBJECTS.map(subject => ({
+      url:             `${AB_BASE_URL}/mock-exams/${subject}`,
+      lastModified:    new Date(),
+      changeFrequency: 'weekly' as const,
+      priority:        0.7,
     })),
   ]
 

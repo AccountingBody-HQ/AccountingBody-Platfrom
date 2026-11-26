@@ -285,7 +285,11 @@ describe('G5 /search is noindex, follow and out of the pages sitemap', () => {
     const AB = 'https://accountingbody.com'
     const want = ['', '/study', '/practice-questions', '/jobs', '/jobs/listings', '/articles', '/glossary', '/calculators',
       '/global-payroll', '/dictionary', '/free-courses', '/get-help', '/firms-freelancers', '/about', '/contact',
-      '/privacy-policy', '/terms', '/cookie-policy', '/study/acca', '/study/cima', '/study/aat', '/study/icaew'].map((p) => AB + p)
+      '/privacy-policy', '/terms', '/cookie-policy', '/study/acca', '/study/cima', '/study/aat', '/study/icaew',
+      // SEO-1 S6 (D350): the mock-exam hub and the subjects it lists.
+      '/mock-exams', '/mock-exams/financial-accounting', '/mock-exams/financial-management', '/mock-exams/management-accounting',
+      '/mock-exams/financial-market', '/mock-exams/business-management', '/mock-exams/audit-assurance', '/mock-exams/taxation',
+      '/mock-exams/economics'].map((p) => AB + p)
     expect(locs).toEqual(want)
     expect(xml).not.toContain('/search<')
   })
@@ -316,7 +320,8 @@ describe('G6 scope: only the planned lines change', () => {
     ['middleware.ts', 'd93412b73d16b115b288ab6d78999e2f3982a3485ada3c135a7c70122b14e92c'],
     // BP-2 (B): getAdminPath treats an empty ADMIN_PATH like unset.
     ['lib/middleware-logic.ts', 'e0378e7b89ad5007cf928664444f0d322620a534051d96fcb63421854f130612'],
-    ['app/robots.ts', 'bb3375cf5cf479acb4255bc4bca7166374ef7b2cd2b457e16b832d8fcac75f4e'],
+    // SEO-1 S4 (D348, D350): ChatGPT-User and PerplexityBot are no longer blocked (app/robots.test.ts).
+    ['app/robots.ts', '6d2646b690277f742eea0245496e0f45376f773f5835ccefee4d9b052a0c2f9d'],
     ['app/[slug]/page.tsx', 'eba427305e900fbf9ba257aa128b8a35f1a5ce1a40e0ec0cdca7d95f60828032'],
     ['lib/slug-param.ts', '23aff618c927ccded22026c3ea21391b9009fda6eb97eca0ee40ba174c0e95eb'],
     // W0-1 C1: the search words come from lib/search-words.ts (hyphens split too).

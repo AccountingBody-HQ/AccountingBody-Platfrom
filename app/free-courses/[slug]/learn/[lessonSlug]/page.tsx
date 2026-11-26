@@ -13,6 +13,8 @@ import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 import { contentOwner, ownerCanonical, resolveArticlePath } from '@/lib/canonical'
 import { brandName } from '@/lib/brand'
+import StructuredData from '@/components/StructuredData'
+import { lessonSchema } from '@/lib/structured-data'
 
 export async function generateStaticParams() {
   const courses = await getPublishedCourses()
@@ -86,8 +88,14 @@ export default async function FreeCoursesLessonPage({ params }: { params: Promis
     lessons: (ch.lessons ?? []).map(l => ({ _id: l.id, title: l.title, slug: { current: l.slug } })),
   }))
 
+  // Hidden label: the lesson and its course as the top bar shows them, at their canonical addresses.
+  const owner = contentOwner({ canonical_owner: course.canonicalOwner, show_on_sites: course.showOnSites })
+  const lessonUrl = ownerCanonical(owner, `/free-courses/${slug}/learn/${lessonSlug}`).openGraph.url
+  const courseUrl = ownerCanonical(owner, `/free-courses/${slug}`).openGraph.url
+
   return (
     <div className="flex flex-col" style={{ minHeight: '100vh', background: '#EDE9E3' }}>
+      <StructuredData data={lessonSchema({ name: lesson.title, url: lessonUrl, course: { name: course.title, url: courseUrl }, isEthioTax })} />
 
       {/* TOP BAR */}
       <header

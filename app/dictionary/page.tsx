@@ -5,7 +5,9 @@
 import React from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { ownerCanonical, resolveArticlePath } from '@/lib/canonical'
+import { ownerCanonical, ownerUrl, resolveArticlePath } from '@/lib/canonical'
+import StructuredData from '@/components/StructuredData'
+import { definedTermSetSchema } from '@/lib/structured-data'
 import {
   getDictionaryArticlesByLetter,
   getDictionaryArticlesByCategory,
@@ -130,6 +132,14 @@ export default async function DictionaryPage({
 
   return (
     <>
+      {/* Hidden label on a letter page: the heading and each term's title and excerpt as listed. */}
+      {activeLetter && articles.length > 0 && (
+        <StructuredData data={definedTermSetSchema({
+          name: `Terms starting with "${activeLetter}"`,
+          url: ownerUrl('accountingbody', '/dictionary'),
+          terms: articles.map(a => ({ name: a.title, description: a.excerpt || undefined })),
+        })} />
+      )}
       {/* Header */}
       <section className="bg-navy-950 py-14 md:py-20">
         <div className="container-site">

@@ -27,7 +27,10 @@ vi.mock('next/headers', () => ({
   headers: async () => ({ get: () => null }),
 }))
 vi.mock('@/lib/canonical', () => ({
-  resolveArticleCanonical: async () => ({ alternates: {}, openGraph: { url: 'https://example.test/x' } }),
+  resolveArticleCanonical: () => ({ alternates: {}, openGraph: { url: 'https://example.test/x' } }),
+  ownerUrl: (_owner: string, path: string) => `https://example.test${path}`,
+  AB_URL: 'https://accountingbody.com',
+  ET_URL: 'https://ethiotax.com',
 }))
 
 import { notFound, permanentRedirect, redirect } from 'next/navigation'
