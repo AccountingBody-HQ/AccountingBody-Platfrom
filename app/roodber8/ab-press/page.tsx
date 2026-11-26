@@ -2,6 +2,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react'
 import { adminFetch, type AdminResponse } from '@/lib/admin-fetch'
+// The font check every AB Press book shares (owner decision D349).
+import { fontsEmbedded } from '@/lib/ab-press-pdf-checks'
 
 const BOOK_TYPES = [
   { value: 'combined', label: 'Combined', desc: 'Study notes + practice questions per chapter' },
@@ -172,32 +174,6 @@ function planVolumes(chapterPages: number[], answerPages: number[], limit = KDP_
     }
   }
   return { volumes }
-}
-
-// Whether every font of a PDF is embedded, as KDP asks (owner decision D346):
-// each font's descriptor holds its font file; a Type 0 font is judged by its
-// descendant fonts; a Type 3 font draws its own glyphs. false when the PDF
-// cannot be read.
-async function fontsEmbedded(bytes: Uint8Array): Promise<boolean> {
-  try {
-    const { PDFDocument, PDFDict, PDFName, PDFArray } = await import('pdf-lib')
-    const doc = await PDFDocument.load(bytes)
-    const embedded = (font: any): boolean => {
-      const subtype = font.lookup(PDFName.of('Subtype'))
-      if (subtype === PDFName.of('Type3')) return true
-      if (subtype === PDFName.of('Type0')) {
-        const kids = font.lookup(PDFName.of('DescendantFonts'))
-        return kids instanceof PDFArray && kids.size() > 0 &&
-          kids.asArray().every(kid => { const d = doc.context.lookup(kid); return d instanceof PDFDict && embedded(d) })
-      }
-      const descriptor = font.lookup(PDFName.of('FontDescriptor'))
-      return descriptor instanceof PDFDict && ['FontFile', 'FontFile2', 'FontFile3'].some(key => descriptor.has(PDFName.of(key)))
-    }
-    return doc.context.enumerateIndirectObjects().every(([, object]) =>
-      !(object instanceof PDFDict) || object.lookup(PDFName.of('Type')) !== PDFName.of('Font') || embedded(object))
-  } catch {
-    return false
-  }
 }
 
 // The KDP checks of the server's check report (buildPreflight in the generate
