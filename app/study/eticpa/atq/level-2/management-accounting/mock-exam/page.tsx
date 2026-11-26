@@ -10,7 +10,7 @@ export default async function ManagementAccountingMockExamPage() {
     <div className="min-h-screen bg-slate-50">
       <div className="bg-white border-b border-slate-200">
         <div className="container-site py-4">
-          <nav className="flex items-center gap-2 text-xs text-slate-400 flex-wrap">
+          <nav className="flex items-center gap-2 text-xs text-slate-500 flex-wrap">
             <a href="/study/eticpa" className="hover:text-slate-600 transition-colors">ETICPA</a>
             <span>/</span>
             <a href="/study/eticpa/atq/level-2" className="hover:text-slate-600 transition-colors">ATQ Level 2</a>
