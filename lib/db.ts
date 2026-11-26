@@ -471,27 +471,61 @@ export const getPublicCasesBySetId = cache(async (setId: string): Promise<Questi
   guardedPublicCases(setId)
 )
 
+// Text used inside an ilike pattern matches itself only: the LIKE wildcards
+// % and _ and the escape character \ are escaped (\ is PostgreSQL's default
+// LIKE escape).
+export function escapeLikeText(text: string): string {
+  return text.replace(/[\\%_]/g, (c) => `\\${c}`)
+}
+
+// The filters shared by the list read and its total-only read.
+function questionSetsListQuery<Columns extends string>(
+  supabase: ReturnType<typeof getSupabase>,
+  columns: Columns,
+  options: { count: 'exact'; head?: boolean },
+  filters: { difficulty?: string; search?: string; startsWith?: string },
+) {
+  let query = supabase
+    .from('question_sets')
+    .select(columns, options)
+    .eq('status', 'published')
+    .contains('show_on_sites', ['ab'])
+
+  if (filters.difficulty) query = query.eq('difficulty', filters.difficulty)
+  if (filters.search)     query = query.ilike('title', `%${filters.search}%`)
+  if (filters.startsWith) query = query.ilike('title', `${escapeLikeText(filters.startsWith)}%`)
+  return query
+}
+
+// PostgREST answers a range that starts after the last row with HTTP 416 and
+// code PGRST103 ("Requested range not satisfiable"); supabase-js passes the
+// status and code through and gives no count. That page is past the end, not
+// a failure.
+function isRangePastEnd(error: { code?: unknown }, status: number): boolean {
+  return status === 416 || error.code === 'PGRST103'
+}
+
 export async function getQuestionSets(params: {
   difficulty?: string
   search?: string
+  startsWith?: string
   category?: string
   page?: number
   perPage?: number
   sortBy?: string
 }): Promise<{ sets: QuestionSet[]; total: number }> {
   const supabase = getSupabase()
-  const { difficulty, search, page = 1, perPage = 12, sortBy = 'alpha' } = params
+  const { difficulty, search, startsWith, page = 1, perPage = 12, sortBy = 'alpha' } = params
   const start = (page - 1) * perPage
   const end   = start + perPage - 1
+  const filters = { difficulty, search, startsWith }
 
-  let query = supabase
-    .from('question_sets')
-    .select('id, title, slug, excerpt, difficulty, topic, exam_body, question_type, published_at', { count: 'exact' })
-    .eq('status', 'published')
-    .contains('show_on_sites', ['ab'])
-
-  if (difficulty) query = query.eq('difficulty', difficulty)
-  if (search)     query = query.ilike('title', `%${search}%`)
+  let query = questionSetsListQuery(
+    supabase,
+    'id, title, slug, excerpt, difficulty, topic, exam_body, question_type, published_at',
+    { count: 'exact' },
+    filters,
+  )
   if (sortBy === 'newest') {
     query = query.order('published_at', { ascending: false })
   } else {
@@ -501,6 +535,13 @@ export async function getQuestionSets(params: {
   query = query.range(start, end)
 
   const { data, error, count, status } = await query
+  if (error && start > 0 && isRangePastEnd(error, status)) {
+    // No rows on this page: read the exact total of the same filters.
+    const counted = await questionSetsListQuery(supabase, 'id', { count: 'exact', head: true }, filters)
+    if (counted.error) throw readProblem(`getQuestionSets: question_sets count failed (status ${counted.status})`, counted.error)
+    if (counted.count === null) throw new Error(`getQuestionSets: question_sets count returned no count (status ${counted.status})`)
+    return { sets: [], total: counted.count }
+  }
   if (error) throw readProblem(`getQuestionSets: question_sets query failed (status ${status})`, error)
   if (!data) return { sets: [], total: 0 }
   return { sets: data as QuestionSet[], total: count ?? 0 }
@@ -530,19 +571,56 @@ const guardedPublicQuestionSetsList = guardCachedRead(
 export async function getPublicQuestionSets(params: {
   difficulty?: string
   search?: string
+  startsWith?: string
   category?: string
   page?: number
   perPage?: number
   sortBy?: string
 }): Promise<{ sets: QuestionSet[]; total: number }> {
-  const { difficulty = '', search, page = 1, perPage = 12, sortBy } = params
+  const { difficulty = '', search, startsWith, page = 1, perPage = 12, sortBy } = params
   const cacheable =
     !search &&
+    !startsWith &&
     Number.isInteger(page) && page >= 1 && page <= 20 &&
     PUBLIC_LIST_DIFFICULTIES.includes(difficulty) &&
     perPage === 12
   if (!cacheable) return getQuestionSets(params)
   return guardedPublicQuestionSetsList(difficulty, page, sortBy === 'newest' ? 'newest' : 'alpha')
+}
+
+// How many live AB sets each difficulty has, for the /practice-questions
+// level filter. Three head counts, kept for an hour under the list's tags. A
+// failure is thrown and never stored; the page then shows every level.
+export const QUESTION_SET_DIFFICULTIES = ['beginner', 'intermediate', 'advanced'] as const
+const PUBLIC_QUESTION_SET_DIFFICULTY_COUNTS_KEY = ['public-question-set-difficulty-counts']
+
+async function fetchQuestionSetDifficultyCounts(): Promise<Record<string, number>> {
+  const supabase = getSupabase()
+  const counts = await Promise.all(QUESTION_SET_DIFFICULTIES.map(async (difficulty) => {
+    const { count, error, status } = await supabase
+      .from('question_sets')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'published')
+      .contains('show_on_sites', ['ab'])
+      .eq('difficulty', difficulty)
+    if (error) throw readProblem(`question set difficulty count failed (status ${status})`, error)
+    if (count === null) throw new Error(`question set difficulty count returned no count (status ${status})`)
+    return [difficulty, count] as const
+  }))
+  return Object.fromEntries(counts)
+}
+
+const guardedQuestionSetDifficultyCounts = guardCachedRead(
+  PUBLIC_QUESTION_SET_DIFFICULTY_COUNTS_KEY,
+  () =>
+    unstable_cache(fetchQuestionSetDifficultyCounts, PUBLIC_QUESTION_SET_DIFFICULTY_COUNTS_KEY, {
+      revalidate: 3600,
+      tags: ['question-sets', 'question-sets-list'],
+    })()
+)
+
+export async function getPublicQuestionSetDifficultyCounts(): Promise<Record<string, number>> {
+  return guardedQuestionSetDifficultyCounts()
 }
 
 async function fetchQuestionSetCount(): Promise<number> {

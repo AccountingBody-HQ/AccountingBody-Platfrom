@@ -162,7 +162,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
           <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Exam Complete</p>
           <div className="w-28 h-28 rounded-full mx-auto mb-6 flex items-center justify-center border-4"
             style={{ borderColor: passed ? GREEN : GOLD }}>
-            <span className="font-display text-3xl" style={{ color: passed ? GREEN : GOLD }}>{pct}%</span>
+            <span className="font-display text-3xl" style={{ color: passed ? GREEN : '#88671c' }}>{pct}%</span>
           </div>
           <h1 ref={resultsHeadingRef} tabIndex={-1} className="font-display text-2xl text-navy-950 mb-2">{passed ? 'Well done — you passed!' : 'Keep practising'}</h1>
           <p className="text-slate-500 mb-6">You scored {score} out of {questions.length} ({answered} answered)</p>

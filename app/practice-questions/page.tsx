@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { getPublicQuestionSets } from '@/lib/db'
+import { getPublicQuestionSets, getPublicQuestionSetDifficultyCounts, QUESTION_SET_DIFFICULTIES } from '@/lib/db'
 import { headers } from 'next/headers'
+import { notFound } from 'next/navigation'
+import { parseListPage, visibleDifficulties } from '@/lib/practice-list'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 import { PracticeQuestionsPagination } from './PracticeQuestionsPagination'
 import { buildPracticeQuestionsUrl } from './buildUrl'
@@ -27,6 +29,16 @@ const PER_PAGE = 12
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 
+// Levels with at least one live set; if the cached count cannot be read,
+// every level is offered, as before.
+async function levelOptions(): Promise<string[]> {
+  try {
+    return visibleDifficulties(QUESTION_SET_DIFFICULTIES, await getPublicQuestionSetDifficultyCounts())
+  } catch {
+    return visibleDifficulties(QUESTION_SET_DIFFICULTIES, null)
+  }
+}
+
 export default async function PracticeQuestionsPage({
   searchParams,
 }: {
@@ -37,24 +49,29 @@ export default async function PracticeQuestionsPage({
   const sp           = await searchParams
   const difficulty   = sp.difficulty ?? ''
   const search       = sp.search ?? ''
-  const page         = Math.max(1, parseInt(sp.page ?? '1', 10))
+  const page         = parseListPage(sp.page)
   const letter       = sp.letter ?? ''
   const sort         = sp.sort ?? 'alpha'
   const category     = sp.category ?? ''
 
-  // Build search term — letter filter takes priority over text search
-  const searchTerm = letter ? letter : (search || undefined)
-
-  const { sets: posts, total } = await getPublicQuestionSets({
-    difficulty: difficulty || undefined,
-    search:     searchTerm,
-    page,
-    perPage:    PER_PAGE,
-    sortBy:     sort,
-  })
-  const filters: { difficulties: string[]; categories: { slug: string; title: string }[] } = { difficulties: ['beginner', 'intermediate', 'advanced'], categories: [] }
+  // The letter filter takes priority over text search: a letter matches
+  // titles that start with it; a search matches titles that contain it.
+  const [{ sets: posts, total }, difficulties] = await Promise.all([
+    getPublicQuestionSets({
+      difficulty: difficulty || undefined,
+      search:     letter ? undefined : (search || undefined),
+      startsWith: letter || undefined,
+      page,
+      perPage:    PER_PAGE,
+      sortBy:     sort,
+    }),
+    levelOptions(),
+  ])
+  const filters: { difficulties: string[]; categories: { slug: string; title: string }[] } = { difficulties, categories: [] }
 
   const totalPages = Math.ceil(total / PER_PAGE)
+  // A page after the last one is not a page: the site's normal 404.
+  if (total > 0 && page > totalPages) notFound()
 
   // Build URL helper — preserves existing params and overrides one. The
   // actual logic lives in buildUrl.ts (framework-free) so it can also run

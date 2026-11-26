@@ -46,6 +46,28 @@ describe('mock-exam text contrast', () => {
     expect(client).not.toContain('style={{ color: GOLD }}>{q.topic}')
   })
 
+  // PQB-1 S2 (PQ-D3 #23; D351): the failed score % is the dark gold too; the
+  // ring border (not text) stays GOLD.
+  it('the failed score % is #88671c; the ring border stays GOLD', () => {
+    const client = read('components/course/MockExamClient.tsx')
+    expect(client).toContain(`<span className="font-display text-3xl" style={{ color: passed ? GREEN : '#88671c' }}>{pct}%</span>`)
+    expect(client).not.toContain('style={{ color: passed ? GREEN : GOLD }}')
+    expect(client).toContain('style={{ borderColor: passed ? GREEN : GOLD }}')
+  })
+
+  // PQB-1 S2 (PQ-D3 #24; D351): the ETICPA module breadcrumbs are slate-500.
+  it.each([
+    'app/study/eticpa/atq/level-1/cost-accounting/mock-exam/page.tsx',
+    'app/study/eticpa/atq/level-1/introduction-to-accounting/mock-exam/page.tsx',
+    'app/study/eticpa/atq/level-2/assurance-controls-ethics/mock-exam/page.tsx',
+    'app/study/eticpa/atq/level-2/financial-accounting/mock-exam/page.tsx',
+    'app/study/eticpa/atq/level-2/management-accounting/mock-exam/page.tsx',
+  ])('%s: the breadcrumb line is text-slate-500 and no text-slate-400 is left', (f) => {
+    const src = read(f)
+    expect(src.split('<nav className="flex items-center gap-2 text-xs text-slate-500 flex-wrap">').length - 1).toBe(1)
+    expect(src).not.toContain('text-slate-400')
+  })
+
   it('the new colours pass 4.5:1 where the old ones failed', () => {
     expect(ratio('#88671c', '#ffffff')).toBeGreaterThanOrEqual(4.5)
     expect(ratio('#C9982A', '#ffffff')).toBeLessThan(4.5)
