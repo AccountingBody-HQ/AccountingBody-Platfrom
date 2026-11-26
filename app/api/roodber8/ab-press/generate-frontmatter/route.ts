@@ -15,17 +15,34 @@ import { courseKey, EMPTY_COURSE, isEmptyCourse } from "@/lib/ab-press-builder"
 
 export const maxDuration = 60
 
+// A volume of a book made as several (owner decision D346): whole numbers
+// with 1 <= x <= n <= 20.
+const isVolume = (v: any) =>
+  !!v && typeof v === "object" && Number.isInteger(v.x) && Number.isInteger(v.n) && v.x >= 1 && v.x <= v.n && v.n <= 20
+
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
     return signedOutResponse()
   }
   try {
     const body = await req.json()
-    const { slug, bookType, edition, subtitle, chapterPageStarts, totalPages, answersPageStart, hasAnswers } = body
+    const { slug, bookType, edition, subtitle, chapterPageStarts, totalPages, answersPageStart, hasAnswers, volume, chapters } = body
     if (!slug)     return NextResponse.json({ error: "slug is required" },     { status: 400 })
     if (!bookType) return NextResponse.json({ error: "bookType is required" }, { status: 400 })
     if (!Array.isArray(chapterPageStarts)) {
       return NextResponse.json({ error: "chapterPageStarts is required" }, { status: 400 })
+    }
+    // The front pages of one volume: its chapters, as indexes into the
+    // course's chapters, in order. Both are given, or neither.
+    if (volume !== undefined && !isVolume(volume)) return NextResponse.json({ error: "volume is invalid" }, { status: 400 })
+    if (volume === undefined && chapters !== undefined) return NextResponse.json({ error: "volume is required" }, { status: 400 })
+    if (volume !== undefined && chapters === undefined) return NextResponse.json({ error: "chapters is required" }, { status: 400 })
+    const chosen: number[] | null = volume === undefined ? null : chapters
+    if (chosen && (
+      !Array.isArray(chosen) || chosen.length === 0 || chosen.length !== chapterPageStarts.length ||
+      !chosen.every((i, at) => Number.isInteger(i) && i >= 0 && (at === 0 || i > chosen[at - 1]))
+    )) {
+      return NextResponse.json({ error: "chapters is invalid" }, { status: 400 })
     }
 
     // Only the course/chapter title structure is needed for the TOC —
@@ -33,8 +50,20 @@ export async function POST(req: NextRequest) {
     const rawCourse = await getCourseBySlug(slug, true)
     if (!rawCourse) return NextResponse.json({ error: "Course not found" }, { status: 404 })
     if (isEmptyCourse(rawCourse)) return NextResponse.json({ error: EMPTY_COURSE }, { status: 422 })
+    if (chosen && chosen[chosen.length - 1] >= rawCourse.chapters.length) {
+      return NextResponse.json({ error: "chapters is invalid" }, { status: 400 })
+    }
 
-    const course = {
+    const course = chosen
+      ? {
+          // A volume's contents page keeps each chapter's number in the course.
+          chapters: chosen.map((i) => ({
+            _key:          rawCourse.chapters[i].id,
+            chapterTitle:  rawCourse.chapters[i].title,
+            chapterNumber: i + 1,
+          })),
+        }
+      : {
       chapters: rawCourse.chapters.map((ch) => ({
         _key:         ch.id,
         chapterTitle: ch.title,
@@ -51,6 +80,7 @@ export async function POST(req: NextRequest) {
         totalPages: totalPages ?? 0,
         answersPageStart: typeof answersPageStart === "number" ? answersPageStart : undefined,
         hasAnswers: hasAnswers === false ? false : undefined,
+        ...(volume !== undefined ? { volume: { x: volume.x, n: volume.n } } : {}),
       }) as any
     )
 

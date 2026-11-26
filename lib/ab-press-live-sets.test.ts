@@ -7,6 +7,7 @@ import * as pdfLib from 'pdf-lib'
 import ts from 'typescript'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FrontmatterTemplate } from '@/components/book/FrontmatterTemplate'
+import { FullCoverTemplate } from '@/components/book/FullCoverTemplate'
 import { ARTICLES_READ_FAILED, buildCourse, courseKey, EMPTY_COURSE, missingOptionLine, noAnswerLine, READ_FAILED, unpublishedLine, type BuildStats } from './ab-press-builder'
 import { adminFetch, type AdminFetchOptions } from './admin-fetch'
 import { TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
@@ -1343,10 +1344,13 @@ class Screen {
   private cursor = 0
   private effects: (() => void)[] = []
   private component: () => Element
+  // Functions of the page itself, when it has them (owner decision D346).
+  inner: Record<string, ((...args: never[]) => unknown) | undefined> = {}
 
-  constructor() {
-    const source = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
-    const { outputText } = ts.transpileModule(source, {
+  // `edit` changes the page's text before it runs: for a test only.
+  constructor(edit: (source: string) => string = (source) => source) {
+    const source = edit(readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8'))
+    const { outputText: moduleText } = ts.transpileModule(source, {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
     })
     const element = (type: unknown, props: Record<string, unknown>): Element => ({ type, props })
@@ -1366,10 +1370,13 @@ class Screen {
         adminFetch: (url: string, init?: RequestInit, options?: AdminFetchOptions) => (this.realFetch ? adminFetch(url, init, options) : this.fetch(url, init)),
       },
     }
-    const made: { exports: { default?: () => Element } } = { exports: {} }
+    const names = ['planVolumes', 'fontsEmbedded', 'kdpLines']
+    const outputText = `${moduleText}\nmodule.exports.__inner = { ${names.map((name) => `${name}: typeof ${name} === 'undefined' ? undefined : ${name}`).join(', ')} }\n`
+    const made: { exports: { default?: () => Element; __inner?: Screen['inner'] } } = { exports: {} }
     new Function('require', 'module', 'exports', outputText)((name: string) => modules[name], made, made.exports)
     if (!made.exports.default) throw new Error('no page')
     this.component = made.exports.default
+    this.inner = made.exports.__inner ?? {}
   }
 
   private async answer(url: string, init?: RequestInit): Promise<Answer> {
@@ -1487,21 +1494,22 @@ const CHAPTER_PAGES = [5, 2, 7]
 const ANSWER_PAGES = [3, 0, 4]
 const QUESTIONS = [6, 0, 9]
 
-async function screen(): Promise<Screen> {
+// The pages and questions of each chapter can be given (owner decision D346).
+async function screen({ chapterPages = CHAPTER_PAGES, answerPages = ANSWER_PAGES, questions = QUESTIONS } = {}): Promise<Screen> {
   const made = new Screen()
   vi.spyOn(URL, 'createObjectURL').mockImplementation((file) => {
     made.files.push(file as Blob)
     return `blob:${made.files.length}`
   })
   const pdfs = new Map<number, string>()
-  for (const pages of [...CHAPTER_PAGES, 1, 3]) pdfs.set(pages, await pdfOf(pages))
+  for (const pages of [...chapterPages, 1, 3]) pdfs.set(pages, await pdfOf(pages))
   // The pages of the answers are narrower, so they can be told apart.
-  const answerPdfs = await Promise.all(ANSWER_PAGES.map((pages) => (pages ? pdfOf(pages, 400) : null)))
+  const answerPdfs = await Promise.all(answerPages.map((pages) => (pages ? pdfOf(pages, 400) : null)))
   made.answers = {
     'load-course': () => ({ body: { courses: ['first', 'second'].map((slug) => ({ _id: slug, slug, title: `Title ${slug}` })) } }),
     preview: () => ({
       body: {
-        course: { title: 'Course', slug: 'first', chapters: CHAPTER_PAGES.map((_, i) => ({ _key: i, chapterTitle: `C${i}`, lessons: [] })) },
+        course: { title: 'Course', slug: 'first', chapters: chapterPages.map((_, i) => ({ _key: i, chapterTitle: `C${i}`, lessons: [] })) },
         courseKey: courseKey(planned(PLAN)),
         stats: { chapterCount: 3, lessonCount: 3, articleCount: 60, questionCount: 15, questionCountError: false },
         health: { verdict: 'ready', emptyArticles: 0, articlesWithWebElements: 0, totalWebElementsRemoved: 0, mcqLinked: 2, emptyList: [], webWarningDetails: [] },
@@ -1509,15 +1517,15 @@ async function screen(): Promise<Screen> {
       },
     }),
     'generate-chapter': ({ chapterIndex: at }) => ({
-      body: { pdf: pdfs.get(CHAPTER_PAGES[at as number]), pageCount: CHAPTER_PAGES[at as number], chapterCount: 3, courseKey: courseKey(planned(PLAN)), questionCount: QUESTIONS[at as number], missingSets: [], noAnswerSets: [], missingOptionSets: [], unpublished: [] },
+      body: { pdf: pdfs.get(chapterPages[at as number]), pageCount: chapterPages[at as number], chapterCount: chapterPages.length, courseKey: courseKey(planned(PLAN)), questionCount: questions[at as number], missingSets: [], noAnswerSets: [], missingOptionSets: [], unpublished: [] },
     }),
     'generate-answers': ({ chapterIndex: at }) => ({
       body: {
         pdf: answerPdfs[at as number],
-        pageCount: ANSWER_PAGES[at as number],
-        chapterCount: 3,
+        pageCount: answerPages[at as number],
+        chapterCount: chapterPages.length,
         courseKey: courseKey(planned(PLAN)),
-        questionCount: QUESTIONS[at as number],
+        questionCount: questions[at as number],
       },
     }),
     'generate-frontmatter': () => ({ body: { pdf: pdfs.get(3), courseKey: courseKey(planned(PLAN)) } }),
@@ -2253,5 +2261,326 @@ describe('the page numbers of a book made chapter by chapter (D346)', () => {
     const old = await pdfLib.PDFDocument.create()
     old.addPage([432, 648]).drawText('4', { x: 396, y: 18, size: 8, font: await old.embedFont(pdfLib.StandardFonts.Helvetica) })
     expect(await fontsOf(await old.save())).toEqual([{ name: 'Helvetica', kind: 'Type1', embedded: false }])
+  })
+})
+
+// The page numbers drawn on each page from the 4th, read back as text through
+// the font's own character map.
+async function drawnNumbersOf(bytes: Uint8Array): Promise<string[]> {
+  const doc = await pdfLib.PDFDocument.load(bytes)
+  const unicode = new Map<string, string>()
+  for (const [, object] of doc.context.enumerateIndirectObjects()) {
+    if (!(object instanceof pdfLib.PDFDict) || String(object.lookup(pdfLib.PDFName.of('Subtype'))) !== '/Type0') continue
+    const map = object.lookup(pdfLib.PDFName.of('ToUnicode'))
+    if (!(map instanceof pdfLib.PDFRawStream)) continue
+    const text = Buffer.from(pdfLib.decodePDFRawStream(map).decode()).toString('latin1')
+    for (const [, glyph, code] of Array.from(text.matchAll(/<([0-9a-fA-F]+)> <([0-9a-fA-F]+)>/g))) unicode.set(glyph.toLowerCase(), String.fromCharCode(parseInt(code, 16)))
+  }
+  return doc.getPages().slice(3).map((made) => {
+    const contents = made.node.Contents()
+    const streams = contents instanceof pdfLib.PDFArray ? contents.asArray().map((ref) => doc.context.lookup(ref)) : [contents]
+    const text = streams.map((stream) => (stream instanceof pdfLib.PDFRawStream ? Buffer.from(pdfLib.decodePDFRawStream(stream).decode()).toString('latin1') : '')).join('\n')
+    const hex = Array.from(text.matchAll(/<([0-9A-Fa-f]*)> Tj/g)).pop()?.[1] ?? ''
+    return (hex.toLowerCase().match(/.{4}/g) ?? []).map((glyph) => unicode.get(glyph) ?? '?').join('')
+  })
+}
+
+type VolumePlan = { volumes?: number[][]; tooLong?: number }
+let planner: ((c: number[], a: number[], l?: number) => VolumePlan) | null = null
+const planOf = (chapterPages: number[], answerPages: number[], limit?: number): VolumePlan => {
+  planner ??= new Screen().inner.planVolumes as unknown as (c: number[], a: number[], l?: number) => VolumePlan
+  return planner(chapterPages, answerPages, limit)
+}
+const pagesOfPlan = (plan: VolumePlan, chapterPages: number[], answerPages: number[]) =>
+  (plan.volumes ?? []).map((volume) => 3 + volume.reduce((sum, i) => sum + chapterPages[i] + answerPages[i], 0))
+
+// The owner's test book "Financial Accounting" (1,624 pages in one interior
+// today): its chapters' pages, and its 338 answer pages shared out in
+// proportion to the chapters' pages (largest remainder, so they add up).
+const OWNER_CHAPTERS = [301, 120, 231, 191, 182, 220, 38]
+const OWNER_ANSWERS = (() => {
+  const total = OWNER_CHAPTERS.reduce((sum, pages) => sum + pages, 0)
+  const exact = OWNER_CHAPTERS.map((pages) => (338 * pages) / total)
+  const shares = exact.map(Math.floor)
+  const byRemainder = exact.map((value, i) => [value - Math.floor(value), i]).sort((a, b) => b[0] - a[0])
+  const missing = 338 - shares.reduce((sum, pages) => sum + pages, 0)
+  for (let k = 0; k < missing; k++) shares[byRemainder[k][1]] += 1
+  return shares
+})()
+
+describe('the volumes of a long book made chapter by chapter (D346)', { timeout: 120000 }, () => {
+  it("the owner's book: two volumes, chapters 1-3 and 4-7, each within KDP's limits", () => {
+    expect(OWNER_ANSWERS).toEqual([79, 32, 61, 50, 48, 58, 10])
+    expect(3 + OWNER_CHAPTERS.reduce((sum, pages) => sum + pages, 0) + 338).toBe(1624)
+    const plan = planOf(OWNER_CHAPTERS, OWNER_ANSWERS)
+    expect(plan).toEqual({ volumes: [[0, 1, 2], [3, 4, 5, 6]] })
+    expect(pagesOfPlan(plan, OWNER_CHAPTERS, OWNER_ANSWERS)).toEqual([827, 800])
+  })
+
+  it.each<[string, number[], number[], VolumePlan, number[]]>([
+    ['exactly 828 pages: one volume', [500, 325], [0, 0], { volumes: [[0, 1]] }, [828]],
+    ['829 pages: two volumes', [500, 326], [0, 0], { volumes: [[0], [1]] }, [503, 329]],
+    ['the answers count with their chapter', [500, 300], [20, 6], { volumes: [[0], [1]] }, [523, 309]],
+    ['no short last volume where the chapters allow it', [400, 420, 10], [0, 0, 0], { volumes: [[0], [1, 2]] }, [403, 433]],
+    ['a short last volume that cannot be avoided stays', [825, 10], [0, 0], { volumes: [[0], [1]] }, [828, 13]],
+    ['one chapter that alone fills a book', [825], [0], { volumes: [[0]] }, [828]],
+  ])('%s', (_name, chapterPages, answerPages, plan, pages) => {
+    const made = planOf(chapterPages, answerPages)
+    expect(made).toEqual(plan)
+    expect(pagesOfPlan(made, chapterPages, answerPages)).toEqual(pages)
+  })
+
+  it.each<[string, number[], number[], number]>([
+    ['one chapter of 826 pages', [826], [0], 1],
+    ['chapter 2 with its answers', [100, 800, 10], [0, 26, 0], 2],
+  ])('%s is too long for any volume', (_name, chapterPages, answerPages, n) => {
+    expect(planOf(chapterPages, answerPages)).toEqual({ tooLong: n })
+  })
+
+  it('any book: the fewest volumes, chapters in order, every volume within the limit', () => {
+    let seed = 7
+    const random = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648
+    for (let round = 0; round < 300; round++) {
+      const count = 1 + Math.floor(random() * 12)
+      const chapterPages = Array.from({ length: count }, () => 1 + Math.floor(random() * 400))
+      const answerPages = Array.from({ length: count }, () => Math.floor(random() * 60))
+      const plan = planOf(chapterPages, answerPages)
+      const pages = pagesOfPlan(plan, chapterPages, answerPages)
+      expect(plan.volumes?.flat()).toEqual(chapterPages.map((_, i) => i))
+      for (const size of pages) expect(size).toBeLessThanOrEqual(828)
+      // Greedy filling gives the fewest volumes.
+      let greedy = 0
+      let size = Infinity
+      for (let i = 0; i < count; i++) {
+        if (size + chapterPages[i] + answerPages[i] > 828) { greedy += 1; size = 3 }
+        size += chapterPages[i] + answerPages[i]
+      }
+      expect(plan.volumes).toHaveLength(greedy)
+    }
+  })
+
+  // A course of three chapters: 500, 400 and 300 pages, with 20, 0 and 30
+  // answer pages. The chapters' pages have their own widths, so they can be
+  // told apart in the book.
+  const LONG = { chapterPages: [500, 400, 300], answerPages: [20, 0, 30], questions: [5, 0, 6] }
+  const long = async () => {
+    const page = await screen(LONG)
+    const widths = await Promise.all(LONG.chapterPages.map((pages, at) => pdfOf(pages, 410 + at)))
+    const before = page.answers['generate-chapter']
+    page.answers['generate-chapter'] = (body) => {
+      const answer = before(body)
+      return { ...answer, body: { ...(answer.body as object), pdf: widths[body.chapterIndex as number] } }
+    }
+    // A book of 1,256 pages takes longer to merge: wait until it is made.
+    page.generate = async () => {
+      page.press('Generate Book')
+      for (let i = 0; i < 5000 && page.shown.includes('please wait'); i++) await page.settle()
+      expect(page.shown).not.toContain('please wait')
+    }
+    return page
+  }
+  const NAMES = ['interior.pdf', 'cover.pdf', 'metadata.txt', 'preflight-report.txt']
+
+  it('makes one ZIP with the four files of each volume', async () => {
+    const page = await long()
+    const shownAtFont: string[] = []
+    const font = page.answers.font
+    page.answers.font = (body) => {
+      shownAtFont.push(page.shown)
+      return font(body)
+    }
+    await page.open()
+    page.change(page.radio('combined'), 'combined')
+    await page.generate()
+    expect(page.links()).toEqual(['first-combined.zip'])
+    const files = await page.zip()
+    expect(Object.keys(files)).toEqual([1, 2].flatMap((x) => NAMES.map((name) => `volume-${x}-${name}`)))
+    expect(shownAtFont).toHaveLength(1)
+    expect(shownAtFont[0]).toContain('Splitting into 2 volumes...')
+    // The questions keep their numbers: the answers are asked as before.
+    expect(page.calls.filter((call) => call.name === 'generate-answers').map((call) => call.body?.questionNumberOffset)).toEqual([0, 5, 5])
+  })
+
+  it('each volume: its own contents numbers, interior numbered from 4, its own answers, its own cover', async () => {
+    const page = await long()
+    await page.open()
+    page.change(page.radio('combined'), 'combined')
+    await page.generate()
+    const files = await page.zip()
+    const sent = (name: string) => page.calls.filter((call) => call.name === name).map((call) => call.body)
+    const fronts = sent('generate-frontmatter')
+    expect(fronts).toEqual([
+      { slug: 'first', bookType: 'combined', edition: '2026/27 Edition', subtitle: 'Title first', chapterPageStarts: [4], totalPages: 505, answersPageStart: 504, volume: { x: 1, n: 2 }, chapters: [0] },
+      { slug: 'first', bookType: 'combined', edition: '2026/27 Edition', subtitle: 'Title first', chapterPageStarts: [4, 404], totalPages: 705, answersPageStart: 704, volume: { x: 2, n: 2 }, chapters: [1, 2] },
+    ])
+    const PAGES = [523, 733]
+    expect(sent('generate-cover')).toEqual(PAGES.map((pageCount, v) => ({ slug: 'first', bookType: 'combined', edition: '2026/27 Edition', subtitle: 'Title first', pageCount, volume: { x: v + 1, n: 2 } })))
+    for (const [v, front] of Array.from(fronts.entries())) {
+      const interior = new Uint8Array(files[`volume-${v + 1}-interior.pdf`])
+      const book = await pdfLib.PDFDocument.load(interior)
+      expect(book.getPageCount()).toBe(PAGES[v])
+      const widths = book.getPages().map((made) => made.getWidth())
+      // Each contents number is the real first page of its chapter in this volume.
+      const chapters = front?.chapters as number[]
+      for (const [k, start] of Array.from((front?.chapterPageStarts as number[]).entries())) {
+        expect(widths[start - 1]).toBe(410 + chapters[k])
+        expect(widths[start - 2]).not.toBe(410 + chapters[k])
+      }
+      // The answers of this volume's chapters only, right after them.
+      const answers = chapters.reduce((sum, i) => sum + LONG.answerPages[i], 0)
+      expect(widths.filter((width) => width === 400)).toHaveLength(answers)
+      expect(widths.indexOf(400)).toBe((front?.answersPageStart as number) - 1)
+      // Numbered from 4 inside the volume, in the embedded font.
+      expect(await drawnNumbersOf(interior)).toEqual(Array.from({ length: PAGES[v] - 3 }, (_, i) => String(i + 4)))
+      expect((await fontsOf(interior)).every((found) => found.embedded)).toBe(true)
+      // The cover is the one made for this volume.
+      expect((await pdfLib.PDFDocument.load(new Uint8Array(files[`volume-${v + 1}-cover.pdf`]))).getPageCount()).toBe(1)
+    }
+  })
+
+  it('each volume: its metadata names the volume, and its check report covers its own chapters', async () => {
+    const page = await long()
+    spoil(page, 'generate-chapter', 0, { missingSets: ['x'] })
+    spoil(page, 'generate-chapter', 2, { missingOptionSets: ['m', 'm'] })
+    await page.open()
+    page.change(page.radio('combined'), 'combined')
+    await page.generate()
+    const files = await page.zip()
+    const text = (name: string) => files[name].toString('utf8')
+    const lines = (x: number) => text(`volume-${x}-metadata.txt`).split('\n')
+    expect(lines(1).filter((line) => line.startsWith('Title: '))).toEqual(['Title: Title first — Volume 1 of 2'])
+    expect(lines(2).filter((line) => line.startsWith('Title: '))).toEqual(['Title: Title first — Volume 2 of 2'])
+    const rest = (x: number) => lines(x).filter((line) => !line.startsWith('Title: ') && !line.startsWith('Generated: '))
+    expect(rest(1)).toEqual(rest(2))
+    const report = (x: number) => text(`volume-${x}-preflight-report.txt`)
+    expect(report(1)).toContain('[WARN] 1 linked practice set(s) not found or not live: x')
+    expect(report(1)).toContain(missingOptionLine([]))
+    expect(report(2)).toContain('[PASS] All linked practice sets found')
+    expect(report(2)).toContain(missingOptionLine(['m', 'm']))
+    // The line under the button counts the items of every report.
+    const items = [1, 2].reduce((sum, x) => sum + report(x).split('\n').filter((line) => /^\[(WARN|FAIL)\]/.test(line)).length, 0)
+    expect(items).toBeGreaterThanOrEqual(2)
+    const shown = page.elements().filter((e) => e.type === 'p' && Screen.text(e).includes('preflight-report.txt'))
+    expect(shown.map((e) => [e.props.className, Screen.text(e)])).toEqual([
+      ['text-red-400 text-xs mt-2', `The check reports (volume-1-preflight-report.txt to volume-2-preflight-report.txt) list ${items} item(s) to look at. Please read them before uploading to KDP.`],
+    ])
+  })
+
+  it.each<[string, string, typeof LONG, string]>([
+    ['a chapter too long', 'study', { chapterPages: [100, 826, 10], answerPages: [0, 0, 0], questions: [0, 0, 0] }, 'generate-chapter'],
+    ['a chapter too long with its answers', 'combined', { chapterPages: [100, 800, 10], answerPages: [0, 26, 0], questions: [0, 3, 0] }, 'generate-answers'],
+  ])('%s (%s): it stops with its message and makes nothing', async (_name, bookType, course, last) => {
+    const page = await screen(course)
+    await page.open()
+    page.change(page.radio(bookType), bookType)
+    await page.generate()
+    expect(page.shown).toContain('Chapter 2 is longer than KDP allows for one book (828 pages), so nothing was made.')
+    expect(page.links()).toEqual([])
+    expect(page.files).toEqual([])
+    expect(page.calls[page.calls.length - 1]).toMatchObject({ name: last, body: { chapterIndex: 2 } })
+  })
+
+  it('the words are exact', () => {
+    const source = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
+    expect(source).toContain('const KDP_MIN_PAGES = 24\nconst KDP_MAX_PAGES = 828\nconst FRONT_PAGES = 3\n')
+    expect(source).toContain('const CHAPTER_TOO_LONG = (n: number) => `Chapter ${n} is longer than KDP allows for one book (828 pages), so nothing was made.`\n')
+    expect(source).toContain('const REPORT_ITEMS_VOLUMES = (n: number, k: number) => `The check reports (volume-1-preflight-report.txt to volume-${n}-preflight-report.txt) list ${k} item(s) to look at. Please read them before uploading to KDP.`\n')
+    expect(source).toContain('const SPLITTING = (n: number) => `Splitting into ${n} volumes...`\n')
+    expect(source).toContain('const VOLUME_TITLE = (title: string, x: number, n: number) => `${title} — Volume ${x} of ${n}`\n')
+    const front = readFileSync(join(ROOT, 'components', 'book', 'FrontmatterTemplate.tsx'), 'utf8')
+    const cover = readFileSync(join(ROOT, 'components', 'book', 'FullCoverTemplate.tsx'), 'utf8')
+    expect(front).toContain('{volume ? `${sanitise(subtitle)}\\nVolume ${volume.x} of ${volume.n}` : sanitise(subtitle)}')
+    expect(cover).toContain('{volume ? `${subtitle}\\nVolume ${volume.x} of ${volume.n}` : subtitle}')
+    expect(cover).toContain('{volume ? `${subtitle} · Vol. ${volume.x}` : subtitle}')
+  })
+})
+
+describe('the front pages and the cover of a volume (D346)', () => {
+  const strings = (node: unknown): string[] => {
+    if (Array.isArray(node)) return node.flatMap(strings)
+    if (node && typeof node === 'object' && 'props' in node) return strings((node as Element).props.children)
+    return typeof node === 'string' || typeof node === 'number' ? [String(node)] : []
+  }
+  const front = (extra: object) =>
+    strings(FrontmatterTemplate({ course: { chapters: [{ _key: 'a', chapterTitle: 'One' }] }, bookType: 'combined', edition: 'E', subtitle: 'S', chapterPageStarts: [4], totalPages: 9, answersPageStart: 8, ...extra }))
+  const cover = (extra: object) => strings(FullCoverTemplate({ subtitle: 'S', bookType: 'combined', edition: 'E', pageCount: 100, ...extra }))
+
+  it('the title page and the front cover say the volume under the title, and the spine its number; only for a volume', () => {
+    expect(front({ volume: { x: 2, n: 3 } })).toContain('S\nVolume 2 of 3')
+    expect(front({}).filter((text) => text.includes('Vol'))).toEqual([])
+    expect(front({})).toContain('S')
+    const withVolume = cover({ volume: { x: 2, n: 3 } })
+    expect(withVolume.filter((text) => text.includes('Vol'))).toEqual(['S · Vol. 2', 'S\nVolume 2 of 3'])
+    expect(cover({}).filter((text) => text.includes('Vol'))).toEqual([])
+  })
+
+  it('a contents row keeps the chapter number it is given, else its place', () => {
+    const rows = (chapters: object[]) => strings(FrontmatterTemplate({ course: { chapters }, bookType: 'study', edition: 'E', subtitle: 'S', chapterPageStarts: [4, 9], totalPages: 20 })).join('|')
+    expect(rows([{ chapterTitle: 'A' }, { chapterTitle: 'B' }])).toContain('Chapter |1|: |A|')
+    expect(rows([{ chapterTitle: 'A' }, { chapterTitle: 'B' }])).toContain('Chapter |2|: |B|')
+    expect(rows([{ chapterTitle: 'A', chapterNumber: 5 }, { chapterTitle: 'B', chapterNumber: 6 }])).toContain('Chapter |5|: |A|')
+    expect(rows([{ chapterTitle: 'A', chapterNumber: 5 }, { chapterTitle: 'B', chapterNumber: 6 }])).toContain('Chapter |6|: |B|')
+  })
+
+  const GOOD_FRONT = { slug: 'many', bookType: 'combined', chapterPageStarts: [4, 9], totalPages: 20, answersPageStart: 15 }
+  const BAD_VOLUMES: unknown[] = [null, 'x', [], {}, { x: 0, n: 2 }, { x: 3, n: 2 }, { x: 1, n: 21 }, { x: 1.5, n: 2 }, { x: '1', n: '2' }, { x: 1 }]
+
+  it.each(BAD_VOLUMES.map((volume) => [JSON.stringify(volume), volume] as const))('the routes refuse the volume %s', async (_name, volume) => {
+    state.chapters = { many: [[['a']], [['b']], [['c']]] }
+    const fm = await callRoute('generate-frontmatter', { body: { ...GOOD_FRONT, volume, chapters: [1, 2] } })
+    expect([fm.status, await fm.json()]).toEqual([400, { error: 'volume is invalid' }])
+    const cv = await callRoute('generate-cover', { body: { bookType: 'combined', pageCount: 30, volume } })
+    expect([cv.status, await cv.json()]).toEqual([400, { error: 'volume is invalid' }])
+    expect(state.pdfs).toBe(0)
+  })
+
+  it.each<[string, object, string]>([
+    ['chapters without a volume', { chapters: [1, 2] }, 'volume is required'],
+    ['a volume without chapters', { volume: { x: 1, n: 2 } }, 'chapters is required'],
+    ['no chapters', { volume: { x: 1, n: 2 }, chapters: [] }, 'chapters is invalid'],
+    ['chapters out of order', { volume: { x: 1, n: 2 }, chapters: [2, 1] }, 'chapters is invalid'],
+    ['a chapter twice', { volume: { x: 1, n: 2 }, chapters: [1, 1] }, 'chapters is invalid'],
+    ['a chapter that is not a whole number', { volume: { x: 1, n: 2 }, chapters: [0.5, 1] }, 'chapters is invalid'],
+    ['a chapter below 0', { volume: { x: 1, n: 2 }, chapters: [-1, 0] }, 'chapters is invalid'],
+    ['a chapter the course does not have', { volume: { x: 1, n: 2 }, chapters: [2, 3] }, 'chapters is invalid'],
+    ['more chapters than page starts', { volume: { x: 1, n: 2 }, chapters: [0, 1, 2] }, 'chapters is invalid'],
+    ['chapters that are not a list', { volume: { x: 1, n: 2 }, chapters: 'x' }, 'chapters is invalid'],
+  ])('the front pages refuse %s', async (_name, extra, error) => {
+    state.chapters = { many: [[['a']], [['b']], [['c']]] }
+    const response = await callRoute('generate-frontmatter', { body: { ...GOOD_FRONT, ...extra } })
+    expect([response.status, await response.json()]).toEqual([400, { error }])
+    expect(state.pdfs).toBe(0)
+  })
+
+  it("the front pages of a volume list only its chapters, with their numbers in the course, and the key of the whole course", async () => {
+    state.chapters = { many: [[['a']], [['b']], [['c']]] }
+    const whole = await callRoute('generate-frontmatter', { body: GOOD_FRONT })
+    const key = (await whole.json()).courseKey
+    state.made = []
+    state.drawn = []
+    const response = await callRoute('generate-frontmatter', { body: { ...GOOD_FRONT, volume: { x: 2, n: 2 }, chapters: [1, 2] } })
+    expect(response.status).toBe(200)
+    expect((await response.json()).courseKey).toBe(key)
+    const given = JSON.parse(state.made[0])
+    expect(given.course.chapters).toEqual([
+      { _key: 'chapter', chapterTitle: 'Chapter', chapterNumber: 2 },
+      { _key: 'chapter', chapterTitle: 'Chapter', chapterNumber: 3 },
+    ])
+    expect(given.volume).toEqual({ x: 2, n: 2 })
+    const drawn = state.drawn[0] as { type: (props: unknown) => unknown; props: unknown }
+    const texts = strings(drawn.type(drawn.props)).join('|')
+    expect(texts).toContain('Course\nVolume 2 of 2')
+    expect(texts).toContain('Chapter |2|: |Chapter|')
+    expect(texts).toContain('Chapter |3|: |Chapter|')
+    expect(texts).not.toContain('Chapter |1|')
+  })
+
+  it('the cover of a volume is given it; without one, the props are as before', async () => {
+    await callRoute('generate-cover', { body: { bookType: 'combined', pageCount: 30, volume: { x: 1, n: 2 } } })
+    await callRoute('generate-cover', { body: { bookType: 'combined', pageCount: 30 } })
+    expect(state.made.map((made) => JSON.parse(made))).toEqual([
+      { subtitle: '', bookType: 'combined', edition: '2026/27 Edition', pageCount: 30, volume: { x: 1, n: 2 } },
+      { subtitle: '', bookType: 'combined', edition: '2026/27 Edition', pageCount: 30 },
+    ])
   })
 })

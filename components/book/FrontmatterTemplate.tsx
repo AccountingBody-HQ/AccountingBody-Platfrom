@@ -111,10 +111,12 @@ interface FrontmatterTemplateProps {
   answersPageStart?:  number
   // False when the book has no answers: the contents page then lists none.
   hasAnswers?:        boolean
+  // Given only for a book made as several volumes (owner decision D346).
+  volume?:            { x: number; n: number }
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export function FrontmatterTemplate({ course, bookType, edition, subtitle, chapterPageStarts, totalPages, answersPageStart, hasAnswers }: FrontmatterTemplateProps) {
+export function FrontmatterTemplate({ course, bookType, edition, subtitle, chapterPageStarts, totalPages, answersPageStart, hasAnswers, volume }: FrontmatterTemplateProps) {
   const year = new Date().getFullYear()
   const showAnswers = (bookType === "combined" || bookType === "practice") && hasAnswers !== false
 
@@ -139,7 +141,7 @@ export function FrontmatterTemplate({ course, bookType, edition, subtitle, chapt
         <View style={s.titlePage}>
           <Text style={s.publisherLabel}>Accounting Body Press</Text>
           <View style={s.titleDivider} />
-          <Text style={s.bookTitle}>{sanitise(subtitle)}</Text>
+          <Text style={s.bookTitle}>{volume ? `${sanitise(subtitle)}\nVolume ${volume.x} of ${volume.n}` : sanitise(subtitle)}</Text>
           <Text style={s.bookTypeLabel}>{bookTypeLabel}</Text>
           <View style={s.titleDivider} />
           <Text style={s.editionText}>{edition}</Text>
@@ -170,7 +172,7 @@ export function FrontmatterTemplate({ course, bookType, edition, subtitle, chapt
           <View key={ch._key || ci} style={s.tocChapterRow}>
             <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
               <Text style={s.tocChapterText}>
-                Chapter {ci + 1}: {cleanChapterTitle(sanitise(ch.chapterTitle))}
+                Chapter {ch.chapterNumber ?? ci + 1}: {cleanChapterTitle(sanitise(ch.chapterTitle))}
               </Text>
               <View style={{ flex: 1, borderBottomWidth: 0.7, borderBottomColor: "#bbbbbb", borderBottomStyle: "dotted", marginHorizontal: 4, marginBottom: 2 }} />
               <Text style={s.tocChapterText}>{chapterPageStarts[ci] ? String(chapterPageStarts[ci]) : ""}</Text>

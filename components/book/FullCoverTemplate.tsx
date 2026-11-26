@@ -55,9 +55,11 @@ interface FullCoverTemplateProps {
   edition:   string
   pageCount: number
   description?: string
+  // Given only for a book made as several volumes (owner decision D346).
+  volume?: { x: number; n: number }
 }
 
-export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, description }: FullCoverTemplateProps) {
+export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, description, volume }: FullCoverTemplateProps) {
   const SW        = spineWidth(pageCount)
   const TOTAL_W   = BACK_W + SW + FRONT_W
   const TOTAL_H   = COVER_H
@@ -359,7 +361,7 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
           <View style={s.spineTopGold} />
           <View style={s.spineBottomGold} />
           <View style={s.spineContent}>
-            <Text style={s.spineTitle}>{subtitle}</Text>
+            <Text style={s.spineTitle}>{volume ? `${subtitle} · Vol. ${volume.x}` : subtitle}</Text>
           </View>
           <View style={s.spinePublisherWrap}>
             <Text style={s.spinePublisher}>AB PRESS</Text>
@@ -388,7 +390,7 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
             </View>
             <Text style={s.publisherLine}>ACCOUNTING BODY PRESS</Text>
             <View style={s.goldRule} />
-            <Text style={s.titleText}>{subtitle}</Text>
+            <Text style={s.titleText}>{volume ? `${subtitle}\nVolume ${volume.x} of ${volume.n}` : subtitle}</Text>
             <View style={s.authorRow}>
               <View style={s.authorLine} />
               <Text style={s.authorText}>ACCOUNTING BODY EDITORIAL TEAM</Text>
