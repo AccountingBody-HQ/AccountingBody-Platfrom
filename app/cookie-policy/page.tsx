@@ -14,12 +14,17 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-const cookies = [
+// etOnly rows are shown on the EthioTax view only.
+type CookieRow = { name: string; provider: string; purpose: string; duration: string; etOnly?: boolean }
+
+const cookies: { category: string; bar: string; always: boolean; items: CookieRow[] }[] = [
   { category: 'Necessary',  bar: 'bg-teal-600',  always: true,
     items: [
       { name: '_cf_clearance',  provider: 'Cloudflare',  purpose: 'Security — proves your browser passed a challenge.', duration: '30 mins' },
-      { name: 'sb-*',           provider: 'Supabase',    purpose: 'Stores authentication tokens for account data.',    duration: '7 days' },
+      { name: 'ab_vid',         provider: 'Accounting Body', purpose: 'Remembers the jobs you saved on this device.', duration: '7 days' },
       { name: 'x-et-platform',  provider: 'Accounting Body', purpose: 'Identifies which platform (Accounting Body or EthioTax) the visitor is using. No personal data stored.', duration: 'Session' },
+      { name: 'et_language',    provider: 'EthioTax',         purpose: 'Remembers the language you chose.', duration: '1 year', etOnly: true },
+      { name: 'googtrans',      provider: 'Google Translate', purpose: 'Shows pages in the language you chose.', duration: 'Until you close your browser', etOnly: true },
     ],
   },
   { category: 'Analytics',  bar: 'bg-navy-800',  always: false,
@@ -29,6 +34,16 @@ const cookies = [
     ],
   },
 
+]
+
+const STORAGE_INTRO = "Some features keep small notes in your browser's storage on this device instead of in a cookie. They are not sent to us, and they stay until you clear this website's data in your browser settings."
+
+const storage = [
+  { name: 'ab_cookie_consent', purpose: 'Remembers your cookie choice.', duration: 'Until you clear it' },
+  { name: 'course_progress_*', purpose: 'Remembers which free-course lessons you marked complete.', duration: 'Until you clear it' },
+  { name: 'sidebar_open_*',    purpose: 'Remembers which course chapters you left open.', duration: 'Until you clear it' },
+  { name: 'ab_job_alerts',     purpose: 'Keeps the job alert details you entered on this device.', duration: 'Until you clear it' },
+  { name: 'ab_visited_listings, jobs-listings-scroll:*', purpose: 'Helps the Back link return you to the same place in the job listings.', duration: 'Until you close the tab' },
 ]
 
 export default async function CookiePolicyPage() {
@@ -66,7 +81,7 @@ export default async function CookiePolicyPage() {
                     {cat.always && <span className="ml-auto text-xs text-slate-400 italic">Always active</span>}
                   </div>
                   <div className="divide-y divide-slate-100">
-                    {cat.items.map(item => (
+                    {cat.items.filter(item => !item.etOnly || isEthioTax).map(item => (
                       <div key={item.name} className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-5">
                         <div>
                           <code className="text-xs text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">{item.name}</code>
@@ -79,6 +94,22 @@ export default async function CookiePolicyPage() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            <h2 className="font-display text-2xl text-navy-950 mb-4">Stored on your device</h2>
+            <p className="text-slate-500 text-sm leading-relaxed mb-6">{STORAGE_INTRO}</p>
+            <div className="rounded-xl border border-slate-200 overflow-hidden mb-10">
+              <div className="divide-y divide-slate-100">
+                {storage.map(item => (
+                  <div key={item.name} className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-5">
+                    <div>
+                      <code className="text-xs text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">{item.name}</code>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed">{item.purpose}</p>
+                    <p className="text-xs text-slate-500">{item.duration}</p>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <h2 className="font-display text-2xl text-navy-950 mb-4">How to manage cookies</h2>
