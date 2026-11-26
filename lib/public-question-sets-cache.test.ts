@@ -67,14 +67,14 @@ describe('getPublicQuestionSets', () => {
     expect(fake.cacheCalls).toEqual([{
       keyParts: ['public-question-sets-list'],
       options: { revalidate: 3600, tags: ['question-sets', 'question-sets-list'] },
-      args: ['', 1, 'alpha'],
+      args: ['', 1, 'alpha', ''],
     }])
     expect(fake.calls).toContainEqual(['range', 0, 11])
   })
 
   it('caches a known difficulty and page up to 20', async () => {
     await getPublicQuestionSets({ ...base, difficulty: 'beginner', page: 20, sortBy: 'newest' })
-    expect(fake.cacheCalls.map((c) => c.args)).toEqual([['beginner', 20, 'newest']])
+    expect(fake.cacheCalls.map((c) => c.args)).toEqual([['beginner', 20, 'newest', '']])
     expect(fake.calls).toContainEqual(['eq', 'difficulty', 'beginner'])
     expect(fake.calls).toContainEqual(['order', 'published_at', { ascending: false }])
   })
@@ -112,7 +112,7 @@ describe('getPublicQuestionSets', () => {
     await getPublicQuestionSets({ ...base, sortBy: 'alpha' })
     resetCacheGuard()
     await getPublicQuestionSets({ ...base, sortBy: undefined as unknown as string })
-    expect(fake.cacheCalls.map((c) => c.args)).toEqual([['', 1, 'alpha'], ['', 1, 'alpha'], ['', 1, 'alpha']])
+    expect(fake.cacheCalls.map((c) => c.args)).toEqual([['', 1, 'alpha', ''], ['', 1, 'alpha', ''], ['', 1, 'alpha', '']])
   })
 
   it('throws a failed read and does not store it', async () => {

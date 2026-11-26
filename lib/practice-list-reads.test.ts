@@ -1,12 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { getQuestionSets, getPublicQuestionSets, getPublicQuestionSetDifficultyCounts, escapeLikeText } from './db'
+import { getQuestionSets, getPublicQuestionSets, escapeLikeText } from './db'
 import { resetCacheGuard } from './cache-guard'
 
 // PQB-1 S1 (PQ-D3 #18, #20, #21; D351): the /practice-questions list reads.
 // A page that starts after the last row is "no rows plus the exact total",
 // never a failure; every other error is still thrown. The letter filter is a
 // starts-with match with the user's text escaped; search stays "contains".
-// The level filter's counts are three cached head counts.
+// (The level counts moved to the practice-filters read in PQB-2:
+// lib/practice-filters-read.test.ts.)
 
 type Result = { data: unknown; error: unknown; count: number | null; status: number }
 
@@ -150,7 +151,7 @@ describe('getQuestionSets: a page past the end', () => {
   it('through the public reader (cached path, page 17) the page past the end is a success with its total', async () => {
     use(RANGE_PAST_END, { data: null, error: null, count: 181, status: 200 })
     expect(await getPublicQuestionSets({ page: 17, perPage: 12, sortBy: 'alpha' })).toStrictEqual({ sets: [], total: 181 })
-    expect(fake.cacheCalls.map((c) => c.args)).toStrictEqual([['', 17, 'alpha']])
+    expect(fake.cacheCalls.map((c) => c.args)).toStrictEqual([['', 17, 'alpha', '']])
   })
 })
 
@@ -191,32 +192,96 @@ describe('getQuestionSets: the letter filter starts with the letter; search stil
   })
 })
 
-describe('getPublicQuestionSetDifficultyCounts', () => {
-  it('three head counts of live AB sets, one per level, cached for an hour under the list tags', async () => {
-    use({ data: null, error: null, count: 0, status: 200 }, { data: null, error: null, count: 9, status: 200 }, { data: null, error: null, count: 172, status: 200 })
-    expect(await getPublicQuestionSetDifficultyCounts()).toStrictEqual({ beginner: 0, intermediate: 9, advanced: 172 })
-    expect(fake.queries).toStrictEqual(['beginner', 'intermediate', 'advanced'].map((d) => [
-      ['from', 'question_sets'], SELECT_HEAD, PUBLISHED, ON_AB, ['eq', 'difficulty', d],
-    ]))
-    expect(fake.cacheCalls).toStrictEqual([{
-      keyParts: ['public-question-set-difficulty-counts'],
-      options: { revalidate: 3600, tags: ['question-sets', 'question-sets-list'] },
-      args: [],
-    }])
-    expect(fake.contexts).toStrictEqual(['publicRead'])
+// PQB-2 S2 (D351): the subject filter. getQuestionSets takes an optional list
+// of set ids; an empty list is "no sets" with no query. The public reader
+// takes the subject slug, keeps it in the cache key ('' for none) and reads
+// the ids from the practice-filters read; an unknown subject is no subject.
+describe('getQuestionSets: the ids filter', () => {
+  it('ids become one in() filter on id, after the shared filters', async () => {
+    await getQuestionSets({ ids: ['s2', 's1'] })
+    expect(fake.queries[0]).toStrictEqual([
+      ['from', 'question_sets'], SELECT_LIST, PUBLISHED, ON_AB, ['in', 'id', ['s2', 's1']], ['order', 'title', { ascending: true }], ['range', 0, 11],
+    ])
   })
 
-  it('a failed count is thrown and nothing is stored', async () => {
+  it('an empty list returns no sets and a total of 0 with no query at all', async () => {
+    expect(await getQuestionSets({ ids: [], page: 3, difficulty: 'advanced' })).toStrictEqual({ sets: [], total: 0 })
+    expect(fake.queries).toStrictEqual([])
+    expect(fake.contexts).toStrictEqual([])
+  })
+
+  it('no ids (undefined) leaves the read as before: no in() filter', async () => {
+    await getQuestionSets({})
+    expect(fake.queries[0].some((c) => c[0] === 'in')).toBe(false)
+  })
+
+  it('a page past the end with ids: the total is counted with the same ids', async () => {
+    use(RANGE_PAST_END, { data: null, error: null, count: 75, status: 200 })
+    expect(await getQuestionSets({ ids: ['a', 'b'], page: 8 })).toStrictEqual({ sets: [], total: 75 })
+    expect(fake.queries[1]).toStrictEqual([['from', 'question_sets'], SELECT_HEAD, PUBLISHED, ON_AB, ['in', 'id', ['a', 'b']]])
+  })
+})
+
+describe('getPublicQuestionSets: the subject', () => {
+  const FILTER_SETS: Result = {
+    data: [
+      { id: 's3', article_slug: 'fa-1', difficulty: 'advanced' },
+      { id: 's1', article_slug: 'fa-1', difficulty: 'intermediate' },
+      { id: 's2', article_slug: 'aa-1', difficulty: 'advanced' },
+    ],
+    error: null, count: 3, status: 200,
+  }
+  const FILTER_ARTICLES: Result = {
+    data: [{ slug: 'aa-1', category: 'audit-assurance' }, { slug: 'fa-1', category: 'financial-accounting' }],
+    error: null, count: 2, status: 200,
+  }
+  const LIST: Result = { data: ROWS, error: null, count: 2, status: 200 }
+  const listArgs = () => fake.cacheCalls.filter((c) => c.keyParts[0] === 'public-question-sets-list').map((c) => c.args)
+
+  it('a known subject: cached under its slug, list read limited to its set ids (sorted)', async () => {
+    use(FILTER_SETS, FILTER_ARTICLES, LIST)
+    expect(await getPublicQuestionSets({ category: 'financial-accounting', page: 1, perPage: 12, sortBy: 'alpha' })).toStrictEqual({ sets: ROWS, total: 2 })
+    expect(listArgs()).toStrictEqual([['', 1, 'alpha', 'financial-accounting']])
+    expect(fake.cacheCalls.map((c) => c.keyParts[0])).toStrictEqual(['public-question-sets-list', 'public-practice-filters'])
+    expect(fake.queries.map((q) => q[0][1])).toStrictEqual(['question_sets', 'articles', 'question_sets'])
+    expect(fake.queries[2]).toContainEqual(['in', 'id', ['s1', 's3']])
+  })
+
+  it('a subject with a level: both in the key and the read', async () => {
+    use(FILTER_SETS, FILTER_ARTICLES, LIST)
+    await getPublicQuestionSets({ category: 'audit-assurance', difficulty: 'intermediate', page: 2, perPage: 12, sortBy: 'newest' })
+    expect(listArgs()).toStrictEqual([['intermediate', 2, 'newest', 'audit-assurance']])
+    expect(fake.queries[2]).toContainEqual(['in', 'id', ['s2']])
+    expect(fake.queries[2]).toContainEqual(['eq', 'difficulty', 'intermediate'])
+  })
+
+  it.each(['not-a-subject', 'Financial-Accounting', 'FINANCIAL-ACCOUNTING', ' financial-accounting', ''])(
+    'an unknown or empty subject (%j) is no subject: key "", no filters read, no in()', async (category) => {
+      use(LIST)
+      await getPublicQuestionSets({ category, page: 1, perPage: 12, sortBy: 'alpha' })
+      expect(listArgs()).toStrictEqual([['', 1, 'alpha', '']])
+      expect(fake.queries).toHaveLength(1)
+      expect(fake.queries[0].some((c) => c[0] === 'in')).toBe(false)
+    })
+
+  it('a known subject with no sets: no sets, total 0, and no list query', async () => {
+    use(FILTER_SETS, FILTER_ARTICLES, LIST)
+    expect(await getPublicQuestionSets({ category: 'taxation', page: 1, perPage: 12, sortBy: 'alpha' })).toStrictEqual({ sets: [], total: 0 })
+    expect(fake.queries.map((q) => q[0][1])).toStrictEqual(['question_sets', 'articles'])
+  })
+
+  it('a letter with a subject reads fresh (not the list cache), with the ids', async () => {
+    use(FILTER_SETS, FILTER_ARTICLES, LIST)
+    await getPublicQuestionSets({ category: 'financial-accounting', startsWith: 'F', page: 1, perPage: 12, sortBy: 'alpha' })
+    expect(listArgs()).toStrictEqual([])
+    expect(fake.queries[2]).toContainEqual(['ilike', 'title', 'F%'])
+    expect(fake.queries[2]).toContainEqual(['in', 'id', ['s1', 's3']])
+  })
+
+  it('a failed filters read inside the list read is thrown and nothing is stored', async () => {
     use(DB_PROBLEM)
-    const thrown = await thrownBy(() => getPublicQuestionSetDifficultyCounts())
-    expect(thrown?.message).toBe('question set difficulty count failed (status 500)')
-    expect(fake.store.size).toBe(0)
-  })
-
-  it('a missing count is thrown, never read as 0', async () => {
-    use({ data: null, error: null, count: null, status: 200 })
-    const thrown = await thrownBy(() => getPublicQuestionSetDifficultyCounts())
-    expect(thrown?.message).toBe('question set difficulty count returned no count (status 200)')
+    const thrown = await thrownBy(() => getPublicQuestionSets({ category: 'financial-accounting', page: 1, perPage: 12, sortBy: 'alpha' }))
+    expect(thrown?.name).toBe('MockPoolReadError')
     expect(fake.store.size).toBe(0)
   })
 })

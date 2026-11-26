@@ -2,7 +2,7 @@ import * as React from 'react'
 import type { ReactElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { parseListPage, visibleDifficulties } from './practice-list'
+import { parseListPage, pickSubject, visibleDifficulties, visibleSubjects } from './practice-list'
 
 // The page's components use the classic JSX transform under vitest (as in lib/et-ten.test.ts).
 ;(globalThis as { React?: typeof React }).React = React
@@ -16,7 +16,8 @@ import { parseListPage, visibleDifficulties } from './practice-list'
 const NOT_FOUND = vi.hoisted(() => new Error('NEXT_NOT_FOUND'))
 const db = vi.hoisted(() => ({
   list: vi.fn(),
-  counts: vi.fn(),
+  filters: vi.fn(),
+  report: vi.fn(),
 }))
 vi.mock('next/navigation', () => ({
   notFound: vi.fn(() => { throw NOT_FOUND }),
@@ -30,9 +31,10 @@ vi.mock('next/headers', () => ({
 }))
 vi.mock('@/lib/db', () => ({
   getPublicQuestionSets: db.list,
-  getPublicQuestionSetDifficultyCounts: db.counts,
+  getPublicPracticeFilters: db.filters,
   QUESTION_SET_DIFFICULTIES: ['beginner', 'intermediate', 'advanced'],
 }))
+vi.mock('@/lib/report-error', () => ({ reportServerError: db.report }))
 
 import { notFound } from 'next/navigation'
 import PracticeQuestionsPage from '@/app/practice-questions/page'
@@ -43,12 +45,23 @@ const render = async (sp: SP = {}) => renderToStaticMarkup(await run(sp))
 const sets = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `s${i}`, title: `Set ${i}`, slug: `set-${i}`, difficulty: 'advanced' }))
 const levelLinks = (html: string) => Array.from(html.matchAll(/href="\/practice-questions\?difficulty=(\w+)[^"]*"/g)).map((m) => m[1])
 
+// Today's facts (PQ-D3): levels 0 / 9 / 172; subjects FA 75, FM 18, MA 68, AA 20, the other four 0.
+const ids = (prefix: string, n: number) => Array.from({ length: n }, (_, i) => `${prefix}${i}`)
+const FACTS = {
+  difficultyCounts: { beginner: 0, intermediate: 9, advanced: 172 },
+  subjectSetIds: {
+    'financial-accounting': ids('fa', 75), 'financial-management': ids('fm', 18), 'management-accounting': ids('ma', 68),
+    'financial-market': [], 'business-management': [], 'audit-assurance': ids('aa', 20), taxation: [], economics: [],
+  },
+}
+
 beforeEach(() => {
   vi.mocked(notFound).mockClear()
   db.list.mockReset()
-  db.counts.mockReset()
+  db.filters.mockReset()
+  db.report.mockReset()
   db.list.mockResolvedValue({ sets: sets(12), total: 181 })
-  db.counts.mockResolvedValue({ beginner: 0, intermediate: 9, advanced: 172 })
+  db.filters.mockResolvedValue(FACTS)
 })
 
 describe('parseListPage: a whole number of 1 or more, anything else is 1', () => {
@@ -81,7 +94,7 @@ describe('the page', () => {
   it('page 1: 12 sets, the read asks for page 1 with no letter', async () => {
     const html = await render()
     expect(html.match(/href="\/practice-questions\/set-\d+"/g)).toHaveLength(12)
-    expect(db.list).toHaveBeenCalledWith({ difficulty: undefined, search: undefined, startsWith: undefined, page: 1, perPage: 12, sortBy: 'alpha' })
+    expect(db.list).toHaveBeenCalledWith({ difficulty: undefined, search: undefined, startsWith: undefined, category: undefined, page: 1, perPage: 12, sortBy: 'alpha' })
     expect(notFound).not.toHaveBeenCalled()
   })
 
@@ -138,10 +151,21 @@ describe('the page', () => {
     expect(html).toContain('>Advanced<')
   })
 
-  it('a failed count shows all three levels, as before', async () => {
-    db.counts.mockRejectedValue(new Error('question set difficulty count failed (status 500)'))
-    const html = await render()
+  it('a failed filters read is reported once and shows all three levels and no Subject panel, as before', async () => {
+    const problem = new Error('mock exam pool: practice-filters question_sets read failed')
+    db.filters.mockRejectedValue(problem)
+    const html = await render({ category: 'financial-accounting' })
     expect(levelLinks(html)).toStrictEqual(['beginner', 'intermediate', 'advanced'])
+    expect(db.report).toHaveBeenCalledTimes(1)
+    expect(db.report).toHaveBeenCalledWith('practice filters read failed', problem, { area: 'public' })
+    expect(html).not.toContain('>Subject<')
+    expect(html).not.toContain('category=')
+    expect(db.list.mock.calls[0][0].category).toBeUndefined()
+  })
+
+  it('a good filters read reports nothing', async () => {
+    await render()
+    expect(db.report).not.toHaveBeenCalled()
   })
 
   it('an address with a level that has no sets still works (empty state, no redirect, no 404)', async () => {
@@ -152,7 +176,108 @@ describe('the page', () => {
     expect(notFound).not.toHaveBeenCalled()
   })
 
-  it('the hidden Subject panel stays hidden', async () => {
-    expect(await render()).not.toContain('>Subject<')
+})
+
+// PQB-2 S2 (D351; PQ-D3 item 6, row 17): the Subject filter.
+const subjectLinks = (html: string) => {
+  const panel = html.slice(html.indexOf('>Subject</p>'), html.indexOf('</aside>'))
+  return Array.from(panel.matchAll(/<a [^>]*>([^<]+)<\/a>/g)).map((m) => m[1])
+}
+const resultLine = (html: string) => {
+  const m = html.match(/<p class="text-sm text-slate-500">(.*?)<\/p>/)
+  return m ? m[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : null
+}
+
+describe('pickSubject and visibleSubjects', () => {
+  const SUBJECTS = [
+    { slug: 'financial-accounting', title: 'Financial Accounting', category: 'financial-accounting' },
+    { slug: 'taxation', title: 'Tax', category: 'taxation' },
+    { slug: 'audit-assurance', title: 'Audit and Assurance', category: 'audit-assurance' },
+  ]
+  it.each([
+    ['financial-accounting', 'financial-accounting'],
+    ['taxation', 'taxation'],
+    ['not-a-subject', undefined],
+    ['', undefined],
+    ['Financial-Accounting', undefined],
+    ['FINANCIAL-ACCOUNTING', undefined],
+    [' financial-accounting', undefined],
+    [undefined, undefined],
+    [['financial-accounting'], undefined],
+  ] as Array<[unknown, string | undefined]>)('%j → %j', (raw, slug) => {
+    expect(pickSubject(SUBJECTS, raw)?.slug).toBe(slug)
+  })
+  it('only subjects with at least one set, in the given order, as slug and title', () => {
+    expect(visibleSubjects(SUBJECTS, { 'audit-assurance': ['a'], 'financial-accounting': ['b', 'c'], taxation: [] })).toStrictEqual([
+      { slug: 'financial-accounting', title: 'Financial Accounting' },
+      { slug: 'audit-assurance', title: 'Audit and Assurance' },
+    ])
+    expect(visibleSubjects(SUBJECTS, {})).toStrictEqual([])
+  })
+})
+
+describe('the page: Subject filter', () => {
+  it('the panel shows All subjects and only subjects with sets, in the hub order', async () => {
+    expect(subjectLinks(await render())).toStrictEqual(['All subjects', 'Financial Accounting', 'Financial Management', 'Management Accounting', 'Audit and Assurance'])
+  })
+
+  it('the levels come from the same read: All levels, Intermediate, Advanced', async () => {
+    const html = await render()
+    expect(levelLinks(html)).toStrictEqual(['intermediate', 'advanced'])
+    expect(db.filters).toHaveBeenCalledTimes(1)
+  })
+
+  it('a known subject is passed to the read, kept in links, the hidden input and the result line', async () => {
+    db.list.mockResolvedValue({ sets: sets(12), total: 75 })
+    const html = await render({ category: 'financial-accounting' })
+    expect(db.list.mock.calls[0][0]).toMatchObject({ category: 'financial-accounting', page: 1 })
+    expect(resultLine(html)).toBe('75 question sets · Financial Accounting')
+    expect(html).toContain('<input type="hidden" name="category" value="financial-accounting"/>')
+    const hrefs = Array.from(html.matchAll(/href="(\/practice-questions\?[^"]+)"/g)).map((m) => m[1]).filter((h) => /difficulty=intermediate|letter=F|page=2/.test(h))
+    expect(hrefs).toStrictEqual([
+      '/practice-questions?category=financial-accounting&amp;difficulty=intermediate&amp;page=1',
+      '/practice-questions?category=financial-accounting&amp;letter=F&amp;page=1',
+      '/practice-questions?category=financial-accounting&amp;page=2',
+      '/practice-questions?category=financial-accounting&amp;page=2',
+    ])
+    expect(html).toContain('>Clear filters</a>')
+  })
+
+  it('subject and level: the result line keeps the level part after the subject', async () => {
+    db.list.mockResolvedValue({ sets: sets(9), total: 9 })
+    const html = await render({ category: 'financial-accounting', difficulty: 'intermediate' })
+    expect(resultLine(html)).toBe('9 question sets · Financial Accounting · intermediate')
+  })
+
+  it.each(['not-a-subject', 'Financial-Accounting', ''])('an unknown or empty subject (%j) is ignored: full list, not in links, no hidden input', async (category) => {
+    const html = await render({ category })
+    expect(db.list.mock.calls[0][0].category).toBeUndefined()
+    // Only the Subject panel's own options link to a subject.
+    const outsidePanel = html.slice(0, html.indexOf('>Subject</p>')) + html.slice(html.indexOf('</aside>'))
+    expect(outsidePanel).not.toContain('category=')
+    expect(subjectLinks(html)).toHaveLength(5)
+    expect(html).not.toContain('name="category"')
+    expect(resultLine(html)).toBe('181 question sets')
+    expect(notFound).not.toHaveBeenCalled()
+  })
+
+  it('a known subject with no sets shows the empty state (no 404, no redirect)', async () => {
+    db.list.mockResolvedValue({ sets: [], total: 0 })
+    const html = await render({ category: 'taxation' })
+    expect(db.list.mock.calls[0][0].category).toBe('taxation')
+    expect(html).toContain('No practice questions found.')
+    expect(resultLine(html)).toBe('0 question sets · Tax')
+    expect(notFound).not.toHaveBeenCalled()
+  })
+
+  it('a page after the last one of a subject is the 404', async () => {
+    db.list.mockResolvedValue({ sets: [], total: 75 })
+    await expect(run({ category: 'financial-accounting', page: '8' })).rejects.toBe(NOT_FOUND)
+  })
+
+  it('no subject: no hidden input, and the top Clear filters link is not shown', async () => {
+    const html = await render()
+    expect(html).not.toContain('name="category"')
+    expect(html).not.toContain('>Clear filters</a>')
   })
 })
