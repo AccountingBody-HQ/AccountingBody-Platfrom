@@ -30,10 +30,10 @@ const sections = [
   },
   {
     id: 'accounts',
-    title: '3. Accounts and registration',
+    title: '3. Registration',
     body: [
-      'To access certain features you must create a free account. You are responsible for keeping your account credentials secure and for all activity that occurs under your account.',
-      'You must provide accurate information when registering. We reserve the right to suspend or terminate accounts that provide false information or that breach these Terms.',
+      'You do not need an account to use our learning content. If you register as a job seeker, employer or firm, you are responsible for keeping your login details secure and for all activity under your registration.',
+      'You must provide accurate information when registering. We reserve the right to suspend or remove registrations that provide false information or that breach these Terms.',
     ],
   },
   {

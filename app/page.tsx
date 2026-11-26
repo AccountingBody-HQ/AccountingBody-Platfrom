@@ -781,7 +781,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         <span className="eyebrow mb-3 block">Exam Practice Questions</span>
         <h2 className="section-title mb-4">Exam-standard questions — free to start</h2>
         <p className="text-slate-500 text-lg leading-relaxed mb-8">
-          ETICPA, ACCA, CIMA and AAT question banks. Exam-standard MCQs with instant marking and detailed explanations. Track your progress and walk into the exam room ready.
+          ETICPA, ACCA, CIMA and AAT question banks. Exam-standard MCQs with instant marking and detailed explanations. Walk into the exam room ready.
         </p>
 
         <div className="space-y-4">
@@ -797,13 +797,13 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               d: 'M13 10V3L4 14h7v7l9-11h-7z',
             },
             {
-              title: 'Track your progress by topic',
-              body: 'See which topics you have mastered and where you need more practice before exam day.',
+              title: 'Practise by topic',
+              body: 'Choose any topic and practise as many questions as you like, as often as you like.',
               d: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
             },
             {
-              title: 'Free to start — no credit card required',
-              body: 'Core question banks permanently free. Study notes, practice questions and the full glossary at no cost.',
+              title: 'Free forever — no account needed',
+              body: 'Every question bank, study note and the full glossary is free. No account, no credit card.',
               d: 'M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z',
             },
           ].map(row => (
@@ -1603,7 +1603,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               <span className="eyebrow mb-3 block">Practice Questions</span>
               <h2 className="section-title mb-4">Exam-standard questions</h2>
               <p className="text-slate-500 text-lg leading-relaxed mb-8">
-                MCQs, written tasks and full mock exams for ACCA, CIMA, AAT and ICAEW. Instant marking with detailed explanations. Track your progress and walk into the exam room ready.
+                MCQs, written tasks and full mock exams for ACCA, CIMA, AAT and ICAEW. Instant marking with detailed explanations. Walk into the exam room ready.
               </p>
 
               <div className="space-y-4">
@@ -1619,13 +1619,13 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                     d: 'M13 10V3L4 14h7v7l9-11h-7z',
                   },
                   {
-                    title: 'Track your progress',
-                    body: 'See which topics you have mastered and where you need more practice.',
+                    title: 'Practise by topic',
+                    body: 'Choose any topic and practise as often as you like.',
                     d: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
                   },
                   {
-                    title: 'Free to start',
-                    body: 'Core question banks permanently free. No credit card, no trial period.',
+                    title: 'Free forever',
+                    body: 'Every question bank is free. No account, no credit card.',
                     d: 'M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z',
                   },
                 ].map(row => (

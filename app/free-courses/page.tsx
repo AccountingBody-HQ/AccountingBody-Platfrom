@@ -31,7 +31,7 @@ const LEVEL_BADGE: Record<string, string> = {
 const WHY_FREE = [
   { title: 'Written by qualified accountants', body: 'Every lesson is written or reviewed by ACCA, CIMA, or ICAEW members — not generic content writers.' },
   { title: 'Built-in practice questions',       body: 'Each lesson ends with MCQs so you test your understanding immediately, not hours later.' },
-  { title: 'No registration required',          body: 'Start any course right now. Create a free account to save your progress.' },
+  { title: 'No registration required',          body: 'Start any course right now. Your progress is active. No account needed.' },
   { title: 'Updated every exam sitting',        body: 'Syllabus changes, examiner reports, and new question formats are reflected within days.' },
 ]
 
