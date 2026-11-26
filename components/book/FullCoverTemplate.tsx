@@ -390,7 +390,7 @@ export function FullCoverTemplate({ subtitle, bookType, edition, pageCount, desc
             </View>
             <Text style={s.publisherLine}>ACCOUNTING BODY PRESS</Text>
             <View style={s.goldRule} />
-            <Text style={s.titleText}>{volume ? `${subtitle}\nVolume ${volume.x} of ${volume.n}` : subtitle}</Text>
+            {volume ? <View><Text style={s.titleText}>{subtitle}</Text><Text style={s.titleText}>{`Volume ${volume.x} of ${volume.n}`}</Text></View> : <Text style={s.titleText}>{subtitle}</Text>}
             <View style={s.authorRow}>
               <View style={s.authorLine} />
               <Text style={s.authorText}>ACCOUNTING BODY EDITORIAL TEAM</Text>

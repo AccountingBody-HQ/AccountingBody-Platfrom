@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { NextRequest } from 'next/server'
+import { createElement } from 'react'
 import fontkit from '@pdf-lib/fontkit'
 import * as pdfLib from 'pdf-lib'
 import ts from 'typescript'
@@ -2508,9 +2509,12 @@ describe('the volumes of a long book made chapter by chapter (D346)', { timeout:
     expect(source).toContain('const VOLUME_TITLE = (title: string, x: number, n: number) => `${title} — Volume ${x} of ${n}`\n')
     const front = readFileSync(join(ROOT, 'components', 'book', 'FrontmatterTemplate.tsx'), 'utf8')
     const cover = readFileSync(join(ROOT, 'components', 'book', 'FullCoverTemplate.tsx'), 'utf8')
-    expect(front).toContain('{volume ? `${sanitise(subtitle)}\\nVolume ${volume.x} of ${volume.n}` : sanitise(subtitle)}')
-    expect(cover).toContain('{volume ? `${subtitle}\\nVolume ${volume.x} of ${volume.n}` : subtitle}')
+    expect(front).toContain('{volume ? <View><Text style={s.bookTitle}>{sanitise(subtitle)}</Text><Text style={s.bookTitle}>{`Volume ${volume.x} of ${volume.n}`}</Text></View> : <Text style={s.bookTitle}>{sanitise(subtitle)}</Text>}')
+    expect(cover).toContain('{volume ? <View><Text style={s.titleText}>{subtitle}</Text><Text style={s.titleText}>{`Volume ${volume.x} of ${volume.n}`}</Text></View> : <Text style={s.titleText}>{subtitle}</Text>}')
     expect(cover).toContain('{volume ? `${subtitle} · Vol. ${volume.x}` : subtitle}')
+    // A line break inside a text made react-pdf fall back to Helvetica, which
+    // is not embedded: the volume line is a text of its own.
+    expect(front.includes('\\nVolume') || cover.includes('\\nVolume')).toBe(false)
   })
 })
 
@@ -2524,13 +2528,62 @@ describe('the front pages and the cover of a volume (D346)', () => {
     strings(FrontmatterTemplate({ course: { chapters: [{ _key: 'a', chapterTitle: 'One' }] }, bookType: 'combined', edition: 'E', subtitle: 'S', chapterPageStarts: [4], totalPages: 9, answersPageStart: 8, ...extra }))
   const cover = (extra: object) => strings(FullCoverTemplate({ subtitle: 'S', bookType: 'combined', edition: 'E', pageCount: 100, ...extra }))
 
-  it('the title page and the front cover say the volume under the title, and the spine its number; only for a volume', () => {
-    expect(front({ volume: { x: 2, n: 3 } })).toContain('S\nVolume 2 of 3')
+  // Every element of a drawn page, in order.
+  const elementsOf = (node: unknown): Element[] => {
+    if (Array.isArray(node)) return node.flatMap(elementsOf)
+    if (node && typeof node === 'object' && 'props' in node) return [node as Element, ...elementsOf((node as Element).props.children)]
+    return []
+  }
+  // The style of the text that says `words`, and of the text right before it.
+  const styles = (page: unknown, words: string) => {
+    const texts = elementsOf(page).filter((e) => typeof e.props.children === 'string')
+    const at = texts.findIndex((e) => e.props.children === words)
+    return at > 0 ? [texts[at - 1].props.children, texts[at - 1].props.style === texts[at].props.style] : null
+  }
+
+  it('the title page and the front cover say the volume under the title, in its style, and the spine its number; only for a volume', () => {
+    const volume = { x: 2, n: 3 }
+    const frontPage = FrontmatterTemplate({ course: { chapters: [{ _key: 'a', chapterTitle: 'One' }] }, bookType: 'combined', edition: 'E', subtitle: 'S', chapterPageStarts: [4], totalPages: 9, answersPageStart: 8, volume })
+    expect(styles(frontPage, 'Volume 2 of 3')).toEqual(['S', true])
+    expect(front({ volume }).join('|')).toContain('Accounting Body Press|S|Volume 2 of 3|Study Text & Practice Kit')
     expect(front({}).filter((text) => text.includes('Vol'))).toEqual([])
     expect(front({})).toContain('S')
-    const withVolume = cover({ volume: { x: 2, n: 3 } })
-    expect(withVolume.filter((text) => text.includes('Vol'))).toEqual(['S · Vol. 2', 'S\nVolume 2 of 3'])
+    const coverPage = FullCoverTemplate({ subtitle: 'S', bookType: 'combined', edition: 'E', pageCount: 100, volume })
+    expect(styles(coverPage, 'Volume 2 of 3')).toEqual(['S', true])
+    expect(cover({ volume }).filter((text) => text.includes('Vol'))).toEqual(['S · Vol. 2', 'Volume 2 of 3'])
     expect(cover({}).filter((text) => text.includes('Vol'))).toEqual([])
+    for (const text of [...front({ volume }), ...cover({ volume })]) expect(text).not.toContain('\n')
+  })
+
+  it("a volume's front pages and cover, drawn by react-pdf, have only embedded fonts; a line break would not", async () => {
+    // react-pdf fetches the templates' fonts itself: they come from the site's
+    // own files on disk, and any other address is refused (no network).
+    vi.unstubAllGlobals()
+    const realFetch = globalThis.fetch
+    const asked: string[] = []
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : String(input)
+      const font = /^https:\/\/accountingbody\.com\/fonts\/(LiberationSans-(Regular|Bold|Italic)\.ttf)$/.exec(url)
+      if (font) {
+        asked.push(font[1])
+        return new Response(readFileSync(join(ROOT, 'public', 'fonts', font[1])))
+      }
+      if (/^(data|file):/.test(url)) return realFetch(input, init)
+      throw new Error('no network in this test')
+    })
+    const actual = await vi.importActual<typeof import('@react-pdf/renderer')>('@react-pdf/renderer')
+    const volume = { x: 1, n: 2 }
+    const drawn = async (element: unknown) => new Uint8Array(await actual.renderToBuffer(element as Parameters<typeof actual.renderToBuffer>[0]))
+    const frontPdf = await drawn(createElement(FrontmatterTemplate, { course: { chapters: [{ _key: 'a', chapterTitle: 'One' }] }, bookType: 'combined', edition: 'E', subtitle: 'Sample', chapterPageStarts: [4], totalPages: 9, answersPageStart: 8, volume }))
+    const coverPdf = await drawn(createElement(FullCoverTemplate, { subtitle: 'Sample', bookType: 'combined', edition: 'E', pageCount: 100, volume }))
+    for (const pdf of [frontPdf, coverPdf]) {
+      expect((await fontsOf(pdf)).filter((found) => !found.embedded)).toEqual([])
+      expect(await (new Screen().inner.fontsEmbedded as unknown as (bytes: Uint8Array) => Promise<boolean>)(pdf)).toBe(true)
+    }
+    // The form this job first had: the line inside the title's text.
+    const broken = await drawn(createElement(actual.Document, null, createElement(actual.Page, null, createElement(actual.Text, { style: { fontFamily: 'BookSans' } }, 'Sample\nVolume 1 of 2'))))
+    expect((await fontsOf(broken)).filter((found) => !found.embedded).map((found) => found.name)).toEqual(['Helvetica'])
+    expect(new Set(asked)).toEqual(new Set(['LiberationSans-Regular.ttf', 'LiberationSans-Bold.ttf']))
   })
 
   it('a contents row keeps the chapter number it is given, else its place', () => {
@@ -2588,7 +2641,7 @@ describe('the front pages and the cover of a volume (D346)', () => {
     expect(given.volume).toEqual({ x: 2, n: 2 })
     const drawn = state.drawn[0] as { type: (props: unknown) => unknown; props: unknown }
     const texts = strings(drawn.type(drawn.props)).join('|')
-    expect(texts).toContain('Course\nVolume 2 of 2')
+    expect(texts).toContain('Course|Volume 2 of 2')
     expect(texts).toContain('Chapter |2|: |Chapter|')
     expect(texts).toContain('Chapter |3|: |Chapter|')
     expect(texts).not.toContain('Chapter |1|')
