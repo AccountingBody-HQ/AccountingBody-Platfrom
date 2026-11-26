@@ -13,6 +13,7 @@ import { FullCoverTemplate } from "@/components/book/FullCoverTemplate"
 import {
   buildCourse, BuildStats, createSupabaseClient, EMPTY_COURSE, hasAnswer, hasPrintedAnswer, missingOptionLine, noAnswerLine, practiceSlug, unpublishedLine,
 } from "@/lib/ab-press-builder"
+import { fontsEmbedded } from "@/lib/ab-press-pdf-checks"
 
 export const maxDuration = 300
 
@@ -185,14 +186,14 @@ function estimateChapterPages(ch: any, bookType: string): number {
   return Math.ceil(lines / LINES_PER_PAGE)
 }
 
-function buildPreflight(interiorPdf: Buffer, coverPdf: Buffer, pageCount: number, subtitle: string, bookType: string): string {
+async function buildPreflight(interiorPdf: Buffer, coverPdf: Buffer, pageCount: number, subtitle: string, bookType: string): Promise<string> {
   const interiorStr = interiorPdf.toString("binary")
   const coverStr    = coverPdf.toString("binary")
   const checks: { name: string; pass: boolean; detail: string }[] = []
-  const hasEmbedded = /\/FontFile2/.test(interiorStr) && /\/FontFile2/.test(coverStr)
-  const hasStdHelv  = /\/BaseFont\s*\/Helvetica[^-]/.test(interiorStr) || /\/BaseFont\s*\/Helvetica[^-]/.test(coverStr)
-  checks.push({ name: "Fonts embedded", pass: hasEmbedded && !hasStdHelv,
-    detail: hasEmbedded && !hasStdHelv ? "Liberation Sans embedded in interior and cover" : "Non-embedded font detected - KDP may reject" })
+  // Every font of both PDFs, read with pdf-lib (owner decision D349).
+  const embedded = (await fontsEmbedded(interiorPdf)) && (await fontsEmbedded(coverPdf))
+  checks.push({ name: "Fonts embedded", pass: embedded,
+    detail: embedded ? "Liberation Sans embedded in interior and cover" : "Non-embedded font detected - KDP may reject" })
   const pagesOk = pageCount >= 24 && pageCount <= 828
   checks.push({ name: "Page count", pass: pagesOk, detail: pageCount + " pages (KDP limit 24-828)" })
   const spineIn   = Math.max(pageCount * 0.002252, 0.5)
@@ -300,7 +301,7 @@ export async function POST(req: NextRequest) {
     )
 
     const metaBuffer      = Buffer.from(buildMetadata(subtitle || course.title, bookType, edition || "2026/27 Edition", course), "utf8")
-    const preflightBuffer = Buffer.from(buildPreflight(interiorPdf, coverPdf, pageCount, subtitle || course.title, bookType) + "\n\n" + buildFidelity(course, fidelityStats, bookType), "utf8")
+    const preflightBuffer = Buffer.from((await buildPreflight(interiorPdf, coverPdf, pageCount, subtitle || course.title, bookType)) + "\n\n" + buildFidelity(course, fidelityStats, bookType), "utf8")
 
     const zip      = buildZip([
       { name: "interior.pdf",         data: interiorPdf     },

@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FrontmatterTemplate } from '@/components/book/FrontmatterTemplate'
 import { FullCoverTemplate } from '@/components/book/FullCoverTemplate'
 import { ARTICLES_READ_FAILED, buildCourse, courseKey, EMPTY_COURSE, missingOptionLine, noAnswerLine, READ_FAILED, unpublishedLine, type BuildStats } from './ab-press-builder'
+import * as pdfChecks from './ab-press-pdf-checks'
 import { adminFetch, type AdminFetchOptions } from './admin-fetch'
 import { TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
 import { ADMIN_SESSION_COOKIE, getAdminPath } from './middleware-logic'
@@ -46,6 +47,11 @@ const state = vi.hoisted(() => ({
   courseFails: null as Error | null,
   // Every problem report: its label, its problem and what goes with it.
   reports: [] as unknown[][],
+  // What the PDF maker gives instead of its stand-in: these bytes, or the real
+  // drawing by react-pdf (owner decision D349).
+  pdfOut: null as Buffer | null,
+  realPdf: false,
+  rendered: [] as Buffer[],
 }))
 
 vi.mock('@/lib/report-error', () => ({
@@ -76,16 +82,24 @@ vi.mock('@/lib/coursesNew', () => ({
   },
 }))
 
-vi.mock('@react-pdf/renderer', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@react-pdf/renderer')>()),
-  renderToBuffer: async (element: { type: (props: unknown) => unknown; props: unknown }) => {
-    if (state.pdfFails) throw state.pdfFails
-    state.pdfs += 1
-    state.made.push(JSON.stringify(element.props))
-    state.drawn.push(element)
-    return Buffer.from('/Type /Page ')
-  },
-}))
+vi.mock('@react-pdf/renderer', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@react-pdf/renderer')>()
+  return {
+    ...original,
+    renderToBuffer: async (element: { type: (props: unknown) => unknown; props: unknown }) => {
+      if (state.pdfFails) throw state.pdfFails
+      state.pdfs += 1
+      state.made.push(JSON.stringify(element.props))
+      state.drawn.push(element)
+      if (state.realPdf) {
+        const drawn = await original.renderToBuffer(element as unknown as Parameters<typeof original.renderToBuffer>[0])
+        state.rendered.push(drawn)
+        return drawn
+      }
+      return state.pdfOut ?? Buffer.from('/Type /Page ')
+    },
+  }
+})
 
 vi.mock('docx', () => {
   class Part {
@@ -545,6 +559,9 @@ beforeEach(() => {
   state.pdfFails = null
   state.courseFails = null
   state.reports = []
+  state.pdfOut = null
+  state.realPdf = false
+  state.rendered = []
   vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'http://db.invalid')
   vi.stubEnv('SUPABASE_SECRET_KEY', 'test-key')
   vi.stubEnv('ADMIN_SECRET', TEST_ADMIN_SECRET)
@@ -1367,11 +1384,12 @@ class Screen {
       'react/jsx-runtime': { jsx: element, jsxs: element, Fragment: 'fragment' },
       'pdf-lib': pdfLib,
       '@pdf-lib/fontkit': { __esModule: true, default: fontkit },
+      '@/lib/ab-press-pdf-checks': pdfChecks,
       '@/lib/admin-fetch': {
         adminFetch: (url: string, init?: RequestInit, options?: AdminFetchOptions) => (this.realFetch ? adminFetch(url, init, options) : this.fetch(url, init)),
       },
     }
-    const names = ['planVolumes', 'fontsEmbedded', 'kdpLines']
+    const names = ['planVolumes', 'fontsEmbedded', 'kdpLines', 'buildMetadata']
     const outputText = `${moduleText}\nmodule.exports.__inner = { ${names.map((name) => `${name}: typeof ${name} === 'undefined' ? undefined : ${name}`).join(', ')} }\n`
     const made: { exports: { default?: () => Element; __inner?: Screen['inner'] } } = { exports: {} }
     new Function('require', 'module', 'exports', outputText)((name: string) => modules[name], made, made.exports)
@@ -2576,8 +2594,13 @@ describe('the volumes of a long book made chapter by chapter (D346)', { timeout:
     const lines = (x: number) => text(`volume-${x}-metadata.txt`).split('\n')
     expect(lines(1).filter((line) => line.startsWith('Title: '))).toEqual(['Title: Title first — Volume 1 of 2'])
     expect(lines(2).filter((line) => line.startsWith('Title: '))).toEqual(['Title: Title first — Volume 2 of 2'])
-    const rest = (x: number) => lines(x).filter((line) => !line.startsWith('Title: ') && !line.startsWith('Generated: '))
+    // Each volume names its own chapters and files (owner decision D349).
+    const own = (x: number) => lines(x).filter((line) => /^(Chapters?: |4\. |5\. )/.test(line))
+    expect(own(1)).toEqual(['Chapter: 1 of 3', '4. Upload volume-1-interior.pdf as manuscript', '5. Upload volume-1-cover.pdf as cover'])
+    expect(own(2)).toEqual(['Chapters: 2–3 of 3', '4. Upload volume-2-interior.pdf as manuscript', '5. Upload volume-2-cover.pdf as cover'])
+    const rest = (x: number) => lines(x).filter((line) => !line.startsWith('Title: ') && !line.startsWith('Generated: ') && !own(x).includes(line))
     expect(rest(1)).toEqual(rest(2))
+    expect(rest(1)).toHaveLength(lines(1).length - 5)
     const report = (x: number) => text(`volume-${x}-preflight-report.txt`)
     expect(report(1)).toContain('[WARN] 1 linked practice set(s) not found or not live: x')
     expect(report(1)).toContain(missingOptionLine([]))
@@ -2621,6 +2644,82 @@ describe('the volumes of a long book made chapter by chapter (D346)', { timeout:
     // A line break inside a text made react-pdf fall back to Helvetica, which
     // is not embedded: the volume line is a text of its own.
     expect(front.includes('\\nVolume') || cover.includes('\\nVolume')).toBe(false)
+  })
+})
+
+describe('the details file of each volume (D349)', () => {
+  type Metadata = (subtitle: string, bookType: string, edition: string, course: object, volume?: { x: number; chapters: number[] }) => string
+  const metadata = (...args: Parameters<Metadata>) => (new Screen().inner.buildMetadata as unknown as Metadata)(...args)
+  const COURSE = { title: 'Course', chapters: Array.from({ length: 7 }, (_, i) => ({ _key: i })) }
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-26T12:00:00.000Z'))
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("the owner's book in three volumes: chapters 1-2, 3-4 and 5-7 of 7, and each volume's own files", () => {
+    const own = (x: number, chapters: number[]) =>
+      metadata(`Financial Accounting — Volume ${x} of 3`, 'combined', '2026/27 Edition', COURSE, { x, chapters }).split('\n').filter((line) => /^(Chapters?: |4\. |5\. )/.test(line))
+    expect(own(1, [0, 1])).toEqual(['Chapters: 1–2 of 7', '4. Upload volume-1-interior.pdf as manuscript', '5. Upload volume-1-cover.pdf as cover'])
+    expect(own(2, [2, 3])).toEqual(['Chapters: 3–4 of 7', '4. Upload volume-2-interior.pdf as manuscript', '5. Upload volume-2-cover.pdf as cover'])
+    expect(own(3, [4, 5, 6])).toEqual(['Chapters: 5–7 of 7', '4. Upload volume-3-interior.pdf as manuscript', '5. Upload volume-3-cover.pdf as cover'])
+  })
+
+  it('a volume of one chapter', () => {
+    const lines = metadata('S — Volume 2 of 2', 'study', 'E', COURSE, { x: 2, chapters: [6] }).split('\n')
+    expect(lines.filter((line) => /^Chapters?: /.test(line))).toEqual(['Chapter: 7 of 7'])
+    expect(lines).toContain('4. Upload volume-2-interior.pdf as manuscript')
+    expect(lines).toContain('5. Upload volume-2-cover.pdf as cover')
+  })
+
+  it('nothing else in the file changes for a volume', () => {
+    const one = metadata('S', 'combined', 'E', COURSE).split('\n')
+    const volume = metadata('S', 'combined', 'E', COURSE, { x: 1, chapters: [0, 1] }).split('\n')
+    expect(volume).toHaveLength(one.length)
+    expect(volume.filter((line, i) => line !== one[i])).toEqual(['Chapters: 1–2 of 7', '4. Upload volume-1-interior.pdf as manuscript', '5. Upload volume-1-cover.pdf as cover'])
+  })
+
+  it('a book of one volume: the file is byte for byte as before', () => {
+    const made = metadata('Financial Accounting', 'combined', '2026/27 Edition', { ...COURSE, level: 'Foundation' })
+    expect(made).toBe([
+      'ACCOUNTING BODY PRESS - BOOK METADATA',
+      '=====================================',
+      '',
+      'Title: Financial Accounting',
+      'Type: Study Text and Practice Kit',
+      'Author: Accounting Body Editorial Team',
+      'Publisher: Accounting Body Press',
+      'Edition: 2026/27 Edition',
+      'Year: 2026',
+      'Language: English',
+      'Trim Size: 6 x 9 inches',
+      'Interior: Black and White',
+      'Paper: White',
+      '',
+      'COURSE INFO',
+      '-----------',
+      'Course: Course',
+      'Level: Foundation',
+      'Category: Not specified',
+      'Chapters: 7',
+      '',
+      'KDP UPLOAD INSTRUCTIONS',
+      '-----------------------',
+      '1. Log in to kdp.amazon.com',
+      '2. Create new paperback title',
+      '3. Enter metadata from above',
+      '4. Upload interior.pdf as manuscript',
+      '5. Upload cover.pdf as cover',
+      '6. Choose 6x9 trim size, black and white interior',
+      '7. Set price and territories',
+      '8. Submit for review',
+      '',
+      'Generated: 2026-11-26T12:00:00.000Z',
+      'Generated by: Accounting Body Press Publishing System',
+    ].join('\n'))
+    expect(sha(made)).toBe(sha(metadata('Financial Accounting', 'combined', '2026/27 Edition', { ...COURSE, level: 'Foundation' }, undefined)))
   })
 })
 
@@ -2684,7 +2783,7 @@ describe('the front pages and the cover of a volume (D346)', () => {
     const coverPdf = await drawn(createElement(FullCoverTemplate, { subtitle: 'Sample', bookType: 'combined', edition: 'E', pageCount: 100, volume }))
     for (const pdf of [frontPdf, coverPdf]) {
       expect((await fontsOf(pdf)).filter((found) => !found.embedded)).toEqual([])
-      expect(await (new Screen().inner.fontsEmbedded as unknown as (bytes: Uint8Array) => Promise<boolean>)(pdf)).toBe(true)
+      expect(await pdfChecks.fontsEmbedded(pdf)).toBe(true)
     }
     // The form this job first had: the line inside the title's text.
     const broken = await drawn(createElement(actual.Document, null, createElement(actual.Page, null, createElement(actual.Text, { style: { fontFamily: 'BookSans' } }, 'Sample\nVolume 1 of 2'))))
@@ -2797,10 +2896,10 @@ describe('the front pages and the cover of a volume (D346)', () => {
 
 describe('the KDP checks of a book made chapter by chapter (D346)', { timeout: 120000 }, () => {
   type KdpLines = (interior: Uint8Array, cover: Uint8Array, pageCount: number) => Promise<string[]>
-  type Embedded = (bytes: Uint8Array) => Promise<boolean>
   const inner = () => new Screen().inner
   const kdpLines = (...args: Parameters<KdpLines>) => (inner().kdpLines as unknown as KdpLines)(...args)
-  const embedded = (bytes: Uint8Array) => (inner().fontsEmbedded as unknown as Embedded)(bytes)
+  // The one font check every book shares (owner decision D349).
+  const embedded = (bytes: Uint8Array) => pdfChecks.fontsEmbedded(bytes)
   const bytesOf = (base64: string) => new Uint8Array(Buffer.from(base64, 'base64'))
   const kdpCover = async (pages: number) => bytesOf(await pdfOf(1, (6.125 * 2 + Math.max(pages * 0.002252, 0.5)) * 72, 9.25 * 72))
   const liberation = async () => {
@@ -2920,5 +3019,112 @@ describe('the KDP checks of a book made chapter by chapter (D346)', { timeout: 1
       '[PASS] Cover dimensions - 918.00 x 666.00 pts (expected 918.00 x 666.00, spine 0.500in)',
     ])
     expect(page.shown).toContain('The check reports (volume-1-preflight-report.txt to volume-2-preflight-report.txt) list 1 item(s) to look at. Please read them before uploading to KDP.')
+  })
+})
+
+describe('one real font check for every book (D349)', { timeout: 180000 }, () => {
+  const PASS = '[PASS] Fonts embedded - Liberation Sans embedded in interior and cover'
+  const FAIL = '[FAIL] Fonts embedded - Non-embedded font detected - KDP may reject'
+  const ROUTES: [string, object][] = [
+    ['generate', { slug: 'good', bookType: 'combined' }],
+    ['generate-pq', { slug: 'good' }],
+  ]
+  // The check report of a book the route made, without its clock.
+  const reportOf = async (name: string, body: object) => {
+    const response = await callRoute(name, { body: { ...body, edition: 'E', subtitle: 'S' } })
+    expect(response.status).toBe(200)
+    const zip = Buffer.from(await response.arrayBuffer()).toString('latin1')
+    const report = zip.split('ACCOUNTING BODY PRESS - KDP PRE-FLIGHT REPORT')[1].split('\n\nCONTENT FIDELITY AUDIT')[0]
+    return report.split('\n').filter((line) => !line.startsWith('Generated: '))
+  }
+  const fontLine = (lines: string[]) => lines.filter((line) => line.includes('] Fonts embedded - '))
+  // Liberation Sans embedded, plus another font as `extra` gives it.
+  const withLiberation = async (extra: (made: pdfLib.PDFDocument) => Promise<void>, useObjectStreams: boolean) => {
+    const made = await pdfLib.PDFDocument.create()
+    made.registerFontkit(fontkit)
+    made.addPage([432, 648]).drawText('4', { x: 396, y: 18, size: 8, font: await made.embedFont(new Uint8Array(PAGE_FONT), { subset: true }) })
+    await extra(made)
+    return Buffer.from(await made.save({ useObjectStreams }))
+  }
+  // A Type 1 Times-Roman with no font file, beside an embedded font, written plainly.
+  const times = () => withLiberation(async (made) => {
+    made.getPage(0).drawText('5', { x: 36, y: 18, size: 8, font: await made.embedFont(pdfLib.StandardFonts.TimesRoman) })
+  }, false)
+  // Every font dictionary inside a compressed object stream, one with no font
+  // file; the words "/FontFile2" are still in the bytes (an uncompressed stream).
+  const hidden = () => withLiberation(async (made) => {
+    made.getPage(0).drawText('5', { x: 36, y: 18, size: 8, font: await made.embedFont(pdfLib.StandardFonts.Helvetica) })
+    made.context.register(made.context.stream('/FontFile2'))
+  }, true)
+  // react-pdf takes the templates' fonts from the site's files on disk; no network.
+  const fontsFromDisk = () => {
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : String(input)
+      const font = /^https:\/\/accountingbody\.com\/fonts\/(LiberationSans-(Regular|Bold|Italic)\.ttf)$/.exec(url)
+      if (font) return new Response(readFileSync(join(ROOT, 'public', 'fonts', font[1])))
+      return fakeDatabase(input, init)
+    })
+  }
+
+  it('the PDFs below are what they say', async () => {
+    const plain = (await times()).toString('latin1')
+    expect(plain).toContain('/FontFile2')
+    expect(plain).toMatch(/\/BaseFont\s*\/Times-Roman/)
+    expect(plain).not.toMatch(/\/BaseFont\s*\/Helvetica/)
+    const packed = (await hidden()).toString('latin1')
+    expect(packed).toContain('/ObjStm')
+    expect(packed).toContain('/FontFile2')
+    expect(packed).not.toMatch(/\/BaseFont\s*\/Helvetica/)
+    expect((await fontsOf(new Uint8Array(await times()))).filter((found) => !found.embedded).map((found) => found.name)).toEqual(['Times-Roman'])
+    expect((await fontsOf(new Uint8Array(await hidden()))).filter((found) => !found.embedded).map((found) => found.name)).toEqual(['Helvetica'])
+  })
+
+  it.each(ROUTES)('%s: a Times-Roman with no font file fails the font check', async (name, body) => {
+    state.pdfOut = await times()
+    expect(fontLine(await reportOf(name, body))).toEqual([FAIL])
+  })
+
+  it.each(ROUTES)('%s: a font with no file inside a compressed object stream fails the font check', async (name, body) => {
+    state.pdfOut = await hidden()
+    expect(fontLine(await reportOf(name, body))).toEqual([FAIL])
+  })
+
+  it.each(ROUTES)('%s: an embedded font passes; a PDF that cannot be read fails, as before', async (name, body) => {
+    state.pdfOut = await withLiberation(async () => {}, true)
+    expect(fontLine(await reportOf(name, body))).toEqual([PASS])
+    state.pdfOut = null
+    expect(fontLine(await reportOf(name, body))).toEqual([FAIL])
+  })
+
+  it.each<[string, object, string]>([
+    // Taken from the code before owner decision D349.
+    ['generate', { slug: 'good', bookType: 'combined' }, '3c2fd6afe4c82c0b'],
+    ['generate-pq', { slug: 'good' }, '1a696322dc46b2a3'],
+  ])('%s: the real templates drawn by react-pdf pass, and the report reads as before', async (name, body, before) => {
+    fontsFromDisk()
+    state.realPdf = true
+    const lines = await reportOf(name, body)
+    expect(fontLine(lines)).toEqual([PASS])
+    expect(sha(lines.join('\n'))).toBe(before)
+    // Real PDFs with real fonts: the interior's passes and the cover, every font embedded.
+    expect(state.rendered.length).toBeGreaterThanOrEqual(2)
+    for (const pdf of state.rendered) {
+      const fonts = await fontsOf(new Uint8Array(pdf))
+      expect(fonts.length).toBeGreaterThan(0)
+      expect(fonts.filter((found) => !found.embedded)).toEqual([])
+    }
+  })
+
+  it('the screen and both routes use the shared check; no text search is left', () => {
+    expect(new Screen().inner.fontsEmbedded).toBeUndefined()
+    const page = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
+    expect(page).toContain("import { fontsEmbedded } from '@/lib/ab-press-pdf-checks'")
+    for (const name of ['generate', 'generate-pq']) {
+      const route = readFileSync(join(ROOT, 'app', 'api', ADMIN, 'ab-press', name, 'route.ts'), 'utf8')
+      expect(route).toContain('import { fontsEmbedded } from "@/lib/ab-press-pdf-checks"')
+      expect(route).toContain('const embedded = (await fontsEmbedded(interiorPdf)) && (await fontsEmbedded(coverPdf))')
+      expect(route).not.toContain('FontFile2')
+      expect(route).not.toContain('Helvetica')
+    }
   })
 })

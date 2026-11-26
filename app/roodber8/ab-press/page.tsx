@@ -2,6 +2,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react'
 import { adminFetch, type AdminResponse } from '@/lib/admin-fetch'
+// The font check every AB Press book shares (owner decision D349).
+import { fontsEmbedded } from '@/lib/ab-press-pdf-checks'
 
 const BOOK_TYPES = [
   { value: 'combined', label: 'Combined', desc: 'Study notes + practice questions per chapter' },
@@ -58,7 +60,14 @@ const BOOK_TYPE_LABELS: Record<string, string> = {
 // no server dependencies. buildZip is rewritten against Uint8Array/DataView
 // instead of Node's Buffer (unavailable in the browser) but produces a
 // byte-identical ZIP format.
-function buildMetadata(subtitle: string, bookType: string, edition: string, course: any): string {
+// For a volume of a longer book (owner decision D349), its number and the
+// chapter indexes it holds: the chapters line and upload steps 4 and 5 name
+// that volume. Without it the file is as before.
+function buildMetadata(subtitle: string, bookType: string, edition: string, course: any, volume?: { x: number; chapters: number[] }): string {
+  const total = (course.chapters || []).length
+  const first = volume ? volume.chapters[0] + 1 : 0
+  const last = volume ? volume.chapters[volume.chapters.length - 1] + 1 : 0
+  const file = (name: string) => (volume ? `volume-${volume.x}-${name}` : name)
   const lines = [
     'ACCOUNTING BODY PRESS - BOOK METADATA',
     '=====================================',
@@ -79,15 +88,15 @@ function buildMetadata(subtitle: string, bookType: string, edition: string, cour
     `Course: ${course.title}`,
     `Level: ${course.level || 'Not specified'}`,
     `Category: ${course.categoryTitle || 'Not specified'}`,
-    `Chapters: ${(course.chapters || []).length}`,
+    !volume ? `Chapters: ${total}` : first === last ? `Chapter: ${first} of ${total}` : `Chapters: ${first}–${last} of ${total}`,
     '',
     'KDP UPLOAD INSTRUCTIONS',
     '-----------------------',
     '1. Log in to kdp.amazon.com',
     '2. Create new paperback title',
     '3. Enter metadata from above',
-    '4. Upload interior.pdf as manuscript',
-    '5. Upload cover.pdf as cover',
+    `4. Upload ${file('interior.pdf')} as manuscript`,
+    `5. Upload ${file('cover.pdf')} as cover`,
     '6. Choose 6x9 trim size, black and white interior',
     '7. Set price and territories',
     '8. Submit for review',
@@ -165,32 +174,6 @@ function planVolumes(chapterPages: number[], answerPages: number[], limit = KDP_
     }
   }
   return { volumes }
-}
-
-// Whether every font of a PDF is embedded, as KDP asks (owner decision D346):
-// each font's descriptor holds its font file; a Type 0 font is judged by its
-// descendant fonts; a Type 3 font draws its own glyphs. false when the PDF
-// cannot be read.
-async function fontsEmbedded(bytes: Uint8Array): Promise<boolean> {
-  try {
-    const { PDFDocument, PDFDict, PDFName, PDFArray } = await import('pdf-lib')
-    const doc = await PDFDocument.load(bytes)
-    const embedded = (font: any): boolean => {
-      const subtype = font.lookup(PDFName.of('Subtype'))
-      if (subtype === PDFName.of('Type3')) return true
-      if (subtype === PDFName.of('Type0')) {
-        const kids = font.lookup(PDFName.of('DescendantFonts'))
-        return kids instanceof PDFArray && kids.size() > 0 &&
-          kids.asArray().every(kid => { const d = doc.context.lookup(kid); return d instanceof PDFDict && embedded(d) })
-      }
-      const descriptor = font.lookup(PDFName.of('FontDescriptor'))
-      return descriptor instanceof PDFDict && ['FontFile', 'FontFile2', 'FontFile3'].some(key => descriptor.has(PDFName.of(key)))
-    }
-    return doc.context.enumerateIndirectObjects().every(([, object]) =>
-      !(object instanceof PDFDict) || object.lookup(PDFName.of('Type')) !== PDFName.of('Font') || embedded(object))
-  } catch {
-    return false
-  }
 }
 
 // The KDP checks of the server's check report (buildPreflight in the generate
@@ -628,7 +611,7 @@ export default function AbPressPage() {
       zipFiles.push(
         { name: fileName('interior.pdf'), data: interiorPdf },
         { name: fileName('cover.pdf'),    data: coverPdf },
-        { name: fileName('metadata.txt'), data: new TextEncoder().encode(buildMetadata(volume ? VOLUME_TITLE(title, volume.x, volume.n) : title, bookType, edition, preview.course)) },
+        { name: fileName('metadata.txt'), data: new TextEncoder().encode(buildMetadata(volume ? VOLUME_TITLE(title, volume.x, volume.n) : title, bookType, edition, preview.course, volume ? { x: volume.x, chapters: volumeChapters } : undefined)) },
         { name: fileName('preflight-report.txt'), data: new TextEncoder().encode(checkReport) },
       )
       reportItemCount += countReportItems(checkReport)
