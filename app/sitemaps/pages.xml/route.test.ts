@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 
 // The pages reader is replaced so the route's answer to each result is tested
@@ -7,12 +5,20 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 vi.mock('@/lib/db', () => ({
   getPagesSitemapContent: vi.fn(),
 }))
+// The mock-exam pool sizes (ME-1 S3): every subject open unless a test says otherwise.
+const P = vi.hoisted(() => ({ sizes: new Map<string, number | null>() }))
+vi.mock('@/lib/mock-exam-pool', () => ({
+  getAbMockPoolSize: vi.fn(async (category: string) => (P.sizes.has(category) ? P.sizes.get(category) : 500)),
+  getEticpaMockPoolSize: vi.fn(async () => 300),
+}))
 
 import { GET } from './route'
 import { getPagesSitemapContent } from '@/lib/db'
+import { MOCK_EXAM_SUBJECTS } from '@/lib/mock-exam-subjects'
 
 afterEach(() => {
   vi.clearAllMocks()
+  P.sizes.clear()
 })
 
 describe('/sitemaps/pages.xml GET', () => {
@@ -99,9 +105,24 @@ describe('/sitemaps/pages.xml GET', () => {
     expect(locs).toHaveLength(31)
     expect(new Set(locs).size).toBe(locs.length)
     expect(locs.some(l => /\/get-help\/|\/faq$|\/how-it-works$|\/study\/mock-exams$/.test(l))).toBe(false)
-    // The subjects are exactly the ones the hub links to.
-    const hub = readFileSync(join(process.cwd(), 'app/mock-exams/page.tsx'), 'utf8')
-    const hubSlugs = Array.from(hub.matchAll(/\{ slug: '([a-z-]+)',/g)).map(m => m[1])
+    // The subjects are exactly the ones the hub lists (the one list, ME-1 S3).
+    const hubSlugs = MOCK_EXAM_SUBJECTS.map(s => s.slug)
     expect(locs.filter(l => l.includes('/mock-exams/')).map(l => l.split('/').pop())).toEqual(hubSlugs)
+  })
+
+  // ME-1 S3: a subject still under 50 questions ("Coming soon") is left out;
+  // the open ones stay exactly as before. A failed pool read keeps it in.
+  it('leaves out a Coming soon subject and keeps the open ones', async () => {
+    vi.mocked(getPagesSitemapContent).mockResolvedValue({ ok: true, articles: [], questionSets: [], courses: [] })
+    for (const slug of ['financial-market', 'business-management', 'taxation', 'economics']) P.sizes.set(slug, 0)
+    P.sizes.set('audit-assurance', null)
+    const body = await (await GET()).text()
+    const locs = Array.from(body.matchAll(/<loc>([^<]+)<\/loc>/g)).map(m => m[1])
+    expect(locs.filter(l => l.includes('/mock-exams'))).toEqual([
+      'https://accountingbody.com/mock-exams',
+      ...['financial-accounting', 'financial-management', 'management-accounting', 'audit-assurance']
+        .map(s => `https://accountingbody.com/mock-exams/${s}`),
+    ])
+    expect(locs).toHaveLength(27)
   })
 })

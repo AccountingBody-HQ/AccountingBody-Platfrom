@@ -18,11 +18,14 @@ interface Props {
   moduleName: string
   backHref: string
   apiPath?: string
+  // The subject's question bank is under 50 questions: the intro says so,
+  // with no tiles and no start button (lib/mock-exam-subjects.ts).
+  notOpen?: boolean
 }
 
 type Phase = 'intro' | 'exam' | 'results'
 
-export default function MockExamClient({ level, module, moduleName, backHref, apiPath = '/api/eticpa/mock-exam' }: Props) {
+export default function MockExamClient({ level, module, moduleName, backHref, apiPath = '/api/eticpa/mock-exam', notOpen = false }: Props) {
   const [phase, setPhase] = useState<Phase>('intro')
   const [questions, setQuestions] = useState<Question[]>([])
   const [answers, setAnswers] = useState<Record<number, number>>({})
@@ -98,6 +101,9 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
             <svg className="w-8 h-8" fill="none" stroke={GOLD} viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
           </div>
           <h1 className="font-display text-2xl md:text-3xl text-navy-950 mb-3">{moduleName} Mock Exam</h1>
+          {notOpen ? (
+            <p className="text-slate-500 leading-relaxed mb-8">This mock exam is not open yet. Questions are being added to this subject.</p>
+          ) : (<>
           <p className="text-slate-500 leading-relaxed mb-8">50 questions randomly selected and balanced across all topics. You have 75 minutes. Every attempt gives you a fresh set.</p>
           <div className="grid grid-cols-3 gap-4 mb-8">
             {[{ v: '50', l: 'Questions' }, { v: '75', l: 'Minutes' }, { v: '60%', l: 'Pass mark' }].map(s => (
@@ -113,6 +119,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
             style={{ backgroundColor: GOLD, color: GREEN }}>
             {loading ? 'Preparing your exam…' : 'Start Mock Exam'}
           </button>
+          </>)}
           <Link href={backHref} className="inline-block mt-4 text-sm text-slate-400 hover:text-slate-600 transition-colors">← {backHref === "/mock-exams" ? "Back to Mock Exams" : "Back to module"}</Link>
         </div>
       </div>
