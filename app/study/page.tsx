@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
-import { getCategoryCounts, getQuestionSetCount } from '@/lib/db'
+import { getCategoryCounts } from '@/lib/db'
+import { getOpenEticpaModuleCount, getOpenMockExamSubjects } from '@/lib/mock-exam-subjects'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 import { ownerCanonical } from '@/lib/canonical'
 import { getRequestBrand } from '@/lib/brand-server'
@@ -214,9 +215,11 @@ export default async function StudyPage() {
   const activeExamBodies = isEthioTax
     ? [eticpaCard, ...EXAM_BODIES.filter(b => b.slug !== 'icaew')]
     : EXAM_BODIES
-  const [categoryCounts, practicePostCount] = await Promise.all([
+  // The Mock Exams card counts the open mock exams: AB subjects, or ETICPA
+  // modules on EthioTax (lib/mock-exam-subjects.ts).
+  const [categoryCounts, openMockExamCount] = await Promise.all([
     getCategoryCounts(),
-    getQuestionSetCount(),
+    isEthioTax ? getOpenEticpaModuleCount() : getOpenMockExamSubjects().then(s => s.length),
   ])
 
   return (
@@ -303,11 +306,11 @@ export default async function StudyPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {SUBJECT_AREAS.map(area => {
               const isMockExams = area.slug === 'mock-exams'
-              const href = isMockExams ? '/practice-questions' : `/study/${area.slug}`
+              const href = isMockExams ? (isEthioTax ? '/study/mock-exams' : '/mock-exams') : `/study/${area.slug}`
               const count = isMockExams
-                ? practicePostCount.toLocaleString()
+                ? openMockExamCount.toLocaleString()
                 : (categoryCounts[area.slug] ?? 0).toLocaleString()
-              const browseLabel = isMockExams ? 'Browse question sets' : 'Browse notes'
+              const browseLabel = isMockExams ? 'Start a mock exam' : 'Browse notes'
               return (
                 <Link key={area.slug} href={href}
                   className="group flex items-start gap-5 p-6 rounded-xl border border-slate-200 bg-white hover:border-gold-400 hover:shadow-lg transition-all duration-200">

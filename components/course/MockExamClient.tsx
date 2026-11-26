@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useId, useRef } from 'react'
 import Link from 'next/link'
+import { TIME_UP_TEXT, announcementAt, examEndAt, momentsPassedAtStart, secondsLeftAt } from '@/lib/mock-exam-timer'
 
 interface Question {
   questionText: string
@@ -18,11 +19,14 @@ interface Props {
   moduleName: string
   backHref: string
   apiPath?: string
+  // The subject's question bank is under 50 questions: the intro says so,
+  // with no tiles and no start button (lib/mock-exam-subjects.ts).
+  notOpen?: boolean
 }
 
 type Phase = 'intro' | 'exam' | 'results'
 
-export default function MockExamClient({ level, module, moduleName, backHref, apiPath = '/api/eticpa/mock-exam' }: Props) {
+export default function MockExamClient({ level, module, moduleName, backHref, apiPath = '/api/eticpa/mock-exam', notOpen = false }: Props) {
   const [phase, setPhase] = useState<Phase>('intro')
   const [questions, setQuestions] = useState<Question[]>([])
   const [answers, setAnswers] = useState<Record<number, number>>({})
@@ -31,6 +35,11 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
   const [error, setError] = useState('')
   // poolTotal removed
   const [secondsLeft, setSecondsLeft] = useState(50 * 90) // 90s per question
+  // The exam's end time; the seconds left are worked out from it on each tick.
+  const endAtRef = useRef(0)
+  // Time warnings for screen readers, each said once (lib/mock-exam-timer.ts).
+  const saidRef = useRef<Set<number>>(new Set())
+  const [announcement, setAnnouncement] = useState('')
   const [reviewIdx, setReviewIdx] = useState<number | null>(null)
   const qHeadingId = useId()
   const resultsHeadingRef = useRef<HTMLHeadingElement>(null)
@@ -55,7 +64,13 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
       // poolTotal not needed
       setAnswers({})
       setCurrent(0)
-      setSecondsLeft(Math.min(data.questions.length, 50) * 90)
+      setReviewIdx(null)
+      const now = Date.now()
+      endAtRef.current = examEndAt(now, data.questions.length)
+      const total = secondsLeftAt(endAtRef.current, now)
+      saidRef.current = momentsPassedAtStart(total)
+      setAnnouncement('')
+      setSecondsLeft(total)
       setPhase('exam')
     } catch {
       setError('Could not load the exam. Please try again.')
@@ -65,10 +80,23 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
 
   useEffect(() => {
     if (phase !== 'exam') return
-    if (secondsLeft <= 0) { setPhase('results'); return }
-    const t = setInterval(() => setSecondsLeft(s => s - 1), 1000)
+    const tick = () => {
+      const left = secondsLeftAt(endAtRef.current, Date.now())
+      setSecondsLeft(left)
+      const line = announcementAt(left, saidRef.current)
+      if (line) setAnnouncement(line)
+      if (left <= 0) {
+        if (line !== TIME_UP_TEXT) setAnnouncement(TIME_UP_TEXT)
+        setPhase('results')
+      }
+    }
+    const t = setInterval(tick, 1000)
     return () => clearInterval(t)
-  }, [phase, secondsLeft])
+  }, [phase])
+
+  // One polite live region kept in every phase, so the time-up line is still
+  // heard after the results appear. It speaks only the timer lines.
+  const timerLive = <p className="sr-only" aria-live="polite">{announcement}</p>
 
   const answered = Object.keys(answers).length
   const handleSubmit = () => {
@@ -91,19 +119,23 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
 
   // ── INTRO ──
   if (phase === 'intro') {
-    return (
+    return (<>
+      {timerLive}
       <div className="max-w-2xl mx-auto">
         <div className="rounded-2xl border border-slate-200 bg-white p-8 md:p-10 text-center">
           <div className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center" style={{ backgroundColor: backHref === "/mock-exams" ? "#0C1A3D" : GREEN }}>
             <svg className="w-8 h-8" fill="none" stroke={GOLD} viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
           </div>
           <h1 className="font-display text-2xl md:text-3xl text-navy-950 mb-3">{moduleName} Mock Exam</h1>
+          {notOpen ? (
+            <p className="text-slate-500 leading-relaxed mb-8">This mock exam is not open yet. Questions are being added to this subject.</p>
+          ) : (<>
           <p className="text-slate-500 leading-relaxed mb-8">50 questions randomly selected and balanced across all topics. You have 75 minutes. Every attempt gives you a fresh set.</p>
           <div className="grid grid-cols-3 gap-4 mb-8">
             {[{ v: '50', l: 'Questions' }, { v: '75', l: 'Minutes' }, { v: '60%', l: 'Pass mark' }].map(s => (
               <div key={s.l} className="rounded-xl p-4" style={{ backgroundColor: '#f0f7f4' }}>
                 <p className="font-display text-2xl" style={{ color: GREEN }}>{s.v}</p>
-                <p className="text-xs text-slate-400 mt-1">{s.l}</p>
+                <p className="text-xs text-slate-500 mt-1">{s.l}</p>
               </div>
             ))}
           </div>
@@ -113,28 +145,31 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
             style={{ backgroundColor: GOLD, color: GREEN }}>
             {loading ? 'Preparing your exam…' : 'Start Mock Exam'}
           </button>
-          <Link href={backHref} className="inline-block mt-4 text-sm text-slate-400 hover:text-slate-600 transition-colors">← {backHref === "/mock-exams" ? "Back to Mock Exams" : "Back to module"}</Link>
+          </>)}
+          <Link href={backHref} className="inline-block mt-4 text-sm text-slate-500 hover:text-slate-600 transition-colors">← {backHref === "/mock-exams" ? "Back to Mock Exams" : "Back to module"}</Link>
         </div>
       </div>
-    )
+    </>)
   }
 
   // ── RESULTS ──
   if (phase === 'results') {
     const passed = pct >= 60
-    return (
+    return (<>
+      {timerLive}
       <div className="max-w-3xl mx-auto">
         <div className="rounded-2xl border border-slate-200 bg-white p-8 md:p-10 mb-6 text-center">
-          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Exam Complete</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Exam Complete</p>
           <div className="w-28 h-28 rounded-full mx-auto mb-6 flex items-center justify-center border-4"
             style={{ borderColor: passed ? GREEN : GOLD }}>
             <span className="font-display text-3xl" style={{ color: passed ? GREEN : GOLD }}>{pct}%</span>
           </div>
           <h1 ref={resultsHeadingRef} tabIndex={-1} className="font-display text-2xl text-navy-950 mb-2">{passed ? 'Well done — you passed!' : 'Keep practising'}</h1>
           <p className="text-slate-500 mb-6">You scored {score} out of {questions.length} ({answered} answered)</p>
+          {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">{error}</p>}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button onClick={loadExam} className="h-11 px-6 rounded-lg text-sm font-semibold transition-colors" style={{ backgroundColor: GREEN, color: 'white' }}>Take a fresh exam</button>
-            <Link href={backHref} className="h-11 px-6 rounded-lg text-sm font-semibold border-2 inline-flex items-center justify-center transition-colors" style={{ borderColor: GREEN, color: GREEN }}>Back to module</Link>
+            <button onClick={loadExam} disabled={loading} className="h-11 px-6 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50" style={{ backgroundColor: GREEN, color: 'white' }}>{loading ? 'Preparing your exam…' : 'Take a fresh exam'}</button>
+            <Link href={backHref} className="h-11 px-6 rounded-lg text-sm font-semibold border-2 inline-flex items-center justify-center transition-colors" style={{ borderColor: GREEN, color: GREEN }}>{backHref === "/mock-exams" ? "Back to Mock Exams" : "Back to module"}</Link>
           </div>
         </div>
         <div className="space-y-3">
@@ -168,7 +203,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
                       </div>
                     ))}
                     {q.explanation && <p className="text-xs text-slate-500 leading-relaxed pt-2 border-t border-slate-100 mt-3">{q.explanation}</p>}
-                    <p className="text-xs text-slate-400 pt-1">Topic: {q.topic}</p>
+                    <p className="text-xs text-slate-500 pt-1">Topic: {q.topic}</p>
                   </div>
                 )}
               </div>
@@ -176,19 +211,20 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
           })}
         </div>
       </div>
-    )
+    </>)
   }
 
   // ── EXAM ──
   const q = questions[current]
-  return (
+  return (<>
+    {timerLive}
     <div className="max-w-3xl mx-auto">
       {/* The page keeps one h1 while the intro title is unmounted (screen readers only). */}
       <h1 className="sr-only">{moduleName} Mock Exam</h1>
       {/* Status bar */}
       <div className="flex items-center justify-between mb-6 sticky top-0 bg-slate-50 py-3 z-10">
         <span className="text-sm font-semibold text-navy-950" aria-live="polite">Question {current + 1} of {questions.length}</span>
-        <span className="text-sm font-bold px-3 py-1 rounded-lg" style={{ backgroundColor: secondsLeft < 300 ? '#fef2f2' : '#f0f7f4', color: secondsLeft < 300 ? '#dc2626' : GREEN }}>
+        <span className="text-sm font-bold px-3 py-1 rounded-lg" style={{ backgroundColor: secondsLeft < 300 ? '#fef2f2' : '#f0f7f4', color: secondsLeft < 300 ? '#b91c1c' : GREEN }}>
           {mins}:{secs.toString().padStart(2, '0')}
         </span>
       </div>
@@ -200,7 +236,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
 
       {/* Question */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 md:p-8 mb-6">
-        <p className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: GOLD }}>{q.topic}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: '#88671c' }}>{q.topic}</p>
         <h2 id={qHeadingId} ref={questionHeadingRef} tabIndex={-1} className="font-display text-lg md:text-xl text-navy-950 leading-snug mb-6">{q.questionText}</h2>
         <div className="space-y-3" role="group" aria-labelledby={qHeadingId}>
           {q.options.map((opt, oi) => {
@@ -225,7 +261,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
         <button onClick={() => setCurrent(c => Math.max(0, c - 1))} disabled={current === 0}
           className="h-11 px-5 rounded-lg text-sm font-semibold border-2 transition-colors disabled:opacity-30"
           style={{ borderColor: GREEN, color: GREEN }}>← Previous</button>
-        <span className="text-xs text-slate-400">{answered} of {questions.length} answered</span>
+        <span className="text-xs text-slate-500">{answered} of {questions.length} answered</span>
         {current < questions.length - 1 ? (
           <button onClick={() => setCurrent(c => Math.min(questions.length - 1, c + 1))}
             className="h-11 px-5 rounded-lg text-sm font-semibold transition-colors" style={{ backgroundColor: GREEN, color: 'white' }}>Next →</button>
@@ -239,12 +275,12 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
         <button onClick={handleSubmit}
           className="h-11 px-6 rounded-lg text-sm font-semibold border-2 transition-colors"
           style={{ borderColor: GOLD, color: GREEN }}>Finish &amp; submit exam</button>
-        <p className="text-xs text-slate-400 mt-2 text-center">{answered} of {questions.length} answered — you can submit at any time.</p>
+        <p className="text-xs text-slate-500 mt-2 text-center">{answered} of {questions.length} answered — you can submit at any time.</p>
       </div>
 
       {/* Question grid */}
       <div className="mt-8 pt-6 border-t border-slate-200">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Jump to question</p>
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Jump to question</p>
         <div className="flex flex-wrap gap-2">
           {questions.map((_, i) => (
             <button key={i} onClick={() => setCurrent(i)} aria-current={i === current ? 'step' : undefined}
@@ -258,5 +294,5 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
         </div>
       </div>
     </div>
-  )
+  </>)
 }

@@ -22,6 +22,12 @@ vi.mock('@/lib/coursesNew', () => ({
     return Array.from({ length: n }, (_, i) => ({ lessonCount: i === 0 ? lessons : 0 }))
   }),
 }))
+// The mock-exam pool sizes (ME-1 S3): every subject open unless a test says otherwise.
+const P = vi.hoisted(() => ({ sizes: new Map<string, number | null>() }))
+vi.mock('@/lib/mock-exam-pool', () => ({
+  getAbMockPoolSize: vi.fn(async (category: string) => (P.sizes.has(category) ? P.sizes.get(category) : 500)),
+  getEticpaMockPoolSize: vi.fn(async () => 300),
+}))
 
 import { GET } from './route'
 import * as db from '@/lib/db'
@@ -53,7 +59,34 @@ function isRealPage(path: string): boolean {
 
 beforeEach(() => {
   C.articles = 2017; C.sets = 181; C.questions = 3963; C.courses = [7, 103]; C.fail = false
+  P.sizes.clear()
   vi.mocked(db.getCachedPublishedArticleCount).mockClear()
+})
+
+// ME-1 S3: a subject still under 50 questions ("Coming soon") is left out;
+// the open ones stay exactly as before. A failed pool read keeps it in.
+describe('Accounting Body /llms.txt mock exams', () => {
+  it('leaves out the Coming soon subjects', async () => {
+    for (const slug of ['financial-market', 'business-management', 'taxation', 'economics']) P.sizes.set(slug, 0)
+    P.sizes.set('audit-assurance', null)
+    const { text } = await get('ab')
+    const mock = links(text).filter(([, url]) => url.includes('/mock-exams/'))
+    expect(mock).toEqual([
+      ['Financial Accounting', 'https://accountingbody.com/mock-exams/financial-accounting'],
+      ['Financial Management', 'https://accountingbody.com/mock-exams/financial-management'],
+      ['Management Accounting', 'https://accountingbody.com/mock-exams/management-accounting'],
+      ['Audit and Assurance', 'https://accountingbody.com/mock-exams/audit-assurance'],
+    ])
+    expect(text).toContain('- [Financial Accounting](https://accountingbody.com/mock-exams/financial-accounting): mock exam')
+    expect(text).toContain('- [Mock exams](https://accountingbody.com/mock-exams): timed exams drawn from the question bank')
+  })
+
+  it('the EthioTax file does not read the pools', async () => {
+    const pool = await import('@/lib/mock-exam-pool')
+    vi.mocked(pool.getAbMockPoolSize).mockClear()
+    await get('et')
+    expect(pool.getAbMockPoolSize).not.toHaveBeenCalled()
+  })
 })
 
 describe('Accounting Body /llms.txt', () => {

@@ -2,14 +2,9 @@ import { NextResponse } from 'next/server'
 import { getPagesSitemapContent } from '@/lib/db'
 import { contentOwner, ownerUrl, resolveArticleCanonicalUrl } from '@/lib/canonical'
 import { buildUrlset, type UrlsetEntry } from '@/lib/sitemap-chunks'
+import { getOpenMockExamSubjects } from '@/lib/mock-exam-subjects'
 
 const AB_BASE_URL = 'https://accountingbody.com'
-
-// The subjects the /mock-exams hub lists, in its order.
-const MOCK_EXAM_SUBJECTS = [
-  'financial-accounting', 'financial-management', 'management-accounting', 'financial-market',
-  'business-management', 'audit-assurance', 'taxation', 'economics',
-] as const
 
 export const dynamic = 'force-dynamic'
 // force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
@@ -31,6 +26,9 @@ export async function GET() {
     })
   }
   const { articles, questionSets, courses } = result
+  // The open mock-exam subjects, in the hub's order; a subject still under
+  // 50 questions ("Coming soon") is left out (lib/mock-exam-subjects.ts).
+  const mockExamSubjects = await getOpenMockExamSubjects()
 
   const staticPages: UrlsetEntry[] = [
     { url: AB_BASE_URL,                         lastModified: new Date(), changeFrequency: 'daily',   priority: 1.0 },
@@ -57,10 +55,10 @@ export async function GET() {
       changeFrequency: 'weekly' as const,
       priority:        0.85,
     })),
-    // The mock-exam hub and each subject it links to (app/mock-exams).
+    // The mock-exam hub and each open subject it links to (app/mock-exams).
     { url: `${AB_BASE_URL}/mock-exams`,         lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.8 },
-    ...MOCK_EXAM_SUBJECTS.map(subject => ({
-      url:             `${AB_BASE_URL}/mock-exams/${subject}`,
+    ...mockExamSubjects.map(subject => ({
+      url:             `${AB_BASE_URL}/mock-exams/${subject.slug}`,
       lastModified:    new Date(),
       changeFrequency: 'weekly' as const,
       priority:        0.7,

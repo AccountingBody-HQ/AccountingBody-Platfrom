@@ -7,6 +7,7 @@ import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 import { ownerCanonical, ownerUrl } from '@/lib/canonical'
 import StructuredData from '@/components/StructuredData'
 import { breadcrumbSchema, webPageSchema } from '@/lib/structured-data'
+import { getMockExamSubjectStates } from '@/lib/mock-exam-subjects'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -18,15 +19,16 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const dynamic = 'force-dynamic'
 
+// Keyed by each subject's icon key in lib/mock-exam-subjects.ts.
 const CATEGORY_ICONS: Record<string, string> = {
-  'financial-accounting':   'M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z',
-  'management-accounting':  'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
-  'audit-and-assurance':    'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-  'tax':                    'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z',
-  'financial-management':   'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
-  'business-management':    'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
-  'economics':              'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z',
-  'financial-market':       'M13 17h8m0 0V9m0 8l-8-8-4 4-6-6',
+  'ledger':         'M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z',
+  'bar-chart':      'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+  'shield-check':   'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
+  'cash':           'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z',
+  'trend-up':       'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
+  'briefcase':      'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+  'presentation':   'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z',
+  'trend-down':     'M13 17h8m0 0V9m0 8l-8-8-4 4-6-6',
 }
 
 const DEFAULT_ICON = 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'
@@ -38,19 +40,9 @@ export default async function MockExamsPage() {
   // ET users stay on their own mock exams page
   if (isEthioTax) redirect('/study/mock-exams')
 
-  const filters = {
-    categories: [
-      { slug: 'financial-accounting',  title: 'Financial Accounting' },
-      { slug: 'financial-management',  title: 'Financial Management' },
-      { slug: 'management-accounting', title: 'Management Accounting' },
-      { slug: 'financial-market',      title: 'Financial Market' },
-      { slug: 'business-management',   title: 'Business Management' },
-      { slug: 'audit-assurance',       title: 'Audit and Assurance' },
-      { slug: 'taxation',              title: 'Tax' },
-      { slug: 'economics',             title: 'Economics' },
-    ]
-  }
-  const categories = filters.categories
+  // Each subject with whether its question bank has reached 50 (a failed
+  // read counts as open, as before: lib/mock-exam-subjects.ts).
+  const categories = await getMockExamSubjectStates()
 
   return (
     <div>
@@ -108,7 +100,7 @@ export default async function MockExamsPage() {
             ].map(stat => (
               <div key={stat.label} className="text-center">
                 <p className="font-display text-3xl font-bold text-navy-950 mb-1"><span translate="no"><span translate="no">{stat.value}</span></span></p>
-                <p className="text-xs text-slate-400">{stat.label}</p>
+                <p className="text-xs text-slate-500">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -132,8 +124,39 @@ export default async function MockExamsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {categories.map(cat => {
-                const iconPath = CATEGORY_ICONS[cat.slug] ?? DEFAULT_ICON
+              {categories.map(({ subject: cat, open }) => {
+                const iconPath = CATEGORY_ICONS[cat.icon] ?? DEFAULT_ICON
+                if (!open) {
+                  // Coming soon: the same card, not a link, until the bank reaches 50 questions.
+                  return (
+                    <div
+                      key={cat.slug}
+                      data-coming-soon={cat.slug}
+                      className="flex flex-col rounded-xl border border-slate-200 bg-white overflow-hidden"
+                    >
+                      <div className="h-1 bg-slate-200" />
+                      <div className="p-6 flex flex-col flex-1">
+                        <div className="flex items-center justify-between mb-5">
+                          <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-slate-100 text-slate-600">
+                            Mock Exam
+                          </span>
+                          <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-slate-100 text-slate-600">
+                            Coming soon
+                          </span>
+                        </div>
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 bg-slate-50 border border-slate-100">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6" aria-hidden="true">
+                            <path d={iconPath} />
+                          </svg>
+                        </div>
+                        <h3 className="font-display text-base text-slate-600 leading-snug mb-1">
+                          {cat.title}
+                        </h3>
+                        <p className="text-xs text-slate-500 mb-3">Questions are being added. This exam opens when the bank reaches 50 questions.</p>
+                      </div>
+                    </div>
+                  )
+                }
                 return (
                   <Link
                     key={cat.slug}
@@ -159,21 +182,21 @@ export default async function MockExamsPage() {
                       <h3 className="font-display text-base text-navy-950 group-hover:text-gold-600 transition-colors leading-snug mb-1">
                         {cat.title}
                       </h3>
-                      <p className="text-xs text-slate-400 mb-3">Exam-standard question bank</p>
+                      <p className="text-xs text-slate-500 mb-3">Exam-standard question bank</p>
                       <div className="flex items-center gap-4 mb-5">
                         <div>
                           <p className="font-display text-xl font-bold text-navy-950">50</p>
-                          <p className="text-xs text-slate-400">per attempt</p>
+                          <p className="text-xs text-slate-500">per attempt</p>
                         </div>
                         <div className="w-px h-8 bg-slate-100" />
                         <div>
                           <p className="font-display text-xl font-bold text-navy-950">75</p>
-                          <p className="text-xs text-slate-400">minutes</p>
+                          <p className="text-xs text-slate-500">minutes</p>
                         </div>
                         <div className="w-px h-8 bg-slate-100" />
                         <div>
                           <p className="font-display text-xl font-bold text-navy-950">∞</p>
-                          <p className="text-xs text-slate-400">attempts</p>
+                          <p className="text-xs text-slate-500">attempts</p>
                         </div>
                       </div>
                       <span className="inline-flex items-center gap-1.5 text-xs font-semibold mt-auto text-navy-950 group-hover:gap-2.5 transition-all">

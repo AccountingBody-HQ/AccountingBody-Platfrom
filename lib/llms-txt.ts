@@ -4,6 +4,7 @@
 // "- [Name](URL): note" links. Each brand gets its own file, naming only its
 // own pages on its own domain. Pure: the route reads the counts.
 import { AB_URL, ET_URL } from '@/lib/canonical'
+import { MOCK_EXAM_SUBJECTS, type MockExamSubject } from '@/lib/mock-exam-subjects'
 
 export interface LlmsCounts {
   articles:  number
@@ -21,18 +22,11 @@ const fmt = (n: number) => n.toLocaleString('en-GB')
 // sentence is written without the number rather than with a wrong one.
 const count = (n: number, words: string) => (n > 0 ? `${fmt(n)} ${words}` : words)
 
-const MOCK_EXAMS: readonly (readonly [string, string])[] = [
-  ['Financial Accounting', 'financial-accounting'],
-  ['Financial Management', 'financial-management'],
-  ['Management Accounting', 'management-accounting'],
-  ['Financial Market', 'financial-market'],
-  ['Business Management', 'business-management'],
-  ['Audit and Assurance', 'audit-assurance'],
-  ['Tax', 'taxation'],
-  ['Economics', 'economics'],
-]
+// The mock-exam subjects to list: the route passes the open ones
+// (lib/mock-exam-subjects.ts); a subject still "Coming soon" is left out.
+type MockExams = readonly Pick<MockExamSubject, 'title' | 'slug'>[]
 
-function abSections(c: LlmsCounts): readonly Section[] {
+function abSections(c: LlmsCounts, mockExams: MockExams): readonly Section[] {
   return [
     ['Study by qualification', [
       ['Study hub', '/study', 'every study topic, by qualification'],
@@ -47,7 +41,7 @@ function abSections(c: LlmsCounts): readonly Section[] {
     ]],
     ['Mock exams', [
       ['Mock exams', '/mock-exams', 'timed exams drawn from the question bank'],
-      ...MOCK_EXAMS.map(([name, slug]): Link => [name, `/mock-exams/${slug}`, 'mock exam']),
+      ...mockExams.map(({ title, slug }): Link => [title, `/mock-exams/${slug}`, 'mock exam']),
     ]],
     ['Free courses', [
       ['Free courses', '/free-courses', `${count(c.courses, 'structured courses')}${c.lessons > 0 ? `, ${fmt(c.lessons)} lessons` : ''}, no registration`],
@@ -129,7 +123,7 @@ function sectionLines(base: string, sections: readonly Section[]): string[] {
   ])
 }
 
-export function buildLlmsTxt(isEthioTax: boolean, c: LlmsCounts): string {
+export function buildLlmsTxt(isEthioTax: boolean, c: LlmsCounts, mockExams: MockExams = MOCK_EXAM_SUBJECTS): string {
   if (isEthioTax) {
     return [
       '# EthioTax',
@@ -147,7 +141,7 @@ export function buildLlmsTxt(isEthioTax: boolean, c: LlmsCounts): string {
     '> Free study notes, practice questions, mock exams and courses for accounting students preparing for ACCA, CIMA, AAT and ICAEW exams, plus accounting and finance jobs, a network of firms and freelancers, and professional help for businesses. All learning is free and needs no account.',
     '',
     `Accounting Body publishes ${count(c.articles, 'study articles')} written or reviewed by qualified accountants, ${count(c.sets, 'practice question sets')}${questions} and worked explanations, timed mock exams, and ${count(c.courses, 'free courses')}${lessons}. Course progress is kept in the learner's own browser.`,
-    ...sectionLines(AB_URL, abSections(c)),
+    ...sectionLines(AB_URL, abSections(c, mockExams)),
     '',
   ].join('\n')
 }

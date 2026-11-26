@@ -3,6 +3,7 @@ import { isEthioTaxHeader } from '@/lib/brand'
 import { getCachedPublishedArticleCount, getPublishedQuestionCount, getQuestionSetCount } from '@/lib/db'
 import { getPublishedCoursesOrThrow } from '@/lib/coursesNew'
 import { buildLlmsTxt, type LlmsCounts } from '@/lib/llms-txt'
+import { getOpenMockExamSubjects, type MockExamSubject } from '@/lib/mock-exam-subjects'
 
 // /llms.txt — a plain-English map of the site for AI tools, one file per
 // brand (lib/llms-txt.ts). The counts come from the same cached reads the
@@ -24,16 +25,20 @@ async function courseCounts(): Promise<{ courses: number; lessons: number }> {
 export async function GET() {
   const isEthioTax = isEthioTaxHeader(await headers())
   let counts: LlmsCounts = { articles: 0, sets: 0, questions: 0, courses: 0, lessons: 0 }
+  let mockExams: MockExamSubject[] = []
   if (!isEthioTax) {
-    const [articles, sets, questions, course] = await Promise.all([
+    const [articles, sets, questions, course, openMockExams] = await Promise.all([
       getCachedPublishedArticleCount('ab'),
       getQuestionSetCount(),
       getPublishedQuestionCount(),
       courseCounts(),
+      // Only the open subjects; one still "Coming soon" is left out.
+      getOpenMockExamSubjects(),
     ])
     counts = { articles, sets, questions, ...course }
+    mockExams = openMockExams
   }
-  return new Response(buildLlmsTxt(isEthioTax, counts), {
+  return new Response(buildLlmsTxt(isEthioTax, counts, mockExams), {
     status: 200,
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
