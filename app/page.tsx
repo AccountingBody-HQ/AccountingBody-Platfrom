@@ -1652,7 +1652,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                   Start practising free →
                 </Link>
                 <Link
-                  href="/mock-exams/acca"
+                  href="/mock-exams"
                   className="h-12 px-8 inline-flex items-center gap-2 rounded-xl text-sm font-semibold transition-colors"
                   style={{ border: '2px solid #C9982A', color: '#88671c', background: 'transparent' }}
                 >
