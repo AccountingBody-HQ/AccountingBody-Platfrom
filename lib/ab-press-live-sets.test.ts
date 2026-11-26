@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { NextRequest } from 'next/server'
+import fontkit from '@pdf-lib/fontkit'
 import * as pdfLib from 'pdf-lib'
 import ts from 'typescript'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -1360,6 +1361,7 @@ class Screen {
       },
       'react/jsx-runtime': { jsx: element, jsxs: element, Fragment: 'fragment' },
       'pdf-lib': pdfLib,
+      '@pdf-lib/fontkit': { __esModule: true, default: fontkit },
       '@/lib/admin-fetch': {
         adminFetch: (url: string, init?: RequestInit, options?: AdminFetchOptions) => (this.realFetch ? adminFetch(url, init, options) : this.fetch(url, init)),
       },
@@ -1371,7 +1373,7 @@ class Screen {
   }
 
   private async answer(url: string, init?: RequestInit): Promise<Answer> {
-    const name = /\/([a-z-]+)(\?.*)?$/.exec(url)?.[1] ?? ''
+    const name = url.startsWith('/fonts/') ? 'font' : /\/([a-z-]+)(\?.*)?$/.exec(url)?.[1] ?? ''
     const body = init?.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : null
     this.calls.push({ name, body })
     const answer = this.answers[name]?.(body ?? {}) ?? { status: 404, body: { error: 'no answer' } }
@@ -1478,6 +1480,8 @@ async function pdfOf(pages: number, width = 432): Promise<string> {
   return Buffer.from(await made.save()).toString('base64')
 }
 
+const PAGE_FONT = readFileSync(join(ROOT, 'public', 'fonts', 'LiberationSans-Regular.ttf'))
+
 // A screen for a course of three chapters, made chapter by chapter.
 const CHAPTER_PAGES = [5, 2, 7]
 const ANSWER_PAGES = [3, 0, 4]
@@ -1518,6 +1522,8 @@ async function screen(): Promise<Screen> {
     }),
     'generate-frontmatter': () => ({ body: { pdf: pdfs.get(3), courseKey: courseKey(planned(PLAN)) } }),
     'generate-cover': () => ({ body: { pdf: pdfs.get(1) ?? '' } }),
+    // The page-number font, from the site's own folder (owner decision D346).
+    font: () => ({ file: new Uint8Array(PAGE_FONT) }),
     generate: () => ({ file: 'zip' }),
     'generate-pq': () => ({ file: 'zip' }),
     'export-word': () => ({ file: 'word' }),
@@ -2099,7 +2105,153 @@ describe('a request that the platform stops for time', () => {
     const source = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
     expect(source).toContain(`const TIMED_OUT = '${TIMED_OUT}'\n`)
     const requests = source.split(/\badminFetch\(/).slice(1)
-    expect(requests).toHaveLength(9)
+    // 10 since the page-number font is fetched (owner decision D346).
+    expect(requests).toHaveLength(10)
     for (const request of requests) expect(request.split(/\bbookError\(/)).toHaveLength(2)
+  })
+})
+
+// ── Owner decision D346: volumes, embedded page numbers, KDP checks ─────────
+describe('a book of one volume is made as before (D346)', () => {
+  // What the screen sends and zips, without the parts V2 and V3 change (the
+  // page-number font and the new check lines) and without the clock.
+  const fingerprint = async (bookType: string) => {
+    const page = await screen()
+    await page.open()
+    page.change(page.radio(bookType), bookType)
+    await page.generate()
+    const files = await page.zip()
+    const text = (name: string) => files[name].toString('utf8').replace(/^Generated: .*$/m, 'Generated: NOW').replace(/^Year: .*$/m, 'Year: YEAR')
+    return sha(JSON.stringify({
+      calls: page.calls.filter((call) => call.name !== 'font'),
+      names: Object.keys(files),
+      links: page.links(),
+      metadata: text('metadata.txt'),
+      report: text('preflight-report.txt').split('\n').slice(0, 6),
+      pages: (await pdfLib.PDFDocument.load(new Uint8Array(files['interior.pdf']))).getPages().map((p) => [p.getWidth(), p.getHeight()]),
+      // The cover is zipped as the route gave it (its bytes carry a clock).
+      cover: files['cover.pdf'].toString('base64') === (page.answers['generate-cover']({}).body as { pdf: string }).pdf,
+    }))
+  }
+  it.each<[string, string]>([
+    // Taken from the code before owner decision D346.
+    ['combined', '78a02b84ddccf969'],
+    ['study', '6dabd6125d4b3346'],
+  ])('%s: the same requests, files and texts as before', async (bookType, before) => {
+    expect(await fingerprint(bookType)).toBe(before)
+  })
+})
+
+// Every font of a PDF, as pdffonts lists them: its name, its kind and whether
+// its file is in the PDF. A Type 0 font is listed through its descendants.
+async function fontsOf(bytes: Uint8Array): Promise<{ name: string; kind: string; embedded: boolean }[]> {
+  const { PDFDict, PDFName, PDFArray } = pdfLib
+  const doc = await pdfLib.PDFDocument.load(bytes)
+  const name = (dict: pdfLib.PDFDict, key: string) => String(dict.lookup(PDFName.of(key)) ?? '').replace(/^\//, '')
+  const found: { name: string; kind: string; embedded: boolean }[] = []
+  for (const [, object] of doc.context.enumerateIndirectObjects()) {
+    if (!(object instanceof PDFDict) || name(object, 'Type') !== 'Font') continue
+    const kind = name(object, 'Subtype')
+    if (kind === 'Type0') {
+      const kids = object.lookup(PDFName.of('DescendantFonts'))
+      expect(kids).toBeInstanceOf(PDFArray)
+      continue
+    }
+    const descriptor = object.lookup(PDFName.of('FontDescriptor'))
+    const embedded = kind === 'Type3' || (descriptor instanceof PDFDict && ['FontFile', 'FontFile2', 'FontFile3'].some((key) => descriptor.has(PDFName.of(key))))
+    found.push({ name: name(object, 'BaseFont'), kind, embedded })
+  }
+  return found
+}
+
+// The page-number drawing of each page from the 4th: its colour, font size and
+// place, read from the page's content stream.
+async function numbersOf(bytes: Uint8Array): Promise<string[]> {
+  const doc = await pdfLib.PDFDocument.load(bytes)
+  return doc.getPages().slice(3).map((made) => {
+    const contents = made.node.Contents()
+    const streams = contents instanceof pdfLib.PDFArray ? contents.asArray().map((ref) => doc.context.lookup(ref)) : [contents]
+    const text = streams
+      .map((stream) => (stream instanceof pdfLib.PDFRawStream ? Buffer.from(pdfLib.decodePDFRawStream(stream).decode()).toString('latin1') : ''))
+      .join('\n')
+    const drawn = /BT\n(\S+ \S+ \S+ rg)\n\/\S+ (\S+) Tf\n\S+ TL\n(\S+ \S+ \S+ \S+ \S+ \S+) Tm\n<([0-9A-Fa-f]*)> Tj\nT\*\nET/.exec(text)
+    return drawn ? `${drawn[1]}|${drawn[2]}|${drawn[3]}|${drawn[4].length > 0}` : 'none'
+  })
+}
+
+describe('the page numbers of a book made chapter by chapter (D346)', () => {
+  const made = async (bookType = 'combined') => {
+    const page = await screen()
+    await page.open()
+    page.change(page.radio(bookType), bookType)
+    await page.generate()
+    return { page, interior: new Uint8Array((await page.zip())['interior.pdf']) }
+  }
+
+  it('are drawn in Liberation Sans, embedded, and no font of the book is left out', async () => {
+    const { page, interior } = await made()
+    expect(await fontsOf(interior)).toEqual([{ name: expect.stringMatching(/^LiberationSans-\d+$/), kind: 'CIDFontType2', embedded: true }])
+    expect(Buffer.from(interior).toString('latin1')).not.toContain('Helvetica')
+    expect(page.calls.filter((call) => call.name === 'font')).toHaveLength(1)
+  })
+
+  it('are drawn where and as before: bottom right, 8 pt, the same grey, from page 4', async () => {
+    const { interior } = await made()
+    // The drawing before D346, word for word, with the font it used then, on
+    // pages of the same sizes.
+    const book = await pdfLib.PDFDocument.load(interior)
+    const blank = await pdfLib.PDFDocument.create()
+    for (const sized of book.getPages()) blank.addPage([sized.getWidth(), sized.getHeight()])
+    const helvetica = await blank.embedFont(pdfLib.StandardFonts.Helvetica)
+    for (let i = 3; i < blank.getPageCount(); i++) {
+      const pdfPage = blank.getPage(i)
+      const { width } = pdfPage.getSize()
+      pdfPage.drawText(String(i + 1), { x: width - 36, y: 18, size: 8, font: helvetica, color: pdfLib.rgb(0.6, 0.6, 0.6) })
+    }
+    const now = await numbersOf(interior)
+    expect(now).toHaveLength(3 + 5 + 2 + 7 + 3 + 4 - 3)
+    expect(now).toEqual(await numbersOf(await blank.save()))
+    expect(now.slice(0, 2)).toEqual(['0.6 0.6 0.6 rg|8|1 0 0 1 396 18|true', '0.6 0.6 0.6 rg|8|1 0 0 1 396 18|true'])
+    expect(new Set(now.slice(-4))).toEqual(new Set(['0.6 0.6 0.6 rg|8|1 0 0 1 364 18|true']))
+  })
+
+  it.each<[string, Answer, string]>([
+    ['an error', { status: 404, body: { error: 'Request failed (404)' } }, 'Request failed (404)'],
+    ['nothing', { status: 500, body: {} }, 'Page number font failed'],
+    ['a time-out', { status: 504, body: {} }, 'The book took too long to make, so nothing was made. Please try again in a minute.'],
+  ])('a font that cannot be fetched (%s) stops the book: nothing is made', async (_name, answer, message) => {
+    const page = await screen()
+    page.answers.font = () => answer
+    await page.open()
+    await page.generate()
+    expect(page.shown).toContain(message)
+    expect(page.links()).toEqual([])
+    expect(page.files).toEqual([])
+    expect(page.calls[page.calls.length - 1].name).toBe('font')
+  })
+
+  it('a font that cannot be read stops the book too', async () => {
+    const page = await screen()
+    page.answers.font = () => ({ file: new Uint8Array([1, 2, 3]) })
+    await page.open()
+    await page.generate()
+    expect(page.links()).toEqual([])
+    expect(page.files).toEqual([])
+  })
+
+  it('the font is the site file, and Helvetica is drawn nowhere in AB Press', () => {
+    const source = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
+    expect(source).toContain(`const PAGE_NUMBER_FONT = '/fonts/LiberationSans-Regular.ttf'\n`)
+    expect(source).toContain(`const FONT_FAILED = 'Page number font failed'\n`)
+    expect(source).toContain('mergedDoc.registerFontkit(fontkit)')
+    expect(source).toContain('await mergedDoc.embedFont(fontBytes, { subset: true })')
+    expect(existsSync(join(ROOT, 'public', 'fonts', 'LiberationSans-Regular.ttf'))).toBe(true)
+    for (const path of FILES) expect([label(path), readFileSync(join(ROOT, path), 'utf8').includes('StandardFonts')]).toEqual([label(path), false])
+  })
+
+  it('the scan finds a font that is not embedded (the page numbers before D346)', async () => {
+    const old = await pdfLib.PDFDocument.create()
+    old.addPage([432, 648]).drawText('4', { x: 396, y: 18, size: 8, font: await old.embedFont(pdfLib.StandardFonts.Helvetica) })
+    expect(await fontsOf(await old.save())).toEqual([{ name: 'Helvetica', kind: 'Type1', embedded: false }])
   })
 })

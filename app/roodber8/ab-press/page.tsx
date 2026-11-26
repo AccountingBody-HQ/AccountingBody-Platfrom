@@ -17,6 +17,9 @@ const COURSE_CHANGED = 'The course has changed since the preview was loaded, so 
 const ANSWERS_DIFFER = (n: number) => `The questions and answers of chapter ${n} do not match, so nothing was made. Please try again in a minute.`
 const TIMED_OUT = 'The book took too long to make, so nothing was made. Please try again in a minute.'
 const REPORT_ITEMS = (n: number) => `The check report (preflight-report.txt) lists ${n} item(s) to look at. Please read it before uploading to KDP.`
+// The font of the page numbers, embedded in the book as KDP asks (owner decision D346).
+const PAGE_NUMBER_FONT = '/fonts/LiberationSans-Regular.ttf'
+const FONT_FAILED = 'Page number font failed'
 
 // The message for a failed request: TIMED_OUT when the platform stopped it for
 // time, else the message as given.
@@ -425,8 +428,13 @@ export default function AbPressPage() {
 
       // 5. Merge all PDFs using pdf-lib (client-side)
       setGenerationPhase('Merging PDF pages...')
-      const { PDFDocument, StandardFonts, rgb } = await import('pdf-lib')
+      const { PDFDocument, rgb } = await import('pdf-lib')
+      const fontkit = (await import('@pdf-lib/fontkit')).default
+      const fontRes = await adminFetch(PAGE_NUMBER_FONT, undefined, { expect: 'file' })
+      if (!fontRes.ok) throw new Error(bookError(fontRes, (await fontRes.json()).error || FONT_FAILED))
+      const fontBytes = new Uint8Array(await (await fontRes.blob()).arrayBuffer())
       const mergedDoc = await PDFDocument.create()
+      mergedDoc.registerFontkit(fontkit)
 
       const allPdfs = [frontmatterPdf, ...chapterPdfs, ...answerChapterPdfs]
 
@@ -444,8 +452,9 @@ export default function AbPressPage() {
       // after the merge, when the final page index is known.
       // Frontmatter = pages 1-3 (title, copyright, TOC) — no page number.
       // Pages 4+ get their sequential number at bottom-right, matching
-      // the Practice Kit's s.pageNum position (MO=36pt, y=18pt, 8pt grey).
-      const helvetica = await mergedDoc.embedFont(StandardFonts.Helvetica)
+      // the Practice Kit's s.pageNum position (MO=36pt, y=18pt, 8pt grey),
+      // in Liberation Sans embedded as a subset (owner decision D346).
+      const pageFont = await mergedDoc.embedFont(fontBytes, { subset: true })
       const FRONTMATTER_PAGES = 3
       for (let i = FRONTMATTER_PAGES; i < mergedDoc.getPageCount(); i++) {
         const pdfPage = mergedDoc.getPage(i)
@@ -454,7 +463,7 @@ export default function AbPressPage() {
           x: width - 36,
           y: 18,
           size: 8,
-          font: helvetica,
+          font: pageFont,
           color: rgb(0.6, 0.6, 0.6),
         })
       }
