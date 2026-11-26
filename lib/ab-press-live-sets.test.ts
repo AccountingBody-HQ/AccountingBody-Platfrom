@@ -1481,9 +1481,9 @@ class Screen {
   }
 }
 
-async function pdfOf(pages: number, width = 432): Promise<string> {
+async function pdfOf(pages: number, width = 432, height = 648): Promise<string> {
   const made = await pdfLib.PDFDocument.create()
-  for (let i = 0; i < pages; i++) made.addPage([width, 648])
+  for (let i = 0; i < pages; i++) made.addPage([width, height])
   return Buffer.from(await made.save()).toString('base64')
 }
 
@@ -1529,7 +1529,12 @@ async function screen({ chapterPages = CHAPTER_PAGES, answerPages = ANSWER_PAGES
       },
     }),
     'generate-frontmatter': () => ({ body: { pdf: pdfs.get(3), courseKey: courseKey(planned(PLAN)) } }),
-    'generate-cover': () => ({ body: { pdf: pdfs.get(1) ?? '' } }),
+    // A cover of the size KDP asks for the book's pages (owner decision D346).
+    'generate-cover': ({ pageCount }) => {
+      const body: { pdf?: string } = {}
+      const spine = Math.max(Number(pageCount) * 0.002252, 0.5)
+      return { body, wait: pdfOf(1, (6.125 * 2 + spine) * 72, 9.25 * 72).then((pdf) => void (body.pdf = pdf)) }
+    },
     // The page-number font, from the site's own folder (owner decision D346).
     font: () => ({ file: new Uint8Array(PAGE_FONT) }),
     generate: () => ({ file: 'zip' }),
@@ -1785,7 +1790,8 @@ describe('the line under the download button', () => {
     const page = await screen()
     await page.open()
     await page.generate()
-    expect(line(page)).toBe(null)
+    // The study book has 3 + 5 + 2 + 7 = 17 pages: below KDP's 24 (D346).
+    expect(line(page)).toBe(LINE(1))
     spoil(page, 'generate-chapter', 0, { missingSets: ['x', 'y'], unpublished: ['u'] })
     spoil(page, 'generate-chapter', 2, { missingOptionSets: ['m'] })
     page.change(page.radio('combined'), 'combined')
@@ -1861,6 +1867,10 @@ describe('the screen of a book made chapter by chapter', () => {
       noAnswerLine([]),
       missingOptionLine([]),
       unpublishedLine([]),
+      // The server's KDP checks (owner decision D346); the study book has 17 pages.
+      '[PASS] Fonts embedded - Liberation Sans embedded in interior and cover',
+      '[FAIL] Page count - 17 pages (KDP limit 24-828)',
+      '[PASS] Cover dimensions - 918.00 x 666.00 pts (expected 918.00 x 666.00, spine 0.500in)',
     ])
     spoil(page, 'generate-chapter', 0, { missingSets: ['x', 'y'], noAnswerSets: ['s', 's'], missingOptionSets: ['m'], unpublished: ['u', 'v'] })
     spoil(page, 'generate-chapter', 2, { missingSets: ['x'], noAnswerSets: ['t'], missingOptionSets: ['n', 'm'], unpublished: ['u'] })
@@ -1873,6 +1883,9 @@ describe('the screen of a book made chapter by chapter', () => {
       noAnswerLine(['s', 's', 't']),
       missingOptionLine(['m', 'n', 'm']),
       unpublishedLine(['u', 'v', 'u']),
+      '[PASS] Fonts embedded - Liberation Sans embedded in interior and cover',
+      '[PASS] Page count - 24 pages (KDP limit 24-828)',
+      '[PASS] Cover dimensions - 918.00 x 666.00 pts (expected 918.00 x 666.00, spine 0.500in)',
     ])
   })
 
@@ -2125,6 +2138,12 @@ describe('a book of one volume is made as before (D346)', () => {
   // page-number font and the new check lines) and without the clock.
   const fingerprint = async (bookType: string) => {
     const page = await screen()
+    const covers: Answer[] = []
+    const cover = page.answers['generate-cover']
+    page.answers['generate-cover'] = (body) => {
+      covers.push(cover(body))
+      return covers[covers.length - 1]
+    }
     await page.open()
     page.change(page.radio(bookType), bookType)
     await page.generate()
@@ -2138,7 +2157,7 @@ describe('a book of one volume is made as before (D346)', () => {
       report: text('preflight-report.txt').split('\n').slice(0, 6),
       pages: (await pdfLib.PDFDocument.load(new Uint8Array(files['interior.pdf']))).getPages().map((p) => [p.getWidth(), p.getHeight()]),
       // The cover is zipped as the route gave it (its bytes carry a clock).
-      cover: files['cover.pdf'].toString('base64') === (page.answers['generate-cover']({}).body as { pdf: string }).pdf,
+      cover: covers.length === 1 && files['cover.pdf'].toString('base64') === (covers[0].body as { pdf: string }).pdf,
     }))
   }
   it.each<[string, string]>([
@@ -2582,5 +2601,133 @@ describe('the front pages and the cover of a volume (D346)', () => {
       { subtitle: '', bookType: 'combined', edition: '2026/27 Edition', pageCount: 30, volume: { x: 1, n: 2 } },
       { subtitle: '', bookType: 'combined', edition: '2026/27 Edition', pageCount: 30 },
     ])
+  })
+})
+
+describe('the KDP checks of a book made chapter by chapter (D346)', { timeout: 120000 }, () => {
+  type KdpLines = (interior: Uint8Array, cover: Uint8Array, pageCount: number) => Promise<string[]>
+  type Embedded = (bytes: Uint8Array) => Promise<boolean>
+  const inner = () => new Screen().inner
+  const kdpLines = (...args: Parameters<KdpLines>) => (inner().kdpLines as unknown as KdpLines)(...args)
+  const embedded = (bytes: Uint8Array) => (inner().fontsEmbedded as unknown as Embedded)(bytes)
+  const bytesOf = (base64: string) => new Uint8Array(Buffer.from(base64, 'base64'))
+  const kdpCover = async (pages: number) => bytesOf(await pdfOf(1, (6.125 * 2 + Math.max(pages * 0.002252, 0.5)) * 72, 9.25 * 72))
+  const liberation = async () => {
+    const made = await pdfLib.PDFDocument.create()
+    made.registerFontkit(fontkit)
+    made.addPage([432, 648]).drawText('4', { x: 396, y: 18, size: 8, font: await made.embedFont(new Uint8Array(PAGE_FONT), { subset: true }) })
+    return new Uint8Array(await made.save())
+  }
+  const helvetica = async () => {
+    const made = await pdfLib.PDFDocument.create()
+    made.addPage([432, 648]).drawText('4', { x: 396, y: 18, size: 8, font: await made.embedFont(pdfLib.StandardFonts.Helvetica) })
+    return new Uint8Array(await made.save())
+  }
+  // A PDF with one font dictionary written by hand.
+  const withFont = async (font: (made: pdfLib.PDFDocument) => pdfLib.PDFDict) => {
+    const made = await pdfLib.PDFDocument.create()
+    made.addPage([432, 648])
+    made.context.register(font(made))
+    return new Uint8Array(await made.save())
+  }
+  const descriptor = (made: pdfLib.PDFDocument, file: string | null) =>
+    made.context.register(made.context.obj({ Type: 'FontDescriptor', ...(file ? { [file]: made.context.register(made.context.flateStream('x')) } : {}) }))
+
+  it('the sentences are the server\'s, word for word', async () => {
+    const page = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
+    const server = readFileSync(join(ROOT, 'app', 'api', ADMIN, 'ab-press', 'generate', 'route.ts'), 'utf8')
+    for (const words of [
+      '"Fonts embedded"', '"Liberation Sans embedded in interior and cover"', '"Non-embedded font detected - KDP may reject"',
+      '"Page count"', '" pages (KDP limit 24-828)"', '"Cover dimensions"', '" x "', '" pts (expected "', '", spine "', '"in)"',
+      '"[PASS] "', '"[FAIL] "', '" - "',
+    ]) {
+      expect(server).toContain(words)
+      expect(page).toContain(words.replace(/^"|"$/g, "'"))
+    }
+    for (const rule of [
+      'const pagesOk = pageCount >= 24 && pageCount <= 828',
+      'const spineIn   = Math.max(pageCount * 0.002252, 0.5)',
+      'const expectedW = (6.125 * 2 + spineIn) * 72',
+      'const expectedH = 9.25 * 72',
+      'const coverOk   = Math.abs(coverW - expectedW) < 1 && Math.abs(coverH - expectedH) < 1',
+    ]) expect(server).toContain(rule)
+    expect(page).toContain('const pagesOk = pageCount >= KDP_MIN_PAGES && pageCount <= KDP_MAX_PAGES')
+    for (const rule of ['const spineIn   = Math.max(pageCount * 0.002252, 0.5)', 'const expectedW = (6.125 * 2 + spineIn) * 72', 'const expectedH = 9.25 * 72', 'const coverOk   = Math.abs(coverW - expectedW) < 1 && Math.abs(coverH - expectedH) < 1']) {
+      expect(page).toContain(rule)
+    }
+  })
+
+  it('for the same book, the page writes the very lines the server writes', async () => {
+    const made = Buffer.from(await (await callRoute('generate', { body: { slug: 'good', bookType: 'combined' } })).arrayBuffer()).toString('utf8')
+    const report = made.split('ACCOUNTING BODY PRESS - KDP PRE-FLIGHT REPORT')[1].split('\n')
+    const names = ['Fonts embedded', 'Page count', 'Cover dimensions']
+    const server = report.filter((line) => names.some((name) => line.startsWith(`[PASS] ${name} - `) || line.startsWith(`[FAIL] ${name} - `)))
+    expect(server).toHaveLength(3)
+    const pages = Number(/Page count - (\d+) pages/.exec(server.join('\n'))?.[1])
+    // The PDF maker is a stand-in here, so both read the same unreadable PDFs.
+    const stand = new Uint8Array(Buffer.from('/Type /Page '))
+    expect(await kdpLines(stand, stand, pages)).toEqual(server)
+  })
+
+  it.each<[string, number, string, string]>([
+    ['23 pages', 23, '[FAIL] Page count - 23 pages (KDP limit 24-828)', '0.500'],
+    ['24 pages', 24, '[PASS] Page count - 24 pages (KDP limit 24-828)', '0.500'],
+    ['300 pages', 300, '[PASS] Page count - 300 pages (KDP limit 24-828)', '0.676'],
+    ['828 pages', 828, '[PASS] Page count - 828 pages (KDP limit 24-828)', '1.865'],
+    ['829 pages', 829, '[FAIL] Page count - 829 pages (KDP limit 24-828)', '1.867'],
+  ])('%s: the page count and the spine', async (_name, pages, line, spine) => {
+    const lines = await kdpLines(await liberation(), await kdpCover(pages), pages)
+    expect(lines[0]).toBe('[PASS] Fonts embedded - Liberation Sans embedded in interior and cover')
+    expect(lines[1]).toBe(line)
+    expect(lines[2]).toMatch(new RegExp(`^\\[PASS\\] Cover dimensions - (\\S+) x 666\\.00 pts \\(expected \\1 x 666\\.00, spine ${spine.replace('.', '\\.')}in\\)$`))
+  })
+
+  it('a cover of the wrong size fails, with its size', async () => {
+    const lines = await kdpLines(await liberation(), bytesOf(await pdfOf(1)), 300)
+    expect(lines[2]).toBe('[FAIL] Cover dimensions - 432.00 x 648.00 pts (expected 930.64 x 666.00, spine 0.676in)')
+  })
+
+  it.each<[string, () => Promise<Uint8Array>, boolean]>([
+    ['Liberation Sans embedded by pdf-lib', liberation, true],
+    ['Helvetica, as the page numbers were before', helvetica, false],
+    ['no font at all', async () => bytesOf(await pdfOf(2)), true],
+    ['not a PDF', async () => new Uint8Array([1, 2, 3]), false],
+    ['a TrueType font with its file', () => withFont((made) => made.context.obj({ Type: 'Font', Subtype: 'TrueType', BaseFont: 'X', FontDescriptor: descriptor(made, 'FontFile2') })), true],
+    ['a Type 1 font with its file', () => withFont((made) => made.context.obj({ Type: 'Font', Subtype: 'Type1', BaseFont: 'X', FontDescriptor: descriptor(made, 'FontFile') })), true],
+    ['an OpenType font with its file', () => withFont((made) => made.context.obj({ Type: 'Font', Subtype: 'Type1', BaseFont: 'X', FontDescriptor: descriptor(made, 'FontFile3') })), true],
+    ['a font whose descriptor has no file', () => withFont((made) => made.context.obj({ Type: 'Font', Subtype: 'TrueType', BaseFont: 'X', FontDescriptor: descriptor(made, null) })), false],
+    ['a Type 3 font', () => withFont((made) => made.context.obj({ Type: 'Font', Subtype: 'Type3' })), true],
+    ['a Type 0 font with an embedded descendant', () => withFont((made) => made.context.obj({ Type: 'Font', Subtype: 'Type0', DescendantFonts: [made.context.register(made.context.obj({ Type: 'Font', Subtype: 'CIDFontType2', FontDescriptor: descriptor(made, 'FontFile2') }))] })), true],
+    ['a Type 0 font whose descendant has no file', () => withFont((made) => made.context.obj({ Type: 'Font', Subtype: 'Type0', DescendantFonts: [made.context.obj({ Type: 'Font', Subtype: 'CIDFontType0', FontDescriptor: descriptor(made, null) })] })), false],
+    ['a Type 0 font without descendants', () => withFont((made) => made.context.obj({ Type: 'Font', Subtype: 'Type0', DescendantFonts: [] })), false],
+  ])('the font scan: %s → %s', async (_name, pdf, expected) => {
+    const bytes = await pdf()
+    expect(await embedded(bytes)).toBe(expected)
+    const lines = await kdpLines(bytes, await kdpCover(30), 30)
+    expect(lines[0]).toBe(expected ? '[PASS] Fonts embedded - Liberation Sans embedded in interior and cover' : '[FAIL] Fonts embedded - Non-embedded font detected - KDP may reject')
+  })
+
+  it('a cover with a font that is not embedded fails the font check too', async () => {
+    expect((await kdpLines(await liberation(), await helvetica(), 30))[0]).toBe('[FAIL] Fonts embedded - Non-embedded font detected - KDP may reject')
+  })
+
+  it('every volume has its own checks: a short last volume that cannot be avoided fails its page count', async () => {
+    const page = await screen({ chapterPages: [825, 10], answerPages: [0, 0], questions: [0, 0] })
+    await page.open()
+    page.press('Generate Book')
+    for (let i = 0; i < 5000 && page.shown.includes('please wait'); i++) await page.settle()
+    const files = await page.zip()
+    const report = (x: number) => files[`volume-${x}-preflight-report.txt`].toString('utf8').split('\n')
+    expect(report(1).slice(-3)).toEqual([
+      '[PASS] Fonts embedded - Liberation Sans embedded in interior and cover',
+      '[PASS] Page count - 828 pages (KDP limit 24-828)',
+      '[PASS] Cover dimensions - 1016.26 x 666.00 pts (expected 1016.26 x 666.00, spine 1.865in)',
+    ])
+    expect(report(2).slice(-3)).toEqual([
+      '[PASS] Fonts embedded - Liberation Sans embedded in interior and cover',
+      '[FAIL] Page count - 13 pages (KDP limit 24-828)',
+      '[PASS] Cover dimensions - 918.00 x 666.00 pts (expected 918.00 x 666.00, spine 0.500in)',
+    ])
+    expect(page.shown).toContain('The check reports (volume-1-preflight-report.txt to volume-2-preflight-report.txt) list 1 item(s) to look at. Please read them before uploading to KDP.')
   })
 })

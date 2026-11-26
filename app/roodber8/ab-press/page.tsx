@@ -167,6 +167,59 @@ function planVolumes(chapterPages: number[], answerPages: number[], limit = KDP_
   return { volumes }
 }
 
+// Whether every font of a PDF is embedded, as KDP asks (owner decision D346):
+// each font's descriptor holds its font file; a Type 0 font is judged by its
+// descendant fonts; a Type 3 font draws its own glyphs. false when the PDF
+// cannot be read.
+async function fontsEmbedded(bytes: Uint8Array): Promise<boolean> {
+  try {
+    const { PDFDocument, PDFDict, PDFName, PDFArray } = await import('pdf-lib')
+    const doc = await PDFDocument.load(bytes)
+    const embedded = (font: any): boolean => {
+      const subtype = font.lookup(PDFName.of('Subtype'))
+      if (subtype === PDFName.of('Type3')) return true
+      if (subtype === PDFName.of('Type0')) {
+        const kids = font.lookup(PDFName.of('DescendantFonts'))
+        return kids instanceof PDFArray && kids.size() > 0 &&
+          kids.asArray().every(kid => { const d = doc.context.lookup(kid); return d instanceof PDFDict && embedded(d) })
+      }
+      const descriptor = font.lookup(PDFName.of('FontDescriptor'))
+      return descriptor instanceof PDFDict && ['FontFile', 'FontFile2', 'FontFile3'].some(key => descriptor.has(PDFName.of(key)))
+    }
+    return doc.context.enumerateIndirectObjects().every(([, object]) =>
+      !(object instanceof PDFDict) || object.lookup(PDFName.of('Type')) !== PDFName.of('Font') || embedded(object))
+  } catch {
+    return false
+  }
+}
+
+// The KDP checks of the server's check report (buildPreflight in the generate
+// route), with its sentences, for one book or volume made chapter by chapter.
+async function kdpLines(interior: Uint8Array, cover: Uint8Array, pageCount: number): Promise<string[]> {
+  const line = (pass: boolean, name: string, detail: string) => (pass ? '[PASS] ' : '[FAIL] ') + name + ' - ' + detail
+  const embedded = (await fontsEmbedded(interior)) && (await fontsEmbedded(cover))
+  const pagesOk = pageCount >= KDP_MIN_PAGES && pageCount <= KDP_MAX_PAGES
+  const spineIn   = Math.max(pageCount * 0.002252, 0.5)
+  const expectedW = (6.125 * 2 + spineIn) * 72
+  const expectedH = 9.25 * 72
+  let coverW = 0
+  let coverH = 0
+  try {
+    const { PDFDocument } = await import('pdf-lib')
+    const box = (await PDFDocument.load(cover)).getPage(0).getMediaBox()
+    coverW = box.width
+    coverH = box.height
+  } catch {
+    // An unreadable cover measures 0 x 0, as on the server.
+  }
+  const coverOk   = Math.abs(coverW - expectedW) < 1 && Math.abs(coverH - expectedH) < 1
+  return [
+    line(embedded, 'Fonts embedded', embedded ? 'Liberation Sans embedded in interior and cover' : 'Non-embedded font detected - KDP may reject'),
+    line(pagesOk, 'Page count', pageCount + ' pages (KDP limit 24-828)'),
+    line(coverOk, 'Cover dimensions', coverW.toFixed(2) + ' x ' + coverH.toFixed(2) + ' pts (expected ' + expectedW.toFixed(2) + ' x ' + expectedH.toFixed(2) + ', spine ' + spineIn.toFixed(3) + 'in)'),
+  ]
+}
+
 // The same for the check report in a ZIP made by the server, whose files are
 // stored one after the other, not compressed. 0 when it cannot be read.
 async function countZipReportItems(zip: Blob): Promise<number> {
@@ -566,7 +619,11 @@ export default function AbPressPage() {
 
       // 7. The files of the volume, for the ZIP
       const ofVolume = (lists: string[][]) => volumeChapters.flatMap(i => lists[i])
-      const checkReport = buildCheckReport(ofVolume(missingSetsOf), ofVolume(noAnswerSetsOf), ofVolume(missingOptionSetsOf), ofVolume(unpublishedOf))
+      // The check report, then the server's KDP checks (owner decision D346).
+      const checkReport = [
+        buildCheckReport(ofVolume(missingSetsOf), ofVolume(noAnswerSetsOf), ofVolume(missingOptionSetsOf), ofVolume(unpublishedOf)),
+        ...(await kdpLines(interiorPdf, coverPdf, mergedDoc.getPageCount())),
+      ].join('\n')
       const title = subtitle || preview.course.title
       zipFiles.push(
         { name: fileName('interior.pdf'), data: interiorPdf },
