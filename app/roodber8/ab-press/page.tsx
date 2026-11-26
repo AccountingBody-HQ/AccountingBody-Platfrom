@@ -58,7 +58,14 @@ const BOOK_TYPE_LABELS: Record<string, string> = {
 // no server dependencies. buildZip is rewritten against Uint8Array/DataView
 // instead of Node's Buffer (unavailable in the browser) but produces a
 // byte-identical ZIP format.
-function buildMetadata(subtitle: string, bookType: string, edition: string, course: any): string {
+// For a volume of a longer book (owner decision D349), its number and the
+// chapter indexes it holds: the chapters line and upload steps 4 and 5 name
+// that volume. Without it the file is as before.
+function buildMetadata(subtitle: string, bookType: string, edition: string, course: any, volume?: { x: number; chapters: number[] }): string {
+  const total = (course.chapters || []).length
+  const first = volume ? volume.chapters[0] + 1 : 0
+  const last = volume ? volume.chapters[volume.chapters.length - 1] + 1 : 0
+  const file = (name: string) => (volume ? `volume-${volume.x}-${name}` : name)
   const lines = [
     'ACCOUNTING BODY PRESS - BOOK METADATA',
     '=====================================',
@@ -79,15 +86,15 @@ function buildMetadata(subtitle: string, bookType: string, edition: string, cour
     `Course: ${course.title}`,
     `Level: ${course.level || 'Not specified'}`,
     `Category: ${course.categoryTitle || 'Not specified'}`,
-    `Chapters: ${(course.chapters || []).length}`,
+    !volume ? `Chapters: ${total}` : first === last ? `Chapter: ${first} of ${total}` : `Chapters: ${first}–${last} of ${total}`,
     '',
     'KDP UPLOAD INSTRUCTIONS',
     '-----------------------',
     '1. Log in to kdp.amazon.com',
     '2. Create new paperback title',
     '3. Enter metadata from above',
-    '4. Upload interior.pdf as manuscript',
-    '5. Upload cover.pdf as cover',
+    `4. Upload ${file('interior.pdf')} as manuscript`,
+    `5. Upload ${file('cover.pdf')} as cover`,
     '6. Choose 6x9 trim size, black and white interior',
     '7. Set price and territories',
     '8. Submit for review',
@@ -628,7 +635,7 @@ export default function AbPressPage() {
       zipFiles.push(
         { name: fileName('interior.pdf'), data: interiorPdf },
         { name: fileName('cover.pdf'),    data: coverPdf },
-        { name: fileName('metadata.txt'), data: new TextEncoder().encode(buildMetadata(volume ? VOLUME_TITLE(title, volume.x, volume.n) : title, bookType, edition, preview.course)) },
+        { name: fileName('metadata.txt'), data: new TextEncoder().encode(buildMetadata(volume ? VOLUME_TITLE(title, volume.x, volume.n) : title, bookType, edition, preview.course, volume ? { x: volume.x, chapters: volumeChapters } : undefined)) },
         { name: fileName('preflight-report.txt'), data: new TextEncoder().encode(checkReport) },
       )
       reportItemCount += countReportItems(checkReport)

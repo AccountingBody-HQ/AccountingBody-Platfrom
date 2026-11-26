@@ -1371,7 +1371,7 @@ class Screen {
         adminFetch: (url: string, init?: RequestInit, options?: AdminFetchOptions) => (this.realFetch ? adminFetch(url, init, options) : this.fetch(url, init)),
       },
     }
-    const names = ['planVolumes', 'fontsEmbedded', 'kdpLines']
+    const names = ['planVolumes', 'fontsEmbedded', 'kdpLines', 'buildMetadata']
     const outputText = `${moduleText}\nmodule.exports.__inner = { ${names.map((name) => `${name}: typeof ${name} === 'undefined' ? undefined : ${name}`).join(', ')} }\n`
     const made: { exports: { default?: () => Element; __inner?: Screen['inner'] } } = { exports: {} }
     new Function('require', 'module', 'exports', outputText)((name: string) => modules[name], made, made.exports)
@@ -2576,8 +2576,13 @@ describe('the volumes of a long book made chapter by chapter (D346)', { timeout:
     const lines = (x: number) => text(`volume-${x}-metadata.txt`).split('\n')
     expect(lines(1).filter((line) => line.startsWith('Title: '))).toEqual(['Title: Title first — Volume 1 of 2'])
     expect(lines(2).filter((line) => line.startsWith('Title: '))).toEqual(['Title: Title first — Volume 2 of 2'])
-    const rest = (x: number) => lines(x).filter((line) => !line.startsWith('Title: ') && !line.startsWith('Generated: '))
+    // Each volume names its own chapters and files (owner decision D349).
+    const own = (x: number) => lines(x).filter((line) => /^(Chapters?: |4\. |5\. )/.test(line))
+    expect(own(1)).toEqual(['Chapter: 1 of 3', '4. Upload volume-1-interior.pdf as manuscript', '5. Upload volume-1-cover.pdf as cover'])
+    expect(own(2)).toEqual(['Chapters: 2–3 of 3', '4. Upload volume-2-interior.pdf as manuscript', '5. Upload volume-2-cover.pdf as cover'])
+    const rest = (x: number) => lines(x).filter((line) => !line.startsWith('Title: ') && !line.startsWith('Generated: ') && !own(x).includes(line))
     expect(rest(1)).toEqual(rest(2))
+    expect(rest(1)).toHaveLength(lines(1).length - 5)
     const report = (x: number) => text(`volume-${x}-preflight-report.txt`)
     expect(report(1)).toContain('[WARN] 1 linked practice set(s) not found or not live: x')
     expect(report(1)).toContain(missingOptionLine([]))
@@ -2621,6 +2626,82 @@ describe('the volumes of a long book made chapter by chapter (D346)', { timeout:
     // A line break inside a text made react-pdf fall back to Helvetica, which
     // is not embedded: the volume line is a text of its own.
     expect(front.includes('\\nVolume') || cover.includes('\\nVolume')).toBe(false)
+  })
+})
+
+describe('the details file of each volume (D349)', () => {
+  type Metadata = (subtitle: string, bookType: string, edition: string, course: object, volume?: { x: number; chapters: number[] }) => string
+  const metadata = (...args: Parameters<Metadata>) => (new Screen().inner.buildMetadata as unknown as Metadata)(...args)
+  const COURSE = { title: 'Course', chapters: Array.from({ length: 7 }, (_, i) => ({ _key: i })) }
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-26T12:00:00.000Z'))
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("the owner's book in three volumes: chapters 1-2, 3-4 and 5-7 of 7, and each volume's own files", () => {
+    const own = (x: number, chapters: number[]) =>
+      metadata(`Financial Accounting — Volume ${x} of 3`, 'combined', '2026/27 Edition', COURSE, { x, chapters }).split('\n').filter((line) => /^(Chapters?: |4\. |5\. )/.test(line))
+    expect(own(1, [0, 1])).toEqual(['Chapters: 1–2 of 7', '4. Upload volume-1-interior.pdf as manuscript', '5. Upload volume-1-cover.pdf as cover'])
+    expect(own(2, [2, 3])).toEqual(['Chapters: 3–4 of 7', '4. Upload volume-2-interior.pdf as manuscript', '5. Upload volume-2-cover.pdf as cover'])
+    expect(own(3, [4, 5, 6])).toEqual(['Chapters: 5–7 of 7', '4. Upload volume-3-interior.pdf as manuscript', '5. Upload volume-3-cover.pdf as cover'])
+  })
+
+  it('a volume of one chapter', () => {
+    const lines = metadata('S — Volume 2 of 2', 'study', 'E', COURSE, { x: 2, chapters: [6] }).split('\n')
+    expect(lines.filter((line) => /^Chapters?: /.test(line))).toEqual(['Chapter: 7 of 7'])
+    expect(lines).toContain('4. Upload volume-2-interior.pdf as manuscript')
+    expect(lines).toContain('5. Upload volume-2-cover.pdf as cover')
+  })
+
+  it('nothing else in the file changes for a volume', () => {
+    const one = metadata('S', 'combined', 'E', COURSE).split('\n')
+    const volume = metadata('S', 'combined', 'E', COURSE, { x: 1, chapters: [0, 1] }).split('\n')
+    expect(volume).toHaveLength(one.length)
+    expect(volume.filter((line, i) => line !== one[i])).toEqual(['Chapters: 1–2 of 7', '4. Upload volume-1-interior.pdf as manuscript', '5. Upload volume-1-cover.pdf as cover'])
+  })
+
+  it('a book of one volume: the file is byte for byte as before', () => {
+    const made = metadata('Financial Accounting', 'combined', '2026/27 Edition', { ...COURSE, level: 'Foundation' })
+    expect(made).toBe([
+      'ACCOUNTING BODY PRESS - BOOK METADATA',
+      '=====================================',
+      '',
+      'Title: Financial Accounting',
+      'Type: Study Text and Practice Kit',
+      'Author: Accounting Body Editorial Team',
+      'Publisher: Accounting Body Press',
+      'Edition: 2026/27 Edition',
+      'Year: 2026',
+      'Language: English',
+      'Trim Size: 6 x 9 inches',
+      'Interior: Black and White',
+      'Paper: White',
+      '',
+      'COURSE INFO',
+      '-----------',
+      'Course: Course',
+      'Level: Foundation',
+      'Category: Not specified',
+      'Chapters: 7',
+      '',
+      'KDP UPLOAD INSTRUCTIONS',
+      '-----------------------',
+      '1. Log in to kdp.amazon.com',
+      '2. Create new paperback title',
+      '3. Enter metadata from above',
+      '4. Upload interior.pdf as manuscript',
+      '5. Upload cover.pdf as cover',
+      '6. Choose 6x9 trim size, black and white interior',
+      '7. Set price and territories',
+      '8. Submit for review',
+      '',
+      'Generated: 2026-11-26T12:00:00.000Z',
+      'Generated by: Accounting Body Press Publishing System',
+    ].join('\n'))
+    expect(sha(made)).toBe(sha(metadata('Financial Accounting', 'combined', '2026/27 Edition', { ...COURSE, level: 'Foundation' }, undefined)))
   })
 })
 
