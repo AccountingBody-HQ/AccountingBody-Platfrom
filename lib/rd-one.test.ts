@@ -316,7 +316,8 @@ describe('G6 scope: only the planned lines change', () => {
     ['middleware.ts', 'd93412b73d16b115b288ab6d78999e2f3982a3485ada3c135a7c70122b14e92c'],
     // BP-2 (B): getAdminPath treats an empty ADMIN_PATH like unset.
     ['lib/middleware-logic.ts', 'e0378e7b89ad5007cf928664444f0d322620a534051d96fcb63421854f130612'],
-    ['app/robots.ts', 'bb3375cf5cf479acb4255bc4bca7166374ef7b2cd2b457e16b832d8fcac75f4e'],
+    // SEO-1 S4 (D348, D350): ChatGPT-User and PerplexityBot are no longer blocked (app/robots.test.ts).
+    ['app/robots.ts', '6d2646b690277f742eea0245496e0f45376f773f5835ccefee4d9b052a0c2f9d'],
     ['app/[slug]/page.tsx', 'eba427305e900fbf9ba257aa128b8a35f1a5ce1a40e0ec0cdca7d95f60828032'],
     ['lib/slug-param.ts', '23aff618c927ccded22026c3ea21391b9009fda6eb97eca0ee40ba174c0e95eb'],
     // W0-1 C1: the search words come from lib/search-words.ts (hyphens split too).
