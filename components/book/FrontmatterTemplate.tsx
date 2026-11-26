@@ -141,7 +141,7 @@ export function FrontmatterTemplate({ course, bookType, edition, subtitle, chapt
         <View style={s.titlePage}>
           <Text style={s.publisherLabel}>Accounting Body Press</Text>
           <View style={s.titleDivider} />
-          {volume ? <View><Text style={s.bookTitle}>{sanitise(subtitle)}</Text><Text style={s.bookTitle}>{`Volume ${volume.x} of ${volume.n}`}</Text></View> : <Text style={s.bookTitle}>{sanitise(subtitle)}</Text>}
+          {volume ? <View style={{ alignItems: "center" }}><Text style={s.bookTitle}>{sanitise(subtitle)}</Text><Text style={s.bookTitle}>{`Volume ${volume.x} of ${volume.n}`}</Text></View> : <Text style={s.bookTitle}>{sanitise(subtitle)}</Text>}
           <Text style={s.bookTypeLabel}>{bookTypeLabel}</Text>
           <View style={s.titleDivider} />
           <Text style={s.editionText}>{edition}</Text>

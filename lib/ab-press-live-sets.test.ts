@@ -2207,6 +2207,112 @@ async function numbersOf(bytes: Uint8Array): Promise<string[]> {
   })
 }
 
+// Where each text of one drawn page sits across the page, in points from the
+// left edge, read exactly from the page's content stream: the position is the
+// text matrix (Tm) times every transformation (cm) in force, and the width is
+// the sum of the embedded font's own glyph widths (its /W array) at the size
+// set by Tf, plus the spacing numbers inside TJ. The words come from the
+// font's ToUnicode map.
+async function textsAcross(bytes: Uint8Array, pageIndex: number): Promise<{ words: string; left: number; right: number }[]> {
+  const { PDFArray, PDFDict, PDFName, PDFNumber, PDFRawStream, decodePDFRawStream } = pdfLib
+  const doc = await pdfLib.PDFDocument.load(bytes)
+  const page = doc.getPage(pageIndex)
+  const decode = (stream: unknown) => (stream instanceof PDFRawStream ? Buffer.from(decodePDFRawStream(stream).decode()).toString('latin1') : '')
+  // Each font of the page: its glyph widths and the text of each glyph.
+  const fonts = new Map<string, { widths: Map<number, number>; fallback: number; unicode: Map<number, string> }>()
+  const fontDict = page.node.Resources()?.lookup(PDFName.of('Font'), PDFDict)
+  for (const [key, ref] of fontDict ? fontDict.entries() : []) {
+    const font = doc.context.lookup(ref, PDFDict)
+    const kid = font.lookup(PDFName.of('DescendantFonts'), PDFArray).lookup(0, PDFDict)
+    const widths = new Map<number, number>()
+    const w = kid.lookup(PDFName.of('W'))
+    const items = w instanceof PDFArray ? w.asArray().map((item) => doc.context.lookup(item) ?? item) : []
+    for (let i = 0; i < items.length; ) {
+      const first = (items[i] as pdfLib.PDFNumber).asNumber()
+      const next = items[i + 1]
+      if (next instanceof PDFArray) {
+        next.asArray().forEach((width, at) => widths.set(first + at, (width as pdfLib.PDFNumber).asNumber()))
+        i += 2
+      } else {
+        const last = (next as pdfLib.PDFNumber).asNumber()
+        for (let gid = first; gid <= last; gid++) widths.set(gid, (items[i + 2] as pdfLib.PDFNumber).asNumber())
+        i += 3
+      }
+    }
+    const dw = kid.lookup(PDFName.of('DW'))
+    const unicode = new Map<number, string>()
+    const hexText = (hex: string) => String.fromCodePoint(...(hex.match(/.{4}/g) ?? []).map((unit) => parseInt(unit, 16)))
+    const cmap = decode(font.lookup(PDFName.of('ToUnicode')))
+    for (const block of cmap.match(/beginbfrange[\s\S]*?endbfrange/g) ?? []) {
+      for (const row of Array.from(block.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>\s*(\[[^\]]*\]|<[0-9a-fA-F]+>)/g))) {
+        const start = parseInt(row[1], 16)
+        const end = parseInt(row[2], 16)
+        if (row[3].startsWith('[')) {
+          (row[3].match(/<([0-9a-fA-F]+)>/g) ?? []).forEach((dest: string, at: number) => unicode.set(start + at, hexText(dest.slice(1, -1))))
+        } else {
+          const base = parseInt(row[3].slice(1, -1), 16)
+          for (let gid = start; gid <= end; gid++) unicode.set(gid, String.fromCodePoint(base + gid - start))
+        }
+      }
+    }
+    for (const block of cmap.match(/beginbfchar[\s\S]*?endbfchar/g) ?? []) {
+      for (const row of Array.from(block.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g))) unicode.set(parseInt(row[1], 16), hexText(row[2]))
+    }
+    fonts.set(key.asString().slice(1), { widths, fallback: dw instanceof PDFNumber ? dw.asNumber() : 1000, unicode })
+  }
+  const contents = page.node.Contents()
+  const streams = contents instanceof PDFArray ? contents.asArray().map((ref) => doc.context.lookup(ref)) : [contents]
+  const text = streams.map(decode).join('\n')
+  expect(text).not.toMatch(/\((?:[^)\\]|\\.)*\)\s*T[jJ]/)
+  type Matrix = [number, number, number, number, number, number]
+  const times = (m: Matrix, n: Matrix): Matrix => [
+    m[0] * n[0] + m[1] * n[2], m[0] * n[1] + m[1] * n[3],
+    m[2] * n[0] + m[3] * n[2], m[2] * n[1] + m[3] * n[3],
+    m[4] * n[0] + m[5] * n[2] + n[4], m[4] * n[1] + m[5] * n[3] + n[5],
+  ]
+  let ctm: Matrix = [1, 0, 0, 1, 0, 0]
+  const saved: Matrix[] = []
+  let tm: Matrix = [1, 0, 0, 1, 0, 0]
+  let font = ''
+  let size = 0
+  let operands: (number | string | (number | string)[])[] = []
+  let array: (number | string)[] | null = null
+  const found: { words: string; left: number; right: number }[] = []
+  for (const token of text.match(/\[|\]|<[0-9a-fA-F]*>|\/[^\s/[\]<>()]+|[-+]?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?|[A-Za-z'"*]+/g) ?? []) {
+    if (token === '[') { array = []; continue }
+    if (token === ']') { operands.push(array ?? []); array = null; continue }
+    const value = /^[-+.\d]/.test(token) ? Number(token) : token
+    if (array) { array.push(value); continue }
+    if (typeof value === 'number' || token.startsWith('<') || token.startsWith('/')) { operands.push(value); continue }
+    const numbers = operands.filter((item): item is number => typeof item === 'number')
+    if (token === 'q') saved.push(ctm)
+    else if (token === 'Q') ctm = saved.pop() ?? [1, 0, 0, 1, 0, 0]
+    else if (token === 'cm') ctm = times(numbers as Matrix, ctm)
+    else if (token === 'BT') tm = [1, 0, 0, 1, 0, 0]
+    else if (token === 'Tm') tm = numbers as Matrix
+    else if (token === 'Tf') { font = String(operands[0]).slice(1); size = numbers[0] }
+    else if (token === 'Tj' || token === 'TJ') {
+      const glyphs = fonts.get(font)
+      expect(glyphs).toBeDefined()
+      const pieces = token === 'TJ' ? (operands[0] as (number | string)[]) : [operands[0] as string]
+      let advance = 0
+      let words = ''
+      for (const piece of pieces) {
+        if (typeof piece === 'number') { advance -= (piece / 1000) * size; continue }
+        for (const unit of piece.slice(1, -1).match(/.{4}/g) ?? []) {
+          const gid = parseInt(unit, 16)
+          advance += ((glyphs?.widths.get(gid) ?? glyphs?.fallback ?? 1000) / 1000) * size
+          words += glyphs?.unicode.get(gid) ?? '?'
+        }
+      }
+      const at = times(tm, ctm)
+      found.push({ words, left: at[4], right: at[4] + advance * at[0] })
+    }
+    operands = []
+  }
+  return found
+}
+
 describe('the page numbers of a book made chapter by chapter (D346)', () => {
   const made = async (bookType = 'combined') => {
     const page = await screen()
@@ -2509,7 +2615,7 @@ describe('the volumes of a long book made chapter by chapter (D346)', { timeout:
     expect(source).toContain('const VOLUME_TITLE = (title: string, x: number, n: number) => `${title} — Volume ${x} of ${n}`\n')
     const front = readFileSync(join(ROOT, 'components', 'book', 'FrontmatterTemplate.tsx'), 'utf8')
     const cover = readFileSync(join(ROOT, 'components', 'book', 'FullCoverTemplate.tsx'), 'utf8')
-    expect(front).toContain('{volume ? <View><Text style={s.bookTitle}>{sanitise(subtitle)}</Text><Text style={s.bookTitle}>{`Volume ${volume.x} of ${volume.n}`}</Text></View> : <Text style={s.bookTitle}>{sanitise(subtitle)}</Text>}')
+    expect(front).toContain('{volume ? <View style={{ alignItems: "center" }}><Text style={s.bookTitle}>{sanitise(subtitle)}</Text><Text style={s.bookTitle}>{`Volume ${volume.x} of ${volume.n}`}</Text></View> : <Text style={s.bookTitle}>{sanitise(subtitle)}</Text>}')
     expect(cover).toContain('{volume ? <View><Text style={s.titleText}>{subtitle}</Text><Text style={s.titleText}>{`Volume ${volume.x} of ${volume.n}`}</Text></View> : <Text style={s.titleText}>{subtitle}</Text>}')
     expect(cover).toContain('{volume ? `${subtitle} · Vol. ${volume.x}` : subtitle}')
     // A line break inside a text made react-pdf fall back to Helvetica, which
@@ -2584,6 +2690,38 @@ describe('the front pages and the cover of a volume (D346)', () => {
     const broken = await drawn(createElement(actual.Document, null, createElement(actual.Page, null, createElement(actual.Text, { style: { fontFamily: 'BookSans' } }, 'Sample\nVolume 1 of 2'))))
     expect((await fontsOf(broken)).filter((found) => !found.embedded).map((found) => found.name)).toEqual(['Helvetica'])
     expect(new Set(asked)).toEqual(new Set(['LiberationSans-Regular.ttf', 'LiberationSans-Bold.ttf']))
+  })
+
+  it("a volume's title page centres the title and the volume line, as it centres the title of one book", async () => {
+    vi.unstubAllGlobals()
+    const realFetch = globalThis.fetch
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : String(input)
+      const font = /^https:\/\/accountingbody\.com\/fonts\/(LiberationSans-(Regular|Bold|Italic)\.ttf)$/.exec(url)
+      if (font) return new Response(readFileSync(join(ROOT, 'public', 'fonts', font[1])))
+      if (/^(data|file):/.test(url)) return realFetch(input, init)
+      throw new Error('no network in this test')
+    })
+    const actual = await vi.importActual<typeof import('@react-pdf/renderer')>('@react-pdf/renderer')
+    const titlePage = async (volume?: { x: number; n: number }) => {
+      const pdf = new Uint8Array(await actual.renderToBuffer(createElement(FrontmatterTemplate, { course: { chapters: [{ _key: 'a', chapterTitle: 'One' }] }, bookType: 'combined', edition: 'E', subtitle: 'Sample Course', chapterPageStarts: [4], totalPages: 9, answersPageStart: 8, ...(volume ? { volume } : {}) }) as Parameters<typeof actual.renderToBuffer>[0]))
+      return textsAcross(pdf, 0)
+    }
+    // The title page's text runs from its inner margin (0.75 in) to its outer
+    // margin (0.5 in) on a 6 in page; every line of it is centred there.
+    const centre = (54 + (432 - 36)) / 2
+    const middle = (texts: { words: string; left: number; right: number }[], words: string) => {
+      const line = texts.filter((text) => text.words === words)
+      expect(line).toHaveLength(1)
+      expect(line[0].right - line[0].left).toBeGreaterThan(100)
+      return (line[0].left + line[0].right) / 2
+    }
+    const one = await titlePage()
+    expect(Math.abs(middle(one, 'Sample Course') - centre)).toBeLessThanOrEqual(1)
+    const two = await titlePage({ x: 1, n: 2 })
+    expect(Math.abs(middle(two, 'Sample Course') - centre)).toBeLessThanOrEqual(1)
+    expect(Math.abs(middle(two, 'Volume 1 of 2') - centre)).toBeLessThanOrEqual(1)
+    expect(Math.abs(middle(two, 'Study Text & Practice Kit') - centre)).toBeLessThanOrEqual(1)
   })
 
   it('a contents row keeps the chapter number it is given, else its place', () => {
