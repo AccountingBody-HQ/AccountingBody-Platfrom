@@ -53,8 +53,8 @@ interface PagedQuery {
 // is ordered on a unique column, so pages neither overlap nor skip. The next
 // page starts after the rows RECEIVED (a database setting may send fewer
 // than asked for) until the total is in. Anything else than all rows is
-// thrown, never returned.
-async function readPaged<T>(what: string, query: () => PagedQuery): Promise<T[]> {
+// thrown, never returned. Also used by the practice-filters read (lib/db.ts).
+export async function readPaged<T>(what: string, query: () => PagedQuery): Promise<T[]> {
   const rows: T[] = []
   let received = 0
   let total = 0
@@ -73,7 +73,7 @@ async function readPaged<T>(what: string, query: () => PagedQuery): Promise<T[]>
 }
 
 // The same, for a list of values, in chunks of IN_CHUNK values.
-async function readPagedIn<T>(what: string, values: string[], query: (chunk: string[]) => PagedQuery): Promise<T[]> {
+export async function readPagedIn<T>(what: string, values: string[], query: (chunk: string[]) => PagedQuery): Promise<T[]> {
   const rows: T[] = []
   for (let start = 0; start < values.length; start += IN_CHUNK) {
     const chunk = values.slice(start, start + IN_CHUNK)

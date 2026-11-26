@@ -4,6 +4,8 @@ import { unstable_cache } from 'next/cache'
 import { getServerSupabase, type DbContext } from '@/lib/supabase-server'
 import { guardCachedRead } from '@/lib/cache-guard'
 import { reportServerError } from '@/lib/report-error'
+import { readPaged, readPagedIn } from '@/lib/mock-exam-pool'
+import { MOCK_EXAM_SUBJECTS } from '@/lib/mock-exam-subjects'
 
 // Every function in this file that has a caller serves public pages, so all
 // use the public read limit (the default), except the whole-table counts,
@@ -621,6 +623,60 @@ const guardedQuestionSetDifficultyCounts = guardCachedRead(
 
 export async function getPublicQuestionSetDifficultyCounts(): Promise<Record<string, number>> {
   return guardedQuestionSetDifficultyCounts()
+}
+
+// The /practice-questions filters: how many live AB sets each level has, and
+// for each subject in MOCK_EXAM_SUBJECTS the ids of its sets. A set belongs
+// to a subject when its article is a published article of that category, the
+// same rule as the mock-exam pool (lib/mock-exam-pool.ts). Read with GET and
+// an exact total, in pages (readPaged), never head counts; kept for an hour
+// under the list's tags. Any failed or short read is thrown and never stored.
+export interface PracticeFilters {
+  difficultyCounts: Record<string, number>
+  subjectSetIds: Record<string, string[]>
+}
+
+const PUBLIC_PRACTICE_FILTERS_KEY = ['public-practice-filters']
+
+async function fetchPracticeFilters(): Promise<PracticeFilters> {
+  const supabase = getSupabase()
+  const sets = await readPaged<{ id: string; article_slug: string | null; difficulty: string | null }>('practice-filters question_sets', () =>
+    supabase.from('question_sets').select('id, article_slug, difficulty', { count: 'exact' })
+      .eq('status', 'published').contains('show_on_sites', ['ab'])
+      .order('id', { ascending: true }))
+  const slugs = Array.from(new Set(sets.map(s => s.article_slug).filter((s): s is string => !!s))).sort()
+  const articles = await readPagedIn<{ slug: string; category: string | null }>('practice-filters articles', slugs, chunk =>
+    supabase.from('articles').select('slug, category', { count: 'exact' })
+      .eq('status', 'published').in('slug', chunk)
+      .order('slug', { ascending: true }))
+  const categoryOf = new Map(articles.map(a => [a.slug, a.category]))
+
+  const difficultyCounts: Record<string, number> = {}
+  for (const level of QUESTION_SET_DIFFICULTIES) difficultyCounts[level] = 0
+  const subjectSetIds: Record<string, string[]> = {}
+  for (const subject of MOCK_EXAM_SUBJECTS) subjectSetIds[subject.category] = []
+  const has = (record: object, key: string) => Object.prototype.hasOwnProperty.call(record, key)
+
+  for (const set of sets) {
+    if (set.difficulty && has(difficultyCounts, set.difficulty)) difficultyCounts[set.difficulty]++
+    const category = set.article_slug ? categoryOf.get(set.article_slug) : undefined
+    if (category && has(subjectSetIds, category)) subjectSetIds[category].push(set.id)
+  }
+  for (const ids of Object.values(subjectSetIds)) ids.sort()
+  return { difficultyCounts, subjectSetIds }
+}
+
+const guardedPracticeFilters = guardCachedRead(
+  PUBLIC_PRACTICE_FILTERS_KEY,
+  () =>
+    unstable_cache(fetchPracticeFilters, PUBLIC_PRACTICE_FILTERS_KEY, {
+      revalidate: 3600,
+      tags: ['question-sets', 'question-sets-list'],
+    })()
+)
+
+export async function getPublicPracticeFilters(): Promise<PracticeFilters> {
+  return guardedPracticeFilters()
 }
 
 async function fetchQuestionSetCount(): Promise<number> {
