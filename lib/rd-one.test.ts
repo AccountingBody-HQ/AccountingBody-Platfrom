@@ -285,7 +285,11 @@ describe('G5 /search is noindex, follow and out of the pages sitemap', () => {
     const AB = 'https://accountingbody.com'
     const want = ['', '/study', '/practice-questions', '/jobs', '/jobs/listings', '/articles', '/glossary', '/calculators',
       '/global-payroll', '/dictionary', '/free-courses', '/get-help', '/firms-freelancers', '/about', '/contact',
-      '/privacy-policy', '/terms', '/cookie-policy', '/study/acca', '/study/cima', '/study/aat', '/study/icaew'].map((p) => AB + p)
+      '/privacy-policy', '/terms', '/cookie-policy', '/study/acca', '/study/cima', '/study/aat', '/study/icaew',
+      // SEO-1 S6 (D350): the mock-exam hub and the subjects it lists.
+      '/mock-exams', '/mock-exams/financial-accounting', '/mock-exams/financial-management', '/mock-exams/management-accounting',
+      '/mock-exams/financial-market', '/mock-exams/business-management', '/mock-exams/audit-assurance', '/mock-exams/taxation',
+      '/mock-exams/economics'].map((p) => AB + p)
     expect(locs).toEqual(want)
     expect(xml).not.toContain('/search<')
   })

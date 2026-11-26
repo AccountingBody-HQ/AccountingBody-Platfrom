@@ -69,7 +69,8 @@ describe('F2 targets are at least 24 by 24 px (WCAG 2.5.8)', () => {
 describe('F3 the EthioTax sitemap lists final addresses only', () => {
   const paths = Array.from(read('app/et-sitemap/route.ts').matchAll(/\n\s+url\('([^']*)',/g)).map((m) => m[1])
   it('every fixed page is a real page, not one that only redirects', () => {
-    expect(paths).toHaveLength(28)
+    // SEO-1 S6 added /study/mock-exams (28 + 1).
+    expect(paths).toHaveLength(29)
     for (const p of paths) {
       const file = [`app${p}/page.tsx`, `app${p.replace(/\/[^/]+$/, '')}/[slug]/page.tsx`].find((f) => existsSync(join(process.cwd(), f)))
       expect(file, p).toBeTruthy()

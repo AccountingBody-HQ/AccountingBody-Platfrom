@@ -546,7 +546,9 @@ const ET_FIXED = ['', '/how-it-works', '/about-ethiotax', '/faq', '/study/eticpa
   '/study/eticpa/atq/level-1/business-skills', '/study/eticpa/atq/level-1/ethiopian-business-law',
   '/study/eticpa/atq/level-2', '/study/eticpa/atq/level-2/financial-accounting', '/study/eticpa/atq/level-2/management-accounting',
   '/study/eticpa/atq/level-2/assurance-controls-ethics', '/study/eticpa/atq/level-2/ethiopian-taxation',
-  '/study/eticpa/atq/level-2/ethiopian-public-sector-accounting', '/study/eticpa/cpa']
+  '/study/eticpa/atq/level-2/ethiopian-public-sector-accounting', '/study/eticpa/cpa',
+  // SEO-1 S6: the EthioTax mock exams (its canonical names ethiotax.com).
+  '/study/mock-exams']
 const HB_SITEMAP = ['/get-help', '/get-help/tax-filing-compliance', '/get-help/accounting-bookkeeping', '/get-help/business-consulting',
   '/get-help/payroll-services', '/get-help/company-formation', '/get-help/audit-assurance', '/get-help/financial-planning-advisory',
   '/firms-freelancers', '/firms-freelancers/join', '/terms']

@@ -61,6 +61,7 @@ export async function GET() {
     url('/faq',                                    0.7,  'monthly'),
     // Study
     url('/study/eticpa',                           0.85, 'weekly'),
+    url('/study/mock-exams',                       0.8,  'weekly'),
     // ETICPA ATQ Level 1
     url('/study/eticpa/atq/level-1',                              0.85, 'weekly'),
     url('/study/eticpa/atq/level-1/introduction-to-accounting',   0.85, 'weekly'),

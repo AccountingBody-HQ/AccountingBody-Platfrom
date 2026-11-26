@@ -6,7 +6,7 @@ import React from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { ownerCanonical } from '@/lib/canonical'
-import { getCachedPublishedArticleCount } from '@/lib/db'
+import { getCachedPublishedArticleCount, getCategoryCounts } from '@/lib/db'
 import { formatCountLabel } from '@/lib/job-format'
 import { getRequestBrand } from '@/lib/brand-server'
 
@@ -49,18 +49,23 @@ export default async function GlossaryPage() {
   const articleCountLabel = formatCountLabel(articleCount)
   // Brand name only (owner decision D248); the content above stays shared.
   const { name: platformName, isEthioTax } = await getRequestBrand()
+  // Live counts: the same published Accounting Body articles each category
+  // link (/dictionary?category=…) lists, read through the cached per-category
+  // count that /study also uses (one hour; a failed read shows 0 for that
+  // category only).
+  const counts = await getCategoryCounts()
   const categories = [
-    { slug: 'financial-accounting',  title: 'Financial Accounting',  count: 714 },
-    { slug: 'financial-management',  title: 'Financial Management',  count: 742 },
-    { slug: 'management-accounting', title: 'Management Accounting', count: 446 },
-    { slug: 'financial-market',      title: 'Financial Market',      count: 211 },
-    { slug: 'business-management',   title: 'Business Management',   count: 197 },
-    { slug: 'audit-assurance',       title: 'Audit and Assurance',   count: 61  },
-    { slug: 'taxation',              title: 'Tax',                   count: 40  },
-    { slug: 'economics',             title: 'Economics',             count: 120 },
-    { slug: 'cryptocurrency',        title: 'Cryptocurrency',        count: 7   },
-    { slug: 'tools-templates',       title: 'Tools and Templates',   count: 3   },
-  ]
+    { slug: 'financial-accounting',  title: 'Financial Accounting'  },
+    { slug: 'financial-management',  title: 'Financial Management'  },
+    { slug: 'management-accounting', title: 'Management Accounting' },
+    { slug: 'financial-market',      title: 'Financial Market'      },
+    { slug: 'business-management',   title: 'Business Management'   },
+    { slug: 'audit-assurance',       title: 'Audit and Assurance'   },
+    { slug: 'taxation',              title: 'Tax'                   },
+    { slug: 'economics',             title: 'Economics'             },
+    { slug: 'cryptocurrency',        title: 'Cryptocurrency'        },
+    { slug: 'tools-templates',       title: 'Tools and Templates'   },
+  ].map(c => ({ ...c, count: counts[c.slug] ?? 0 }))
 
   return (
     <>

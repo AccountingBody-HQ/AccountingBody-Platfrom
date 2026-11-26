@@ -64,8 +64,10 @@ describe('/et-sitemap GET', () => {
     expect(xml).toContain('<loc>https://ethiotax.com/jobs/job-a</loc>')
     expect(xml).toContain('<loc>https://ethiotax.com/jobs/job-b</loc>')
     expect(xml).toContain('<lastmod>2026-11-02T00:00:00.000Z</lastmod>')
-    // 28 fixed pages: 17 EthioTax pages + 11 owner-pending pages (ET-9, D272; VF-2 left out one that redirects).
-    expect(xml.match(/<url>/g)).toHaveLength(28 + 2)
+    // 29 fixed pages: 18 EthioTax pages + 11 owner-pending pages (ET-9, D272; VF-2 left out one that redirects;
+    // SEO-1 S6 added the EthioTax mock exams, /study/mock-exams).
+    expect(xml.match(/<url>/g)).toHaveLength(29 + 2)
+    expect(xml).toContain('<loc>https://ethiotax.com/study/mock-exams</loc>')
   })
 
   it('still answers 200 for a real empty job list', async () => {
@@ -76,6 +78,6 @@ describe('/et-sitemap GET', () => {
     const res = await GET()
 
     expect(res.status).toBe(200)
-    expect((await res.text()).match(/<url>/g)).toHaveLength(28)
+    expect((await res.text()).match(/<url>/g)).toHaveLength(29)
   })
 })

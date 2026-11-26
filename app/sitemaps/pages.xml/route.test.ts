@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 
 // The pages reader is replaced so the route's answer to each result is tested
@@ -80,5 +82,26 @@ describe('/sitemaps/pages.xml GET', () => {
     expect(res.headers.get('cache-control')).toBe('public, s-maxage=3600, stale-while-revalidate=86400')
     expect(body).toContain('<loc>https://accountingbody.com/about</loc>')
     expect(body).not.toContain('/practice-questions/')
+  })
+
+  // SEO-1 S6 (D350): the mock-exam hub and the subjects it lists; EthioTax-owned
+  // pages (get-help services, /faq, /how-it-works, /study/mock-exams) stay in the
+  // EthioTax sitemap only, because their canonicals name ethiotax.com.
+  it('lists /mock-exams and each subject the hub lists, once, and no EthioTax-owned page', async () => {
+    vi.mocked(getPagesSitemapContent).mockResolvedValue({ ok: true, articles: [], questionSets: [], courses: [] })
+    const body = await (await GET()).text()
+    const locs = Array.from(body.matchAll(/<loc>([^<]+)<\/loc>/g)).map(m => m[1])
+    expect(locs.filter(l => l.includes('/mock-exams'))).toEqual([
+      'https://accountingbody.com/mock-exams',
+      ...['financial-accounting', 'financial-management', 'management-accounting', 'financial-market',
+        'business-management', 'audit-assurance', 'taxation', 'economics'].map(s => `https://accountingbody.com/mock-exams/${s}`),
+    ])
+    expect(locs).toHaveLength(31)
+    expect(new Set(locs).size).toBe(locs.length)
+    expect(locs.some(l => /\/get-help\/|\/faq$|\/how-it-works$|\/study\/mock-exams$/.test(l))).toBe(false)
+    // The subjects are exactly the ones the hub links to.
+    const hub = readFileSync(join(process.cwd(), 'app/mock-exams/page.tsx'), 'utf8')
+    const hubSlugs = Array.from(hub.matchAll(/\{ slug: '([a-z-]+)',/g)).map(m => m[1])
+    expect(locs.filter(l => l.includes('/mock-exams/')).map(l => l.split('/').pop())).toEqual(hubSlugs)
   })
 })
