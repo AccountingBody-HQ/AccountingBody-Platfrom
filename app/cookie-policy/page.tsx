@@ -36,14 +36,17 @@ const cookies: { category: string; bar: string; always: boolean; items: CookieRo
 
 ]
 
-const STORAGE_INTRO = "Some features keep small notes in your browser's storage on this device instead of in a cookie. They are not sent to us, and they stay until you clear this website's data in your browser settings."
+const STORAGE_INTRO = "Some features keep small notes in your browser's storage on this device instead of in a cookie. They stay on your device unless a row below says otherwise, and most of them stay until you clear this website's data in your browser settings."
 
-const storage = [
+// etOnly rows are shown on the EthioTax view only.
+const storage: { name: string; purpose: string; duration: string; etOnly?: boolean }[] = [
   { name: 'ab_cookie_consent', purpose: 'Remembers your cookie choice.', duration: 'Until you clear it' },
   { name: 'course_progress_*', purpose: 'Remembers which free-course lessons you marked complete.', duration: 'Until you clear it' },
   { name: 'sidebar_open_*',    purpose: 'Remembers which course chapters you left open.', duration: 'Until you clear it' },
   { name: 'ab_job_alerts',     purpose: 'Keeps the job alert details you entered on this device.', duration: 'Until you clear it' },
   { name: 'ab_visited_listings, jobs-listings-scroll:*', purpose: 'Helps the Back link return you to the same place in the job listings.', duration: 'Until you close the tab' },
+  { name: 'et-lang-reload',    purpose: 'Keeps the page loading bar going after you change the language.', duration: 'Removed when the new page has loaded', etOnly: true },
+  { name: 'ab_saved_jobs',     purpose: 'An older list of saved jobs. It is sent once to move those jobs into your saved jobs, then removed.', duration: 'Removed once the move has worked' },
 ]
 
 export default async function CookiePolicyPage() {
@@ -100,7 +103,7 @@ export default async function CookiePolicyPage() {
             <p className="text-slate-500 text-sm leading-relaxed mb-6">{STORAGE_INTRO}</p>
             <div className="rounded-xl border border-slate-200 overflow-hidden mb-10">
               <div className="divide-y divide-slate-100">
-                {storage.map(item => (
+                {storage.filter(item => !item.etOnly || isEthioTax).map(item => (
                   <div key={item.name} className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-5">
                     <div>
                       <code className="text-xs text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">{item.name}</code>

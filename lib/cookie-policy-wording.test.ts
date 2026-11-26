@@ -37,7 +37,11 @@ const storageRow = (name: string, purpose: string, duration: string) =>
   `<code class="text-xs text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">${name}</code></div><p class="text-xs text-slate-500 leading-relaxed">${purpose}</p><p class="text-xs text-slate-500">${duration}</p>`
 
 const HEADING = 'Stored on your device'
-const INTRO = "Some features keep small notes in your browser's storage on this device instead of in a cookie. They are not sent to us, and they stay until you clear this website's data in your browser settings."
+// PQB-2 S3: the intro allows for a row that is sent to the site (ab_saved_jobs).
+const INTRO = "Some features keep small notes in your browser's storage on this device instead of in a cookie. They stay on your device unless a row below says otherwise, and most of them stay until you clear this website's data in your browser settings."
+const OLD_INTRO = "They are not sent to us, and they stay until you clear this website's data in your browser settings."
+const ET_LANG_RELOAD: [string, string, string] = ['et-lang-reload', 'Keeps the page loading bar going after you change the language.', 'Removed when the new page has loaded']
+const SAVED_JOBS: [string, string, string] = ['ab_saved_jobs', 'An older list of saved jobs. It is sent once to move those jobs into your saved jobs, then removed.', 'Removed once the move has worked']
 const STORAGE: Array<[string, string, string]> = [
   ['ab_cookie_consent', 'Remembers your cookie choice.', 'Until you clear it'],
   ['course_progress_*', 'Remembers which free-course lessons you marked complete.', 'Until you clear it'],
@@ -95,6 +99,30 @@ describe('cookie page wording', () => {
       // The future mock and practice keys arrive with the device-progress job.
       expect(html).not.toMatch(/ab_mock_|ab_pq_/)
     }
+  })
+
+  it('PQB-2: the new intro, exactly, on both brands; the old sentence is gone', async () => {
+    for (const et of [false, true]) {
+      const html = await render(et)
+      expect(count(html, `<p class="text-slate-500 text-sm leading-relaxed mb-6">${INTRO}</p>`)).toBe(1)
+      expect(html).not.toContain(OLD_INTRO)
+    }
+  })
+
+  it('PQB-2: et-lang-reload is on the EthioTax view only; ab_saved_jobs on both; both exact, after the five PQB-1 rows', async () => {
+    const storageNames = (html: string) => {
+      const part = html.slice(html.indexOf(`>${HEADING}</h2>`), html.indexOf('>How to manage cookies</h2>'))
+      return Array.from(part.matchAll(/<code class="text-xs text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">([^<]+)<\/code>/g)).map((m) => m[1])
+    }
+    const ab = await render(false)
+    const et = await render(true)
+    expect(ab).not.toContain('et-lang-reload')
+    expect(count(et, storageRow(...ET_LANG_RELOAD))).toBe(1)
+    expect(count(ab, storageRow(...SAVED_JOBS))).toBe(1)
+    expect(count(et, storageRow(...SAVED_JOBS))).toBe(1)
+    const five = STORAGE.map(([name]) => name)
+    expect(storageNames(ab)).toStrictEqual([...five, 'ab_saved_jobs'])
+    expect(storageNames(et)).toStrictEqual([...five, 'et-lang-reload', 'ab_saved_jobs'])
   })
 
   it('everything else stays: date, analytics rows, metadata', async () => {
