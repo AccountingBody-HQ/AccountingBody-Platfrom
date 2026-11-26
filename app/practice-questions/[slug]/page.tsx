@@ -7,6 +7,8 @@ import QuizRenderer from '@/components/QuizRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 import { ownerCanonical, resolveArticlePath } from '@/lib/canonical'
 import { getRequestBrand } from '@/lib/brand-server'
+import StructuredData from '@/components/StructuredData'
+import { quizSchema } from '@/lib/structured-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -92,6 +94,11 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
 
   return (
     <div>
+      {/* Hidden label: the set's name and description as shown — never its questions or answers (D350 E). */}
+      <StructuredData data={quizSchema({
+        name: post.title, description: post.excerpt || undefined,
+        url: ownerCanonical('accountingbody', `/practice-questions/${slug}`).openGraph.url, isEthioTax,
+      })} />
       {/* HERO */}
       <section className='relative overflow-hidden bg-navy-950 py-14 md:py-20'>
         <div className='absolute inset-0 pointer-events-none'>

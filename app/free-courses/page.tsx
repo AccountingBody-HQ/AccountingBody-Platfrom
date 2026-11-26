@@ -8,7 +8,9 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 import { getPublishedCoursesOrThrow } from '@/lib/coursesNew'
-import { ownerCanonical } from '@/lib/canonical'
+import { contentOwner, ownerCanonical, ownerUrl } from '@/lib/canonical'
+import StructuredData from '@/components/StructuredData'
+import { itemListSchema } from '@/lib/structured-data'
 import { brandText } from '@/lib/et-wording'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -53,6 +55,11 @@ export default async function FreeCoursesPage({ searchParams }: { searchParams: 
 
   return (
     <div>
+      {/* Hidden label: the course cards as listed, at each course's canonical address. */}
+      <StructuredData data={itemListSchema(courses.map(c => ({
+        name: c.title,
+        url: ownerUrl(contentOwner({ canonical_owner: c.canonicalOwner, show_on_sites: c.showOnSites }), `/free-courses/${c.slug}`),
+      })))} />
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-navy-950 py-20 md:py-28">

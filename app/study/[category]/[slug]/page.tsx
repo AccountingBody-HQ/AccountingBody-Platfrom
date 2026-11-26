@@ -8,7 +8,9 @@ import type { ArticleFull } from '@/lib/db'
 import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 import { brandExamBodies } from '@/lib/brand'
-import { resolveArticleCanonical } from '@/lib/canonical'
+import { ownerUrl, resolveArticleCanonical } from '@/lib/canonical'
+import StructuredData from '@/components/StructuredData'
+import { articleSchema, breadcrumbSchema } from '@/lib/structured-data'
 import { toStoredSlug } from '@/lib/slug-param'
 import { studyCategoryName } from '@/lib/study-category-name'
 import { studyEticpaRedirect } from '@/lib/study-eticpa-redirect'
@@ -151,8 +153,20 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
       })
     : null
 
+  // Hidden labels repeat what this page shows; each address is that page's own canonical.
+  const canonicalUrl = resolveArticleCanonical(article).openGraph.url
+
   return (
     <div>
+      <StructuredData data={[
+        articleSchema({ title: article.title, description: article.excerpt || undefined, url: canonicalUrl, authorName: article.author_name || undefined, isEthioTax }),
+        breadcrumbSchema([
+          { name: 'Home', url: ownerUrl(isEthioTax ? 'ethiotax' : 'accountingbody', '/') },
+          { name: 'Study', url: ownerUrl('accountingbody', '/study') },
+          { name: studyCategoryName(category, article), url: ownerUrl('accountingbody', `/study/${category}`) },
+          { name: article.title, url: canonicalUrl },
+        ]),
+      ]} />
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-navy-950 py-14 md:py-20">
         <div className="absolute inset-0 pointer-events-none">

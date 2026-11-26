@@ -7,7 +7,9 @@ import { resolveLegacyRenamedPath } from '@/lib/legacy-renamed-path'
 import HtmlRenderer from '@/components/HtmlRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 import { brandExamBodies } from '@/lib/brand'
-import { articleTitleOwner, resolveArticleCanonical } from '@/lib/canonical'
+import { articleTitleOwner, ownerUrl, resolveArticleCanonical } from '@/lib/canonical'
+import StructuredData from '@/components/StructuredData'
+import { articleSchema, breadcrumbSchema } from '@/lib/structured-data'
 import { toStoredSlug } from '@/lib/slug-param'
 
 export const revalidate = 0
@@ -69,8 +71,20 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       })
     : null
 
+  // Hidden labels repeat what this page shows (no description: this page does not show the excerpt);
+  // each address is that page's own canonical.
+  const canonicalUrl = resolveArticleCanonical(article).openGraph.url
+
   return (
     <div>
+      <StructuredData data={[
+        articleSchema({ title: article.title, url: canonicalUrl, authorName: article.author_name || undefined, isEthioTax }),
+        breadcrumbSchema([
+          { name: 'Home', url: ownerUrl(isEthioTax ? 'ethiotax' : 'accountingbody', '/') },
+          { name: 'Articles', url: ownerUrl('accountingbody', '/articles') },
+          { name: article.title, url: canonicalUrl },
+        ]),
+      ]} />
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-navy-950 py-14 md:py-20">
         <div className="absolute inset-0 pointer-events-none">

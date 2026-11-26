@@ -4,7 +4,9 @@ import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
-import { ownerCanonical } from '@/lib/canonical'
+import { ownerCanonical, ownerUrl } from '@/lib/canonical'
+import StructuredData from '@/components/StructuredData'
+import { breadcrumbSchema, webPageSchema } from '@/lib/structured-data'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -52,6 +54,19 @@ export default async function MockExamsPage() {
 
   return (
     <div>
+      {/* Hidden labels: the eyebrow, intro and breadcrumb as shown (Accounting Body only; EthioTax redirects above). */}
+      <StructuredData data={[
+        webPageSchema({
+          type: 'CollectionPage', name: 'Mock Exams',
+          description: 'Free timed mock exams organised by subject. Every attempt draws 50 fresh questions from the live question bank. Unlimited attempts.',
+          url: ownerUrl('accountingbody', '/mock-exams'),
+        }),
+        breadcrumbSchema([
+          { name: 'Home', url: ownerUrl('accountingbody', '/') },
+          { name: 'Study', url: ownerUrl('accountingbody', '/study') },
+          { name: 'Mock Exams', url: ownerUrl('accountingbody', '/mock-exams') },
+        ]),
+      ]} />
       {/* HERO */}
       <section className="relative overflow-hidden bg-navy-950 py-20 md:py-28">
         <div className="absolute inset-0 pointer-events-none">
