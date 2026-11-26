@@ -137,7 +137,7 @@ export default async function PracticeQuestionsPage({
 
             {/* FILTER SIDEBAR */}
             <aside className="bg-white rounded-xl border border-slate-200 p-5 lg:sticky lg:top-24">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">Filter</p>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Filter</p>
 
               {/* Search */}
               <form method="GET" action="/practice-questions">
@@ -157,7 +157,7 @@ export default async function PracticeQuestionsPage({
               </form>
 
               {/* Sort */}
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Sort by</p>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Sort by</p>
               <div className="space-y-1 mb-5">
                 {[{ label: 'A – Z', value: 'alpha' }, { label: 'Newest first', value: 'newest' }].map(opt => (
                   <Link
@@ -171,7 +171,7 @@ export default async function PracticeQuestionsPage({
               </div>
 
               {/* Difficulty */}
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Difficulty</p>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Difficulty</p>
               <div className="space-y-1">
                 {[{ label: 'All levels', value: '' }, ...filters.difficulties.map(d => ({ label: d.charAt(0).toUpperCase() + d.slice(1), value: d }))].map(opt => (
                   <Link
@@ -187,7 +187,7 @@ export default async function PracticeQuestionsPage({
               {/* Subject Category */}
               {filters.categories.length > 0 && (
                 <>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3 mt-5">Subject</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3 mt-5">Subject</p>
                   <div className="space-y-1">
                     {[{ label: 'All subjects', slug: '' }, ...filters.categories].map(cat => (
                       <Link
@@ -234,7 +234,7 @@ export default async function PracticeQuestionsPage({
                   {difficulty && <span className="ml-1">· {difficulty}</span>}
                 </p>
                 {(letter || search || difficulty || category) && (
-                  <Link href="/practice-questions" className="text-xs text-slate-400 hover:text-navy-950 transition-colors">
+                  <Link href="/practice-questions" className="text-xs text-slate-500 hover:text-navy-950 transition-colors">
                     Clear filters
                   </Link>
                 )}
@@ -242,7 +242,7 @@ export default async function PracticeQuestionsPage({
 
               {posts.length === 0 ? (
                 <div className="text-center py-20">
-                  <p className="text-slate-400 text-lg">No practice questions found.</p>
+                  <p className="text-slate-500 text-lg">No practice questions found.</p>
                   <Link href="/practice-questions" className="mt-4 inline-block text-sm text-navy-700 hover:underline">Clear filters</Link>
                 </div>
               ) : (
