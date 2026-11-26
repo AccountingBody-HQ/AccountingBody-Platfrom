@@ -419,7 +419,7 @@ export default function AbPressPage() {
 
   // Large courses (> 50 articles): chapter-by-chapter orchestration.
   // Each chapter is rendered by its own short-lived serverless call
-  // (generate-chapter, maxDuration 60s), avoiding the single 300s call
+  // (generate-chapter, maxDuration 300 s), avoiding the single 300s call
   // that was timing out on large courses. Frontmatter (title + copyright +
   // TOC) is rendered last, once every chapter's real page count is known,
   // so the TOC gets exact page numbers. All PDFs are merged client-side
@@ -479,7 +479,7 @@ export default function AbPressPage() {
 
       // 2. Render answers section chapter by chapter if needed. Each call is
       // scoped to one chapter (same pattern as generate-chapter above) so a
-      // large course's full answer key doesn't blow the 60s render budget in
+      // large course's full answer key doesn't blow the 300 s render budget in
       // one request; a chapter with no questions comes back with pdf: null
       // and is skipped from the merge.
       const answerPdfOf: (Uint8Array | null)[] = chapterPdfs.map(() => null)
