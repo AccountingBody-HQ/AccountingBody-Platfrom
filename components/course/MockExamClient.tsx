@@ -135,7 +135,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
             {[{ v: '50', l: 'Questions' }, { v: '75', l: 'Minutes' }, { v: '60%', l: 'Pass mark' }].map(s => (
               <div key={s.l} className="rounded-xl p-4" style={{ backgroundColor: '#f0f7f4' }}>
                 <p className="font-display text-2xl" style={{ color: GREEN }}>{s.v}</p>
-                <p className="text-xs text-slate-400 mt-1">{s.l}</p>
+                <p className="text-xs text-slate-500 mt-1">{s.l}</p>
               </div>
             ))}
           </div>
@@ -146,7 +146,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
             {loading ? 'Preparing your exam…' : 'Start Mock Exam'}
           </button>
           </>)}
-          <Link href={backHref} className="inline-block mt-4 text-sm text-slate-400 hover:text-slate-600 transition-colors">← {backHref === "/mock-exams" ? "Back to Mock Exams" : "Back to module"}</Link>
+          <Link href={backHref} className="inline-block mt-4 text-sm text-slate-500 hover:text-slate-600 transition-colors">← {backHref === "/mock-exams" ? "Back to Mock Exams" : "Back to module"}</Link>
         </div>
       </div>
     </>)
@@ -159,7 +159,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
       {timerLive}
       <div className="max-w-3xl mx-auto">
         <div className="rounded-2xl border border-slate-200 bg-white p-8 md:p-10 mb-6 text-center">
-          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Exam Complete</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">Exam Complete</p>
           <div className="w-28 h-28 rounded-full mx-auto mb-6 flex items-center justify-center border-4"
             style={{ borderColor: passed ? GREEN : GOLD }}>
             <span className="font-display text-3xl" style={{ color: passed ? GREEN : GOLD }}>{pct}%</span>
@@ -203,7 +203,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
                       </div>
                     ))}
                     {q.explanation && <p className="text-xs text-slate-500 leading-relaxed pt-2 border-t border-slate-100 mt-3">{q.explanation}</p>}
-                    <p className="text-xs text-slate-400 pt-1">Topic: {q.topic}</p>
+                    <p className="text-xs text-slate-500 pt-1">Topic: {q.topic}</p>
                   </div>
                 )}
               </div>
@@ -236,7 +236,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
 
       {/* Question */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 md:p-8 mb-6">
-        <p className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: GOLD }}>{q.topic}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide mb-4" style={{ color: '#88671c' }}>{q.topic}</p>
         <h2 id={qHeadingId} ref={questionHeadingRef} tabIndex={-1} className="font-display text-lg md:text-xl text-navy-950 leading-snug mb-6">{q.questionText}</h2>
         <div className="space-y-3" role="group" aria-labelledby={qHeadingId}>
           {q.options.map((opt, oi) => {
@@ -261,7 +261,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
         <button onClick={() => setCurrent(c => Math.max(0, c - 1))} disabled={current === 0}
           className="h-11 px-5 rounded-lg text-sm font-semibold border-2 transition-colors disabled:opacity-30"
           style={{ borderColor: GREEN, color: GREEN }}>← Previous</button>
-        <span className="text-xs text-slate-400">{answered} of {questions.length} answered</span>
+        <span className="text-xs text-slate-500">{answered} of {questions.length} answered</span>
         {current < questions.length - 1 ? (
           <button onClick={() => setCurrent(c => Math.min(questions.length - 1, c + 1))}
             className="h-11 px-5 rounded-lg text-sm font-semibold transition-colors" style={{ backgroundColor: GREEN, color: 'white' }}>Next →</button>
@@ -275,12 +275,12 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
         <button onClick={handleSubmit}
           className="h-11 px-6 rounded-lg text-sm font-semibold border-2 transition-colors"
           style={{ borderColor: GOLD, color: GREEN }}>Finish &amp; submit exam</button>
-        <p className="text-xs text-slate-400 mt-2 text-center">{answered} of {questions.length} answered — you can submit at any time.</p>
+        <p className="text-xs text-slate-500 mt-2 text-center">{answered} of {questions.length} answered — you can submit at any time.</p>
       </div>
 
       {/* Question grid */}
       <div className="mt-8 pt-6 border-t border-slate-200">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Jump to question</p>
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Jump to question</p>
         <div className="flex flex-wrap gap-2">
           {questions.map((_, i) => (
             <button key={i} onClick={() => setCurrent(i)} aria-current={i === current ? 'step' : undefined}

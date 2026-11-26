@@ -93,7 +93,7 @@ export default async function MockExamsPage() {
             ].map(stat => (
               <div key={stat.label} className="text-center">
                 <p className="font-display text-3xl font-bold mb-1" style={{ color: '#1A4731' }}><span translate="no"><span translate="no">{stat.value}</span></span></p>
-                <p className="text-xs text-slate-400">{stat.label}</p>
+                <p className="text-xs text-slate-500">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -137,12 +137,12 @@ export default async function MockExamsPage() {
                   <div className="flex items-center gap-4 mb-5">
                     <div>
                       <p className="font-display text-xl font-bold" style={{ color: '#1A4731' }}>50</p>
-                      <p className="text-xs text-slate-400">per attempt</p>
+                      <p className="text-xs text-slate-500">per attempt</p>
                     </div>
                     <div className="w-px h-8 bg-slate-100" />
                     <div>
                       <p className="font-display text-xl font-bold" style={{ color: '#1A4731' }}>∞</p>
-                      <p className="text-xs text-slate-400">attempts</p>
+                      <p className="text-xs text-slate-500">attempts</p>
                     </div>
                   </div>
                   <span className="inline-flex items-center gap-1.5 text-xs font-semibold mt-auto group-hover:gap-2.5 transition-all"
