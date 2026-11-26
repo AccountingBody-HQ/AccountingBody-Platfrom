@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { reportServerError } from '@/lib/report-error'
 import { SERVER_PROBLEM_TEXT } from '@/lib/message-rules'
+import { parseMockExamCount, toServableQuestion, type PoolQuestion } from '@/lib/mock-exam-question'
 
 function getSupabase() {
   return getServerSupabase('publicRead')
@@ -15,19 +16,6 @@ export const dynamic = 'force-dynamic'
 // force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
 // handlers (Data Cache, up to 1 year, survives deploys). Do not remove.
 export const fetchCache = 'force-no-store'
-
-interface QuizQuestion {
-  questionText: string
-  options:      string[]
-  correctIndex: number
-  explanation?: string
-  difficulty?:  string
-}
-
-interface PoolQuestion extends QuizQuestion {
-  sourceTitle: string
-  topic:       string
-}
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
@@ -46,7 +34,7 @@ function readFailed(error: { code?: string }) {
 
 export async function GET(req: NextRequest) {
   const category = req.nextUrl.searchParams.get('category') ?? ''
-  const count    = parseInt(req.nextUrl.searchParams.get('count') ?? '50', 10)
+  const count    = parseMockExamCount(req.nextUrl.searchParams.get('count'))
 
   if (!category) {
     return NextResponse.json({ error: 'category parameter is required' }, { status: 400 })
@@ -98,19 +86,8 @@ export async function GET(req: NextRequest) {
     // Group questions by set for round-robin
     const groupMap = new Map<string, PoolQuestion[]>()
     for (const q of (questions ?? [])) {
-      if (!q.question_text || typeof q.correct_index !== 'number') continue
-      const options = [q.option_a, q.option_b, q.option_c, q.option_d].filter(Boolean) as string[]
-      if (options.length < 2) continue
-      const title = setTitleMap.get(q.set_id) ?? ''
-      const pq: PoolQuestion = {
-        questionText: q.question_text,
-        options,
-        correctIndex: q.correct_index,
-        explanation:  q.explanation ?? undefined,
-        difficulty:   q.difficulty ?? undefined,
-        sourceTitle:  title,
-        topic:        title.replace(/ [—-] Practice Questions$/, ''),
-      }
+      const pq = toServableQuestion(q, setTitleMap.get(q.set_id) ?? '')
+      if (!pq) continue
       const group = groupMap.get(q.set_id) ?? []
       group.push(pq)
       groupMap.set(q.set_id, group)
