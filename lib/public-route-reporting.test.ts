@@ -41,7 +41,12 @@ vi.mock('resend', () => ({
   },
 }))
 vi.mock('@sentry/nextjs', () => ({ captureException: () => {}, captureMessage: () => {} }))
+// The mock-exam pool is a cached read; here it reads straight through.
+vi.mock('next/cache', () => ({
+  unstable_cache: (fn: (...args: unknown[]) => Promise<unknown>) => (...args: unknown[]) => fn(...args),
+}))
 
+import { resetCacheGuard } from '@/lib/cache-guard'
 import { POST as contact } from '@/app/api/contact/route'
 import { GET as eticpaMockExam } from '@/app/api/eticpa/mock-exam/route'
 import { POST as firmsApplication } from '@/app/api/firms-application/route'
@@ -96,6 +101,11 @@ const fakeFetch: typeof fetch = async (input, init) => {
   const matches = filtersOf(url.searchParams)
   if (method === 'GET') {
     const found = rows.filter(matches)
+    // A read that asks for the exact total gets it, as the database answers.
+    const counted = (new Headers(init?.headers).get('prefer') ?? '').includes('count=exact')
+    if (counted && !accept.includes('vnd.pgrst.object')) {
+      return new Response(JSON.stringify(found), { status: 200, headers: { 'content-type': 'application/json', 'content-range': `*/${found.length}` } })
+    }
     if (!accept.includes('vnd.pgrst.object')) return json(found)
     if (found.length === 1) return json(found[0])
     return json({ message: 'no single row', code: 'PGRST116', details: null, hint: null }, 406)
@@ -461,6 +471,7 @@ beforeEach(() => {
   state.personOk = true
   db.tables = {}
   db.failing = false
+  resetCacheGuard()
 })
 
 afterEach(() => {

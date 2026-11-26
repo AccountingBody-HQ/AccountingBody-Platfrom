@@ -99,6 +99,7 @@ import { POST as updateCandidate } from '@/app/api/recruitment/update-candidate/
 import { POST as updateEmployer } from '@/app/api/recruitment/update-employer/route'
 import { POST as jobSeekerApply } from '@/app/api/recruitment/job-seeker-apply/route'
 import { getArticleBySlug } from '@/lib/db'
+import { resetCacheGuard } from '@/lib/cache-guard'
 
 // The folder comes from the app's own default, so its name is not repeated here.
 vi.stubEnv('ADMIN_PATH', undefined)
@@ -252,6 +253,8 @@ beforeEach(async () => {
   net.failing = false
   net.failMethod = null
   net.nullSingle = false
+  // Cached reads (the mock-exam pool) start empty in every test.
+  resetCacheGuard()
   session = await signTestSession()
 })
 
