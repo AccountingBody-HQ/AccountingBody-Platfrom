@@ -17,6 +17,18 @@ const COURSE_CHANGED = 'The course has changed since the preview was loaded, so 
 const ANSWERS_DIFFER = (n: number) => `The questions and answers of chapter ${n} do not match, so nothing was made. Please try again in a minute.`
 const TIMED_OUT = 'The book took too long to make, so nothing was made. Please try again in a minute.'
 const REPORT_ITEMS = (n: number) => `The check report (preflight-report.txt) lists ${n} item(s) to look at. Please read it before uploading to KDP.`
+// The font of the page numbers, embedded in the book as KDP asks (owner decision D346).
+const PAGE_NUMBER_FONT = '/fonts/LiberationSans-Regular.ttf'
+const FONT_FAILED = 'Page number font failed'
+// A KDP paperback (6 x 9 in, black ink) has 24 to 828 pages, so a longer book
+// made chapter by chapter is made as volumes (owner decision D346).
+const KDP_MIN_PAGES = 24
+const KDP_MAX_PAGES = 828
+const FRONT_PAGES = 3
+const CHAPTER_TOO_LONG = (n: number) => `Chapter ${n} is longer than KDP allows for one book (828 pages), so nothing was made.`
+const REPORT_ITEMS_VOLUMES = (n: number, k: number) => `The check reports (volume-1-preflight-report.txt to volume-${n}-preflight-report.txt) list ${k} item(s) to look at. Please read them before uploading to KDP.`
+const SPLITTING = (n: number) => `Splitting into ${n} volumes...`
+const VOLUME_TITLE = (title: string, x: number, n: number) => `${title} — Volume ${x} of ${n}`
 
 // The message for a failed request: TIMED_OUT when the platform stopped it for
 // time, else the message as given.
@@ -113,6 +125,101 @@ function countReportItems(report: string): number {
   return report.split('\n').filter(line => line.startsWith('[WARN]') || line.startsWith('[FAIL]')).length
 }
 
+// The volumes of a book made chapter by chapter (owner decision D346), as the
+// chapter indexes of each: runs of consecutive chapters, in order. A volume has
+// its 3 front pages, its chapters and their answers, at most `limit` pages.
+// The fewest volumes come first; then the page ceiling is lowered as far as it
+// can be without another volume, so the volumes are as even as the chapters
+// allow. A short last volume joins the one before when that still fits.
+// tooLong is the number of a chapter that, with its answers, fits no volume.
+function planVolumes(chapterPages: number[], answerPages: number[], limit = KDP_MAX_PAGES): { volumes: number[][] } | { tooLong: number } {
+  const cost = chapterPages.map((pages, i) => pages + (answerPages[i] ?? 0))
+  const tooLong = cost.findIndex(pages => FRONT_PAGES + pages > limit)
+  if (tooLong >= 0) return { tooLong: tooLong + 1 }
+  const split = (ceiling: number) => {
+    const volumes: number[][] = []
+    let size = Infinity
+    cost.forEach((pages, i) => {
+      if (size + pages > ceiling) { volumes.push([]); size = FRONT_PAGES }
+      volumes[volumes.length - 1].push(i)
+      size += pages
+    })
+    return volumes
+  }
+  const fewest = split(limit).length
+  let low = FRONT_PAGES + Math.max(0, ...cost)
+  let high = limit
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2)
+    if (split(middle).length <= fewest) high = middle
+    else low = middle + 1
+  }
+  const volumes = split(low)
+  const pagesOf = (volume: number[]) => FRONT_PAGES + volume.reduce((sum, i) => sum + cost[i], 0)
+  if (volumes.length > 1) {
+    const last = volumes[volumes.length - 1]
+    const before = volumes[volumes.length - 2]
+    if (pagesOf(last) < KDP_MIN_PAGES && pagesOf(before) + pagesOf(last) - FRONT_PAGES <= limit) {
+      volumes.pop()
+      before.push(...last)
+    }
+  }
+  return { volumes }
+}
+
+// Whether every font of a PDF is embedded, as KDP asks (owner decision D346):
+// each font's descriptor holds its font file; a Type 0 font is judged by its
+// descendant fonts; a Type 3 font draws its own glyphs. false when the PDF
+// cannot be read.
+async function fontsEmbedded(bytes: Uint8Array): Promise<boolean> {
+  try {
+    const { PDFDocument, PDFDict, PDFName, PDFArray } = await import('pdf-lib')
+    const doc = await PDFDocument.load(bytes)
+    const embedded = (font: any): boolean => {
+      const subtype = font.lookup(PDFName.of('Subtype'))
+      if (subtype === PDFName.of('Type3')) return true
+      if (subtype === PDFName.of('Type0')) {
+        const kids = font.lookup(PDFName.of('DescendantFonts'))
+        return kids instanceof PDFArray && kids.size() > 0 &&
+          kids.asArray().every(kid => { const d = doc.context.lookup(kid); return d instanceof PDFDict && embedded(d) })
+      }
+      const descriptor = font.lookup(PDFName.of('FontDescriptor'))
+      return descriptor instanceof PDFDict && ['FontFile', 'FontFile2', 'FontFile3'].some(key => descriptor.has(PDFName.of(key)))
+    }
+    return doc.context.enumerateIndirectObjects().every(([, object]) =>
+      !(object instanceof PDFDict) || object.lookup(PDFName.of('Type')) !== PDFName.of('Font') || embedded(object))
+  } catch {
+    return false
+  }
+}
+
+// The KDP checks of the server's check report (buildPreflight in the generate
+// route), with its sentences, for one book or volume made chapter by chapter.
+async function kdpLines(interior: Uint8Array, cover: Uint8Array, pageCount: number): Promise<string[]> {
+  const line = (pass: boolean, name: string, detail: string) => (pass ? '[PASS] ' : '[FAIL] ') + name + ' - ' + detail
+  const embedded = (await fontsEmbedded(interior)) && (await fontsEmbedded(cover))
+  const pagesOk = pageCount >= KDP_MIN_PAGES && pageCount <= KDP_MAX_PAGES
+  const spineIn   = Math.max(pageCount * 0.002252, 0.5)
+  const expectedW = (6.125 * 2 + spineIn) * 72
+  const expectedH = 9.25 * 72
+  let coverW = 0
+  let coverH = 0
+  try {
+    const { PDFDocument } = await import('pdf-lib')
+    const box = (await PDFDocument.load(cover)).getPage(0).getMediaBox()
+    coverW = box.width
+    coverH = box.height
+  } catch {
+    // An unreadable cover measures 0 x 0, as on the server.
+  }
+  const coverOk   = Math.abs(coverW - expectedW) < 1 && Math.abs(coverH - expectedH) < 1
+  return [
+    line(embedded, 'Fonts embedded', embedded ? 'Liberation Sans embedded in interior and cover' : 'Non-embedded font detected - KDP may reject'),
+    line(pagesOk, 'Page count', pageCount + ' pages (KDP limit 24-828)'),
+    line(coverOk, 'Cover dimensions', coverW.toFixed(2) + ' x ' + coverH.toFixed(2) + ' pts (expected ' + expectedW.toFixed(2) + ' x ' + expectedH.toFixed(2) + ', spine ' + spineIn.toFixed(3) + 'in)'),
+  ]
+}
+
 // The same for the check report in a ZIP made by the server, whose files are
 // stored one after the other, not compressed. 0 when it cannot be read.
 async function countZipReportItems(zip: Blob): Promise<number> {
@@ -205,6 +312,7 @@ export default function AbPressPage() {
   const [genError,    setGenError]    = useState('')
   const [downloadUrl,    setDownloadUrl]    = useState('')
   const [reportItems,    setReportItems]    = useState(0)
+  const [reportVolumes,  setReportVolumes]  = useState(1)
   const [wordUrl,        setWordUrl]        = useState('')
   const [exportingWord,  setExportingWord]  = useState(false)
   const [wordError,      setWordError]      = useState('')
@@ -229,7 +337,7 @@ export default function AbPressPage() {
 
   // A file that was made belongs to the choices it was made with.
   const clearMade = () => {
-    setDownloadUrl(''); setReportItems(0); setGenError(''); setWordUrl(''); setWordError('')
+    setDownloadUrl(''); setReportItems(0); setReportVolumes(1); setGenError(''); setWordUrl(''); setWordError('')
   }
 
   const handleCourseSelect = (e: any) => {
@@ -311,7 +419,7 @@ export default function AbPressPage() {
 
   // Large courses (> 50 articles): chapter-by-chapter orchestration.
   // Each chapter is rendered by its own short-lived serverless call
-  // (generate-chapter, maxDuration 60s), avoiding the single 300s call
+  // (generate-chapter, maxDuration 300 s), avoiding the single 300s call
   // that was timing out on large courses. Frontmatter (title + copyright +
   // TOC) is rendered last, once every chapter's real page count is known,
   // so the TOC gets exact page numbers. All PDFs are merged client-side
@@ -328,10 +436,11 @@ export default function AbPressPage() {
       const chapterPageCounts: number[] = []
       const chapterQuestionOffsets: number[] = []
       const chapterQuestionCounts: number[] = []
-      const missingSets: string[] = []
-      const noAnswerSets: string[] = []
-      const missingOptionSets: string[] = []
-      const unpublished: string[] = []
+      // What each chapter reports, so each volume reports its own chapters.
+      const missingSetsOf: string[][] = []
+      const noAnswerSetsOf: string[][] = []
+      const missingOptionSetsOf: string[][] = []
+      const unpublishedOf: string[][] = []
       let questionNumberOffset = 0
 
       // Every part must come from the course as the preview showed it. A part
@@ -361,19 +470,20 @@ export default function AbPressPage() {
         chapterPdfs.push(pdfBytes)
         chapterPageCounts.push(data.pageCount)
         chapterQuestionCounts.push(data.questionCount)
-        missingSets.push(...data.missingSets)
-        noAnswerSets.push(...data.noAnswerSets)
-        missingOptionSets.push(...data.missingOptionSets)
-        unpublished.push(...data.unpublished)
+        missingSetsOf.push([...data.missingSets])
+        noAnswerSetsOf.push([...data.noAnswerSets])
+        missingOptionSetsOf.push([...data.missingOptionSets])
+        unpublishedOf.push([...data.unpublished])
         questionNumberOffset += data.questionCount ?? 0
       }
 
       // 2. Render answers section chapter by chapter if needed. Each call is
       // scoped to one chapter (same pattern as generate-chapter above) so a
-      // large course's full answer key doesn't blow the 60s render budget in
+      // large course's full answer key doesn't blow the 300 s render budget in
       // one request; a chapter with no questions comes back with pdf: null
       // and is skipped from the merge.
-      const answerChapterPdfs: Uint8Array[] = []
+      const answerPdfOf: (Uint8Array | null)[] = chapterPdfs.map(() => null)
+      const answerPageCounts: number[] = chapterPdfs.map(() => 0)
       if (bookType === 'combined' || bookType === 'practice') {
         for (let i = 0; i < chapterCount; i++) {
           setGenerationPhase(`Rendering answers ${i + 1} of ${chapterCount}...`)
@@ -390,15 +500,40 @@ export default function AbPressPage() {
           if (data.chapterCount !== chapterCount || !sameCourse(data)) throw new Error(COURSE_CHANGED)
           if (data.questionCount !== chapterQuestionCounts[i]) throw new Error(ANSWERS_DIFFER(i + 1))
           if (data.pdf) {
-            answerChapterPdfs.push(Uint8Array.from(atob(data.pdf), c => c.charCodeAt(0)))
+            answerPdfOf[i] = Uint8Array.from(atob(data.pdf), c => c.charCodeAt(0))
+            answerPageCounts[i] = data.pageCount ?? 0
           }
         }
       }
 
-      // 3. Compute chapter page starts (cumulative, offset by 3 frontmatter pages)
+      // Volumes (owner decision D346): a book of 828 pages or fewer is one
+      // volume and is made as before; a longer one is made as several, each
+      // with its own front pages, interior, cover, metadata and check report.
+      const plan = planVolumes(chapterPageCounts, answerPageCounts)
+      if ('tooLong' in plan) throw new Error(CHAPTER_TOO_LONG(plan.tooLong))
+      const volumes = plan.volumes.length > 1 ? plan.volumes : [chapterPdfs.map((_, i) => i)]
+      if (volumes.length > 1) setGenerationPhase(SPLITTING(volumes.length))
+      const zipFiles: { name: string; data: Uint8Array }[] = []
+      let reportItemCount = 0
+
+      // The font of the page numbers, fetched once for every volume (D346).
+      const fontRes = await adminFetch(PAGE_NUMBER_FONT, undefined, { expect: 'file' })
+      if (!fontRes.ok) throw new Error(bookError(fontRes, (await fontRes.json()).error || FONT_FAILED))
+      const fontBytes = new Uint8Array(await (await fontRes.blob()).arrayBuffer())
+
+      // Steps 3 to 7 run once per volume. They keep their former indent so
+      // that only what changed shows.
+      for (let v = 0; v < volumes.length; v++) {
+      const volumeChapters = volumes[v]
+      const volume = volumes.length > 1 ? { x: v + 1, n: volumes.length } : null
+      const fileName = (name: string) => (volume ? `volume-${volume.x}-${name}` : name)
+      const answerChapterPdfs = volumeChapters.map(i => answerPdfOf[i]).filter((pdf): pdf is Uint8Array => pdf !== null)
+
+      // 3. Compute chapter page starts (cumulative, offset by 3 frontmatter pages),
+      // counted from 1 inside the volume
       const chapterPageStarts: number[] = []
       let pageAcc = 4 // pages 1-3 = frontmatter, chapter 1 starts on page 4
-      for (const count of chapterPageCounts) {
+      for (const count of volumeChapters.map(i => chapterPageCounts[i])) {
         chapterPageStarts.push(pageAcc)
         pageAcc += count
       }
@@ -415,7 +550,9 @@ export default function AbPressPage() {
           slug: slug.trim(), bookType, edition, subtitle,
           chapterPageStarts, totalPages: totalInteriorPages, answersPageStart,
           // Sent only for a book without answers.
-          ...(noAnswersPart ? { hasAnswers: false } : {})
+          ...(noAnswersPart ? { hasAnswers: false } : {}),
+          // Sent only for a book of several volumes.
+          ...(volume ? { volume, chapters: volumeChapters } : {})
         })
       })
       const fmData = await fmRes.json()
@@ -425,10 +562,12 @@ export default function AbPressPage() {
 
       // 5. Merge all PDFs using pdf-lib (client-side)
       setGenerationPhase('Merging PDF pages...')
-      const { PDFDocument, StandardFonts, rgb } = await import('pdf-lib')
+      const { PDFDocument, rgb } = await import('pdf-lib')
+      const fontkit = (await import('@pdf-lib/fontkit')).default
       const mergedDoc = await PDFDocument.create()
+      mergedDoc.registerFontkit(fontkit)
 
-      const allPdfs = [frontmatterPdf, ...chapterPdfs, ...answerChapterPdfs]
+      const allPdfs = [frontmatterPdf, ...volumeChapters.map(i => chapterPdfs[i]), ...answerChapterPdfs]
 
       for (const pdfBytes of allPdfs) {
         const srcDoc = await PDFDocument.load(pdfBytes)
@@ -444,8 +583,9 @@ export default function AbPressPage() {
       // after the merge, when the final page index is known.
       // Frontmatter = pages 1-3 (title, copyright, TOC) — no page number.
       // Pages 4+ get their sequential number at bottom-right, matching
-      // the Practice Kit's s.pageNum position (MO=36pt, y=18pt, 8pt grey).
-      const helvetica = await mergedDoc.embedFont(StandardFonts.Helvetica)
+      // the Practice Kit's s.pageNum position (MO=36pt, y=18pt, 8pt grey),
+      // in Liberation Sans embedded as a subset (owner decision D346).
+      const pageFont = await mergedDoc.embedFont(fontBytes, { subset: true })
       const FRONTMATTER_PAGES = 3
       for (let i = FRONTMATTER_PAGES; i < mergedDoc.getPageCount(); i++) {
         const pdfPage = mergedDoc.getPage(i)
@@ -454,7 +594,7 @@ export default function AbPressPage() {
           x: width - 36,
           y: 18,
           size: 8,
-          font: helvetica,
+          font: pageFont,
           color: rgb(0.6, 0.6, 0.6),
         })
       }
@@ -468,24 +608,38 @@ export default function AbPressPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           slug: slug.trim(), bookType, edition, subtitle,
-          pageCount: mergedDoc.getPageCount()
+          pageCount: mergedDoc.getPageCount(),
+          // Sent only for a book of several volumes.
+          ...(volume ? { volume } : {})
         })
       })
       const coverData = await coverRes.json()
       if (!coverRes.ok || coverData.error) throw new Error(bookError(coverRes, coverData.error || 'Cover render failed'))
       const coverPdf = Uint8Array.from(atob(coverData.pdf), c => c.charCodeAt(0))
 
-      // 7. Build ZIP client-side
+      // 7. The files of the volume, for the ZIP
+      const ofVolume = (lists: string[][]) => volumeChapters.flatMap(i => lists[i])
+      // The check report, then the server's KDP checks (owner decision D346).
+      const checkReport = [
+        buildCheckReport(ofVolume(missingSetsOf), ofVolume(noAnswerSetsOf), ofVolume(missingOptionSetsOf), ofVolume(unpublishedOf)),
+        ...(await kdpLines(interiorPdf, coverPdf, mergedDoc.getPageCount())),
+      ].join('\n')
+      const title = subtitle || preview.course.title
+      zipFiles.push(
+        { name: fileName('interior.pdf'), data: interiorPdf },
+        { name: fileName('cover.pdf'),    data: coverPdf },
+        { name: fileName('metadata.txt'), data: new TextEncoder().encode(buildMetadata(volume ? VOLUME_TITLE(title, volume.x, volume.n) : title, bookType, edition, preview.course)) },
+        { name: fileName('preflight-report.txt'), data: new TextEncoder().encode(checkReport) },
+      )
+      reportItemCount += countReportItems(checkReport)
+      }
+
+      // Build ZIP client-side
       setGenerationPhase('Building ZIP...')
-      const checkReport = buildCheckReport(missingSets, noAnswerSets, missingOptionSets, unpublished)
-      const zipBytes = buildZip([
-        { name: 'interior.pdf', data: interiorPdf },
-        { name: 'cover.pdf',    data: coverPdf },
-        { name: 'metadata.txt', data: new TextEncoder().encode(buildMetadata(subtitle || preview.course.title, bookType, edition, preview.course)) },
-        { name: 'preflight-report.txt', data: new TextEncoder().encode(checkReport) },
-      ])
+      const zipBytes = buildZip(zipFiles)
       const blob = new Blob([zipBytes as any], { type: 'application/zip' })
-      setReportItems(countReportItems(checkReport))
+      setReportItems(reportItemCount)
+      setReportVolumes(volumes.length)
       setDownloadUrl(URL.createObjectURL(blob))
 
     } catch (err: any) {
@@ -836,7 +990,7 @@ export default function AbPressPage() {
                   {generating ? 'Generating PDF — please wait...' : 'Generate Book'}
                 </button>
               )}
-              {downloadUrl && reportItems > 0 ? <p className="text-red-400 text-xs mt-2">{REPORT_ITEMS(reportItems)}</p> : null}
+              {downloadUrl && reportItems > 0 ? <p className="text-red-400 text-xs mt-2">{reportVolumes > 1 ? REPORT_ITEMS_VOLUMES(reportVolumes, reportItems) : REPORT_ITEMS(reportItems)}</p> : null}
               {wordError ? <p className="text-red-400 text-xs mt-2">{wordError}</p> : null}
               {wordUrl ? (
                 <a

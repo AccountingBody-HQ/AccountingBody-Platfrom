@@ -2,10 +2,13 @@ import { createHash } from 'node:crypto'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { NextRequest } from 'next/server'
+import { createElement } from 'react'
+import fontkit from '@pdf-lib/fontkit'
 import * as pdfLib from 'pdf-lib'
 import ts from 'typescript'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FrontmatterTemplate } from '@/components/book/FrontmatterTemplate'
+import { FullCoverTemplate } from '@/components/book/FullCoverTemplate'
 import { ARTICLES_READ_FAILED, buildCourse, courseKey, EMPTY_COURSE, missingOptionLine, noAnswerLine, READ_FAILED, unpublishedLine, type BuildStats } from './ab-press-builder'
 import { adminFetch, type AdminFetchOptions } from './admin-fetch'
 import { TEST_ADMIN_SECRET, TEST_SESSION_SECRET, signTestSession } from './admin-session-fixtures'
@@ -1342,10 +1345,13 @@ class Screen {
   private cursor = 0
   private effects: (() => void)[] = []
   private component: () => Element
+  // Functions of the page itself, when it has them (owner decision D346).
+  inner: Record<string, ((...args: never[]) => unknown) | undefined> = {}
 
-  constructor() {
-    const source = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
-    const { outputText } = ts.transpileModule(source, {
+  // `edit` changes the page's text before it runs: for a test only.
+  constructor(edit: (source: string) => string = (source) => source) {
+    const source = edit(readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8'))
+    const { outputText: moduleText } = ts.transpileModule(source, {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
     })
     const element = (type: unknown, props: Record<string, unknown>): Element => ({ type, props })
@@ -1360,18 +1366,22 @@ class Screen {
       },
       'react/jsx-runtime': { jsx: element, jsxs: element, Fragment: 'fragment' },
       'pdf-lib': pdfLib,
+      '@pdf-lib/fontkit': { __esModule: true, default: fontkit },
       '@/lib/admin-fetch': {
         adminFetch: (url: string, init?: RequestInit, options?: AdminFetchOptions) => (this.realFetch ? adminFetch(url, init, options) : this.fetch(url, init)),
       },
     }
-    const made: { exports: { default?: () => Element } } = { exports: {} }
+    const names = ['planVolumes', 'fontsEmbedded', 'kdpLines']
+    const outputText = `${moduleText}\nmodule.exports.__inner = { ${names.map((name) => `${name}: typeof ${name} === 'undefined' ? undefined : ${name}`).join(', ')} }\n`
+    const made: { exports: { default?: () => Element; __inner?: Screen['inner'] } } = { exports: {} }
     new Function('require', 'module', 'exports', outputText)((name: string) => modules[name], made, made.exports)
     if (!made.exports.default) throw new Error('no page')
     this.component = made.exports.default
+    this.inner = made.exports.__inner ?? {}
   }
 
   private async answer(url: string, init?: RequestInit): Promise<Answer> {
-    const name = /\/([a-z-]+)(\?.*)?$/.exec(url)?.[1] ?? ''
+    const name = url.startsWith('/fonts/') ? 'font' : /\/([a-z-]+)(\?.*)?$/.exec(url)?.[1] ?? ''
     const body = init?.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : null
     this.calls.push({ name, body })
     const answer = this.answers[name]?.(body ?? {}) ?? { status: 404, body: { error: 'no answer' } }
@@ -1472,32 +1482,35 @@ class Screen {
   }
 }
 
-async function pdfOf(pages: number, width = 432): Promise<string> {
+async function pdfOf(pages: number, width = 432, height = 648): Promise<string> {
   const made = await pdfLib.PDFDocument.create()
-  for (let i = 0; i < pages; i++) made.addPage([width, 648])
+  for (let i = 0; i < pages; i++) made.addPage([width, height])
   return Buffer.from(await made.save()).toString('base64')
 }
+
+const PAGE_FONT = readFileSync(join(ROOT, 'public', 'fonts', 'LiberationSans-Regular.ttf'))
 
 // A screen for a course of three chapters, made chapter by chapter.
 const CHAPTER_PAGES = [5, 2, 7]
 const ANSWER_PAGES = [3, 0, 4]
 const QUESTIONS = [6, 0, 9]
 
-async function screen(): Promise<Screen> {
+// The pages and questions of each chapter can be given (owner decision D346).
+async function screen({ chapterPages = CHAPTER_PAGES, answerPages = ANSWER_PAGES, questions = QUESTIONS } = {}): Promise<Screen> {
   const made = new Screen()
   vi.spyOn(URL, 'createObjectURL').mockImplementation((file) => {
     made.files.push(file as Blob)
     return `blob:${made.files.length}`
   })
   const pdfs = new Map<number, string>()
-  for (const pages of [...CHAPTER_PAGES, 1, 3]) pdfs.set(pages, await pdfOf(pages))
+  for (const pages of [...chapterPages, 1, 3]) pdfs.set(pages, await pdfOf(pages))
   // The pages of the answers are narrower, so they can be told apart.
-  const answerPdfs = await Promise.all(ANSWER_PAGES.map((pages) => (pages ? pdfOf(pages, 400) : null)))
+  const answerPdfs = await Promise.all(answerPages.map((pages) => (pages ? pdfOf(pages, 400) : null)))
   made.answers = {
     'load-course': () => ({ body: { courses: ['first', 'second'].map((slug) => ({ _id: slug, slug, title: `Title ${slug}` })) } }),
     preview: () => ({
       body: {
-        course: { title: 'Course', slug: 'first', chapters: CHAPTER_PAGES.map((_, i) => ({ _key: i, chapterTitle: `C${i}`, lessons: [] })) },
+        course: { title: 'Course', slug: 'first', chapters: chapterPages.map((_, i) => ({ _key: i, chapterTitle: `C${i}`, lessons: [] })) },
         courseKey: courseKey(planned(PLAN)),
         stats: { chapterCount: 3, lessonCount: 3, articleCount: 60, questionCount: 15, questionCountError: false },
         health: { verdict: 'ready', emptyArticles: 0, articlesWithWebElements: 0, totalWebElementsRemoved: 0, mcqLinked: 2, emptyList: [], webWarningDetails: [] },
@@ -1505,19 +1518,26 @@ async function screen(): Promise<Screen> {
       },
     }),
     'generate-chapter': ({ chapterIndex: at }) => ({
-      body: { pdf: pdfs.get(CHAPTER_PAGES[at as number]), pageCount: CHAPTER_PAGES[at as number], chapterCount: 3, courseKey: courseKey(planned(PLAN)), questionCount: QUESTIONS[at as number], missingSets: [], noAnswerSets: [], missingOptionSets: [], unpublished: [] },
+      body: { pdf: pdfs.get(chapterPages[at as number]), pageCount: chapterPages[at as number], chapterCount: chapterPages.length, courseKey: courseKey(planned(PLAN)), questionCount: questions[at as number], missingSets: [], noAnswerSets: [], missingOptionSets: [], unpublished: [] },
     }),
     'generate-answers': ({ chapterIndex: at }) => ({
       body: {
         pdf: answerPdfs[at as number],
-        pageCount: ANSWER_PAGES[at as number],
-        chapterCount: 3,
+        pageCount: answerPages[at as number],
+        chapterCount: chapterPages.length,
         courseKey: courseKey(planned(PLAN)),
-        questionCount: QUESTIONS[at as number],
+        questionCount: questions[at as number],
       },
     }),
     'generate-frontmatter': () => ({ body: { pdf: pdfs.get(3), courseKey: courseKey(planned(PLAN)) } }),
-    'generate-cover': () => ({ body: { pdf: pdfs.get(1) ?? '' } }),
+    // A cover of the size KDP asks for the book's pages (owner decision D346).
+    'generate-cover': ({ pageCount }) => {
+      const body: { pdf?: string } = {}
+      const spine = Math.max(Number(pageCount) * 0.002252, 0.5)
+      return { body, wait: pdfOf(1, (6.125 * 2 + spine) * 72, 9.25 * 72).then((pdf) => void (body.pdf = pdf)) }
+    },
+    // The page-number font, from the site's own folder (owner decision D346).
+    font: () => ({ file: new Uint8Array(PAGE_FONT) }),
     generate: () => ({ file: 'zip' }),
     'generate-pq': () => ({ file: 'zip' }),
     'export-word': () => ({ file: 'word' }),
@@ -1771,7 +1791,8 @@ describe('the line under the download button', () => {
     const page = await screen()
     await page.open()
     await page.generate()
-    expect(line(page)).toBe(null)
+    // The study book has 3 + 5 + 2 + 7 = 17 pages: below KDP's 24 (D346).
+    expect(line(page)).toBe(LINE(1))
     spoil(page, 'generate-chapter', 0, { missingSets: ['x', 'y'], unpublished: ['u'] })
     spoil(page, 'generate-chapter', 2, { missingOptionSets: ['m'] })
     page.change(page.radio('combined'), 'combined')
@@ -1847,6 +1868,10 @@ describe('the screen of a book made chapter by chapter', () => {
       noAnswerLine([]),
       missingOptionLine([]),
       unpublishedLine([]),
+      // The server's KDP checks (owner decision D346); the study book has 17 pages.
+      '[PASS] Fonts embedded - Liberation Sans embedded in interior and cover',
+      '[FAIL] Page count - 17 pages (KDP limit 24-828)',
+      '[PASS] Cover dimensions - 918.00 x 666.00 pts (expected 918.00 x 666.00, spine 0.500in)',
     ])
     spoil(page, 'generate-chapter', 0, { missingSets: ['x', 'y'], noAnswerSets: ['s', 's'], missingOptionSets: ['m'], unpublished: ['u', 'v'] })
     spoil(page, 'generate-chapter', 2, { missingSets: ['x'], noAnswerSets: ['t'], missingOptionSets: ['n', 'm'], unpublished: ['u'] })
@@ -1859,6 +1884,9 @@ describe('the screen of a book made chapter by chapter', () => {
       noAnswerLine(['s', 's', 't']),
       missingOptionLine(['m', 'n', 'm']),
       unpublishedLine(['u', 'v', 'u']),
+      '[PASS] Fonts embedded - Liberation Sans embedded in interior and cover',
+      '[PASS] Page count - 24 pages (KDP limit 24-828)',
+      '[PASS] Cover dimensions - 918.00 x 666.00 pts (expected 918.00 x 666.00, spine 0.500in)',
     ])
   })
 
@@ -2099,7 +2127,798 @@ describe('a request that the platform stops for time', () => {
     const source = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
     expect(source).toContain(`const TIMED_OUT = '${TIMED_OUT}'\n`)
     const requests = source.split(/\badminFetch\(/).slice(1)
-    expect(requests).toHaveLength(9)
+    // 10 since the page-number font is fetched (owner decision D346).
+    expect(requests).toHaveLength(10)
     for (const request of requests) expect(request.split(/\bbookError\(/)).toHaveLength(2)
+  })
+})
+
+// ── Owner decision D346: volumes, embedded page numbers, KDP checks ─────────
+describe('a book of one volume is made as before (D346)', () => {
+  // What the screen sends and zips, without the parts V2 and V3 change (the
+  // page-number font and the new check lines) and without the clock.
+  const fingerprint = async (bookType: string) => {
+    const page = await screen()
+    const covers: Answer[] = []
+    const cover = page.answers['generate-cover']
+    page.answers['generate-cover'] = (body) => {
+      covers.push(cover(body))
+      return covers[covers.length - 1]
+    }
+    await page.open()
+    page.change(page.radio(bookType), bookType)
+    await page.generate()
+    const files = await page.zip()
+    const text = (name: string) => files[name].toString('utf8').replace(/^Generated: .*$/m, 'Generated: NOW').replace(/^Year: .*$/m, 'Year: YEAR')
+    return sha(JSON.stringify({
+      calls: page.calls.filter((call) => call.name !== 'font'),
+      names: Object.keys(files),
+      links: page.links(),
+      metadata: text('metadata.txt'),
+      report: text('preflight-report.txt').split('\n').slice(0, 6),
+      pages: (await pdfLib.PDFDocument.load(new Uint8Array(files['interior.pdf']))).getPages().map((p) => [p.getWidth(), p.getHeight()]),
+      // The cover is zipped as the route gave it (its bytes carry a clock).
+      cover: covers.length === 1 && files['cover.pdf'].toString('base64') === (covers[0].body as { pdf: string }).pdf,
+    }))
+  }
+  it.each<[string, string]>([
+    // Taken from the code before owner decision D346.
+    ['combined', '78a02b84ddccf969'],
+    ['study', '6dabd6125d4b3346'],
+  ])('%s: the same requests, files and texts as before', async (bookType, before) => {
+    expect(await fingerprint(bookType)).toBe(before)
+  })
+})
+
+// Every font of a PDF, as pdffonts lists them: its name, its kind and whether
+// its file is in the PDF. A Type 0 font is listed through its descendants.
+async function fontsOf(bytes: Uint8Array): Promise<{ name: string; kind: string; embedded: boolean }[]> {
+  const { PDFDict, PDFName, PDFArray } = pdfLib
+  const doc = await pdfLib.PDFDocument.load(bytes)
+  const name = (dict: pdfLib.PDFDict, key: string) => String(dict.lookup(PDFName.of(key)) ?? '').replace(/^\//, '')
+  const found: { name: string; kind: string; embedded: boolean }[] = []
+  for (const [, object] of doc.context.enumerateIndirectObjects()) {
+    if (!(object instanceof PDFDict) || name(object, 'Type') !== 'Font') continue
+    const kind = name(object, 'Subtype')
+    if (kind === 'Type0') {
+      const kids = object.lookup(PDFName.of('DescendantFonts'))
+      expect(kids).toBeInstanceOf(PDFArray)
+      continue
+    }
+    const descriptor = object.lookup(PDFName.of('FontDescriptor'))
+    const embedded = kind === 'Type3' || (descriptor instanceof PDFDict && ['FontFile', 'FontFile2', 'FontFile3'].some((key) => descriptor.has(PDFName.of(key))))
+    found.push({ name: name(object, 'BaseFont'), kind, embedded })
+  }
+  return found
+}
+
+// The page-number drawing of each page from the 4th: its colour, font size and
+// place, read from the page's content stream.
+async function numbersOf(bytes: Uint8Array): Promise<string[]> {
+  const doc = await pdfLib.PDFDocument.load(bytes)
+  return doc.getPages().slice(3).map((made) => {
+    const contents = made.node.Contents()
+    const streams = contents instanceof pdfLib.PDFArray ? contents.asArray().map((ref) => doc.context.lookup(ref)) : [contents]
+    const text = streams
+      .map((stream) => (stream instanceof pdfLib.PDFRawStream ? Buffer.from(pdfLib.decodePDFRawStream(stream).decode()).toString('latin1') : ''))
+      .join('\n')
+    const drawn = /BT\n(\S+ \S+ \S+ rg)\n\/\S+ (\S+) Tf\n\S+ TL\n(\S+ \S+ \S+ \S+ \S+ \S+) Tm\n<([0-9A-Fa-f]*)> Tj\nT\*\nET/.exec(text)
+    return drawn ? `${drawn[1]}|${drawn[2]}|${drawn[3]}|${drawn[4].length > 0}` : 'none'
+  })
+}
+
+// Where each text of one drawn page sits across the page, in points from the
+// left edge, read exactly from the page's content stream: the position is the
+// text matrix (Tm) times every transformation (cm) in force, and the width is
+// the sum of the embedded font's own glyph widths (its /W array) at the size
+// set by Tf, plus the spacing numbers inside TJ. The words come from the
+// font's ToUnicode map.
+async function textsAcross(bytes: Uint8Array, pageIndex: number): Promise<{ words: string; left: number; right: number }[]> {
+  const { PDFArray, PDFDict, PDFName, PDFNumber, PDFRawStream, decodePDFRawStream } = pdfLib
+  const doc = await pdfLib.PDFDocument.load(bytes)
+  const page = doc.getPage(pageIndex)
+  const decode = (stream: unknown) => (stream instanceof PDFRawStream ? Buffer.from(decodePDFRawStream(stream).decode()).toString('latin1') : '')
+  // Each font of the page: its glyph widths and the text of each glyph.
+  const fonts = new Map<string, { widths: Map<number, number>; fallback: number; unicode: Map<number, string> }>()
+  const fontDict = page.node.Resources()?.lookup(PDFName.of('Font'), PDFDict)
+  for (const [key, ref] of fontDict ? fontDict.entries() : []) {
+    const font = doc.context.lookup(ref, PDFDict)
+    const kid = font.lookup(PDFName.of('DescendantFonts'), PDFArray).lookup(0, PDFDict)
+    const widths = new Map<number, number>()
+    const w = kid.lookup(PDFName.of('W'))
+    const items = w instanceof PDFArray ? w.asArray().map((item) => doc.context.lookup(item) ?? item) : []
+    for (let i = 0; i < items.length; ) {
+      const first = (items[i] as pdfLib.PDFNumber).asNumber()
+      const next = items[i + 1]
+      if (next instanceof PDFArray) {
+        next.asArray().forEach((width, at) => widths.set(first + at, (width as pdfLib.PDFNumber).asNumber()))
+        i += 2
+      } else {
+        const last = (next as pdfLib.PDFNumber).asNumber()
+        for (let gid = first; gid <= last; gid++) widths.set(gid, (items[i + 2] as pdfLib.PDFNumber).asNumber())
+        i += 3
+      }
+    }
+    const dw = kid.lookup(PDFName.of('DW'))
+    const unicode = new Map<number, string>()
+    const hexText = (hex: string) => String.fromCodePoint(...(hex.match(/.{4}/g) ?? []).map((unit) => parseInt(unit, 16)))
+    const cmap = decode(font.lookup(PDFName.of('ToUnicode')))
+    for (const block of cmap.match(/beginbfrange[\s\S]*?endbfrange/g) ?? []) {
+      for (const row of Array.from(block.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>\s*(\[[^\]]*\]|<[0-9a-fA-F]+>)/g))) {
+        const start = parseInt(row[1], 16)
+        const end = parseInt(row[2], 16)
+        if (row[3].startsWith('[')) {
+          (row[3].match(/<([0-9a-fA-F]+)>/g) ?? []).forEach((dest: string, at: number) => unicode.set(start + at, hexText(dest.slice(1, -1))))
+        } else {
+          const base = parseInt(row[3].slice(1, -1), 16)
+          for (let gid = start; gid <= end; gid++) unicode.set(gid, String.fromCodePoint(base + gid - start))
+        }
+      }
+    }
+    for (const block of cmap.match(/beginbfchar[\s\S]*?endbfchar/g) ?? []) {
+      for (const row of Array.from(block.matchAll(/<([0-9a-fA-F]+)>\s*<([0-9a-fA-F]+)>/g))) unicode.set(parseInt(row[1], 16), hexText(row[2]))
+    }
+    fonts.set(key.asString().slice(1), { widths, fallback: dw instanceof PDFNumber ? dw.asNumber() : 1000, unicode })
+  }
+  const contents = page.node.Contents()
+  const streams = contents instanceof PDFArray ? contents.asArray().map((ref) => doc.context.lookup(ref)) : [contents]
+  const text = streams.map(decode).join('\n')
+  expect(text).not.toMatch(/\((?:[^)\\]|\\.)*\)\s*T[jJ]/)
+  type Matrix = [number, number, number, number, number, number]
+  const times = (m: Matrix, n: Matrix): Matrix => [
+    m[0] * n[0] + m[1] * n[2], m[0] * n[1] + m[1] * n[3],
+    m[2] * n[0] + m[3] * n[2], m[2] * n[1] + m[3] * n[3],
+    m[4] * n[0] + m[5] * n[2] + n[4], m[4] * n[1] + m[5] * n[3] + n[5],
+  ]
+  let ctm: Matrix = [1, 0, 0, 1, 0, 0]
+  const saved: Matrix[] = []
+  let tm: Matrix = [1, 0, 0, 1, 0, 0]
+  let font = ''
+  let size = 0
+  let operands: (number | string | (number | string)[])[] = []
+  let array: (number | string)[] | null = null
+  const found: { words: string; left: number; right: number }[] = []
+  for (const token of text.match(/\[|\]|<[0-9a-fA-F]*>|\/[^\s/[\]<>()]+|[-+]?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?|[A-Za-z'"*]+/g) ?? []) {
+    if (token === '[') { array = []; continue }
+    if (token === ']') { operands.push(array ?? []); array = null; continue }
+    const value = /^[-+.\d]/.test(token) ? Number(token) : token
+    if (array) { array.push(value); continue }
+    if (typeof value === 'number' || token.startsWith('<') || token.startsWith('/')) { operands.push(value); continue }
+    const numbers = operands.filter((item): item is number => typeof item === 'number')
+    if (token === 'q') saved.push(ctm)
+    else if (token === 'Q') ctm = saved.pop() ?? [1, 0, 0, 1, 0, 0]
+    else if (token === 'cm') ctm = times(numbers as Matrix, ctm)
+    else if (token === 'BT') tm = [1, 0, 0, 1, 0, 0]
+    else if (token === 'Tm') tm = numbers as Matrix
+    else if (token === 'Tf') { font = String(operands[0]).slice(1); size = numbers[0] }
+    else if (token === 'Tj' || token === 'TJ') {
+      const glyphs = fonts.get(font)
+      expect(glyphs).toBeDefined()
+      const pieces = token === 'TJ' ? (operands[0] as (number | string)[]) : [operands[0] as string]
+      let advance = 0
+      let words = ''
+      for (const piece of pieces) {
+        if (typeof piece === 'number') { advance -= (piece / 1000) * size; continue }
+        for (const unit of piece.slice(1, -1).match(/.{4}/g) ?? []) {
+          const gid = parseInt(unit, 16)
+          advance += ((glyphs?.widths.get(gid) ?? glyphs?.fallback ?? 1000) / 1000) * size
+          words += glyphs?.unicode.get(gid) ?? '?'
+        }
+      }
+      const at = times(tm, ctm)
+      found.push({ words, left: at[4], right: at[4] + advance * at[0] })
+    }
+    operands = []
+  }
+  return found
+}
+
+describe('the page numbers of a book made chapter by chapter (D346)', () => {
+  const made = async (bookType = 'combined') => {
+    const page = await screen()
+    await page.open()
+    page.change(page.radio(bookType), bookType)
+    await page.generate()
+    return { page, interior: new Uint8Array((await page.zip())['interior.pdf']) }
+  }
+
+  it('are drawn in Liberation Sans, embedded, and no font of the book is left out', async () => {
+    const { page, interior } = await made()
+    expect(await fontsOf(interior)).toEqual([{ name: expect.stringMatching(/^LiberationSans-\d+$/), kind: 'CIDFontType2', embedded: true }])
+    expect(Buffer.from(interior).toString('latin1')).not.toContain('Helvetica')
+    expect(page.calls.filter((call) => call.name === 'font')).toHaveLength(1)
+  })
+
+  it('are drawn where and as before: bottom right, 8 pt, the same grey, from page 4', async () => {
+    const { interior } = await made()
+    // The drawing before D346, word for word, with the font it used then, on
+    // pages of the same sizes.
+    const book = await pdfLib.PDFDocument.load(interior)
+    const blank = await pdfLib.PDFDocument.create()
+    for (const sized of book.getPages()) blank.addPage([sized.getWidth(), sized.getHeight()])
+    const helvetica = await blank.embedFont(pdfLib.StandardFonts.Helvetica)
+    for (let i = 3; i < blank.getPageCount(); i++) {
+      const pdfPage = blank.getPage(i)
+      const { width } = pdfPage.getSize()
+      pdfPage.drawText(String(i + 1), { x: width - 36, y: 18, size: 8, font: helvetica, color: pdfLib.rgb(0.6, 0.6, 0.6) })
+    }
+    const now = await numbersOf(interior)
+    expect(now).toHaveLength(3 + 5 + 2 + 7 + 3 + 4 - 3)
+    expect(now).toEqual(await numbersOf(await blank.save()))
+    expect(now.slice(0, 2)).toEqual(['0.6 0.6 0.6 rg|8|1 0 0 1 396 18|true', '0.6 0.6 0.6 rg|8|1 0 0 1 396 18|true'])
+    expect(new Set(now.slice(-4))).toEqual(new Set(['0.6 0.6 0.6 rg|8|1 0 0 1 364 18|true']))
+  })
+
+  it.each<[string, Answer, string]>([
+    ['an error', { status: 404, body: { error: 'Request failed (404)' } }, 'Request failed (404)'],
+    ['nothing', { status: 500, body: {} }, 'Page number font failed'],
+    ['a time-out', { status: 504, body: {} }, 'The book took too long to make, so nothing was made. Please try again in a minute.'],
+  ])('a font that cannot be fetched (%s) stops the book: nothing is made', async (_name, answer, message) => {
+    const page = await screen()
+    page.answers.font = () => answer
+    await page.open()
+    await page.generate()
+    expect(page.shown).toContain(message)
+    expect(page.links()).toEqual([])
+    expect(page.files).toEqual([])
+    expect(page.calls[page.calls.length - 1].name).toBe('font')
+  })
+
+  it('a font that cannot be read stops the book too', async () => {
+    const page = await screen()
+    page.answers.font = () => ({ file: new Uint8Array([1, 2, 3]) })
+    await page.open()
+    await page.generate()
+    expect(page.links()).toEqual([])
+    expect(page.files).toEqual([])
+  })
+
+  it('the font is the site file, and Helvetica is drawn nowhere in AB Press', () => {
+    const source = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
+    expect(source).toContain(`const PAGE_NUMBER_FONT = '/fonts/LiberationSans-Regular.ttf'\n`)
+    expect(source).toContain(`const FONT_FAILED = 'Page number font failed'\n`)
+    expect(source).toContain('mergedDoc.registerFontkit(fontkit)')
+    expect(source).toContain('await mergedDoc.embedFont(fontBytes, { subset: true })')
+    expect(existsSync(join(ROOT, 'public', 'fonts', 'LiberationSans-Regular.ttf'))).toBe(true)
+    for (const path of FILES) expect([label(path), readFileSync(join(ROOT, path), 'utf8').includes('StandardFonts')]).toEqual([label(path), false])
+  })
+
+  it('the scan finds a font that is not embedded (the page numbers before D346)', async () => {
+    const old = await pdfLib.PDFDocument.create()
+    old.addPage([432, 648]).drawText('4', { x: 396, y: 18, size: 8, font: await old.embedFont(pdfLib.StandardFonts.Helvetica) })
+    expect(await fontsOf(await old.save())).toEqual([{ name: 'Helvetica', kind: 'Type1', embedded: false }])
+  })
+})
+
+// The page numbers drawn on each page from the 4th, read back as text through
+// the font's own character map.
+async function drawnNumbersOf(bytes: Uint8Array): Promise<string[]> {
+  const doc = await pdfLib.PDFDocument.load(bytes)
+  const unicode = new Map<string, string>()
+  for (const [, object] of doc.context.enumerateIndirectObjects()) {
+    if (!(object instanceof pdfLib.PDFDict) || String(object.lookup(pdfLib.PDFName.of('Subtype'))) !== '/Type0') continue
+    const map = object.lookup(pdfLib.PDFName.of('ToUnicode'))
+    if (!(map instanceof pdfLib.PDFRawStream)) continue
+    const text = Buffer.from(pdfLib.decodePDFRawStream(map).decode()).toString('latin1')
+    for (const [, glyph, code] of Array.from(text.matchAll(/<([0-9a-fA-F]+)> <([0-9a-fA-F]+)>/g))) unicode.set(glyph.toLowerCase(), String.fromCharCode(parseInt(code, 16)))
+  }
+  return doc.getPages().slice(3).map((made) => {
+    const contents = made.node.Contents()
+    const streams = contents instanceof pdfLib.PDFArray ? contents.asArray().map((ref) => doc.context.lookup(ref)) : [contents]
+    const text = streams.map((stream) => (stream instanceof pdfLib.PDFRawStream ? Buffer.from(pdfLib.decodePDFRawStream(stream).decode()).toString('latin1') : '')).join('\n')
+    const hex = Array.from(text.matchAll(/<([0-9A-Fa-f]*)> Tj/g)).pop()?.[1] ?? ''
+    return (hex.toLowerCase().match(/.{4}/g) ?? []).map((glyph) => unicode.get(glyph) ?? '?').join('')
+  })
+}
+
+type VolumePlan = { volumes?: number[][]; tooLong?: number }
+let planner: ((c: number[], a: number[], l?: number) => VolumePlan) | null = null
+const planOf = (chapterPages: number[], answerPages: number[], limit?: number): VolumePlan => {
+  planner ??= new Screen().inner.planVolumes as unknown as (c: number[], a: number[], l?: number) => VolumePlan
+  return planner(chapterPages, answerPages, limit)
+}
+const pagesOfPlan = (plan: VolumePlan, chapterPages: number[], answerPages: number[]) =>
+  (plan.volumes ?? []).map((volume) => 3 + volume.reduce((sum, i) => sum + chapterPages[i] + answerPages[i], 0))
+
+// The owner's test book "Financial Accounting" (1,624 pages in one interior
+// today): its chapters' pages, and its 338 answer pages shared out in
+// proportion to the chapters' pages (largest remainder, so they add up).
+const OWNER_CHAPTERS = [301, 120, 231, 191, 182, 220, 38]
+const OWNER_ANSWERS = (() => {
+  const total = OWNER_CHAPTERS.reduce((sum, pages) => sum + pages, 0)
+  const exact = OWNER_CHAPTERS.map((pages) => (338 * pages) / total)
+  const shares = exact.map(Math.floor)
+  const byRemainder = exact.map((value, i) => [value - Math.floor(value), i]).sort((a, b) => b[0] - a[0])
+  const missing = 338 - shares.reduce((sum, pages) => sum + pages, 0)
+  for (let k = 0; k < missing; k++) shares[byRemainder[k][1]] += 1
+  return shares
+})()
+
+describe('the volumes of a long book made chapter by chapter (D346)', { timeout: 120000 }, () => {
+  it("the owner's book: two volumes, chapters 1-3 and 4-7, each within KDP's limits", () => {
+    expect(OWNER_ANSWERS).toEqual([79, 32, 61, 50, 48, 58, 10])
+    expect(3 + OWNER_CHAPTERS.reduce((sum, pages) => sum + pages, 0) + 338).toBe(1624)
+    const plan = planOf(OWNER_CHAPTERS, OWNER_ANSWERS)
+    expect(plan).toEqual({ volumes: [[0, 1, 2], [3, 4, 5, 6]] })
+    expect(pagesOfPlan(plan, OWNER_CHAPTERS, OWNER_ANSWERS)).toEqual([827, 800])
+  })
+
+  it.each<[string, number[], number[], VolumePlan, number[]]>([
+    ['exactly 828 pages: one volume', [500, 325], [0, 0], { volumes: [[0, 1]] }, [828]],
+    ['829 pages: two volumes', [500, 326], [0, 0], { volumes: [[0], [1]] }, [503, 329]],
+    ['the answers count with their chapter', [500, 300], [20, 6], { volumes: [[0], [1]] }, [523, 309]],
+    ['no short last volume where the chapters allow it', [400, 420, 10], [0, 0, 0], { volumes: [[0], [1, 2]] }, [403, 433]],
+    ['a short last volume that cannot be avoided stays', [825, 10], [0, 0], { volumes: [[0], [1]] }, [828, 13]],
+    ['one chapter that alone fills a book', [825], [0], { volumes: [[0]] }, [828]],
+  ])('%s', (_name, chapterPages, answerPages, plan, pages) => {
+    const made = planOf(chapterPages, answerPages)
+    expect(made).toEqual(plan)
+    expect(pagesOfPlan(made, chapterPages, answerPages)).toEqual(pages)
+  })
+
+  it.each<[string, number[], number[], number]>([
+    ['one chapter of 826 pages', [826], [0], 1],
+    ['chapter 2 with its answers', [100, 800, 10], [0, 26, 0], 2],
+  ])('%s is too long for any volume', (_name, chapterPages, answerPages, n) => {
+    expect(planOf(chapterPages, answerPages)).toEqual({ tooLong: n })
+  })
+
+  it('any book: the fewest volumes, chapters in order, every volume within the limit', () => {
+    let seed = 7
+    const random = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648
+    for (let round = 0; round < 300; round++) {
+      const count = 1 + Math.floor(random() * 12)
+      const chapterPages = Array.from({ length: count }, () => 1 + Math.floor(random() * 400))
+      const answerPages = Array.from({ length: count }, () => Math.floor(random() * 60))
+      const plan = planOf(chapterPages, answerPages)
+      const pages = pagesOfPlan(plan, chapterPages, answerPages)
+      expect(plan.volumes?.flat()).toEqual(chapterPages.map((_, i) => i))
+      for (const size of pages) expect(size).toBeLessThanOrEqual(828)
+      // Greedy filling gives the fewest volumes.
+      let greedy = 0
+      let size = Infinity
+      for (let i = 0; i < count; i++) {
+        if (size + chapterPages[i] + answerPages[i] > 828) { greedy += 1; size = 3 }
+        size += chapterPages[i] + answerPages[i]
+      }
+      expect(plan.volumes).toHaveLength(greedy)
+    }
+  })
+
+  // A course of three chapters: 500, 400 and 300 pages, with 20, 0 and 30
+  // answer pages. The chapters' pages have their own widths, so they can be
+  // told apart in the book.
+  const LONG = { chapterPages: [500, 400, 300], answerPages: [20, 0, 30], questions: [5, 0, 6] }
+  const long = async () => {
+    const page = await screen(LONG)
+    const widths = await Promise.all(LONG.chapterPages.map((pages, at) => pdfOf(pages, 410 + at)))
+    const before = page.answers['generate-chapter']
+    page.answers['generate-chapter'] = (body) => {
+      const answer = before(body)
+      return { ...answer, body: { ...(answer.body as object), pdf: widths[body.chapterIndex as number] } }
+    }
+    // A book of 1,256 pages takes longer to merge: wait until it is made.
+    page.generate = async () => {
+      page.press('Generate Book')
+      for (let i = 0; i < 5000 && page.shown.includes('please wait'); i++) await page.settle()
+      expect(page.shown).not.toContain('please wait')
+    }
+    return page
+  }
+  const NAMES = ['interior.pdf', 'cover.pdf', 'metadata.txt', 'preflight-report.txt']
+
+  it('makes one ZIP with the four files of each volume', async () => {
+    const page = await long()
+    const shownAtFont: string[] = []
+    const font = page.answers.font
+    page.answers.font = (body) => {
+      shownAtFont.push(page.shown)
+      return font(body)
+    }
+    await page.open()
+    page.change(page.radio('combined'), 'combined')
+    await page.generate()
+    expect(page.links()).toEqual(['first-combined.zip'])
+    const files = await page.zip()
+    expect(Object.keys(files)).toEqual([1, 2].flatMap((x) => NAMES.map((name) => `volume-${x}-${name}`)))
+    expect(shownAtFont).toHaveLength(1)
+    expect(shownAtFont[0]).toContain('Splitting into 2 volumes...')
+    // The questions keep their numbers: the answers are asked as before.
+    expect(page.calls.filter((call) => call.name === 'generate-answers').map((call) => call.body?.questionNumberOffset)).toEqual([0, 5, 5])
+  })
+
+  it('each volume: its own contents numbers, interior numbered from 4, its own answers, its own cover', async () => {
+    const page = await long()
+    await page.open()
+    page.change(page.radio('combined'), 'combined')
+    await page.generate()
+    const files = await page.zip()
+    const sent = (name: string) => page.calls.filter((call) => call.name === name).map((call) => call.body)
+    const fronts = sent('generate-frontmatter')
+    expect(fronts).toEqual([
+      { slug: 'first', bookType: 'combined', edition: '2026/27 Edition', subtitle: 'Title first', chapterPageStarts: [4], totalPages: 505, answersPageStart: 504, volume: { x: 1, n: 2 }, chapters: [0] },
+      { slug: 'first', bookType: 'combined', edition: '2026/27 Edition', subtitle: 'Title first', chapterPageStarts: [4, 404], totalPages: 705, answersPageStart: 704, volume: { x: 2, n: 2 }, chapters: [1, 2] },
+    ])
+    const PAGES = [523, 733]
+    expect(sent('generate-cover')).toEqual(PAGES.map((pageCount, v) => ({ slug: 'first', bookType: 'combined', edition: '2026/27 Edition', subtitle: 'Title first', pageCount, volume: { x: v + 1, n: 2 } })))
+    for (const [v, front] of Array.from(fronts.entries())) {
+      const interior = new Uint8Array(files[`volume-${v + 1}-interior.pdf`])
+      const book = await pdfLib.PDFDocument.load(interior)
+      expect(book.getPageCount()).toBe(PAGES[v])
+      const widths = book.getPages().map((made) => made.getWidth())
+      // Each contents number is the real first page of its chapter in this volume.
+      const chapters = front?.chapters as number[]
+      for (const [k, start] of Array.from((front?.chapterPageStarts as number[]).entries())) {
+        expect(widths[start - 1]).toBe(410 + chapters[k])
+        expect(widths[start - 2]).not.toBe(410 + chapters[k])
+      }
+      // The answers of this volume's chapters only, right after them.
+      const answers = chapters.reduce((sum, i) => sum + LONG.answerPages[i], 0)
+      expect(widths.filter((width) => width === 400)).toHaveLength(answers)
+      expect(widths.indexOf(400)).toBe((front?.answersPageStart as number) - 1)
+      // Numbered from 4 inside the volume, in the embedded font.
+      expect(await drawnNumbersOf(interior)).toEqual(Array.from({ length: PAGES[v] - 3 }, (_, i) => String(i + 4)))
+      expect((await fontsOf(interior)).every((found) => found.embedded)).toBe(true)
+      // The cover is the one made for this volume.
+      expect((await pdfLib.PDFDocument.load(new Uint8Array(files[`volume-${v + 1}-cover.pdf`]))).getPageCount()).toBe(1)
+    }
+  })
+
+  it('each volume: its metadata names the volume, and its check report covers its own chapters', async () => {
+    const page = await long()
+    spoil(page, 'generate-chapter', 0, { missingSets: ['x'] })
+    spoil(page, 'generate-chapter', 2, { missingOptionSets: ['m', 'm'] })
+    await page.open()
+    page.change(page.radio('combined'), 'combined')
+    await page.generate()
+    const files = await page.zip()
+    const text = (name: string) => files[name].toString('utf8')
+    const lines = (x: number) => text(`volume-${x}-metadata.txt`).split('\n')
+    expect(lines(1).filter((line) => line.startsWith('Title: '))).toEqual(['Title: Title first — Volume 1 of 2'])
+    expect(lines(2).filter((line) => line.startsWith('Title: '))).toEqual(['Title: Title first — Volume 2 of 2'])
+    const rest = (x: number) => lines(x).filter((line) => !line.startsWith('Title: ') && !line.startsWith('Generated: '))
+    expect(rest(1)).toEqual(rest(2))
+    const report = (x: number) => text(`volume-${x}-preflight-report.txt`)
+    expect(report(1)).toContain('[WARN] 1 linked practice set(s) not found or not live: x')
+    expect(report(1)).toContain(missingOptionLine([]))
+    expect(report(2)).toContain('[PASS] All linked practice sets found')
+    expect(report(2)).toContain(missingOptionLine(['m', 'm']))
+    // The line under the button counts the items of every report.
+    const items = [1, 2].reduce((sum, x) => sum + report(x).split('\n').filter((line) => /^\[(WARN|FAIL)\]/.test(line)).length, 0)
+    expect(items).toBeGreaterThanOrEqual(2)
+    const shown = page.elements().filter((e) => e.type === 'p' && Screen.text(e).includes('preflight-report.txt'))
+    expect(shown.map((e) => [e.props.className, Screen.text(e)])).toEqual([
+      ['text-red-400 text-xs mt-2', `The check reports (volume-1-preflight-report.txt to volume-2-preflight-report.txt) list ${items} item(s) to look at. Please read them before uploading to KDP.`],
+    ])
+  })
+
+  it.each<[string, string, typeof LONG, string]>([
+    ['a chapter too long', 'study', { chapterPages: [100, 826, 10], answerPages: [0, 0, 0], questions: [0, 0, 0] }, 'generate-chapter'],
+    ['a chapter too long with its answers', 'combined', { chapterPages: [100, 800, 10], answerPages: [0, 26, 0], questions: [0, 3, 0] }, 'generate-answers'],
+  ])('%s (%s): it stops with its message and makes nothing', async (_name, bookType, course, last) => {
+    const page = await screen(course)
+    await page.open()
+    page.change(page.radio(bookType), bookType)
+    await page.generate()
+    expect(page.shown).toContain('Chapter 2 is longer than KDP allows for one book (828 pages), so nothing was made.')
+    expect(page.links()).toEqual([])
+    expect(page.files).toEqual([])
+    expect(page.calls[page.calls.length - 1]).toMatchObject({ name: last, body: { chapterIndex: 2 } })
+  })
+
+  it('the words are exact', () => {
+    const source = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
+    expect(source).toContain('const KDP_MIN_PAGES = 24\nconst KDP_MAX_PAGES = 828\nconst FRONT_PAGES = 3\n')
+    expect(source).toContain('const CHAPTER_TOO_LONG = (n: number) => `Chapter ${n} is longer than KDP allows for one book (828 pages), so nothing was made.`\n')
+    expect(source).toContain('const REPORT_ITEMS_VOLUMES = (n: number, k: number) => `The check reports (volume-1-preflight-report.txt to volume-${n}-preflight-report.txt) list ${k} item(s) to look at. Please read them before uploading to KDP.`\n')
+    expect(source).toContain('const SPLITTING = (n: number) => `Splitting into ${n} volumes...`\n')
+    expect(source).toContain('const VOLUME_TITLE = (title: string, x: number, n: number) => `${title} — Volume ${x} of ${n}`\n')
+    const front = readFileSync(join(ROOT, 'components', 'book', 'FrontmatterTemplate.tsx'), 'utf8')
+    const cover = readFileSync(join(ROOT, 'components', 'book', 'FullCoverTemplate.tsx'), 'utf8')
+    expect(front).toContain('{volume ? <View style={{ alignItems: "center" }}><Text style={s.bookTitle}>{sanitise(subtitle)}</Text><Text style={s.bookTitle}>{`Volume ${volume.x} of ${volume.n}`}</Text></View> : <Text style={s.bookTitle}>{sanitise(subtitle)}</Text>}')
+    expect(cover).toContain('{volume ? <View><Text style={s.titleText}>{subtitle}</Text><Text style={s.titleText}>{`Volume ${volume.x} of ${volume.n}`}</Text></View> : <Text style={s.titleText}>{subtitle}</Text>}')
+    expect(cover).toContain('{volume ? `${subtitle} · Vol. ${volume.x}` : subtitle}')
+    // A line break inside a text made react-pdf fall back to Helvetica, which
+    // is not embedded: the volume line is a text of its own.
+    expect(front.includes('\\nVolume') || cover.includes('\\nVolume')).toBe(false)
+  })
+})
+
+describe('the front pages and the cover of a volume (D346)', () => {
+  const strings = (node: unknown): string[] => {
+    if (Array.isArray(node)) return node.flatMap(strings)
+    if (node && typeof node === 'object' && 'props' in node) return strings((node as Element).props.children)
+    return typeof node === 'string' || typeof node === 'number' ? [String(node)] : []
+  }
+  const front = (extra: object) =>
+    strings(FrontmatterTemplate({ course: { chapters: [{ _key: 'a', chapterTitle: 'One' }] }, bookType: 'combined', edition: 'E', subtitle: 'S', chapterPageStarts: [4], totalPages: 9, answersPageStart: 8, ...extra }))
+  const cover = (extra: object) => strings(FullCoverTemplate({ subtitle: 'S', bookType: 'combined', edition: 'E', pageCount: 100, ...extra }))
+
+  // Every element of a drawn page, in order.
+  const elementsOf = (node: unknown): Element[] => {
+    if (Array.isArray(node)) return node.flatMap(elementsOf)
+    if (node && typeof node === 'object' && 'props' in node) return [node as Element, ...elementsOf((node as Element).props.children)]
+    return []
+  }
+  // The style of the text that says `words`, and of the text right before it.
+  const styles = (page: unknown, words: string) => {
+    const texts = elementsOf(page).filter((e) => typeof e.props.children === 'string')
+    const at = texts.findIndex((e) => e.props.children === words)
+    return at > 0 ? [texts[at - 1].props.children, texts[at - 1].props.style === texts[at].props.style] : null
+  }
+
+  it('the title page and the front cover say the volume under the title, in its style, and the spine its number; only for a volume', () => {
+    const volume = { x: 2, n: 3 }
+    const frontPage = FrontmatterTemplate({ course: { chapters: [{ _key: 'a', chapterTitle: 'One' }] }, bookType: 'combined', edition: 'E', subtitle: 'S', chapterPageStarts: [4], totalPages: 9, answersPageStart: 8, volume })
+    expect(styles(frontPage, 'Volume 2 of 3')).toEqual(['S', true])
+    expect(front({ volume }).join('|')).toContain('Accounting Body Press|S|Volume 2 of 3|Study Text & Practice Kit')
+    expect(front({}).filter((text) => text.includes('Vol'))).toEqual([])
+    expect(front({})).toContain('S')
+    const coverPage = FullCoverTemplate({ subtitle: 'S', bookType: 'combined', edition: 'E', pageCount: 100, volume })
+    expect(styles(coverPage, 'Volume 2 of 3')).toEqual(['S', true])
+    expect(cover({ volume }).filter((text) => text.includes('Vol'))).toEqual(['S · Vol. 2', 'Volume 2 of 3'])
+    expect(cover({}).filter((text) => text.includes('Vol'))).toEqual([])
+    for (const text of [...front({ volume }), ...cover({ volume })]) expect(text).not.toContain('\n')
+  })
+
+  it("a volume's front pages and cover, drawn by react-pdf, have only embedded fonts; a line break would not", async () => {
+    // react-pdf fetches the templates' fonts itself: they come from the site's
+    // own files on disk, and any other address is refused (no network).
+    vi.unstubAllGlobals()
+    const realFetch = globalThis.fetch
+    const asked: string[] = []
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : String(input)
+      const font = /^https:\/\/accountingbody\.com\/fonts\/(LiberationSans-(Regular|Bold|Italic)\.ttf)$/.exec(url)
+      if (font) {
+        asked.push(font[1])
+        return new Response(readFileSync(join(ROOT, 'public', 'fonts', font[1])))
+      }
+      if (/^(data|file):/.test(url)) return realFetch(input, init)
+      throw new Error('no network in this test')
+    })
+    const actual = await vi.importActual<typeof import('@react-pdf/renderer')>('@react-pdf/renderer')
+    const volume = { x: 1, n: 2 }
+    const drawn = async (element: unknown) => new Uint8Array(await actual.renderToBuffer(element as Parameters<typeof actual.renderToBuffer>[0]))
+    const frontPdf = await drawn(createElement(FrontmatterTemplate, { course: { chapters: [{ _key: 'a', chapterTitle: 'One' }] }, bookType: 'combined', edition: 'E', subtitle: 'Sample', chapterPageStarts: [4], totalPages: 9, answersPageStart: 8, volume }))
+    const coverPdf = await drawn(createElement(FullCoverTemplate, { subtitle: 'Sample', bookType: 'combined', edition: 'E', pageCount: 100, volume }))
+    for (const pdf of [frontPdf, coverPdf]) {
+      expect((await fontsOf(pdf)).filter((found) => !found.embedded)).toEqual([])
+      expect(await (new Screen().inner.fontsEmbedded as unknown as (bytes: Uint8Array) => Promise<boolean>)(pdf)).toBe(true)
+    }
+    // The form this job first had: the line inside the title's text.
+    const broken = await drawn(createElement(actual.Document, null, createElement(actual.Page, null, createElement(actual.Text, { style: { fontFamily: 'BookSans' } }, 'Sample\nVolume 1 of 2'))))
+    expect((await fontsOf(broken)).filter((found) => !found.embedded).map((found) => found.name)).toEqual(['Helvetica'])
+    expect(new Set(asked)).toEqual(new Set(['LiberationSans-Regular.ttf', 'LiberationSans-Bold.ttf']))
+  })
+
+  it("a volume's title page centres the title and the volume line, as it centres the title of one book", async () => {
+    vi.unstubAllGlobals()
+    const realFetch = globalThis.fetch
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : String(input)
+      const font = /^https:\/\/accountingbody\.com\/fonts\/(LiberationSans-(Regular|Bold|Italic)\.ttf)$/.exec(url)
+      if (font) return new Response(readFileSync(join(ROOT, 'public', 'fonts', font[1])))
+      if (/^(data|file):/.test(url)) return realFetch(input, init)
+      throw new Error('no network in this test')
+    })
+    const actual = await vi.importActual<typeof import('@react-pdf/renderer')>('@react-pdf/renderer')
+    const titlePage = async (volume?: { x: number; n: number }) => {
+      const pdf = new Uint8Array(await actual.renderToBuffer(createElement(FrontmatterTemplate, { course: { chapters: [{ _key: 'a', chapterTitle: 'One' }] }, bookType: 'combined', edition: 'E', subtitle: 'Sample Course', chapterPageStarts: [4], totalPages: 9, answersPageStart: 8, ...(volume ? { volume } : {}) }) as Parameters<typeof actual.renderToBuffer>[0]))
+      return textsAcross(pdf, 0)
+    }
+    // The title page's text runs from its inner margin (0.75 in) to its outer
+    // margin (0.5 in) on a 6 in page; every line of it is centred there.
+    const centre = (54 + (432 - 36)) / 2
+    const middle = (texts: { words: string; left: number; right: number }[], words: string) => {
+      const line = texts.filter((text) => text.words === words)
+      expect(line).toHaveLength(1)
+      expect(line[0].right - line[0].left).toBeGreaterThan(100)
+      return (line[0].left + line[0].right) / 2
+    }
+    const one = await titlePage()
+    expect(Math.abs(middle(one, 'Sample Course') - centre)).toBeLessThanOrEqual(1)
+    const two = await titlePage({ x: 1, n: 2 })
+    expect(Math.abs(middle(two, 'Sample Course') - centre)).toBeLessThanOrEqual(1)
+    expect(Math.abs(middle(two, 'Volume 1 of 2') - centre)).toBeLessThanOrEqual(1)
+    expect(Math.abs(middle(two, 'Study Text & Practice Kit') - centre)).toBeLessThanOrEqual(1)
+  })
+
+  it('a contents row keeps the chapter number it is given, else its place', () => {
+    const rows = (chapters: object[]) => strings(FrontmatterTemplate({ course: { chapters }, bookType: 'study', edition: 'E', subtitle: 'S', chapterPageStarts: [4, 9], totalPages: 20 })).join('|')
+    expect(rows([{ chapterTitle: 'A' }, { chapterTitle: 'B' }])).toContain('Chapter |1|: |A|')
+    expect(rows([{ chapterTitle: 'A' }, { chapterTitle: 'B' }])).toContain('Chapter |2|: |B|')
+    expect(rows([{ chapterTitle: 'A', chapterNumber: 5 }, { chapterTitle: 'B', chapterNumber: 6 }])).toContain('Chapter |5|: |A|')
+    expect(rows([{ chapterTitle: 'A', chapterNumber: 5 }, { chapterTitle: 'B', chapterNumber: 6 }])).toContain('Chapter |6|: |B|')
+  })
+
+  const GOOD_FRONT = { slug: 'many', bookType: 'combined', chapterPageStarts: [4, 9], totalPages: 20, answersPageStart: 15 }
+  const BAD_VOLUMES: unknown[] = [null, 'x', [], {}, { x: 0, n: 2 }, { x: 3, n: 2 }, { x: 1, n: 21 }, { x: 1.5, n: 2 }, { x: '1', n: '2' }, { x: 1 }]
+
+  it.each(BAD_VOLUMES.map((volume) => [JSON.stringify(volume), volume] as const))('the routes refuse the volume %s', async (_name, volume) => {
+    state.chapters = { many: [[['a']], [['b']], [['c']]] }
+    const fm = await callRoute('generate-frontmatter', { body: { ...GOOD_FRONT, volume, chapters: [1, 2] } })
+    expect([fm.status, await fm.json()]).toEqual([400, { error: 'volume is invalid' }])
+    const cv = await callRoute('generate-cover', { body: { bookType: 'combined', pageCount: 30, volume } })
+    expect([cv.status, await cv.json()]).toEqual([400, { error: 'volume is invalid' }])
+    expect(state.pdfs).toBe(0)
+  })
+
+  it.each<[string, object, string]>([
+    ['chapters without a volume', { chapters: [1, 2] }, 'volume is required'],
+    ['a volume without chapters', { volume: { x: 1, n: 2 } }, 'chapters is required'],
+    ['no chapters', { volume: { x: 1, n: 2 }, chapters: [] }, 'chapters is invalid'],
+    ['chapters out of order', { volume: { x: 1, n: 2 }, chapters: [2, 1] }, 'chapters is invalid'],
+    ['a chapter twice', { volume: { x: 1, n: 2 }, chapters: [1, 1] }, 'chapters is invalid'],
+    ['a chapter that is not a whole number', { volume: { x: 1, n: 2 }, chapters: [0.5, 1] }, 'chapters is invalid'],
+    ['a chapter below 0', { volume: { x: 1, n: 2 }, chapters: [-1, 0] }, 'chapters is invalid'],
+    ['a chapter the course does not have', { volume: { x: 1, n: 2 }, chapters: [2, 3] }, 'chapters is invalid'],
+    ['more chapters than page starts', { volume: { x: 1, n: 2 }, chapters: [0, 1, 2] }, 'chapters is invalid'],
+    ['chapters that are not a list', { volume: { x: 1, n: 2 }, chapters: 'x' }, 'chapters is invalid'],
+  ])('the front pages refuse %s', async (_name, extra, error) => {
+    state.chapters = { many: [[['a']], [['b']], [['c']]] }
+    const response = await callRoute('generate-frontmatter', { body: { ...GOOD_FRONT, ...extra } })
+    expect([response.status, await response.json()]).toEqual([400, { error }])
+    expect(state.pdfs).toBe(0)
+  })
+
+  it("the front pages of a volume list only its chapters, with their numbers in the course, and the key of the whole course", async () => {
+    state.chapters = { many: [[['a']], [['b']], [['c']]] }
+    const whole = await callRoute('generate-frontmatter', { body: GOOD_FRONT })
+    const key = (await whole.json()).courseKey
+    state.made = []
+    state.drawn = []
+    const response = await callRoute('generate-frontmatter', { body: { ...GOOD_FRONT, volume: { x: 2, n: 2 }, chapters: [1, 2] } })
+    expect(response.status).toBe(200)
+    expect((await response.json()).courseKey).toBe(key)
+    const given = JSON.parse(state.made[0])
+    expect(given.course.chapters).toEqual([
+      { _key: 'chapter', chapterTitle: 'Chapter', chapterNumber: 2 },
+      { _key: 'chapter', chapterTitle: 'Chapter', chapterNumber: 3 },
+    ])
+    expect(given.volume).toEqual({ x: 2, n: 2 })
+    const drawn = state.drawn[0] as { type: (props: unknown) => unknown; props: unknown }
+    const texts = strings(drawn.type(drawn.props)).join('|')
+    expect(texts).toContain('Course|Volume 2 of 2')
+    expect(texts).toContain('Chapter |2|: |Chapter|')
+    expect(texts).toContain('Chapter |3|: |Chapter|')
+    expect(texts).not.toContain('Chapter |1|')
+  })
+
+  it('the cover of a volume is given it; without one, the props are as before', async () => {
+    await callRoute('generate-cover', { body: { bookType: 'combined', pageCount: 30, volume: { x: 1, n: 2 } } })
+    await callRoute('generate-cover', { body: { bookType: 'combined', pageCount: 30 } })
+    expect(state.made.map((made) => JSON.parse(made))).toEqual([
+      { subtitle: '', bookType: 'combined', edition: '2026/27 Edition', pageCount: 30, volume: { x: 1, n: 2 } },
+      { subtitle: '', bookType: 'combined', edition: '2026/27 Edition', pageCount: 30 },
+    ])
+  })
+})
+
+describe('the KDP checks of a book made chapter by chapter (D346)', { timeout: 120000 }, () => {
+  type KdpLines = (interior: Uint8Array, cover: Uint8Array, pageCount: number) => Promise<string[]>
+  type Embedded = (bytes: Uint8Array) => Promise<boolean>
+  const inner = () => new Screen().inner
+  const kdpLines = (...args: Parameters<KdpLines>) => (inner().kdpLines as unknown as KdpLines)(...args)
+  const embedded = (bytes: Uint8Array) => (inner().fontsEmbedded as unknown as Embedded)(bytes)
+  const bytesOf = (base64: string) => new Uint8Array(Buffer.from(base64, 'base64'))
+  const kdpCover = async (pages: number) => bytesOf(await pdfOf(1, (6.125 * 2 + Math.max(pages * 0.002252, 0.5)) * 72, 9.25 * 72))
+  const liberation = async () => {
+    const made = await pdfLib.PDFDocument.create()
+    made.registerFontkit(fontkit)
+    made.addPage([432, 648]).drawText('4', { x: 396, y: 18, size: 8, font: await made.embedFont(new Uint8Array(PAGE_FONT), { subset: true }) })
+    return new Uint8Array(await made.save())
+  }
+  const helvetica = async () => {
+    const made = await pdfLib.PDFDocument.create()
+    made.addPage([432, 648]).drawText('4', { x: 396, y: 18, size: 8, font: await made.embedFont(pdfLib.StandardFonts.Helvetica) })
+    return new Uint8Array(await made.save())
+  }
+  // A PDF with one font dictionary written by hand.
+  const withFont = async (font: (made: pdfLib.PDFDocument) => pdfLib.PDFDict) => {
+    const made = await pdfLib.PDFDocument.create()
+    made.addPage([432, 648])
+    made.context.register(font(made))
+    return new Uint8Array(await made.save())
+  }
+  const descriptor = (made: pdfLib.PDFDocument, file: string | null) =>
+    made.context.register(made.context.obj({ Type: 'FontDescriptor', ...(file ? { [file]: made.context.register(made.context.flateStream('x')) } : {}) }))
+
+  it('the sentences are the server\'s, word for word', async () => {
+    const page = readFileSync(join(ROOT, 'app', ADMIN, 'ab-press', 'page.tsx'), 'utf8')
+    const server = readFileSync(join(ROOT, 'app', 'api', ADMIN, 'ab-press', 'generate', 'route.ts'), 'utf8')
+    for (const words of [
+      '"Fonts embedded"', '"Liberation Sans embedded in interior and cover"', '"Non-embedded font detected - KDP may reject"',
+      '"Page count"', '" pages (KDP limit 24-828)"', '"Cover dimensions"', '" x "', '" pts (expected "', '", spine "', '"in)"',
+      '"[PASS] "', '"[FAIL] "', '" - "',
+    ]) {
+      expect(server).toContain(words)
+      expect(page).toContain(words.replace(/^"|"$/g, "'"))
+    }
+    for (const rule of [
+      'const pagesOk = pageCount >= 24 && pageCount <= 828',
+      'const spineIn   = Math.max(pageCount * 0.002252, 0.5)',
+      'const expectedW = (6.125 * 2 + spineIn) * 72',
+      'const expectedH = 9.25 * 72',
+      'const coverOk   = Math.abs(coverW - expectedW) < 1 && Math.abs(coverH - expectedH) < 1',
+    ]) expect(server).toContain(rule)
+    expect(page).toContain('const pagesOk = pageCount >= KDP_MIN_PAGES && pageCount <= KDP_MAX_PAGES')
+    for (const rule of ['const spineIn   = Math.max(pageCount * 0.002252, 0.5)', 'const expectedW = (6.125 * 2 + spineIn) * 72', 'const expectedH = 9.25 * 72', 'const coverOk   = Math.abs(coverW - expectedW) < 1 && Math.abs(coverH - expectedH) < 1']) {
+      expect(page).toContain(rule)
+    }
+  })
+
+  it('for the same book, the page writes the very lines the server writes', async () => {
+    const made = Buffer.from(await (await callRoute('generate', { body: { slug: 'good', bookType: 'combined' } })).arrayBuffer()).toString('utf8')
+    const report = made.split('ACCOUNTING BODY PRESS - KDP PRE-FLIGHT REPORT')[1].split('\n')
+    const names = ['Fonts embedded', 'Page count', 'Cover dimensions']
+    const server = report.filter((line) => names.some((name) => line.startsWith(`[PASS] ${name} - `) || line.startsWith(`[FAIL] ${name} - `)))
+    expect(server).toHaveLength(3)
+    const pages = Number(/Page count - (\d+) pages/.exec(server.join('\n'))?.[1])
+    // The PDF maker is a stand-in here, so both read the same unreadable PDFs.
+    const stand = new Uint8Array(Buffer.from('/Type /Page '))
+    expect(await kdpLines(stand, stand, pages)).toEqual(server)
+  })
+
+  it.each<[string, number, string, string]>([
+    ['23 pages', 23, '[FAIL] Page count - 23 pages (KDP limit 24-828)', '0.500'],
+    ['24 pages', 24, '[PASS] Page count - 24 pages (KDP limit 24-828)', '0.500'],
+    ['300 pages', 300, '[PASS] Page count - 300 pages (KDP limit 24-828)', '0.676'],
+    ['828 pages', 828, '[PASS] Page count - 828 pages (KDP limit 24-828)', '1.865'],
+    ['829 pages', 829, '[FAIL] Page count - 829 pages (KDP limit 24-828)', '1.867'],
+  ])('%s: the page count and the spine', async (_name, pages, line, spine) => {
+    const lines = await kdpLines(await liberation(), await kdpCover(pages), pages)
+    expect(lines[0]).toBe('[PASS] Fonts embedded - Liberation Sans embedded in interior and cover')
+    expect(lines[1]).toBe(line)
+    expect(lines[2]).toMatch(new RegExp(`^\\[PASS\\] Cover dimensions - (\\S+) x 666\\.00 pts \\(expected \\1 x 666\\.00, spine ${spine.replace('.', '\\.')}in\\)$`))
+  })
+
+  it('a cover of the wrong size fails, with its size', async () => {
+    const lines = await kdpLines(await liberation(), bytesOf(await pdfOf(1)), 300)
+    expect(lines[2]).toBe('[FAIL] Cover dimensions - 432.00 x 648.00 pts (expected 930.64 x 666.00, spine 0.676in)')
+  })
+
+  it.each<[string, () => Promise<Uint8Array>, boolean]>([
+    ['Liberation Sans embedded by pdf-lib', liberation, true],
+    ['Helvetica, as the page numbers were before', helvetica, false],
+    ['no font at all', async () => bytesOf(await pdfOf(2)), true],
+    ['not a PDF', async () => new Uint8Array([1, 2, 3]), false],
+    ['a TrueType font with its file', () => withFont((made) => made.context.obj({ Type: 'Font', Subtype: 'TrueType', BaseFont: 'X', FontDescriptor: descriptor(made, 'FontFile2') })), true],
+    ['a Type 1 font with its file', () => withFont((made) => made.context.obj({ Type: 'Font', Subtype: 'Type1', BaseFont: 'X', FontDescriptor: descriptor(made, 'FontFile') })), true],
+    ['an OpenType font with its file', () => withFont((made) => made.context.obj({ Type: 'Font', Subtype: 'Type1', BaseFont: 'X', FontDescriptor: descriptor(made, 'FontFile3') })), true],
+    ['a font whose descriptor has no file', () => withFont((made) => made.context.obj({ Type: 'Font', Subtype: 'TrueType', BaseFont: 'X', FontDescriptor: descriptor(made, null) })), false],
+    ['a Type 3 font', () => withFont((made) => made.context.obj({ Type: 'Font', Subtype: 'Type3' })), true],
+    ['a Type 0 font with an embedded descendant', () => withFont((made) => made.context.obj({ Type: 'Font', Subtype: 'Type0', DescendantFonts: [made.context.register(made.context.obj({ Type: 'Font', Subtype: 'CIDFontType2', FontDescriptor: descriptor(made, 'FontFile2') }))] })), true],
+    ['a Type 0 font whose descendant has no file', () => withFont((made) => made.context.obj({ Type: 'Font', Subtype: 'Type0', DescendantFonts: [made.context.obj({ Type: 'Font', Subtype: 'CIDFontType0', FontDescriptor: descriptor(made, null) })] })), false],
+    ['a Type 0 font without descendants', () => withFont((made) => made.context.obj({ Type: 'Font', Subtype: 'Type0', DescendantFonts: [] })), false],
+  ])('the font scan: %s → %s', async (_name, pdf, expected) => {
+    const bytes = await pdf()
+    expect(await embedded(bytes)).toBe(expected)
+    const lines = await kdpLines(bytes, await kdpCover(30), 30)
+    expect(lines[0]).toBe(expected ? '[PASS] Fonts embedded - Liberation Sans embedded in interior and cover' : '[FAIL] Fonts embedded - Non-embedded font detected - KDP may reject')
+  })
+
+  it('a cover with a font that is not embedded fails the font check too', async () => {
+    expect((await kdpLines(await liberation(), await helvetica(), 30))[0]).toBe('[FAIL] Fonts embedded - Non-embedded font detected - KDP may reject')
+  })
+
+  it('every volume has its own checks: a short last volume that cannot be avoided fails its page count', async () => {
+    const page = await screen({ chapterPages: [825, 10], answerPages: [0, 0], questions: [0, 0] })
+    await page.open()
+    page.press('Generate Book')
+    for (let i = 0; i < 5000 && page.shown.includes('please wait'); i++) await page.settle()
+    const files = await page.zip()
+    const report = (x: number) => files[`volume-${x}-preflight-report.txt`].toString('utf8').split('\n')
+    expect(report(1).slice(-3)).toEqual([
+      '[PASS] Fonts embedded - Liberation Sans embedded in interior and cover',
+      '[PASS] Page count - 828 pages (KDP limit 24-828)',
+      '[PASS] Cover dimensions - 1016.26 x 666.00 pts (expected 1016.26 x 666.00, spine 1.865in)',
+    ])
+    expect(report(2).slice(-3)).toEqual([
+      '[PASS] Fonts embedded - Liberation Sans embedded in interior and cover',
+      '[FAIL] Page count - 13 pages (KDP limit 24-828)',
+      '[PASS] Cover dimensions - 918.00 x 666.00 pts (expected 918.00 x 666.00, spine 0.500in)',
+    ])
+    expect(page.shown).toContain('The check reports (volume-1-preflight-report.txt to volume-2-preflight-report.txt) list 1 item(s) to look at. Please read them before uploading to KDP.')
   })
 })

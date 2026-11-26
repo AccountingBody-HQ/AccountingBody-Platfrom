@@ -13,17 +13,23 @@ import { FullCoverTemplate } from "@/components/book/FullCoverTemplate"
 
 export const maxDuration = 60
 
+// A volume of a book made as several (owner decision D346): whole numbers
+// with 1 <= x <= n <= 20.
+const isVolume = (v: any) =>
+  !!v && typeof v === "object" && Number.isInteger(v.x) && Number.isInteger(v.n) && v.x >= 1 && v.x <= v.n && v.n <= 20
+
 export async function POST(req: NextRequest) {
   if (!(await isAuthenticated(req))) {
     return signedOutResponse()
   }
   try {
     const body = await req.json()
-    const { bookType, edition, subtitle, pageCount } = body
+    const { bookType, edition, subtitle, pageCount, volume } = body
     if (!bookType) return NextResponse.json({ error: "bookType is required" }, { status: 400 })
     if (typeof pageCount !== "number") {
       return NextResponse.json({ error: "pageCount is required" }, { status: 400 })
     }
+    if (volume !== undefined && !isVolume(volume)) return NextResponse.json({ error: "volume is invalid" }, { status: 400 })
 
     const pdfBuffer = await renderToBuffer(
       React.createElement(FullCoverTemplate, {
@@ -31,6 +37,7 @@ export async function POST(req: NextRequest) {
         bookType,
         edition:  edition || "2026/27 Edition",
         pageCount,
+        ...(volume !== undefined ? { volume: { x: volume.x, n: volume.n } } : {}),
       }) as any
     )
 

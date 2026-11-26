@@ -3,7 +3,7 @@
 // Renders only the "Answers and Explanations" back-of-book section, for
 // combined/practice book types. With an optional chapterIndex, renders
 // just that chapter's answers (large-course orchestration calls this once
-// per chapter, same pattern as generate-chapter, to avoid the 60s timeout
+// per chapter, same pattern as generate-chapter, to avoid the 300 s timeout
 // rendering every chapter's answers in one call would hit); without it,
 // renders every chapter in one call (small-course path). Question
 // numbering here is continuous across the whole course (a single running
