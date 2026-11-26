@@ -25,7 +25,10 @@ describe('quiz and mock-exam answers', () => {
     expect(src).toMatch(/ref=\{resultsHeadingRef\} tabIndex=\{-1\}/)
     expect(src).toMatch(/aria-expanded=\{open\}/)
     expect(src).toMatch(/<span className="sr-only">\{correct \? 'Correct: ' : 'Incorrect: '\}<\/span>/)
-    expect(count(src, /aria-live=/g)).toBe(1)
+    // Two polite regions only: the question counter, and the timer lines (ME-1 S4).
+    expect(count(src, /aria-live=/g)).toBe(2)
+    expect(src).toMatch(/<span className="text-sm font-semibold text-navy-950" aria-live="polite">Question \{current \+ 1\} of/)
+    expect(src).toContain('<p className="sr-only" aria-live="polite">{announcement}</p>')
   })
 
   it('QuizBankRenderer: pressed options, named textarea, Previous/Next keep their names on phones', () => {
