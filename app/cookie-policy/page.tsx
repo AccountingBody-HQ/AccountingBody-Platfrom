@@ -44,6 +44,9 @@ const cookies: { category: string; bar: string; always: boolean; adsOnly?: boole
     items: [
       { name: '_ga',      provider: 'Google Analytics', purpose: 'Tells visits apart for Google Analytics (only if you accept).', duration: '2 years' },
       { name: '_ga_<id>', provider: 'Google Analytics', purpose: 'Keeps the state of your visit for Google Analytics (only if you accept).', duration: '2 years' },
+      { name: '_gid',     provider: 'Google Analytics', purpose: 'Tells visits apart for Google Analytics for one day (only if you accept).', duration: '24 hours' },
+      { name: '_gat*',    provider: 'Google Analytics', purpose: 'Limits how often Google Analytics collects data (only if you accept).', duration: '1 minute' },
+      { name: '_gcl_*',   provider: 'Google',           purpose: 'Measures whether a Google advert led to your visit (only if you accept).', duration: '90 days' },
     ],
   },
   { category: 'Advertising cookies',  bar: OPTIONAL_BAR,  always: false,  adsOnly: true,

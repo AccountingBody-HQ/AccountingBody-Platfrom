@@ -257,6 +257,10 @@ describe('PRIV-3 S1: cookie rows and groups', () => {
   const VSI = cookieRow('Vercel Speed Insights', 'Vercel', 'Measures how fast pages load. Choosing "Reject non-essential cookies" turns it off.', 'No cookie')
   const GA = cookieRow('_ga', 'Google Analytics', 'Tells visits apart for Google Analytics (only if you accept).', '2 years')
   const GA_ID = cookieRow('_ga_<id>', 'Google Analytics', 'Keeps the state of your visit for Google Analytics (only if you accept).', '2 years')
+  // PRIV-8 S1 (D360 (1)): the three other Google cookies the site clears on Reject (lib/consent.ts).
+  const GID = cookieRow('_gid', 'Google Analytics', 'Tells visits apart for Google Analytics for one day (only if you accept).', '24 hours')
+  const GAT = cookieRow('_gat*', 'Google Analytics', 'Limits how often Google Analytics collects data (only if you accept).', '1 minute')
+  const GCL = cookieRow('_gcl_*', 'Google', 'Measures whether a Google advert led to your visit (only if you accept).', '90 days')
   const ADS = cookieRow('__gads, __gpi, __eoi', 'Google AdSense', 'Shows ads and limits how often you see them (only if you accept). Google may also set cookies on its own domains.', 'Up to 13 months')
   const decodeLt = (html: string) => html.replace(/&lt;/g, '<').replace(/&gt;/g, '>')
   // '' is how an unset value reads (adsenseClientId returns '' for both).
@@ -273,7 +277,12 @@ describe('PRIV-3 S1: cookie rows and groups', () => {
     for (const et of [false, true]) {
       for (const ads of [undefined, 'ca-pub-0000000000000000']) {
         const html = await page(et, ads)
-        for (const row of [CF, TURNSTILE, VWA, VSI, GA, GA_ID]) expect(count(html, row)).toBe(1)
+        for (const row of [CF, TURNSTILE, VWA, VSI, GA, GA_ID, GID, GAT, GCL]) expect(count(html, row)).toBe(1)
+        // PRIV-8 S1: the three new rows come directly after _ga_<id>, in this order
+        const rows = [GA_ID, GID, GAT, GCL].map((r) => html.indexOf(r))
+        expect(rows[1]).toBeGreaterThan(rows[0])
+        expect(rows[2]).toBeGreaterThan(rows[1])
+        expect(rows[3]).toBeGreaterThan(rows[2])
         expect(count(html, group('Necessary cookies', true))).toBe(1)
         expect(count(html, group('Statistics (no cookies)', false))).toBe(1)
         expect(count(html, group('Analytics cookies', false))).toBe(1)

@@ -40,6 +40,13 @@ const COOKIE_PAGE_ALWAYS = [
   'Tells visits apart for Google Analytics (only if you accept).',
   '_ga_<id>',
   'Keeps the state of your visit for Google Analytics (only if you accept).',
+  // PRIV-8 S1 (D360 (1))
+  '_gid',
+  'Tells visits apart for Google Analytics for one day (only if you accept).',
+  '_gat*',
+  'Limits how often Google Analytics collects data (only if you accept).',
+  '_gcl_*',
+  'Measures whether a Google advert led to your visit (only if you accept).',
   'You can change your choice at any time with "Cookie settings" at the bottom of every page.',
 ]
 const COOKIE_PAGE_ADS = [
