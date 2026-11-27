@@ -1,7 +1,8 @@
 // A small in-memory stand-in for the database's REST interface, for tests that
 // run real supabase-js clients with a fake `fetch`. It understands only the
 // filters these tests use (eq, neq, lt, gt, in, not.is.null), order on one
-// column, limit and offset, and GET / PATCH / DELETE. Every request is
+// column, limit and offset, and GET / PATCH / DELETE / POST (insert, or upsert
+// with on_conflict). Every request is
 // recorded. A test may make any request fail through `problem`.
 
 export type Row = Record<string, unknown>
@@ -106,6 +107,18 @@ export function fakeTables(origin: string, tables: Record<string, Row[]>): FakeT
       if (method === 'DELETE') {
         state.tables[table] = rows.filter((row) => !hit.includes(row))
         return json(hit.map((row) => pick(row, select)))
+      }
+      if (method === 'POST') {
+        // Insert, or upsert merged on the on_conflict columns.
+        const onConflict = url.searchParams.get('on_conflict')?.split(',') ?? null
+        const written: Row[] = []
+        for (const row of (Array.isArray(body) ? body : [body]) as Row[]) {
+          const existing = onConflict ? rows.find((r) => onConflict.every((key) => r[key] === row[key])) : undefined
+          if (existing) Object.assign(existing, row)
+          else rows.push({ ...row })
+          written.push(existing ?? rows[rows.length - 1])
+        }
+        return json(written.map((row) => pick(row, select)), 201)
       }
       throw new Error('unexpected method')
     },
