@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
       .lt('last_confirmation_sent_at', cutoff)
 
     if (error) {
-      console.error('cron/prune-pending-subscribers: delete failed', error.message)
+      console.error('cron/prune-pending-subscribers: delete failed', errorCode(error))
       return NextResponse.json({ error: 'Prune failed' }, { status: 500 })
     }
 

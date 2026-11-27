@@ -27,6 +27,8 @@ vi.mock('@sentry/nextjs', () => ({ captureException: () => {}, captureMessage: (
 import { POST as contact } from '@/app/api/contact/route'
 import { POST as subscribe } from '@/app/api/subscribe/route'
 import { GET as prunePending } from '@/app/api/cron/prune-pending-subscribers/route'
+import { GET as opsStatus } from '@/app/api/ops-status/route'
+import { opsStatusHold } from './ops-status'
 import { fakeTables, type FakeTables, type Row } from './test-helpers/fake-rest-tables'
 import { getServerSupabase } from './supabase-server'
 import {
@@ -243,6 +245,26 @@ describe('(3) error logs carry a code only', () => {
     const line = rawLogs.find((args) => args[0] === 'cron/prune-pending-subscribers: fatal error')
     expect(line).toEqual(['cron/prune-pending-subscribers: fatal error', 'unknown'])
     for (const args of rawLogs) for (const a of args) expect(typeof a).toBe('string')
+  })
+
+  // S6: the pending clean-up's delete failure and the ops-status catch.
+  it('the pending clean-up logs a failed delete as a code, not the database message', async () => {
+    vi.stubEnv('CRON_SECRET', 'cron-test-value')
+    db.problem = (r) => (r.method === 'DELETE' ? 'fail' : undefined)
+    const res = await prunePending(new NextRequest(SITE + '/api/cron/prune-pending-subscribers', { headers: { authorization: 'Bearer cron-test-value' } }))
+    expect(res.status).toBe(500)
+    expect(rawLogs).toContainEqual(['cron/prune-pending-subscribers: delete failed', '22P02'])
+    expect(logs.join('\n')).not.toContain('seed problem text')
+  })
+
+  it('/api/ops-status logs a failed check as a code, never the whole error', async () => {
+    opsStatusHold.clear()
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', '')
+    const res = await opsStatus()
+    expect(res.status).toBe(503)
+    expect(rawLogs).toContainEqual(['ops status check failed:', 'unknown'])
+    for (const args of rawLogs) for (const a of args) expect(typeof a).toBe('string')
+    opsStatusHold.clear()
   })
 
   it('a failed look-up logs the code only, never the address', async () => {

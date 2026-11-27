@@ -29,6 +29,7 @@ import {
 import { reportServerError } from '@/lib/report-error'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { RETENTION_RULES, applyRuleFilter, dataRetentionMode } from '@/lib/data-retention'
+import { errorCode } from '@/lib/recycle-bin'
 
 // Whether the scheduled jobs have done their work recently, for an uptime
 // monitor: 200 when every alerting check is ok, otherwise 503. One small read
@@ -171,7 +172,7 @@ export async function GET() {
     const answer = await opsStatusHold.get(computeAnswer)
     return NextResponse.json(answer.body, { status: answer.httpStatus, headers: HEADERS })
   } catch (error) {
-    console.error('ops status check failed:', error)
+    console.error('ops status check failed:', errorCode(error))
     reportServerError('ops status check failed', error, { area: 'public' })
     const answer = neutralAttention()
     return NextResponse.json(answer.body, { status: answer.httpStatus, headers: HEADERS })
