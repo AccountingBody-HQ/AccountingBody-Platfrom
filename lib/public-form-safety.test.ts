@@ -121,7 +121,9 @@ const fakeFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<
     return new Response(null, { status: 201 })
   }
   if (method === 'PATCH') {
-    if (!db.keepRowsOnUpdate) for (const row of rows.filter(matches)) Object.assign(row, body)
+    const changed = db.keepRowsOnUpdate ? [] : rows.filter(matches)
+    for (const row of changed) Object.assign(row, body)
+    if ((headers.get('prefer') ?? '').includes('return=representation')) return json(changed)
     return new Response(null, { status: 204 })
   }
   if (method === 'DELETE') {
@@ -638,6 +640,10 @@ describe('visitor text appears as plain text in emails', () => {
   })
 
   it('newsletter team notification', async () => {
+    // PRIV-1: a link confirms an existing pending row; it never creates one.
+    db.tables.email_subscribers = [
+      { id: '0f8fad5b-d9cb-469f-a165-70867728950e', email: `<b>o'neil@example.com\n`, platform: 'ab', status: 'pending' },
+    ]
     const token = await new SignJWT({ email: `<b>o'neil@example.com\n`, platform: 'ab' })
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime('7d')

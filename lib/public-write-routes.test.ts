@@ -219,7 +219,8 @@ const scenarios: Scenario[] = [
     row: { email: 'ada@example.com', status: 'pending' },
     call: async () => confirmSubscription(get('/api/confirm-subscription?token=' + (await signedToken()))),
     healthy: { status: 307, location: SITE + '/?confirmed=true', emails: 1, dbRequests: 2 },
-    never: { status: 307, location: SITE + '/?confirmed=error', emails: 0, dbRequests: 2 },
+    // PRIV-1: a lookup that gets no answer stops the link at once.
+    never: { status: 307, location: SITE + '/?confirmed=error', emails: 0, dbRequests: 1 },
   },
   {
     name: 'contact form',
@@ -243,7 +244,8 @@ const scenarios: Scenario[] = [
     context: 'publicWrite',
     row: {},
     call: async () => contact(post('/api/contact', { email: 'ada@example.com', subscribeOnly: true, ...turnstile })),
-    healthy: { status: 200, body: { success: true }, emails: 0, dbRequests: 1, turnstile: 1 },
+    // PRIV-1: the shared double opt-in looks up, sends the confirmation e-mail, then records the pending row.
+    healthy: { status: 200, body: { success: true }, emails: 1, dbRequests: 2, turnstile: 1 },
     never: { status: 500, body: serverProblem, emails: 0, dbRequests: 1, turnstile: 1 },
   },
   {

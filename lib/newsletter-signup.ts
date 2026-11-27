@@ -13,7 +13,7 @@
 
 import { shouldSendConfirmationEmail } from './subscribe-dedup'
 import { checkEmailSend, type EmailSendResultLike } from './email-check'
-import { reportServerError, summariseError } from './report-error'
+import { reportServerError } from './report-error'
 import { getContactBrand, type ContactBrand } from './contact-brand'
 import { createConfirmationToken, type NewsletterPlatform } from './newsletter-tokens'
 import type { getServerSupabase } from './supabase-server'
@@ -36,9 +36,13 @@ type Db = ReturnType<typeof getServerSupabase>
 
 export const NEWSLETTER_SENDER = 'noreply@accountingbody.com'
 
-// The error's code only, for a log line.
+const SHORT_CODE = /^[A-Za-z0-9_.-]{1,40}$/
+
+// The error's code only, for a log line ('no-code' when it has none that
+// looks like a code). Never the message, which can echo an address.
 export function errorCode(error: unknown): string {
-  return summariseError(error).code ?? 'no-code'
+  const code = typeof error === 'object' && error !== null ? (error as { code?: unknown }).code : undefined
+  return typeof code === 'string' && SHORT_CODE.test(code) ? code : 'no-code'
 }
 
 export function newsletterBrand(platform: NewsletterPlatform): ContactBrand {

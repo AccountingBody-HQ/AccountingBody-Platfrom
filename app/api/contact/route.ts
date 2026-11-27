@@ -7,6 +7,7 @@ import { HUMAN_CHECK_FAILED_TEXT, SERVER_PROBLEM_TEXT, isMessageTooShort, messag
 import { verifyHumanCheck } from '@/lib/turnstile-verify'
 import { escapeHtml, withoutLineBreaks } from '@/lib/html-escape'
 import { reportServerError } from '@/lib/report-error'
+import { errorCode, startNewsletterSignup } from '@/lib/newsletter-signup'
 
 export async function POST(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
@@ -51,14 +52,17 @@ export async function POST(req: NextRequest) {
       const BLOCKED_DOMAINS_SUB = ['hardfer.com', 'mailinator.com', 'guerrillamail.com', 'trashmail.com', 'tempmail.com', 'yopmail.com', 'sharklasers.com', 'dispostable.com', 'maildrop.cc']
       const subEmailDomain = email?.split('@')[1]?.toLowerCase() ?? ''
       if (BLOCKED_DOMAINS_SUB.includes(subEmailDomain)) return NextResponse.json({ success: true })
-      const { error: subError } = await supabase
-        .from('email_subscribers')
-        .upsert({ email, platform: contactPlatformValue(isEthioTax), status: 'subscribed', source: 'contact_form' }, { onConflict: 'email,platform' })
-      if (subError) {
-        console.error('contact: newsletter save failed', subError.code || 'no-code')
-        return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
-      }
-      return NextResponse.json({ success: true })
+      // The shared double opt-in: nothing is recorded as subscribed until the
+      // person clicks the link in the confirmation e-mail.
+      const signup = await startNewsletterSignup({
+        supabase,
+        resend,
+        email,
+        platform: contactPlatformValue(isEthioTax),
+        source: 'contact_form',
+      })
+      if (signup.kind === 'sent' || signup.kind === 'already-sent') return NextResponse.json({ success: true })
+      return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
     }
 
     // Full contact form path
@@ -75,13 +79,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
     }
 
-    // Also subscribe if checkbox was ticked
+    // Newsletter box ticked: the shared double opt-in sends a confirmation
+    // e-mail. The message is saved, so whatever happens here the visitor
+    // still gets the contact answer and both e-mails below.
+    let newsletter: 'check-inbox' | undefined
     if (subscribe) {
-      const { error: subError } = await supabase
-        .from('email_subscribers')
-        .upsert({ email, platform: contactPlatformValue(isEthioTax), status: 'subscribed', source: 'contact_form' }, { onConflict: 'email,platform' })
-      if (subError) {
-        console.error('Subscribe error (non-fatal):', subError)
+      try {
+        const signup = await startNewsletterSignup({
+          supabase,
+          resend,
+          email,
+          platform: contactPlatformValue(isEthioTax),
+          source: 'contact_form',
+        })
+        if (signup.kind === 'sent' || signup.kind === 'already-sent') newsletter = 'check-inbox'
+        else reportServerError('contact newsletter signup failed', new Error('newsletter signup failed'), { area: 'public', code: signup.kind })
+      } catch (newsletterError) {
+        console.error('contact: newsletter signup failed', errorCode(newsletterError))
+        reportServerError('contact newsletter signup failed', newsletterError, { area: 'public' })
       }
     }
 
@@ -184,7 +199,7 @@ export async function POST(req: NextRequest) {
     })
     checkEmailSend(ackResult, 'contact acknowledgement')
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json(newsletter ? { success: true, newsletter } : { success: true })
   } catch (error) {
     console.error('Contact route error:', error)
     reportServerError('contact submit failed', error, { area: 'public' })

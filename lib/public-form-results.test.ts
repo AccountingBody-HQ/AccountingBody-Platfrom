@@ -63,8 +63,8 @@ function json(body: unknown, status = 200, headers: Record<string, string> = {})
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...headers } })
 }
 
-// Supports what these routes send: eq filters on select and delete, insert
-// and upsert (merged on the given columns).
+// Supports what these routes send: eq filters on select, update and delete,
+// insert and upsert (merged on the given columns).
 function eqFilters(params: URLSearchParams): [string, string][] {
   const filters: [string, string][] = []
   params.forEach((value, key) => {
@@ -111,6 +111,12 @@ const fakeFetch: typeof fetch = async (input, init) => {
       else rows.push({ ...row })
     }
     return new Response(null, { status: 201 })
+  }
+  if (method === 'PATCH') {
+    const changed = rows.filter((row) => matches(row, filters))
+    for (const row of changed) Object.assign(row, body)
+    if (prefer.includes('return=representation')) return json(changed)
+    return new Response(null, { status: 204 })
   }
   if (method === 'DELETE') {
     const removed = rows.filter((row) => matches(row, filters))
@@ -274,13 +280,16 @@ describe('contact form', () => {
     expect(logs).toEqual(['contact: save failed XX000'])
   })
 
+  // PRIV-1: the newsletter-only request uses the shared double opt-in, so a
+  // failed lookup sends nothing and the visitor sees the same friendly message.
   it('shows a friendly message when a newsletter-only signup cannot be saved', async () => {
     db.rules = [{ table: 'email_subscribers', answer: 'error' }]
     const result = await read(
       await contact(post('/api/contact', { email: 'ada@example.com', subscribeOnly: true, ...turnstile })),
     )
     expect(result).toEqual({ status: 500, location: null, body: { error: SERVER_PROBLEM_TEXT } })
-    expect(logs).toEqual(['contact: newsletter save failed XX000'])
+    expect(mail.sent).toEqual([])
+    expect(logs).toEqual(['newsletter signup: lookup failed XX000'])
   })
 
   it('still confirms a saved message when the team notification fails, and logs it', async () => {
@@ -403,8 +412,16 @@ describe('newsletter signup', () => {
     expect(mail.sent.map((m) => [m.from, m.to, m.subject])).toEqual([
       ['Accounting Body <noreply@accountingbody.com>', 'ada@example.com', 'Confirm your subscription - Accounting Body'],
     ])
+    // PRIV-1: the row also holds the link token's hash and where they signed up.
     expect(db.tables.email_subscribers).toEqual([
-      { email: 'ada@example.com', platform: 'ab', status: 'pending', last_confirmation_sent_at: '2026-06-01T09:00:00.000Z' },
+      {
+        email: 'ada@example.com',
+        platform: 'ab',
+        status: 'pending',
+        last_confirmation_sent_at: '2026-06-01T09:00:00.000Z',
+        confirmation_token: expect.stringMatching(/^[0-9a-f]{64}$/),
+        source: 'footer',
+      },
     ])
     expect(logs).toEqual([])
   })
@@ -448,14 +465,15 @@ describe('newsletter signup', () => {
     expect(writes()).toEqual([])
   })
 
-  it('sends a confirmation to an existing subscriber without changing their row, as before', async () => {
+  // PRIV-1: only the new link token's hash is stored; the status never changes.
+  it('sends a confirmation to an existing subscriber without changing their status, as before', async () => {
     const row = { email: 'ada@example.com', platform: 'ab', status: 'subscribed', last_confirmation_sent_at: null }
     db.tables.email_subscribers = [{ ...row }]
     const result = await read(await signup())
     expect(result).toEqual({ status: 200, location: null, body: { success: true } })
     expect(mail.sent).toHaveLength(1)
-    expect(writes()).toEqual([])
-    expect(db.tables.email_subscribers).toEqual([row])
+    expect(writes().map((r) => `${r.method} ${r.table}`)).toEqual(['PATCH email_subscribers'])
+    expect(db.tables.email_subscribers).toEqual([{ ...row, confirmation_token: expect.stringMatching(/^[0-9a-f]{64}$/) }])
   })
 
   it('keeps its existing answer for filtered submissions', async () => {
@@ -481,8 +499,10 @@ describe('subscription confirmation link', () => {
     return confirmSubscription(new NextRequest(SITE + '/api/confirm-subscription?token=' + token))
   }
 
+  const ROW_ID = '0f8fad5b-d9cb-469f-a165-70867728950e'
+
   it('confirms the subscription and notifies the team as before', async () => {
-    db.tables.email_subscribers = [{ email: 'ada@example.com', platform: 'ab', status: 'pending' }]
+    db.tables.email_subscribers = [{ id: ROW_ID, email: 'ada@example.com', platform: 'ab', status: 'pending' }]
     const result = await read(await link())
     expect(result.location).toBe(SITE + '/?confirmed=true')
     expect(mail.sent.map((m) => m.to)).toEqual(['info@accountingbody.com'])
@@ -490,7 +510,7 @@ describe('subscription confirmation link', () => {
   })
 
   it('still confirms the subscription when the team notification fails, and logs it', async () => {
-    db.tables.email_subscribers = [{ email: 'ada@example.com', platform: 'ab', status: 'pending' }]
+    db.tables.email_subscribers = [{ id: ROW_ID, email: 'ada@example.com', platform: 'ab', status: 'pending' }]
     mail.fail = () => true
     const result = await read(await link())
     expect(result).toEqual({ status: 307, location: SITE + '/?confirmed=true', body: '' })

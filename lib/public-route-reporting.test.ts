@@ -204,6 +204,9 @@ const ROUTES: Route[] = [
       ['person check', () => { state.personOk = false }],
       ['database error', () => { db.failing = true }],
     ],
+    // PRIV-1: a newsletter problem after the message is saved is reported
+    // under its own label and does not change the contact answer.
+    fixedProblemLabels: ['contact newsletter signup failed'],
   },
   {
     name: 'help-request',

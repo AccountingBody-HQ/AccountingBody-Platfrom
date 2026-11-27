@@ -34,6 +34,7 @@ export default function ContactForm({ isEthioTax = false }: { isEthioTax?: boole
   const [formState, setFormState]     = useState<FormState>('idle')
   const successHeading = useFocusOnShow<HTMLHeadingElement>(formState === 'success')
   const [errorMsg, setErrorMsg]       = useState('')
+  const [newsletterCheckInbox, setNewsletterCheckInbox] = useState(false)
   const [subscribeState, setSubState] = useState<FormState>('idle')
   const [subAlreadySent, setSubAlreadySent] = useState(false)
   const [subErrorMsg, setSubErrorMsg] = useState('')
@@ -224,6 +225,7 @@ export default function ContactForm({ isEthioTax = false }: { isEthioTax?: boole
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'Something went wrong')
+      setNewsletterCheckInbox(json.newsletter === 'check-inbox')
       setFormState('success')
       form.reset()
       discardWidget(contactWidgetId)
@@ -286,6 +288,11 @@ export default function ContactForm({ isEthioTax = false }: { isEthioTax?: boole
               <p className="text-slate-500 text-sm max-w-sm leading-relaxed">
                 Thank you for getting in touch. We will reply within 2 business days.
               </p>
+              {newsletterCheckInbox && (
+                <p className="text-slate-500 text-sm max-w-sm leading-relaxed">
+                  Check your inbox to confirm your newsletter sign-up.
+                </p>
+              )}
               <button onClick={() => setFormState('idle')}
                 className="mt-6 text-sm font-medium text-navy-700 hover:text-gold-600 transition-colors">
                 Send another message
@@ -327,7 +334,7 @@ export default function ContactForm({ isEthioTax = false }: { isEthioTax?: boole
                   className="w-full px-4 py-3 rounded-lg border border-slate-300 text-sm text-navy-950 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent transition resize-none" />
               </div>
               <div className="flex items-start gap-3 bg-slate-50 rounded-lg p-4 border border-slate-200">
-                <input id="subscribe" name="subscribe" type="checkbox" defaultChecked
+                <input id="subscribe" name="subscribe" type="checkbox"
                   className="w-4 h-4 mt-0.5 rounded border-slate-300 text-navy-950 focus:ring-navy-950 shrink-0" />
                 <label htmlFor="subscribe" className="text-sm text-slate-600 leading-relaxed cursor-pointer">
                   Also subscribe me to the free weekly email — exam tips and study guides written by qualified accountants.
