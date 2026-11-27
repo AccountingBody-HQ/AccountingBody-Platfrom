@@ -24,16 +24,20 @@ export function subscribeConsent(fn: (e: ConsentEvent) => void): () => void {
   }
 }
 
+// The choice made on this page, for when storage cannot keep it (blocked or full).
+let pageChoice: ConsentChoice | null = null
+
 export function readConsent(): ConsentChoice | null {
   try {
     const v = localStorage.getItem(CONSENT_KEY)
-    return v === 'accepted' || v === 'declined' ? v : null
+    return v === 'accepted' || v === 'declined' ? v : pageChoice
   } catch {
-    return null
+    return pageChoice
   }
 }
 
 export function writeConsent(choice: ConsentChoice) {
+  pageChoice = choice
   try {
     localStorage.setItem(CONSENT_KEY, choice)
   } catch {

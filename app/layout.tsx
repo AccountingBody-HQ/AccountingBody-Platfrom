@@ -5,8 +5,6 @@
 
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
-import { Analytics } from '@vercel/analytics/next'
-import { SpeedInsights } from '@vercel/speed-insights/next'
 import { NavigationWrapper } from '@/components/layout/NavigationWrapper'
 import { Footer } from '@/components/layout/Footer'
 import { EthioTaxWhatsAppButton } from '@/components/layout/EthioTaxWhatsAppButton'
@@ -16,6 +14,7 @@ import StructuredData from '@/components/StructuredData'
 import { organizationSchema, websiteSchema } from '@/lib/structured-data'
 import CookieConsent from '@/components/CookieConsent'
 import { adsenseClientId } from '@/lib/consent'
+import VercelStatistics from '@/components/VercelStatistics'
 import ScrollToTop from '@/components/ScrollToTop'
 import RouteProgressBar from '@/components/RouteProgressBar'
 import Script from 'next/script'
@@ -152,8 +151,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             questionCount={questionCount}
           />
           <ScrollToTop />
-          <Analytics />
-          <SpeedInsights />
+          <VercelStatistics />
           {isEthioTax && <EthioTaxWhatsAppButton />}
         </body>
       </html>
