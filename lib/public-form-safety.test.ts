@@ -356,6 +356,8 @@ const jobSeekerForm = {
   years_experience: '5',
   employment_status: 'Employed',
   biography: 'Experienced accountant.',
+  terms_agreed: true,
+  data_consent: true,
   ...turnstile,
 }
 const briefForm = {
@@ -670,6 +672,8 @@ describe('visitor text appears as plain text in emails', () => {
         years_experience: '5',
         employment_status: 'Employed',
         biography: 'Experienced accountant.',
+        terms_agreed: true,
+        data_consent: true,
         ...turnstile,
       }),
     )

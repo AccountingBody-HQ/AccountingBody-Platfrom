@@ -394,6 +394,8 @@ const scenarios: Scenario[] = [
           years_experience: '5',
           employment_status: 'employed',
           biography: 'Experienced management accountant.',
+          terms_agreed: true,
+          data_consent: true,
           ...turnstile,
         }),
       ),

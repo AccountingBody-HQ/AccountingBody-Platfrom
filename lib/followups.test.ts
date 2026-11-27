@@ -481,6 +481,8 @@ describe('recruitment logs', () => {
       years_experience: '5',
       employment_status: 'employed',
       biography: 'Seed biography text',
+      terms_agreed: true,
+      data_consent: true,
       'cf-turnstile-response': 'token',
     }
     const result = await answerOf(await jobSeekerApply(request('/api/recruitment/job-seeker-apply', { method: 'POST', body })))

@@ -6,6 +6,8 @@ import { HUMAN_CHECK_FAILED_TEXT, SERVER_PROBLEM_TEXT } from "@/lib/message-rule
 import { verifyHumanCheck } from "@/lib/turnstile-verify"
 import { escapeHtml } from "@/lib/html-escape"
 import { reportServerError } from "@/lib/report-error"
+import { isEthioTaxHeader } from "@/lib/brand"
+import { contactPlatformValue } from "@/lib/contact-brand"
 
 function generateToken() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36)
@@ -21,7 +23,7 @@ export async function POST(req: NextRequest) {
     // Nothing is saved or sent unless it passed. The site is the one the
     // request came through, as for the widget's site key.
     const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for") ?? ""
-    const onSecondSite = req.headers.get("x-et-platform") === "ethiotax"
+    const onSecondSite = isEthioTaxHeader(req.headers)
     const humanCheck = await verifyHumanCheck(body["cf-turnstile-response"], ip, onSecondSite, "job seeker registration")
     if (!humanCheck.ok) {
       return NextResponse.json({ error: HUMAN_CHECK_FAILED_TEXT }, { status: 400 })
@@ -36,8 +38,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const platform = body.platform ?? "ab"
-    const isET = platform === "et"
+    // Both ticks are required (PRIV-4): the privacy notice and the terms.
+    // Only exactly true counts, so a request that skips the form cannot
+    // register without them. Checked before anything is saved or sent.
+    for (const field of ["terms_agreed", "data_consent"]) {
+      if (body[field] !== true) {
+        return NextResponse.json({ error: `Missing required field: ${field}` }, { status: 400 })
+      }
+    }
+
+    // The site is the one the request came through (the brand header),
+    // never a value the browser sends.
+    const platform = contactPlatformValue(onSecondSite)
+    const isET = onSecondSite
     const platformName = isET ? "EthioTax" : "Accounting Body"
     const brandColor = isET ? "#1A4731" : "#0C1A3D"
     const baseUrl = isET ? "https://ethiotax.com" : "https://accountingbody.com"
@@ -63,9 +76,9 @@ export async function POST(req: NextRequest) {
         jurisdictions:      body.jurisdictions || null,
         languages:          body.languages || null,
         biography:          body.biography.trim(),
-        terms_agreed:       body.terms_agreed ?? false,
+        terms_agreed:       true,
         pathway:            body.pathway ?? 'direct',
-        data_consent:       body.data_consent ?? false,
+        data_consent:       true,
         status:             "pending_verification",
         verification_token: token,
       })
