@@ -15,6 +15,7 @@ import { getCachedPublishedArticleCount, getCachedPublishedQuestionCount } from 
 import StructuredData from '@/components/StructuredData'
 import { organizationSchema, websiteSchema } from '@/lib/structured-data'
 import CookieConsent from '@/components/CookieConsent'
+import { adsenseClientId } from '@/lib/consent'
 import ScrollToTop from '@/components/ScrollToTop'
 import RouteProgressBar from '@/components/RouteProgressBar'
 import Script from 'next/script'
@@ -128,7 +129,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           >
             Skip to main content
           </a>
-          <CookieConsent gtmId={GTM_ID ?? ''} adsenseId={process.env.NEXT_PUBLIC_ADSENSE_ID ?? ''} isEthioTax={isEthioTax} />
+          <CookieConsent gtmId={GTM_ID ?? ''} adsenseId={adsenseClientId()} isEthioTax={isEthioTax} />
           <RouteProgressBar />
           <Script
             id="cf-turnstile-script"

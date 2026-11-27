@@ -5,6 +5,7 @@ import { ownerCanonical } from '@/lib/canonical'
 import { getRequestBrand } from '@/lib/brand-server'
 import { brandText } from '@/lib/et-wording'
 import ForgetPracticeProgress from '@/components/ForgetPracticeProgress'
+import { adsenseClientId } from '@/lib/consent'
 
 export async function generateMetadata(): Promise<Metadata> {
   const { isEthioTax } = await getRequestBrand()
@@ -18,23 +19,38 @@ export async function generateMetadata(): Promise<Metadata> {
 // etOnly rows are shown on the EthioTax view only.
 type CookieRow = { name: string; provider: string; purpose: string; duration: string; etOnly?: boolean }
 
-const cookies: { category: string; bar: string; always: boolean; items: CookieRow[] }[] = [
-  { category: 'Necessary',  bar: 'bg-teal-600',  always: true,
+// adsOnly groups are shown only when this site can load AdSense: the same
+// condition as the banner's advertising sentence (adsenseClientId, lib/consent.ts).
+// The optional groups share one bar colour (one recorded class use, lib/et-brand-surfaces.test.ts).
+const OPTIONAL_BAR = 'bg-navy-800'
+const cookies: { category: string; bar: string; always: boolean; adsOnly?: boolean; items: CookieRow[] }[] = [
+  { category: 'Necessary cookies',  bar: 'bg-teal-600',  always: true,
     items: [
-      { name: '_cf_clearance',  provider: 'Cloudflare',  purpose: 'Security — proves your browser passed a challenge.', duration: '30 mins' },
+      { name: 'cf_clearance',   provider: 'Cloudflare',  purpose: 'Security: set only if Cloudflare asks your browser to pass a check.', duration: 'Up to 30 minutes' },
+      { name: 'Turnstile (no cookie)', provider: 'Cloudflare', purpose: 'Checks that forms are sent by a person, not a bot. It reads browser details but stores no cookie.', duration: 'While the page is open' },
       { name: 'ab_vid',         provider: 'Accounting Body', purpose: 'Remembers the jobs you saved on this device.', duration: '7 days' },
       { name: 'x-et-platform',  provider: 'Accounting Body', purpose: 'Identifies which platform (Accounting Body or EthioTax) the visitor is using. No personal data stored.', duration: 'Session' },
       { name: 'et_language',    provider: 'EthioTax',         purpose: 'Remembers the language you chose.', duration: '1 year', etOnly: true },
       { name: 'googtrans',      provider: 'Google Translate', purpose: 'Shows pages in the language you chose.', duration: 'Until you close your browser', etOnly: true },
     ],
   },
-  { category: 'Analytics',  bar: 'bg-navy-800',  always: false,
+  { category: 'Statistics (no cookies)',  bar: OPTIONAL_BAR,  always: false,
     items: [
-      { name: '_va_*',  provider: 'Vercel Analytics', purpose: 'Privacy-first page view counting. No personal data stored.', duration: 'Session' },
-      { name: '_ga',    provider: 'Google Analytics', purpose: 'Tracks pages visited and time on site (optional).',          duration: '2 years' },
+      { name: 'Vercel Web Analytics',  provider: 'Vercel', purpose: 'Counts page visits without cookies and without identifying you. Choosing "Reject non-essential cookies" turns it off.', duration: 'No cookie' },
+      { name: 'Vercel Speed Insights', provider: 'Vercel', purpose: 'Measures how fast pages load. Choosing "Reject non-essential cookies" turns it off.', duration: 'No cookie' },
     ],
   },
-
+  { category: 'Analytics cookies',  bar: OPTIONAL_BAR,  always: false,
+    items: [
+      { name: '_ga',      provider: 'Google Analytics', purpose: 'Tells visits apart for Google Analytics (only if you accept).', duration: '2 years' },
+      { name: '_ga_<id>', provider: 'Google Analytics', purpose: 'Keeps the state of your visit for Google Analytics (only if you accept).', duration: '2 years' },
+    ],
+  },
+  { category: 'Advertising cookies',  bar: OPTIONAL_BAR,  always: false,  adsOnly: true,
+    items: [
+      { name: '__gads, __gpi, __eoi', provider: 'Google AdSense', purpose: 'Shows ads and limits how often you see them (only if you accept). Google may also set cookies on its own domains.', duration: 'Up to 13 months' },
+    ],
+  },
 ]
 
 const STORAGE_INTRO = "Some features keep small notes in your browser's storage on this device instead of in a cookie. They stay on your device unless a row below says otherwise, and most of them stay until you clear this website's data in your browser settings."
@@ -54,6 +70,7 @@ const storage: { name: string; purpose: string; duration: string; etOnly?: boole
 
 export default async function CookiePolicyPage() {
   const { isEthioTax } = await getRequestBrand()
+  const showAds = adsenseClientId() !== ''
   return (
     <>
       <section className="relative overflow-hidden bg-navy-950 py-16 md:py-20">
@@ -79,11 +96,11 @@ export default async function CookiePolicyPage() {
 
             <h2 className="font-display text-2xl text-navy-950 mb-6">Cookies we use</h2>
             <div className="space-y-6 mb-10">
-              {cookies.map(cat => (
+              {cookies.filter(cat => !cat.adsOnly || showAds).map(cat => (
                 <div key={cat.category} className="rounded-xl border border-slate-200 overflow-hidden">
                   <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200 bg-slate-50">
                     <span className={`w-3 h-3 rounded-full ${cat.bar}`} />
-                    <h3 className="font-semibold text-navy-950 text-sm">{cat.category} cookies</h3>
+                    <h3 className="font-semibold text-navy-950 text-sm">{cat.category}</h3>
                     {cat.always && <span className="ml-auto text-xs text-slate-400 italic">Always active</span>}
                   </div>
                   <div className="divide-y divide-slate-100">
@@ -121,6 +138,7 @@ export default async function CookiePolicyPage() {
 
             <h2 className="font-display text-2xl text-navy-950 mb-4">How to manage cookies</h2>
             <p className="text-slate-500 text-sm leading-relaxed mb-6">
+              You can change your choice at any time with &quot;Cookie settings&quot; at the bottom of every page.{' '}
               You can control cookies through your browser settings. Disabling necessary cookies will prevent the site
               from working correctly. You can also opt out of Google Analytics at{" "}
               <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer"

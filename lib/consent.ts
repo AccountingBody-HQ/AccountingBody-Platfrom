@@ -42,6 +42,15 @@ export function writeConsent(choice: ConsentChoice) {
   emit('change')
 }
 
+/**
+ * The AdSense client id, or '' when ads are off. The one condition for "this site can load AdSense":
+ * the root layout passes it to the banner, and the cookie page lists the advertising cookies only
+ * when it is set. Safe on the server (it only reads the build-time value).
+ */
+export function adsenseClientId(): string {
+  return process.env.NEXT_PUBLIC_ADSENSE_ID ?? ''
+}
+
 /** Re-open the banner so the visitor can change the choice (footer "Cookie settings"). */
 export function openConsentSettings() {
   emit('open')
