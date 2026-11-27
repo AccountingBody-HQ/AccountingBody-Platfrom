@@ -33,7 +33,8 @@ const DAY_MS = 24 * HOUR_MS
 export const IMPORT_WINDOW_MS = 26 * HOUR_MS
 
 // The daily jobs (expiry 06:00, subscriber clean-up 06:30, saved-jobs
-// clean-up 07:00 UTC) can leave a due row in place for up to a day. 26 hours
+// clean-up 07:00, job retention 07:30 UTC) can leave a due row in place for
+// up to a day. 26 hours
 // covers the day between runs and the run itself, with margin.
 export const DAILY_GRACE_MS = 26 * HOUR_MS
 

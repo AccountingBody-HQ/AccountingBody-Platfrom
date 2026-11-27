@@ -8,6 +8,7 @@ import { escapeHtml, withoutLineBreaks } from '@/lib/html-escape'
 import { reportServerError } from '@/lib/report-error'
 import { isEthioTaxHeader } from '@/lib/brand'
 import { contactPlatformValue } from '@/lib/contact-brand'
+import { errorCode } from '@/lib/recycle-bin'
 
 export async function POST(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
@@ -177,7 +178,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Help request error:', error)
+    console.error('Help request error:', errorCode(error))
     reportServerError('help request submit failed', error, { area: 'public' })
     return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 })
   }

@@ -3,6 +3,7 @@ import { Resend } from 'resend'
 import { getJobByManageToken, closeJobByManageToken, type Job, type JobStatus } from '@/lib/jobs'
 import { reportServerError } from '@/lib/report-error'
 import { brandName, compactBrandName, isEthioTaxJobPlatform } from '@/lib/brand'
+import { errorCode } from '@/lib/recycle-bin'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -47,7 +48,7 @@ export async function GET(req: NextRequest) {
     }
     return NextResponse.json({ job: toPublicJob(job) })
   } catch (err: unknown) {
-    console.error('jobs/manage GET error:', err)
+    console.error('jobs/manage GET error:', errorCode(err))
     reportServerError('job manage link failed', err, { area: 'public' })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
@@ -98,12 +99,12 @@ export async function POST(req: NextRequest) {
         html: `<p>Your listing for ${job.title} at ${job.company_name} has been withdrawn from ${compactName}.</p><p>If this was a mistake, please contact us at info@accountingbody.com.</p>`,
       })
     } catch (emailErr: unknown) {
-      console.error('jobs/manage POST: withdrawal email failed (non-fatal):', emailErr)
+      console.error('jobs/manage POST: withdrawal email failed (non-fatal):', errorCode(emailErr))
     }
 
     return NextResponse.json({ success: true, job: toPublicJob(job) })
   } catch (err: unknown) {
-    console.error('jobs/manage POST error:', err)
+    console.error('jobs/manage POST error:', errorCode(err))
     reportServerError('job withdraw failed', err, { area: 'public' })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

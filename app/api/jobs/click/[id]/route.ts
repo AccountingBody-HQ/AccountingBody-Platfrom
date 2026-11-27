@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { incrementJobClicks } from '@/lib/jobs'
 import { reportServerError } from '@/lib/report-error'
+import { errorCode } from '@/lib/recycle-bin'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +14,7 @@ export async function POST(_req: NextRequest, { params }: RouteParams) {
     const { id } = await params
     await incrementJobClicks(id)
   } catch (err: unknown) {
-    console.error('api/jobs/click error (non-fatal):', err)
+    console.error('api/jobs/click error (non-fatal):', errorCode(err))
     reportServerError('job click failed', err, { area: 'public' })
   }
   return NextResponse.json({ success: true })

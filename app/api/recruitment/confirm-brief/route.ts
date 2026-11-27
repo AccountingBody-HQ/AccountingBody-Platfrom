@@ -7,6 +7,7 @@ import { checkEmailSend } from "@/lib/email-check"
 import { escapeHtml, withoutLineBreaks } from "@/lib/html-escape"
 import { reportServerError } from "@/lib/report-error"
 import { getAdminPath } from "@/lib/middleware-logic"
+import { errorCode } from "@/lib/recycle-bin"
 
 // Every answer depends on the link's token, so this route must never be
 // pre-built: a build without the e-mail key would otherwise freeze the
@@ -115,7 +116,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(baseUrl + "/jobs/hire-talent?brief=invalid")
 
   } catch (err) {
-    console.error("confirm-brief error:", err)
+    console.error("confirm-brief error:", errorCode(err))
     reportServerError("hiring brief confirm failed", err, { area: "public" })
     return NextResponse.redirect("https://accountingbody.com/jobs/hire-talent?brief=invalid")
   }

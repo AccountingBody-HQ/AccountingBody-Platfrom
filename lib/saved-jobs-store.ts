@@ -5,6 +5,7 @@
 import { getServerSupabase, type DbContext } from './supabase-server'
 import { SAVED_JOBS_LIMIT } from './saved-jobs'
 import { reportServerError } from './report-error'
+import { errorCode } from './recycle-bin'
 
 function getSupabase(context: DbContext = 'publicRead') {
   return getServerSupabase(context)
@@ -193,7 +194,7 @@ export async function touchLastSeen(visitorId: string, platform: string, throttl
       reportServerError('saved jobs last seen save failed', new Error('saved jobs last seen save failed'), { area: 'public' })
     }
   } catch (err) {
-    console.error('touchLastSeen: unexpected error (non-fatal):', err)
+    console.error('touchLastSeen: unexpected error (non-fatal):', errorCode(err))
     reportServerError('saved jobs last seen save threw', new Error('saved jobs last seen save threw'), { area: 'public' })
   }
 }

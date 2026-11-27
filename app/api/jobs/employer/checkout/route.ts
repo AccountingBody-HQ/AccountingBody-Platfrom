@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { createJob, type ApplyMethod, type Job, type JobInsert } from '@/lib/jobs'
 import { reportServerError } from '@/lib/report-error'
+import { errorCode } from '@/lib/recycle-bin'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -174,7 +175,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ checkoutUrl })
   } catch (err: unknown) {
-    console.error('jobs/employer/checkout error:', err)
+    console.error('jobs/employer/checkout error:', errorCode(err))
 
     // Clean up the draft job row so a failed checkout doesn't leave an
     // orphaned pending_payment row (and, via the dedup index, block a
@@ -183,7 +184,7 @@ export async function POST(req: NextRequest) {
       try {
         await getSupabase().from('jobs').delete().eq('id', createdJobId)
       } catch (cleanupErr: unknown) {
-        console.error('jobs/employer/checkout cleanup failed:', cleanupErr)
+        console.error('jobs/employer/checkout cleanup failed:', errorCode(cleanupErr))
       }
     }
 

@@ -5,6 +5,7 @@ import { sendJobConfirmationEmail, sendAdminJobNotificationEmail } from '@/lib/j
 import { Resend } from 'resend'
 import { reportServerError } from '@/lib/report-error'
 import { brandName, isEthioTaxJobPlatform } from '@/lib/brand'
+import { errorCode } from '@/lib/recycle-bin'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -107,18 +108,18 @@ export async function POST(req: NextRequest) {
       try {
         await getSupabase().from('jobs').update({ stripe_session_id: orderId }).eq('id', jobId)
       } catch (traceErr: unknown) {
-        console.error('jobs/employer/webhook: failed to record order id on stripe_session_id (non-fatal):', traceErr)
+        console.error('jobs/employer/webhook: failed to record order id on stripe_session_id (non-fatal):', errorCode(traceErr))
       }
 
       try {
         await sendJobConfirmationEmail(job, manageToken ?? job.manage_token ?? '')
       } catch (emailErr: unknown) {
-        console.error('jobs/employer/webhook: confirmation email failed (non-fatal):', emailErr)
+        console.error('jobs/employer/webhook: confirmation email failed (non-fatal):', errorCode(emailErr))
       }
       try {
         await sendAdminJobNotificationEmail(job)
       } catch (emailErr: unknown) {
-        console.error('jobs/employer/webhook: admin notification email failed (non-fatal):', emailErr)
+        console.error('jobs/employer/webhook: admin notification email failed (non-fatal):', errorCode(emailErr))
       }
 
       return NextResponse.json({ received: true })
@@ -138,7 +139,7 @@ export async function POST(req: NextRequest) {
           .single()
 
         if (error) {
-          console.error('jobs/employer/webhook: order_refunded update failed:', error)
+          console.error('jobs/employer/webhook: order_refunded update failed:', errorCode(error))
         } else if (job) {
           try {
             await getResend().emails.send({
@@ -148,7 +149,7 @@ export async function POST(req: NextRequest) {
               html: `<p>Dear ${job.employer_name.split(' ')[0]},</p><p>Your payment for the listing "${job.title}" at ${job.company_name} has been refunded, and the listing has been closed.</p><p>If you believe this is an error, please contact us.</p>`,
             })
           } catch (emailErr: unknown) {
-            console.error('jobs/employer/webhook: refund email failed (non-fatal):', emailErr)
+            console.error('jobs/employer/webhook: refund email failed (non-fatal):', errorCode(emailErr))
           }
         }
       }
@@ -159,7 +160,7 @@ export async function POST(req: NextRequest) {
     // All other events: acknowledge, ignore.
     return NextResponse.json({ received: true })
   } catch (err: unknown) {
-    console.error('jobs/employer/webhook processing error:', err)
+    console.error('jobs/employer/webhook processing error:', errorCode(err))
     reportServerError('payment notice failed', err, { area: 'public' })
     // Always 200 here — see comment above the handler.
     return NextResponse.json({ received: true })

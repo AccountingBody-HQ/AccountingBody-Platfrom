@@ -4,6 +4,7 @@ import { getActiveDirectJobs, buildSimilarQuery, type Job } from '@/lib/jobs'
 import { buildPhraseQuery, buildAndQuery, pickJobSearchTier } from '@/app/search/jobSearchTiers'
 import { reportServerError } from '@/lib/report-error'
 import { sanitiseWord, searchWords } from '@/lib/search-words'
+import { errorCode } from '@/lib/recycle-bin'
 
 const JOB_PANEL_LIMIT = 5
 
@@ -143,7 +144,7 @@ async function fetchJobsForSearch(rawQuery: string, platform: string): Promise<J
     ])
     return { jobs: orJobs, jobsTotal: orTotal, jobsSearchQuery: orTerm }
   } catch (err: unknown) {
-    console.error('[search] job query failed:', err)
+    console.error('[search] job query failed:', errorCode(err))
     reportServerError('search job lookup failed', err, { area: 'public' })
     return NO_JOBS
   }

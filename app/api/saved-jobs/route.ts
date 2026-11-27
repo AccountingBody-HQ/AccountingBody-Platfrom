@@ -19,6 +19,7 @@ import {
   touchLastSeen,
 } from '@/lib/saved-jobs-store'
 import { reportServerError } from '@/lib/report-error'
+import { errorCode } from '@/lib/recycle-bin'
 
 export const dynamic = 'force-dynamic'
 // force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
@@ -94,7 +95,7 @@ export async function GET(req: NextRequest) {
     res.cookies.set(SAVED_JOBS_COOKIE, visitorId, savedJobsCookieOptions())
     return res
   } catch (err) {
-    console.error('api/saved-jobs GET error:', err)
+    console.error('api/saved-jobs GET error:', errorCode(err))
     reportServerError('saved jobs load failed', err, { area: 'public' })
     return NextResponse.json({ error: 'server_error' }, { status: 500, headers: NO_STORE })
   }
@@ -146,7 +147,7 @@ export async function POST(req: NextRequest) {
     res.cookies.set(SAVED_JOBS_COOKIE, visitorId, savedJobsCookieOptions())
     return res
   } catch (err) {
-    console.error('api/saved-jobs POST error:', err)
+    console.error('api/saved-jobs POST error:', errorCode(err))
     reportServerError('saved job save failed', err, { area: 'public' })
     return NextResponse.json({ error: 'server_error' }, { status: 500, headers: NO_STORE })
   }
@@ -179,7 +180,7 @@ export async function DELETE(req: NextRequest) {
     res.cookies.set(SAVED_JOBS_COOKIE, visitorId, savedJobsCookieOptions())
     return res
   } catch (err) {
-    console.error('api/saved-jobs DELETE error:', err)
+    console.error('api/saved-jobs DELETE error:', errorCode(err))
     reportServerError('saved job remove failed', err, { area: 'public' })
     return NextResponse.json({ error: 'server_error' }, { status: 500, headers: NO_STORE })
   }

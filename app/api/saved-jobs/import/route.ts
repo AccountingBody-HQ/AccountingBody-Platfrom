@@ -9,6 +9,7 @@ import {
 } from '@/lib/saved-jobs'
 import { insertManySaved, listSavedIds, touchLastSeen } from '@/lib/saved-jobs-store'
 import { reportServerError } from '@/lib/report-error'
+import { errorCode } from '@/lib/recycle-bin'
 
 export const dynamic = 'force-dynamic'
 // force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
     }
     return res
   } catch (err) {
-    console.error('api/saved-jobs/import POST error:', err)
+    console.error('api/saved-jobs/import POST error:', errorCode(err))
     reportServerError('saved jobs import failed', err, { area: 'public' })
     return NextResponse.json({ error: 'server_error' }, { status: 500, headers: NO_STORE })
   }

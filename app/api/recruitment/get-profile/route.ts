@@ -3,6 +3,7 @@ import { getServerSupabase } from "@/lib/supabase-server"
 import { checkRead } from "@/lib/db-check"
 import { SERVER_PROBLEM_TEXT } from "@/lib/message-rules"
 import { reportServerError } from "@/lib/report-error"
+import { errorCode } from "@/lib/recycle-bin"
 
 export async function GET(req: NextRequest) {
   try {
@@ -65,7 +66,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid type" }, { status: 400 })
 
   } catch (err) {
-    console.error("get-profile error:", err)
+    console.error("get-profile error:", errorCode(err))
     reportServerError("profile lookup failed", err, { area: "public" })
     return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })
   }

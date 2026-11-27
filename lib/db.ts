@@ -6,6 +6,7 @@ import { guardCachedRead } from '@/lib/cache-guard'
 import { reportServerError } from '@/lib/report-error'
 import { readPaged, readPagedIn } from '@/lib/mock-exam-pool'
 import { MOCK_EXAM_SUBJECTS, findMockExamSubject } from '@/lib/mock-exam-subjects'
+import { errorCode } from '@/lib/recycle-bin'
 
 // Every function in this file that has a caller serves public pages, so all
 // use the public read limit (the default), except the whole-table counts,
@@ -141,7 +142,7 @@ export const getArticleBySlug = cache(async (slug: string): Promise<ArticleFull 
   try {
     return await guardedArticleBySlug(slug)
   } catch (error) {
-    console.error('getArticleBySlug error:', error)
+    console.error('getArticleBySlug error:', errorCode(error))
     throw error
   }
 })
@@ -353,7 +354,7 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
     try {
       return [cat, await cachedCategoryCount(cat)]
     } catch (error) {
-      console.error('getCategoryCounts error:', error)
+      console.error('getCategoryCounts error:', errorCode(error))
       reportServerError('article category count read failed', error, { area: 'public' })
       return [cat, 0]
     }
@@ -689,7 +690,7 @@ export async function getQuestionSetCount(): Promise<number> {
   try {
     return await cachedQuestionSetCount()
   } catch (error) {
-    console.error('getQuestionSetCount error:', error)
+    console.error('getQuestionSetCount error:', errorCode(error))
     reportServerError('question set count read failed', error, { area: 'public' })
     return 0
   }
@@ -733,7 +734,7 @@ export async function getPublishedQuestionCount(): Promise<number> {
   try {
     return await cachedPublishedQuestionCount()
   } catch (error) {
-    console.error('getPublishedQuestionCount error:', error)
+    console.error('getPublishedQuestionCount error:', errorCode(error))
     reportServerError('question count read failed', error, { area: 'public' })
     return 0
   }
@@ -780,7 +781,7 @@ export async function getPublishedArticleCount(siteCode: string): Promise<number
   try {
     return await cachedPublishedArticleCount(siteCode)
   } catch (error) {
-    console.error('getPublishedArticleCount error:', error)
+    console.error('getPublishedArticleCount error:', errorCode(error))
     reportServerError('article count read failed', error, { area: 'public' })
     return 0
   }
