@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
-  MAX_ATTEMPT_MS, MOCK_HISTORY_KEY, PRACTICE_SETS_KEY, addHistory, checkAttempt, clearExpiredAttempts,
-  clearPracticeData, formatLastResultDate, lastResult, lastSetScore, mockAttemptKey, mockExamId, readAttempt,
-  readHistory, readSets, removeAttempt, saveAttempt, saveSetScore, topicScores,
+  MAX_ATTEMPT_MS, MOCK_HISTORY_KEY, PRACTICE_OFF_KEY, PRACTICE_SETS_KEY, addHistory, checkAttempt, clearExpiredAttempts,
+  clearPracticeData, formatLastResultDate, isPracticeSavingOff, lastResult, lastSetScore, mockAttemptKey, mockExamId, readAttempt,
+  readHistory, readSets, removeAttempt, saveAttempt, saveSetScore, setPracticeSavingOff, topicScores,
   type HistoryItem, type MockAttempt, type StorageLike, type StoredQuestion,
 } from './practice-store'
 
@@ -346,5 +346,91 @@ describe('clearPracticeData (the cookie page "Forget" button)', () => {
     put(b, PRACTICE_SETS_KEY, 'x')
     b.throwOn.add('remove')
     expect(clearPracticeData(b)).toBe(false)
+  })
+})
+
+// PQB-3b S5 (D352): the visitor's lasting "Stop saving" choice.
+describe('ab_practice_off (the cookie page "Stop saving" choice)', () => {
+  const offStore = () => { const s = new FakeStorage(); put(s, PRACTICE_OFF_KEY, '1'); return s }
+
+  it('the key name and its one value', () => {
+    expect(PRACTICE_OFF_KEY).toBe('ab_practice_off')
+    expect(isPracticeSavingOff(offStore())).toBe(true)
+    expect(isPracticeSavingOff(new FakeStorage())).toBe(false)
+    for (const v of ['true', '0', '', ' 1', '1 ', '01', 'yes', '"1"']) {
+      const s = new FakeStorage()
+      put(s, PRACTICE_OFF_KEY, v)
+      expect(isPracticeSavingOff(s), v).toBe(false)
+    }
+  })
+
+  it('while off, every save writes nothing and returns false', () => {
+    const s = offStore()
+    expect(saveAttempt(s, KEY, attempt(), NOW)).toBe(false)
+    expect(addHistory(s, hist('ab:a', NOW))).toBe(false)
+    expect(saveSetScore(s, 'set-a', { score: 3, total: 5, pct: 60 }, NOW)).toBe(false)
+    expect(Array.from(s.map.entries())).toEqual([[PRACTICE_OFF_KEY, '1']])
+  })
+
+  it('while off, reads keep working and find nothing', () => {
+    const s = offStore()
+    expect(readAttempt(s, KEY, NOW)).toBeNull()
+    expect(readHistory(s)).toBeNull()
+    expect(lastResult(s, 'ab:a')).toBeNull()
+    expect(readSets(s)).toBeNull()
+    expect(lastSetScore(s, 'set-a')).toBeNull()
+    expect(Array.from(s.map.entries())).toEqual([[PRACTICE_OFF_KEY, '1']])
+  })
+
+  it('any other value does not stop saving', () => {
+    const s = new FakeStorage()
+    put(s, PRACTICE_OFF_KEY, 'true')
+    expect(saveSetScore(s, 'set-a', { score: 3, total: 5, pct: 60 }, NOW)).toBe(true)
+    expect(addHistory(s, hist('ab:a', NOW))).toBe(true)
+    expect(saveAttempt(s, KEY, attempt(), NOW)).toBe(true)
+  })
+
+  it('turning off keeps the choice (value "1") and removes the practice data only', () => {
+    const s = new FakeStorage()
+    const keep = ['ab_cookie_consent', 'course_progress_intro', 'ab_saved_jobs']
+    for (const k of keep) put(s, k, 'v')
+    put(s, mockAttemptKey('ab', 'a'), attempt())
+    put(s, MOCK_HISTORY_KEY, { v: 1, items: [] })
+    put(s, PRACTICE_SETS_KEY, { v: 1, sets: {} })
+    expect(setPracticeSavingOff(s, true)).toBe(true)
+    expect(s.map.get(PRACTICE_OFF_KEY)).toBe('1')
+    expect(Array.from(s.map.keys()).sort()).toEqual([...keep, PRACTICE_OFF_KEY].sort())
+  })
+
+  it('turning on again removes the choice only; saving works again', () => {
+    const s = offStore()
+    put(s, 'ab_cookie_consent', 'accepted')
+    expect(setPracticeSavingOff(s, false)).toBe(true)
+    expect(Array.from(s.map.keys())).toEqual(['ab_cookie_consent'])
+    expect(isPracticeSavingOff(s)).toBe(false)
+    expect(saveSetScore(s, 'set-a', { score: 3, total: 5, pct: 60 }, NOW)).toBe(true)
+    expect(setPracticeSavingOff(new FakeStorage(), false)).toBe(true)
+  })
+
+  it('"Forget" (clearPracticeData) leaves the choice in place', () => {
+    const s = offStore()
+    put(s, PRACTICE_SETS_KEY, { v: 1, sets: {} })
+    expect(clearPracticeData(s)).toBe(true)
+    expect(Array.from(s.map.entries())).toEqual([[PRACTICE_OFF_KEY, '1']])
+  })
+
+  it('throwing storage → false, never throws; a failed clear still keeps the choice', () => {
+    const a = new FakeStorage()
+    a.throwOn.add('set')
+    expect(setPracticeSavingOff(a, true)).toBe(false)
+    const b = new FakeStorage()
+    put(b, PRACTICE_SETS_KEY, 'x')
+    b.throwOn.add('remove')
+    expect(setPracticeSavingOff(b, true)).toBe(false)
+    expect(b.map.get(PRACTICE_OFF_KEY)).toBe('1')
+    expect(setPracticeSavingOff(b, false)).toBe(false)
+    const c = new FakeStorage()
+    c.throwOn.add('get')
+    expect(isPracticeSavingOff(c)).toBe(false)
   })
 })

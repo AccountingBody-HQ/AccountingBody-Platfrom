@@ -42,7 +42,9 @@ const INTRO = "Some features keep small notes in your browser's storage on this 
 const OLD_INTRO = "They are not sent to us, and they stay until you clear this website's data in your browser settings."
 const ET_LANG_RELOAD: [string, string, string] = ['et-lang-reload', 'Keeps the page loading bar going after you change the language.', 'Removed when the new page has loaded']
 const SAVED_JOBS: [string, string, string] = ['ab_saved_jobs', 'An older list of saved jobs. It is sent once to move those jobs into your saved jobs, then removed.', 'Removed once the move has worked']
-const PRACTICE: [string, string, string] = ['ab_mock_v1:*, ab_mock_hist_v1, ab_pq_v1', 'Remembers your practice and mock exam results, flagged questions and an unfinished mock exam on this device.', 'Until you clear it; an unfinished exam is removed when its time runs out']
+// PQB-3b S5 (D352): the row gains ab_practice_off and the exact new wording.
+const PRACTICE: [string, string, string] = ['ab_mock_v1:*, ab_mock_hist_v1, ab_pq_v1, ab_practice_off', 'Remembers your practice and mock exam results, flagged questions and an unfinished mock exam on this device. If you choose to stop saving below, only that choice is kept.', 'Until you clear it; an unfinished exam is no longer used once its time runs out']
+const OLD_PRACTICE_DURATION = 'an unfinished exam is removed when its time runs out'
 const STORAGE: Array<[string, string, string]> = [
   ['ab_cookie_consent', 'Remembers your cookie choice.', 'Until you clear it'],
   ['course_progress_*', 'Remembers which free-course lessons you marked complete.', 'Until you clear it'],
@@ -101,10 +103,12 @@ describe('cookie page wording', () => {
       expect(count(html, storageRow(...PRACTICE))).toBe(1)
       expect(count(html, 'ab_mock_v1')).toBe(1)
       expect(count(html, 'ab_pq_v1')).toBe(1)
+      expect(count(html, 'ab_practice_off')).toBe(1)
+      expect(html).not.toContain(OLD_PRACTICE_DURATION)
     }
   })
 
-  it('PQB-3: the practice row comes right after sidebar_open_*; AB shows 8 storage rows, ET 9; the other rows unchanged', async () => {
+  it('PQB-3: the practice row comes right after sidebar_open_*; AB shows 7 storage rows, ET 8; the other rows unchanged', async () => {
     const storageNames = (html: string) => {
       const part = html.slice(html.indexOf(`>${HEADING}</h2>`), html.indexOf('>How to manage cookies</h2>'))
       return Array.from(part.matchAll(/<code class="text-xs text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">([^<]+)<\/code>/g)).map((m) => m[1])
@@ -115,6 +119,8 @@ describe('cookie page wording', () => {
     const after = ['ab_job_alerts', 'ab_visited_listings, jobs-listings-scroll:*']
     expect(storageNames(ab)).toStrictEqual([...before, PRACTICE[0], ...after, 'ab_saved_jobs'])
     expect(storageNames(et)).toStrictEqual([...before, PRACTICE[0], ...after, 'et-lang-reload', 'ab_saved_jobs'])
+    expect(storageNames(ab)).toHaveLength(7)
+    expect(storageNames(et)).toHaveLength(8)
     for (const html of [ab, et]) {
       for (const [name, purpose, duration] of STORAGE) expect(count(html, storageRow(name, purpose, duration))).toBe(1)
       expect(count(html, storageRow(...SAVED_JOBS))).toBe(1)
@@ -126,7 +132,8 @@ describe('cookie page wording', () => {
     expect(store.MOCK_ATTEMPT_PREFIX).toBe('ab_mock_v1:')
     expect(store.MOCK_HISTORY_KEY).toBe('ab_mock_hist_v1')
     expect(store.PRACTICE_SETS_KEY).toBe('ab_pq_v1')
-    expect(PRACTICE[0]).toBe(`${store.MOCK_ATTEMPT_PREFIX}*, ${store.MOCK_HISTORY_KEY}, ${store.PRACTICE_SETS_KEY}`)
+    expect(store.PRACTICE_OFF_KEY).toBe('ab_practice_off')
+    expect(PRACTICE[0]).toBe(`${store.MOCK_ATTEMPT_PREFIX}*, ${store.MOCK_HISTORY_KEY}, ${store.PRACTICE_SETS_KEY}, ${store.PRACTICE_OFF_KEY}`)
   })
 
   it('PQB-3: the "Forget" button is under the storage table on both brands; its messages are exact', async () => {
@@ -134,7 +141,10 @@ describe('cookie page wording', () => {
     expect(forget.FORGET_BUTTON_TEXT).toBe('Forget my practice results on this device')
     expect(forget.FORGET_DONE_TEXT).toBe('Your practice results on this device have been removed.')
     expect(forget.FORGET_FAILED_TEXT).toBe("This device's storage could not be changed. You can clear this website's data in your browser settings.")
-    const button = '<button type="button" class="inline-flex items-center h-10 px-5 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:border-navy-300 transition-colors">Forget my practice results on this device</button><p class="text-xs text-slate-500 mt-3" aria-live="polite"></p>'
+    // PQB-3b S5: the "Stop saving" button sits beside it (server HTML shows the
+    // "Stop saving…" text); the one polite line stays under both.
+    const cls = 'inline-flex items-center h-10 px-5 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:border-navy-300 transition-colors'
+    const button = `<div class="-mt-6 mb-10"><div class="flex flex-wrap gap-4"><button type="button" class="${cls}">Forget my practice results on this device</button><button type="button" class="${cls}">Stop saving my practice results on this device</button></div><p class="text-xs text-slate-500 mt-3" aria-live="polite"></p></div>`
     for (const et of [false, true]) {
       const html = await render(et)
       expect(count(html, button)).toBe(1)
@@ -168,6 +178,37 @@ describe('cookie page wording', () => {
     const fsrc = readFileSync(join(process.cwd(), 'components/ForgetPracticeProgress.tsx'), 'utf8')
     expect(fsrc).not.toMatch(/fetch\(|XMLHttpRequest|sendBeacon|confirm\(/)
     expect(fsrc.startsWith("'use client'")).toBe(true)
+  })
+
+  it('PQB-3b: "Stop saving" / "Start saving again" — exact texts, lasting choice, Forget keeps it, no request', async () => {
+    const forget = await import('@/components/ForgetPracticeProgress')
+    expect(forget.STOP_BUTTON_TEXT).toBe('Stop saving my practice results on this device')
+    expect(forget.START_BUTTON_TEXT).toBe('Start saving my practice results again')
+    expect(forget.STOP_DONE_TEXT).toBe('Your practice results will not be saved on this device, and the saved ones have been removed.')
+    expect(forget.START_DONE_TEXT).toBe('Your practice results will be saved on this device again.')
+    const map = new Map<string, string>([['ab_mock_v1:ab:x', '1'], ['ab_mock_hist_v1', '1'], ['ab_pq_v1', '1'], ['ab_cookie_consent', 'accepted']])
+    const storage = {
+      get length() { return map.size },
+      key: (i: number) => Array.from(map.keys())[i] ?? null,
+      getItem: (k: string) => map.get(k) ?? null,
+      setItem: (k: string, v: string) => { map.set(k, v) },
+      removeItem: (k: string) => { map.delete(k) },
+    }
+    expect(forget.savingChoiceMessage(storage, true)).toBe(forget.STOP_DONE_TEXT)
+    expect(Array.from(map.entries()).sort()).toStrictEqual([['ab_cookie_consent', 'accepted'], ['ab_practice_off', '1']])
+    expect(forget.forgetPracticeMessage(storage)).toBe(forget.FORGET_DONE_TEXT)
+    expect(map.get('ab_practice_off')).toBe('1')
+    expect(forget.savingChoiceMessage(storage, false)).toBe(forget.START_DONE_TEXT)
+    expect(Array.from(map.keys())).toStrictEqual(['ab_cookie_consent'])
+    expect(forget.savingChoiceMessage(null, true)).toBe(forget.FORGET_FAILED_TEXT)
+    expect(forget.savingChoiceMessage(null, false)).toBe(forget.FORGET_FAILED_TEXT)
+    const broken = { ...storage, setItem: () => { throw new Error('blocked') } }
+    expect(forget.savingChoiceMessage(broken, true)).toBe(forget.FORGET_FAILED_TEXT)
+    const fsrc = readFileSync(join(process.cwd(), 'components/ForgetPracticeProgress.tsx'), 'utf8')
+    // One polite line for every message; the choice is read after mount.
+    expect(count(fsrc, 'aria-live="polite"')).toBe(1)
+    expect(fsrc).toContain('{off ? START_BUTTON_TEXT : STOP_BUTTON_TEXT}')
+    expect(fsrc).toMatch(/useEffect\(\(\) => \{\s+const store = deviceStorage\(\)\s+setOff\(!!store && isPracticeSavingOff\(store\)\)\s+\}, \[\]\)/)
   })
 
   it('PQB-2: the new intro, exactly, on both brands; the old sentence is gone', async () => {

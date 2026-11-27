@@ -44,8 +44,8 @@ const storage: { name: string; purpose: string; duration: string; etOnly?: boole
   { name: 'ab_cookie_consent', purpose: 'Remembers your cookie choice.', duration: 'Until you clear it' },
   { name: 'course_progress_*', purpose: 'Remembers which free-course lessons you marked complete.', duration: 'Until you clear it' },
   { name: 'sidebar_open_*',    purpose: 'Remembers which course chapters you left open.', duration: 'Until you clear it' },
-  // Keys from lib/practice-store.ts; the button below removes them.
-  { name: 'ab_mock_v1:*, ab_mock_hist_v1, ab_pq_v1', purpose: 'Remembers your practice and mock exam results, flagged questions and an unfinished mock exam on this device.', duration: 'Until you clear it; an unfinished exam is removed when its time runs out' },
+  // Keys from lib/practice-store.ts; the buttons below remove them or stop saving them.
+  { name: 'ab_mock_v1:*, ab_mock_hist_v1, ab_pq_v1, ab_practice_off', purpose: 'Remembers your practice and mock exam results, flagged questions and an unfinished mock exam on this device. If you choose to stop saving below, only that choice is kept.', duration: 'Until you clear it; an unfinished exam is no longer used once its time runs out' },
   { name: 'ab_job_alerts',     purpose: 'Keeps the job alert details you entered on this device.', duration: 'Until you clear it' },
   { name: 'ab_visited_listings, jobs-listings-scroll:*', purpose: 'Helps the Back link return you to the same place in the job listings.', duration: 'Until you close the tab' },
   { name: 'et-lang-reload',    purpose: 'Keeps the page loading bar going after you change the language.', duration: 'Removed when the new page has loaded', etOnly: true },

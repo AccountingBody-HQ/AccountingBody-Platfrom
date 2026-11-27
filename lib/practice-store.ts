@@ -20,6 +20,8 @@ export const MOCK_ATTEMPT_PREFIX = 'ab_mock_v1:'
 export const MOCK_HISTORY_KEY = 'ab_mock_hist_v1'
 /** The last score of each practice set. */
 export const PRACTICE_SETS_KEY = 'ab_pq_v1'
+/** The visitor chose "Stop saving" on the cookie page: the value '1' only. */
+export const PRACTICE_OFF_KEY = 'ab_practice_off'
 
 export const MAX_QUESTIONS = 50
 export const MAX_HISTORY = 10
@@ -90,6 +92,23 @@ function safeKeys(storage: StorageLike): string[] | null {
     return keys
   } catch { return null }
 }
+// ── the visitor's lasting "Stop saving" choice ──
+/** True when the visitor chose to stop saving (the key holds exactly '1'). */
+export function isPracticeSavingOff(storage: StorageLike): boolean {
+  return safeGet(storage, PRACTICE_OFF_KEY) === '1'
+}
+
+/**
+ * off=true keeps the choice and removes the saved practice data; off=false
+ * removes the choice. False when storage could not be changed.
+ */
+export function setPracticeSavingOff(storage: StorageLike, off: boolean): boolean {
+  if (!off) return safeRemove(storage, PRACTICE_OFF_KEY)
+  const kept = safeSet(storage, PRACTICE_OFF_KEY, '1')
+  const cleared = clearPracticeData(storage)
+  return kept && cleared
+}
+
 function readJson(storage: StorageLike, key: string): unknown {
   const raw = safeGet(storage, key)
   if (raw === null) return undefined
@@ -160,9 +179,9 @@ export function readAttempt(storage: StorageLike, key: string, now: number): Moc
   return a
 }
 
-/** Saves the attempt; false when it has the wrong shape or storage refuses it. */
+/** Saves the attempt; false when saving is off, it has the wrong shape or storage refuses it. */
 export function saveAttempt(storage: StorageLike, key: string, attempt: MockAttempt, now: number): boolean {
-  if (!checkAttempt(attempt, now)) return false
+  if (isPracticeSavingOff(storage) || !checkAttempt(attempt, now)) return false
   return safeSet(storage, key, JSON.stringify(attempt))
 }
 
@@ -195,9 +214,9 @@ export function readHistory(storage: StorageLike): HistoryItem[] | null {
   return null
 }
 
-/** Adds the item first; keeps the newest 10. */
+/** Adds the item first; keeps the newest 10. False (nothing written) when saving is off. */
 export function addHistory(storage: StorageLike, item: HistoryItem): boolean {
-  if (!checkHistoryItem(item)) return false
+  if (isPracticeSavingOff(storage) || !checkHistoryItem(item)) return false
   const items = [item, ...(readHistory(storage) ?? [])].slice(0, MAX_HISTORY)
   return safeSet(storage, MOCK_HISTORY_KEY, JSON.stringify({ v: 1, items }))
 }
@@ -226,10 +245,10 @@ export function lastSetScore(storage: StorageLike, setSlug: string): SetScore | 
   return sets && Object.prototype.hasOwnProperty.call(sets, setSlug) ? sets[setSlug] : null
 }
 
-/** Saves this set's score; keeps at most 200 sets, dropping the oldest first. */
+/** Saves this set's score; keeps at most 200 sets, dropping the oldest first. False (nothing written) when saving is off. */
 export function saveSetScore(storage: StorageLike, setSlug: string, s: { score: number; total: number; pct: number }, now: number): boolean {
   const item: SetScore = { score: s.score, total: s.total, pct: s.pct, at: now }
-  if (!setSlug || !checkSetScore(item)) return false
+  if (isPracticeSavingOff(storage) || !setSlug || !checkSetScore(item)) return false
   const sets: Record<string, SetScore> = { ...(readSets(storage) ?? {}) }
   delete sets[setSlug]
   const kept = Object.entries(sets).sort((a, b) => b[1].at - a[1].at).slice(0, MAX_SETS - 1)
@@ -264,8 +283,8 @@ export function formatLastResultDate(at: number, timeZone?: string): string {
 
 /**
  * The cookie page's "Forget" button: removes every `ab_mock_v1:*` key,
- * `ab_mock_hist_v1` and `ab_pq_v1`, and nothing else. False when storage
- * could not be read or changed.
+ * `ab_mock_hist_v1` and `ab_pq_v1`, and nothing else (the visitor's
+ * `ab_practice_off` choice stays). False when storage could not be read or changed.
  */
 export function clearPracticeData(storage: StorageLike): boolean {
   const keys = safeKeys(storage)
