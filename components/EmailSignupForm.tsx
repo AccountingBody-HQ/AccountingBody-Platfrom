@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { safeUserFacingErrorMessage } from '@/lib/turnstile-error'
+import PrivacyNote from '@/components/PrivacyNote'
 
 declare global {
   interface Window {
@@ -209,6 +210,11 @@ export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: b
       {status === 'error' && (
         <p role="alert" className="text-red-400 text-xs text-center">{errorMsg || 'Something went wrong. Please try again.'}</p>
       )}
+      {/* Dark section: the small print of app/page.tsx:252 and the footer's brand link (Footer.tsx). */}
+      <PrivacyNote
+        className="text-white/70 text-xs text-center"
+        linkClassName={isEthioTax ? 'text-gold-400 underline hover:decoration-2' : 'text-[#C9982A] underline hover:text-[#e0b84e]'}
+      />
     </form>
   )
 }

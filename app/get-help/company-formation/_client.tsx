@@ -2,6 +2,7 @@
 import { useState, useRef } from 'react'
 import { useFormIds, useFocusOnShow } from '@/lib/form-a11y'
 import Script from 'next/script'
+import PrivacyNote from '@/components/PrivacyNote'
 
 const countries = [
   'Afghanistan','Albania','Algeria','Andorra','Angola','Antigua and Barbuda','Argentina','Armenia','Australia','Austria','Azerbaijan',
@@ -363,6 +364,7 @@ export default function CompanyFormationClient() {
                 <p className="text-xs text-slate-500 text-center">
                   EthioTax will review your enquiry and respond within 24 hours. No work commences without your approval of scope and fee.
                 </p>
+                <PrivacyNote />
               </form>
             )}
           </div>

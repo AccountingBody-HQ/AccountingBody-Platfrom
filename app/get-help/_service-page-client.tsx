@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 import { useFormIds, useFocusOnShow } from '@/lib/form-a11y'
+import PrivacyNote from '@/components/PrivacyNote'
 
 const services: Record<string, {
   name: string
@@ -322,6 +323,7 @@ export default function ServicePageClient({ params, isEthioTax = false }: { para
                 <p className="text-xs text-slate-400 text-center">
                   All briefs are reviewed by our team. We will confirm your engagement scope and fee before any work commences.
                 </p>
+                <PrivacyNote />
               </form>
             )}
           </div>

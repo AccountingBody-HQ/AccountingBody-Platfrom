@@ -523,6 +523,7 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                           onChange={e => { setForm({...form, biography: e.target.value}); if (e.target.value.trim().split(/\s+/).length >= 50) setFieldErrors(p => ({...p, biography: false})) }}
                           className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
                           placeholder="e.g. I am an ACCA-qualified accountant with 8 years of experience in financial reporting and tax compliance, having worked with clients across the UK and Ethiopia. I specialise in..." />
+                        <p className="text-sm text-slate-500">Please do not include health, religion or other sensitive details.</p>
                         <p className="text-xs text-slate-400">{form.biography.trim() ? form.biography.trim().split(/\s+/).length : 0} words</p>
                         <NavButtons />
                       </div>
@@ -547,8 +548,8 @@ export default function FindWorkClient({ isEthioTax: isEthioTaxProp }: { isEthio
                             <input type="checkbox" aria-required="true" {...invalidProps(fieldErrors.terms && !dataConsent, ids.errId('terms'))} checked={dataConsent} onChange={e => { setDataConsent(e.target.checked); if (e.target.checked) setFieldErrors(p => ({...p, terms: false})) }}
                               className="mt-0.5 accent-gold-500 shrink-0" />
                             <span className="text-sm text-slate-600">
-                              I consent to {platformName} holding and processing my personal data for the purpose of matching me with suitable roles, in accordance with the{' '}
-                              <Link href="/privacy-policy" className="underline text-navy-700 hover:text-gold-600">Privacy Policy</Link>.
+                              I have read the{' '}
+                              <Link href="/privacy-policy" className="underline text-navy-700 hover:text-gold-600">Privacy Policy</Link>. I understand you will share my profile with an employer only after telling me.
                             </span>
                           </label>
                           <div className="bg-slate-50 rounded-lg border border-slate-200 p-4 mt-2">

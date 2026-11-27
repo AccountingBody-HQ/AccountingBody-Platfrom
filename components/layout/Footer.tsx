@@ -340,7 +340,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
             <p role="alert" className={`text-xs ${isEthioTax ? 'text-red-300' : 'text-red-400'}`}>{errorMsg || 'Something went wrong. Please try again.'}</p>
           )}
           <p className="text-xs text-white/70">
-            By subscribing you agree to our{' '}
+            See how we use your details in our{' '}
             <Link href="/privacy-policy" className={isEthioTax ? 'text-gold-400 underline hover:decoration-2' : 'text-[#C9982A] underline hover:text-[#e0b84e]'}>Privacy Policy</Link>.
           </p>
         </form>

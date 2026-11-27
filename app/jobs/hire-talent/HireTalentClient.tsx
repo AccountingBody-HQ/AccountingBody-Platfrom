@@ -8,6 +8,7 @@ import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 import { BRIEF_LINK_RETRY_TEXT, LINK_RETRY_HEADING, briefLinkStatus } from '@/lib/message-rules'
 import { invalidProps, useFocusFirstInvalid, useFocusOnShow, useFormIds } from '@/lib/form-a11y'
 import FormErrorSummary from '@/components/FormErrorSummary'
+import PrivacyNote from '@/components/PrivacyNote'
 
 declare global {
   interface Window {
@@ -530,6 +531,7 @@ export default function HireTalentClient({ isEthioTax: isEthioTaxProp }: { isEth
                           {status !== 'loading' && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>}
                         </button>
                       </div>
+                      <PrivacyNote />
                     </div>
                   )}
 
