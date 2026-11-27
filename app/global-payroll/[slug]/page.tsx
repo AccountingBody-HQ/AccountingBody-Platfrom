@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { notFound, useParams } from 'next/navigation'
 import Link from 'next/link'
 import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
+import PrivacyNote from '@/components/PrivacyNote'
 import { useFormIds, useFocusOnShow } from '@/lib/form-a11y'
 
 export const dynamic = 'force-dynamic'
@@ -277,6 +278,7 @@ export default function GlobalPayrollServicePage() {
                 <p className="text-xs text-slate-400 text-center">
                   All briefs are reviewed by our team. We will confirm your engagement scope and fee before any work commences.
                 </p>
+                <PrivacyNote />
               </form>
             )}
           </div>

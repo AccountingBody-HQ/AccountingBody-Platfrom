@@ -372,12 +372,12 @@ describe('job read problems', () => {
     state.db.jobs = failedRead()
     expect(await read()).toStrictEqual([])
 
-    const problems = state.logs.map((line) => line[1] as Error & { code?: string })
-    expect(problems.map((problem) => problem.message)).toStrictEqual([
-      'getSimilarJobs: saved list query failed',
-      'getSimilarJobs: jobs query failed',
+    // PRIV-8 S4: each failed read logs the fixed label and the short code only.
+    expect(state.logs).toStrictEqual([
+      ['getSimilarJobs (saved list) error:', 'XX000'],
+      ['getSimilarJobs (saved list) error:', 'XX000'],
     ])
-    for (const problem of problems) expectFixedProblem(problem, problem.message)
+    expect(JSON.stringify(state.logs)).not.toMatch(SEED)
   })
 
   it('similar jobs stay off by default and read nothing', async () => {

@@ -13,8 +13,8 @@ const tracked = (dir: string) =>
     .filter((f) => /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f))
 
 const WHOLE_ERROR = /console\.(error|warn)\(.*,\s*(e|err|error|cleanupErr|traceErr|emailErr|countError|sendError)\s*\)\s*;?\s*$/
-// Left on purpose (STILL OPEN in the PRIV-3 report): the similar-jobs read, which is switched off (CLAUDE.md §6).
-const KNOWN = ["lib/jobs.ts: console.error('getSimilarJobs (saved list) error:', error)"]
+// PRIV-8 S4: no exceptions left; the similar-jobs read now logs a code too.
+const KNOWN: string[] = []
 
 describe('PRIV-3 S5: no whole-error log lines in public routes and libraries', () => {
   it('every console.error / console.warn passes a code, not the error object', () => {

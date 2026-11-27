@@ -1,6 +1,6 @@
 // Shared brand values for contact-enquiry emails: the visitor-facing
 // notify-team/acknowledgement emails (app/api/contact/route.ts) and the
-// admin's reply to a stored enquiry (app/api/roodber8/reply/route.ts).
+// admin's reply to a stored enquiry (the admin area's reply route).
 // Centralised so the two routes can't drift on what EthioTax's From
 // address, name or colour are — the bug this fixes was exactly that drift:
 // the reply route had independently hand-typed an EthioTax From address on
@@ -40,7 +40,7 @@ export function getContactBrand(isET: boolean): ContactBrand {
 }
 
 // The value contact_submissions.platform (and help_requests.platform)
-// actually store, matching what app/roodber8/submissions/page.tsx's
+// actually store, matching what the admin submissions page's
 // platform filter expects — its <select name="platform"> options are
 // exactly 'ab' and 'et'.
 export function contactPlatformValue(isET: boolean): 'ab' | 'et' {

@@ -47,8 +47,8 @@ export interface SavedJobRecord {
 // `job:jobs(...)` embeds via the saved_jobs.job_id -> jobs.id foreign key
 // (0008_saved_jobs.sql). Without a generated Database type, supabase-js
 // types every embed as an array regardless of actual cardinality — same
-// gotcha already handled in app/api/roodber8/course-factory/load-course/
-// route.ts (`Array.isArray(c.course_chapters) ...`). job_id is a NOT NULL
+// gotcha already handled in the admin area's course-factory load-course
+// route (`Array.isArray(c.course_chapters) ...`). job_id is a NOT NULL
 // FK, so at runtime this is always exactly one row; normalise defensively
 // rather than trust the array type.
 function normaliseJoinedJob(value: unknown): SavedJobJoinedRow | null {

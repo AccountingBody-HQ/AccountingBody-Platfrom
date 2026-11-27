@@ -238,8 +238,9 @@ describe('G3 the saved-list read', () => {
     expect(error).toHaveBeenCalledTimes(1)
     const [label, problem] = error.mock.calls[0]
     expect(label).toBe('getSimilarJobs (saved list) error:')
-    expect((problem as Error).message).toBe(message)
-    expect((problem as Error & { code?: string }).code).toBe('XX000')
+    // PRIV-8 S4: the log carries the short code only, not the read problem's text.
+    expect(problem).toBe('XX000')
+    expect(JSON.stringify(error.mock.calls)).not.toContain(message)
     expect(JSON.stringify(state.reports)).not.toContain('seed database detail')
   })
 
