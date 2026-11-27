@@ -66,6 +66,10 @@ Open `https://accountingbody.com/api/ops-status` to see which check is not `ok`.
 - `subscriber-cleanup` or `saved-jobs-cleanup` `late`: the daily clean-up has
   not removed rows that are due. Check that day's cron run in Vercel and its
   function log.
+- `job-retention` or `data-retention` `late` (possible only when switched
+  on): that clean-up has not removed rows that are due. Check that day's cron
+  run in Vercel (07:30 for job retention, 06:30 for the personal-data
+  clean-up) and its function log.
 - `job-expiry` `late` (not alerting): listings past their end date are still
   active. Check the expiry cron run and its log.
 - Any check `unknown`, or `"checks": {}`: the database could not be read.

@@ -504,4 +504,11 @@ describe('the alerts guide', () => {
     expect(doc).toContain('| `data-retention` | personal-data clean-up (inside the 06:30 subscriber clean-up) | daily 06:30 | only when RETENTION_DELETE=on: a row past its keeping period by more than 26 h | yes |')
     expect(doc).toContain('`job-retention` and `data-retention` always show `ok` while their clean-up is\noff or only counts')
   })
+
+  it('"What to do" covers a late job-retention or data-retention check', () => {
+    const start = doc.indexOf('## What to do')
+    const section = doc.slice(start, doc.indexOf('\n## ', start + 1))
+    expect(start).toBeGreaterThan(0)
+    expect(section).toContain('- `job-retention` or `data-retention` `late` (possible only when switched\n  on)')
+  })
 })
