@@ -25,7 +25,7 @@ const CONTACT_LINE = 'See how we use your details in our Privacy Policy.'
 const TICK = 'I have read the Privacy Policy. I understand you will share my profile with an employer only after telling me.'
 const HINT = 'Please do not include health, religion or other sensitive details.'
 
-// The 11 forms (STEP C list). Company formation is one form with a component per brand.
+// The 13 forms (STEP C list + PRIV-8). Company formation is one form with a component per brand.
 const FORM_FILES: Array<{ file: string; submit: string }> = [
   { file: 'components/EmailSignupForm.tsx', submit: "'Subscribe free'" },
   { file: 'app/get-help/accounting-bookkeeping/page.tsx', submit: "'Submit Enquiry →'" },
@@ -39,6 +39,7 @@ const FORM_FILES: Array<{ file: string; submit: string }> = [
   { file: 'app/firms-freelancers/join/page.tsx', submit: "'Submit Application'" },
   { file: 'app/jobs/hire-talent/HireTalentClient.tsx', submit: "'Submit Hiring Brief'" },
   { file: 'app/jobs/post-a-job/PostAJobClient.tsx', submit: 'Post Job & Pay £9' },
+  { file: 'app/global-payroll/[slug]/page.tsx', submit: "'Submit Service Brief →'" },
 ]
 
 describe('PRIV-3 S3: the privacy note component', () => {
