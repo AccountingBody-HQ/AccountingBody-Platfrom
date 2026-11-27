@@ -40,7 +40,16 @@ describe('checkRead', () => {
     const error = { message: 'connection reset', code: '08006' }
     const result = checkRead({ data: null, error }, 'course save: existing course')
     expect(result).toEqual({ ok: false, error })
-    expect(logged).toEqual([['course save: existing course read failed:', error]])
+    // PRIV-2 S3: the code only, never the whole error object.
+    expect(logged).toEqual([['course save: existing course read failed:', '08006']])
+  })
+
+  it('PRIV-2: never logs the message, detail or whole object; no code → no-code', () => {
+    const error = { message: 'row ada@example.com', code: '', details: 'ada@example.com', hint: 'x' }
+    checkRead({ data: null, error }, 'label')
+    expect(logged).toEqual([['label read failed:', 'no-code']])
+    expect(JSON.stringify(logged)).not.toContain('ada@example.com')
+    expect(logged[0]).not.toContain(error)
   })
 
   it('reports a failed count read even when its message is empty', () => {

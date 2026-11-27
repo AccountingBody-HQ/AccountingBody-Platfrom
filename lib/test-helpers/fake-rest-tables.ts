@@ -1,6 +1,6 @@
 // A small in-memory stand-in for the database's REST interface, for tests that
 // run real supabase-js clients with a fake `fetch`. It understands only the
-// filters these tests use (eq, neq, lt, gt, in, not.is.null), order on one
+// filters these tests use (eq, neq, lt, gt, in, ilike, not.is.null), order on one
 // column, limit and offset, and GET / PATCH / DELETE / POST (insert, or upsert
 // with on_conflict). Every request is
 // recorded. A test may make any request fail through `problem`.
@@ -40,6 +40,20 @@ function inList(value: string): string[] {
   return value.slice(1, -1).split(',').map((v) => v.replace(/^"(.*)"$/, '$1'))
 }
 
+// PostgREST ilike: % and * match any run, _ one character, \ makes the next
+// character literal; the whole value must match, in any letter case.
+function ilikeMatches(value: string, pattern: string): boolean {
+  let source = ''
+  for (let i = 0; i < pattern.length; i++) {
+    const c = pattern[i]
+    if (c === '\\' && i + 1 < pattern.length) source += pattern[++i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    else if (c === '%' || c === '*') source += '[\\s\\S]*'
+    else if (c === '_') source += '[\\s\\S]'
+    else source += c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  }
+  return new RegExp(`^${source}$`, 'i').test(value)
+}
+
 function matches(row: Row, column: string, filter: string): boolean {
   const value = row[column]
   if (filter === 'not.is.null') return value !== null && value !== undefined
@@ -55,6 +69,7 @@ function matches(row: Row, column: string, filter: string): boolean {
     case 'lt': return compare(value, arg) < 0
     case 'gt': return compare(value, arg) > 0
     case 'in': return inList(arg).includes(String(value))
+    case 'ilike': return ilikeMatches(String(value), arg)
     default: throw new Error(`fake tables: unknown filter ${filter}`)
   }
 }

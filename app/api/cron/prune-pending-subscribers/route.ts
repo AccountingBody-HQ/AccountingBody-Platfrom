@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { reportServerError } from '@/lib/report-error'
+import { errorCode } from '@/lib/recycle-bin'
 
 export const dynamic = 'force-dynamic'
 // force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ pruned: count ?? 0 })
   } catch (err: unknown) {
-    console.error('cron/prune-pending-subscribers: fatal error', err)
+    console.error('cron/prune-pending-subscribers: fatal error', errorCode(err))
     reportServerError('pending subscriber cleanup failed', err, { area: 'cron' })
     return NextResponse.json({ error: 'Cron run failed' }, { status: 500 })
   }

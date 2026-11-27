@@ -99,7 +99,7 @@ describe('newsletter sign-up', () => {
   })
 
   it('an already subscribed address: sends, stores only the new token hash, never changes the status', async () => {
-    setup([{ email: 'ada@example.com', platform: 'ab', status: 'subscribed', source: 'footer', last_confirmation_sent_at: null }])
+    setup([{ id: 'r1', email: 'ada@example.com', platform: 'ab', status: 'subscribed', source: 'footer', last_confirmation_sent_at: null }])
     expect(await run({ source: 'contact_form' })).toEqual({ kind: 'sent' })
     expect(sent).toHaveLength(1)
     expect(writes().map((r) => [r.method, r.body])).toEqual([
@@ -116,7 +116,7 @@ describe('newsletter sign-up', () => {
   })
 
   it('an unsubscribed address signing up again must confirm again', async () => {
-    setup([{ email: 'ada@example.com', platform: 'ab', status: 'unsubscribed', last_confirmation_sent_at: '2026-01-01T00:00:00.000Z' }])
+    setup([{ id: 'r1', email: 'ada@example.com', platform: 'ab', status: 'unsubscribed', last_confirmation_sent_at: '2026-01-01T00:00:00.000Z' }])
     expect(await run()).toEqual({ kind: 'sent' })
     expect(db.tables.email_subscribers[0]).toMatchObject({ status: 'pending', source: 'footer' })
   })

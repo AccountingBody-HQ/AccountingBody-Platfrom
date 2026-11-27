@@ -259,7 +259,7 @@ function EmailSignup({ isEthioTax }: { isEthioTax: boolean }) {
       const res = await fetch('/api/subscribe', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, _h: honeypot, 'cf-turnstile-response': turnstileToken.current }),
+        body:    JSON.stringify({ email, _h: honeypot, 'cf-turnstile-response': turnstileToken.current, source: 'footer' }),
       })
       const data = await res.json()
       if (!res.ok || !data.success) throw new Error(data.error || 'Something went wrong. Please try again.')

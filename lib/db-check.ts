@@ -7,7 +7,8 @@
 //
 // - ok: true, data: null (or []) means the read worked and found nothing.
 // - ok: false means the read did not work; the route must not act on it.
-//   The error is logged under `label`, never sent to the browser.
+//   The error's code (never its message or the whole object) is logged
+//   under `label`; the error is never sent to the browser.
 // - Any error counts, even one with an empty message (a failed count request
 //   has no body, so its message is '').
 // - noRowsIsEmpty: for a .single() read whose route already treats "no rows"
@@ -44,7 +45,8 @@ export function checkRead<R extends DbResultLike<unknown>>(
   if (options.noRowsIsEmpty && error.code === NO_ROWS_CODE) {
     return { ok: true, data: null, count: null }
   }
-  console.error(`${label} read failed:`, error)
+  // The error code only: a message or detail can echo row data.
+  console.error(`${label} read failed:`, error.code || 'no-code')
   reportServerError(label, error)
   return { ok: false, error }
 }

@@ -16,7 +16,7 @@ import { createHash } from 'node:crypto'
 import { checkEmailSend } from './email-check'
 import { reportServerError } from './report-error'
 import { type ContactBrand } from './contact-brand'
-import { NEWSLETTER_SENDER, errorCode, newsletterBrand, newsletterEmailHtml, type NewsletterMailer } from './newsletter-signup'
+import { NEWSLETTER_SENDER, errorCode, findSubscriber, newsletterBrand, newsletterEmailHtml, type NewsletterMailer } from './newsletter-signup'
 import { unsubscribeUrl, verifyUnsubscribeToken, type NewsletterPlatform } from './newsletter-tokens'
 import type { getServerSupabase } from './supabase-server'
 
@@ -107,13 +107,8 @@ export async function requestUnsubscribeLink({
 }): Promise<void> {
   try {
     if (!take(ipWindows, ip || 'unknown', IP_LIMIT, now)) return
-    const { data: row, error } = await supabase
-      .from('email_subscribers')
-      .select('id, status')
-      .eq('email', email.trim().toLowerCase())
-      .eq('platform', platform)
-      .in('status', ['subscribed', 'pending'])
-      .maybeSingle()
+    // Any letter case: a stored "Name@Example.com" is found for "name@example.com".
+    const { row, error } = await findSubscriber(supabase, email, platform, ['subscribed', 'pending'])
     if (error) {
       console.error('unsubscribe request: lookup failed', errorCode(error))
       reportServerError('unsubscribe request: lookup failed', error, { area: 'public' })

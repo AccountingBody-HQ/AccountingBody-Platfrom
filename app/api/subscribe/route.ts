@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { Resend } from "resend"
 import { getServerSupabase } from "@/lib/supabase-server"
-import { errorCode, personCheckRefusal, startNewsletterSignup } from "@/lib/newsletter-signup"
+import { errorCode, newsletterFormSource, personCheckRefusal, startNewsletterSignup } from "@/lib/newsletter-signup"
 import { CONFIRMATION_EMAIL_FAILED_TEXT, SERVER_PROBLEM_TEXT } from "@/lib/message-rules"
 import { verifyHumanCheck } from "@/lib/turnstile-verify"
 import { reportServerError } from "@/lib/report-error"
@@ -52,7 +52,8 @@ export async function POST(req: NextRequest) {
       resend,
       email,
       platform: isET ? "et" : "ab",
-      source: "footer",
+      // Which newsletter form was used (footer, home, contact_page); anything else is "footer".
+      source: newsletterFormSource(body.source),
     })
     if (signup.kind === "server-error") {
       return NextResponse.json({ error: SERVER_PROBLEM_TEXT }, { status: 500 })

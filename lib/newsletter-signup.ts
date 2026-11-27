@@ -10,8 +10,12 @@
 //   signed up). A failed send records nothing, so the person can try again.
 // - Log lines are a short label and an error code only: never an e-mail
 //   address, a token or a whole error object.
+// - An address is found in any letter case (findSubscriber): a stored
+//   "Name@Example.com" is the same person as a typed "name@example.com", and
+//   that row is updated by its id; a second row is never created for it.
 
 import { shouldSendConfirmationEmail } from './subscribe-dedup'
+import { exactLikePattern, sameEmail } from './personal-data'
 import { checkEmailSend, type EmailSendResultLike } from './email-check'
 import { reportServerError } from './report-error'
 import { getContactBrand, type ContactBrand } from './contact-brand'
@@ -19,7 +23,16 @@ import { createConfirmationToken, type NewsletterPlatform } from './newsletter-t
 import type { getServerSupabase } from './supabase-server'
 import type { HumanCheckReason } from './turnstile-verify'
 
-export type NewsletterSource = 'footer' | 'contact_form'
+// Where the person signed up: one of the three newsletter forms, or the tick
+// box on the contact form.
+export type NewsletterSource = 'footer' | 'home' | 'contact_page' | 'contact_form'
+
+// The values /api/subscribe accepts from its forms; anything else is 'footer'.
+export const NEWSLETTER_FORM_SOURCES = ['footer', 'home', 'contact_page'] as const
+
+export function newsletterFormSource(value: unknown): NewsletterSource {
+  return (NEWSLETTER_FORM_SOURCES as readonly unknown[]).includes(value) ? (value as NewsletterSource) : 'footer'
+}
 
 export type NewsletterSignupResult =
   | { kind: 'sent' }
@@ -79,6 +92,51 @@ export function errorCode(error: unknown): string {
   return typeof code === 'string' && SHORT_CODE.test(code) ? code : 'no-code'
 }
 
+export type SubscriberRow = {
+  id: string
+  email: string
+  platform: string
+  status: string | null
+  source: string | null
+  created_at: string | null
+  last_confirmation_sent_at: string | null
+}
+
+export const SUBSCRIBER_COLUMNS = 'id, email, platform, status, source, created_at, last_confirmation_sent_at'
+
+// At most this many rows are read for one address and site (normally 0 or 1).
+export const SUBSCRIBER_MATCH_LIMIT = 10
+
+// One row for the person when several match in different letter cases: a
+// subscribed row if there is one, otherwise the newest.
+export function pickSubscriberRow(rows: SubscriberRow[]): SubscriberRow | null {
+  if (rows.length === 0) return null
+  const subscribed = rows.find((row) => row.status === 'subscribed')
+  if (subscribed) return subscribed
+  return rows.reduce((newest, row) => ((row.created_at ?? '') > (newest.created_at ?? '') ? row : newest))
+}
+
+// The person's row on one site, matching the address exactly in any letter
+// case: ilike with \ % _ escaped (lib/personal-data.ts), and every returned
+// row checked again here. An address containing * (a wildcard PostgREST
+// cannot escape) is looked up exactly instead.
+export async function findSubscriber(
+  supabase: Db,
+  email: string,
+  platform: string,
+  statuses?: readonly string[],
+): Promise<{ row: SubscriberRow | null; error: unknown }> {
+  const address = email.trim().toLowerCase()
+  const base = supabase.from('email_subscribers').select(SUBSCRIBER_COLUMNS)
+  let query = address.includes('*') ? base.eq('email', address) : base.ilike('email', exactLikePattern(address))
+  query = query.eq('platform', platform)
+  if (statuses) query = query.in('status', [...statuses])
+  const { data, error } = await query.limit(SUBSCRIBER_MATCH_LIMIT)
+  if (error) return { row: null, error }
+  const rows = ((data ?? []) as unknown as SubscriberRow[]).filter((row) => sameEmail(row.email, address))
+  return { row: pickSubscriberRow(rows), error: null }
+}
+
 export function newsletterBrand(platform: NewsletterPlatform): ContactBrand {
   return getContactBrand(platform === 'et')
 }
@@ -129,12 +187,7 @@ export async function startNewsletterSignup({
 
   // If the lookup fails nothing is sent: without it the code cannot tell
   // whether a confirmation went out recently.
-  const { data: existing, error: readError } = await supabase
-    .from('email_subscribers')
-    .select('status, last_confirmation_sent_at, source')
-    .eq('email', normalisedEmail)
-    .eq('platform', platform)
-    .maybeSingle()
+  const { row: existing, error: readError } = await findSubscriber(supabase, normalisedEmail, platform)
   if (readError) {
     console.error('newsletter signup: lookup failed', errorCode(readError))
     reportServerError('newsletter signup: lookup failed', readError, { area: 'public' })
@@ -159,15 +212,27 @@ export async function startNewsletterSignup({
   })
   if (!checkEmailSend(sendResult, 'subscribe confirmation')) return { kind: 'send-failed' }
 
-  if (alreadySubscribed) {
+  if (existing && alreadySubscribed) {
     // Never changes the status of a subscribed row.
     const { error } = await supabase
       .from('email_subscribers')
       .update({ confirmation_token: hash })
-      .eq('email', normalisedEmail)
-      .eq('platform', platform)
+      .eq('id', existing.id)
       .eq('status', 'subscribed')
     if (error) console.error('newsletter signup: token not stored (non-fatal)', errorCode(error))
+  } else if (existing) {
+    // The person's own row (in whatever letter case it was stored) becomes
+    // pending again; no second row is created.
+    const { error } = await supabase
+      .from('email_subscribers')
+      .update({
+        status: 'pending',
+        last_confirmation_sent_at: now.toISOString(),
+        confirmation_token: hash,
+        source,
+      })
+      .eq('id', existing.id)
+    if (error) console.error('newsletter signup: pending row not recorded (non-fatal)', errorCode(error))
   } else {
     const { error } = await supabase
       .from('email_subscribers')
