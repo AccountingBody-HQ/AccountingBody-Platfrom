@@ -7,6 +7,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useFocusOnShow } from '@/lib/form-a11y'
 import { safeUserFacingErrorMessage } from '@/lib/turnstile-error'
 import { isMessageTooShort, messageTooShortText } from '@/lib/message-rules'
+import PrivacyNote from '@/components/PrivacyNote'
 
 declare global {
   interface Window {
@@ -415,6 +416,10 @@ export default function ContactForm({ isEthioTax = false }: { isEthioTax?: boole
               <p role="alert" className="text-red-400 text-xs mt-2">{subErrorMsg || 'Something went wrong. Please try again.'}</p>
             )}
             <p className="text-white/70 text-xs mt-4">No spam, ever. Unsubscribe any time.</p>
+            <PrivacyNote
+              className="text-white/70 text-xs mt-2"
+              linkClassName={isEthioTax ? 'text-gold-400 underline hover:decoration-2' : 'text-[#C9982A] underline hover:text-[#e0b84e]'}
+            />
           </div>
         </div>
 
