@@ -17,6 +17,7 @@ import { reportServerError } from './report-error'
 import { getContactBrand, type ContactBrand } from './contact-brand'
 import { createConfirmationToken, type NewsletterPlatform } from './newsletter-tokens'
 import type { getServerSupabase } from './supabase-server'
+import type { HumanCheckReason } from './turnstile-verify'
 
 export type NewsletterSource = 'footer' | 'contact_form'
 
@@ -35,6 +36,39 @@ export type NewsletterMailer = {
 type Db = ReturnType<typeof getServerSupabase>
 
 export const NEWSLETTER_SENDER = 'noreply@accountingbody.com'
+
+// The answer to a refused person check on the newsletter routes
+// (/api/subscribe, /api/unsubscribe). "unreachable" covers a network failure
+// or no answer in time from Cloudflare, an unreadable reply, and a
+// missing/misconfigured secret — none of them is something the visitor did
+// wrong, so they all get the same user-facing copy.
+export type NewsletterCheckReason = 'missing_token' | 'invalid_token' | 'unreachable'
+
+const CHECK_REASON: Record<HumanCheckReason, NewsletterCheckReason> = {
+  missing: 'missing_token',
+  'not-confirmed': 'invalid_token',
+  unreadable: 'unreachable',
+  unavailable: 'unreachable',
+}
+
+export function personCheckRefusal(humanReason: HumanCheckReason): {
+  reason: NewsletterCheckReason
+  body: { error: string; code: string }
+  status: number
+} {
+  const reason = CHECK_REASON[humanReason]
+  const unreachable = reason === 'unreachable'
+  return {
+    reason,
+    body: {
+      error: unreachable
+        ? "We couldn't verify your request right now. Please try again in a moment."
+        : "We couldn't verify your request. If you're using an ad blocker or privacy extension, please disable it for this page and try again.",
+      code: unreachable ? 'turnstile_unreachable' : 'turnstile_failed',
+    },
+    status: unreachable ? 503 : 400,
+  }
+}
 
 const SHORT_CODE = /^[A-Za-z0-9_.-]{1,40}$/
 

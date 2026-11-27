@@ -1,24 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { Resend } from "resend"
 import { getServerSupabase } from "@/lib/supabase-server"
-import { startNewsletterSignup } from "@/lib/newsletter-signup"
+import { personCheckRefusal, startNewsletterSignup } from "@/lib/newsletter-signup"
 import { CONFIRMATION_EMAIL_FAILED_TEXT, SERVER_PROBLEM_TEXT } from "@/lib/message-rules"
-import { verifyHumanCheck, type HumanCheckReason } from "@/lib/turnstile-verify"
+import { verifyHumanCheck } from "@/lib/turnstile-verify"
 import { reportServerError } from "@/lib/report-error"
 
 // This route fails CLOSED on a bad person-check result: no subscription is
-// created, and the visitor is told why. "unreachable" covers a network
-// failure or no answer in time from Cloudflare, an unreadable reply, and a
-// missing/misconfigured secret — none of them is something the visitor did
-// wrong, so they all get the same user-facing copy.
-type SubscribeCheckReason = "missing_token" | "invalid_token" | "unreachable"
-
-const SUBSCRIBE_CHECK_REASON: Record<HumanCheckReason, SubscribeCheckReason> = {
-  missing: "missing_token",
-  "not-confirmed": "invalid_token",
-  unreadable: "unreachable",
-  unavailable: "unreachable",
-}
+// created, and the visitor is told why (answers shared with /api/unsubscribe,
+// see personCheckRefusal).
 
 export async function POST(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
@@ -34,18 +24,10 @@ export async function POST(req: NextRequest) {
     // whatever else was sent.
     const turnstileResult = await verifyHumanCheck(turnstileToken, ip, isET, "subscribe")
     if (!turnstileResult.ok) {
-      const reason = SUBSCRIBE_CHECK_REASON[turnstileResult.reason]
+      const refusal = personCheckRefusal(turnstileResult.reason)
+      const reason = refusal.reason
       reportServerError("subscribe person check refused", new Error("person check refused"), { area: "public", code: reason })
-      const unreachable = reason === "unreachable"
-      return NextResponse.json(
-        {
-          error: unreachable
-            ? "We couldn't verify your request right now. Please try again in a moment."
-            : "We couldn't verify your request. If you're using an ad blocker or privacy extension, please disable it for this page and try again.",
-          code: unreachable ? "turnstile_unreachable" : "turnstile_failed",
-        },
-        { status: unreachable ? 503 : 400 }
-      )
+      return NextResponse.json(refusal.body, { status: refusal.status })
     }
 
     if (_h) return NextResponse.json({ success: true })

@@ -115,6 +115,7 @@ const legalLinks = [
   { label: 'Privacy Policy',    href: '/privacy-policy' },
   { label: 'Terms of Service',  href: '/terms' },
   { label: 'Cookie Policy',     href: '/cookie-policy' },
+  { label: 'Unsubscribe',       href: '/unsubscribe' },
   { label: 'Disclaimer',        href: '/disclaimer' },
   { label: 'Accessibility',     href: '/accessibility' },
 ]
