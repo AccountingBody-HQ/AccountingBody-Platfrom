@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { Resend } from "resend"
 import { getServerSupabase } from "@/lib/supabase-server"
-import { personCheckRefusal, startNewsletterSignup } from "@/lib/newsletter-signup"
+import { errorCode, personCheckRefusal, startNewsletterSignup } from "@/lib/newsletter-signup"
 import { CONFIRMATION_EMAIL_FAILED_TEXT, SERVER_PROBLEM_TEXT } from "@/lib/message-rules"
 import { verifyHumanCheck } from "@/lib/turnstile-verify"
 import { reportServerError } from "@/lib/report-error"
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Subscribe error:", error)
+    console.error("Subscribe error:", errorCode(error))
     reportServerError("subscribe failed", error, { area: "public" })
     return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 })
   }

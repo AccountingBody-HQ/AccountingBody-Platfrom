@@ -201,7 +201,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(newsletter ? { success: true, newsletter } : { success: true })
   } catch (error) {
-    console.error('Contact route error:', error)
+    console.error('Contact route error:', errorCode(error))
     reportServerError('contact submit failed', error, { area: 'public' })
     return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 })
   }

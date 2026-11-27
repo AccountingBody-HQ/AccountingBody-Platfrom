@@ -113,7 +113,7 @@ export async function GET(req: NextRequest) {
     })
     checkEmailSend(notifyResult, "subscription team notification")
   } catch (emailError) {
-    console.error("Admin notification error:", emailError)
+    console.error("Admin notification error:", errorCode(emailError))
   }
 
   return NextResponse.redirect("https://" + brand.domain + "/?confirmed=true")
