@@ -246,7 +246,7 @@ export default function ContactForm({ isEthioTax = false }: { isEthioTax?: boole
     try {
       const res = await fetch('/api/subscribe', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, _h: '', 'cf-turnstile-response': token }),
+        body: JSON.stringify({ email, _h: '', 'cf-turnstile-response': token, source: 'contact_page' }),
       })
       const data = await res.json()
       if (!res.ok || !data.success) throw new Error(data.error || 'Something went wrong. Please try again.')

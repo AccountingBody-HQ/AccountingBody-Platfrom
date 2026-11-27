@@ -135,7 +135,7 @@ export default function EmailSignupForm({ isEthioTax = false }: { isEthioTax?: b
       const res = await fetch('/api/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, _h: honeypot, 'cf-turnstile-response': token }),
+        body: JSON.stringify({ email, _h: honeypot, 'cf-turnstile-response': token, source: 'home' }),
       })
       const data = await res.json()
       if (!res.ok || !data.success) throw new Error(data.error || 'Something went wrong. Please try again.')

@@ -613,6 +613,7 @@ const LOG_ONLY: Record<string, string> = {
   'lib/question-article-link.ts:setArticleLink':'the admin is told the link was not saved; logged with its code only',
   'lib/personal-data.ts:findPerson': 'the admin is told nothing was shown; table and code only, never the address (a database message can echo it)',
   'lib/personal-data.ts:erasePerson': 'the admin gets the honest partial answer; table and code only, never the address',
+  'lib/data-retention.ts:logRule': 'one line per clean-up rule: rule, mode, counts and an error code only; the cron answer carries the same',
 }
 
 describe('log lines in server pages and shared code', () => {

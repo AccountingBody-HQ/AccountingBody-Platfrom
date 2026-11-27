@@ -12,11 +12,15 @@ describe('cookie and privacy policy pages', () => {
     })
   }
 
-  // PQB-3b S6 (D352): section 5 names the practice progress kept on the device.
-  it('the privacy policy section 5 text is exact; the old text is gone', () => {
+  // PRIV-2 S1 (D352, D356): the cookies section is now section 6 with the
+  // owner-approved text (practice progress moved to section 2, see
+  // lib/priv2-wording.test.ts); the PQB-3b text is gone.
+  it('the privacy policy cookies section text is exact; the old text is gone', () => {
     const source = readFileSync('app/privacy-policy/page.tsx', 'utf8')
-    const body = "      id: 'cookies', title: '5. Cookies',\n      body: 'We use cookies and similar storage on your device for authentication, site performance and optional analytics, and to keep your practice progress on your device (it is not sent to us). See our full Cookie Policy for details.',\n"
+    const body = "      id: 'cookies', nav: 'Cookies', title: '6. Cookies',\n      body: [\n        'See our Cookie Policy. You can change your choice at any time with \"Cookie settings\" at the bottom of every page.',\n      ],\n"
     expect(source.split(body).length - 1).toBe(1)
+    expect(source).toContain("'Practice progress: kept only on your device, and never sent to us.',")
+    expect(source).not.toContain('We use cookies and similar storage on your device for authentication')
     expect(source).not.toContain('We use cookies for authentication, site performance, and optional analytics.')
   })
 })

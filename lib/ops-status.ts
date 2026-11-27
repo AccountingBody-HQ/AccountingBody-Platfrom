@@ -9,12 +9,16 @@
 // - failing: the job ran within its time allowance and every run failed.
 // - unknown: the rows could not be read.
 //
+// data-retention is ok with no read unless RETENTION_DELETE is "on"; then it
+// is late when a row is overdue for the personal-data clean-up.
+//
 // database-size is not a job: it is failing when the database is above
 // DATABASE_SIZE_WARN_BYTES. The answer shows the word, never the size.
 //
 // A check with alerting: false is shown but never changes the overall answer.
 
 import { jobRetentionCutoff } from './job-retention'
+import { ruleCutoff, type RetentionRule } from './data-retention'
 
 export type CheckWord = 'ok' | 'late' | 'failing' | 'unknown'
 export type OverallWord = 'ok' | 'attention'
@@ -44,6 +48,7 @@ export const CHECKS = [
   { name: 'saved-jobs-cleanup', alerting: true },
   { name: 'job-retention', alerting: true },
   { name: 'database-size', alerting: true },
+  { name: 'data-retention', alerting: true },
 ] as const
 
 export type CheckName = (typeof CHECKS)[number]['name']
@@ -94,6 +99,21 @@ export function judgeDue(rows: Record<string, unknown>[] | null, column: string,
 // closed_at is DAILY_GRACE_MS before the cron's own cutoff.
 export function retentionOverdueBefore(now: number, days: number): string {
   return new Date(Date.parse(jobRetentionCutoff(new Date(now), days)) - DAILY_GRACE_MS).toISOString()
+}
+
+// The personal-data clean-up (06:30 UTC, lib/data-retention.ts) runs once a
+// day, so a due row may wait up to a day. A row counts as overdue only once
+// its date is DAILY_GRACE_MS before the rule's own cut-off.
+export function dataRetentionOverdueBefore(rule: RetentionRule, now: number): string {
+  return new Date(Date.parse(ruleCutoff(rule, new Date(now))) - DAILY_GRACE_MS).toISOString()
+}
+
+// One read per deleting rule (null = that read failed): any overdue row →
+// late; otherwise any failed read → unknown; otherwise ok.
+export function judgeDataRetention(reads: (unknown[] | null)[]): CheckWord {
+  if (reads.some((rows) => rows !== null && rows.length > 0)) return 'late'
+  if (reads.some((rows) => rows === null)) return 'unknown'
+  return 'ok'
 }
 
 // At most this many job_applications rows are read for the retention check.

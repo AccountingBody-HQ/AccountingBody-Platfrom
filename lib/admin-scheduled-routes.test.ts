@@ -541,7 +541,15 @@ const scenarios: Scenario[] = [
     name: 'pending subscriber clean-up',
     context: 'cron',
     call: async () => (await load('app/api/cron/prune-pending-subscribers/route.ts')).GET(cron('/api/cron/prune-pending-subscribers'), { params: {} }),
-    healthy: { status: 200, body: { pruned: 3 }, dbRequests: 1 },
+    // PRIV-2 S4: then six count-only reads for the personal-data clean-up.
+    healthy: {
+      status: 200,
+      body: {
+        pruned: 3,
+        retention: { mode: 'count', rules: Object.fromEntries(['R1', 'R2', 'R3', 'R4', 'R5', 'R6'].map((r) => [r, { due: 3, deleted: 0 }])) },
+      },
+      dbRequests: 7,
+    },
     stalled: { waits: 1, status: 500, body: { error: 'Prune failed' }, dbRequests: 1 },
   },
   {

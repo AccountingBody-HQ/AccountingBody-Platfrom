@@ -18,15 +18,17 @@ describe('free courses card', () => {
 
 describe('Terms section 3', () => {
   const src = read('app/terms/page.tsx')
-  it('same id, new title and the two new sentences', () => {
+  // PRIV-2 S2 (D356): the two SEO-1 paragraphs became one owner-approved
+  // paragraph (no login details: the site has no logins).
+  it('same id, same title and the one PRIV-2 paragraph', () => {
     expect(src).toContain([
-      "    id: 'accounts',",
-      "    title: '3. Registration',",
-      '    body: [',
-      "      'You do not need an account to use our learning content. If you register as a job seeker, employer or firm, you are responsible for keeping your login details secure and for all activity under your registration.',",
-      "      'You must provide accurate information when registering. We reserve the right to suspend or remove registrations that provide false information or that breach these Terms.',",
-      '    ],',
+      "      id: 'accounts',",
+      "      title: '3. Registration',",
+      '      body: [',
+      "        'You do not need an account to use our learning content. If you register as a job seeker, employer or firm, you must give accurate information. We may remove a registration that gives false information or breaks these Terms.',",
+      '      ],',
     ].join('\n'))
+    expect(src).not.toContain('keeping your login details secure')
     expect(src).not.toContain('3. Accounts and registration')
     expect(src).not.toContain('you must create a free account')
     expect(src).not.toContain('suspend or terminate accounts')

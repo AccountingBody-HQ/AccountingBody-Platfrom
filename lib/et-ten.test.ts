@@ -281,8 +281,10 @@ describe('G9 e-mail addresses (D274): no ethiotax.com address from the app', () 
     const hits = files.filter((f) => /[a-z0-9.+-]+@ethiotax\.com/i.test(read(f)))
     expect(hits).toEqual([])
   })
-  it('the three EthioTax-view addresses are the accountingbody.com ones', () => {
-    expect(read('app/privacy-policy/page.tsx')).toContain("const privacyEmail = 'privacy@accountingbody.com'")
+  // PRIV-2 S1 (D355): the privacy policy shows no e-mail address any more;
+  // the two remaining EthioTax-view addresses are the accountingbody.com ones.
+  it('the EthioTax-view addresses are the accountingbody.com ones; the privacy policy has none', () => {
+    expect(read('app/privacy-policy/page.tsx')).not.toMatch(/[a-z0-9.+-]+@[a-z0-9-]+\./i)
     expect(read('app/jobs/guarantee/page.tsx')).toContain("const contactEmail = 'info@accountingbody.com'")
     expect(read('app/jobs/ethiopian-professionals/page.tsx')).toContain('<a href="mailto:info@accountingbody.com" className="text-white/70 hover:text-white/70 underline">info@accountingbody.com</a>')
   })

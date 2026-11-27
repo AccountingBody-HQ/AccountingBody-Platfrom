@@ -35,6 +35,7 @@ const ALL_OK: Record<CheckName, CheckWord> = {
   'saved-jobs-cleanup': 'ok',
   'job-retention': 'ok',
   'database-size': 'ok',
+  'data-retention': 'ok',
 }
 const WORDS: CheckWord[] = ['ok', 'late', 'failing', 'unknown']
 
@@ -195,12 +196,13 @@ describe('the overall answer', () => {
 
   it('lists the job expiry check as shown but not alerting', () => {
     expect(quiet).toStrictEqual(['job-expiry'])
-    expect(alerting).toStrictEqual(['job-import', 'subscriber-cleanup', 'saved-jobs-cleanup', 'job-retention', 'database-size'])
+    expect(alerting).toStrictEqual(['job-import', 'subscriber-cleanup', 'saved-jobs-cleanup', 'job-retention', 'database-size', 'data-retention'])
   })
 
-  it('keeps the five existing checks in their order and adds database-size last', () => {
+  // PRIV-2 S4: data-retention is added after database-size.
+  it('keeps the six existing checks in their order and adds data-retention last', () => {
     expect(CHECKS.map((check) => check.name)).toStrictEqual([
-      'job-import', 'job-expiry', 'subscriber-cleanup', 'saved-jobs-cleanup', 'job-retention', 'database-size',
+      'job-import', 'job-expiry', 'subscriber-cleanup', 'saved-jobs-cleanup', 'job-retention', 'database-size', 'data-retention',
     ])
   })
 

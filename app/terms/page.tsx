@@ -1,99 +1,116 @@
 // app/terms/page.tsx
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { headers } from 'next/headers'
 import { canonicalMetadata } from '@/lib/canonical'
 
+// The brand comes from the x-et-platform header, as on the privacy policy.
+async function termsBrand() {
+  const headersList = await headers()
+  const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
+  return {
+    platformName: isEthioTax ? 'EthioTax' : 'Accounting Body',
+    platformUrl: isEthioTax ? 'ethiotax.com' : 'accountingbody.com',
+  }
+}
+
 export async function generateMetadata(): Promise<Metadata> {
+  const { platformName } = await termsBrand()
   return {
     title: 'Terms of Service',
-    description: 'The terms and conditions governing your use of Accounting Body. Last updated March 2026.',
+    description: `The terms and conditions governing your use of ${platformName}. Last updated November 2026.`,
     ...(await canonicalMetadata('/terms')),
   }
 }
 
-const sections = [
-  {
-    id: 'acceptance',
-    title: '1. Acceptance of terms',
-    body: [
-      'By accessing or using accountingbody.com ("the Site"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use the Site.',
-      'These Terms apply to all visitors, registered users, and subscribers. We may update these Terms at any time. Continued use of the Site after changes constitutes acceptance of the updated Terms.',
-    ],
-  },
-  {
-    id: 'use-of-site',
-    title: '2. Use of the site',
-    body: [
-      'You may use Accounting Body for lawful, personal, and non-commercial educational purposes. You must not use the Site in any way that is unlawful, harmful, or that could damage our reputation.',
-      'You must not attempt to gain unauthorised access to any part of the Site, its servers, or any database connected to it. You must not use automated tools to scrape, harvest, or copy content from the Site without prior written permission.',
-    ],
-  },
-  {
-    id: 'accounts',
-    title: '3. Registration',
-    body: [
-      'You do not need an account to use our learning content. If you register as a job seeker, employer or firm, you are responsible for keeping your login details secure and for all activity under your registration.',
-      'You must provide accurate information when registering. We reserve the right to suspend or remove registrations that provide false information or that breach these Terms.',
-    ],
-  },
-  {
-    id: 'subscriptions',
-    title: '4. Subscriptions and payments',
-    body: [
-      'Accounting Body is currently free to use. A Pro subscription tier is planned for the future. When introduced, full pricing and payment terms will be published here in advance.',
-    ],
-  },
-  {
-    id: 'intellectual-property',
-    title: '5. Intellectual property',
-    body: [
-      'All original content on Accounting Body — including study notes, practice questions, articles, and guides — is owned by Accounting Body or its content contributors and is protected by copyright.',
-      'You may not reproduce, redistribute, or republish any content without prior written permission. You may print or download content for your own personal, non-commercial study use only.',
-      'Accounting Body is not affiliated with, endorsed by, or officially connected to ACCA, CIMA, AAT, ICAEW, or any other professional body. All qualification names are trademarks of their respective owners.',
-    ],
-  },
-  {
-    id: 'disclaimer',
-    title: '6. Content disclaimer',
-    body: [
-      'Content on Accounting Body is provided for educational purposes only. It does not constitute professional accounting, tax, legal, or financial advice. See our full Disclaimer for details.',
-      'We make every effort to keep content accurate and up to date, but we cannot guarantee that all content reflects the very latest syllabus or regulatory requirements. Always verify against official sources.',
-    ],
-  },
-  {
-    id: 'limitation',
-    title: '7. Limitation of liability',
-    body: [
-      'To the fullest extent permitted by law, Accounting Body shall not be liable for any indirect, incidental, special, or consequential loss arising from your use of the Site or its content.',
-      'Our total liability to you for any claim arising from your use of the Site shall not exceed the amount you paid us in the 12 months preceding the claim, or £50, whichever is greater.',
-    ],
-  },
-  {
-    id: 'termination',
-    title: '8. Termination',
-    body: [
-      'We reserve the right to suspend or terminate your access to the Site at any time, with or without notice, if we reasonably believe you have breached these Terms.',
-      'You may close your account at any time by contacting us at noreply@accountingbody.com. Upon closure, your data will be handled in accordance with our Privacy Policy.',
-    ],
-  },
-  {
-    id: 'governing-law',
-    title: '9. Governing law',
-    body: [
-      'These Terms are governed by the laws of England and Wales. Any disputes arising from these Terms or your use of the Site shall be subject to the exclusive jurisdiction of the courts of England and Wales.',
-    ],
-  },
-  {
-    id: 'contact',
-    title: '10. Contact',
-    body: [
-      'If you have any questions about these Terms, please contact us at noreply@accountingbody.com or via our contact form at accountingbody.com/contact.',
-      'These Terms were last updated in March 2026.',
-    ],
-  },
-]
+// Owner-approved wording (PRIV-2, D356). The section ids stay the same
+// (inbound links), including 'subscriptions' for "4. Payments".
+function termsSections(platformName: string, platformUrl: string) {
+  return [
+    {
+      id: 'acceptance',
+      title: '1. Acceptance of terms',
+      body: [
+        `By accessing or using ${platformUrl} ("the Site"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use the Site.`,
+        'These Terms apply to everyone who visits or uses the Site, including job seekers, employers and firms who send us their details. We may update these Terms at any time. Continued use of the Site after changes means you accept the updated Terms.',
+      ],
+    },
+    {
+      id: 'use-of-site',
+      title: '2. Use of the site',
+      body: [
+        `You may use ${platformName} for lawful, personal, and non-commercial educational purposes. You must not use the Site in any way that is unlawful, harmful, or that could damage our reputation.`,
+        'You must not attempt to gain unauthorised access to any part of the Site, its servers, or any database connected to it. You must not use automated tools to scrape, harvest, or copy content from the Site without prior written permission.',
+      ],
+    },
+    {
+      id: 'accounts',
+      title: '3. Registration',
+      body: [
+        'You do not need an account to use our learning content. If you register as a job seeker, employer or firm, you must give accurate information. We may remove a registration that gives false information or breaks these Terms.',
+      ],
+    },
+    {
+      id: 'subscriptions',
+      title: '4. Payments',
+      body: [
+        'Our learning content is free to use. If we ever charge for a service, the price and terms will be shown before you pay.',
+      ],
+    },
+    {
+      id: 'intellectual-property',
+      title: '5. Intellectual property',
+      body: [
+        `All original content on ${platformName} — including study notes, practice questions, articles, and guides — is owned by ${platformName} or its content contributors and is protected by copyright.`,
+        'You may not reproduce, redistribute, or republish any content without prior written permission. You may print or download content for your own personal, non-commercial study use only.',
+        `${platformName} is not affiliated with, endorsed by, or officially connected to ACCA, CIMA, AAT, ICAEW, or any other professional body. All qualification names are trademarks of their respective owners.`,
+      ],
+    },
+    {
+      id: 'disclaimer',
+      title: '6. Content disclaimer',
+      body: [
+        `Content on ${platformName} is provided for educational purposes only. It does not constitute professional accounting, tax, legal, or financial advice. See our full Disclaimer for details.`,
+        'We make every effort to keep content accurate and up to date, but we cannot guarantee that all content reflects the very latest syllabus or regulatory requirements. Always verify against official sources.',
+      ],
+    },
+    {
+      id: 'limitation',
+      title: '7. Limitation of liability',
+      body: [
+        `To the fullest extent permitted by law, ${platformName} shall not be liable for any indirect, incidental, special, or consequential loss arising from your use of the Site or its content.`,
+        'Our total liability to you for any claim arising from your use of the Site shall not exceed the amount you paid us in the 12 months preceding the claim, or £50, whichever is greater.',
+      ],
+    },
+    {
+      id: 'termination',
+      title: '8. Termination',
+      body: [
+        'We reserve the right to suspend or terminate your access to the Site at any time, with or without notice, if we reasonably believe you have breached these Terms.',
+        'You can ask us to remove your registration or your details at any time through our contact form. We will handle your data as our Privacy Policy explains.',
+      ],
+    },
+    {
+      id: 'governing-law',
+      title: '9. Governing law',
+      body: [
+        'These Terms are governed by the laws of England and Wales. Any disputes arising from these Terms or your use of the Site shall be subject to the exclusive jurisdiction of the courts of England and Wales.',
+      ],
+    },
+    {
+      id: 'contact',
+      title: '10. Contact',
+      body: [
+        `If you have any questions about these Terms, please use our contact form at ${platformUrl}/contact.`,
+        'These Terms were last updated in November 2026.',
+      ],
+    },
+  ]
+}
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const { platformName, platformUrl } = await termsBrand()
+  const sections = termsSections(platformName, platformUrl)
   return (
     <>
       <section className="relative overflow-hidden bg-navy-950 py-16 md:py-20">
@@ -104,7 +121,7 @@ export default function TermsPage() {
         <div className="container-site relative z-10">
           <span className="eyebrow text-gold-400 mb-4 block">Legal</span>
           <h1 className="font-display text-white mb-3 leading-tight">Terms of Service</h1>
-          <p className="text-white/70 text-sm">Last updated: March 2026</p>
+          <p className="text-white/70 text-sm">Last updated: November 2026</p>
         </div>
       </section>
 
@@ -129,7 +146,7 @@ export default function TermsPage() {
             <div className="lg:col-span-3">
               <div className="border-l-4 border-gold-400 pl-5 mb-10">
                 <p className="text-slate-600 text-base leading-relaxed">
-                  Please read these Terms of Service carefully before using Accounting Body.
+                  Please read these Terms of Service carefully before using {platformName}.
                   By using the Site you agree to be bound by these Terms.
                 </p>
               </div>

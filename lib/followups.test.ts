@@ -288,7 +288,14 @@ const SCHEDULED: {
     run: (a) => prunePendingSubscribers(request('/api/cron/prune-pending-subscribers', { headers: authHeaders(a) })),
     log: 'cron/prune-pending-subscribers: not configured',
     refused: { status: 401, headers: JSON_HEADERS, body: { error: 'Unauthorised' } },
-    healthy: { status: 200, body: { pruned: 0 } },
+    // PRIV-2 S4: the answer also carries the count-only personal-data clean-up.
+    healthy: {
+      status: 200,
+      body: {
+        pruned: 0,
+        retention: { mode: 'count', rules: Object.fromEntries(['R1', 'R2', 'R3', 'R4', 'R5', 'R6'].map((r) => [r, { due: 0, deleted: 0 }])) },
+      },
+    },
   },
   {
     name: 'cron/prune-saved-jobs',
