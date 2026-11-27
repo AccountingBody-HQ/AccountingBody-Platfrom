@@ -19,3 +19,21 @@ export function visibleDifficulties(
   if (!counts) return [...levels]
   return levels.filter((level) => (counts[level] ?? 0) > 0)
 }
+
+// The subject from the address: one of the given subjects, by exact slug.
+// Anything else (unknown, empty, other case, a list) is no subject.
+export function pickSubject<S extends { slug: string }>(subjects: readonly S[], raw: unknown): S | undefined {
+  if (typeof raw !== 'string' || raw === '') return undefined
+  return subjects.find((s) => s.slug === raw)
+}
+
+// The subjects the filter offers: only those with at least one live set, in
+// the given order.
+export function visibleSubjects<S extends { slug: string; title: string; category: string }>(
+  subjects: readonly S[],
+  setIds: Record<string, string[]>,
+): { slug: string; title: string }[] {
+  return subjects
+    .filter((s) => (setIds[s.category]?.length ?? 0) > 0)
+    .map((s) => ({ slug: s.slug, title: s.title }))
+}

@@ -4,6 +4,8 @@ import { unstable_cache } from 'next/cache'
 import { getServerSupabase, type DbContext } from '@/lib/supabase-server'
 import { guardCachedRead } from '@/lib/cache-guard'
 import { reportServerError } from '@/lib/report-error'
+import { readPaged, readPagedIn } from '@/lib/mock-exam-pool'
+import { MOCK_EXAM_SUBJECTS, findMockExamSubject } from '@/lib/mock-exam-subjects'
 
 // Every function in this file that has a caller serves public pages, so all
 // use the public read limit (the default), except the whole-table counts,
@@ -483,7 +485,7 @@ function questionSetsListQuery<Columns extends string>(
   supabase: ReturnType<typeof getSupabase>,
   columns: Columns,
   options: { count: 'exact'; head?: boolean },
-  filters: { difficulty?: string; search?: string; startsWith?: string },
+  filters: { difficulty?: string; search?: string; startsWith?: string; ids?: string[] },
 ) {
   let query = supabase
     .from('question_sets')
@@ -494,6 +496,7 @@ function questionSetsListQuery<Columns extends string>(
   if (filters.difficulty) query = query.eq('difficulty', filters.difficulty)
   if (filters.search)     query = query.ilike('title', `%${filters.search}%`)
   if (filters.startsWith) query = query.ilike('title', `${escapeLikeText(filters.startsWith)}%`)
+  if (filters.ids)        query = query.in('id', filters.ids)
   return query
 }
 
@@ -510,15 +513,19 @@ export async function getQuestionSets(params: {
   search?: string
   startsWith?: string
   category?: string
+  // Only these sets (the subject filter). An empty list matches nothing and
+  // sends no query.
+  ids?: string[]
   page?: number
   perPage?: number
   sortBy?: string
 }): Promise<{ sets: QuestionSet[]; total: number }> {
+  const { difficulty, search, startsWith, ids, page = 1, perPage = 12, sortBy = 'alpha' } = params
+  if (ids && ids.length === 0) return { sets: [], total: 0 }
   const supabase = getSupabase()
-  const { difficulty, search, startsWith, page = 1, perPage = 12, sortBy = 'alpha' } = params
   const start = (page - 1) * perPage
   const end   = start + perPage - 1
-  const filters = { difficulty, search, startsWith }
+  const filters = { difficulty, search, startsWith, ids }
 
   let query = questionSetsListQuery(
     supabase,
@@ -548,24 +555,39 @@ export async function getQuestionSets(params: {
 }
 
 // Cached list read for the public /practice-questions page only. Plain list
-// pages (no search, page 1-20, a known difficulty, 12 per page) are kept for
-// an hour; every other request reads fresh through getQuestionSets. The key
-// holds primitives only. getQuestionSets itself stays uncached for its other
-// caller. A failure is thrown and never stored.
+// pages (no search, page 1-20, a known difficulty, 12 per page, with or
+// without a subject) are kept for an hour; every other request reads fresh
+// through getQuestionSets. The key holds primitives only: the subject is its
+// slug ('' for none), and its set ids come from getPublicPracticeFilters().
+// getQuestionSets itself stays uncached for its other caller. A failure is
+// thrown and never stored.
 const PUBLIC_QUESTION_SETS_LIST_KEY = ['public-question-sets-list']
 const PUBLIC_LIST_DIFFICULTIES = ['', 'beginner', 'intermediate', 'advanced']
 
-function fetchPublicQuestionSetsList(difficulty: string, page: number, sort: 'newest' | 'alpha') {
-  return getQuestionSets({ difficulty: difficulty || undefined, page, perPage: 12, sortBy: sort })
+// A subject slug from MOCK_EXAM_SUBJECTS (exact match), or '' for none.
+function listSubject(category: string | undefined): string {
+  return (category && findMockExamSubject(category)?.slug) || ''
+}
+
+// The set ids of a subject, or undefined for no subject.
+async function subjectSetIds(subjectSlug: string): Promise<string[] | undefined> {
+  const subject = subjectSlug ? findMockExamSubject(subjectSlug) : undefined
+  if (!subject) return undefined
+  return (await getPublicPracticeFilters()).subjectSetIds[subject.category] ?? []
+}
+
+async function fetchPublicQuestionSetsList(difficulty: string, page: number, sort: 'newest' | 'alpha', subject: string) {
+  const ids = await subjectSetIds(subject)
+  return getQuestionSets({ difficulty: difficulty || undefined, ids, page, perPage: 12, sortBy: sort })
 }
 
 const guardedPublicQuestionSetsList = guardCachedRead(
   PUBLIC_QUESTION_SETS_LIST_KEY,
-  (difficulty: string, page: number, sort: 'newest' | 'alpha') =>
+  (difficulty: string, page: number, sort: 'newest' | 'alpha', subject: string) =>
     unstable_cache(fetchPublicQuestionSetsList, PUBLIC_QUESTION_SETS_LIST_KEY, {
       revalidate: 3600,
       tags: ['question-sets', 'question-sets-list'],
-    })(difficulty, page, sort)
+    })(difficulty, page, sort, subject)
 )
 
 export async function getPublicQuestionSets(params: {
@@ -577,50 +599,73 @@ export async function getPublicQuestionSets(params: {
   perPage?: number
   sortBy?: string
 }): Promise<{ sets: QuestionSet[]; total: number }> {
-  const { difficulty = '', search, startsWith, page = 1, perPage = 12, sortBy } = params
+  const { difficulty = '', search, startsWith, category, page = 1, perPage = 12, sortBy } = params
+  const subject = listSubject(category)
   const cacheable =
     !search &&
     !startsWith &&
     Number.isInteger(page) && page >= 1 && page <= 20 &&
     PUBLIC_LIST_DIFFICULTIES.includes(difficulty) &&
     perPage === 12
-  if (!cacheable) return getQuestionSets(params)
-  return guardedPublicQuestionSetsList(difficulty, page, sortBy === 'newest' ? 'newest' : 'alpha')
+  if (!cacheable) return getQuestionSets({ ...params, ids: await subjectSetIds(subject) })
+  return guardedPublicQuestionSetsList(difficulty, page, sortBy === 'newest' ? 'newest' : 'alpha', subject)
 }
 
-// How many live AB sets each difficulty has, for the /practice-questions
-// level filter. Three head counts, kept for an hour under the list's tags. A
-// failure is thrown and never stored; the page then shows every level.
+// The levels of the /practice-questions level filter, in its order.
 export const QUESTION_SET_DIFFICULTIES = ['beginner', 'intermediate', 'advanced'] as const
-const PUBLIC_QUESTION_SET_DIFFICULTY_COUNTS_KEY = ['public-question-set-difficulty-counts']
 
-async function fetchQuestionSetDifficultyCounts(): Promise<Record<string, number>> {
-  const supabase = getSupabase()
-  const counts = await Promise.all(QUESTION_SET_DIFFICULTIES.map(async (difficulty) => {
-    const { count, error, status } = await supabase
-      .from('question_sets')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'published')
-      .contains('show_on_sites', ['ab'])
-      .eq('difficulty', difficulty)
-    if (error) throw readProblem(`question set difficulty count failed (status ${status})`, error)
-    if (count === null) throw new Error(`question set difficulty count returned no count (status ${status})`)
-    return [difficulty, count] as const
-  }))
-  return Object.fromEntries(counts)
+// The /practice-questions filters: how many live AB sets each level has, and
+// for each subject in MOCK_EXAM_SUBJECTS the ids of its sets. A set belongs
+// to a subject when its article is a published article of that category, the
+// same rule as the mock-exam pool (lib/mock-exam-pool.ts). Read with GET and
+// an exact total, in pages (readPaged), never head counts; kept for an hour
+// under the list's tags. Any failed or short read is thrown and never stored.
+export interface PracticeFilters {
+  difficultyCounts: Record<string, number>
+  subjectSetIds: Record<string, string[]>
 }
 
-const guardedQuestionSetDifficultyCounts = guardCachedRead(
-  PUBLIC_QUESTION_SET_DIFFICULTY_COUNTS_KEY,
+const PUBLIC_PRACTICE_FILTERS_KEY = ['public-practice-filters']
+
+async function fetchPracticeFilters(): Promise<PracticeFilters> {
+  const supabase = getSupabase()
+  const sets = await readPaged<{ id: string; article_slug: string | null; difficulty: string | null }>('practice-filters question_sets', () =>
+    supabase.from('question_sets').select('id, article_slug, difficulty', { count: 'exact' })
+      .eq('status', 'published').contains('show_on_sites', ['ab'])
+      .order('id', { ascending: true }))
+  const slugs = Array.from(new Set(sets.map(s => s.article_slug).filter((s): s is string => !!s))).sort()
+  const articles = await readPagedIn<{ slug: string; category: string | null }>('practice-filters articles', slugs, chunk =>
+    supabase.from('articles').select('slug, category', { count: 'exact' })
+      .eq('status', 'published').in('slug', chunk)
+      .order('slug', { ascending: true }))
+  const categoryOf = new Map(articles.map(a => [a.slug, a.category]))
+
+  const difficultyCounts: Record<string, number> = {}
+  for (const level of QUESTION_SET_DIFFICULTIES) difficultyCounts[level] = 0
+  const subjectSetIds: Record<string, string[]> = {}
+  for (const subject of MOCK_EXAM_SUBJECTS) subjectSetIds[subject.category] = []
+  const has = (record: object, key: string) => Object.prototype.hasOwnProperty.call(record, key)
+
+  for (const set of sets) {
+    if (set.difficulty && has(difficultyCounts, set.difficulty)) difficultyCounts[set.difficulty]++
+    const category = set.article_slug ? categoryOf.get(set.article_slug) : undefined
+    if (category && has(subjectSetIds, category)) subjectSetIds[category].push(set.id)
+  }
+  for (const ids of Object.values(subjectSetIds)) ids.sort()
+  return { difficultyCounts, subjectSetIds }
+}
+
+const guardedPracticeFilters = guardCachedRead(
+  PUBLIC_PRACTICE_FILTERS_KEY,
   () =>
-    unstable_cache(fetchQuestionSetDifficultyCounts, PUBLIC_QUESTION_SET_DIFFICULTY_COUNTS_KEY, {
+    unstable_cache(fetchPracticeFilters, PUBLIC_PRACTICE_FILTERS_KEY, {
       revalidate: 3600,
       tags: ['question-sets', 'question-sets-list'],
     })()
 )
 
-export async function getPublicQuestionSetDifficultyCounts(): Promise<Record<string, number>> {
-  return guardedQuestionSetDifficultyCounts()
+export async function getPublicPracticeFilters(): Promise<PracticeFilters> {
+  return guardedPracticeFilters()
 }
 
 async function fetchQuestionSetCount(): Promise<number> {

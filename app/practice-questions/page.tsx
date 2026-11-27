@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { getPublicQuestionSets, getPublicQuestionSetDifficultyCounts, QUESTION_SET_DIFFICULTIES } from '@/lib/db'
+import { getPublicQuestionSets, getPublicPracticeFilters, QUESTION_SET_DIFFICULTIES, type PracticeFilters } from '@/lib/db'
 import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
-import { parseListPage, visibleDifficulties } from '@/lib/practice-list'
+import { parseListPage, pickSubject, visibleDifficulties, visibleSubjects } from '@/lib/practice-list'
+import { MOCK_EXAM_SUBJECTS } from '@/lib/mock-exam-subjects'
+import { reportServerError } from '@/lib/report-error'
 import { JobsRecruitmentSection } from '@/components/JobsRecruitmentSection'
 import { PracticeQuestionsPagination } from './PracticeQuestionsPagination'
 import { buildPracticeQuestionsUrl } from './buildUrl'
@@ -29,13 +31,15 @@ const PER_PAGE = 12
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 
-// Levels with at least one live set; if the cached count cannot be read,
-// every level is offered, as before.
-async function levelOptions(): Promise<string[]> {
+// The level and subject filters, from one cached read. If it cannot be read,
+// the problem is reported and the page looks as before: every level, no
+// Subject panel, and a subject in the address is ignored.
+async function practiceFilters(): Promise<PracticeFilters | null> {
   try {
-    return visibleDifficulties(QUESTION_SET_DIFFICULTIES, await getPublicQuestionSetDifficultyCounts())
-  } catch {
-    return visibleDifficulties(QUESTION_SET_DIFFICULTIES, null)
+    return await getPublicPracticeFilters()
+  } catch (error) {
+    reportServerError('practice filters read failed', error, { area: 'public' })
+    return null
   }
 }
 
@@ -52,22 +56,27 @@ export default async function PracticeQuestionsPage({
   const page         = parseListPage(sp.page)
   const letter       = sp.letter ?? ''
   const sort         = sp.sort ?? 'alpha'
-  const category     = sp.category ?? ''
+  const facts        = await practiceFilters()
+  // Only a known subject counts, and only when the filters could be read;
+  // anything else is no subject (not kept in links).
+  const subject      = facts ? pickSubject(MOCK_EXAM_SUBJECTS, sp.category) : undefined
+  const category     = subject?.slug ?? ''
 
   // The letter filter takes priority over text search: a letter matches
   // titles that start with it; a search matches titles that contain it.
-  const [{ sets: posts, total }, difficulties] = await Promise.all([
-    getPublicQuestionSets({
-      difficulty: difficulty || undefined,
-      search:     letter ? undefined : (search || undefined),
-      startsWith: letter || undefined,
-      page,
-      perPage:    PER_PAGE,
-      sortBy:     sort,
-    }),
-    levelOptions(),
-  ])
-  const filters: { difficulties: string[]; categories: { slug: string; title: string }[] } = { difficulties, categories: [] }
+  const { sets: posts, total } = await getPublicQuestionSets({
+    difficulty: difficulty || undefined,
+    search:     letter ? undefined : (search || undefined),
+    startsWith: letter || undefined,
+    category:   category || undefined,
+    page,
+    perPage:    PER_PAGE,
+    sortBy:     sort,
+  })
+  const filters: { difficulties: string[]; categories: { slug: string; title: string }[] } = {
+    difficulties: visibleDifficulties(QUESTION_SET_DIFFICULTIES, facts?.difficultyCounts ?? null),
+    categories:   facts ? visibleSubjects(MOCK_EXAM_SUBJECTS, facts.subjectSetIds) : [],
+  }
 
   const totalPages = Math.ceil(total / PER_PAGE)
   // A page after the last one is not a page: the site's normal 404.
@@ -128,12 +137,13 @@ export default async function PracticeQuestionsPage({
 
             {/* FILTER SIDEBAR */}
             <aside className="bg-white rounded-xl border border-slate-200 p-5 lg:sticky lg:top-24">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">Filter</p>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Filter</p>
 
               {/* Search */}
               <form method="GET" action="/practice-questions">
                 {difficulty && <input type="hidden" name="difficulty" value={difficulty} />}
                 {sort && sort !== 'alpha' && <input type="hidden" name="sort" value={sort} />}
+                {category && <input type="hidden" name="category" value={category} />}
                 <input
                   type="text"
                   name="search"
@@ -147,7 +157,7 @@ export default async function PracticeQuestionsPage({
               </form>
 
               {/* Sort */}
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Sort by</p>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Sort by</p>
               <div className="space-y-1 mb-5">
                 {[{ label: 'A – Z', value: 'alpha' }, { label: 'Newest first', value: 'newest' }].map(opt => (
                   <Link
@@ -161,7 +171,7 @@ export default async function PracticeQuestionsPage({
               </div>
 
               {/* Difficulty */}
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Difficulty</p>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Difficulty</p>
               <div className="space-y-1">
                 {[{ label: 'All levels', value: '' }, ...filters.difficulties.map(d => ({ label: d.charAt(0).toUpperCase() + d.slice(1), value: d }))].map(opt => (
                   <Link
@@ -177,7 +187,7 @@ export default async function PracticeQuestionsPage({
               {/* Subject Category */}
               {filters.categories.length > 0 && (
                 <>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3 mt-5">Subject</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3 mt-5">Subject</p>
                   <div className="space-y-1">
                     {[{ label: 'All subjects', slug: '' }, ...filters.categories].map(cat => (
                       <Link
@@ -220,10 +230,11 @@ export default async function PracticeQuestionsPage({
                   {total} question set{total !== 1 ? 's' : ''}
                   {letter && <span className="ml-1 font-medium text-navy-950">starting with {letter}</span>}
                   {search && !letter && <span className="ml-1 font-medium text-navy-950">matching &ldquo;{search}&rdquo;</span>}
+                  {subject && <span className="ml-1">· {subject.title}</span>}
                   {difficulty && <span className="ml-1">· {difficulty}</span>}
                 </p>
-                {(letter || search || difficulty) && (
-                  <Link href="/practice-questions" className="text-xs text-slate-400 hover:text-navy-950 transition-colors">
+                {(letter || search || difficulty || category) && (
+                  <Link href="/practice-questions" className="text-xs text-slate-500 hover:text-navy-950 transition-colors">
                     Clear filters
                   </Link>
                 )}
@@ -231,7 +242,7 @@ export default async function PracticeQuestionsPage({
 
               {posts.length === 0 ? (
                 <div className="text-center py-20">
-                  <p className="text-slate-400 text-lg">No practice questions found.</p>
+                  <p className="text-slate-500 text-lg">No practice questions found.</p>
                   <Link href="/practice-questions" className="mt-4 inline-block text-sm text-navy-700 hover:underline">Clear filters</Link>
                 </div>
               ) : (
