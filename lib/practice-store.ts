@@ -58,6 +58,15 @@ export interface HistoryItem {
 
 export interface SetScore { score: number; total: number; pct: number; at: number }
 
+/** This browser's localStorage, or null on the server or when the browser blocks it. */
+export function deviceStorage(): StorageLike | null {
+  try {
+    return typeof window === 'undefined' ? null : window.localStorage
+  } catch {
+    return null
+  }
+}
+
 export const mockExamId = (level: string, module: string) => `${level}:${module}`
 export const mockAttemptKey = (level: string, module: string) => `${MOCK_ATTEMPT_PREFIX}${mockExamId(level, module)}`
 

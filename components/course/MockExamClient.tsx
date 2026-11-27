@@ -3,6 +3,11 @@
 import { useState, useEffect, useCallback, useId, useRef } from 'react'
 import Link from 'next/link'
 import { TIME_UP_TEXT, announcementAt, examEndAt, momentsPassedAtStart, secondsLeftAt } from '@/lib/mock-exam-timer'
+import { addHistory, clearExpiredAttempts, deviceStorage, lastResult, mockAttemptKey, mockExamId, removeAttempt, saveAttempt, topicScores, type HistoryItem } from '@/lib/practice-store'
+import {
+  CONTINUE_TEXT, FLAGGED_TEXT, FLAG_TEXT, NOT_SAVING_TEXT, START_NEW_TEXT, TOPIC_HEADING,
+  attemptRecord, flaggedLine, lastResultLine, resultHistoryItem, resumeAttempt, toggleFlag, unfinishedAttemptLine,
+} from '@/lib/mock-exam-progress'
 
 interface Question {
   questionText: string
@@ -44,6 +49,25 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
   const qHeadingId = useId()
   const resultsHeadingRef = useRef<HTMLHeadingElement>(null)
   const questionHeadingRef = useRef<HTMLHeadingElement>(null)
+  // On-device progress (lib/practice-store.ts, D347): flags, an unfinished
+  // attempt to continue, the last result, and whether saving failed.
+  const [flags, setFlags] = useState<number[]>([])
+  const [resumable, setResumable] = useState<{ secondsLeft: number } | null>(null)
+  const [last, setLast] = useState<HistoryItem | null>(null)
+  const [notSaving, setNotSaving] = useState(false)
+  // The end time of the attempt already added to the history (added once).
+  const recordedRef = useRef(0)
+
+  // Storage is read only after mount, so the first render matches the server.
+  useEffect(() => {
+    const store = deviceStorage()
+    if (!store) return
+    const now = Date.now()
+    clearExpiredAttempts(store, now)
+    const saved = resumeAttempt(store, level, module, now)
+    setResumable(saved ? { secondsLeft: saved.secondsLeft } : null)
+    setLast(lastResult(store, mockExamId(level, module)))
+  }, [level, module])
 
   // Screen-reader and keyboard users land on the new content when the exam starts and when results appear.
   useEffect(() => {
@@ -63,6 +87,8 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
       setQuestions(data.questions)
       // poolTotal not needed
       setAnswers({})
+      setFlags([])
+      setNotSaving(false)
       setCurrent(0)
       setReviewIdx(null)
       const now = Date.now()
@@ -77,6 +103,54 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
     }
     setLoading(false)
   }, [level, module, apiPath])
+
+  // Continue: the saved questions, answers, flags and question, with the
+  // saved end time (time away counts); warnings already passed are not said.
+  const continueAttempt = () => {
+    const store = deviceStorage()
+    const now = Date.now()
+    const saved = store ? resumeAttempt(store, level, module, now) : null
+    setResumable(null)
+    if (!saved) return
+    setQuestions(saved.questions)
+    setAnswers(saved.answers)
+    setFlags(saved.flags)
+    setNotSaving(false)
+    setCurrent(saved.current)
+    setReviewIdx(null)
+    endAtRef.current = saved.endAt
+    saidRef.current = momentsPassedAtStart(saved.secondsLeft)
+    setAnnouncement('')
+    setSecondsLeft(saved.secondsLeft)
+    setPhase('exam')
+  }
+
+  const startNewAttempt = () => {
+    const store = deviceStorage()
+    if (store) removeAttempt(store, mockAttemptKey(level, module))
+    setResumable(null)
+    loadExam()
+  }
+
+  // One save after every answer, flag and move.
+  useEffect(() => {
+    if (phase !== 'exam') return
+    const store = deviceStorage()
+    const now = Date.now()
+    const saved = !!store && saveAttempt(store, mockAttemptKey(level, module), attemptRecord(endAtRef.current, questions, answers, flags, current), now)
+    if (!saved && now < endAtRef.current) setNotSaving(true)
+  }, [phase, questions, answers, flags, current, level, module])
+
+  // Results: the saved attempt goes, and the result is added to the history once.
+  useEffect(() => {
+    if (phase !== 'results') return
+    const store = deviceStorage()
+    if (!store) return
+    removeAttempt(store, mockAttemptKey(level, module))
+    if (recordedRef.current === endAtRef.current) return
+    recordedRef.current = endAtRef.current
+    addHistory(store, resultHistoryItem(level, module, questions, answers, Date.now()))
+  }, [phase, level, module, questions, answers])
 
   useEffect(() => {
     if (phase !== 'exam') return
@@ -116,6 +190,9 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
 
   const GREEN = apiPath === '/api/mock-exam' ? '#0C1A3D' : '#1A4731'
   const GOLD = '#C9982A'
+  // The flag mark and tag: the dark gold already used for the topic label (3:1 or better on the tiles and page).
+  const FLAG_GOLD = '#88671c'
+  const topics = phase === 'results' ? topicScores(questions, answers) : []
 
   // ── INTRO ──
   if (phase === 'intro') {
@@ -139,12 +216,27 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
               </div>
             ))}
           </div>
+          {last && <p className="text-sm text-slate-500 -mt-4 mb-8">{lastResultLine(last)}</p>}
           {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">{error}</p>}
+          {resumable ? (<>
+          <p className="text-sm text-slate-500 mb-4">{unfinishedAttemptLine(resumable.secondsLeft)}</p>
+          <button onClick={continueAttempt} disabled={loading}
+            className="w-full h-12 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
+            style={{ backgroundColor: GOLD, color: GREEN }}>
+            {CONTINUE_TEXT}
+          </button>
+          <button onClick={startNewAttempt} disabled={loading}
+            className="w-full h-12 mt-3 rounded-lg text-sm font-semibold border-2 transition-colors disabled:opacity-50"
+            style={{ borderColor: GREEN, color: GREEN }}>
+            {START_NEW_TEXT}
+          </button>
+          </>) : (
           <button onClick={loadExam} disabled={loading}
             className="w-full h-12 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
             style={{ backgroundColor: GOLD, color: GREEN }}>
             {loading ? 'Preparing your exam…' : 'Start Mock Exam'}
           </button>
+          )}
           </>)}
           <Link href={backHref} className="inline-block mt-4 text-sm text-slate-500 hover:text-slate-600 transition-colors">← {backHref === "/mock-exams" ? "Back to Mock Exams" : "Back to module"}</Link>
         </div>
@@ -166,12 +258,43 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
           </div>
           <h1 ref={resultsHeadingRef} tabIndex={-1} className="font-display text-2xl text-navy-950 mb-2">{passed ? 'Well done — you passed!' : 'Keep practising'}</h1>
           <p className="text-slate-500 mb-6">You scored {score} out of {questions.length} ({answered} answered)</p>
+          {flags.length > 0 && <p className="text-sm text-slate-500 -mt-3 mb-6">{flaggedLine(flags.length)}</p>}
           {error && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">{error}</p>}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button onClick={loadExam} disabled={loading} className="h-11 px-6 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50" style={{ backgroundColor: GREEN, color: 'white' }}>{loading ? 'Preparing your exam…' : 'Take a fresh exam'}</button>
             <Link href={backHref} className="h-11 px-6 rounded-lg text-sm font-semibold border-2 inline-flex items-center justify-center transition-colors" style={{ borderColor: GREEN, color: GREEN }}>{backHref === "/mock-exams" ? "Back to Mock Exams" : "Back to module"}</Link>
           </div>
         </div>
+        {topics.length > 1 && (
+          <div className="mb-6 rounded-xl border border-slate-200 bg-white overflow-hidden">
+            <div className="bg-slate-50 px-5 py-3 border-b border-slate-200">
+              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest">{TOPIC_HEADING}</h2>
+            </div>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  <th className="text-left px-5 py-2 text-slate-500 font-medium">Topic</th>
+                  <th className="text-right px-5 py-2 text-slate-500 font-medium">Score</th>
+                  <th className="text-right px-5 py-2 text-slate-500 font-medium">%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topics.map(t => {
+                  const tp = Math.round((t.correct / t.total) * 100)
+                  return (
+                    <tr key={t.topic} className="border-b border-slate-100 last:border-0">
+                      <td className="px-5 py-2 text-navy-950 font-medium">{t.topic}</td>
+                      <td className="px-5 py-2 text-right text-slate-600">{t.correct}/{t.total}</td>
+                      <td className="px-5 py-2 text-right">
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${tp >= 60 ? 'bg-teal-50 text-teal-700' : 'bg-red-50 text-red-700'}`}>{tp}%</span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
         <div className="space-y-3">
           <h2 className="font-display text-lg text-navy-950 mb-4">Review your answers</h2>
           {questions.map((q, i) => {
@@ -186,6 +309,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
                   </span>
                   <span className="sr-only">{correct ? 'Correct: ' : 'Incorrect: '}</span>
                   <span className="flex-1 text-sm font-medium text-navy-950">{i + 1}. {q.questionText}</span>
+                  {flags.includes(i) && <span className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full border" style={{ borderColor: FLAG_GOLD, color: FLAG_GOLD }}>{FLAGGED_TEXT}</span>}
                   <svg className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                 </button>
                 {open && (
@@ -216,6 +340,7 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
 
   // ── EXAM ──
   const q = questions[current]
+  const flagged = flags.includes(current)
   return (<>
     {timerLive}
     <div className="max-w-3xl mx-auto">
@@ -228,6 +353,8 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
           {mins}:{secs.toString().padStart(2, '0')}
         </span>
       </div>
+      {/* Said once, the first time a save fails. */}
+      <p className="text-xs text-slate-500" aria-live="polite">{notSaving && <span className="block -mt-3 mb-6">{NOT_SAVING_TEXT}</span>}</p>
 
       {/* Progress */}
       <div className="w-full h-1.5 bg-slate-200 rounded-full mb-8 overflow-hidden">
@@ -254,6 +381,11 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
             )
           })}
         </div>
+        <button onClick={() => setFlags(f => toggleFlag(f, current))} aria-pressed={flagged}
+          className="mt-4 h-10 px-4 rounded-lg text-sm font-semibold border-2 transition-colors"
+          style={flagged ? { borderColor: FLAG_GOLD, color: FLAG_GOLD } : { borderColor: GREEN, color: GREEN }}>
+          {flagged ? FLAGGED_TEXT : FLAG_TEXT}
+        </button>
       </div>
 
       {/* Controls */}
@@ -284,14 +416,23 @@ export default function MockExamClient({ level, module, moduleName, backHref, ap
         <div className="flex flex-wrap gap-2">
           {questions.map((_, i) => (
             <button key={i} onClick={() => setCurrent(i)} aria-current={i === current ? 'step' : undefined}
-              className="w-9 h-9 rounded-lg text-xs font-semibold transition-colors"
+              className="relative w-9 h-9 rounded-lg text-xs font-semibold transition-colors"
               style={i === current ? { backgroundColor: GREEN, color: 'white' }
                 : answers[i] !== undefined ? { backgroundColor: '#d1e8db', color: GREEN }
                 : { backgroundColor: '#f1f5f9', color: '#475569' }}>
               {i + 1}
+              {flags.includes(i) && (<>
+                <span aria-hidden="true" className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white" style={{ backgroundColor: FLAG_GOLD }} />
+                <span className="sr-only"> {FLAGGED_TEXT}</span>
+              </>)}
             </button>
           ))}
         </div>
+        {/* Legend for the mark (the tiles also say "Flagged" to screen readers). */}
+        <p aria-hidden="true" className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+          <span className="inline-block w-3 h-3 rounded-full border-2 border-white" style={{ backgroundColor: FLAG_GOLD }} />
+          {FLAGGED_TEXT}
+        </p>
       </div>
     </div>
   </>)
