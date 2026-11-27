@@ -7,6 +7,7 @@ import { brandName, isEthioTaxBrowser } from '@/lib/brand'
 import PersonCheck, { type PersonCheckHandle } from '@/components/PersonCheck'
 import { invalidProps, useFocusFirstInvalid, useFocusOnShow, useFormIds } from '@/lib/form-a11y'
 import FormErrorSummary from '@/components/FormErrorSummary'
+import PrivacyNote from '@/components/PrivacyNote'
 
 declare global {
   interface Window {
@@ -468,6 +469,7 @@ export default function JoinNetworkPage() {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                       )}
                     </button>
+                    <PrivacyNote className="text-xs text-slate-500 text-center mt-4" />
                   </div>
 
                 </form>

@@ -3,6 +3,7 @@ import { unstable_cache } from 'next/cache'
 import { getServerSupabase, type DbContext } from '@/lib/supabase-server'
 import { guardCachedRead } from '@/lib/cache-guard'
 import { reportServerError } from '@/lib/report-error'
+import { errorCode } from '@/lib/recycle-bin'
 
 // Public pages use the public read limit (the default). getCourseBySlug's
 // admin mode is used only by admin tools, which get the admin limit.
@@ -389,7 +390,7 @@ export async function getCourseBySlug(slug: string, adminMode = false): Promise<
     chapters:        courseChapters,
   }
   } catch (err) {
-    console.error('getCourseBySlug error:', err)
+    console.error('getCourseBySlug error:', errorCode(err))
     throw err
   }
 }
@@ -453,7 +454,7 @@ export async function getLessonData(courseSlug: string, lessonSlug: string): Pro
   return { course, lesson: lessonWithContent, prevLesson, nextLesson }
   } catch (err) {
     // Rethrown, not returned as null: null means "no such lesson" (404).
-    console.error('getLessonData error:', err)
+    console.error('getLessonData error:', errorCode(err))
     throw err
   }
 }

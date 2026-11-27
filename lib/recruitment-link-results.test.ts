@@ -890,6 +890,8 @@ describe('job seeker registration form', () => {
           years_experience: '5',
           employment_status: 'Employed',
           biography: 'Management accountant.',
+          terms_agreed: true,
+          data_consent: true,
           'cf-turnstile-response': 'token',
         }),
       ),

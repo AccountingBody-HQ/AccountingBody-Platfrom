@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { loadDirectJobsPage, loadDirectJobsTotal, parseDirectJobsQuery } from './load'
 import { reportServerError } from '@/lib/report-error'
+import { errorCode } from '@/lib/recycle-bin'
 
 export const dynamic = 'force-dynamic'
 // force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest) {
     // 503, never a 200 with an empty list: JobListingsClient shows its error
     // state and Retry button on a non-2xx, and "No jobs found" only for a
     // genuine empty result.
-    console.error('api/jobs/direct error:', err)
+    console.error('api/jobs/direct error:', errorCode(err))
     reportServerError('job listings load failed', err, { area: 'public' })
     return NextResponse.json(
       { error: 'Could not load jobs right now.' },

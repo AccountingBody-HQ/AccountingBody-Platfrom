@@ -370,7 +370,7 @@ export default function ContactForm({ isEthioTax = false }: { isEthioTax?: boole
                 ) : 'Send message'}
               </button>
               <p className="text-xs text-slate-400 text-center">
-                By submitting this form you agree to our{" "}
+                See how we use your details in our{" "}
                 <a href="/privacy-policy" className="underline hover:text-navy-700 transition-colors">Privacy Policy</a>.
               </p>
             </form>

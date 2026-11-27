@@ -391,6 +391,8 @@ const ROUTES: Route[] = [
         years_experience: '5',
         employment_status: 'employed',
         biography: 'Ten years in practice.',
+        terms_agreed: true,
+        data_consent: true,
         ...turnstile,
       }),
     healthyAnswer: { status: 200, body: { success: true } },

@@ -6,6 +6,9 @@ import { HUMAN_CHECK_FAILED_TEXT, SERVER_PROBLEM_TEXT, isMessageTooShort, messag
 import { verifyHumanCheck } from '@/lib/turnstile-verify'
 import { escapeHtml, withoutLineBreaks } from '@/lib/html-escape'
 import { reportServerError } from '@/lib/report-error'
+import { isEthioTaxHeader } from '@/lib/brand'
+import { contactPlatformValue } from '@/lib/contact-brand'
+import { errorCode } from '@/lib/recycle-bin'
 
 export async function POST(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
@@ -14,8 +17,9 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
 
-    // Detect platform from Referer header
-    const isEthioTax = req.headers.get('x-et-platform') === 'ethiotax'
+    // The site is the one the request came through (the brand header),
+    // never a value the browser sends.
+    const isEthioTax = isEthioTaxHeader(req.headers)
     const brand = isEthioTax
       ? { name: 'EthioTax', domain: 'ethiotax.com', email: 'info@accountingbody.com', color: '#1A4731' }
       : { name: 'Accounting Body', domain: 'accountingbody.com', email: 'info@accountingbody.com', color: '#0C1A3D' }
@@ -56,7 +60,7 @@ export async function POST(req: NextRequest) {
         phone: phone || null,
         service_type,
         message,
-        platform: 'ab',
+        platform: contactPlatformValue(isEthioTax),
         title: service_type,
         description: message,
       }])
@@ -174,7 +178,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Help request error:', error)
+    console.error('Help request error:', errorCode(error))
     reportServerError('help request submit failed', error, { area: 'public' })
     return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 })
   }

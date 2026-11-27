@@ -3,6 +3,7 @@
 import { useId, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { invalidProps, useFocusFirstInvalid, useFormIds } from '@/lib/form-a11y'
+import PrivacyNote from '@/components/PrivacyNote'
 
 type ApplyMethod = 'platform' | 'external' | 'email'
 
@@ -494,6 +495,7 @@ export default function PostAJobClient({ isEthioTax }: { isEthioTax: boolean }) 
                     : <>Post Job & Pay £9 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg></>
                   }
                 </button>
+                <PrivacyNote className="text-xs text-slate-500 text-center mt-4" />
               </div>
             )}
 

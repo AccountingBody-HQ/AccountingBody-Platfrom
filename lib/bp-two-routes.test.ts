@@ -218,7 +218,7 @@ describe('Personal data route: find', () => {
     const all = JSON.stringify(data)
     expect(all).not.toContain('secret-confirm')
     expect(all).not.toContain('secret-update')
-    expect(data.outside_our_database).toHaveLength(4)
+    expect(data.outside_our_database).toHaveLength(6)
     expect(writes()).toHaveLength(0)
   })
 
@@ -274,7 +274,7 @@ describe('Personal data route: export', () => {
       id: id(20), kind: 'form_entry', label: 'help_requests entry 1', deleted_at: '2026-11-20T00:00:00Z',
       rows: [{ table: 'help_requests', row: { id: id(30), email: 'person@EXAMPLE.com', name: 'Pat' } }],
     }])
-    expect(doc.outside_our_database).toHaveLength(4)
+    expect(doc.outside_our_database).toHaveLength(6)
     expect(JSON.stringify(doc)).not.toContain('secret-')
     expect(writes()).toHaveLength(0)
   })

@@ -293,13 +293,14 @@ describe('getLessonData — a failed article text read', () => {
     expect(thrown).not.toBe(DB_PROBLEM)
   })
 
-  it('is passed on through the existing log line, once', async () => {
+  it('is passed on through the existing log line, once (PRIV-3 S5: its code only)', async () => {
     use(failedSecond(DB_PROBLEM))
     const thrown = await thrownBy(() => getLessonData(COURSE_SLUG, LESSON_SLUG))
     const logged = vi.mocked(console.error).mock.calls
     expect(logged).toHaveLength(1)
     expect(logged[0][0]).toBe('getLessonData error:')
-    expect(logged[0][1]).toBe(thrown)
+    expect(logged[0][1]).toBe((thrown as { code: string }).code)
+    expect(logged[0]).toHaveLength(2)
   })
 })
 

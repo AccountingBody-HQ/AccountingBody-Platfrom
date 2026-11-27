@@ -145,7 +145,9 @@ describe('no Google tag or ad code before consent (app/layout.tsx)', () => {
     expect(layout).toContain('<meta name="google-adsense-account" content={process.env.NEXT_PUBLIC_ADSENSE_ID} />')
   })
   it('passes the brand and both public ids to the banner, placed right after the skip link', () => {
-    expect(layout).toMatch(/<CookieConsent gtmId=\{GTM_ID \?\? ''\} adsenseId=\{process\.env\.NEXT_PUBLIC_ADSENSE_ID \?\? ''\} isEthioTax=\{isEthioTax\} \/>/)
+    // PRIV-3 S1: the AdSense id comes from the one helper the cookie page also uses.
+    expect(layout).toMatch(/<CookieConsent gtmId=\{GTM_ID \?\? ''\} adsenseId=\{adsenseClientId\(\)\} isEthioTax=\{isEthioTax\} \/>/)
+    expect(layout).toContain("import { adsenseClientId } from '@/lib/consent'")
     expect(layout.match(/<CookieConsent\b/g)).toHaveLength(1)
     const skip = layout.indexOf('Skip to main content')
     const banner = layout.indexOf('<CookieConsent')
@@ -176,8 +178,9 @@ describe('the banner (components/CookieConsent.tsx)', () => {
   it('shows the approved words and takes the brand from one switch', () => {
     expect(src).toContain("const brand = isEthioTax ? 'EthioTax' : 'Accounting Body'")
     expect(src).toContain('Cookies on {brand}')
-    // PQB-3b S6 (D352): practice progress is kept without consent, so the first sentence says so.
-    expect(src).toContain("We use only what is needed to run this site and to remember your practice on this device.{' '}\n            {adsenseId")
+    // PRIV-3 S1 (D358): the first sentence names the security check and the cookie-free visit counting.
+    expect(src).toContain("We use what is needed to run this site, a security check on forms, cookie-free visit counting, and your practice notes on this device.{' '}\n            {adsenseId")
+    expect(src).not.toContain('We use only what is needed to run this site and to remember your practice on this device.')
     expect(src).not.toContain('We only use what is needed to run this site unless you accept.')
     expect(src).not.toContain('unless you accept')
     expect(src).toContain('If you accept, we also use analytics and advertising cookies to understand how the site is used and to show ads.')

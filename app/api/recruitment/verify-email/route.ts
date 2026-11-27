@@ -6,6 +6,7 @@ import { checkEmailSend } from "@/lib/email-check"
 import { escapeHtml, withoutLineBreaks } from "@/lib/html-escape"
 import { reportServerError } from "@/lib/report-error"
 import { getAdminPath } from "@/lib/middleware-logic"
+import { errorCode } from "@/lib/recycle-bin"
 
 export async function GET(req: NextRequest) {
   try {
@@ -77,7 +78,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/jobs/find-work?verified=true", baseUrl))
 
   } catch (err) {
-    console.error("Verify email error:", err)
+    console.error("Verify email error:", errorCode(err))
     reportServerError("email verify failed", err, { area: "public" })
     return NextResponse.redirect(new URL("/jobs/find-work?verified=error", req.url))
   }

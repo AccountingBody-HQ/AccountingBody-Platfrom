@@ -133,7 +133,7 @@ function ProgressBar({ currentStep, brand }: { currentStep: number; brand: strin
   )
 }
 
-function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: boolean; brand: string; platformName: string }) {
+function FreelancingForm({ isEthioTax, brand }: { isEthioTax: boolean; brand: string }) {
   const [currentStep, setCurrentStep] = useState(1)
   const formTopRef = useRef<HTMLDivElement>(null)
   const [form, setForm] = useState({
@@ -388,6 +388,7 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
               onChange={e => { setForm({...form, biography: e.target.value}); if (e.target.value.trim().split(/\s+/).length >= 30) setFieldErrors(p => ({...p, biography: false})) }}
               className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-navy-950 focus:border-transparent"
               placeholder="e.g. I am an ACCA-qualified accountant currently working full-time in industry. I am interested in taking on bookkeeping and tax clients on the side to build my own practice over time..." />
+            <p className="text-sm text-slate-500">Please do not include health, religion or other sensitive details.</p>
             <p className="text-xs text-slate-400">{form.biography.trim() ? form.biography.trim().split(/\s+/).length : 0} words</p>
             <NavButtons />
           </div>
@@ -411,8 +412,8 @@ function FreelancingForm({ isEthioTax, brand, platformName }: { isEthioTax: bool
                 <input type="checkbox" aria-required="true" {...invalidProps(fieldErrors.terms && !dataConsent, ids.errId('terms'))} checked={dataConsent} onChange={e => { setDataConsent(e.target.checked); if (e.target.checked) setFieldErrors(p => ({...p, terms: false})) }}
                   className="mt-0.5 accent-gold-500 shrink-0" />
                 <span className="text-sm text-slate-600">
-                  I consent to {platformName} holding and processing my personal data for the purpose of matching me with freelancing opportunities, in accordance with the{' '}
-                  <Link href="/privacy-policy" className="underline text-navy-700 hover:text-gold-600">Privacy Policy</Link>.
+                  I have read the{' '}
+                  <Link href="/privacy-policy" className="underline text-navy-700 hover:text-gold-600">Privacy Policy</Link>. I understand you will share my profile with an employer only after telling me.
                 </span>
               </label>
               <div className="bg-slate-50 rounded-lg border border-slate-200 p-4 mt-2">
@@ -586,7 +587,7 @@ export default function FreelancingPathwaysClient({ isEthioTax }: { isEthioTax: 
             </p>
           </div>
           <div className="max-w-2xl mx-auto">
-            <FreelancingForm isEthioTax={isEthioTax} brand={brand} platformName={platformName} />
+            <FreelancingForm isEthioTax={isEthioTax} brand={brand} />
           </div>
         </div>
       </section>

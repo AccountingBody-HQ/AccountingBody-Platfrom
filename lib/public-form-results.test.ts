@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { createConfirmationToken } from './newsletter-tokens'
 import { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -222,6 +224,8 @@ const jobSeekerForm = {
   years_experience: '5',
   employment_status: 'employed',
   biography: 'Experienced management accountant.',
+  terms_agreed: true,
+  data_consent: true,
   ...turnstile,
 }
 
@@ -594,5 +598,80 @@ describe('bot check calls', () => {
     await helpRequest(post('/api/help-request', helpForm))
     await subscribe(post('/api/subscribe', { email: 'ada@example.com', ...turnstile }))
     expect(turnstileRequests).toBe(4)
+  })
+})
+
+// PRIV-3 S4 (PRIV-4, PRIV-6): the job-seeker server requires both ticks, and the site of a
+// registration or help request comes from the request (the brand header), never from the body.
+const postOn = (site: 'ab' | 'et', path: string, body: unknown) => {
+  const req = post(path, body)
+  if (site === 'et') req.headers.set('x-et-platform', 'ethiotax')
+  return req
+}
+
+describe('PRIV-3 S4: job seeker registration needs both ticks', () => {
+  const register = (form: Row) => jobSeekerApply(post('/api/recruitment/job-seeker-apply', form))
+  const cases: Array<[string, Row, string]> = [
+    ['terms tick missing', { ...jobSeekerForm, terms_agreed: undefined }, 'terms_agreed'],
+    ['terms tick false', { ...jobSeekerForm, terms_agreed: false }, 'terms_agreed'],
+    ['terms tick as the text "true"', { ...jobSeekerForm, terms_agreed: 'true' }, 'terms_agreed'],
+    ['privacy tick missing', { ...jobSeekerForm, data_consent: undefined }, 'data_consent'],
+    ['privacy tick false', { ...jobSeekerForm, data_consent: false }, 'data_consent'],
+    ['privacy tick as 1', { ...jobSeekerForm, data_consent: 1 }, 'data_consent'],
+    ['both missing', { ...jobSeekerForm, terms_agreed: undefined, data_consent: undefined }, 'terms_agreed'],
+  ]
+  it.each(cases)('%s → 400, nothing saved, no e-mail', async (_label, form, field) => {
+    const result = await read(await register(form))
+    expect(result).toEqual({ status: 400, location: null, body: { error: `Missing required field: ${field}` } })
+    expect(writes()).toEqual([])
+    expect(db.tables.job_seeker_registrations ?? []).toEqual([])
+    expect(mail.sent).toEqual([])
+    expect(logs).toEqual([])
+  })
+
+  it('both ticks true → saved as today, both stored as true', async () => {
+    const result = await read(await register(jobSeekerForm))
+    expect(result).toEqual({ status: 200, location: null, body: { success: true } })
+    expect(db.tables.job_seeker_registrations).toHaveLength(1)
+    expect(db.tables.job_seeker_registrations[0]).toMatchObject({ terms_agreed: true, data_consent: true, platform: 'ab' })
+    expect(mail.sent).toHaveLength(1)
+  })
+})
+
+describe('PRIV-3 S4: the site comes from the request, never the body', () => {
+  it('job seeker: an EthioTax request that says "ab" is saved as et, with the EthioTax e-mail', async () => {
+    const result = await read(await jobSeekerApply(postOn('et', '/api/recruitment/job-seeker-apply', { ...jobSeekerForm, platform: 'ab' })))
+    expect(result.status).toBe(200)
+    expect(db.tables.job_seeker_registrations.map((r) => r.platform)).toEqual(['et'])
+    expect(mail.sent.map((m) => m.from)).toEqual(['EthioTax <noreply@accountingbody.com>'])
+  })
+
+  it('job seeker: an Accounting Body request that says "et" is saved as ab', async () => {
+    const result = await read(await jobSeekerApply(postOn('ab', '/api/recruitment/job-seeker-apply', { ...jobSeekerForm, platform: 'et' })))
+    expect(result.status).toBe(200)
+    expect(db.tables.job_seeker_registrations.map((r) => r.platform)).toEqual(['ab'])
+    expect(mail.sent.map((m) => m.from)).toEqual(['Accounting Body <noreply@accountingbody.com>'])
+  })
+
+  it('help request: saved as et from EthioTax and ab from Accounting Body, whatever the body says', async () => {
+    for (const [site, said, saved] of [['et', 'ab', 'et'], ['ab', 'et', 'ab'], ['et', undefined, 'et'], ['ab', undefined, 'ab']] as const) {
+      db.tables = {}
+      const result = await read(await helpRequest(postOn(site, '/api/help-request', { ...helpForm, platform: said })))
+      expect(result).toEqual({ status: 200, location: null, body: { success: true } })
+      expect(db.tables.help_requests.map((r) => r.platform)).toEqual([saved])
+    }
+  })
+
+  it('both routes read the site with the shared helpers, and no longer from the body', () => {
+    const src = (p: string) => readFileSync(join(process.cwd(), p), 'utf8')
+    for (const f of ['app/api/recruitment/job-seeker-apply/route.ts', 'app/api/help-request/route.ts']) {
+      const s = src(f)
+      expect(s).toMatch(/import \{ isEthioTaxHeader \} from ["']@\/lib\/brand["']/)
+      expect(s).toMatch(/import \{ contactPlatformValue \} from ["']@\/lib\/contact-brand["']/)
+      expect(s).toContain('isEthioTaxHeader(req.headers)')
+      expect(s).not.toContain('body.platform')
+      expect(s).not.toMatch(/get\(["']x-et-platform["']\)/)
+    }
+    expect(src('app/api/help-request/route.ts')).not.toContain("platform: 'ab'")
   })
 })

@@ -24,22 +24,35 @@ export function subscribeConsent(fn: (e: ConsentEvent) => void): () => void {
   }
 }
 
+// The choice made on this page, for when storage cannot keep it (blocked or full).
+let pageChoice: ConsentChoice | null = null
+
 export function readConsent(): ConsentChoice | null {
   try {
     const v = localStorage.getItem(CONSENT_KEY)
-    return v === 'accepted' || v === 'declined' ? v : null
+    return v === 'accepted' || v === 'declined' ? v : pageChoice
   } catch {
-    return null
+    return pageChoice
   }
 }
 
 export function writeConsent(choice: ConsentChoice) {
+  pageChoice = choice
   try {
     localStorage.setItem(CONSENT_KEY, choice)
   } catch {
     // Storage blocked: the choice still applies to this page.
   }
   emit('change')
+}
+
+/**
+ * The AdSense client id, or '' when ads are off. The one condition for "this site can load AdSense":
+ * the root layout passes it to the banner, and the cookie page lists the advertising cookies only
+ * when it is set. Safe on the server (it only reads the build-time value).
+ */
+export function adsenseClientId(): string {
+  return process.env.NEXT_PUBLIC_ADSENSE_ID ?? ''
 }
 
 /** Re-open the banner so the visitor can change the choice (footer "Cookie settings"). */

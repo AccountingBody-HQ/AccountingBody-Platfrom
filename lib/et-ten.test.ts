@@ -252,7 +252,8 @@ describe('G7 the WhatsApp button (K5)', () => {
     const s = read('app/layout.tsx')
     expect(s).toContain("import { EthioTaxWhatsAppButton } from '@/components/layout/EthioTaxWhatsAppButton'")
     expect(s.split('<EthioTaxWhatsAppButton').length - 1).toBe(1)
-    expect(s).toMatch(/<SpeedInsights \/>\n\s+\{isEthioTax && <EthioTaxWhatsAppButton \/>\}\n\s+<\/body>/)
+    // PRIV-3 S2: the Vercel statistics are one consent-aware component now.
+    expect(s).toMatch(/<VercelStatistics \/>\n\s+\{isEthioTax && <EthioTaxWhatsAppButton \/>\}\n\s+<\/body>/)
     expect(s.indexOf('<EthioTaxWhatsAppButton')).toBeGreaterThan(s.indexOf('</main>'))
   })
   it('the box, hover and keyboard-focus styles are CSS only, scoped to #et-wa-btn', () => {

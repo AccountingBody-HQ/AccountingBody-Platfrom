@@ -7,6 +7,7 @@ import { COUNTRY_CANONICAL_NAMES } from '@/lib/ingestion/countries'
 import { guardCachedRead } from '@/lib/cache-guard'
 import { reportServerError } from '@/lib/report-error'
 import { problemCode } from '@/lib/job-expiry'
+import { errorCode } from '@/lib/recycle-bin'
 
 // Reads used by public pages and APIs use the public read limit (the
 // default); the whole-table counts and the job search use the heavy read
@@ -951,11 +952,11 @@ export async function getAdminJobs(params: {
   const [{ data, error }, { count, error: countError }] = await Promise.all([listQuery, countQuery])
 
   if (error) {
-    console.error('getAdminJobs list error:', error)
+    console.error('getAdminJobs list error:', errorCode(error))
     reportServerError('admin job list read failed', new Error('admin job list read failed'), { area: 'admin' })
   }
   if (countError) {
-    console.error('getAdminJobs count error:', countError)
+    console.error('getAdminJobs count error:', errorCode(countError))
     reportServerError('admin job count read failed', new Error('admin job count read failed'), { area: 'admin' })
   }
 
@@ -1612,7 +1613,7 @@ export async function getJobSitemapEntries(
       // a row cap. Discard the accumulated pages: log (if there was an
       // actual error, not just an empty page) and return { ok: false }.
       if (error) {
-        console.error('getJobSitemapEntries error:', error)
+        console.error('getJobSitemapEntries error:', errorCode(error))
         reportServerError('sitemap jobs read failed', error, { area: 'public' })
       }
       return { ok: false }
@@ -1697,7 +1698,7 @@ export async function getJobSitemapChunk(
 
     if (error || !data) {
       if (error) {
-        console.error(`getJobSitemapChunk(bucket=${bucket}) error:`, error)
+        console.error(`getJobSitemapChunk(bucket=${bucket}) error:`, errorCode(error))
         reportServerError('sitemap job chunk read failed', error, { area: 'public' })
       }
       return { ok: false }
@@ -1890,7 +1891,7 @@ export async function incrementJobImpressions(id: string): Promise<void> {
       .update({ impression_count: impressionCount, ctr })
       .eq('id', id)
   } catch (err: unknown) {
-    console.error('incrementJobImpressions failed (non-fatal):', err)
+    console.error('incrementJobImpressions failed (non-fatal):', errorCode(err))
     reportServerError('job impression count failed', err, { area: 'public' })
   }
 }
@@ -1914,7 +1915,7 @@ export async function incrementJobClicks(id: string): Promise<void> {
       .update({ click_count: clickCount, ctr })
       .eq('id', id)
   } catch (err: unknown) {
-    console.error('incrementJobClicks failed (non-fatal):', err)
+    console.error('incrementJobClicks failed (non-fatal):', errorCode(err))
     reportServerError('job click count failed', err, { area: 'public' })
   }
 }

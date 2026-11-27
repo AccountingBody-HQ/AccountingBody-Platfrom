@@ -81,10 +81,12 @@ describe('cookie page wording', () => {
     expect(ab).not.toContain('Google Translate')
   })
 
-  it('the necessary cookies are in this order: _cf_clearance, ab_vid, x-et-platform (+ the two EthioTax rows)', async () => {
+  it('the necessary cookies are in this order: cf_clearance, Turnstile, ab_vid, x-et-platform (+ the two EthioTax rows)', async () => {
+    // PRIV-3 S1: cf_clearance renamed, Turnstile added, _va_* gone, Vercel statistics and _ga_<id> added.
     const names = (html: string) => Array.from(html.matchAll(/<code class="text-xs text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">([^<]+)<\/code>/g)).map((m) => m[1])
-    expect(names(await render(false)).slice(0, 5)).toStrictEqual(['_cf_clearance', 'ab_vid', 'x-et-platform', '_va_*', '_ga'])
-    expect(names(await render(true)).slice(0, 7)).toStrictEqual(['_cf_clearance', 'ab_vid', 'x-et-platform', 'et_language', 'googtrans', '_va_*', '_ga'])
+    // (the HTML escapes the angle brackets of _ga_<id>)
+    expect(names(await render(false)).slice(0, 8)).toStrictEqual(['cf_clearance', 'Turnstile (no cookie)', 'ab_vid', 'x-et-platform', 'Vercel Web Analytics', 'Vercel Speed Insights', '_ga', '_ga_&lt;id&gt;'])
+    expect(names(await render(true)).slice(0, 10)).toStrictEqual(['cf_clearance', 'Turnstile (no cookie)', 'ab_vid', 'x-et-platform', 'et_language', 'googtrans', 'Vercel Web Analytics', 'Vercel Speed Insights', '_ga', '_ga_&lt;id&gt;'])
   })
 
   it('the new section comes right after "Cookies we use", with the exact heading, text and rows, on both brands', async () => {
@@ -237,12 +239,96 @@ describe('cookie page wording', () => {
     expect(storageNames(et)).toStrictEqual([...six, 'et-lang-reload', 'ab_saved_jobs'])
   })
 
-  it('everything else stays: date, analytics rows, metadata', async () => {
+  it('everything else stays: date, metadata (the PRIV-3 rows are checked below)', async () => {
     const ab = await render(false)
     expect(ab).toContain('Last updated: November 2026')
-    expect(ab).toContain(cookieRow('_va_*', 'Vercel Analytics', 'Privacy-first page view counting. No personal data stored.', 'Session'))
-    expect(ab).toContain(cookieRow('_ga', 'Google Analytics', 'Tracks pages visited and time on site (optional).', '2 years'))
-    expect(ab).toContain(cookieRow('_cf_clearance', 'Cloudflare', 'Security — proves your browser passed a challenge.', '30 mins'))
     expect(src).toContain("description: brandText(isEthioTax, 'How Accounting Body uses cookies and how to manage your preferences. Last updated November 2026.'),")
+  })
+})
+
+// PRIV-3 S1 (D352, D353 (2)(3), D358): the cookie table lists exactly what the site uses, in the
+// owner-approved words. The advertising group follows the banner's AdSense condition.
+describe('PRIV-3 S1: cookie rows and groups', () => {
+  const group = (name: string, always: boolean) =>
+    `<h3 class="font-semibold text-navy-950 text-sm">${name}</h3>${always ? '<span class="ml-auto text-xs text-slate-400 italic">Always active</span>' : ''}</div>`
+  const CF = cookieRow('cf_clearance', 'Cloudflare', 'Security: set only if Cloudflare asks your browser to pass a check.', 'Up to 30 minutes')
+  const TURNSTILE = cookieRow('Turnstile (no cookie)', 'Cloudflare', 'Checks that forms are sent by a person, not a bot. It reads browser details but stores no cookie.', 'While the page is open')
+  const VWA = cookieRow('Vercel Web Analytics', 'Vercel', 'Counts page visits without cookies and without identifying you. Choosing "Reject non-essential cookies" turns it off.', 'No cookie')
+  const VSI = cookieRow('Vercel Speed Insights', 'Vercel', 'Measures how fast pages load. Choosing "Reject non-essential cookies" turns it off.', 'No cookie')
+  const GA = cookieRow('_ga', 'Google Analytics', 'Tells visits apart for Google Analytics (only if you accept).', '2 years')
+  const GA_ID = cookieRow('_ga_<id>', 'Google Analytics', 'Keeps the state of your visit for Google Analytics (only if you accept).', '2 years')
+  const ADS = cookieRow('__gads, __gpi, __eoi', 'Google AdSense', 'Shows ads and limits how often you see them (only if you accept). Google may also set cookies on its own domains.', 'Up to 13 months')
+  const decodeLt = (html: string) => html.replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+  // '' is how an unset value reads (adsenseClientId returns '' for both).
+  const page = async (et: boolean, ads: string | undefined) => {
+    vi.stubEnv('NEXT_PUBLIC_ADSENSE_ID', ads ?? '')
+    try {
+      return decodeLt(await render(et))
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  }
+
+  it('every row and group is exact on both brands, with and without AdSense', async () => {
+    for (const et of [false, true]) {
+      for (const ads of [undefined, 'ca-pub-0000000000000000']) {
+        const html = await page(et, ads)
+        for (const row of [CF, TURNSTILE, VWA, VSI, GA, GA_ID]) expect(count(html, row)).toBe(1)
+        expect(count(html, group('Necessary cookies', true))).toBe(1)
+        expect(count(html, group('Statistics (no cookies)', false))).toBe(1)
+        expect(count(html, group('Analytics cookies', false))).toBe(1)
+        expect(count(html, 'Statistics (no cookies) cookies')).toBe(0)
+        expect(count(html, 'Always active')).toBe(1)
+        expect(count(html, group('Advertising cookies', false))).toBe(ads ? 1 : 0)
+        expect(count(html, ADS)).toBe(ads ? 1 : 0)
+        expect(count(html, 'Advertising')).toBe(ads ? 1 : 0)
+        // the EthioTax language rows stay EthioTax-only
+        expect(count(html, '>et_language</code>')).toBe(et ? 1 : 0)
+        expect(count(html, '>googtrans</code>')).toBe(et ? 1 : 0)
+        // the groups come in this order
+        const at = ['Necessary cookies<', 'Statistics (no cookies)<', 'Analytics cookies<'].map((s) => html.indexOf(s))
+        expect(at[0]).toBeGreaterThan(-1)
+        expect(at[1]).toBeGreaterThan(at[0])
+        expect(at[2]).toBeGreaterThan(at[1])
+        if (ads) expect(html.indexOf('Advertising cookies<')).toBeGreaterThan(at[2])
+      }
+    }
+  })
+
+  it('the old rows are gone: _va_*, _cf_clearance, Vercel Analytics Session, old _ga purpose', async () => {
+    for (const et of [false, true]) {
+      const html = await page(et, 'ca-pub-0000000000000000')
+      expect(count(html, '_va_')).toBe(0)
+      expect(count(html, '_cf_clearance')).toBe(0)
+      expect(count(html, 'Privacy-first page view counting')).toBe(0)
+      expect(count(html, 'Tracks pages visited and time on site (optional).')).toBe(0)
+      expect(count(html, 'Security — proves your browser passed a challenge.')).toBe(0)
+    }
+    expect(src).not.toContain('_va_')
+  })
+
+  it('"How to manage cookies" starts with the new sentence; the rest is unchanged', async () => {
+    const manage = '<h2 class="font-display text-2xl text-navy-950 mb-4">How to manage cookies</h2><p class="text-slate-500 text-sm leading-relaxed mb-6">You can change your choice at any time with "Cookie settings" at the bottom of every page. You can control cookies through your browser settings. Disabling necessary cookies will prevent the site'
+    for (const et of [false, true]) {
+      const html = await page(et, undefined)
+      expect(count(html.replace(/\s+/g, ' '), manage)).toBe(1)
+      expect(count(html, 'tools.google.com/dlpage/gaoptout</a>.')).toBe(1)
+    }
+  })
+
+  it('the advertising group uses the banner condition: one helper, passed to the banner by the layout', async () => {
+    const consent = await import('@/lib/consent')
+    vi.stubEnv('NEXT_PUBLIC_ADSENSE_ID', 'ca-pub-1')
+    expect(consent.adsenseClientId()).toBe('ca-pub-1')
+    vi.stubEnv('NEXT_PUBLIC_ADSENSE_ID', '')
+    expect(consent.adsenseClientId()).toBe('')
+    vi.unstubAllEnvs()
+    expect(src).toContain("const showAds = adsenseClientId() !== ''")
+    expect(src).toContain('cookies.filter(cat => !cat.adsOnly || showAds)')
+    const layout = readFileSync(join(process.cwd(), 'app/layout.tsx'), 'utf8')
+    expect(layout).toContain("adsenseId={adsenseClientId()}")
+    expect(layout).not.toContain('adsenseId={process.env.NEXT_PUBLIC_ADSENSE_ID')
+    const banner = readFileSync(join(process.cwd(), 'components/CookieConsent.tsx'), 'utf8')
+    expect(banner).toContain("{adsenseId\n              ? 'If you accept, we also use analytics and advertising cookies")
   })
 })

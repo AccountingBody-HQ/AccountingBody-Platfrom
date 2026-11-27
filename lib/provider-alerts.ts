@@ -3,6 +3,7 @@ import { getServerSupabase } from './supabase-server'
 import type { JobProvider } from './providers'
 import { reportServerError } from './report-error'
 import { getAdminPath } from './middleware-logic'
+import { errorCode } from './recycle-bin'
 
 // Every other Resend call site in this codebase instantiates the client
 // inline — grep across lib/ and app/ turns up 15+ separate
@@ -168,11 +169,11 @@ export async function maybeSendProviderAlert(
       // throwing on an API-level failure; check and log it explicitly,
       // never assume the call succeeded just because it didn't throw.
       if (sendError) {
-        console.error('[maybeSendProviderAlert] Resend error:', sendError)
+        console.error('[maybeSendProviderAlert] Resend error:', errorCode(sendError))
         reportServerError('job import alert email refused', sendError, { area: 'ingest' })
       }
     } catch (err: unknown) {
-      console.error('[maybeSendProviderAlert] send threw:', err)
+      console.error('[maybeSendProviderAlert] send threw:', errorCode(err))
       reportServerError('job import alert email failed', err, { area: 'ingest' })
     }
   }

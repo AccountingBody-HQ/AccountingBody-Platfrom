@@ -61,6 +61,8 @@ export const OUTSIDE_OUR_DATABASE: readonly string[] = [
   'Resend (e-mail sending service): the sent-message log holds the e-mails sent to this address.',
   'Lemon Squeezy (payments): if they paid for a job post, their order and receipt are held there.',
   'WhatsApp (EthioTax enquiries): delete any chat with this person.',
+  "Sentry (error reports): reports have personal details removed, but check for this person's address in any report and delete it.",
+  "Vercel logs: server logs are kept for a short time by Vercel; they hold codes, not addresses. Nothing to delete unless a log shows this person's details.",
 ]
 
 export const EMAIL_MAX = 254

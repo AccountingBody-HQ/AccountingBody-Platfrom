@@ -73,10 +73,14 @@ describe('PD_SOURCES', () => {
     for (const table of FORM_TABLES) expect(PD_SOURCES.some((s) => s.table === table)).toBe(true)
   })
 
-  it('names the four places outside the database', () => {
-    expect(OUTSIDE_OUR_DATABASE).toHaveLength(4)
+  it('names the six places outside the database (PRIV-3 S5 adds Sentry and Vercel logs)', () => {
+    expect(OUTSIDE_OUR_DATABASE).toHaveLength(6)
     for (const words of ['info@accountingbody.com', 'Resend', 'Lemon Squeezy', 'WhatsApp']) {
       expect(OUTSIDE_OUR_DATABASE.some((line) => line.includes(words))).toBe(true)
     }
+    expect(OUTSIDE_OUR_DATABASE.slice(4)).toStrictEqual([
+      "Sentry (error reports): reports have personal details removed, but check for this person's address in any report and delete it.",
+      "Vercel logs: server logs are kept for a short time by Vercel; they hold codes, not addresses. Nothing to delete unless a log shows this person's details.",
+    ])
   })
 })
