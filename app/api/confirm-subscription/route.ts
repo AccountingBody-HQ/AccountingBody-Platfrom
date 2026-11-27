@@ -10,56 +10,97 @@ import { jwtVerify } from "jose"
 import { checkEmailSend } from "@/lib/email-check"
 import { escapeHtml, withoutLineBreaks } from "@/lib/html-escape"
 import { getAdminPath } from "@/lib/middleware-logic"
+import { hashConfirmationToken, isConfirmationFresh, isConfirmationTokenShape } from "@/lib/newsletter-tokens"
+import { errorCode, newsletterBrand } from "@/lib/newsletter-signup"
+
+type SubscriberRow = {
+  id: string
+  email: string
+  platform: string
+  status: string | null
+  source: string | null
+  last_confirmation_sent_at: string | null
+}
+
+const ROW_COLUMNS = "id, email, platform, status, source, last_confirmation_sent_at"
 
 export async function GET(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY)
   const supabase = getServerSupabase("publicWrite")
 
   const token = req.nextUrl.searchParams.get("token")
+  const invalid = () => NextResponse.redirect("https://accountingbody.com/?confirmed=invalid")
 
-  if (!token) {
-    return NextResponse.redirect("https://accountingbody.com/?confirmed=invalid")
+  if (!token) return invalid()
+
+  // The link holds a random token; the row holds only its hash.
+  let found: { data: SubscriberRow | null; error: unknown }
+  if (isConfirmationTokenShape(token)) {
+    found = await supabase
+      .from("email_subscribers")
+      .select(ROW_COLUMNS)
+      .eq("confirmation_token", hashConfirmationToken(token))
+      .maybeSingle()
+  } else {
+    // Legacy JWT links expire by 4 Dec 2026 — remove this branch in PRIV-2.
+    // Links sent before PRIV-1 carry a signed { email, platform } with its
+    // own 7-day expiry.
+    let email: unknown
+    let platform: unknown
+    try {
+      const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
+      const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"] })
+      email = payload.email
+      platform = payload.platform
+    } catch {
+      return invalid()
+    }
+    if (typeof email !== "string" || !email || (platform !== "ab" && platform !== "et")) return invalid()
+    found = await supabase
+      .from("email_subscribers")
+      .select(ROW_COLUMNS)
+      .eq("email", email)
+      .eq("platform", platform)
+      .maybeSingle()
   }
 
-  let email: string
-  let platform: string
-
-  try {
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
-    const { payload } = await jwtVerify(token, secret)
-    email = payload.email as string
-    platform = payload.platform as string
-  } catch {
-    return NextResponse.redirect("https://accountingbody.com/?confirmed=invalid")
+  if (found.error) {
+    console.error("confirm subscription: lookup failed", errorCode(found.error))
+    return NextResponse.redirect("https://accountingbody.com/?confirmed=error")
   }
+  const row = found.data
+  if (!row) return invalid()
 
-  const isEthioTax = platform === "et"
-  const brand = isEthioTax
-    ? { name: "EthioTax", domain: "ethiotax.com", color: "#1A4731" }
-    : { name: "Accounting Body", domain: "accountingbody.com", color: "#0C1A3D" }
+  const platform = row.platform === "et" ? "et" : "ab"
+  const brand = newsletterBrand(platform)
 
-  const { data: existing } = await supabase
-    .from("email_subscribers")
-    .select("email, status")
-    .eq("email", email)
-    .eq("platform", platform)
-    .single()
-
-  if (existing?.status === "subscribed") {
+  if (row.status === "subscribed") {
     return NextResponse.redirect("https://" + brand.domain + "/?confirmed=already")
   }
+  if (isConfirmationTokenShape(token) && !isConfirmationFresh(row.last_confirmation_sent_at, new Date())) {
+    return invalid()
+  }
 
-  const { error: upsertError } = await supabase
+  // An update of the row that was found: a link can never create a row. The
+  // place the person signed up is kept; 'footer' only when none was recorded.
+  const { data: updated, error: updateError } = await supabase
     .from("email_subscribers")
-    .upsert(
-      { email, platform, status: "subscribed", source: "footer", subscribed_at: new Date().toISOString(), confirmation_token: null },
-      { onConflict: "email,platform" }
-    )
+    .update({
+      status: "subscribed",
+      subscribed_at: new Date().toISOString(),
+      unsubscribed_at: null,
+      confirmation_token: null,
+      source: row.source || "footer",
+    })
+    .eq("id", row.id)
+    .select("id")
 
-  if (upsertError) {
-    console.error("Confirm subscription error:", upsertError)
+  if (updateError || !updated || updated.length !== 1) {
+    console.error("confirm subscription: save failed", updateError ? errorCode(updateError) : "no-row")
     return NextResponse.redirect("https://" + brand.domain + "/?confirmed=error")
   }
+
+  const email = row.email
 
   // The subscription is saved, so a failed team notification is logged and
   // the visitor still sees the confirmed page.
@@ -72,7 +113,7 @@ export async function GET(req: NextRequest) {
     })
     checkEmailSend(notifyResult, "subscription team notification")
   } catch (emailError) {
-    console.error("Admin notification error:", emailError)
+    console.error("Admin notification error:", errorCode(emailError))
   }
 
   return NextResponse.redirect("https://" + brand.domain + "/?confirmed=true")

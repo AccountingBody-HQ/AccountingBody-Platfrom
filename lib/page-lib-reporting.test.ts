@@ -541,6 +541,12 @@ const REPORTING: Record<string, string[]> = {
     "reportServerError('admin job count read failed', new Error('admin job count read failed'), { area: 'admin' })",
   ],
   'lib/jobs.ts:getBrowsableJobsTotal': ["reportServerError('job count read failed', error, { area: 'public' })"],
+  'lib/newsletter-signup.ts:startNewsletterSignup': ["reportServerError('newsletter signup: lookup failed', readError, { area: 'public' })"],
+  'lib/newsletter-unsubscribe.ts:unsubscribeByToken': ["reportServerError('unsubscribe: save failed', error, { area: 'public' })"],
+  'lib/newsletter-unsubscribe.ts:requestUnsubscribeLink': [
+    "reportServerError('unsubscribe request: lookup failed', error, { area: 'public' })",
+    "reportServerError('unsubscribe request: failed', error, { area: 'public' })",
+  ],
   'lib/jobs.ts:getCachedActiveJobCountries': ["reportServerError('job countries cached read failed', error, { area: 'public' })"],
   'lib/jobs.ts:getJobSitemapEntries': [
     "reportServerError('sitemap jobs read failed', error, { area: 'public' })",

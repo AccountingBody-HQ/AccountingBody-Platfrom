@@ -59,6 +59,7 @@ export const PUBLIC_PAGE_SEGMENTS: readonly string[] = [
   'sitemaps',
   'study',
   'terms',
+  'unsubscribe',
   'wa',
 ]
 
@@ -79,6 +80,7 @@ export const PUBLIC_API_SEGMENTS: readonly string[] = [
   'saved-jobs',
   'search',
   'subscribe',
+  'unsubscribe',
   'version',
 ]
 
