@@ -1,4 +1,4 @@
-import { SignJWT } from 'jose'
+import { createConfirmationToken } from './newsletter-tokens'
 import { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CONFIRMATION_EMAIL_FAILED_TEXT, SERVER_PROBLEM_TEXT, messageTooShortText } from './message-rules'
@@ -490,19 +490,22 @@ describe('newsletter signup', () => {
 })
 
 describe('subscription confirmation link', () => {
-  const link = async () => {
-    const token = await new SignJWT({ email: 'ada@example.com', platform: 'ab' })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('7d')
-      .setIssuedAt()
-      .sign(new TextEncoder().encode(JWT_TEST_VALUE))
-    return confirmSubscription(new NextRequest(SITE + '/api/confirm-subscription?token=' + token))
-  }
+  // PRIV-2b: the link carries a random token; the row holds its hash.
+  const confirmation = createConfirmationToken()
+  const link = () => confirmSubscription(new NextRequest(SITE + '/api/confirm-subscription?token=' + confirmation.token))
 
   const ROW_ID = '0f8fad5b-d9cb-469f-a165-70867728950e'
+  const pendingRow = () => ({
+    id: ROW_ID,
+    email: 'ada@example.com',
+    platform: 'ab',
+    status: 'pending',
+    confirmation_token: confirmation.hash,
+    last_confirmation_sent_at: new Date().toISOString(),
+  })
 
   it('confirms the subscription and notifies the team as before', async () => {
-    db.tables.email_subscribers = [{ id: ROW_ID, email: 'ada@example.com', platform: 'ab', status: 'pending' }]
+    db.tables.email_subscribers = [pendingRow()]
     const result = await read(await link())
     expect(result.location).toBe(SITE + '/?confirmed=true')
     expect(mail.sent.map((m) => m.to)).toEqual(['info@accountingbody.com'])
@@ -510,7 +513,7 @@ describe('subscription confirmation link', () => {
   })
 
   it('still confirms the subscription when the team notification fails, and logs it', async () => {
-    db.tables.email_subscribers = [{ id: ROW_ID, email: 'ada@example.com', platform: 'ab', status: 'pending' }]
+    db.tables.email_subscribers = [pendingRow()]
     mail.fail = () => true
     const result = await read(await link())
     expect(result).toEqual({ status: 307, location: SITE + '/?confirmed=true', body: '' })

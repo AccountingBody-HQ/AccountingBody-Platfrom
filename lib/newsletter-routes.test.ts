@@ -29,7 +29,7 @@ import { GET as confirmSubscription } from '@/app/api/confirm-subscription/route
 import { POST as contact } from '@/app/api/contact/route'
 import { POST as subscribe } from '@/app/api/subscribe/route'
 import { fakeTables, type FakeTables, type Row } from './test-helpers/fake-rest-tables'
-import { createConfirmationToken } from './newsletter-tokens'
+import { CONFIRMATION_TOKEN_LIFE_MS, createConfirmationToken } from './newsletter-tokens'
 
 const DB_URL = 'https://example.supabase.co'
 const SITE = 'https://accountingbody.com'
@@ -306,23 +306,28 @@ describe('confirmation link', () => {
     expect(mail.sent).toEqual([])
   })
 
+  // PRIV-2b (D357): old-style signed confirmation links are retired. Such a
+  // link gets the invalid answer at once and nothing is looked up by address.
   const legacy = (payload: Record<string, unknown>, expiry: string | Date = '7d') =>
     new SignJWT(payload).setProtectedHeader({ alg: 'HS256' }).setExpirationTime(expiry).setIssuedAt().sign(new TextEncoder().encode(SECRET))
 
-  it('a legacy signed link still confirms the existing row, keeping its source', async () => {
+  it('a validly signed old-style link is invalid and the database receives no request', async () => {
     pending({ confirmation_token: null })
     const result = await confirm(await legacy({ email: 'ada@example.com', platform: 'ab' }))
-    expect(result.headers.get('location')).toBe(SITE + '/?confirmed=true')
-    expect(subscribers()[0]).toMatchObject({ status: 'subscribed', source: 'contact_form' })
+    expect(result.headers.get('location')).toBe(SITE + '/?confirmed=invalid')
+    expect(db.requests).toEqual([])
+    expect(fetch).not.toHaveBeenCalled()
+    expect(subscribers()[0].status).toBe('pending')
+    expect(mail.sent).toEqual([])
   })
 
-  it('a legacy signed link never creates a row', async () => {
+  it('an old-style link for an unknown address never creates a row and reads nothing', async () => {
     const result = await confirm(await legacy({ email: 'nobody@example.com', platform: 'ab' }))
     expect(result.headers.get('location')).toBe(SITE + '/?confirmed=invalid')
-    expect(subscriberWrites()).toEqual([])
+    expect(db.requests).toEqual([])
   })
 
-  it('an expired legacy link or an unsubscribe token is invalid', async () => {
+  it('an expired old-style link, an unsubscribe token or junk is invalid and reads nothing', async () => {
     pending()
     for (const token of [
       await legacy({ email: 'ada@example.com', platform: 'ab' }, new Date('2026-05-31T00:00:00Z')),
@@ -331,6 +336,32 @@ describe('confirmation link', () => {
     ]) {
       expect((await confirm(token)).headers.get('location')).toBe(SITE + '/?confirmed=invalid')
     }
+    expect(db.requests).toEqual([])
+  })
+
+  it('a random-token link still confirms, keeps the source and notifies the team', async () => {
+    const token = pending({ source: 'jobs_page' })
+    const result = await confirm(token)
+    expect(result.headers.get('location')).toBe(SITE + '/?confirmed=true')
+    expect(subscribers()[0]).toMatchObject({ status: 'subscribed', source: 'jobs_page' })
+    expect(mail.sent.map((m) => [m.to, m.subject])).toEqual([['info@accountingbody.com', 'New subscriber - ada@example.com']])
+  })
+
+  it('a random token sent 7 days and 1 minute ago is invalid and changes nothing', async () => {
+    const sent = new Date(NOW.getTime() - CONFIRMATION_TOKEN_LIFE_MS - 60_000).toISOString()
+    const token = pending({ last_confirmation_sent_at: sent })
+    const result = await confirm(token)
+    expect(result.headers.get('location')).toBe(SITE + '/?confirmed=invalid')
     expect(subscriberWrites()).toEqual([])
+    expect(mail.sent).toEqual([])
+  })
+
+  it('the route no longer reads signed tokens or looks rows up by address', () => {
+    const source = readFileSync(join(process.cwd(), 'app/api/confirm-subscription/route.ts'), 'utf8')
+    expect(source).not.toMatch(/from ["']jose["']/)
+    expect(source).not.toContain('jwtVerify')
+    expect(source).not.toContain('JWT_SECRET')
+    expect(source).not.toMatch(/\.eq\(["']email["']/)
+    expect(source).toContain('if (!token || !isConfirmationTokenShape(token)) return invalid()')
   })
 })

@@ -6,7 +6,6 @@ export const fetchCache = "force-no-store"
 import { NextRequest, NextResponse } from "next/server"
 import { Resend } from "resend"
 import { getServerSupabase } from "@/lib/supabase-server"
-import { jwtVerify } from "jose"
 import { checkEmailSend } from "@/lib/email-check"
 import { escapeHtml, withoutLineBreaks } from "@/lib/html-escape"
 import { getAdminPath } from "@/lib/middleware-logic"
@@ -31,38 +30,15 @@ export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token")
   const invalid = () => NextResponse.redirect("https://accountingbody.com/?confirmed=invalid")
 
-  if (!token) return invalid()
+  // The link holds a random token; the row holds only its hash. Any other
+  // token is invalid at once, with no database read.
+  if (!token || !isConfirmationTokenShape(token)) return invalid()
 
-  // The link holds a random token; the row holds only its hash.
-  let found: { data: SubscriberRow | null; error: unknown }
-  if (isConfirmationTokenShape(token)) {
-    found = await supabase
-      .from("email_subscribers")
-      .select(ROW_COLUMNS)
-      .eq("confirmation_token", hashConfirmationToken(token))
-      .maybeSingle()
-  } else {
-    // Legacy JWT links expire by 4 Dec 2026 — remove this branch in PRIV-2.
-    // Links sent before PRIV-1 carry a signed { email, platform } with its
-    // own 7-day expiry.
-    let email: unknown
-    let platform: unknown
-    try {
-      const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
-      const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"] })
-      email = payload.email
-      platform = payload.platform
-    } catch {
-      return invalid()
-    }
-    if (typeof email !== "string" || !email || (platform !== "ab" && platform !== "et")) return invalid()
-    found = await supabase
-      .from("email_subscribers")
-      .select(ROW_COLUMNS)
-      .eq("email", email)
-      .eq("platform", platform)
-      .maybeSingle()
-  }
+  const found: { data: SubscriberRow | null; error: unknown } = await supabase
+    .from("email_subscribers")
+    .select(ROW_COLUMNS)
+    .eq("confirmation_token", hashConfirmationToken(token))
+    .maybeSingle()
 
   if (found.error) {
     console.error("confirm subscription: lookup failed", errorCode(found.error))
@@ -77,7 +53,7 @@ export async function GET(req: NextRequest) {
   if (row.status === "subscribed") {
     return NextResponse.redirect("https://" + brand.domain + "/?confirmed=already")
   }
-  if (isConfirmationTokenShape(token) && !isConfirmationFresh(row.last_confirmation_sent_at, new Date())) {
+  if (!isConfirmationFresh(row.last_confirmation_sent_at, new Date())) {
     return invalid()
   }
 

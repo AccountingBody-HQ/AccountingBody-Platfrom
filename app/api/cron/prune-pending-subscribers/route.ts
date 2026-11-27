@@ -26,10 +26,11 @@ function isAuthorised(req: NextRequest, secret: string): boolean {
   return req.headers.get('authorization') === `Bearer ${secret}`
 }
 
-// A confirmation JWT expires after 7 days (see the setExpirationTime("7d")
-// call in app/api/subscribe/route.ts), so a pending row whose last
-// confirmation email is older than that can never be confirmed — its link
-// is dead. Pruning it stops these rows accumulating forever.
+// A confirmation link works for 7 days after its e-mail was sent
+// (CONFIRMATION_TOKEN_LIFE_MS, checked by isConfirmationFresh in
+// lib/newsletter-tokens.ts), so a pending row whose last confirmation email
+// is older than that can never be confirmed — its link is dead. Pruning it
+// stops these rows accumulating forever.
 const PENDING_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 
 export async function GET(req: NextRequest) {
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest) {
     const cutoff = new Date(startedAt - PENDING_MAX_AGE_MS).toISOString()
 
     // Tightly bounded by design: only rows that are still 'pending' AND
-    // whose last confirmation email predates the 7-day JWT expiry. Never
+    // whose last confirmation email predates the 7-day link life. Never
     // touches a 'subscribed' or 'unsubscribed' row regardless of age.
     const { error, count } = await supabase
       .from('email_subscribers')
