@@ -40,7 +40,7 @@ export default async function PrivacyPolicyPage() {
     },
     {
       id: 'cookies', title: '5. Cookies',
-      body: 'We use cookies for authentication, site performance, and optional analytics. See our full Cookie Policy for details.',
+      body: 'We use cookies and similar storage on your device for authentication, site performance and optional analytics, and to keep your practice progress on your device (it is not sent to us). See our full Cookie Policy for details.',
     },
     {
       id: 'your-rights', title: '6. Your rights',

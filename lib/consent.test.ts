@@ -176,7 +176,10 @@ describe('the banner (components/CookieConsent.tsx)', () => {
   it('shows the approved words and takes the brand from one switch', () => {
     expect(src).toContain("const brand = isEthioTax ? 'EthioTax' : 'Accounting Body'")
     expect(src).toContain('Cookies on {brand}')
-    expect(src).toContain('We only use what is needed to run this site unless you accept.')
+    // PQB-3b S6 (D352): practice progress is kept without consent, so the first sentence says so.
+    expect(src).toContain("We use only what is needed to run this site and to remember your practice on this device.{' '}\n            {adsenseId")
+    expect(src).not.toContain('We only use what is needed to run this site unless you accept.')
+    expect(src).not.toContain('unless you accept')
     expect(src).toContain('If you accept, we also use analytics and advertising cookies to understand how the site is used and to show ads.')
     expect(src).toContain('If you accept, we also use analytics cookies to understand how the site is used.')
     expect(src).toContain('Read our cookie policy')

@@ -11,4 +11,12 @@ describe('cookie and privacy policy pages', () => {
       expect(source).toContain('Last updated: November 2026')
     })
   }
+
+  // PQB-3b S6 (D352): section 5 names the practice progress kept on the device.
+  it('the privacy policy section 5 text is exact; the old text is gone', () => {
+    const source = readFileSync('app/privacy-policy/page.tsx', 'utf8')
+    const body = "      id: 'cookies', title: '5. Cookies',\n      body: 'We use cookies and similar storage on your device for authentication, site performance and optional analytics, and to keep your practice progress on your device (it is not sent to us). See our full Cookie Policy for details.',\n"
+    expect(source.split(body).length - 1).toBe(1)
+    expect(source).not.toContain('We use cookies for authentication, site performance, and optional analytics.')
+  })
 })
