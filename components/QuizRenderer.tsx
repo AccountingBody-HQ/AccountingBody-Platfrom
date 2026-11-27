@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback, useId } from 'react'
 import QuizProgress from './QuizProgress'
 import ExplanationRenderer from './ExplanationRenderer'
+import { deviceStorage, lastScoreLine, lastSetScore, saveSetScore, type SetScore } from '@/lib/practice-store'
 
 interface QuizOption { label: string; value: string }
 
@@ -36,7 +37,9 @@ interface QuizData {
   cases?:         QuizCase[]
 }
 
-interface Props { quizJson: string }
+// setSlug: the practice set's slug; with it, the last score is kept on the
+// visitor's device only (lib/practice-store.ts, D347).
+interface Props { quizJson: string; setSlug?: string }
 
 const SPECIAL = ['all of the above','all of these','all of the given','none of the above']
 const isSpecial = (t: string) => SPECIAL.includes(t.trim().toLowerCase())
@@ -81,7 +84,24 @@ function qId(q: QuizQuestion, idx: number): string {
   return q.id?.trim() || q.key?.trim() || String(idx)
 }
 
-export default function QuizRenderer({ quizJson }: Props) {
+type Entry = { orig: number; q: QuizQuestion; opts: QuizOption[]; correctLabel: string }
+
+// The score of the graded (non-writing) questions; used by the banner and the device save.
+function gradeSelected(selected: Entry[], answers: Record<string, string>): { correct: number; gradedTotal: number } {
+  let correct = 0; let gradedTotal = 0
+  selected.forEach(({ q, orig, opts, correctLabel }) => {
+    const type = (q.type ?? 'single').toLowerCase()
+    if (type === 'writing') return
+    gradedTotal++
+    const id       = qId(q, orig)
+    const userVal  = answers[id]
+    const userLabel    = opts.find(o => o.value === userVal)?.label ?? userVal ?? ''
+    if (userLabel && correctLabel && userLabel.trim().toLowerCase() === correctLabel.trim().toLowerCase()) correct++
+  })
+  return { correct, gradedTotal }
+}
+
+export default function QuizRenderer({ quizJson, setSlug }: Props) {
   const [quiz, setQuiz]           = useState<QuizData | null>(null)
   const [error, setError]         = useState('')
   const [selected, setSelected]   = useState<{ orig: number; q: QuizQuestion; opts: QuizOption[]; correctLabel: string }[]>([])
@@ -143,6 +163,24 @@ export default function QuizRenderer({ quizJson }: Props) {
     }
   }, [quizJson, buildSession, session])
 
+  // Last score on this device: read after mount (and after "Try a new set"),
+  // saved once per submit.
+  const [lastScore, setLastScore] = useState<SetScore | null>(null)
+  const savedSessionRef = useRef(-1)
+  useEffect(() => {
+    if (!setSlug) return
+    const store = deviceStorage()
+    setLastScore(store ? lastSetScore(store, setSlug) : null)
+  }, [setSlug, session])
+  useEffect(() => {
+    if (!submitted || !setSlug || savedSessionRef.current === session) return
+    const { correct, gradedTotal } = gradeSelected(selected, answers)
+    if (gradedTotal === 0) return
+    savedSessionRef.current = session
+    const store = deviceStorage()
+    if (store) saveSetScore(store, setSlug, { score: correct, total: gradedTotal, pct: Math.round((correct / gradedTotal) * 100) }, Date.now())
+  }, [submitted, setSlug, session, selected, answers])
+
   const handleRetry = () => setSession(s => s + 1)
 
   const handleSubmitClick = () => {
@@ -178,16 +216,7 @@ export default function QuizRenderer({ quizJson }: Props) {
   const caseMap = Object.fromEntries((quiz.cases ?? []).map(c => [String(c.case_id), c]))
 
   // Score
-  let correct = 0; let gradedTotal = 0
-  selected.forEach(({ q, orig, opts, correctLabel }) => {
-    const type = (q.type ?? 'single').toLowerCase()
-    if (type === 'writing') return
-    gradedTotal++
-    const id       = qId(q, orig)
-    const userVal  = answers[id]
-    const userLabel    = opts.find(o => o.value === userVal)?.label ?? userVal ?? ''
-    if (userLabel && correctLabel && userLabel.trim().toLowerCase() === correctLabel.trim().toLowerCase()) correct++
-  })
+  const { correct, gradedTotal } = gradeSelected(selected, answers)
   const pct = gradedTotal > 0 ? Math.round((correct / gradedTotal) * 100) : 0
 
   // Topic breakdown
@@ -234,6 +263,8 @@ export default function QuizRenderer({ quizJson }: Props) {
       <p className="sr-only" aria-live="polite">
         {submitted && gradedTotal > 0 ? `${correct}/${gradedTotal} correct — ${pct}%` : ''}
       </p>
+
+      {!submitted && lastScore && <p className="text-sm text-slate-500 -mt-3 mb-6">{lastScoreLine(lastScore)}</p>}
 
       {!submitted && (
         <QuizProgress current={answeredCount} total={selected.length} answered={answeredCount} />

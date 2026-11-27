@@ -134,7 +134,7 @@ export default async function PracticePostPage({ params }: { params: Promise<{ s
                 <p className='text-slate-600 text-lg leading-relaxed mb-8 pb-8 border-b border-slate-200'>{post.excerpt}</p>
               )}
               {post.quizJson ? (
-                <QuizRenderer quizJson={post.quizJson} />
+                <QuizRenderer quizJson={post.quizJson} setSlug={post.slug} />
               ) : (
                 <div className='mt-10 pt-10 border-t border-slate-200'>
                   <div className='p-8 rounded-xl bg-slate-50 border border-slate-200 text-center'>

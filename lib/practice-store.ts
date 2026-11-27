@@ -252,6 +252,11 @@ export function topicScores(questions: { topic: string; correctIndex: number }[]
   return out
 }
 
+/** "Your last score on this device: {score} of {total} ({pct}%)." */
+export function lastScoreLine(s: Pick<SetScore, 'score' | 'total' | 'pct'>): string {
+  return `Your last score on this device: ${s.score} of ${s.total} (${s.pct}%).`
+}
+
 /** "27 November 2026", in English, in the visitor's own time zone. */
 export function formatLastResultDate(at: number, timeZone?: string): string {
   return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', ...(timeZone ? { timeZone } : {}) }).format(new Date(at))
