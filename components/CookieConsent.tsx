@@ -153,7 +153,7 @@ export default function CookieConsent({ gtmId, adsenseId, isEthioTax }: Props) {
             Cookies on {brand}
           </p>
           <p className="mt-1 text-sm leading-relaxed text-slate-700">
-            We only use what is needed to run this site unless you accept.{' '}
+            We use only what is needed to run this site and to remember your practice on this device.{' '}
             {adsenseId
               ? 'If you accept, we also use analytics and advertising cookies to understand how the site is used and to show ads.'
               : 'If you accept, we also use analytics cookies to understand how the site is used.'}{' '}

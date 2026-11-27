@@ -25,8 +25,10 @@ describe('quiz and mock-exam answers', () => {
     expect(src).toMatch(/ref=\{resultsHeadingRef\} tabIndex=\{-1\}/)
     expect(src).toMatch(/aria-expanded=\{open\}/)
     expect(src).toMatch(/<span className="sr-only">\{correct \? 'Correct: ' : 'Incorrect: '\}<\/span>/)
-    // Two polite regions only: the question counter, and the timer lines (ME-1 S4).
-    expect(count(src, /aria-live=/g)).toBe(2)
+    // Three polite regions only: the question counter, the timer lines (ME-1 S4),
+    // and the "not saving" line said once when a device save fails (PQB-3 S2).
+    expect(count(src, /aria-live=/g)).toBe(3)
+    expect(src).toContain('<p className="text-xs text-slate-500" aria-live="polite">{notSaving && <span className="block -mt-3 mb-6">{NOT_SAVING_TEXT}</span>}</p>')
     expect(src).toMatch(/<span className="text-sm font-semibold text-navy-950" aria-live="polite">Question \{current \+ 1\} of/)
     expect(src).toContain('<p className="sr-only" aria-live="polite">{announcement}</p>')
   })
