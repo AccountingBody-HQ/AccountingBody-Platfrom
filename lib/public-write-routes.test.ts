@@ -1,5 +1,5 @@
 import { createHmac } from 'node:crypto'
-import { SignJWT } from 'jose'
+import { createConfirmationToken } from './newsletter-tokens'
 import { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { SERVER_PROBLEM_TEXT } from './message-rules'
@@ -98,12 +98,9 @@ const post = (path: string, body: unknown, headers: Record<string, string> = {})
   })
 const get = (pathAndQuery: string) => new NextRequest(SITE + pathAndQuery)
 
-const signedToken = () =>
-  new SignJWT({ email: 'ada@example.com', platform: 'ab' })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('7d')
-    .setIssuedAt()
-    .sign(new TextEncoder().encode(JWT_TEST_VALUE))
+// PRIV-2b: a confirmation link carries a random token (the fake answers every
+// read with network.row).
+const confirmationToken = () => createConfirmationToken().token
 
 function webhookRequest(event: string, payload: unknown, signature?: string) {
   const raw = JSON.stringify(payload)
@@ -216,8 +213,8 @@ const scenarios: Scenario[] = [
   {
     name: 'subscription confirmation link',
     context: 'publicWrite',
-    row: { email: 'ada@example.com', status: 'pending' },
-    call: async () => confirmSubscription(get('/api/confirm-subscription?token=' + (await signedToken()))),
+    row: { email: 'ada@example.com', status: 'pending', last_confirmation_sent_at: new Date().toISOString() },
+    call: async () => confirmSubscription(get('/api/confirm-subscription?token=' + confirmationToken())),
     healthy: { status: 307, location: SITE + '/?confirmed=true', emails: 1, dbRequests: 2 },
     // PRIV-1: a lookup that gets no answer stops the link at once.
     never: { status: 307, location: SITE + '/?confirmed=error', emails: 0, dbRequests: 1 },

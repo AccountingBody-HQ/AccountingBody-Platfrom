@@ -4,8 +4,10 @@
 // period. The privacy policy (app/privacy-policy/page.tsx, section 7) says
 // how long each kind of data is kept; these rules apply it.
 //
-// - R1 contact_submissions: created_at older than 24 calendar months
-// - R2 help_requests: created_at older than 24 calendar months
+// - R1 contact_submissions: last contact older than 24 calendar months
+// - R2 help_requests: last contact older than 24 calendar months
+//   (for R1 and R2, "last contact" is the latest of created_at, updated_at
+//   and resolved_at; empty dates are ignored)
 // - R3 email_subscribers: status 'unsubscribed' and unsubscribed_at older
 //   than 30 days (updated_at when unsubscribed_at is empty)
 // - R4 firms_applications: status 'rejected' and reviewed_at older than 6
@@ -71,9 +73,24 @@ export type RetentionRule = {
   deletes: boolean
 }
 
+// R1 and R2: the dates that count as contact with the person.
+const LAST_CONTACT_COLUMNS = ['created_at', 'updated_at', 'resolved_at'] as const
+
 export const RETENTION_RULES: readonly RetentionRule[] = [
-  { id: 'R1', table: 'contact_submissions', date: { kind: 'before', column: 'created_at' }, period: { months: 24 }, deletes: true },
-  { id: 'R2', table: 'help_requests', date: { kind: 'before', column: 'created_at' }, period: { months: 24 }, deletes: true },
+  {
+    id: 'R1',
+    table: 'contact_submissions',
+    date: { kind: 'latest-before', columns: LAST_CONTACT_COLUMNS },
+    period: { months: 24 },
+    deletes: true,
+  },
+  {
+    id: 'R2',
+    table: 'help_requests',
+    date: { kind: 'latest-before', columns: LAST_CONTACT_COLUMNS },
+    period: { months: 24 },
+    deletes: true,
+  },
   {
     id: 'R3',
     table: 'email_subscribers',

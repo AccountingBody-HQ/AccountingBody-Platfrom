@@ -153,7 +153,11 @@ describe('cut-offs (calendar months and days, UTC)', () => {
 
   it('the date filters are the approved ones', () => {
     const c = '2026-01-01T00:00:00.000Z'
-    expect(dateOrFilter(rule('R1'), c)).toBeNull()
+    // PRIV-2b: R1 and R2 use the latest of created_at, updated_at, resolved_at.
+    for (const id of ['R1', 'R2'] as const) {
+      expect(dateOrFilter(rule(id), c)).toBe(`and(created_at.lt."${c}",or(updated_at.is.null,updated_at.lt."${c}"),or(resolved_at.is.null,resolved_at.lt."${c}"))`)
+    }
+    expect(dateOrFilter(rule('R6'), c)).toBeNull()
     expect(dateOrFilter(rule('R3'), c)).toBe(`unsubscribed_at.lt."${c}",and(unsubscribed_at.is.null,updated_at.lt."${c}")`)
     expect(dateOrFilter(rule('R4'), c)).toBe(`reviewed_at.lt."${c}",and(reviewed_at.is.null,updated_at.lt."${c}")`)
     expect(dateOrFilter(rule('R5'), c)).toBe(`and(created_at.lt."${c}",or(verified_at.is.null,verified_at.lt."${c}"),or(reviewed_at.is.null,reviewed_at.lt."${c}"))`)
@@ -243,7 +247,7 @@ describe('on mode', () => {
     expect(r3.params).toEqual(expect.arrayContaining([['status', 'eq.unsubscribed'], ['or', `(${dateOrFilter(rule('R3'), ruleCutoff(rule('R3'), NOW))})`]]))
     expect(r3.params.find(([k]) => k === 'id')?.[1]).toBe('in.(s-due,s-due-fallback)')
     const r1 = deletes().find((r) => r.table === 'contact_submissions')!
-    expect(r1.params).toContainEqual(['created_at', `lt.${ruleCutoff(rule('R1'), NOW)}`])
+    expect(r1.params).toContainEqual(['or', `(${dateOrFilter(rule('R1'), ruleCutoff(rule('R1'), NOW))})`])
   })
 
   it('a row that changed between the read and the delete is kept', async () => {
@@ -416,5 +420,95 @@ describe('the /api/ops-status data-retention check', () => {
     setup({})
     db.problem = (r) => (r.table === 'admin_recycle_bin' ? 'fail' : undefined)
     expect((await call()).checks['data-retention']).toBe('unknown')
+  })
+})
+
+// PRIV-2b: "24 months after our last contact" — for contact messages and
+// enquiries the last contact is the latest of created_at, updated_at and
+// resolved_at; an empty date is "no later contact", never "never due".
+describe('R1 and R2: last contact', () => {
+  const THREE_YEARS_OLD = iso('2023-11-01T00:00:00Z')
+  const ONE_MONTH_AGO = ago(30 * DAY)
+  const THIRTY_MONTHS_OLD = iso('2024-05-27T06:30:00Z')
+  const cases: [string, Row, boolean][] = [
+    ['updated_at 1 month ago → not due', { updated_at: ONE_MONTH_AGO, resolved_at: null }, false],
+    ['resolved_at 1 month ago → not due', { updated_at: null, resolved_at: ONE_MONTH_AGO }, false],
+    ['updated_at and resolved_at both empty → due', { updated_at: null, resolved_at: null }, true],
+    ['all three dates older than 24 months → due', { updated_at: THIRTY_MONTHS_OLD, resolved_at: THIRTY_MONTHS_OLD }, true],
+  ]
+  const tables: [RetentionRuleId, string][] = [
+    ['R1', 'contact_submissions'],
+    ['R2', 'help_requests'],
+  ]
+  const call = async () => (await (await opsStatus()).json()) as { checks: Record<string, string> }
+
+  describe.each(tables)('%s %s', (id, table) => {
+    const row = (dates: Row) => ({ [table]: [{ id: 'x', created_at: THREE_YEARS_OLD, ...dates }] })
+
+    it.each(cases)('the count: a 3-year-old row with %s', async (_name, dates, due) => {
+      setup(row(dates))
+      expect((await run('count')).rules[id]).toStrictEqual({ due: due ? 1 : 0, deleted: 0 })
+      expect(db.tables[table]).toHaveLength(1)
+    })
+
+    it.each(cases)('the delete: a 3-year-old row with %s', async (_name, dates, due) => {
+      setup(row(dates))
+      expect((await run('on')).rules[id]).toStrictEqual({ due: due ? 1 : 0, deleted: due ? 1 : 0 })
+      expect(db.tables[table]).toHaveLength(due ? 0 : 1)
+    })
+
+    it.each(cases)('the ops-status alarm: a 3-year-old row with %s', async (_name, dates, due) => {
+      vi.stubEnv('RETENTION_DELETE', 'on')
+      setup(row(dates))
+      expect((await call()).checks['data-retention']).toBe(due ? 'late' : 'ok')
+    })
+  })
+
+  it('the count, the delete and the alarm send the same last-contact filter', async () => {
+    const filter = (cutoff: string) => ['or', `(${dateOrFilter(rule('R1'), cutoff)})`]
+    setup({ contact_submissions: [{ id: 'x', created_at: THREE_YEARS_OLD, updated_at: null, resolved_at: null }] })
+    await run('on')
+    const work = db.requests.filter((r) => r.table === 'contact_submissions')
+    expect(work.map((r) => r.method)).toStrictEqual(['HEAD', 'GET', 'DELETE'])
+    for (const r of work) expect(r.params).toContainEqual(filter(ruleCutoff(rule('R1'), NOW)))
+
+    vi.stubEnv('RETENTION_DELETE', 'on')
+    setup({})
+    await call()
+    const alarm = db.requests.filter((r) => r.table === 'contact_submissions')
+    expect(alarm).toHaveLength(1)
+    expect(alarm[0].params).toContainEqual(filter(new Date(Date.parse(ruleCutoff(rule('R1'), NOW)) - DAILY_GRACE_MS).toISOString()))
+  })
+
+  it('one shared function builds the filter for all three', () => {
+    const lib = readFileSync(join(process.cwd(), 'lib/data-retention.ts'), 'utf8')
+    const route = readFileSync(join(process.cwd(), 'app/api/ops-status/route.ts'), 'utf8')
+    expect(lib.match(/applyRuleFilter\(supabase\.from\(rule\.table\)/g)).toHaveLength(3)
+    expect(route).toContain("applyRuleFilter(supabase.from(rule.table).select('id'), rule, dataRetentionOverdueBefore(rule, now))")
+  })
+})
+
+// PRIV-2b: docs/ALERTS.md describes every check the status answer gives.
+describe('the alerts guide', () => {
+  const doc = readFileSync(join(process.cwd(), 'docs/ALERTS.md'), 'utf8')
+
+  it('the example answer lists every check, in the order the answer gives them', () => {
+    const example = JSON.parse(/```json\n(.*)\n```/.exec(doc)![1]) as { checks: Record<string, string> }
+    expect(Object.keys(example.checks)).toStrictEqual(CHECKS.map((c) => c.name))
+  })
+
+  it('the table has one row per check, with the data-retention row as approved', () => {
+    for (const check of CHECKS) {
+      expect(doc.split('\n').filter((line) => line.startsWith(`| \`${check.name}\` |`))).toHaveLength(1)
+    }
+    expect(doc).toContain('| `data-retention` | personal-data clean-up (inside the 06:30 subscriber clean-up) | daily 06:30 | only when RETENTION_DELETE=on: a row past its keeping period by more than 26 h | yes |')
+    expect(doc).toContain('`job-retention` and `data-retention` always show `ok` while their clean-up is\noff or only counts')
+  })
+
+  it('"What to do" covers a late job-retention or data-retention check', () => {
+    const start = doc.indexOf('## What to do')
+    const section = doc.slice(start, doc.indexOf('\n## ', start + 1))
+    expect(start).toBeGreaterThan(0)
+    expect(section).toContain('- `job-retention` or `data-retention` `late` (possible only when switched\n  on)')
   })
 })

@@ -1,5 +1,5 @@
 import { createHmac } from 'node:crypto'
-import { SignJWT } from 'jose'
+import { createConfirmationToken } from './newsletter-tokens'
 import { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -75,6 +75,8 @@ const ROW = {
   employer_name: 'Ada Lovelace',
   manage_token: 'manage',
   location_country: null,
+  // A confirmation sent just now, so the confirmation link reaches its save.
+  last_confirmation_sent_at: new Date().toISOString(),
 }
 
 let paymentsFail = false
@@ -129,13 +131,8 @@ type Case = [string, () => Promise<unknown>]
 const writeRoutes: Case[] = [
   [
     'subscription confirmation link',
-    async () => {
-      const token = await new SignJWT({ email: 'ada@example.com', platform: 'ab' })
-        .setProtectedHeader({ alg: 'HS256' })
-        .setExpirationTime('7d')
-        .sign(new TextEncoder().encode(JWT_TEST_VALUE))
-      return confirmSubscription(get('/api/confirm-subscription?token=' + token))
-    },
+    // PRIV-2b: the link carries a random token (the fake answers every read with ROW).
+    () => confirmSubscription(get('/api/confirm-subscription?token=' + createConfirmationToken().token)),
   ],
   [
     'contact form',

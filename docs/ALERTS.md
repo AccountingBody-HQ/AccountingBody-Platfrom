@@ -9,7 +9,7 @@ the runbook; the same text can be moved into it.
 recently. It is read fresh on every request and never cached.
 
 ```json
-{ "status": "ok", "checks": { "job-import": "ok", "job-expiry": "ok", "subscriber-cleanup": "ok", "saved-jobs-cleanup": "ok" } }
+{ "status": "ok", "checks": { "job-import": "ok", "job-expiry": "ok", "subscriber-cleanup": "ok", "saved-jobs-cleanup": "ok", "job-retention": "ok", "database-size": "ok", "data-retention": "ok" } }
 ```
 
 - HTTP 200, `"status": "ok"`: every alerting check is fine.
@@ -32,7 +32,12 @@ Words for each check:
 | `job-expiry` | job expiry | daily 06:00 | an active listing 26 h past its end date | no (shown only) |
 | `subscriber-cleanup` | unconfirmed subscriber clean-up | daily 06:30 | an unconfirmed sign-up 7 days + 26 h old | yes |
 | `saved-jobs-cleanup` | saved jobs clean-up | daily 07:00 | a saved job unused for 7 days + 26 h | yes |
+| `job-retention` | expired imported job clean-up | daily 07:30 | only when JOB_RETENTION=on: an imported job without an application past its keeping period by more than 26 h | yes |
 | `database-size` | database size (not a job; read on each check) | — | `failing` above 300 MB (the free plan allows 500 MB); `unknown` if the size cannot be read | yes |
+| `data-retention` | personal-data clean-up (inside the 06:30 subscriber clean-up) | daily 06:30 | only when RETENTION_DELETE=on: a row past its keeping period by more than 26 h | yes |
+
+`job-retention` and `data-retention` always show `ok` while their clean-up is
+off or only counts (JOB_RETENTION or RETENTION_DELETE not exactly `on`).
 
 A check that is not alerting is shown in the answer but never turns it to 503.
 `job-expiry` is shown only for now; to make it alert, set `alerting: true` for
@@ -61,6 +66,10 @@ Open `https://accountingbody.com/api/ops-status` to see which check is not `ok`.
 - `subscriber-cleanup` or `saved-jobs-cleanup` `late`: the daily clean-up has
   not removed rows that are due. Check that day's cron run in Vercel and its
   function log.
+- `job-retention` or `data-retention` `late` (possible only when switched
+  on): that clean-up has not removed rows that are due. Check that day's cron
+  run in Vercel (07:30 for job retention, 06:30 for the personal-data
+  clean-up) and its function log.
 - `job-expiry` `late` (not alerting): listings past their end date are still
   active. Check the expiry cron run and its log.
 - Any check `unknown`, or `"checks": {}`: the database could not be read.

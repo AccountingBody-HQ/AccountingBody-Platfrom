@@ -1,4 +1,4 @@
-import { SignJWT } from 'jose'
+import { createConfirmationToken } from './newsletter-tokens'
 import { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { HUMAN_CHECK_FAILED_TEXT } from './message-rules'
@@ -641,14 +641,18 @@ describe('visitor text appears as plain text in emails', () => {
 
   it('newsletter team notification', async () => {
     // PRIV-1: a link confirms an existing pending row; it never creates one.
+    // PRIV-2b: the link carries a random token; the row holds its hash.
+    const { token, hash } = createConfirmationToken()
     db.tables.email_subscribers = [
-      { id: '0f8fad5b-d9cb-469f-a165-70867728950e', email: `<b>o'neil@example.com\n`, platform: 'ab', status: 'pending' },
+      {
+        id: '0f8fad5b-d9cb-469f-a165-70867728950e',
+        email: `<b>o'neil@example.com\n`,
+        platform: 'ab',
+        status: 'pending',
+        confirmation_token: hash,
+        last_confirmation_sent_at: new Date().toISOString(),
+      },
     ]
-    const token = await new SignJWT({ email: `<b>o'neil@example.com\n`, platform: 'ab' })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('7d')
-      .setIssuedAt()
-      .sign(new TextEncoder().encode(JWT_TEST_VALUE))
     await confirmSubscription(get('/api/confirm-subscription?token=' + token))
     expect(htmlOf(0)).toContain('&lt;b&gt;o&#39;neil@example.com')
     expect(htmlOf(0)).not.toContain('<b>o')
