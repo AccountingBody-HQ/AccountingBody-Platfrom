@@ -1,7 +1,8 @@
 // A small in-memory stand-in for the database's REST interface, for tests that
 // run real supabase-js clients with a fake `fetch`. It understands only the
-// filters these tests use (eq, neq, lt, gt, in, ilike, not.is.null), order on one
-// column, limit and offset, and GET / PATCH / DELETE / POST (insert, or upsert
+// filters these tests use (eq, neq, lt, gt, in, ilike, is.null, not.is.null,
+// and or=(…)/and=(…) logic trees), order on one column, limit and offset,
+// count=exact, and GET / HEAD / PATCH / DELETE / POST (insert, or upsert
 // with on_conflict). Every request is
 // recorded. A test may make any request fail through `problem`.
 
@@ -74,6 +75,45 @@ function matches(row: Row, column: string, filter: string): boolean {
   }
 }
 
+// Splits a logic-tree list at top-level commas (outside brackets and quotes).
+function splitTop(list: string): string[] {
+  const parts: string[] = []
+  let depth = 0
+  let quoted = false
+  let start = 0
+  for (let i = 0; i < list.length; i++) {
+    const c = list[i]
+    if (c === '"') quoted = !quoted
+    else if (!quoted && c === '(') depth++
+    else if (!quoted && c === ')') depth--
+    else if (!quoted && depth === 0 && c === ',') {
+      parts.push(list.slice(start, i))
+      start = i + 1
+    }
+  }
+  parts.push(list.slice(start))
+  return parts
+}
+
+// One item of an or=(…) / and=(…) logic tree: a nested and(…)/or(…), or
+// column.op.value with the value optionally in double quotes.
+function logicMatches(row: Row, item: string): boolean {
+  const group = /^(not\.)?(and|or)\((.*)\)$/.exec(item)
+  if (group) {
+    const parts = splitTop(group[3])
+    const result = group[2] === 'and' ? parts.every((p) => logicMatches(row, p)) : parts.some((p) => logicMatches(row, p))
+    return group[1] ? !result : result
+  }
+  const dot = item.indexOf('.')
+  const filter = item.slice(dot + 1).replace(/^([a-z]+\.)"(.*)"$/, '$1$2')
+  return matches(row, item.slice(0, dot), filter)
+}
+
+function rowMatches(row: Row, key: string, value: string): boolean {
+  if (key === 'or' || key === 'and') return logicMatches(row, `${key}${value}`)
+  return matches(row, key, value)
+}
+
 function pick(row: Row, select: string | null): Row {
   if (!select || select === '*') return { ...row }
   const out: Row = {}
@@ -103,7 +143,16 @@ export function fakeTables(origin: string, tables: Record<string, Row[]>): FakeT
 
       const rows = state.tables[table] ?? (state.tables[table] = [])
       const filters = params.filter(([key]) => !RESERVED.has(key))
-      let hit = rows.filter((row) => filters.every(([column, filter]) => matches(row, column, filter)))
+      let hit = rows.filter((row) => filters.every(([column, filter]) => rowMatches(row, column, filter)))
+      // count=exact (supabase-js reads the total from content-range); HEAD
+      // answers the count with no body.
+      const wantsCount = /count=exact/.test(new Headers(init?.headers).get('Prefer') ?? '')
+      const total = hit.length
+      const counted = (response: Response) => {
+        if (wantsCount) response.headers.set('content-range', `*/${total}`)
+        return response
+      }
+      if (method === 'HEAD') return counted(new Response(null, { status: 200 }))
       const order = url.searchParams.get('order')
       if (order) {
         const [column, direction] = order.split('.')
@@ -114,14 +163,14 @@ export function fakeTables(origin: string, tables: Record<string, Row[]>): FakeT
       if (method === 'GET') hit = hit.slice(offset, limit === null ? undefined : offset + Number(limit))
       const select = url.searchParams.get('select')
 
-      if (method === 'GET') return json(hit.map((row) => pick(row, select)))
+      if (method === 'GET') return counted(json(hit.map((row) => pick(row, select))))
       if (method === 'PATCH') {
         for (const row of hit) Object.assign(row, body)
         return json(hit.map((row) => pick(row, select)))
       }
       if (method === 'DELETE') {
         state.tables[table] = rows.filter((row) => !hit.includes(row))
-        return json(hit.map((row) => pick(row, select)))
+        return counted(json(hit.map((row) => pick(row, select))))
       }
       if (method === 'POST') {
         // Insert, or upsert merged on the on_conflict columns.

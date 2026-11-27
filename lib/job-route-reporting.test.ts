@@ -817,7 +817,8 @@ describe('job route reporting', () => {
 
   const SOURCES: [string, number][] = [
     ['app/api/cron/expire-jobs/route.ts', 1],
-    ['app/api/cron/prune-pending-subscribers/route.ts', 1],
+    // PRIV-2 S4: the second step (personal-data clean-up) reports on its own.
+    ['app/api/cron/prune-pending-subscribers/route.ts', 2],
     ['app/api/cron/prune-saved-jobs/route.ts', 1],
     ['lib/ingestion/run-provider-import.ts', 3],
     ['app/api/ingest/orchestrator/route.ts', 3],

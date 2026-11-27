@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { reportServerError } from '@/lib/report-error'
 import { errorCode } from '@/lib/recycle-bin'
+import { dataRetentionMode, runDataRetention, type DataRetentionResult } from '@/lib/data-retention'
+
+// Daily at 06:30 UTC (vercel.json). Step 1 removes pending newsletter
+// sign-ups whose confirmation link has expired. Step 2 runs the personal-data
+// clean-up (lib/data-retention.ts): it counts the rows that are past their
+// approved keeping period and deletes them only when RETENTION_DELETE is
+// exactly "on". A step-2 failure never fails or undoes step 1. The answer is
+// { pruned, retention: { mode, rules } } (counts and error codes only).
 
 export const dynamic = 'force-dynamic'
 // force-dynamic alone does NOT stop Next 14.2 caching fetch() calls in route
@@ -34,9 +42,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
   }
 
+  const startedAt = Date.now()
   try {
     const supabase = getSupabase()
-    const cutoff = new Date(Date.now() - PENDING_MAX_AGE_MS).toISOString()
+    const cutoff = new Date(startedAt - PENDING_MAX_AGE_MS).toISOString()
 
     // Tightly bounded by design: only rows that are still 'pending' AND
     // whose last confirmation email predates the 7-day JWT expiry. Never
@@ -52,7 +61,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Prune failed' }, { status: 500 })
     }
 
-    return NextResponse.json({ pruned: count ?? 0 })
+    const pruned = count ?? 0
+
+    // Step 2: its own try/catch. The 40 s time budget counts from the start
+    // of this route, so both steps fit within maxDuration.
+    const mode = dataRetentionMode(process.env.RETENTION_DELETE)
+    let retention: DataRetentionResult | { mode: typeof mode; error: string }
+    try {
+      retention = await runDataRetention({ supabase, now: new Date(startedAt), mode, startedAt })
+    } catch (err: unknown) {
+      console.error('cron/prune-pending-subscribers: data retention failed', errorCode(err))
+      reportServerError('data retention failed', err, { area: 'cron' })
+      retention = { mode, error: 'failed' }
+    }
+
+    return NextResponse.json({ pruned, retention })
   } catch (err: unknown) {
     console.error('cron/prune-pending-subscribers: fatal error', errorCode(err))
     reportServerError('pending subscriber cleanup failed', err, { area: 'cron' })

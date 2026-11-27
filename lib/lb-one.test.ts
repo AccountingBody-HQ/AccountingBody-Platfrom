@@ -248,9 +248,10 @@ describe('G5 database size words', () => {
     expect(judgeDatabaseSize(bytes)).toBe(word)
   })
 
-  it('CHECKS has six names in order, database-size last and alerting', () => {
+  // PRIV-2 S4: data-retention is the seventh check, after database-size.
+  it('CHECKS has seven names in order, database-size alerting before data-retention', () => {
     expect(CHECKS.map((check) => check.name)).toStrictEqual([
-      'job-import', 'job-expiry', 'subscriber-cleanup', 'saved-jobs-cleanup', 'job-retention', 'database-size',
+      'job-import', 'job-expiry', 'subscriber-cleanup', 'saved-jobs-cleanup', 'job-retention', 'database-size', 'data-retention',
     ])
     expect(CHECKS.find((check) => check.name === 'database-size')?.alerting).toBe(true)
   })
@@ -265,7 +266,7 @@ describe('G5 database size words', () => {
     const answer = summarise({ ...ALL_OK, ['database-size' as CheckName]: word })
     expect(answer.httpStatus).toBe(status)
     expect(answer.body.checks['database-size']).toBe(word)
-    expect(Object.keys(answer.body.checks)).toHaveLength(6)
+    expect(Object.keys(answer.body.checks)).toHaveLength(7)
   })
 })
 
@@ -308,11 +309,11 @@ describe('G5 ops status route reads the size and shows the word only', () => {
     return { status: response.status, text, body: JSON.parse(text) as { status: string; checks: Record<string, string> } }
   }
 
-  it('a small database → 200 with six ok words', async () => {
+  it('a small database → 200 with seven ok words', async () => {
     const result = await call()
     expect(result.status).toBe(200)
     expect(result.body.checks).toStrictEqual({
-      'job-import': 'ok', 'job-expiry': 'ok', 'subscriber-cleanup': 'ok', 'saved-jobs-cleanup': 'ok', 'job-retention': 'ok', 'database-size': 'ok',
+      'job-import': 'ok', 'job-expiry': 'ok', 'subscriber-cleanup': 'ok', 'saved-jobs-cleanup': 'ok', 'job-retention': 'ok', 'database-size': 'ok', 'data-retention': 'ok',
     })
     expect(net.requests.filter((r) => r.path === 'rpc/ops_database_size')).toStrictEqual([{ path: 'rpc/ops_database_size', method: 'GET' }])
   })
@@ -323,17 +324,17 @@ describe('G5 ops status route reads the size and shows the word only', () => {
     expect(result.status).toBe(503)
     expect(result.body.status).toBe('attention')
     expect(result.body.checks['database-size']).toBe('unknown')
-    expect(Object.keys(result.body.checks)).toHaveLength(6)
+    expect(Object.keys(result.body.checks)).toHaveLength(7)
     expect(result.text).not.toContain('7f3a')
     expect(result.text).not.toContain('PGRST202')
   })
 
-  it('a size read that throws → unknown, the other five words still shown', async () => {
+  it('a size read that throws → unknown, the other six words still shown', async () => {
     net.sizeThrows = true
     const result = await call()
     expect(result.status).toBe(503)
     expect(result.body.checks).toStrictEqual({
-      'job-import': 'ok', 'job-expiry': 'ok', 'subscriber-cleanup': 'ok', 'saved-jobs-cleanup': 'ok', 'job-retention': 'ok', 'database-size': 'unknown',
+      'job-import': 'ok', 'job-expiry': 'ok', 'subscriber-cleanup': 'ok', 'saved-jobs-cleanup': 'ok', 'job-retention': 'ok', 'database-size': 'unknown', 'data-retention': 'ok',
     })
   })
 

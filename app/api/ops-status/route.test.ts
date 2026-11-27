@@ -119,6 +119,7 @@ beforeEach(() => {
   vi.stubEnv('SUPABASE_SECRET_KEY', 'test-key')
   vi.stubEnv('JOB_RETENTION', undefined)
   vi.stubEnv('JOB_RETENTION_DAYS', undefined)
+  vi.stubEnv('RETENTION_DELETE', undefined)
   vi.spyOn(console, 'error').mockImplementation(() => {})
   vi.spyOn(console, 'warn').mockImplementation(() => {})
   state.reports.length = 0
@@ -143,7 +144,7 @@ describe('ops status', () => {
     expect(result.status).toBe(200)
     expect(result.body).toStrictEqual({
       status: 'ok',
-      checks: { 'job-import': 'ok', 'job-expiry': 'ok', 'subscriber-cleanup': 'ok', 'saved-jobs-cleanup': 'ok', 'job-retention': 'ok', 'database-size': 'ok' },
+      checks: { 'job-import': 'ok', 'job-expiry': 'ok', 'subscriber-cleanup': 'ok', 'saved-jobs-cleanup': 'ok', 'job-retention': 'ok', 'database-size': 'ok', 'data-retention': 'ok' },
     })
     expect(state.reports).toStrictEqual([])
   })
@@ -194,7 +195,7 @@ describe('ops status', () => {
     expect(result.status).toBe(200)
     expect(result.body).toStrictEqual({
       status: 'ok',
-      checks: { 'job-import': 'ok', 'job-expiry': 'late', 'subscriber-cleanup': 'ok', 'saved-jobs-cleanup': 'ok', 'job-retention': 'ok', 'database-size': 'ok' },
+      checks: { 'job-import': 'ok', 'job-expiry': 'late', 'subscriber-cleanup': 'ok', 'saved-jobs-cleanup': 'ok', 'job-retention': 'ok', 'database-size': 'ok', 'data-retention': 'ok' },
     })
   })
 
@@ -233,8 +234,8 @@ describe('ops status', () => {
     for (const table of ['provider_runs', 'jobs', 'email_subscribers', 'saved_jobs', SIZE_READ]) db.failing.add(table)
     const result = await call()
     expect(result.status).toBe(503)
-    // job-retention is off here, so it reads nothing and stays ok.
-    expect(Object.values(result.body.checks)).toStrictEqual(['unknown', 'unknown', 'unknown', 'unknown', 'ok', 'unknown'])
+    // job-retention and data-retention are off here, so they read nothing and stay ok.
+    expect(Object.values(result.body.checks)).toStrictEqual(['unknown', 'unknown', 'unknown', 'unknown', 'ok', 'unknown', 'ok'])
   })
 
   it('answers failing and 503 when the database is above the size limit', async () => {
@@ -523,7 +524,7 @@ describe('ops status within a minute', () => {
     for (const table of ['provider_runs', 'jobs', 'email_subscribers', 'saved_jobs']) db.failing.add(table)
     const failed = await call()
     expect(failed.status).toBe(503)
-    expect(Object.values(failed.body.checks)).toStrictEqual(['unknown', 'unknown', 'unknown', 'unknown', 'ok', 'ok'])
+    expect(Object.values(failed.body.checks)).toStrictEqual(['unknown', 'unknown', 'unknown', 'unknown', 'ok', 'ok', 'ok'])
     later(OPS_STATUS_HOLD_MS + 1)
     expect((await call()).status).toBe(503)
   })

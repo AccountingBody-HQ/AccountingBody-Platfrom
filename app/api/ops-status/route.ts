@@ -13,6 +13,8 @@ import {
   RETENTION_GUARD_ROWS,
   SAVED_JOB_MAX_AGE_MS,
   cutoffs,
+  dataRetentionOverdueBefore,
+  judgeDataRetention,
   judgeDatabaseSize,
   judgeDue,
   judgeRetention,
@@ -26,10 +28,12 @@ import {
 } from '@/lib/ops-status'
 import { reportServerError } from '@/lib/report-error'
 import { getServerSupabase } from '@/lib/supabase-server'
+import { RETENTION_RULES, applyRuleFilter, dataRetentionMode } from '@/lib/data-retention'
 
 // Whether the scheduled jobs have done their work recently, for an uptime
 // monitor: 200 when every alerting check is ok, otherwise 503. One small read
-// per check (the retention check, when on, may need a second), at most once a
+// per check (when switched on, the job retention check may need a second and
+// the data retention check reads once per deleting rule), at most once a
 // minute per instance (OPS_STATUS_HOLD_MS); the
 // HTTP answer is never cached. See lib/ops-status.ts for the words.
 export const dynamic = 'force-dynamic'
@@ -78,6 +82,21 @@ async function retentionWord(supabase: ReturnType<typeof getServerSupabase>, now
   return judgeRetention(dueIds, guarded === null ? null : guarded.map((row) => String(row.job_id)))
 }
 
+// The personal-data clean-up check (PRIV-5, D356). Unless RETENTION_DELETE
+// is exactly "on" (the cron's own parser), the cron deletes nothing, so this
+// answers ok with no read. When on: one limit(1) read per deleting rule, with
+// the cron's own filter, for a row overdue by more than DAILY_GRACE_MS → late.
+// R5 never deletes and is never read.
+async function dataRetentionWord(supabase: ReturnType<typeof getServerSupabase>, now: number): Promise<CheckWord> {
+  if (dataRetentionMode(process.env.RETENTION_DELETE) !== 'on') return 'ok'
+  const reads = await Promise.all(
+    RETENTION_RULES.filter((rule) => rule.deletes).map(async (rule) =>
+      rowsOf(await applyRuleFilter(supabase.from(rule.table).select('id'), rule, dataRetentionOverdueBefore(rule, now)).limit(1)),
+    ),
+  )
+  return judgeDataRetention(reads)
+}
+
 // The database size check: one read of public.ops_database_size()
 // (migrations/0023, service_role only) as a GET. A failed read, or one that
 // throws, answers unknown; the size itself never leaves this function.
@@ -97,7 +116,7 @@ async function computeAnswer(): Promise<StatusAnswer> {
   const at = cutoffs(now)
   const supabase = getServerSupabase('publicRead')
 
-  const [runs, expiring, pending, saved, retention, databaseSize] = await Promise.all([
+  const [runs, expiring, pending, saved, retention, databaseSize, dataRetention] = await Promise.all([
     // 'completed' sorts before 'failed', so one row tells whether any
     // run in the window completed.
     supabase
@@ -128,6 +147,7 @@ async function computeAnswer(): Promise<StatusAnswer> {
       .limit(1),
     retentionWord(supabase, now),
     databaseSizeWord(supabase),
+    dataRetentionWord(supabase, now),
   ])
 
   return summarise({
@@ -142,6 +162,7 @@ async function computeAnswer(): Promise<StatusAnswer> {
     'saved-jobs-cleanup': judgeDue(rowsOf(saved), 'last_seen_at', now, SAVED_JOB_MAX_AGE_MS + DAILY_GRACE_MS),
     'job-retention': retention,
     'database-size': databaseSize,
+    'data-retention': dataRetention,
   })
 }
 
