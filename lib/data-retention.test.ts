@@ -487,3 +487,21 @@ describe('R1 and R2: last contact', () => {
     expect(route).toContain("applyRuleFilter(supabase.from(rule.table).select('id'), rule, dataRetentionOverdueBefore(rule, now))")
   })
 })
+
+// PRIV-2b: docs/ALERTS.md describes every check the status answer gives.
+describe('the alerts guide', () => {
+  const doc = readFileSync(join(process.cwd(), 'docs/ALERTS.md'), 'utf8')
+
+  it('the example answer lists every check, in the order the answer gives them', () => {
+    const example = JSON.parse(/```json\n(.*)\n```/.exec(doc)![1]) as { checks: Record<string, string> }
+    expect(Object.keys(example.checks)).toStrictEqual(CHECKS.map((c) => c.name))
+  })
+
+  it('the table has one row per check, with the data-retention row as approved', () => {
+    for (const check of CHECKS) {
+      expect(doc.split('\n').filter((line) => line.startsWith(`| \`${check.name}\` |`))).toHaveLength(1)
+    }
+    expect(doc).toContain('| `data-retention` | personal-data clean-up (inside the 06:30 subscriber clean-up) | daily 06:30 | only when RETENTION_DELETE=on: a row past its keeping period by more than 26 h | yes |')
+    expect(doc).toContain('`job-retention` and `data-retention` always show `ok` while their clean-up is\noff or only counts')
+  })
+})
