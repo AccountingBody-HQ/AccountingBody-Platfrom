@@ -634,7 +634,7 @@ export function getCachedListingJobsCount(params: ListingQuery): Promise<number>
   return cachedListingJobsCount(withHiddenCopies(normaliseListingFilters(params)))
 }
 
-// Used by the admin dashboard (app/api/roodber8/jobs/[id]/route.ts, itself
+// Used by the admin dashboard (the admin area's job route, itself
 // cookie-gated) and by app/jobs/apply/[id]/page.tsx (a public Server
 // Component that only ever interpolates title/company_name/location_text/
 // description/status into rendered HTML — it never passes the fetched job
@@ -878,7 +878,7 @@ export async function getSimilarJobs(params: GetSimilarJobsParams): Promise<Simi
       : getCachedSavedSimilarJobs(excludeId, platform))
     return saved.filter(job => job.id !== excludeId).slice(0, Math.max(0, limit))
   } catch (error) {
-    console.error('getSimilarJobs (saved list) error:', error)
+    console.error('getSimilarJobs (saved list) error:', errorCode(error))
     reportServerError('similar jobs saved list read failed', new Error('similar jobs query failed'), { area: 'public' })
     return []
   }

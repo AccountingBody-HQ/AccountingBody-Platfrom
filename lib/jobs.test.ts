@@ -702,7 +702,8 @@ describe('getSimilarJobs — saved list', () => {
     expect(result).toEqual([])
     const [label, err] = consoleError.mock.calls[0]
     expect(label).toContain('saved list')
-    expect((err as Error).message).toBe('getSimilarJobs: saved list query failed')
+    // PRIV-8 S4: the log carries the short code only (this database error has none).
+    expect(err).toBe('unknown')
   })
 
   it('returns [] when the jobs read fails, so the page just hides the section', async () => {
