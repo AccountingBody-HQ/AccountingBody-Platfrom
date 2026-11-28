@@ -9,6 +9,7 @@ async function termsBrand() {
   const headersList = await headers()
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
   return {
+    isEthioTax,
     platformName: isEthioTax ? 'EthioTax' : 'Accounting Body',
     platformUrl: isEthioTax ? 'ethiotax.com' : 'accountingbody.com',
   }
@@ -25,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 // Owner-approved wording (PRIV-2, D356). The section ids stay the same
 // (inbound links), including 'subscriptions' for "4. Payments".
-function termsSections(platformName: string, platformUrl: string) {
+function termsSections(platformName: string, platformUrl: string, isEthioTax: boolean) {
   return [
     {
       id: 'acceptance',
@@ -33,6 +34,7 @@ function termsSections(platformName: string, platformUrl: string) {
       body: [
         `By accessing or using ${platformUrl} ("the Site"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use the Site.`,
         'These Terms apply to everyone who visits or uses the Site, including job seekers, employers and firms who send us their details. We may update these Terms at any time. Continued use of the Site after changes means you accept the updated Terms.',
+        ...(isEthioTax ? [] : ['The Site is run by Accounting Body Ltd, a company registered in England and Wales (company number 17014642). Registered office: 71-75 Shelton Street, Covent Garden, London WC2H 9JQ, United Kingdom.']),
       ],
     },
     {
@@ -109,8 +111,8 @@ function termsSections(platformName: string, platformUrl: string) {
 }
 
 export default async function TermsPage() {
-  const { platformName, platformUrl } = await termsBrand()
-  const sections = termsSections(platformName, platformUrl)
+  const { isEthioTax, platformName, platformUrl } = await termsBrand()
+  const sections = termsSections(platformName, platformUrl, isEthioTax)
   return (
     <>
       <section className="relative overflow-hidden bg-navy-950 py-16 md:py-20">

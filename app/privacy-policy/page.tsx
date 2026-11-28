@@ -27,6 +27,7 @@ export default async function PrivacyPolicyPage() {
       id: 'who-we-are', nav: 'Who we are', title: '1. Who we are',
       body: [
         `${platformName} (${platformUrl}) decides how your personal data is used (we are the "controller"). For any privacy question, use our contact form at ${platformUrl}/contact.`,
+        ...(isEthioTax ? [] : ['Accounting Body is run by Accounting Body Ltd, a company registered in England and Wales (company number 17014642). Registered office: 71-75 Shelton Street, Covent Garden, London WC2H 9JQ, United Kingdom.']),
       ],
     },
     {

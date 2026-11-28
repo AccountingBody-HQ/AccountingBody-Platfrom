@@ -148,7 +148,7 @@ describe('page titles carry one brand suffix (the root template adds it)', () =>
 describe('items left as they are (OUT of ET-1)', () => {
   it('keeps the Accounting Body footer legal line; EthioTax reads the D253 line (ET-2)', () => {
     const src = read('components/layout/Footer.tsx')
-    expect(src).toContain('© {new Date().getFullYear()} AccountingBody Ltd. All rights reserved.{\' \'}')
+    expect(src).toContain('© {new Date().getFullYear()} Accounting Body Ltd. All rights reserved.{\' \'}')
     expect(src).toContain('Registered in England &amp; Wales.')
     expect(src).toContain('{isEthioTax ? `© ${new Date().getFullYear()} EthioTax. All rights reserved.` : (')
   })

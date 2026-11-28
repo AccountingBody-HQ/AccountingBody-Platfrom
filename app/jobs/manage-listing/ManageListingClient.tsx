@@ -218,7 +218,7 @@ export default function ManageListingClient({ token, isEthioTax }: { token: stri
           {/* CONTACT */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 text-center">
             <p className="text-sm font-semibold text-slate-700 mb-1">Need help with your {platformName} listing?</p>
-            <p className="text-sm text-slate-500">Contact us at <a href="mailto:info@accountingbody.com" className="underline" style={{ color: brand }}>info@accountingbody.com</a></p>
+            <p className="text-sm text-slate-500">Contact us through our <Link href="/contact" className="underline" style={{ color: brand }}>contact form</Link>.</p>
           </div>
 
         </div>

@@ -40,6 +40,7 @@ type Section = { id: string; nav: string; title: string; body: string[] }
 const privacy = (brand: string, site: string, et: boolean): Section[] => [
   { id: 'who-we-are', nav: 'Who we are', title: '1. Who we are', body: [
     `${brand} (${site}) decides how your personal data is used (we are the "controller"). For any privacy question, use our contact form at ${site}/contact.`,
+    ...(et ? [] : [AB_COMPANY_PRIVACY]),
   ] },
   { id: 'what-we-collect', nav: 'What we collect', title: '2. What we collect and why', body: [
     'You can read and practise without giving us any personal details. You do not need an account. We collect personal data only when you send it to us:',
@@ -86,13 +87,17 @@ const privacy = (brand: string, site: string, et: boolean): Section[] => [
   ] },
 ]
 const ET_ONLY = 'On EthioTax, Google Translate is used only if you choose Amharic or Oromo.'
+// D364/D365: the company details, on Accounting Body only (EthioTax shows none, D253).
+const AB_COMPANY_PRIVACY = 'Accounting Body is run by Accounting Body Ltd, a company registered in England and Wales (company number 17014642). Registered office: 71-75 Shelton Street, Covent Garden, London WC2H 9JQ, United Kingdom.'
+const AB_COMPANY_TERMS = 'The Site is run by Accounting Body Ltd, a company registered in England and Wales (company number 17014642). Registered office: 71-75 Shelton Street, Covent Garden, London WC2H 9JQ, United Kingdom.'
 
 // The whole terms text: the five approved paragraphs, and every other
 // sentence unchanged apart from the brand.
-const terms = (brand: string, site: string): Omit<Section, 'nav'>[] => [
+const terms = (brand: string, site: string, et: boolean): Omit<Section, 'nav'>[] => [
   { id: 'acceptance', title: '1. Acceptance of terms', body: [
     `By accessing or using ${site} ("the Site"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use the Site.`,
     'These Terms apply to everyone who visits or uses the Site, including job seekers, employers and firms who send us their details. We may update these Terms at any time. Continued use of the Site after changes means you accept the updated Terms.',
+    ...(et ? [] : [AB_COMPANY_TERMS]),
   ] },
   { id: 'use-of-site', title: '2. Use of the site', body: [
     `You may use ${brand} for lawful, personal, and non-commercial educational purposes. You must not use the Site in any way that is unlawful, harmful, or that could damage our reputation.`,
@@ -130,13 +135,16 @@ const terms = (brand: string, site: string): Omit<Section, 'nav'>[] => [
   ] },
 ]
 
-const BANNED = ['authentication', 'Account data', 'login', 'noreply', 'privacy@', 'March 2026', 'Registered office', 'Company number', 'ICO registration']
+const BANNED = ['authentication', 'Account data', 'login', 'noreply', 'privacy@', 'March 2026', 'ICO registration']
+// D365: the company number and registered office appear on Accounting Body only, once, in the approved sentence.
+const COMPANY_WORDS = ['Registered office', 'Company number', '17014642', 'Shelton Street']
 
-function expectNoBanned(html: string) {
+function expectNoBanned(html: string, et: boolean) {
   const text = visible(html)
   expect(text).not.toContain('@')
   expect(text).not.toMatch(/\bPro\b/)
   for (const word of BANNED) expect(text.toLowerCase(), word).not.toContain(word.toLowerCase())
+  for (const word of COMPANY_WORDS) expect(count(text.toLowerCase(), word.toLowerCase()), word).toBe(et ? 0 : 1)
 }
 
 describe('privacy policy (both brands)', () => {
@@ -172,7 +180,7 @@ describe('privacy policy (both brands)', () => {
         expect(visible(html)).toContain(`${brand} is committed to protecting your privacy. This policy explains what personal data we collect, how we use it, and the rights you have over it.`)
         expect(count(html, '>Questions?</h2>')).toBe(1)
         expect(count(html, 'Related:')).toBe(1)
-        expectNoBanned(html)
+        expectNoBanned(html, et)
         expect(html).not.toMatch(/<(ul|ol|li|strong|b)[ >]/)
       })
     })
@@ -191,7 +199,7 @@ describe('terms (both brands)', () => {
     describe(brand, () => {
       it('the whole text is exact (five approved paragraphs, the rest with the brand swapped)', async () => {
         const html = await render('terms', et)
-        const want = terms(brand, site)
+        const want = terms(brand, site, et)
         const blocks = want.map((s) =>
           `<div id="${s.id}" class="scroll-mt-8"><h2 class="font-display text-xl text-navy-950 mb-4">${s.title}</h2><div class="space-y-3">${s.body.map((p) => `${PARA}${p}</p>`).join('')}</div></div>`,
         )
@@ -202,7 +210,7 @@ describe('terms (both brands)', () => {
       it('the Contents links equal the section ids and titles', async () => {
         const html = await render('terms', et)
         const links = Array.from(html.matchAll(/<a href="#([a-z-]+)"[^>]*>\s*([^<]+?)\s*<\/a>/g), (m) => [m[1], m[2]])
-        expect(links).toStrictEqual(terms(brand, site).map((s) => [s.id, s.title]))
+        expect(links).toStrictEqual(terms(brand, site, et).map((s) => [s.id, s.title]))
       })
 
       it('hero, intro and boxes; no e-mail address, no old wording, no other brand', async () => {
@@ -214,7 +222,7 @@ describe('terms (both brands)', () => {
         expect(text).not.toContain('Subscriptions and payments')
         expect(count(text, `${site}/contact`)).toBe(1)
         expect(count(html, '>Questions about these Terms?</h2>')).toBe(1)
-        expectNoBanned(html)
+        expectNoBanned(html, et)
         if (et) {
           expect(text).not.toContain('Accounting Body')
           expect(text).not.toContain('accountingbody.com')
