@@ -8,6 +8,7 @@ import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 import { checkRead } from '@/lib/db-check'
 import { reportServerError } from '@/lib/report-error'
+import { refreshCourseCaches } from '@/lib/course-cache'
 import {
   DELETE_FAILED,
   errorCode,
@@ -247,6 +248,7 @@ export async function PATCH(
       .eq('id', courseId)
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    refreshCourseCaches()
     return NextResponse.json({ success: true })
   }
 
@@ -264,6 +266,7 @@ export async function PATCH(
       .eq('course_id', courseId)
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    refreshCourseCaches()
     return NextResponse.json({ success: true })
   }
 
@@ -291,6 +294,7 @@ export async function PATCH(
       .single()
 
     if (error || !inserted) return NextResponse.json({ error: error?.message ?? 'Insert failed' }, { status: 500 })
+    refreshCourseCaches()
     return NextResponse.json({ success: true, chapter: inserted })
   }
 
@@ -330,6 +334,7 @@ export async function PATCH(
       .eq('course_id', courseId)
 
     if (error) return deleteFailed('delete_chapter', error)
+    refreshCourseCaches()
     return NextResponse.json({ success: true, binId: kept.binId })
   }
 
@@ -360,6 +365,7 @@ export async function PATCH(
         .eq('course_id', courseId)
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     }
+    refreshCourseCaches()
     return NextResponse.json({ success: true })
   }
 
@@ -377,6 +383,7 @@ export async function PATCH(
       .eq('course_id', courseId)
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    refreshCourseCaches()
     return NextResponse.json({ success: true })
   }
 
@@ -430,6 +437,7 @@ export async function PATCH(
       .single()
 
     if (error || !inserted) return NextResponse.json({ error: error?.message ?? 'Insert failed' }, { status: 500 })
+    refreshCourseCaches()
     return NextResponse.json({ success: true, lesson: inserted })
   }
 
@@ -469,6 +477,7 @@ export async function PATCH(
       .eq('course_id', courseId)
 
     if (error) return deleteFailed('delete_lesson', error)
+    refreshCourseCaches()
     return NextResponse.json({ success: true, binId: kept.binId })
   }
 
@@ -515,6 +524,7 @@ export async function PATCH(
         .eq('chapter_id', chapterId)
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     }
+    refreshCourseCaches()
     return NextResponse.json({ success: true })
   }
 
@@ -559,6 +569,7 @@ export async function PATCH(
       .insert({ lesson_id: lessonId, article_id: articleId, article_order: nextOrder })
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    refreshCourseCaches()
     return NextResponse.json({ success: true })
   }
 
@@ -603,6 +614,7 @@ export async function PATCH(
       .eq('article_id', articleId)
 
     if (error) return deleteFailed('remove_article', error)
+    refreshCourseCaches()
     return NextResponse.json({ success: true, binId: kept.binId })
   }
 
@@ -635,6 +647,7 @@ export async function PATCH(
         .eq('article_id', orderedIds[i])
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     }
+    refreshCourseCaches()
     return NextResponse.json({ success: true })
   }
 
@@ -670,6 +683,7 @@ export async function DELETE(
       .eq('id', courseId)
 
     if (error) return deleteFailed('delete course', error)
+    refreshCourseCaches()
     return NextResponse.json({ success: true, binId: kept.binId })
   } catch (err: unknown) {
     reportServerError('admin course delete failed', err, { area: 'admin' })

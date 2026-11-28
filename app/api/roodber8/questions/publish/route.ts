@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       bundle,
       qualification,
       examBody,
-      showOnSites = ['accountingbody'],
+      showOnSites = ['accountingbody', 'ethiotax'],
       canonicalOwner = 'accountingbody',
       articleSlug,
     } = body

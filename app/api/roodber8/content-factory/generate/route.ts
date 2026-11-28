@@ -7,8 +7,6 @@ import { reportServerError } from '@/lib/report-error'
 export const runtime = 'nodejs'
 export const maxDuration = 300
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
 // ═══════════════════════════════════════════════════════════════════════
 // SECTION 1 — PLATFORM IDENTITY
 // ═══════════════════════════════════════════════════════════════════════
@@ -894,6 +892,8 @@ export async function POST(req: NextRequest) {
   }
   try {
     const config = await req.json()
+    // The model client is made per request, never at module scope (CLAUDE.md §5).
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
     if (!config.contentType || !config.qualification || !config.topic) {
       return NextResponse.json(

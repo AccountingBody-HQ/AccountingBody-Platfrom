@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { DELETE_FAILED, errorCode, keepCopyBeforeDelete, snapshotArticle } from '@/lib/recycle-bin'
+import { checkRead } from '@/lib/db-check'
+import { refreshArticleCaches } from '@/lib/article-cache'
+import { refreshCourseCaches } from '@/lib/course-cache'
+import {
+  NOTE_CHECK_FAILED,
+  NOTE_DELETE_CHECK_FAILED,
+  NOTE_HAS_SET,
+  NOTE_SLUG_HAS_SET,
+  NOTE_SLUG_LOCKED,
+  isNoteAddressLocked,
+  noteHasPracticeSet,
+} from '@/lib/note-guards'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -71,6 +83,31 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   sanitised.updated_at = new Date().toISOString()
 
   const supabase = getClient()
+
+  // The note as it is now. A change of address needs it, so a failed read
+  // stops that. Otherwise it only names the caches to refresh (the broad tag
+  // covers every note).
+  const before = checkRead(
+    await supabase.from('articles').select('slug, status').eq('id', articleId).maybeSingle(),
+    'articles/[articleId]: note before update',
+  )
+  const statusGiven = 'status' in sanitised
+  if (!before.ok && 'slug' in sanitised)
+    return NextResponse.json({ error: NOTE_CHECK_FAILED }, { status: 500 })
+  if (before.ok && !before.data)
+    return NextResponse.json({ error: 'Article not found' }, { status: 404 })
+  const old = before.ok ? before.data : null
+
+  // A published note's address never changes, and nor does the address of a
+  // note that a practice set links to (lib/note-guards.ts).
+  if ('slug' in sanitised && old && sanitised.slug !== old.slug) {
+    if (isNoteAddressLocked(old.status, sanitised.status, statusGiven))
+      return NextResponse.json({ error: NOTE_SLUG_LOCKED }, { status: 400 })
+    const hasSet = await noteHasPracticeSet(supabase, old.slug, 'articles/[articleId]: practice set before address change')
+    if (hasSet === null) return NextResponse.json({ error: NOTE_CHECK_FAILED }, { status: 500 })
+    if (hasSet) return NextResponse.json({ error: NOTE_SLUG_HAS_SET }, { status: 400 })
+  }
+
   const { error } = await supabase
     .from('articles')
     .update(sanitised)
@@ -81,6 +118,13 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  // A change of status or sites can change the practice list and the linked
+  // set's page as well.
+  refreshArticleCaches({
+    slugs: [old?.slug, typeof sanitised.slug === 'string' ? sanitised.slug : null],
+    practiceSets: statusGiven || 'show_on_sites' in sanitised,
+  })
 
   return NextResponse.json({ success: true })
 }
@@ -93,6 +137,21 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
 
   const { articleId } = await params
   const supabase = getClient()
+
+  // A note that a practice set links to is never deleted: the set would point
+  // at a missing note (lib/note-guards.ts). A failed check deletes nothing.
+  const found = checkRead(
+    await supabase.from('articles').select('slug').eq('id', articleId).maybeSingle(),
+    'articles/[articleId]: note before delete',
+  )
+  if (!found.ok) return NextResponse.json({ error: NOTE_DELETE_CHECK_FAILED }, { status: 500 })
+  if (!found.data) return NextResponse.json({ error: 'Article not found' }, { status: 404 })
+  const slug = found.data.slug as string | null
+  if (slug) {
+    const hasSet = await noteHasPracticeSet(supabase, slug, 'articles/[articleId]: practice set before delete')
+    if (hasSet === null) return NextResponse.json({ error: NOTE_DELETE_CHECK_FAILED }, { status: 500 })
+    if (hasSet) return NextResponse.json({ error: NOTE_HAS_SET }, { status: 409 })
+  }
 
   // A copy of the article and its course links goes to the recycle bin first.
   const kept = await keepCopyBeforeDelete(supabase, await snapshotArticle(supabase, articleId), {
@@ -113,6 +172,10 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     console.error('articles DELETE failed', errorCode(error))
     return NextResponse.json({ error: DELETE_FAILED }, { status: 500 })
   }
+
+  // Its course lesson links went with it, so the course pages are refreshed too.
+  refreshArticleCaches({ slugs: [slug] })
+  refreshCourseCaches()
 
   return NextResponse.json({ success: true, binId: kept.binId })
 }

@@ -18,6 +18,7 @@ import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 import { checkRead } from '@/lib/db-check'
 import { reportServerError } from '@/lib/report-error'
+import { refreshCourseCaches } from '@/lib/course-cache'
 import { errorCode, moveToBin, snapshotCourse } from '@/lib/recycle-bin'
 
 function getSupabase() {
@@ -345,8 +346,12 @@ export async function POST(req: NextRequest) {
 
   try {
     const supabase = getSupabase()
-    if (mode === 'create') return await createCourse(supabase, String(slug), fields, chapters)
-    return await updateCourse(supabase, courseId, String(slug), fields, chapters)
+    const saved = mode === 'create'
+      ? await createCourse(supabase, String(slug), fields, chapters)
+      : await updateCourse(supabase, courseId, String(slug), fields, chapters)
+    // Only a save that worked refreshes the course pages (lib/course-cache.ts).
+    if (saved.ok) refreshCourseCaches()
+    return saved
   } catch (e: any) {
     reportServerError('admin course save failed', e, { area: 'admin' })
     return NextResponse.json({ error: e.message ?? 'Unknown error' }, { status: 500 })

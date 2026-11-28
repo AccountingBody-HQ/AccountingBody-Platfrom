@@ -7,8 +7,6 @@ import { reportServerError } from '@/lib/report-error'
 export const runtime = 'nodejs'
 export const maxDuration = 300
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // TIER MAP
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -710,7 +708,7 @@ function mergeBatches(batches: any[]): any {
 // ═══════════════════════════════════════════════════════════════════════════════
 // GENERATE ONE BATCH — author + auditor pass for a single batch
 // ═══════════════════════════════════════════════════════════════════════════════
-async function generateBatch(cfg: {
+async function generateBatch(client: Anthropic, cfg: {
   qualification: string; subject: string; topic: string
   questionType: string; difficulty: string; count: number
   framework: string; examBody: string; rounding: string; noiseLevel: string
@@ -838,12 +836,14 @@ export async function POST(req: NextRequest) {
     }
 
     // ── GENERATE BATCHES SEQUENTIALLY ─────────────────────────────────────────
+    // The model client is made per request, never at module scope (CLAUDE.md §5).
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
     const batchResults: any[] = []
     let totalFixedCount = 0
     const allAuditErrors: string[] = []
 
     for (let i = 0; i < batches.length; i++) {
-      const { bundle, fixedCount, auditErrors } = await generateBatch({
+      const { bundle, fixedCount, auditErrors } = await generateBatch(client, {
         ...baseCfg,
         count:        batches[i].count,
         startId:      batches[i].startId,
