@@ -133,6 +133,26 @@ describe('renderBlocks', () => {
     ].join('\n'))
   })
 
+  it('stays safe without validation', () => {
+    const badLevel = { type: 'heading', level: '2 onclick=alert(1)', text: 'x' } as unknown as Block
+    expect(renderBlocks([badLevel])).toBe('<h2 class="ce-heading">x</h2>')
+    expect(renderBlocks([{ type: 'heading', level: 3, text: 'x' }])).toBe('<h3 class="ce-heading">x</h3>')
+    const badAmounts = {
+      type: 'journal_entry',
+      title: 'J',
+      lines: [
+        { account: 'A', debit: NaN, credit: null },
+        { account: 'B', debit: '1', credit: null },
+      ],
+    } as unknown as Block
+    const html = renderBlocks([badAmounts])
+    expect(html).toContain('<tr><td>A</td><td></td><td></td></tr>')
+    expect(html).toContain('<tr><td>B</td><td></td><td></td></tr>')
+    expect(html).not.toContain('NaN')
+    expect(renderBlocks([{ type: 'video', url: 'javascript:alert(1)' } as unknown as Block])).toBe('')
+    expect(scan(html)).toEqual([])
+  })
+
   it('is deterministic', () => {
     expect(renderBlocks(ONE_OF_EACH)).toBe(renderBlocks(JSON.parse(JSON.stringify(ONE_OF_EACH))))
   })

@@ -44,6 +44,8 @@ export function formatAmount(amount: number): string {
   return `${amount < 0 ? '-' : ''}${grouped}.${pence}`
 }
 
+/** An amount only when it is a real number; otherwise an empty cell. */
+const amountCell = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? formatAmount(x) : '')
 const label = (text: string) => `<p class="ce-label">${escapeHtml(text)}</p>`
 const para = (text: string) => `<p>${inline(text)}</p>`
 const th = (text: string) => `<th scope="col">${inline(text)}</th>`
@@ -52,8 +54,10 @@ const li = (text: string) => `<li>${inline(text)}</li>`
 
 function renderBlock(block: Block): string {
   switch (block.type) {
-    case 'heading':
-      return `<h${block.level} class="ce-heading">${inline(block.text)}</h${block.level}>`
+    case 'heading': {
+      const level = block.level === 3 ? 3 : 2
+      return `<h${level} class="ce-heading">${inline(block.text)}</h${level}>`
+    }
     case 'paragraph':
       return `<p class="ce-paragraph">${inline(block.text)}</p>`
     case 'definition':
@@ -64,7 +68,7 @@ function renderBlock(block: Block): string {
       return `<div class="ce-calculation">${label(RENDER_LABELS.calculation)}<table><caption>${inline(block.title)}</caption><thead><tr>${th('Step')}${th('Working')}${th('Result')}</tr></thead><tbody>${block.steps.map(s => `<tr>${td(s.label)}${td(s.working)}${td(s.result)}</tr>`).join('')}</tbody></table></div>`
     case 'journal_entry': {
       const rows = block.lines
-        .map(l => `<tr>${td(l.account)}<td>${l.debit === null ? '' : formatAmount(l.debit)}</td><td>${l.credit === null ? '' : formatAmount(l.credit)}</td></tr>`)
+        .map(l => `<tr>${td(l.account)}<td>${amountCell(l.debit)}</td><td>${amountCell(l.credit)}</td></tr>`)
         .join('')
       const narrative = block.narrative ? para(block.narrative) : ''
       return `<div class="ce-journal_entry"><table><caption>${inline(block.title)}</caption><thead><tr>${th('Account')}${th('Debit')}${th('Credit')}</tr></thead><tbody>${rows}</tbody></table>${narrative}</div>`
@@ -85,6 +89,9 @@ function renderBlock(block: Block): string {
       const tag = block.style === 'number' ? 'ol' : 'ul'
       return `<${tag} class="ce-list">${block.items.map(li).join('')}</${tag}>`
     }
+    // The renderer stays safe even for unvalidated input: an unknown block type renders nothing.
+    default:
+      return ''
   }
 }
 
