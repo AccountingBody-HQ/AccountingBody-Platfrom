@@ -39,7 +39,11 @@ interface QuizData {
 
 // setSlug: the practice set's slug; with it, the last score is kept on the
 // visitor's device only (lib/practice-store.ts, D347).
-interface Props { quizJson: string; setSlug?: string }
+// heading, intro, moreHref, moreLabel: the questions under a study note
+// (lib/note-practice.ts, PQB-4) name their block and, after submitting, offer
+// only the link to the whole set (no "Try a new set": the same few questions
+// would come back); without them the practice set page is unchanged.
+interface Props { quizJson: string; setSlug?: string; heading?: string; intro?: string; moreHref?: string; moreLabel?: string }
 
 const SPECIAL = ['all of the above','all of these','all of the given','none of the above']
 const isSpecial = (t: string) => SPECIAL.includes(t.trim().toLowerCase())
@@ -101,7 +105,7 @@ function gradeSelected(selected: Entry[], answers: Record<string, string>): { co
   return { correct, gradedTotal }
 }
 
-export default function QuizRenderer({ quizJson, setSlug }: Props) {
+export default function QuizRenderer({ quizJson, setSlug, heading, intro, moreHref, moreLabel }: Props) {
   const [quiz, setQuiz]           = useState<QuizData | null>(null)
   const [error, setError]         = useState('')
   const [selected, setSelected]   = useState<{ orig: number; q: QuizQuestion; opts: QuizOption[]; correctLabel: string }[]>([])
@@ -251,13 +255,15 @@ export default function QuizRenderer({ quizJson, setSlug }: Props) {
   return (
     <div className="mt-10 pt-10 border-t border-slate-200">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="font-display text-2xl text-navy-950">Practice Questions</h2>
+        <h2 className="font-display text-2xl text-navy-950">{heading ?? 'Practice Questions'}</h2>
         {qtype !== 'scenario' && (
           <span className="text-xs font-medium px-3 py-1 rounded-full bg-navy-50 text-navy-700 border border-navy-200">
             {selected.length} questions
           </span>
         )}
       </div>
+
+      {intro && <p className="text-sm text-slate-600 -mt-3 mb-6">{intro}</p>}
 
       {/* One polite live region per quiz: announces the score once, when the answers are submitted. */}
       <p className="sr-only" aria-live="polite">
@@ -282,9 +288,11 @@ export default function QuizRenderer({ quizJson, setSlug }: Props) {
                 {pct >= 70 ? 'Well done — you passed this set.' : 'Keep practising — review the explanations below.'}
               </p>
             </div>
-            <button onClick={handleRetry} className="h-10 px-5 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors">
-              Try a new set
-            </button>
+            {!moreHref && (
+              <button onClick={handleRetry} className="h-10 px-5 rounded-lg text-sm font-semibold bg-navy-950 text-white hover:bg-navy-900 transition-colors">
+                Try a new set
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -409,12 +417,20 @@ export default function QuizRenderer({ quizJson, setSlug }: Props) {
 
       {submitted && (
         <div className="mt-8 flex flex-col sm:flex-row items-stretch gap-3">
-          <button onClick={() => { handleRetry(); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="flex-1 py-4 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors flex items-center justify-center">
-            Try a new set
-          </button>
-          <a href="/practice-questions" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="flex-1 py-4 px-7 rounded-lg text-base font-semibold border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors flex items-center justify-center">
-            Browse more questions
-          </a>
+          {moreHref ? (
+            <a href={moreHref} className="flex-1 py-4 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors flex items-center justify-center">
+              {moreLabel ?? 'Browse more questions'}
+            </a>
+          ) : (
+            <>
+              <button onClick={() => { handleRetry(); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="flex-1 py-4 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors flex items-center justify-center">
+                Try a new set
+              </button>
+              <a href="/practice-questions" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="flex-1 py-4 px-7 rounded-lg text-base font-semibold border border-slate-300 text-navy-950 hover:border-navy-950 transition-colors flex items-center justify-center">
+                Browse more questions
+              </a>
+            </>
+          )}
         </div>
       )}
     </div>

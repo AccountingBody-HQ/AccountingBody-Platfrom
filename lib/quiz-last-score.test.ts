@@ -52,8 +52,10 @@ describe('first render (no storage read yet) is unchanged', () => {
 
 describe('QuizRenderer source rules', () => {
   it('optional setSlug prop; only the practice set page passes it, with the set slug', () => {
-    expect(src).toContain('interface Props { quizJson: string; setSlug?: string }')
-    expect(src).toContain('export default function QuizRenderer({ quizJson, setSlug }: Props) {')
+    expect(src).toContain('interface Props { quizJson: string; setSlug?: string; heading?: string; intro?: string; moreHref?: string; moreLabel?: string }')
+    expect(src).toContain('export default function QuizRenderer({ quizJson, setSlug, heading, intro, moreHref, moreLabel }: Props) {')
+    // PQB-4: the questions under a study note pass no setSlug (lib/pqb-four.test.ts).
+    expect(read('lib/note-practice.ts')).not.toMatch(/setSlug\s*:/)
     expect(page).toContain('<QuizRenderer quizJson={post.quizJson} setSlug={post.slug} />')
     expect(page).toContain('slug: qset.slug,')
   })
@@ -78,7 +80,7 @@ describe('QuizRenderer source rules', () => {
   it('the line sits under the heading row, before the progress bar, and only before submitting', () => {
     const line = '{!submitted && lastScore && <p className="text-sm text-slate-500 -mt-3 mb-6">{lastScoreLine(lastScore)}</p>}'
     expect(src).toContain(line)
-    expect(src.indexOf('Practice Questions</h2>')).toBeLessThan(src.indexOf(line))
+    expect(src.indexOf("{heading ?? 'Practice Questions'}</h2>")).toBeLessThan(src.indexOf(line))
     expect(src.indexOf(line)).toBeLessThan(src.indexOf('<QuizProgress'))
   })
 

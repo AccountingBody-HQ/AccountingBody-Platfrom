@@ -6,6 +6,7 @@ import { getArticleBySlug, getAllArticleSlugs } from '@/lib/db'
 import { resolveLegacyRenamedPath } from '@/lib/legacy-renamed-path'
 import type { ArticleFull } from '@/lib/db'
 import HtmlRenderer from '@/components/HtmlRenderer'
+import QuizRenderer from '@/components/QuizRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 import { brandExamBodies } from '@/lib/brand'
 import { ownerUrl, resolveArticleCanonical } from '@/lib/canonical'
@@ -14,6 +15,7 @@ import { articleSchema, breadcrumbSchema } from '@/lib/structured-data'
 import { toStoredSlug } from '@/lib/slug-param'
 import { studyCategoryName } from '@/lib/study-category-name'
 import { studyEticpaRedirect } from '@/lib/study-eticpa-redirect'
+import { notePracticeQuiz } from '@/lib/note-practice'
 
 export async function generateStaticParams() {
   const slugs = await getAllArticleSlugs()
@@ -88,14 +90,12 @@ function QuestionButtons({ article }: { article: ArticleFull }) {
 
   return (
     <div className="mt-12 pt-10 border-t border-slate-200">
-      <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-5">Continue Learning</p>
+      <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-5">Continue Learning</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {items.map(btn => (
           <a
             key={btn.label}
             href={btn.url!}
-            target="_blank"
-            rel="noopener noreferrer"
             className={`group flex items-center gap-4 p-4 rounded-xl border bg-white transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${btn.border}`}
           >
             <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${btn.bg} ${btn.color}`}>
@@ -107,7 +107,7 @@ function QuestionButtons({ article }: { article: ArticleFull }) {
               <p className="text-sm font-semibold text-navy-950 group-hover:text-navy-700 transition-colors leading-snug">
                 {btn.label}
               </p>
-              <p className="text-xs text-slate-400">{btn.sublabel}</p>
+              <p className="text-xs text-slate-500">{btn.sublabel}</p>
             </div>
             <svg className="w-4 h-4 text-slate-500 group-hover:text-slate-500 group-hover:translate-x-0.5 transition-all ml-auto shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -135,6 +135,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
   }
   const eticpaTarget = studyEticpaRedirect(isEthioTax, category, article.slug)
   if (eticpaTarget) permanentRedirect(eticpaTarget)
+  const notePractice = await notePracticeQuiz(article.mcq_url)
 
   const examBodies = brandExamBodies(article.exam_body, isEthioTax)
   const accentBar = EXAM_BODY_ACCENT[examBodies[0]?.toUpperCase() ?? ''] ?? 'bg-navy-950'
@@ -282,6 +283,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
               )}
 
               <AuthorBio article={article} />
+              {notePractice && <QuizRenderer {...notePractice} />}
               <QuestionButtons article={article} />
             </div>
 
