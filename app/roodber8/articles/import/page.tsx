@@ -131,7 +131,7 @@ export default function ImportArticlePage() {
   const [metaExamBody, setMetaExamBody]     = useState<string[]>([])
   const [metaSeoTitle, setMetaSeoTitle]     = useState('')
   const [metaSeoDesc, setMetaSeoDesc]       = useState('')
-  const [showOnSites, setShowOnSites]       = useState<string[]>(['accountingbody'])
+  const [showOnSites, setShowOnSites]       = useState<string[]>(['accountingbody', 'ethiotax'])
   const [canonical, setCanonical]           = useState('accountingbody')
 
   // Content preview
@@ -226,7 +226,7 @@ export default function ImportArticlePage() {
     setMetaExcerpt(''); setMetaAuthor(''); setMetaCategory('')
     setMetaStatus('published'); setMetaDifficulty('')
     setMetaExamBody([]); setMetaSeoTitle(''); setMetaSeoDesc('')
-    setShowOnSites(['accountingbody']); setCanonical('accountingbody')
+    setShowOnSites(['accountingbody', 'ethiotax']); setCanonical('accountingbody')
     setShowFullContent(false); setContentCollapsed(false)
     setPublishedSlug('')
   }

@@ -147,19 +147,15 @@ export default function ContentFactoryPage() {
   const [publishing, setPublishing] = useState(false)
   const [published, setPublished]   = useState(false)
   const [error, setError]           = useState('')
-  const [showOnSites, setShowOnSites] = useState<string[]>(['accountingbody'])
+  const [showOnSites, setShowOnSites] = useState<string[]>(['accountingbody', 'ethiotax'])
   const [canonical, setCanonical]   = useState('accountingbody')
 
-  // Auto-default showOnSites and canonical for ETICPA qualifications
+  // Every qualification, ETICPA included, starts on both sites with
+  // accountingbody as the canonical owner (as every live note is).
   const handleQualificationSelect = (qual: string) => {
     setConfig(prev => ({ ...prev, qualification: qual, subject: '' }))
-    if (qual.startsWith('ETICPA')) {
-      setShowOnSites(['ethiotax'])
-      setCanonical('ethiotax')
-    } else {
-      setShowOnSites(['accountingbody'])
-      setCanonical('accountingbody')
-    }
+    setShowOnSites(['accountingbody', 'ethiotax'])
+    setCanonical('accountingbody')
   }
   const [docId, setDocId]           = useState('')
   const [categories, setCategories] = useState<{slug:string;title:string}[]>([])
@@ -202,7 +198,7 @@ export default function ContentFactoryPage() {
   const [impStatus, setImpStatus]       = useState('published')
   const [impDifficulty, setImpDifficulty] = useState('')
   const [impExamBodies, setImpExamBodies] = useState<string[]>([])
-  const [impShowOnSites, setImpShowOnSites] = useState<string[]>(['accountingbody'])
+  const [impShowOnSites, setImpShowOnSites] = useState<string[]>(['accountingbody', 'ethiotax'])
   const [impCanonical, setImpCanonical] = useState('accountingbody')
   const [impSeoTitle, setImpSeoTitle]   = useState('')
   const [impSeoDesc, setImpSeoDesc]     = useState('')
@@ -289,7 +285,7 @@ export default function ContentFactoryPage() {
   function reset() {
     setStep(0); setConfig(EMPTY); setGenerated(''); setEdited('')
     setPublished(false); setError('')
-    setShowOnSites(['accountingbody']); setCanonical('accountingbody'); setDocId('')
+    setShowOnSites(['accountingbody', 'ethiotax']); setCanonical('accountingbody'); setDocId('')
   }
 
   // ── Import handlers ──────────────────────────────────────────────────────
@@ -316,7 +312,7 @@ export default function ContentFactoryPage() {
       setImpDifficulty(data.article.difficulty ?? '')
       setImpExamBodies(data.article.exam_body ?? [])
       setImpShowOnSites(
-        data.article.show_on_sites?.length ? data.article.show_on_sites : ['accountingbody']
+        data.article.show_on_sites?.length ? data.article.show_on_sites : ['accountingbody', 'ethiotax']
       )
       setImpCanonical(data.article.canonical_owner ?? 'accountingbody')
       setImpSeoTitle(data.article.seo_title ?? '')
@@ -372,7 +368,7 @@ export default function ContentFactoryPage() {
     setImportParseError(''); setImportPublishError('')
     setImpTitle(''); setImpSlug(''); setImpExcerpt(''); setImpAuthor('')
     setImpCategory(''); setImpStatus('published'); setImpDifficulty('')
-    setImpExamBodies([]); setImpShowOnSites(['accountingbody'])
+    setImpExamBodies([]); setImpShowOnSites(['accountingbody', 'ethiotax'])
     setImpCanonical('accountingbody'); setImpSeoTitle(''); setImpSeoDesc('')
     setImportPublishedSlug(''); setImpContentExpanded(false)
   }

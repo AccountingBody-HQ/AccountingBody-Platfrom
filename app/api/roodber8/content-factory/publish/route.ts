@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
-import { revalidateTag } from 'next/cache'
+import { refreshArticleCaches } from '@/lib/article-cache'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { marked } from 'marked'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
@@ -159,9 +159,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error?.message ?? 'Failed to insert article' }, { status: 500 })
     }
 
-    // Drop getArticleBySlug's cached entry (lib/db.ts), including a cached
-    // "not found" from before this insert.
-    revalidateTag(`article:${slug}`)
+    // Refresh the article caches (lib/article-cache.ts): the lists and counts,
+    // and getArticleBySlug's entry, including a cached "not found" from before
+    // this insert.
+    refreshArticleCaches({ slugs: [slug] })
 
     return NextResponse.json({
       success:        true,

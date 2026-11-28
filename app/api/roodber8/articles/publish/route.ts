@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
-import { revalidateTag } from 'next/cache'
+import { refreshArticleCaches } from '@/lib/article-cache'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { SITE_CODE_MAP } from '@/lib/site-codes'
 import type { NormalisedArticle } from '@/lib/article-normaliser'
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     const showOnSites = Array.isArray(body.showOnSites)
       ? body.showOnSites.filter((s): s is string => typeof s === 'string')
-      : ['accountingbody']
+      : ['accountingbody', 'ethiotax']
     const canonicalOwner = typeof body.canonicalOwner === 'string' ? body.canonicalOwner : 'accountingbody'
 
     const showOnSitesCodes = Array.from(new Set(
@@ -158,10 +158,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: insertError?.message ?? 'Failed to insert article' }, { status: 500 })
     }
 
-    // Drop getArticleBySlug's cached entry (lib/db.ts), including a cached
-    // "not found" from before this insert. inserted.slug, not initialSlug —
-    // the slug-conflict retry above may have changed it.
-    revalidateTag(`article:${inserted.slug}`)
+    // Refresh the article caches (lib/article-cache.ts): the lists and counts,
+    // and getArticleBySlug's entry, including a cached "not found" from before
+    // this insert. inserted.slug, not initialSlug — the slug-conflict retry
+    // above may have changed it.
+    refreshArticleCaches({ slugs: [inserted.slug] })
 
     return NextResponse.json({
       success:    true,

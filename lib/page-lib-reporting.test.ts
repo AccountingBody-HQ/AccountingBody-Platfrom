@@ -528,6 +528,8 @@ function logSites(files: string[]): Record<string, string[]> {
 const REPORTERS = ['lib/db-check.ts', 'lib/email-check.ts', 'lib/turnstile-verify.ts', 'lib/report-error.ts', 'lib/sentry-privacy.ts', 'lib/sentry-browser-privacy.ts', 'lib/scrub-rules.ts']
 
 const REPORTING: Record<string, string[]> = {
+  'lib/article-cache.ts:refreshArticleCaches': ["reportServerError('admin article cache refresh failed', error, { area: 'admin' })"],
+  'lib/course-cache.ts:refreshCourseCaches': ["reportServerError('admin course cache refresh failed', error, { area: 'admin' })"],
   'lib/db.ts:getCategoryCounts': ["reportServerError('article category count read failed', error, { area: 'public' })"],
   'lib/db.ts:getQuestionSetCount': ["reportServerError('question set count read failed', error, { area: 'public' })"],
   'lib/db.ts:getPublishedQuestionCount': ["reportServerError('question count read failed', error, { area: 'public' })"],

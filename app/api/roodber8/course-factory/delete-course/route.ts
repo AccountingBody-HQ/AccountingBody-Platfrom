@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isAuthenticated, signedOutResponse } from '@/lib/admin-auth'
 import { getServerSupabase } from '@/lib/supabase-server'
 import { reportServerError } from '@/lib/report-error'
+import { refreshCourseCaches } from '@/lib/course-cache'
 import { DELETE_FAILED, errorCode, keepCopyBeforeDelete, snapshotCourseBy } from '@/lib/recycle-bin'
 
 function getSupabase() {
@@ -42,6 +43,8 @@ export async function DELETE(req: NextRequest) {
       console.error('course-factory/delete-course: delete failed', errorCode(deleteError))
       return NextResponse.json({ error: DELETE_FAILED }, { status: 500 })
     }
+
+    refreshCourseCaches()
 
     return NextResponse.json({
       success: true,

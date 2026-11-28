@@ -213,7 +213,7 @@ export default function ImportQuestionsPage() {
   const [metaExcerpt, setMetaExcerpt]     = useState('')
   const [metaDifficulty, setMetaDiff]     = useState('intermediate')
   const [metaExamBody, setMetaExamBody]   = useState('acca')
-  const [showOnSites, setShowOnSites]     = useState<string[]>(['accountingbody'])
+  const [showOnSites, setShowOnSites]     = useState<string[]>(['accountingbody', 'ethiotax'])
   const [canonical, setCanonical]         = useState('accountingbody')
 
   // Publish state
@@ -319,7 +319,7 @@ export default function ImportQuestionsPage() {
     setMetaTitle(''); setMetaTopic('')
     setMetaExcerpt(''); setMetaDiff('intermediate')
     setMetaExamBody('acca')
-    setShowOnSites(['accountingbody']); setCanonical('accountingbody')
+    setShowOnSites(['accountingbody', 'ethiotax']); setCanonical('accountingbody')
     setPublishedSlug(''); setPublishWarnings([])
     setArticleSlug('')
     setArticleFetchStatus('idle')

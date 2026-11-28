@@ -400,7 +400,7 @@ const scenarios: Scenario[] = [
       status: 200,
       body: { success: true, documentId: ID, contentId: 'AB-ART-00001', title: 'Title', slug: 'title' },
       dbRequests: 2,
-      revalidated: ['article:title'],
+      revalidated: ['articles', 'article:title'],
     },
     stalled: {
       waits: 1,
@@ -532,10 +532,17 @@ const scenarios: Scenario[] = [
       (await api('articles/[articleId]/route.ts')).DELETE(request('DELETE', adminPath(`articles/${ID}`)), {
         params: Promise.resolve({ articleId: ID }),
       }),
-    // BP-1: read the article and its course links, keep a recycle bin copy, then delete.
-    rows: { articles: [{ id: ID, title: 'Article' }] },
-    healthy: { status: 200, body: { success: true, binId: ID }, dbRequests: 5 },
-    stalled: { waits: 1, status: 500, body: { error: SNAPSHOT_FAILED }, dbRequests: 1 },
+    // E1a: read the note's address and count the practice sets that link to it.
+    // This fake answers every count with 3, so the note has a set and nothing is
+    // deleted; the full delete (BP-1 recycle bin copy, then delete) is covered
+    // in lib/e1a-content-plumbing.test.ts.
+    rows: { articles: [{ id: ID, title: 'Article', slug: 'article' }] },
+    healthy: {
+      status: 409,
+      body: { error: 'This study note has a practice set. Delete the set or link it to another note first. Nothing was deleted.' },
+      dbRequests: 2,
+    },
+    stalled: { waits: 1, status: 500, body: { error: 'Could not check this study note. Nothing was deleted.' }, dbRequests: 1 },
   },
   {
     name: 'pending subscriber clean-up',

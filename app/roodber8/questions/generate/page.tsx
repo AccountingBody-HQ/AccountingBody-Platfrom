@@ -85,19 +85,15 @@ export default function GenerateQuestionsPage() {
   const [docId, setDocId]             = useState('')
   const [docSlug, setDocSlug]         = useState('')
   const [publishWarnings, setPublishWarnings] = useState<string[]>([])
-  const [showOnSites, setShowOnSites] = useState<string[]>(['accountingbody'])
+  const [showOnSites, setShowOnSites] = useState<string[]>(['accountingbody', 'ethiotax'])
   const [canonical, setCanonical]     = useState('accountingbody')
 
-  // Auto-default showOnSites and canonical for ETICPA qualifications
+  // Every qualification, ETICPA included, starts on both sites with
+  // accountingbody as the canonical owner (as every live note is).
   const handleQualificationSelect = (qual: string) => {
     setConfig(prev => ({ ...prev, qualification: qual, subject: '' }))
-    if (qual.startsWith('ETICPA')) {
-      setShowOnSites(['ethiotax'])
-      setCanonical('ethiotax')
-    } else {
-      setShowOnSites(['accountingbody'])
-      setCanonical('accountingbody')
-    }
+    setShowOnSites(['accountingbody', 'ethiotax'])
+    setCanonical('accountingbody')
   }
   const [editingIdx, setEditingIdx]   = useState<number | null>(null)
   const [editDraft, setEditDraft]     = useState<any>(null)
@@ -191,7 +187,7 @@ export default function GenerateQuestionsPage() {
     setStep(0); setConfig(EMPTY); setBundle(null)
     setPublished(false); setError(''); setWarnings([])
     setDocId(''); setDocSlug(''); setPublishWarnings([])
-    setShowOnSites(['accountingbody']); setCanonical('accountingbody')
+    setShowOnSites(['accountingbody', 'ethiotax']); setCanonical('accountingbody')
     setEditingIdx(null); setEditDraft(null)
   }
 
