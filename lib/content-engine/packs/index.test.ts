@@ -17,8 +17,8 @@ describe('packs', () => {
     for (const [, text] of all) expect(text.trim().length).toBeGreaterThan(0)
   })
 
-  it('the fingerprint is pinned: any change to a pack text must change this line on purpose', () => {
+  it('the fingerprint is pinned: any change to a pack or blueprint text must change this line on purpose', () => {
     expect(PACKS_FINGERPRINT).toMatch(/^[0-9a-f]{16}$/)
-    expect(PACKS_FINGERPRINT).toBe('a70f8ee5217cbd7b')
+    expect(PACKS_FINGERPRINT).toBe('9245d961a5bed684')
   })
 })

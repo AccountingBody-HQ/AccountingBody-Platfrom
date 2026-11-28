@@ -1,6 +1,8 @@
-// Every pack text in one object, and a fingerprint over all of them. Any
-// change to a pack text changes the fingerprint, and the fingerprint is part
-// of every prompt version, so a changed rule can never pass unnoticed.
+// Every pack text in one object, and a fingerprint over all of them and the
+// blueprints. Any change to a pack or blueprint text changes the fingerprint,
+// and the fingerprint is part of every prompt version, so a changed rule can
+// never pass unnoticed.
+import { BLUEPRINTS } from '../blueprints/index'
 import { canonicalJson, sha16 } from '../canonical'
 import {
   ANSWER_BALANCE,
@@ -56,5 +58,5 @@ export const PACKS = {
   reviewer: { REVIEWER_RULES },
 } as const
 
-/** sha16 over the canonical JSON of every pack text. */
-export const PACKS_FINGERPRINT = sha16(canonicalJson(PACKS))
+/** sha16 over the canonical JSON of every pack text and every blueprint. */
+export const PACKS_FINGERPRINT = sha16(canonicalJson({ packs: PACKS, blueprints: BLUEPRINTS }))
