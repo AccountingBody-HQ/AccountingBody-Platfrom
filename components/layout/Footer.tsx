@@ -612,7 +612,7 @@ export function Footer({
               <p className="text-xs text-white/70">
                 {isEthioTax ? `© ${new Date().getFullYear()} EthioTax. All rights reserved.` : (
                   <>
-                    © {new Date().getFullYear()} AccountingBody Ltd. All rights reserved.{' '}
+                    © {new Date().getFullYear()} Accounting Body Ltd. All rights reserved.{' '}
                     Registered in England &amp; Wales.
                   </>
                 )}

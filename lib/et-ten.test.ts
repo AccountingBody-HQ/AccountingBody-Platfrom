@@ -282,12 +282,19 @@ describe('G9 e-mail addresses (D274): no ethiotax.com address from the app', () 
     const hits = files.filter((f) => /[a-z0-9.+-]+@ethiotax\.com/i.test(read(f)))
     expect(hits).toEqual([])
   })
-  // PRIV-2 S1 (D355): the privacy policy shows no e-mail address any more;
-  // the two remaining EthioTax-view addresses are the accountingbody.com ones.
-  it('the EthioTax-view addresses are the accountingbody.com ones; the privacy policy has none', () => {
+  // PRIV-2 S1 (D355) and the identity step (D363): the privacy policy and the
+  // three job pages show no e-mail address; the job pages link to the contact form.
+  it('the privacy policy and the three job pages show no e-mail address; the job pages link to the contact form', () => {
     expect(read('app/privacy-policy/page.tsx')).not.toMatch(/[a-z0-9.+-]+@[a-z0-9-]+\./i)
-    expect(read('app/jobs/guarantee/page.tsx')).toContain("const contactEmail = 'info@accountingbody.com'")
-    expect(read('app/jobs/ethiopian-professionals/page.tsx')).toContain('<a href="mailto:info@accountingbody.com" className="text-white/70 hover:text-white/70 underline">info@accountingbody.com</a>')
+    for (const file of ['app/jobs/guarantee/page.tsx', 'app/jobs/ethiopian-professionals/page.tsx', 'app/jobs/manage-listing/ManageListingClient.tsx']) {
+      const src = read(file)
+      expect(src, file).not.toMatch(/[a-z0-9.+-]+@[a-z0-9-]+\.[a-z]/i)
+      expect(src, file).not.toContain('mailto:')
+      expect(src.split('<Link href="/contact"').length - 1, file).toBe(1)
+    }
+    expect(read('app/jobs/guarantee/page.tsx')).toContain('<Link href="/contact" className="text-navy-700 underline hover:text-gold-600">contact form</Link>{\' \'}')
+    expect(read('app/jobs/ethiopian-professionals/page.tsx')).toContain('<Link href="/contact" className="text-white/70 hover:text-white/70 underline">contact form</Link>.')
+    expect(read('app/jobs/manage-listing/ManageListingClient.tsx')).toContain('Contact us through our <Link href="/contact" className="underline" style={{ color: brand }}>contact form</Link>.')
   })
 })
 

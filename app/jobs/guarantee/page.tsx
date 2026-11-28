@@ -18,8 +18,6 @@ export default async function GuaranteePage() {
   const isEthioTax = headersList.get('x-et-platform') === 'ethiotax'
   const brand = isEthioTax ? '#1A4731' : '#0C1A3D'
   const platformName = isEthioTax ? 'EthioTax' : 'Accounting Body'
-  // One address on both views until an EthioTax mailbox exists (D274).
-  const contactEmail = 'info@accountingbody.com'
 
   return (
     <div className="min-h-screen bg-surface">
@@ -98,9 +96,9 @@ export default async function GuaranteePage() {
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
             <h2 className="font-display text-xl text-navy-950 mb-3">How to claim the guarantee</h2>
             <p className="text-slate-500 leading-relaxed mb-4">
-              If a placement does not work out within the guarantee period, contact us at{' '}
-              <a href={`mailto:${contactEmail}`} className="text-navy-700 underline hover:text-gold-600">{contactEmail}</a>{' '}
-              with the placement details. We will respond within 2 working days and initiate the replacement search process.
+              If a placement does not work out within the guarantee period, use our{' '}
+              <Link href="/contact" className="text-navy-700 underline hover:text-gold-600">contact form</Link>{' '}
+              to send us the placement details. We will respond within 2 working days and initiate the replacement search process.
             </p>
             <p className="text-xs text-slate-400">Full terms and conditions are provided in the Fee Agreement Letter issued before each placement search begins.</p>
           </div>

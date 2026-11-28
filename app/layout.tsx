@@ -52,7 +52,7 @@ export async function generateMetadata(): Promise<Metadata> {
     ],
     authors: [{ name: isEthioTax ? 'EthioTax' : 'AccountingBody', url: SITE_URL }],
     creator: isEthioTax ? 'EthioTax' : 'AccountingBody',
-    publisher: isEthioTax ? 'EthioTax Ltd' : 'AccountingBody Ltd',
+    publisher: isEthioTax ? 'EthioTax' : 'Accounting Body Ltd',
     openGraph: {
       type: 'website',
       locale: 'en_GB',
