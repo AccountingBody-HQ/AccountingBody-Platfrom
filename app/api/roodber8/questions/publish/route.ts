@@ -29,6 +29,7 @@ import {
 import { linkedSetSlug, setArticleLink } from '@/lib/question-article-link'
 import { refreshQuestionCaches } from '@/lib/question-cache'
 import { reportServerError } from '@/lib/report-error'
+import { REGISTRY_INVALID, eticpaColumnsOf, parseRegistry } from '@/lib/question-registry'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
       showOnSites = ['accountingbody', 'ethiotax'],
       canonicalOwner = 'accountingbody',
       articleSlug,
+      registry,
     } = body
 
     if (!bundle || !Array.isArray(bundle.questions) || bundle.questions.length === 0) {
@@ -64,6 +66,12 @@ export async function POST(req: NextRequest) {
     const checked = checkPublishBundle(bundle)
     if (!checked.ok) {
       return NextResponse.json({ error: publishProblemsMessage(checked.problems) }, { status: 400 })
+    }
+
+    // The quality record from the Content Studio (prompt, model, score), when sent.
+    const record = parseRegistry(registry)
+    if (!record.ok) {
+      return NextResponse.json({ error: REGISTRY_INVALID }, { status: 400 })
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -123,10 +131,11 @@ export async function POST(req: NextRequest) {
     // have a practice set yet (any status).
     let resolvedArticleSlug: string | null = null
     let articleLink: string | null = null
+    let eticpaColumns: ReturnType<typeof eticpaColumnsOf> = {}
     const articleRef = articleSlug ? String(articleSlug).trim() : ''
     if (articleRef) {
       const contentRef = articleRef.toUpperCase()
-      const articles = supabase.from('articles').select('slug, mcq_url')
+      const articles = supabase.from('articles').select('slug, mcq_url, eticpa_level, eticpa_module')
       const artRead = checkRead(
         await (contentRef.startsWith('AB-ART-')
           ? articles.eq('content_id', contentRef)
@@ -141,6 +150,8 @@ export async function POST(req: NextRequest) {
       if (!resolvedArticleSlug) {
         return NextResponse.json({ error: NOT_FOUND }, { status: 400 })
       }
+      // An ETICPA study note gives its level and module to its set (D369).
+      eticpaColumns = eticpaColumnsOf(artRead.data ?? {})
 
       const linkedSetRead = checkRead(
         await supabase
@@ -216,6 +227,8 @@ export async function POST(req: NextRequest) {
       status:           'draft',
       platform,
       article_slug:     resolvedArticleSlug,
+      ...eticpaColumns,
+      ...(record.columns ?? {}),
     }
 
     const insertSet = () =>

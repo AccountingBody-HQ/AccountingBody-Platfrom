@@ -513,7 +513,7 @@ describe('G6 migrations/0022 (record file, not applied)', () => {
   const files = () => execFileSync('git', ['ls-files', 'migrations'], { encoding: 'utf8' }).split('\n').filter(Boolean)
   const FILE = 'migrations/0022_jobs_drop_raw_source_data.sql'
 
-  it('exactly one 0022 file and, after it, only the three LB-1 records, the two BP-1 records, the BP-2 record, the PQ-1e record, the PRIV-7 record, the PRIV-9 record and the E1a record', () => {
+  it('exactly one 0022 file and, after it, only the three LB-1 records, the two BP-1 records, the BP-2 record, the PQ-1e record, the PRIV-7 record, the PRIV-9 record, the E1a record and the E2 record', () => {
     expect(files().filter((f) => /^migrations\/0022_/.test(f))).toStrictEqual([FILE])
     expect(files().filter((f) => /^migrations\/(002[3-9]|00[3-9]\d|0[1-9]\d\d)_/.test(f))).toStrictEqual([
       'migrations/0023_ops_database_size.sql',
@@ -526,6 +526,7 @@ describe('G6 migrations/0022 (record file, not applied)', () => {
       'migrations/0030_revoke_unused_browser_privileges.sql',
       'migrations/0031_revoke_browser_privileges_content_tables.sql',
       'migrations/0032_question_sets_on_both_sites.sql',
+      'migrations/0033_question_sets_registry.sql',
     ])
   })
 

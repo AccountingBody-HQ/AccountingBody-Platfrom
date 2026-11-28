@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Inbox, Users, Briefcase, Building2,
   Factory, Settings, LogOut, ExternalLink,
-  ChevronRight, BookOpen, FileText, Sparkles, Server, ArchiveRestore, UserSearch
+  ChevronRight, BookOpen, FileText, Sparkles, Server, ArchiveRestore, UserSearch, Layers
 } from 'lucide-react'
 
 // Sanity Studio nav entry removed — Sanity CMS is fully decommissioned (replaced by Supabase).
@@ -20,6 +20,7 @@ const NAV = [
   { href: '/roodber8/candidates',      exact: false, icon: Users,           label: 'Candidates',      sub: 'Candidate registrations'   },
   { href: '/roodber8/employers',        exact: false, icon: Building2,        label: 'Employers',       sub: 'Employer briefs'           },
   { href: '/roodber8/studio',           exact: false, icon: Sparkles,        label: 'Studio',          sub: 'Daily content refresh'      },
+  { href: '/roodber8/content-studio',   exact: false, icon: Layers,          label: 'Content Studio',  sub: 'Plan, make and check content' },
   { href: '/roodber8/questions',        exact: false, icon: BookOpen,        label: 'Questions',       sub: 'Generate and manage MCQs'  },
   { href: '/roodber8/articles',        exact: false, icon: FileText,        label: 'Articles',        sub: 'Manage and import content' },
   { href: '/roodber8/content-factory', exact: false, icon: Factory,         label: 'Content Factory', sub: 'AI content generation'     },
