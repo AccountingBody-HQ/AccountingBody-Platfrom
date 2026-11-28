@@ -8,9 +8,10 @@ import { documentOutput } from './fixtures/outputs'
 const PUBLIC_NAMES = [
   'BLOCK_TYPES', 'BLUEPRINTS', 'BLUEPRINT_IDS', 'BODY_NAMES', 'BODY_NAME_RULE', 'CHECK_ORDER', 'CONTENT_TYPES',
   'DIFFICULTIES', 'ENGINE_NAME', 'ENGINE_VERSION', 'ETICPA_LEVELS', 'ETICPA_MODULES', 'JURISDICTIONS', 'LEVEL_IDS',
-  'PACKS', 'PACKS_FINGERPRINT', 'SUBJECT_KEYS',
-  'blocksToText', 'blueprintFor', 'compilePrompt', 'compileReviewerPrompt', 'countWords', 'extractJson', 'isCompiled',
-  'renderBlocks', 'runGate', 'sourceFromHtml', 'subjectContext', 'toSubjectKey', 'validateBlocks', 'validateBrief',
+  'PACKS', 'PACKS_FINGERPRINT', 'STEP_SIZE', 'SUBJECT_KEYS',
+  'blocksToText', 'blueprintFor', 'compilePrompt', 'compileReviewerPrompt', 'countWords', 'earlierQuestionsOf', 'extractJson',
+  'isCompiled', 'mergeStepAnswers', 'parseReviewerNotes', 'planSteps', 'renderBlocks', 'runGate', 'sourceFromHtml',
+  'stepPromptText', 'subjectContext', 'toSubjectKey', 'validateBlocks', 'validateBrief',
 ]
 
 describe('public API', () => {
