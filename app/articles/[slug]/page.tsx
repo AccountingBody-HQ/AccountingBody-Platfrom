@@ -5,12 +5,14 @@ import { headers } from 'next/headers'
 import { getArticleBySlug } from '@/lib/db'
 import { resolveLegacyRenamedPath } from '@/lib/legacy-renamed-path'
 import HtmlRenderer from '@/components/HtmlRenderer'
+import QuizRenderer from '@/components/QuizRenderer'
 import { JobsRecruitmentBanner } from '@/components/JobsRecruitmentSection'
 import { brandExamBodies } from '@/lib/brand'
 import { articleTitleOwner, ownerUrl, resolveArticleCanonical } from '@/lib/canonical'
 import StructuredData from '@/components/StructuredData'
 import { articleSchema, breadcrumbSchema } from '@/lib/structured-data'
 import { toStoredSlug } from '@/lib/slug-param'
+import { notePracticeQuiz } from '@/lib/note-practice'
 
 export const revalidate = 0
 
@@ -61,6 +63,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     notFound()
   }
   if (!article) return null
+  const notePractice = await notePracticeQuiz(article.mcq_url)
 
   const examBodies = brandExamBodies(article.exam_body, isEthioTax)
   const accentBar  = EXAM_BODY_ACCENT[examBodies[0]?.toUpperCase() ?? ''] ?? 'bg-navy-950'
@@ -178,6 +181,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
 
               <HtmlRenderer html={article.content ?? ''} stripLeadingH1 />
+
+              {notePractice && <QuizRenderer {...notePractice} />}
 
               {/* Test your knowledge — bottom of article */}
               <div className="mt-10 p-6 bg-navy-950 rounded-2xl relative overflow-hidden">

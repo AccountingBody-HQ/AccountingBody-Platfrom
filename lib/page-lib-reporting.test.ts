@@ -540,6 +540,7 @@ const REPORTING: Record<string, string[]> = {
     "reportServerError('admin job list read failed', new Error('admin job list read failed'), { area: 'admin' })",
     "reportServerError('admin job count read failed', new Error('admin job count read failed'), { area: 'admin' })",
   ],
+  'lib/note-practice.ts:notePracticeQuiz': ["reportServerError('note practice questions read failed', error, { area: 'public' })"],
   'lib/jobs.ts:getBrowsableJobsTotal': ["reportServerError('job count read failed', error, { area: 'public' })"],
   'lib/newsletter-signup.ts:startNewsletterSignup': ["reportServerError('newsletter signup: lookup failed', readError, { area: 'public' })"],
   'lib/newsletter-unsubscribe.ts:unsubscribeByToken': ["reportServerError('unsubscribe: save failed', error, { area: 'public' })"],
