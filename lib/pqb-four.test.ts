@@ -68,7 +68,7 @@ describe('the block under a study note', () => {
     expect(p.heading).toBe('Practice questions on this topic')
     expect(p.intro).toBe('Try 5 questions from the practice set for this study note.')
     expect(p.moreHref).toBe('/practice-questions/set-one')
-    expect(p.moreLabel).toBe('Practise all 12 questions →')
+    expect(p.moreLabel).toBe('Practise more questions on this topic →')
     expect(Object.keys(p).sort()).toEqual(['heading', 'intro', 'moreHref', 'moreLabel', 'quizJson'])
     const data = JSON.parse(p.quizJson)
     expect(NOTE_QUESTION_COUNT).toBe(5)
@@ -97,7 +97,7 @@ describe('the block under a study note', () => {
     db.questions = db.questions.slice(0, 4)
     expect(await block('/practice-questions/set-one')).toBeNull()
     db.questions = Array.from({ length: 5 }, (_, i) => question(i + 1))
-    expect((await block('/practice-questions/set-one'))?.moreLabel).toBe('Practise all 5 questions →')
+    expect((await block('/practice-questions/set-one'))?.moreHref).toBe('/practice-questions/set-one')
   })
 
   it('a failed read hides the block, logs its code only, reports it and never fails the note', async () => {
@@ -143,13 +143,24 @@ describe('QuizRenderer with the note props', () => {
     expect(renderToStaticMarkup(createElement(QuizRenderer, { quizJson, heading: 'H', intro: 'I', moreHref: '/practice-questions/set-one', moreLabel: 'M' }))).toBe(today)
   })
 
-  it('the heading, the intro line and the after-submit link; the set page keeps its own words', () => {
+  it('the heading, the intro line and the after-submit link; the set page keeps its own words and buttons', () => {
     expect(src).toContain("<h2 className=\"font-display text-2xl text-navy-950\">{heading ?? 'Practice Questions'}</h2>")
     expect(src).toContain('{intro && <p className="text-sm text-slate-600 -mt-3 mb-6">{intro}</p>}')
     expect(src).toContain("{moreLabel ?? 'Browse more questions'}")
     expect(src).toContain('<a href="/practice-questions" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}')
-    expect(src).toContain('if (heading) rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); else window.scrollTo({ top: 0, behavior: "smooth" });')
-    expect(src).toContain('<div ref={rootRef} className="mt-10 pt-10 border-t border-slate-200">')
+    expect(src).toContain('<button onClick={() => { handleRetry(); window.scrollTo({ top: 0, behavior: "smooth" }); }}')
+    expect(src).toContain('<div className="mt-10 pt-10 border-t border-slate-200">')
+  })
+
+  it('under a note (moreHref) "Try a new set" is never offered: the gold button is the link to the whole set (D368)', () => {
+    expect(src).toContain('{!moreHref && (\n              <button onClick={handleRetry}')
+    const row = src.slice(src.indexOf('{moreHref ? ('), src.indexOf(') : (', src.indexOf('{moreHref ? (')))
+    expect(row).toContain('<a href={moreHref} className="flex-1 py-4 px-7 rounded-lg text-base font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 transition-colors flex items-center justify-center">')
+    expect(row).not.toContain('Try a new set')
+    expect(row).not.toContain('handleRetry')
+    expect((src.match(/Try a new set\n/g) || []).length).toBe(2)
+    expect(read('lib/note-practice.ts')).toContain("moreLabel: 'Practise more questions on this topic →',")
+    expect(read('lib/note-practice.ts')).not.toContain('Practise all')
   })
 
   it('answers still show only after "Submit answers"; no new storage', () => {

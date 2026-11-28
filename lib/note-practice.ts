@@ -34,7 +34,7 @@ export async function notePracticeQuiz(mcqUrl: unknown): Promise<NotePracticeQui
       heading:   'Practice questions on this topic',
       intro:     'Try 5 questions from the practice set for this study note.',
       moreHref:  `/practice-questions/${qset.slug}`,
-      moreLabel: `Practise all ${questions.length} questions →`,
+      moreLabel: 'Practise more questions on this topic →',
     }
   } catch (error) {
     console.error('notePracticeQuiz error:', errorCode(error))
